@@ -2,8 +2,9 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice127 (bounded absolute aspect-ratio derivation; this commit).
-Consolidation42 for124–126 passes below.
+Latest delivery is slice128 (bounded measured absolute natural width; this commit).
+Slice127 is `dfc5843c` (bounded absolute aspect-ratio derivation).
+Consolidation42 is `99dfdf49` for124–126; passing receipts below.
 Slice126 is `0bda56ec` (numeric absolute size bounds).
 Slice125 is `6603731e` (declarative static Flex containing-block ownership).
 Slice124 is `77452150` (opposing-inset derived absolute dimensions).
@@ -3555,13 +3556,53 @@ Kernel68649bytes/SHA unchanged. No capability promotion, full361-case browser
 claim, baseline rewrite or Node24 trust claim. Counts8complete/12experimental/
 6partial/6missing/1excluded; all7release gates remain open.
 
-## [NEXT] Bounded measured absolute intrinsic sizing (slice128)
+## Slice128 delivered: bounded measured absolute natural width
 
-Investigate a direct primitive with existing pure paired measurement providers,
-one automatic axis and a definite opposite dimension, without opposing insets
-or aspect derivation. Establish native shrink-to-fit constraints and public RED
-before production. Preserve receiver-owned measurement invalidation, keyed
-identity and failure cleanup; infer no intrinsic boxes from opaque components.
+Direct custom primitives with paired pure providers may resolve an unpaired auto
+width at a declared finite numeric height. The query is horizontal[0,Infinity],
+vertical[height,height], matching native undefined-width/exact-height callback
+constraints. Numeric bounds clamp after measurement; left/right anchoring and
+source-order A/B/C composition are preserved. Opposing inset/aspect paths keep
+precedence; no builtin Text/font/image, opaque, both-auto or natural-height
+admission. No new API/ABI or native absolute line nodes.
+
+Public RED establishes missing provider admission. Initial integration cached by
+receiver token; the paint rerun exposed an ephemeral-token miss at unchanged
+allocation revision. The fix reuses stable absolute: keyed/occurrence identities
+in existing region maps. Tagged absolute entries and identities prune on removal,
+separately from normal/native flow identities; existing revision/input snapshot
+rules remain conservative. Parent resize remeasures the same unbounded envelope;
+sibling paint on stable inputs reuses it. No resize-cache-hit claim. An absolute-only
+provider owns a region generation/cache but zero native nodes. Cold new identities
+roll back through existing onFinish(false); committed ones remain. Focused rollback
+RED/green proves retry replacement vs committed identity stability without adding
+a registry or counter. No temporary diagnostic logging remains.
+
+Public/lifecycle3files60pass, normal39pass/21skip60. Final selected4files47pass/
+427skip474 includes absolute/containing/latest/cycle/identity and rollback. Evidence
+covers jobs3→6 geometry, exact query, moved hit targets, measurement-owned signals,
+keyed removal releasing cached entries with flow alive, detached signal inert,
+restore, pure unsupported/throwing failure and exact disposal. Six pinned callback
+fixtures (3jobs×20px, explicitly not font parity) bring corpus367/273matches/
+94classified. Final source/built6pass227core/dist inputs, errors[]/cleanup[0,0,0];
+screenshot inspected. Additional pinned cross-bound query probes confirm that
+the exact declared height is queried before its own min/max clamp as well. No full uninterrupted367-case browser claim. Fresh final
+packed245dist inputs, Bundler/NodeNext, absoluteMeasuredWidth lifecycle proof plus
+previous placement and104auto-margin fixtures pass. Tarball SHA256
+`0fcead4ce3865034c33d1273486f5772f8f191be7565f06d93ea19b5d5c94157`.
+Types, changed-code lint, docs109RED probes/JSDoc and scoped ownership review pass.
+Logs `/tmp/pibbl-slice128-{public-red,cache-diagnostic,public-green-stable,public-lifecycle,hardening,rollback-red,focused-final,normal,source-final,built-final,packed-final,docs}.txt`.
+Kernel68649bytes/SHA unchanged; Node26.9.0/macOSChromium, no Node24 trust claim.
+Counts8complete/12experimental/6partial/6missing/1excluded, all7gates open.
+
+## [NEXT] Bounded measured absolute natural height (slice129)
+
+Reuse the paired-provider path for a definite numeric width and automatic height.
+Pinned native evidence confirms exact width and unbounded height, with bounds
+applied after measurement; top/bottom anchoring follows the resulting height.
+Public RED ready for 8jobs wrapping at widths80→40 (heights20→40), measurement
+signals, stable paint reuse and removal/restore. No speculative cache broadening.
+After separate129commit, consolidate127–129 as checkpoint43.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

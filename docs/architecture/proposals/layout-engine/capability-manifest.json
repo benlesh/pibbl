@@ -1609,7 +1609,7 @@
         "covers": ["flex.auto-margin", "flex.min-max"]
       }
     ],
-    "limit": "361 records:267 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "367 records:273 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -2571,7 +2571,7 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "experimental finite row-nowrap Flex static/relative and absolute placement in LTR/RTL, fixed/opposing-inset/aspect-derived absolute dimensions, numeric bounds, axis-wise fixed alignment and declarative static containing chains; omitted-position legacy retained",
+      "current": "experimental finite row-nowrap Flex static/relative and absolute placement in LTR/RTL, fixed/opposing-inset/aspect-derived absolute dimensions, numeric bounds, axis-wise fixed alignment and declarative static containing chains; omitted-position legacy retained; direct paired-provider absolute natural width at a definite height uses an unbounded-width query",
       "status": "experimental",
       "unresolvedPolicy": "Intrinsic absolute sizing, explicit containing-block overrides, opaque/transformed ancestry and wider layout admission remain open.",
       "evidence": {
@@ -2583,7 +2583,8 @@
           "slice124: public direct and forwarded automatic dimensions, resize, finite-before-clamp validation, zero-size precedence; installed absoluteDerivedSize receipt",
           "slice125: direct static chains, relative reset, legacy omitted ownership, decorated ancestor resize; installed absoluteContainingBlock receipt",
           "slice126: fixed/derived numeric absolute bounds, resize, RTL precedence and rejection of invalid/contradictory bounds; installed absoluteBounds receipt",
-          "slice127: exactly-one-auto absolute aspect derivation before bounds, opposing inset precedence and no measurement; installed absoluteAspect receipt"
+          "slice127: exactly-one-auto absolute aspect derivation before bounds, opposing inset precedence and no measurement; installed absoluteAspect receipt",
+          "slice128: pure custom natural-width query, bounds after measurement, stable paint reuse, conservative resize remeasure, keyed remove/restore and failed-identity rollback; installed absoluteMeasuredWidth receipt"
         ],
         "negative": [
           "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
@@ -2632,10 +2633,16 @@
           "position-absolute-aspect-height-auto-width-ltr",
           "position-absolute-aspect-height-auto-width-rtl",
           "position-absolute-aspect-width-bound-ltr",
-          "position-absolute-aspect-height-inset-pair-ltr"
+          "position-absolute-aspect-height-inset-pair-ltr",
+          "position-absolute-measured-left",
+          "position-absolute-measured-left-resized",
+          "position-absolute-measured-right",
+          "position-absolute-measured-right-resized",
+          "position-absolute-measured-right-max50",
+          "position-absolute-measured-right-min80"
         ],
         "missing": [
-          "absolute intrinsic dimensions",
+          "general absolute intrinsic dimensions (built-in text/images, both-auto and nested owners)",
           "column/wrap positioning",
           "general containing-block ownership"
         ]
@@ -2694,7 +2701,7 @@
       "id": "measurement.custom-leaf",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness",
+      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom provider natural width with unbounded horizontal availability and definite exact height",
       "status": "partial",
       "unresolvedPolicy": "Paired intrinsic callback is implemented for the bounded direct-leaf consumer; baselines and broader intrinsic consumers remain open.",
       "evidenceRefs": [
@@ -2712,7 +2719,8 @@
           "finite-row paired intrinsic contribution, purity, retry and validation",
           "exact final-width finite cross height, declared-size/intrinsic-only compatibility and real zero width",
           "finite LTR column paired provider exact width40/60 and unbounded natural height40/30 with following-target movement",
-          "finite-column measurement-only signal dependency moves following targets; unrelated paint reuses constrained snapshots"
+          "finite-column measurement-only signal dependency moves following targets; unrelated paint reuses constrained snapshots",
+          "slice128: pure absolute width query at exact height, measurement-owned signals, conservative layout revision and stable sibling-paint reuse"
         ],
         "negative": [
           "opaque component measurement unsupported",
@@ -2722,7 +2730,16 @@
         "interaction": [
           "reactive intrinsic minimum moves the public target; unrelated sibling paint reuses snapshot; exact disposal"
         ],
-        "yogaCases": ["custom-column-measure", "custom-column-measure-resized"],
+        "yogaCases": [
+          "custom-column-measure",
+          "custom-column-measure-resized",
+          "position-absolute-measured-left",
+          "position-absolute-measured-left-resized",
+          "position-absolute-measured-right",
+          "position-absolute-measured-right-resized",
+          "position-absolute-measured-right-max50",
+          "position-absolute-measured-right-min80"
+        ],
         "missing": [
           "broader exact/at-most/unbounded constraint matrix beyond finite row/column admissions",
           "broader nested invalidation and owner feedback",

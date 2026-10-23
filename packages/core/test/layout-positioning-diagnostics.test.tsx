@@ -1,7 +1,7 @@
-import { Absolute, Flex, Flow, Grid, Overlay, Rectangle, signal, type FlexItemStyle, type FlexStyle, type PibblNode, type PibblController, type RectStyle } from "@pibbl/core";
+import { Absolute, definePrimitive, type BoxStyle, type SystemStyle, Flex, Flow, Grid, Overlay, Rectangle, signal, type FlexItemStyle, type FlexStyle, type PibblNode, type PibblController, type RectStyle } from "@pibbl/core";
 import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it } from 'vitest';
-import { experimentalLayout } from '../src/lib/layout/wasm/region';
+import { snapshotWasmLayoutDiagnostics, experimentalLayout } from '../src/lib/layout/wasm/region';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
 
 let controller: PibblController | undefined;
@@ -99,6 +99,19 @@ describe('bounded direct-Flex absolute admission', () => {
         flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start',
       }} />
     </Flex>)).toThrow(experimentalLayout ? 'static containing-block inheritance requires a direct declarative Flex chain' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+  it.runIf(experimentalLayout).each(['unsupported','throwing'] as const)('releases an absolute natural-width provider after %s measurement', mode => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    let rendered = 0;
+    const Leaf = definePrimitive<{}, BoxStyle & FlexItemStyle, BoxStyle & FlexItemStyle, SystemStyle>(() => { rendered++; return null; }, {
+      resolveStyle: () => ({}),
+      measureIntrinsic: () => ({status:'measured',minContent:{width:20,height:20},maxContent:{width:60,height:20}}),
+      measure: () => { if(mode==='throwing') throw new Error('absolute natural failure'); return {status:'unsupported',reason:'absolute natural unavailable'}; },
+    });
+    expect(mount(<Flex style={{width:200,height:100}}><Leaf style={{position:'absolute',left:12,top:8,width:'auto',height:20}} /></Flex>)).toThrow(mode==='throwing'?'absolute natural failure':'absolute natural unavailable');
+    expect(rendered).toBe(0);controller?.dispose();controller=undefined;
+    const disposed=snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
   });
   it.each([
     ['automatic width without opposing insets', { ...fixed, width: undefined }],

@@ -370,3 +370,16 @@ with left12/top8, static yields world12,8; relative yields32,18. The inner flow
 slot is unchanged. This does not infer containing boxes through opaque
 components, Group, Clip, Layer, transforms, Flow or Grid, and adds no public
 override. See the layout contract for the bounded admission.
+
+### Experimental measured absolute width
+
+A direct custom primitive with paired pure `measureIntrinsic` and `measure`
+providers can use `position: "absolute", width: "auto", height: 20` with, for
+example, `right: 18, top: 8`. Without an opposing horizontal inset pair or aspect
+ratio, `measure` receives `[0, Infinity]` width availability and exact20px height.
+A natural60px width is clamped by numeric bounds and positioned from the owning
+padding box. Resizing the owner moves a right-anchored child while preserving the
+measurement envelope; conservative invalidation can requery it. Measurement
+signals update width and targets through the existing scheduler. This does not
+add builtin Text/image intrinsic sizing, automatic natural height, opaque
+component measurement, margins, decoration or responsive-query support.

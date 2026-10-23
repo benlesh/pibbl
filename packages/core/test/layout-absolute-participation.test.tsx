@@ -5,12 +5,14 @@ import {
   Flex,
   Rectangle,
   createElement,
+  definePrimitive,
   measureElement,
   signal,
   type FlexItemStyle,
   type BoxStyle,
   type RectStyle,
   type PibblResponsiveStyle,
+  type SystemStyle,
   useCanvasContext,
   useConst,
   useLayoutBox,
@@ -700,4 +702,112 @@ it.runIf(experimentalLayout)('applies absolute aspect derivation before bounds a
   await nextFrame();
   // The explicit top/bottom pair supplies the automatic height instead of aspect ratio.
   expect(boxes.get('absolute')).toEqual({ x: 14, y: 10, width: 80, height: 82 });
+});
+
+
+it.runIf(experimentalLayout)('measures one automatic absolute width with unbounded horizontal availability and exact declared height', async () => {
+  type AbsoluteProviderStyle = BoxStyle & FlexItemStyle;
+  type Resolved = SystemStyle & { readonly width: number; readonly height: number };
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const ownerWidth = signal(204), jobs = signal(3), paint = signal('#426b61'), visible = signal(true);
+  const constraints: Array<readonly [number, number, number, number]> = [];
+  const hits: string[] = [];
+  let calls = 0;
+  const Leaf = definePrimitive<{ readonly jobs: typeof jobs }, AbsoluteProviderStyle, AbsoluteProviderStyle, Resolved>((_props, _style) => {
+    const box = useLayoutBox();
+    return <Rectangle onClick={() => hits.push('absolute')} style={{ width: box.width, height: box.height, fill: '#a63758', cursor: 'pointer' }} />;
+  }, {
+    preserveSignalProps: ['jobs'],
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: 'measured' as const, minContent: { width: 0, height: 20 }, maxContent: { width: 160, height: 20 } }),
+    measure: ({ props, constraints: input }) => {
+      calls++;
+      constraints.push([input.minWidth, input.maxWidth, input.minHeight, input.maxHeight]);
+      return { status: 'measured' as const, size: { width: props.jobs.get() * 20, height: 20 } };
+    },
+  });
+  function Scene() {
+    const leaf = useConst(() => <Leaf key="absolute" jobs={jobs} style={{ position: 'absolute', right: 18, top: 8, width: 'auto', height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 }} />);
+    const sibling = useConst(() => <Rectangle key="sibling" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: paint }} />);
+    return <Flex style={{
+      width: ownerWidth, height: 104, boxSizing: 'border-box',
+      padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2,
+      flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start',
+    }}>{[visible.get() ? leaf : null, sibling]}</Flex>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 244; canvas.height = 104; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller);
+  await nextFrame();
+  const initial = snapshotWasmLayoutDiagnostics();
+  expect(constraints).toEqual([[0, Infinity, 20, 20]]);
+  clickCanvas(canvas, 130, 15);
+  expect(hits).toEqual(['absolute']);
+
+  ownerWidth.set(244);
+  await nextFrame();
+  expect(calls).toBe(2);
+  expect(constraints).toEqual([[0, Infinity, 20, 20], [0, Infinity, 20, 20]]);
+  expect(snapshotWasmLayoutDiagnostics().measuredLeaves).toBe(initial.measuredLeaves + 1);
+  clickCanvas(canvas, 170, 15);
+  expect(hits).toEqual(['absolute', 'absolute']);
+  paint.set('#6e3e79');
+  await nextFrame();
+  expect(calls).toBe(2);
+  expect(snapshotWasmLayoutDiagnostics().measuredLeaves).toBe(initial.measuredLeaves + 1);
+
+  jobs.set(6);
+  await nextFrame();
+  expect(constraints).toEqual([[0, Infinity, 20, 20], [0, Infinity, 20, 20], [0, Infinity, 20, 20]]);
+  clickCanvas(canvas, 110, 15);
+  expect(hits).toEqual(['absolute', 'absolute', 'absolute']);
+  const resized = snapshotWasmLayoutDiagnostics();
+  expect(resized.measuredLeaves).toBe(initial.measuredLeaves + 2);
+  expect(resized.nodeCreates).toBe(initial.nodeCreates);
+
+  visible.set(false);
+  await nextFrame();
+  expect(snapshotWasmLayoutDiagnostics().cachedMeasurements).toBe(baseline.cachedMeasurements);
+  const removedCalls = calls;
+  const removedPasses = snapshotWasmLayoutDiagnostics().allocationPasses;
+  jobs.set(4);
+  await nextFrame();
+  expect(calls).toBe(removedCalls);
+  expect(snapshotWasmLayoutDiagnostics().allocationPasses).toBe(removedPasses);
+  visible.set(true);
+  await nextFrame();
+  expect(calls).toBe(removedCalls + 1);
+  clickCanvas(canvas, 150, 15);
+  expect(hits).toEqual(['absolute', 'absolute', 'absolute', 'absolute']);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+  ]);
+});
+
+
+it.runIf(experimentalLayout)('owns a natural-width measurement cache without creating an absolute-only native line item', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const paint = signal('#a63758');
+  let calls = 0;
+  const Leaf = definePrimitive<{}, BoxStyle & FlexItemStyle, BoxStyle & FlexItemStyle, SystemStyle>(() => {
+    const box = useLayoutBox();
+    return <Rectangle style={{width:box.width,height:box.height,fill:paint}} />;
+  }, {
+    resolveStyle: () => ({}),
+    measureIntrinsic: () => ({status:'measured',minContent:{width:20,height:20},maxContent:{width:60,height:20}}),
+    measure: () => { calls++; return {status:'measured',size:{width:60,height:20}}; },
+  });
+  const canvas=document.createElement('canvas');canvas.width=200;canvas.height=100;document.body.append(canvas);
+  const controller=pibbl(canvas,<Flex style={{width:200,height:100}}><Leaf style={{position:'absolute',left:12,top:8,width:'auto',height:20}} /></Flex>);controllers.push(controller);
+  await nextFrame();
+  const initial=snapshotWasmLayoutDiagnostics();
+  expect([initial.activeNodes,initial.activeArenas,initial.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas+1,baseline.cachedMeasurements+1]);
+  paint.set('#426b61');await nextFrame();
+  expect(calls).toBe(1);
+  expect([...canvas.getContext('2d')!.getImageData(14,10,1,1).data]).toEqual([66,107,97,255]);
+  controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
 });

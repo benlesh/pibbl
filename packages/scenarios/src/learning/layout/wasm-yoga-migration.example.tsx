@@ -81,6 +81,8 @@ interface YogaMigrationFixture {
   readonly nestedContainingBlockFixture?: boolean;
   readonly absoluteBoundsFixture?: boolean;
   readonly absoluteAspectFixture?: boolean;
+  readonly absoluteMeasuredWidthFixture?: boolean;
+  readonly measurementModel?: string;
 }
 
 interface WasmYogaMigrationExampleProps {
@@ -191,7 +193,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement, fixtur
     const columns = Math.max(1, Math.floor(box.width / 20));
     const tiles: PibblNode[] = [];
     for (let job = 0; job < measuredQueueJobs; job++) tiles.push(<Rectangle key={job} pointerEvents="none" style={{ left: (job % columns) * 20 + 1, top: Math.floor(job / columns) * 10 + 1, width: 18, height: 8, fill: "#426b61" }} />);
-    return <><Rectangle onClick={() => { hits++; selected.set(props.name); }} style={{ width: box.width, height: box.height, fill: "#d6e3db", cursor: "pointer" }} />{tiles}</>;
+    return <><Rectangle onClick={() => { hits++; selected.set(props.name); }} style={{ width: box.width, height: box.height, fill: "#d6e3db", cursor: "pointer" }} />{tiles}<Text pointerEvents="none" style={{left:4,top:12,font:"bold 10px monospace",fill:"#ffffff"}}>B</Text></>;
   }, {
     resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
     measureIntrinsic: () => ({ status: "measured", minContent: { width: 20, height: 80 }, maxContent: { width: 160, height: 10 } }),
@@ -203,6 +205,29 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement, fixtur
       return { status: "measured", size: { width: constraints.maxWidth, height: Math.ceil(jobs / columns) * 10 } };
     },
   });
+  const absoluteMeasureStyle = computed(() => {
+    const fixture = fixtureCases[index.get()];
+    return fixture.absoluteMeasuredWidthFixture ? requireFixtureValue(fixture.itemStyles, "itemStyles")[1] : {};
+  });
+  let absoluteMeasureCalls = 0;
+  let absoluteMeasureQuery: {minWidth:number;maxWidth:number|"unbounded";minHeight:number;maxHeight:number} | undefined;
+  type AbsoluteMeasuredStyle = BoxStyle & FlexItemStyle;
+  const AbsoluteMeasured = definePrimitive<{ readonly name: string }, AbsoluteMeasuredStyle, AbsoluteMeasuredStyle, SystemStyle & { width: number; height: number }>(props => {
+    const box = recordBox(props.name);
+    actual.set(props.name, `${box.width} × ${box.height}`);
+    const tiles: PibblNode[] = [];
+    for (let job = 0; job < 3; job++) tiles.push(<Rectangle key={job} pointerEvents="none" style={{ left: job * box.width / 3 + 1, top: 1, width: Math.max(0, Math.min(18, box.width / 3 - 2)), height: 18, fill: "#426b61" }} />);
+    return <><Rectangle onClick={() => { hits++; selected.set(props.name); }} style={{ width: box.width, height: box.height, fill: "#d6e3db", cursor: "pointer" }} />{tiles}</>;
+  }, {
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: "measured", minContent: { width: 0, height: 20 }, maxContent: { width: 60, height: 20 } }),
+    measure: ({ constraints }) => {
+      absoluteMeasureCalls++;
+      absoluteMeasureQuery = {minWidth:constraints.minWidth,maxWidth:Number.isFinite(constraints.maxWidth)?constraints.maxWidth:"unbounded",minHeight:constraints.minHeight,maxHeight:constraints.maxHeight};
+      return { status: "measured", size: { width: 60, height: constraints.maxHeight } };
+    },
+  });
+  const absoluteMeasuredNode = <AbsoluteMeasured key="B" name="B" style={absoluteMeasureStyle} />;
   const queueWidth = computed(() => { const fixture = fixtureCases[index.get()]; return fixture.customCrossAutoFixture ? requireFixtureNumber(requireFixtureValue(fixture.itemStyles, "itemStyles")[0].width, "custom cross-auto width") : 80; });
   const queueNode = <AutoQueue key={0} name="A" style={{ width: queueWidth, minWidth: 0, flexShrink: 0, marginTop: "auto" }} />;
   const columnQueueWidth = computed(() => { const fixture = fixtureCases[index.get()]; return fixture.customColumnMeasureFixture ? requireFixtureNumber(requireFixtureValue(fixture.itemStyles, "itemStyles")[0].width, "custom column width") : 40; });
@@ -241,6 +266,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement, fixtur
     const nestedContainingBlockFixture = fixture.nestedContainingBlockFixture === true;
     const absoluteBoundsFixture = fixture.absoluteBoundsFixture === true;
     const absoluteAspectFixture = fixture.absoluteAspectFixture === true;
+    const absoluteMeasuredWidthFixture = fixture.absoluteMeasuredWidthFixture === true;
     const nestedCrossMinFixture = fixture.nestedCrossMinFixture === true || fixture.nestedDecoratedCrossMinFixture === true || fixture.nestedDecoratedCrossMaxFixture === true || fixture.nestedDecoratedColumnCrossMaxFixture === true || fixture.nestedDecoratedColumnCrossMinFixture === true;
     return (
       <>
@@ -334,7 +360,12 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement, fixtur
             </Flex>
             <Panel name="B" style={requireFixtureValue(fixture.footerStyle, "footerStyle")} />
           </> : fixture.contentBoxes ? <Flex style={{width:requireFixtureValue(fixture.itemStyles, "itemStyles")[0].width,height:requireFixtureValue(fixture.itemStyles, "itemStyles")[0].height,boxSizing:requireFixtureValue(fixture.itemStyles, "itemStyles")[0].boxSizing,minWidth:0,minHeight:0,flexShrink:0,padding:"padding" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].padding:undefined,borderWidth:"borderWidth" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].borderWidth:undefined,borderStartWidth:"borderStartWidth" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].borderStartWidth:undefined,borderEndWidth:"borderEndWidth" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].borderEndWidth:undefined,layoutDirection:"layoutDirection" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].layoutDirection:undefined,paddingStart:"paddingStart" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].paddingStart:undefined,paddingEnd:"paddingEnd" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].paddingEnd:undefined}}><LogicalPaddingLeaf style={{width:"100%",height:"100%",flexShrink:0,minWidth:0,minHeight:0}} /></Flex>
-            : nestedCrossMinFixture ? <>
+            : absoluteMeasuredWidthFixture ? <>
+              <Panel key="A" name="A" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[0]} />
+              {absoluteMeasuredNode}
+              <Panel key="C" name="C" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[2]} />
+            </>
+          : nestedCrossMinFixture ? <>
               <Flex
                 key="A"
                 style={{
@@ -444,7 +475,9 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement, fixtur
             font: "12px monospace",
             fill: "#19375b",
           }}
-        >{absoluteAspectFixture
+        >{absoluteMeasuredWidthFixture
+          ? "3 jobs ×20px · natural width60px; query width unbounded / height20px · bounds clamp after measurement · Paint reuses; resize remeasures"
+          : absoluteAspectFixture
           ? `${fixture.layoutDirection} · one auto axis uses the declared numeric axis and aspect ratio; opposing insets win, then bounds clamp independently · no intrinsic measurement`
           : absoluteBoundsFixture
           ? `${fixture.layoutDirection} · absolute dimensions clamp to finite numeric bounds before physical inset precedence · A/C keep their flow slots`
@@ -621,10 +654,11 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement, fixtur
         const absoluteParticipation = fixtureCases.findIndex(fixture => "absoluteParticipationFixture" in fixture);
         const absoluteAlignment = fixtureCases.findIndex(fixture => "absoluteAlignmentFixture" in fixture);
         const absoluteAspect = fixtureCases.findIndex(fixture => "absoluteAspectFixture" in fixture);
+        const absoluteMeasured = fixtureCases.findIndex(fixture => "absoluteMeasuredWidthFixture" in fixture);
         const absoluteBounds = fixtureCases.findIndex(fixture => "absoluteBoundsFixture" in fixture);
         const nestedContainingBlock = fixtureCases.findIndex(fixture => "nestedContainingBlockFixture" in fixture);
         const absoluteDerivedSize = fixtureCases.findIndex(fixture => "absoluteDerivedSizeFixture" in fixture);
-        return value < bounds ? bounds : value < aspect ? aspect : value < gaps ? gaps : value < padding ? padding : value < crossBounds ? crossBounds : value < margins ? margins : value < nested ? nested : value < logicalPadding ? logicalPadding : value < logicalBorders ? logicalBorders : value < intrinsic ? intrinsic : value < directionMatrix ? directionMatrix : value < autoMargins ? autoMargins : value < wrappedAutoMargins ? wrappedAutoMargins : value < crossAutoMargins ? crossAutoMargins : value < crossAutoDirections ? crossAutoDirections : value < autoShorthand ? autoShorthand : value < autoOpposing ? autoOpposing : value < textCrossAuto ? textCrossAuto : value < customCrossAuto ? customCrossAuto : value < ownerCrossAuto ? ownerCrossAuto : value < rounding ? rounding : value < nestedCrossMin ? nestedCrossMin : value < nestedDecoratedCrossMin ? nestedDecoratedCrossMin : value < nestedDecoratedCrossMax ? nestedDecoratedCrossMax : value < nestedDecoratedColumnCrossMax ? nestedDecoratedColumnCrossMax : value < nestedDecoratedColumnCrossMin ? nestedDecoratedColumnCrossMin : value < customColumnMeasure ? customColumnMeasure : value < relativeStatic ? relativeStatic : value < decoratedRelativeStatic ? decoratedRelativeStatic : value < absoluteParticipation ? absoluteParticipation : value < absoluteAlignment ? absoluteAlignment : value < absoluteDerivedSize ? absoluteDerivedSize : value < nestedContainingBlock ? nestedContainingBlock : value < absoluteBounds ? absoluteBounds : value < absoluteAspect ? absoluteAspect : 0;
+        return value < bounds ? bounds : value < aspect ? aspect : value < gaps ? gaps : value < padding ? padding : value < crossBounds ? crossBounds : value < margins ? margins : value < nested ? nested : value < logicalPadding ? logicalPadding : value < logicalBorders ? logicalBorders : value < intrinsic ? intrinsic : value < directionMatrix ? directionMatrix : value < autoMargins ? autoMargins : value < wrappedAutoMargins ? wrappedAutoMargins : value < crossAutoMargins ? crossAutoMargins : value < crossAutoDirections ? crossAutoDirections : value < autoShorthand ? autoShorthand : value < autoOpposing ? autoOpposing : value < textCrossAuto ? textCrossAuto : value < customCrossAuto ? customCrossAuto : value < ownerCrossAuto ? ownerCrossAuto : value < rounding ? rounding : value < nestedCrossMin ? nestedCrossMin : value < nestedDecoratedCrossMin ? nestedDecoratedCrossMin : value < nestedDecoratedCrossMax ? nestedDecoratedCrossMax : value < nestedDecoratedColumnCrossMax ? nestedDecoratedColumnCrossMax : value < nestedDecoratedColumnCrossMin ? nestedDecoratedColumnCrossMin : value < customColumnMeasure ? customColumnMeasure : value < relativeStatic ? relativeStatic : value < decoratedRelativeStatic ? decoratedRelativeStatic : value < absoluteParticipation ? absoluteParticipation : value < absoluteAlignment ? absoluteAlignment : value < absoluteDerivedSize ? absoluteDerivedSize : value < nestedContainingBlock ? nestedContainingBlock : value < absoluteBounds ? absoluteBounds : value < absoluteAspect ? absoluteAspect : value < absoluteMeasured ? absoluteMeasured : 0;
         });
       }} />
       <Text pointerEvents="none" style={{left:496,top:150,font:"14px sans-serif",fill:"#ffffff"}}>Next section</Text>
@@ -632,7 +666,9 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement, fixtur
       <Rectangle style={{left:616,top:142,width:116,height:36,fill:"#19375b",cursor:"pointer"}} onClick={() => {
         queueJobs.set(8);
         const latest = fixtureCases[fixtureCases.length - 1];
-        const latestName = latest.absoluteAspectFixture
+        const latestName = latest.absoluteMeasuredWidthFixture
+          ? fixtureCases.find(fixture => fixture.absoluteMeasuredWidthFixture)!.name
+          : latest.absoluteAspectFixture
           ? fixtureCases.find(fixture => fixture.absoluteAspectFixture)!.name
           : latest.absoluteBoundsFixture
           ? fixtureCases.find(fixture => fixture.absoluteBoundsFixture)!.name
@@ -687,7 +723,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement, fixtur
             .map(([key, value]) => `${key}: ${value}`)
             .join(" · ")
         : "Normal JS build"
-    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name} · fixture count: ${fixtureCases.length}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${fixture.customColumnMeasureFixture ? `paired column provider · B: ${actual.get("B")} px` : fixture.textCrossAutoFixture ? `direct wrapped Text · sibling B: ${actual.get("B")} px` : "intrinsicFixture" in fixture ? `direct wrapped leaves · footer B: ${actual.get("B")} px` : ("nestedCrossMinFixture" in fixture || "nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture) ? `nested leaves A1/A2 · B: ${actual.get("B")} px · C: ${actual.get("C")} px` : "contentBoxes" in fixture ? `content ${actual.get("A1")} px` : fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}${fixture.absoluteAspectFixture ? "\nabsolute aspect state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.absoluteBoundsFixture ? "\nabsolute bounds state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.nestedContainingBlockFixture ? "\ncontaining block state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.customColumnMeasureFixture ? "\ncustom column state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,measureCalls:queueMeasureCalls,jobs:measuredQueueJobs,comparison:"pinned Yoga reference uses 8 jobs; More jobs is a Pibbl-only content mutation"}) : "intrinsicFixture" in fixture ? "\nintrinsic state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ("nestedCrossMinFixture" in fixture || "nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture) ? "\nnested cross min state: "+JSON.stringify({decorated:"nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture,maximum:"nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture,column:"nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture,minimum:"nestedDecoratedColumnCrossMinFixture" in fixture,boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "absoluteDerivedSizeFixture" in fixture ? "\nabsolute derived size state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "absoluteAlignmentFixture" in fixture ? "\nabsolute alignment state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "absoluteParticipationFixture" in fixture ? "\nabsolute participation state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "decoratedRelativeStaticFixture" in fixture ? "\ndecorated relative position state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "relativeStaticFixture" in fixture ? "\nrelative position state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "roundingFixture" in fixture ? "\nrounding state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "autoMarginFixture" in fixture ? "\nauto margin state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,canvasTransform:{a:rootTransform.a,b:rootTransform.b,c:rootTransform.c,d:rootTransform.d,e:rootTransform.e,f:rootTransform.f}}) : "directionMatrixFixture" in fixture ? "\ndirection matrix state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "contentBoxes" in fixture ? "\ncontent state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "nestedBoxes" in fixture ? "\nnested state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ""}`;
+    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name} · fixture count: ${fixtureCases.length}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${fixture.absoluteMeasuredWidthFixture ? `paired absolute provider · B: ${actual.get("B")} px` : fixture.customColumnMeasureFixture ? `paired column provider · B: ${actual.get("B")} px` : fixture.textCrossAutoFixture ? `direct wrapped Text · sibling B: ${actual.get("B")} px` : "intrinsicFixture" in fixture ? `direct wrapped leaves · footer B: ${actual.get("B")} px` : ("nestedCrossMinFixture" in fixture || "nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture) ? `nested leaves A1/A2 · B: ${actual.get("B")} px · C: ${actual.get("C")} px` : "contentBoxes" in fixture ? `content ${actual.get("A1")} px` : fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}${fixture.absoluteMeasuredWidthFixture ? "\nabsolute measured width state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,measureCalls:absoluteMeasureCalls,query:absoluteMeasureQuery,jobs:3}) : fixture.absoluteAspectFixture ? "\nabsolute aspect state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.absoluteBoundsFixture ? "\nabsolute bounds state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.nestedContainingBlockFixture ? "\ncontaining block state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.customColumnMeasureFixture ? "\ncustom column state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,measureCalls:queueMeasureCalls,jobs:measuredQueueJobs,comparison:"pinned Yoga reference uses 8 jobs; More jobs is a Pibbl-only content mutation"}) : "intrinsicFixture" in fixture ? "\nintrinsic state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ("nestedCrossMinFixture" in fixture || "nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture) ? "\nnested cross min state: "+JSON.stringify({decorated:"nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture,maximum:"nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture,column:"nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture,minimum:"nestedDecoratedColumnCrossMinFixture" in fixture,boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "absoluteDerivedSizeFixture" in fixture ? "\nabsolute derived size state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "absoluteAlignmentFixture" in fixture ? "\nabsolute alignment state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "absoluteParticipationFixture" in fixture ? "\nabsolute participation state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "decoratedRelativeStaticFixture" in fixture ? "\ndecorated relative position state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "relativeStaticFixture" in fixture ? "\nrelative position state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "roundingFixture" in fixture ? "\nrounding state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "autoMarginFixture" in fixture ? "\nauto margin state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,canvasTransform:{a:rootTransform.a,b:rootTransform.b,c:rootTransform.c,d:rootTransform.d,e:rootTransform.e,f:rootTransform.f}}) : "directionMatrixFixture" in fixture ? "\ndirection matrix state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "contentBoxes" in fixture ? "\ncontent state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "nestedBoxes" in fixture ? "\nnested state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ""}`;
   };
   refresh();
   const timer = window.setInterval(refresh, 200);

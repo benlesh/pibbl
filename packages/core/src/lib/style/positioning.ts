@@ -165,7 +165,10 @@ export interface PositioningStyle extends SystemStyle {
    * exactly one automatic axis can instead derive from its declared finite numeric opposite axis.
    * Opposing insets win. Finite numeric min/max bounds clamp used axes
    * independently after derivation; a clamp does not recouple aspectRatio, and a
-   * numeric minimum above its maximum rejects. In direct declarative Flex chains,
+   * numeric minimum above its maximum rejects. A direct custom primitive with
+   * paired pure measurement providers may instead measure natural automatic
+   * width at a declared numeric height with unbounded horizontal availability.
+   * In direct declarative Flex chains,
    * static Flex passes the containing box outward while relative Flex owns a local box.
    * Omission retains the legacy local Flex boundary and left/top behavior.
    */

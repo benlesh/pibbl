@@ -12,6 +12,7 @@ import { LayoutRegion, snapshotWasmLayoutDiagnostics, experimentalLayout } from 
 import { frozenFlexInputs } from '../src/lib/layout/flex-allocation-cache';
 import { layoutFlex } from '../src/lib/layout/flex';
 import { createExampleMount } from "../../scenarios/src/example-host";
+import { GLOBAL_STATE } from '../src/lib/global-state';
 
 const mountWasmFlexText = createExampleMount(mountWasmFlexTextComponent);
 const fullYogaMigrationFixtures = yogaReference.cases as readonly YogaMigrationFixture[];
@@ -88,6 +89,32 @@ it.runIf(experimentalLayout)('drives the exact public scenario through signals, 
   controller.dispose();
   expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
+});
+
+it.runIf(experimentalLayout)('rolls back a cold absolute measurement identity after a failed render while retaining a committed identity', () => {
+  const region = new LayoutRegion();
+  const primitive = {};
+  const previousTransaction = GLOBAL_STATE.renderTransaction;
+  const finishCallbacks: Array<(success: boolean) => void> = [];
+  const transaction = {
+    onFinish(callback: (success: boolean) => void): void { finishCallbacks.push(callback); },
+  };
+  try {
+    GLOBAL_STATE.renderTransaction = transaction;
+    const failed = region.absoluteMeasurementIdentity(primitive, 'same-key');
+    expect(finishCallbacks).toHaveLength(1);
+    finishCallbacks.splice(0).forEach(callback => callback(false));
+
+    const committed = region.absoluteMeasurementIdentity(primitive, 'same-key');
+    expect(committed).not.toBe(failed);
+    expect(finishCallbacks).toHaveLength(1);
+    finishCallbacks.splice(0).forEach(callback => callback(true));
+
+    expect(region.absoluteMeasurementIdentity(primitive, 'same-key')).toBe(committed);
+  } finally {
+    GLOBAL_STATE.renderTransaction = previousTransaction;
+    region.dispose();
+  }
 });
 
 it.runIf(experimentalLayout)('renews output views after WASM growth and never accepts a failed revision', async () => {
@@ -872,7 +899,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
   // This walk advances Next case through the contiguous original families. Later
   // sections (including rounding) have dedicated semantic tests and browser drivers.
-  const cases=yogaReference.cases.filter(fixture=>!('absoluteAspectFixture' in fixture) && !('absoluteBoundsFixture' in fixture) && !('nestedContainingBlockFixture' in fixture) && !('absoluteDerivedSizeFixture' in fixture) && !('absoluteAlignmentFixture' in fixture) && !('absoluteParticipationFixture' in fixture) && !('relativeStaticFixture' in fixture) && !('decoratedRelativeStaticFixture' in fixture) && !('customColumnMeasureFixture' in fixture) && !('nestedDecoratedColumnCrossMinFixture' in fixture) && !('nestedDecoratedColumnCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
+  const cases=yogaReference.cases.filter(fixture=>!('absoluteMeasuredWidthFixture' in fixture) && !('absoluteAspectFixture' in fixture) && !('absoluteBoundsFixture' in fixture) && !('nestedContainingBlockFixture' in fixture) && !('absoluteDerivedSizeFixture' in fixture) && !('absoluteAlignmentFixture' in fixture) && !('absoluteParticipationFixture' in fixture) && !('relativeStaticFixture' in fixture) && !('decoratedRelativeStaticFixture' in fixture) && !('customColumnMeasureFixture' in fixture) && !('nestedDecoratedColumnCrossMinFixture' in fixture) && !('nestedDecoratedColumnCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
@@ -4907,7 +4934,9 @@ it.runIf(experimentalLayout)('jumps directly to the latest public proof and pres
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 540; document.body.append(canvas);
   const controller = createExampleMount(WasmYogaMigrationExample)(canvas, { fixtures: fullYogaMigrationFixtures }); controllers.push(controller); await nextFrame();
   const last = yogaReference.cases.at(-1)!;
-  const firstName = 'absoluteAspectFixture' in last
+  const firstName = 'absoluteMeasuredWidthFixture' in last
+    ? yogaReference.cases.find(fixture => 'absoluteMeasuredWidthFixture' in fixture)!.name
+    : 'absoluteAspectFixture' in last
     ? yogaReference.cases.find(fixture => 'absoluteAspectFixture' in fixture)!.name
     : 'absoluteBoundsFixture' in last
     ? yogaReference.cases.find(fixture => 'absoluteBoundsFixture' in fixture)!.name

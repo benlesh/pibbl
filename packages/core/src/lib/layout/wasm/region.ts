@@ -266,6 +266,22 @@ export class LayoutRegion {
     if (!token) { token = {}; entries.set(key, token); }
     return token;
   }
+  /** Stable measurement identity without adding an absolute leaf to the native line. */
+  absoluteMeasurementIdentity(type: object, key: string): object {
+    this.hasAbsoluteMeasurements = true;
+    const absoluteKey = `absolute:${key}`;
+    const existing = this.identities.get(type)?.get(absoluteKey);
+    if (existing) return existing;
+    const token = this.identity(type, absoluteKey);
+    GLOBAL_STATE.renderTransaction?.onFinish(success => {
+      if (success) return;
+      const entries = this.identities.get(type);
+      if (entries?.get(absoluteKey) !== token) return;
+      entries.delete(absoluteKey);
+      if (entries.size === 0) this.identities.delete(type);
+    });
+    return token;
+  }
   private results: number[] = [];
   private main = -1;
   private wrap = false;
@@ -278,6 +294,7 @@ export class LayoutRegion {
   private crossSize = -1;
   private crossRecords: readonly (readonly number[])[] = [];
   private crossResults: readonly { outerCross: number; offset: number }[] = [];
+  private hasAbsoluteMeasurements = false;
   private readonly intrinsicMeasurements = new Map<object, Map<string, PrimitiveMeasurementEntry>>();
   readPrimitiveMeasurement(token: object, key: string): PrimitiveMeasurementEntry | undefined {
     const entries = this.intrinsicMeasurements.get(token), entry = entries?.get(key);
@@ -291,6 +308,31 @@ export class LayoutRegion {
     if (entries.has(entry.key)) { entries.delete(entry.key); counters.cachedMeasurements--; }
     else if (entries.size >= 3) { entries.delete(entries.keys().next().value!); counters.cachedMeasurements--; }
     entries.set(entry.key, entry); counters.cachedMeasurements++;
+    if (entry.key.startsWith('finite:absolute-width:')) this.hasAbsoluteMeasurements = true;
+  }
+  /** Reuses the region-owned cache without lending native line membership to absolute leaves. */
+  pruneAbsoluteMeasurements(live: ReadonlySet<object> | undefined): void {
+    // An absolute-only owner still needs a generation for successful cache publication.
+    if (live?.size) this.ensureOwner();
+    if (!this.hasAbsoluteMeasurements) return;
+    let retained = false;
+    for (const [token, entries] of this.intrinsicMeasurements) {
+      for (const key of entries.keys()) {
+        if (!key.startsWith('finite:absolute-width:')) continue;
+        if (live?.has(token)) retained = true;
+        else { entries.delete(key); counters.cachedMeasurements--; }
+      }
+      if (entries.size === 0) this.intrinsicMeasurements.delete(token);
+    }
+    for (const [type, entries] of this.identities) {
+      for (const [key, token] of entries) {
+        if (!key.startsWith('absolute:')) continue;
+        if (live?.has(token)) retained = true;
+        else entries.delete(key);
+      }
+      if (entries.size === 0) this.identities.delete(type);
+    }
+    this.hasAbsoluteMeasurements = retained;
   }
   private readonly measurements = new Map<object, Map<string, { width: number; height: number }>>();
 
@@ -350,7 +392,7 @@ export class LayoutRegion {
       this.records.delete(token); this.releaseMeasurements(token); counters.activeNodes--;
     }
     for (const [type, entries] of this.identities) {
-      for (const [key, token] of entries) if (!alive.has(token)) entries.delete(key);
+      for (const [key, token] of entries) if (!alive.has(token) && !key.startsWith('absolute:')) entries.delete(key);
       if (entries.size === 0) this.identities.delete(type);
     }
     if (changed) {
@@ -443,6 +485,7 @@ export class LayoutRegion {
     return this.crossResults;
   }
   dispose(): void {
+    this.hasAbsoluteMeasurements = false;
     this.flowCache = undefined;
     this.allocationCache = undefined; this.gridColumns = undefined; this.gridRows = undefined; this.gridCells = undefined; this.gridRevision = 0;
     const owner = this.layoutOwner, handle = this.handle, generation = this.generation;

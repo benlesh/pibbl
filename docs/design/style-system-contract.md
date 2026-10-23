@@ -213,6 +213,10 @@ scientific notation, malformed strings, and non-finite results reject.
   explicit static ancestors; relative and omitted-position Flex boxes establish
   local boundaries. Omitted position retains Pibbl legacy behavior. Opaque and
   transformed ancestry does not acquire an inferred containing box.
+  Direct custom primitives with paired pure measurement providers can also
+  resolve an unpaired automatic absolute width at a definite numeric height,
+  using unbounded horizontal availability before numeric bounds. See the
+  layout contract for receiver/cache ownership and exact limits.
 - Experimental `paddingStart` and `paddingEnd` override their direction-mapped
   physical padding edge, including zero and independent of declaration order.
   Values are nonnegative; percentages require actual allocated Flex ownership and
