@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice87 (wrap-reverse percentage physical margins).
+Latest delivery is slice87 `aac241f6` (wrap-reverse percentage physical margins).
 Slice86 is `cd55cff0` (wrapped percentage physical margins).
 Slice85 is `e4ea5c0d` (finite nested percentage wrapping evidence).
 Slice84 is `86030541` (allocated-nowrap percentage physical margins).
@@ -37,7 +37,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; the single next slice is88, additive inherited Flex layoutDirection. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; the single next slice is88, additive inherited Flex layoutDirection. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles135 records:116matches/19classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -1852,6 +1852,35 @@ belongs to consolidation85–87 immediately after this separate feature commit.
 Kernel65383bytes unchanged; no visual baseline rewrite; Node26.9.0, no Node24
 aggregate trust claim. Fixed33 remains4complete,11experimental,7partial,10missing,
 1excluded; all seven release gates open.
+
+### Consolidation 29 completed for delivery slices 85–87
+
+Separate85 `e4ea5c0d`,86 `cd55cff0`,87 `aac241f6`. Fresh same-ten-file experimental
+Chromium339pass/4normal-onlyskips, ordinary JavaScript148pass/195experimental skips:
+`/tmp/pibbl-consolidation29-{focused,normal}.txt`. The full135-record public comparison
+passes, including all new nested percentage owners and classified wrap/reverse
+physical-margin geometry. Expected negative lifecycle diagnostic console output
+contains no failed assertion. No production or test repair needed in consolidation.
+
+Final87 source/built12margin records and installed consumer receipts remain current,
+including nested owner fixtures from85,469private built/230installed inputs,
+Bundler/NodeNext, exact geometry/targets/identity/cache and final zero ownership.
+Corpus135:116matches/19classified preserved differences. Runtime kernel remains
+65383bytes; no unchanged broad manual replay, native rebuild or screenshot baseline
+rewrite. Fresh discovery/catalog/deterministic Studio docs/API/search checks pass:
+`/tmp/pibbl-consolidation29-{discovery,catalog,studio-docs}.txt`. Documentation109RED
+probes/JSDoc/types/lint/format and canonical native provenance pass. Untracked
+dependency symlinks preserved, never staged. Node26.9.0/pnpm11.21.0deps/Chromium;
+no Node24 aggregate trust or wall-clock speed claim.
+
+The finite LTR row/column nowrap/wrap preserve entry is complete with the fixed
+matrix recorded in85; physical percentage margins now cover all three wrap modes.
+Logical/auto margins, broader minima/indefinite policies and the other fixed entries
+remain explicit gaps. Fixed33 stays4complete,11experimental,7partial,10missing,
+1excluded; all seven release gates open. The additive RTL contract below is now
+authorized and is the next material capability, with no Flow.direction rename or
+general style inheritance system. Final whole-codebase review remains deferred
+until every accepted program exit is complete.
 
 ## [NEXT] Additive inherited Flex layout direction (slice 88)
 
