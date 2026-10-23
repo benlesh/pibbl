@@ -1685,6 +1685,69 @@ static void decoratedRelativeStaticCases() {
   }
 }
 
+
+static void absoluteParticipationCases() {
+  for (int variant = 0; variant < 7; ++variant) {
+    const bool rtl = variant == 1 || variant == 3 || variant == 5;
+    const bool allInsets = variant == 0 || variant == 1;
+    const bool trailingOnly = variant == 4 || variant == 5;
+    const bool overlapLeft = variant == 6;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false);
+    YGConfigSetPointScaleFactor(config, 0);
+    YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, 204);
+    YGNodeStyleSetHeight(root, 104);
+    YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
+    YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+    YGNodeStyleSetGap(root, YGGutterAll, 10);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10);
+    YGNodeStyleSetPadding(root, YGEdgeRight, 30);
+    YGNodeStyleSetPadding(root, YGEdgeTop, 20);
+    YGNodeStyleSetPadding(root, YGEdgeBottom, 20);
+    YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    for (int item = 0; item < 3; ++item) {
+      auto child = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(child, item == 1 ? 30 : 50);
+      YGNodeStyleSetHeight(child, 20);
+      YGNodeStyleSetFlexGrow(child, 0);
+      YGNodeStyleSetFlexShrink(child, 0);
+      YGNodeStyleSetMinWidth(child, 0);
+      YGNodeStyleSetMinHeight(child, 0);
+      if (item == 1) {
+        YGNodeStyleSetPositionType(child, YGPositionTypeAbsolute);
+        if (!trailingOnly) YGNodeStyleSetPosition(child, YGEdgeLeft, overlapLeft ? 72 : 12);
+        if (allInsets || trailingOnly) YGNodeStyleSetPosition(child, YGEdgeRight, 18);
+        if (!trailingOnly) YGNodeStyleSetPosition(child, YGEdgeTop, 8);
+        if (allInsets || trailingOnly) YGNodeStyleSetPosition(child, YGEdgeBottom, 10);
+      }
+      YGNodeInsertChild(root, child, item);
+    }
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, rtl ? YGDirectionRTL : YGDirectionLTR);
+    const char* insets = allInsets ? "all" : trailingOnly ? "right-bottom" : overlapLeft ? "left72-top8" : "left-top";
+    std::cout << ",{\"name\":\"position-absolute-decorated-" << insets << "-" << (rtl ? "rtl" : "ltr")
+              << "\",\"width\":204,\"height\":104,\"gap\":10,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr")
+              << "\",\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\"},\"absoluteParticipationFixture\":true,\"boxes\":[";
+    for (int item = 0; item < 3; ++item) {
+      auto child = YGNodeGetChild(root, item);
+      if (item) std::cout << ',';
+      std::cout << "{\"x\":" << YGNodeLayoutGetLeft(child) << ",\"y\":" << YGNodeLayoutGetTop(child)
+                << ",\"width\":" << YGNodeLayoutGetWidth(child) << ",\"height\":" << YGNodeLayoutGetHeight(child) << "}";
+    }
+    std::cout << "],\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":30,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"position\":\"absolute\"";
+    if (!trailingOnly) std::cout << ",\"left\":" << (overlapLeft ? 72 : 12);
+    if (allInsets || trailingOnly) std::cout << ",\"right\":18";
+    if (!trailingOnly) std::cout << ",\"top\":8";
+    if (allInsets || trailingOnly) std::cout << ",\"bottom\":10";
+    std::cout << "},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root);
+    YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1832,5 +1895,6 @@ int main() {
   customColumnMeasureCases();
   relativeStaticCases();
   decoratedRelativeStaticCases();
+  absoluteParticipationCases();
   std::cout << "]\n";
 }

@@ -107,6 +107,15 @@ Omitting `position` preserves the existing Flex placement rules. This bounded
 feature does not provide CSS absolute positioning, containing blocks,
 percent-inset resolution, wrapping, or other layout-family support.
 
+Experimental direct row-nowrap Flex children may also select `position: "absolute"`
+with explicit finite numeric width/height and at least one numeric inset per
+axis. This excludes the child from Flex line allocation while preserving authored
+paint/target/focus order. Insets reference the parent's inner border edge; padding
+does not shift an explicit inset. LTR prefers left, RTL prefers right, and top
+prefers bottom. Direct layout children, child box decoration, margins, nonzero sizing bounds
+and flex factors remain unsupported, along with automatic sizing and nested
+containing blocks.
+
 ## FlexMargin
 
 `FlexMargin = number | Percentage | "auto"` describes physical and logical margin

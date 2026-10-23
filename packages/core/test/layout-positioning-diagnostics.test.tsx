@@ -1,4 +1,4 @@
-import { Absolute, Flex, Flow, Grid, Overlay, Rectangle, signal, type PibblNode, type PibblController } from "@pibbl/core";
+import { Absolute, Flex, Flow, Grid, Overlay, Rectangle, signal, type PibblNode, type PibblController, type RectStyle } from "@pibbl/core";
 import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it } from 'vitest';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
@@ -69,5 +69,34 @@ describe('explicit direct-Flex position modes', () => {
     expect(mount(<Flex style={{ width: 200, height: 100 }}>
       <Modified style={positioned} />
     </Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+});
+
+
+describe('bounded direct-Flex absolute admission', () => {
+  const fixed = { position: 'absolute' as const, width: 30, height: 20, left: 12, top: 8 };
+  it.each([
+    ['standalone', <Rectangle style={fixed} />],
+    ['Absolute', <Absolute style={{ width: 200, height: 100 }}><Rectangle style={fixed} /></Absolute>],
+    ['Overlay', <Overlay style={{ width: 200, height: 100 }}><Rectangle style={fixed} /></Overlay>],
+    ['Flow', <Flow style={{ width: 200, height: 100 }}><Rectangle style={fixed} /></Flow>],
+    ['Grid', <Grid style={{ width: 200, height: 100, gridTemplateColumns: [200], gridTemplateRows: [100] }}><Rectangle style={fixed} /></Grid>],
+    ['column', <Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={fixed} /></Flex>],
+    ['wrap', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={fixed} /></Flex>],
+    ['layout child', <Flex style={{ width: 200, height: 100 }}><Flex style={fixed}>{null}</Flex></Flex>],
+  ] as const)('rejects absolute participation in %s outside the bounded contract', (_name, node) => {
+    expect(mount(node)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+  it.each([
+    ['automatic width', { ...fixed, width: undefined }],
+    ['percentage width', { ...fixed, width: '50%' as const }],
+    ['missing horizontal inset', { ...fixed, left: undefined }],
+    ['missing vertical inset', { ...fixed, top: undefined }],
+    ['percentage inset', { ...fixed, left: '10%' as const }],
+    ['nonfinite inset', { ...fixed, left: Infinity }],
+    ['margin', { ...fixed, margin: 1 }],
+    ['child padding', { ...fixed, padding: 1 }],
+  ] as const)('rejects unsupported absolute %s instead of changing flow', (_name, style) => {
+    expect(mount(<Flex style={{ width: 200, height: 100 }}><Rectangle style={style as RectStyle} /></Flex>)).toThrow();
   });
 });

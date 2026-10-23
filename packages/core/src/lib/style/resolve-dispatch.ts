@@ -209,10 +209,10 @@ function assertExplicitPositionBoundary(
       value: positioning.right ?? positioning.bottom,
       algorithm: 'render-dispatch',
       constraints: context.constraints,
-      reason: 'PIBBL_LAYOUT_IGNORED_POSITION: right/bottom require position: relative in a supported direct Flex child',
+      reason: 'PIBBL_LAYOUT_IGNORED_POSITION: right/bottom require an explicit position in a supported direct Flex child',
     });
   }
-  if (position !== 'static' && position !== 'relative') {
+  if (position !== 'static' && position !== 'relative' && position !== 'absolute') {
     throw layoutDiagnostic({
       component: context.component,
       property: 'position',

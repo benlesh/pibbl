@@ -49,6 +49,7 @@ import {
   placeDirectChildren,
   prepareLayoutChildren,
   resolveContainerBox,
+  resolveDirectChildBox,
 } from './absolute.js';
 import { getLayoutDirection, pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
@@ -118,6 +119,9 @@ export interface FlexMeasurementInput {
   ): MeasureResult;
 }
 
+// Parent input is private metadata, not a recursively validated resolved value.
+const FLEX_ABSOLUTE_BOX_STYLE = Symbol('pibbl.flex-absolute-box-style');
+
 interface ResolvedFlexStyle extends SystemStyle {
   layoutDirection: 'ltr' | 'rtl';
   box: ResolvedBoxStyle;
@@ -129,6 +133,8 @@ interface ResolvedFlexStyle extends SystemStyle {
   alignContent: CrossAlignment | MainAlignment;
   rowGap: number;
   columnGap: number;
+  /** Original container input retained for lazy absolute padding-box derivation. */
+  [FLEX_ABSOLUTE_BOX_STYLE]: Readonly<FlexStyle>;
 }
 
 interface FlexItem {
@@ -161,6 +167,7 @@ interface FlexItem {
   query?: PreparedQuery;
   relativeX: number;
   relativeY: number;
+  sourceIndex: number;
 }
 
 interface FlexLine {
@@ -294,7 +301,12 @@ export const Flex = definePrimitive<
   childInput: 'structural',
   resolveStyle: (style, context) => {
     const box = resolveContainerBox(style, context, 'Flex', 'flex');
-    return { box, overflow: style.overflow ?? 'visible', ...normalizeFlexOptions(style, box.contentBox) };
+    return {
+      box,
+      [FLEX_ABSOLUTE_BOX_STYLE]: style,
+      overflow: style.overflow ?? 'visible',
+      ...normalizeFlexOptions(style, box.contentBox),
+    };
   },
   measure: input => measureFlex(input),
 });
@@ -327,7 +339,12 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
     const ctx = GLOBAL_STATE.renderContext;
     if (!ctx) throw new Error('Known layout preparation requires a Canvas measurement context.');
     const region = slot.acquire();
-    const resolved = { box: { contentBox: content }, overflow: (style as Readonly<FlexStyle>).overflow ?? 'visible', ...normalizeFlexOptions(style as Readonly<FlexStyle>, content) } as Readonly<ResolvedFlexStyle>;
+    const resolved = {
+      box: { contentBox: content },
+      [FLEX_ABSOLUTE_BOX_STYLE]: style as Readonly<FlexStyle>,
+      overflow: (style as Readonly<FlexStyle>).overflow ?? 'visible',
+      ...normalizeFlexOptions(style as Readonly<FlexStyle>, content),
+    } as Readonly<ResolvedFlexStyle>;
     const plan = prepareFlexAllocation(element.props as FlexProps, resolved, content, flexMeasurementService(ctx), region);
     prepareFlexDescendants(plan, slot);
     stagePreparedLayoutPlan(slot, { ...plan, region });
@@ -403,17 +420,22 @@ function measureFlex(
   let intrinsicMain = 0;
   let intrinsicCross = 0;
   let count = 0;
-  for (const child of children) {
+  for (let sourceIndex = 0; sourceIndex < children.length; sourceIndex++) {
+    const child = children[sourceIndex];
     const receiverToken = getChildPrimitiveReceiverToken(
       GLOBAL_STATE.renderTransaction,
       GLOBAL_STATE.primitiveReceiverToken,
-      count,
+      sourceIndex,
     );
     const prepared = prepareDirectChildStyle(child, receiverToken, diagnosticBox, true);
     let style = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
     if (hasPercentageBoxPadding(style, options.layoutDirection)) return unsupportedIntrinsic('does not support percentage padding without an actual finite Flex allocation');
+    // Absolute children have no flow contribution. This first slice does not
+    // define an intrinsic containing-block cascade, so fail before a child can
+    // be measured into the owner size.
+    if (style.position === 'absolute') return unsupportedIntrinsic('does not support absolute children during intrinsic Flex measurement');
     if (experimentalLayout && (style.paddingStart !== undefined || style.paddingEnd !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined)) style = resolveAllocatedInsets(style, { width: diagnosticBox.width, layoutDirection: options.layoutDirection, context: childContext(child, diagnosticBox) });
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     const settledColumnChild = experimentalLayout && !row && typeof input.style.width === 'number' && !heightDefinite &&
@@ -654,8 +676,13 @@ export function layoutFlex(
   const prepared = materializeLayoutChildren(children, 'Flex');
   const region = experimentalLayout ? new LayoutRegion() : undefined;
   try {
-    return resolveFlexPlacements(container, prepared, style, measurement, region)
-      .map(placement => placement.box);
+    return resolveFlexPlacements(
+      container,
+      prepared,
+      style,
+      measurement,
+      region,
+    ).map(placement => placement.box);
   } finally { region?.dispose(); }
 }
 
@@ -679,20 +706,22 @@ function resolveFlexPlacements(
   const mainGap = row ? options.columnGap : options.rowGap;
   const crossGap = row ? options.rowGap : options.columnGap;
   const items: FlexItem[] = [];
+  const placementsBySource: Array<FlexPlacement | undefined> = new Array(children.length);
   let hasAspectRatio = false;
   let hasAutoMainMargins = false;
+  let absolutePaddingBox: LayoutBox | undefined;
 
   const occurrences = new Map<object, number>();
-  for (const child of children) {
+  for (let sourceIndex = 0; sourceIndex < children.length; sourceIndex++) {
+    const child = children[sourceIndex];
     if (region) recordWasmAllocationItem();
     const receiverToken = getChildPrimitiveReceiverToken(
       GLOBAL_STATE.renderTransaction,
       GLOBAL_STATE.primitiveReceiverToken,
-      items.length,
+      sourceIndex,
     );
     const occurrence = occurrences.get(child.type) ?? 0;
     if (child.key === undefined) occurrences.set(child.type, occurrence + 1);
-    const layoutToken = region?.identity(child.type, child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`);
     const prepared = prepareDirectChildStyle(child, receiverToken, container, true);
     const declared = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
@@ -705,11 +734,27 @@ function resolveFlexPlacements(
       throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'must be a positive finite outer width/height ratio');
     }
     if (aspectRatio !== undefined) hasAspectRatio = true;
+    assertSupportedChildPosition('Flex', child, normalized, true);
+    rejectUnsupportedItemFields(child, normalized, container);
+    if (normalized.position === 'absolute') {
+      assertSupportedAbsoluteFlexPosition(child, normalized, options, container, preparedStyleQuery(prepared));
+      placementsBySource[sourceIndex] = resolveAbsoluteFlexPlacement(
+        absolutePaddingBox ??= resolveFlexAbsolutePaddingBox(
+          (style as Readonly<Partial<ResolvedFlexStyle>>)[FLEX_ABSOLUTE_BOX_STYLE] ?? style,
+          container,
+        ),
+        child,
+        normalized,
+        receiverToken,
+        preparedStyleQuery(prepared),
+        options.layoutDirection,
+      );
+      continue;
+    }
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     const knownIntrinsicLayout = child.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex &&
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
-    assertSupportedChildPosition('Flex', child, normalized, true);
-    rejectUnsupportedItemFields(child, normalized, container);
+    const layoutToken = region?.identity(child.type, child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`);
     let relativeX = 0;
     let relativeY = 0;
     const position = normalized.position;
@@ -1047,6 +1092,7 @@ function resolveFlexPlacements(
       query: preparedStyleQuery(prepared),
       relativeX,
       relativeY,
+      sourceIndex,
     });
   }
 
@@ -1093,7 +1139,6 @@ function resolveFlexPlacements(
 
   const crossPlacements = region?.placeCross(items, crossSize, options.alignItems, { reverse: wrapReverse, wrap: wrappedRegion ? { gap: crossGap, alignContent: options.alignContent } : undefined });
   const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent, reverse, hasAutoMainMargins ? items : undefined);
-  const placements: FlexPlacement[] = [];
   let mainIndex = 0;
   let crossIndex = 0;
   for (const line of lines) {
@@ -1141,7 +1186,7 @@ function resolveFlexPlacements(
         width: row ? item.targetMain : Math.max(0, outerCross - item.paddingCross),
         height: row ? Math.max(0, outerCross - item.paddingCross) : item.targetMain,
       };
-      placements.push({
+      placementsBySource[item.sourceIndex] = {
         usedWidth: usedStyle.width,
         usedHeight: usedStyle.height,
         box,
@@ -1153,13 +1198,64 @@ function resolveFlexPlacements(
           item.receiverToken,
           item.query,
         ),
-      });
+      };
       mainCursor += outerMain + mainGap + distribution.between;
     }
   }
-  return placements;
+  for (let sourceIndex = 0; sourceIndex < placementsBySource.length; sourceIndex++) {
+    if (!placementsBySource[sourceIndex]) throw new Error('Flex placement did not resolve one direct child.');
+  }
+  return placementsBySource as FlexPlacement[];
 }
 
+function resolveFlexAbsolutePaddingBox(
+  style: Readonly<FlexStyle>,
+  content: Readonly<LayoutBox>,
+): LayoutBox {
+  const paddingOnly = normalizeBoxInsets({
+    ...style,
+    borderWidth: undefined,
+    borderStartWidth: undefined,
+    borderEndWidth: undefined,
+  }, {
+    component: 'Flex', algorithm: 'flex absolute', constraints: constraintsFor(content),
+  });
+  return Object.freeze({
+    x: content.x - paddingOnly.left,
+    y: content.y - paddingOnly.top,
+    width: content.width + paddingOnly.left + paddingOnly.right,
+    height: content.height + paddingOnly.top + paddingOnly.bottom,
+  });
+}
+
+function resolveAbsoluteFlexPlacement(
+  paddingBox: Readonly<LayoutBox>,
+  child: PibblElement<any>,
+  style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
+  receiverToken: object,
+  query: PreparedQuery | undefined,
+  direction: 'ltr' | 'rtl',
+): FlexPlacement {
+  const left = numericAbsoluteInset(style.left, 'left', child, paddingBox);
+  const right = numericAbsoluteInset(style.right, 'right', child, paddingBox);
+  const top = numericAbsoluteInset(style.top, 'top', child, paddingBox);
+  const bottom = numericAbsoluteInset(style.bottom, 'bottom', child, paddingBox);
+  const resolved = resolveDirectChildBox(paddingBox, child, 'absolute', style);
+  const width = resolved.borderBox.width;
+  const height = resolved.borderBox.height;
+  const x = direction === 'rtl'
+    ? right === undefined ? paddingBox.x + left! : paddingBox.x + paddingBox.width - right - width
+    : left === undefined ? paddingBox.x + paddingBox.width - right! - width : paddingBox.x + left;
+  const y = top === undefined ? paddingBox.y + paddingBox.height - bottom! - height : paddingBox.y + top;
+  const usedWidth = resolved.contentBox.width;
+  const usedHeight = resolved.contentBox.height;
+  return {
+    box: { x: finiteRelativePlacement(x, 'left', child, paddingBox), y: finiteRelativePlacement(y, 'top', child, paddingBox), width, height },
+    usedWidth,
+    usedHeight,
+    element: childWithUsedSize(child, style, usedWidth, usedHeight, receiverToken, query),
+  };
+}
 
 function genericTextFont(style: Readonly<Record<string, unknown>>): boolean {
   return /^(?:(?:bold|italic|normal) )?\d+(?:\.\d+)?px (?:sans-serif|serif|monospace)$/.test(String(style.font ?? '13px sans-serif'));
@@ -1629,6 +1725,49 @@ function finiteRelativePlacement(
 ): number {
   if (!Number.isFinite(value)) {
     throw childDiagnostic(child, property, value, container, 'resolved relative placement arithmetic must remain finite');
+  }
+  return value;
+}
+
+function assertSupportedAbsoluteFlexPosition(
+  child: PibblElement<any>,
+  style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
+  options: Readonly<Pick<ResolvedFlexStyle, 'flexDirection' | 'flexWrap'>>,
+  container: Readonly<LayoutBox>,
+  query: PreparedQuery | undefined,
+): void {
+  if (isKnownLayoutType(child.type) || isLayoutComponent(child.type)) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute layout children and nested containing blocks are not supported in this slice');
+  }
+  if (!experimentalLayout || options.flexDirection !== 'row' || options.flexWrap !== 'nowrap') {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires a finite row nowrap Flex allocation');
+  }
+  if (typeof style.width !== 'number' || !Number.isFinite(style.width) || style.width < 0 ||
+      typeof style.height !== 'number' || !Number.isFinite(style.height) || style.height < 0) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires explicit finite numeric width and height');
+  }
+  if ((style.left === undefined && style.right === undefined) || (style.top === undefined && style.bottom === undefined)) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires one physical numeric inset on each axis');
+  }
+  if (query || style.aspectRatio !== undefined || style.flexBasis !== undefined && style.flexBasis !== 'auto' ||
+      (style.flexGrow !== undefined && style.flexGrow !== 0) || (style.flexShrink !== undefined && style.flexShrink !== 0) ||
+      (style.minWidth !== undefined && style.minWidth !== 0) || style.maxWidth !== undefined ||
+      (style.minHeight !== undefined && style.minHeight !== 0) || style.maxHeight !== undefined ||
+      style.boxSizing !== undefined || style.padding !== undefined || style.paddingStart !== undefined || style.paddingEnd !== undefined ||
+      style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined || hasFlexMargin(style)) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute excludes measurement, bounds, flex factors, margins, and child box decoration in this slice');
+  }
+}
+
+function numericAbsoluteInset(
+  value: unknown,
+  property: 'left' | 'right' | 'top' | 'bottom',
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): number | undefined {
+  if (value === undefined) return;
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw childDiagnostic(child, property, value, container, 'currently requires a finite numeric absolute inset');
   }
   return value;
 }

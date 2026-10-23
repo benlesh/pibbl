@@ -128,6 +128,7 @@ try {
       console.warn('Packed auto margins: 104 fixture cases passed');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');
+      assert.equal(receipt.absoluteParticipation, true, 'Installed absolute child must leave flow and preserve source-order interaction');
       assert.equal(receipt.decoratedRelativeStatic, true, 'Installed decorated positioning must resolve padding/border before relative offsets');
       assert.equal(receipt.relativeStatic, true, 'Installed static/relative placement must preserve slots and move final geometry once');
       assert.equal(receipt.nestedPercentageWrapping, true, 'Installed nested percentages must use final row/column nowrap/wrap owners across all eight native cases');

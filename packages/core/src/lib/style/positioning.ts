@@ -126,16 +126,18 @@ export interface PositioningStyle extends SystemStyle {
   /**
    * Experimental direct-Flex placement mode. In a finite row-nowrap Flex, static
    * keeps the allocated slot and ignores insets; relative offsets final geometry
-   * once without moving siblings. Omission retains legacy local left/top behavior.
+   * once without moving siblings; absolute uses the Flex padding box and stays out
+   * of sibling allocation on the documented finite direct-child path. Omission
+   * retains legacy local left/top behavior.
    */
-  position?: 'static' | 'relative';
-  /** Left edge coordinate or inset. Experimental relative Flex accepts finite numeric insets only. See {@link Length}. */
+  position?: 'static' | 'relative' | 'absolute';
+  /** Left edge coordinate or inset. Explicit Flex modes currently accept finite numeric insets only. See {@link Length}. */
   left?: Exclude<Length, 'auto'>;
-  /** Right edge inset for experimental relative Flex; must be finite numeric. */
+  /** Right edge inset for an explicit direct-Flex placement mode; must be finite numeric. */
   right?: number;
-  /** Top edge value or inset. Experimental relative Flex accepts finite numeric insets only. See {@link Length}. */
+  /** Top edge coordinate or inset. Explicit Flex modes currently accept finite numeric insets only. See {@link Length}. */
   top?: Exclude<Length, 'auto'>;
-  /** Bottom edge inset for experimental relative Flex; must be finite numeric. */
+  /** Bottom edge inset for an explicit direct-Flex placement mode; must be finite numeric. */
   bottom?: number;
 }
 

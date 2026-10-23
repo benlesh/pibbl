@@ -73,6 +73,25 @@ The first rectangle still reserves its RTL slot, then shifts 18 units left and
 layout only. It does not add CSS absolute positioning, containing blocks,
 percent insets, wrapping, other layout parents, or normal JavaScript Flex.
 
+Experimental direct children can also use `position: "absolute"` with numeric
+width/height and at least one numeric inset per axis. Such a child leaves Flex
+allocation while keeping its authored paint, target and focus order:
+
+```tsx
+<Flex style={{ width: 160, height: 60, gap: 10, alignItems: "flex-start" }}>
+  <Rectangle style={{ width: 50, height: 20, flexShrink: 0, fill: "teal" }} />
+  <Rectangle style={{ position: "absolute", width: 30, height: 20, left: 12, top: 8, fill: "tomato" }} />
+  <Rectangle style={{ width: 50, height: 20, flexShrink: 0, fill: "gold" }} />
+</Flex>
+```
+
+The gold rectangle keeps its ordinary x=60 slot. The tomato rectangle paints
+between its two siblings and uses the parent's inner-border edge as its inset
+origin; padding does not add to explicit insets. Left wins over right in LTR,
+right wins in RTL, and top wins over bottom. Omitted sizing, no-inset alignment,
+percentage insets, direct layout children, child box decoration, margins and
+nested containing-block selection remain unsupported.
+
 The experimental `layout-wasm` Studio build additionally supports finite numeric
 physical margins in finite rows and columns, with nowrap or wrap. `margin` sets all four edges;
 `marginTop`, `marginRight`, `marginBottom` and `marginLeft` override individual

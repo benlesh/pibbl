@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice121 (decorated-parent static/relative evidence).
+Latest delivery is slice122 (bounded direct-Flex absolute participation).
+Slice121 is `f4605ef2` (decorated-parent static/relative evidence).
 Slice120 is `a9d79df8` (bounded explicit direct-Flex static/relative positioning).
 Consolidation40 is `d06c7fc6` for118–120 (one corrected sequential-walk selector).
 Slice119 is `346bc95d` (concise public corpus and exhaustive private rehearsal).
@@ -3307,17 +3308,61 @@ evidence review found no material issue. Positioning remains experimental:
 8complete/12experimental/6partial/6missing/1excluded, all7gates open. No Node24
 trust claim or full-program completion.
 
-## [NEXT] Direct Flex absolute participation (slice122)
+## Slice122 delivered: bounded direct-Flex absolute participation
 
-Advance a material placement gap rather than another relative permutation.
-Verify exact pinned Yoga absolute inset origins before public design: explicit
-insets use the inner-border/padding-box edge, while no-inset alignment may use
-content geometry. First slice admits finite explicitly sized direct children,
-excludes them from in-flow allocation, preserves authored source paint/hit order,
-and supplies current containing bounds without adding a nested containing-block
-cascade. Present the bounded public signature and exact numeric inset policy
-before implementation, then public RED, source/built and installed evidence.
-Broader auto sizing, nested containing blocks and Absolute lowering stay tracked.
+Public `position: "absolute"` accepts finite explicitly sized, undecorated direct
+children in experimental row-nowrap Flex with at least one numeric inset on each
+axis. The child leaves line allocation and consumes no sibling slot or gap, but
+retains authored paint/hit/focus order and keyed identity. Receiver tokens and
+placements use source indices; only flowing items enter native allocation.
+Explicit insets use the parent's inner border/padding-box edge, independently of
+padding: decorated204×104/border2/padding10,30,20,20 gives absolute left12/top8
+at14,10, while flowing slots begin12,22. LTRleft/RTLright/top precedence and
+right/bottom-only anchoring match pinned Yoga. Automatic/intrinsic dimensions,
+no-inset alignment, child decoration/margins/nonzero bounds/factors, direct layout
+children, responsive queries and nested containing-block selection remain open.
+
+Initial public RED `/tmp/pibbl-slice122-public-red.txt`: absolute rejected before
+production. Scoped hardening RED `...layout-child-red.txt` then rejects direct
+nested layout admission. Focused35pass; final selected5files33pass/417skip450;
+additional Absolute-hosted known preflight and intrinsic exclusion3pass. Existing
+percentage-gap focused20pass/393skip, legacy Flex/placement106pass/1skip107,
+normal29pass/3skip32. The first installed retry caught a real unused-path
+regression: raw parent style metadata was enumerable and recursively validated
+percentage gaps as resolved data. The parent source is now a private per-resolved-
+style Symbol; ordinary normalizers/validation are unchanged. No new cache or
+resource owner. Scoped review found no remaining material issue.
+
+Native reproduction adds7matches:337total/243matches/94classified differences.
+Kernel/ABI unchanged68649bytes SHA256
+`029fd944e878b879a235461dcfac17219948569198795428caff12c4c388bfe9`.
+Final source/built7case replays prove exact boxes, exposed targets and overlap
+paint order, stable stamps, paint reuse and cleanup[0,0,0];227core/dist inputs,
+errors[]. The initial source driver selected an exact inclusive overlap edge;
+it now chooses genuinely exposed geometry and separately asserts topmost overlap.
+No arbitration assertion was removed. Screenshot inspected, no baseline rewrite.
+Source/built public5case lesson also passes with zero private corpus requests;
+built editor469dist inputs. Final installed proof:245dist inputs,
+Bundler/NodeNext types, absoluteParticipation receipt, ordinary percentage gaps,
+104auto-margin fixtures and exact cleanup. Tarball SHA256
+`ea731ee7b3bd0dd62f699473a25b22c5d6d2abf18543f1d97d083286bae2b4a4`.
+Logs `/tmp/pibbl-slice122-source-final.txt`, `...built-final.txt`,
+`...packed-final-jsdoc.txt`, `...percentage-gap.txt`, `...legacy.txt`,
+`...normal.txt`, `...final-focused.txt`. TypeScript, lint, catalog, JSDoc and
+109documentation RED probes pass. Node26.9.0/macOS Chromium; no Node24 trust
+claim. Status remains8complete/12experimental/6partial/6missing/1excluded;
+all7release gates open, full-program review remains at the end.
+
+## [NEXT] Fixed absolute children with axis-wise no-inset alignment (slice123)
+
+Remove one material admission limit without adding automatic sizes or a public
+API: on an axis with no inset, align the fixed absolute child using existing
+parent controls and the content box. Explicit inset axes retain122's inner-border
+rule. Pinned Yoga confirms center/flex-end produces absolute77,62 and flowing
+LTR A/C37,62/97,62; setting left12 moves only absolute to14,62. First add the
+focused public failing test, then implementation and source/built/installed proof.
+Keep automatic opposite-inset sizing and nested containing blocks outstanding.
+Consolidation41 follows121–123 before further expansion.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

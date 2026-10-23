@@ -67,6 +67,29 @@ does not add absolute positioning, right/bottom anchoring, containing blocks,
 percent relative insets, wrapping, Flow/Grid/Overlay participation, or normal
 JavaScript Flex support.
 
+### Experimental direct-Flex absolute participation
+
+A finite experimental row-nowrap Flex also accepts a direct child with
+`position: "absolute"`, explicit finite numeric width and height, and at least
+one finite numeric physical inset on each axis. The child leaves line allocation:
+its width, height and flex factors do not consume a sibling slot or an extra gap.
+It remains at its authored position in paint order, pointer targeting and focus
+navigation. Its ordinary keyed identity and receiver-owned inputs remain active.
+
+Explicit insets follow Yoga's inner-border/padding-box reference: the left/top
+origin includes the parent border but not its padding. Right/bottom measure from
+the opposite inner border edge. With both horizontal insets, left wins in LTR
+and right wins in RTL; top wins vertically. Width and height stay explicit rather
+than stretching between opposite insets. Placement is resolved before world
+transforms, and forwarded placement is consumed once.
+
+This admission does not add intrinsic or automatic absolute sizing, no-inset
+alignment, percentage insets, nested containing-block selection, Flow/Grid/Layer
+participation, or a migration of the existing `Absolute` convenience component.
+The first admission excludes direct layout-component children, child box
+decoration, margins, nonzero bounds, nonzero flex factors, and responsive style
+queries. Unsupported contexts and omitted required sizing/insets reject explicitly.
+
 `PibblRenderLayerStyle` accepts the shared box and layout-item fields. Each
 omitted layer dimension uses its current finite logical allocation; an explicit
 or allocated width and height must resolve to positive finite values. A render

@@ -910,6 +910,10 @@ const gridStyle = {
   gridTemplateRows: [120],
 } satisfies GridStyle;
 const flexItem = { flexBasis: '50%', flexGrow: 1 } satisfies FlexItemStyle;
+const absoluteFlexItem = { position: 'absolute', left: 12, right: 18, top: 8, bottom: 10 } satisfies FlexItemStyle;
+createElement(Flex, { style: { width: 160, height: 60 }, children: createElement(Rectangle, { style: { ...absoluteFlexItem, width: 30, height: 20 } }) });
+// @ts-expect-error position accepts only the supported explicit literals
+createElement(Rectangle, { style: { position: 'fixed', width: 30, height: 20 } });
 const gridItem = { gridColumnStart: 1, gridRowStart: 1 } satisfies GridItemStyle;
 const layoutItem = { left: '25%', top: 10 } satisfies LayoutItemStyle;
 void boxStyle;
