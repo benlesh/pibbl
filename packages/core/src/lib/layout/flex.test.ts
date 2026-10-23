@@ -475,7 +475,7 @@ describe('CSS-compatible flex geometry', () => {
   });
 
   it.each([
-    [{ flexWrap: 'wrap' }, /nowrap/i],
+    [{ flexWrap: 'wrap' }, experimentalLayout ? /finite numeric row width/i : /nowrap/i],
     [{}, /grow/i],
     [{}, /percentage/i],
   ] as const)('rejects allocation-dependent intrinsic measurement %#', (

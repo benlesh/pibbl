@@ -2,7 +2,10 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice90 `c997f41e` (logical padding).
+Latest delivery is slice93 `a7c36733` (finite wrapped-row intrinsic height).
+Slice92 is `02f21ea3` (custom intrinsic providers).
+Slice91 is `3f943f70` (logical layout borders).
+Slice90 is `c997f41e` (logical padding).
 Slice89 is `f8f7e76d` (logical Flex margins).
 Slice88 is `14386781` (inherited Flex layoutDirection).
 Previous delivery is slice87 `aac241f6` (wrap-reverse percentage physical margins).
@@ -40,9 +43,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; the single next milestone is consolidation31 for91–93. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; the single next delivery is94, final-width custom leaf measurement. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles159 records:136matches/23classified differences; click A/B/C targets.
+cycles179 records:156matches/23classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2173,16 +2176,59 @@ identity, paint and exact cleanup, Bundler/NodeNext:230inputs, SHA256
 Node26.9.0/Chromium; no Node24 aggregate trust claim. General wrapped intrinsic
 owners and feedback remain open. Fixed33 capabilities/seven release gates remain.
 
-## [NEXT] Consolidation 31 for slices 91–93
+## Consolidation 31 completed for slices 91–93
 
-91 `3f943f70`,92 `02f21ea3`,93 separately committed immediately after this record.
-Run the same bounded ten-file layout/measurement/reuse suite in experimental and
-ordinary modes. Reuse fresh slice package/native/browser/static evidence unless a
-new issue requires a repeat. Reconcile milestones and remaining gate exits, then
-select exactly one next material outcome. The likely next94 is constrained
-finite measurement at a custom intrinsic leaf’s settled row width, using existing
-`measure` rather than inventing a new API. Whole-codebase review stays at the full
-program end; do not stop at this consolidation handoff.
+Separate commits91 `3f943f70`,92 `02f21ea3`,93 `a7c36733`. The ten-file layout,
+measurement, structural-description and reuse suite passed in both modes:
+experimental433passed/8skipped (441),10files; ordinary157passed/284skipped (441),
+8passed/2skipped files. Fresh logs `/tmp/pibbl-consolidation31-focused-final.txt`
+and `/tmp/pibbl-consolidation31-normal-final.txt`; actual processes exited0.
+The initial run’s one stale nowrap-only assertion was updated for the experimental
+finite-width policy, while the ordinary build’s original diagnostic was restored.
+No geometry correction or baseline rewrite was required by the consolidation.
+Reuse fresh93 source/built/native/installed and static evidence above. Environment
+Node26.9.0/pnpm11.21.0 dependencies/Chromium; Node24 aggregate trust remains open.
+
+Fixed33 counts, parsed fresh from the manifest:4complete,11experimental,8partial,
+9missing,1excluded. All seven release gates remain open. Current milestone map:
+
+- Flex core: finite sizing/distribution/wrapping preserve entries complete;
+  automatic minima, general intrinsic/font/image/aspect and overflow policy exits
+  remain.94 next settles custom finite cross measurement at the allocated width.
+- Box/direction: logical vocabulary is implemented. Nearest whole-entry exit is
+  the bounded wrapped/reverse/min/max direction matrix with receiver inheritance,
+  override, source paint/hit/focus order, teardown and explicit classified Yoga
+  differences. Do not claim parity from vocabulary alone. Percentage/intrinsic
+  owner feedback keeps the broader box entries partial.
+- Measurement/intrinsic: direct paired providers and numeric row-wrap autoheight
+  now run end to end. Final-width custom measurement, general nested Flex/Grid/
+  Flow constraint graphs, unbounded/exact/at-most consumers, baselines and feedback
+  still need concrete evidence.
+- Placement/participation: remaining owner and positioning contracts must agree
+  with automatic sizing; no opaque component discovery or speculative execution.
+- Reactivity/publication: retain receiver edges and atomic Canvas, hit, focus and
+  HTML publication; complete failure/cancellation ownership and efficiency exits.
+- Migration/conformance: optional standalone layout packaging/public async loading,
+  packed consumers, explicit corpus classifications, performance evidence and
+  Node24 aggregate trust remain. Existing private package is evidence, not release.
+- Grid beyond Yoga: complete the approved explicit placement/spans and intrinsic/
+  fr/minmax/percentage track graph; no accidental CSS-compatibility promise.
+
+Final whole-codebase review remains at full program end. Continue the fixed
+program after this consolidation; do not create a new denominator or stop here.
+
+## [NEXT] Final-width custom intrinsic leaf measurement (slice 94)
+
+No new API. A direct custom primitive supplying `measureIntrinsic` and existing
+`measure` can compute its automatic cross height after the finite nowrap row
+chooses its final content width. Give the finite callback that exact allocated
+width; keep the paired intrinsic contribution separate. A140→100 owner beside a
+40px sibling yields custom width100→60 and measured height20→40, with the tall
+paint/hit target published together. Preserve intrinsic-only providers and declared
+cross dimensions. Unsupported finite results diagnose; no stale-size fallback.
+Use existing receiver transaction, conservative cache admission/dependency replay
+and exact cleanup. Start with the prepared focused public RED, deliver a runnable
+example, then bounded hardening/source/built/installed checks and separate commit.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

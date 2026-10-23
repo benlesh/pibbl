@@ -1294,7 +1294,7 @@
       "group": "box-and-direction",
       "current": "numeric padding, allocated experimental Flex percentage padding, receiver-aware logical paddingStart/paddingEnd, and receiver-aware numeric borderStartWidth/borderEndWidth over physical layout borderWidth; painted stroke remains separate",
       "status": "partial",
-      "unresolvedPolicy": "Logical padding precedence and owner-width percentages are implemented. Logical border edges and broader intrinsic feedback/percentage ownership remain outstanding.",
+      "unresolvedPolicy": "Logical padding/border precedence and owner-width percentages are implemented. Broader intrinsic feedback and percentage ownership remain outstanding.",
       "evidenceRefs": [
         "docs/design/layout-system-contract.md#flex",
         "docs/architecture/proposals/layout-engine/design.md#boxes-and-units"
@@ -1425,14 +1425,15 @@
       "id": "direction.rtl-and-logical-edges",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental inherited Flex LTR/RTL direction with receiver-aware logical marginStart/marginEnd paddingStart/paddingEnd and numeric borderStartWidth/borderEndWidth precedence; broader direction combinations remain partial",
+      "current": "experimental inherited Flex LTR/RTL direction with receiver-aware logical marginStart/marginEnd, paddingStart/paddingEnd and numeric borderStartWidth/borderEndWidth precedence; broader direction combinations remain partial",
       "status": "partial",
-      "unresolvedPolicy": "Logical margin/padding precedence, zero and owner-width percentage reference are implemented. Logical border edges and broader direction matrix remain outstanding.",
+      "unresolvedPolicy": "Logical margin/padding/border precedence, zero and owner-width percentage reference are implemented. The broader wrapped/min/max direction matrix remains outstanding.",
       "evidence": {
         "positive": [
           "slice88: inherited direction and explicit LTR override; row/column/reverse placement",
           "slice89: logical margin edge precedence, signed percentages, explicit zero and child Flex direction override",
-          "slice90: logical padding zero/end-percentage precedence and exact native content geometry in both directions"
+          "slice90: logical padding zero/end-percentage precedence and exact native content geometry in both directions",
+          "slice91: numeric logical border precedence, explicit zero, both sizing modes and receiver override in eighteen native cases"
         ],
         "negative": [
           "normal JavaScript RTL rejected; invalid direction rejected; stale ABI rejected"
@@ -1445,7 +1446,6 @@
           "layout-direction-{row,row-reverse,column,column-reverse}-{ltr,rtl}"
         ],
         "missing": [
-          "logical layout border edges and precedence",
           "broader wrapped/min/max direction matrix"
         ]
       }

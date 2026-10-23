@@ -378,6 +378,7 @@ function measureFlex(
     } };
   }
   const wrappedIntrinsic = (input.style.flexWrap ?? 'nowrap') !== 'nowrap';
+  if (wrappedIntrinsic && !experimentalLayout) return unsupportedIntrinsic('requires nowrap because wrapped intrinsic sizing is deferred');
   if (isPercentage(input.style.gap) || isPercentage(input.style.rowGap) || isPercentage(input.style.columnGap)) return unsupportedIntrinsic('does not support percentage gaps without an actual finite content allocation');
   const row = isRowDirection(input.style.flexDirection);
   const diagnosticBox = {
