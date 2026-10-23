@@ -3,6 +3,7 @@ import {
   FocusManagement,
   Flex,
   Rectangle,
+  Text,
   createElement,
   definePrimitive,
   signal,
@@ -246,3 +247,96 @@ it.runIf(!experimentalLayout)('keeps first-baseline alignment explicitly experim
   const prevent=(event:ErrorEvent)=>{errors.push(event.error);event.preventDefault();};window.addEventListener('error',prevent);
   try{const controller=pibbl(canvas,<Flex style={{width:120,height:60,alignItems:'first-baseline'}}><Bad style={{width:40,height:20,flexBasis:40,minWidth:0,minHeight:0,flexShrink:0}} /></Flex>);controllers.push(controller);await nextFrame();expect(errors).toHaveLength(1);expect(String(errors[0])).toMatch(/alignItems/);expect(measureBaselines).not.toHaveBeenCalled();expect(paints).not.toHaveBeenCalled();}finally{window.removeEventListener('error',prevent);}
 });
+
+
+it.runIf(experimentalLayout)(
+  'aligns fixed unwrapped Text leaves from their live Canvas top-baseline metrics',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const words = signal('Ag');
+    const font = signal('10px monospace');
+    const decoration = signal('#557a8b');
+    const hits: string[] = [];
+    const focused: string[] = [];
+    const canvas = document.createElement('canvas');
+    canvas.width = 240; canvas.height = 80; document.body.append(canvas);
+    const context = canvas.getContext('2d')!;
+    interface Draw { readonly text: string; readonly x: number; readonly y: number; readonly font: string; }
+    const draws: Draw[] = [];
+    const originalFillText = context.fillText.bind(context);
+    vi.spyOn(context, 'fillText').mockImplementation(((text: string, x: number, y: number, maxWidth?: number) => {
+      const transform = context.getTransform();
+      draws.push({ text, x: transform.e + x, y: transform.f + y, font: context.font });
+      originalFillText(text, x, y, maxWidth);
+    }) as typeof context.fillText);
+    const small = createElement(Text, {
+      key: 'small', children: words, keyboardFocusable: true,
+      onFocus: () => focused.push('small'), onClick: () => hits.push('small'),
+      style: { width: 60, height: 32, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0, font, wrap: false, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#19375b', cursor: 'pointer' },
+    });
+    const large = createElement(Text, {
+      key: 'large', children: 'Ag', keyboardFocusable: true,
+      onFocus: () => focused.push('large'), onClick: () => hits.push('large'),
+      style: { width: 80, height: 32, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, font: '20px sans-serif', wrap: false, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#a63758', cursor: 'pointer' },
+    });
+    const accent = createElement(Rectangle, {
+      key: 'accent', pointerEvents: 'none',
+      style: { width: 20, height: 20, minWidth: 0, minHeight: 0, flexBasis: 20, flexGrow: 0, flexShrink: 0, fill: decoration },
+    });
+    const controller = pibbl(canvas, <FocusManagement><Flex style={{ width: 240, height: 80, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'first-baseline' }}>{[small, large, accent]}</Flex></FocusManagement>);
+    controllers.push(controller);
+    await nextFrame();
+
+    const firstDraw = (expectedFont: string) => draws.find(draw => draw.font === expectedFont)!;
+    const topToAlphabetic = (draw: Draw) => {
+      context.save();
+      try {
+        context.font = draw.font;
+        context.textBaseline = 'top';
+        const top = context.measureText(draw.text).actualBoundingBoxAscent;
+        context.textBaseline = 'alphabetic';
+        const alphabetic = context.measureText(draw.text).actualBoundingBoxAscent;
+        expect(Number.isFinite(top)).toBe(true);
+        expect(Number.isFinite(alphabetic)).toBe(true);
+        return alphabetic - top;
+      } finally { context.restore(); }
+    };
+    const smallInitial = firstDraw('10px monospace');
+    const largeInitial = firstDraw('20px sans-serif');
+    expect(smallInitial.y + topToAlphabetic(smallInitial)).toBeCloseTo(largeInitial.y + topToAlphabetic(largeInitial), 5);
+
+    canvas.blur(); canvas.focus({ preventScroll: true });
+    canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+    canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+    expect(focused).toEqual(['small', 'large']);
+    context.save(); context.font = smallInitial.font; context.textBaseline = 'top';
+    const initialMetrics = context.measureText(smallInitial.text); context.restore();
+    click(canvas, smallInitial.x - initialMetrics.actualBoundingBoxLeft + 1, smallInitial.y - initialMetrics.actualBoundingBoxAscent + 1);
+    expect(hits).toEqual(['small']);
+
+    const beforeFont = snapshotWasmLayoutDiagnostics();
+    draws.splice(0);
+    font.set('16px monospace'); words.set('B'); await nextFrame();
+    const smallUpdated = firstDraw('16px monospace');
+    const largeUpdated = firstDraw('20px sans-serif');
+    expect(smallUpdated.y).not.toBeCloseTo(smallInitial.y, 5);
+    expect(smallUpdated.y + topToAlphabetic(smallUpdated)).toBeCloseTo(largeUpdated.y + topToAlphabetic(largeUpdated), 5);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(beforeFont.nodeCreates);
+    context.save(); context.font = smallUpdated.font; context.textBaseline = 'top';
+    const updatedMetrics = context.measureText(smallUpdated.text); context.restore();
+    click(canvas, smallUpdated.x - updatedMetrics.actualBoundingBoxLeft + 1, smallUpdated.y - updatedMetrics.actualBoundingBoxAscent + 1);
+    expect(hits).toEqual(['small', 'small']);
+
+    await nextFrame();
+    const beforePaint = snapshotWasmLayoutDiagnostics();
+    decoration.set('#9f7d35'); await nextFrame();
+    const afterPaint = snapshotWasmLayoutDiagnostics();
+    expect(afterPaint.nodeCreates).toBe(beforePaint.nodeCreates);
+    expect(afterPaint.solves).toBe(beforePaint.solves);
+    expect(afterPaint.crossPlacements).toBe(beforePaint.crossPlacements);
+
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+  },
+);

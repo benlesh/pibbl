@@ -2617,9 +2617,9 @@
       "id": "flex.baselines",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR nowrap rows of direct fixed primitive leaves, missing-provider content-bottom fallback and explicit failure diagnostics",
+      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR nowrap rows of direct fixed primitive leaves, including nonempty unwrapped visible Text with generic positive px fonts and top baseline measured through an explicit Canvas service capability; missing-provider content-bottom fallback and explicit failure diagnostics",
       "status": "experimental",
-      "unresolvedPolicy": "Automatic Text/font metrics, multiline and nested baseline propagation, last-baseline alignment, wrapping, reverse/RTL and broader leaf admission remain open.",
+      "unresolvedPolicy": "Multiline Text, font loading/shaping, nested baseline propagation, last-baseline alignment, wrapping, reverse/RTL and broader leaf admission remain open.",
       "evidence": {
         "positive": [
           "packages/core/test/layout-flex-baseline.test.tsx",
@@ -2638,7 +2638,7 @@
           "baseline-provider-overheight-a"
         ],
         "missing": [
-          "automatic mixed-font metrics",
+          "font loading/shaping/custom-font lifecycle",
           "multiline Text",
           "nested containers",
           "last-baseline alignment",

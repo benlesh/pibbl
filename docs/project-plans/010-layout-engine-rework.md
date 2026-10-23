@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice157 (indefinite-owner bound validity and pinned policy evidence).
+Latest delivery is slice158 (single-line Text baselines from live Canvas metrics).
+Slice157 is `72da2305`; its public Studio companion is `b725101c`.
 Consolidation52 is `8f65cb34` for154–156.
 Slice156 is `5e819d2f` (experimental first-baseline provider composition).
 Slice155 is `7c60ab49` (public mixed-track spanning Grid evidence).
@@ -4835,16 +4836,74 @@ and469built inputs. The existing exact-row source and exact-column built drivers
 also passed geometry, moved hits, identity, paint reuse and cleanup. Typecheck and
 focused lint passed. No new runtime rule, capability or gate promotion.
 
-## [NEXT] Slice158: built-in Text baseline measurement
+## Slice158 ready for feedback: real Canvas Text first baselines
 
-Use the existing baseline operation with the same Canvas measurement and line
-layout as Text painting, supplying actual first/last offsets rather than manually
-entered provider numbers. Start with the smallest exact admitted Text profile,
-prove mixed-font geometry and signal updates publicly, and retain explicit
-boundaries for any unsupported shaping/fitting/font lifecycle behavior. This is a
-substantive missing measurement prerequisite; it does not adopt a new percentage
-policy or close the full baseline capability. Consolidate157–159 before further
-behavior. Root remains sole writer; helpers propose patches or independent review.
+Optional `CanvasMeasurementService.measureTextAtBaseline(text, { font,
+textBaseline })` returns ordinary `TextMetrics` at the explicitly requested font
+and baseline. Existing `measureText(text, font)` remains unchanged. A shared
+private service restores Canvas state in `finally`; method receivers remain
+intact for application-provided implementations. Text's built-in provider uses
+its paint line layout at final allocation and converts the actual alphabetic
+coordinate from `line.y - metrics.alphabeticBaseline`. Missing service, nonfinite
+metrics or empty text diagnose instead of taking the missing-provider fallback.
+The admitted profile is one nonempty unwrapped visible line, generic finite
+positive px font, top/default baseline and existing fixed direct LTR row-nowrap
+Flex envelope. No new ABI, cache exception or font-size approximation.
+
+The public test failed first at the existing Text prohibition. Fresh
+Node24.15/Chromium checks passed94experimental/2skipped and91ordinary/5skipped
+across7files (96tests), including Text layout, Flex/Grid/Flow, pure measurement,
+Canvas state restoration on throw, optional-service failure and method receiver
+identity. Expected Text alignment is derived independently from the difference
+between real top/alphabetic ink-ascent measurements, not a repeated implementation
+formula or fixed platform font constant. Font/content updates preserve native
+identity and move actual glyph targets; conservative function-prop invalidation
+is retained. Read-only changed-code review found no material issue.
+
+Public source `http://127.0.0.1:5192/#/examples/layout/wasm-flex-baseline`
+(built5193same path): toggle **Text**, click the small Ag label and change the
+paint indicator. Source/built drivers preserve the numeric provider/fallback
+proof, assert live Text baseline equality, moved draw origins and glyph hits,
+source focus, zero extra measurement/solve/cross/node work on unrelated paint,
+and cleanup `[0,0,0]` with no browser errors. Built uses470dist inputs. On this
+host, both Text baseline coordinates are420.3125; small10→16px changes the draw
+origin411.984375→407.875. These are dated host observations, not font parity.
+The actual Canvas bitmap was inspected.
+
+The installed offline package passed strict Bundler/NodeNext, mixed-font baseline,
+font-driven sibling movement, true glyph-target bubbling/identity and paint reuse
+with246installed inputs, SHA256
+`f772fad17e9162db0cc92f47380cc4db397c9863d0362fb3f7099fb7f738c4a4`.
+Earlier package failures were fixture errors: unsupported absolute decoration,
+a click point outside ink bounds, and expecting the dominant-font leaf rather
+than its sibling to move. The corrected proof uses supported sibling placement,
+live ink bounds and correct baseline-group geometry.
+
+The earlier Studio111→121provider work was an inspector layout feedback loop:
+long unbroken JSON changed iframe min-content width and repeatedly resized the
+Canvas. Wrapping/bounding the inspector fixes the host loop. A separate package
+expectation overlooked the existing conservative rule that function props prevent
+measurement caching. Structural Group click bubbling now keeps measured Text
+props scalar while preserving genuine glyph targeting; no cache guard or
+allocation revision was weakened. Failed receipts remain separately recorded.
+
+Typecheck, ordinary core build, exact source/built/editor export parity, JSDoc,
+documentation, catalog171/12/33, Studio metadata/search and changed-code lint pass.
+`flex.baselines` remains experimental: multiline, nested propagation,
+last-baseline placement and broader font lifecycle remain open. Fixed33 stays
+9complete/12experimental/6partial/5missing/1excluded; all7release gates remain open.
+No aggregate trust or native font-metric claim.
+
+## [NEXT] Slice159: wrapped Text first/last baseline metrics
+
+Use the existing Canvas-aware service and paint line layout to measure first and
+last actual visible lines at final width. Prove public wrapped Text first-baseline
+placement, content/line-height reflow and final-line glyph targeting, with pure
+provider evidence for both offsets and explicit no-line failure. Retain the same
+font, top-baseline, visible-fit and outer Flex envelope; do not claim last-baseline
+alignment or font loading. Then consolidate157–159 before further behavior.
+Root remains sole repository writer; reused helpers propose temporary patches or
+review changed code.
 
 ### Finite positioning exit matrix after134
 

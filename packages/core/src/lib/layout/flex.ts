@@ -1,4 +1,5 @@
 import { contentBoxStyle } from './box-sizing.js';
+import { canvasMeasurementService } from './canvas-measurement.js';
 import { Grid } from './grid.js';
 import { Flow } from './flow.js';
 import type { PreparedFlexLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
@@ -28,6 +29,7 @@ import { resolveLength, parsePercentage } from '../style/resolve-length.js';
 import { setPreNormalizedStyle, peekPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
   BoxStyle,
+  TextStyle,
   Percentage,
   FlexItemStyle,
   LayoutItemStyle,
@@ -243,19 +245,8 @@ function renderFlex(
 }
 
 function flexMeasurementService(ctx: RenderingContext2D): CanvasMeasurementService {
-  return {
-    measureText(value: string, font: string) {
-      ctx.save();
-      try {
-        ctx.font = font;
-        return ctx.measureText(value);
-      } finally {
-        ctx.restore();
-      }
-    },
-  };
+  return canvasMeasurementService(ctx);
 }
-
 function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexStyle>, localContent: Readonly<LayoutBox>, service: CanvasMeasurementService, region?: LayoutRegion) {
   const revision = allocationInputRevision();
   // Decide before materializing or inspecting children; normal paint traversal
@@ -1849,7 +1840,20 @@ function assertSupportedFirstBaselineFlex(
   }
   for (const item of items) {
     const style = item.normalized;
-    if (!getPrimitiveDefinition(item.child.type) || isKnownLayoutType(item.child.type) || isLayoutComponent(item.child.type) || item.child.type === Text || item.query || item.alignSelf !== 'auto' ||
+    const textLeaf = item.child.type === Text;
+    const textStyle = style as Readonly<TextStyle>;
+    const fontSize = textLeaf ? /(?:^| )(\d+(?:\.\d+)?)px /.exec(String(textStyle.font ?? '13px sans-serif')) : null;
+    const supportedTextLeaf = !textLeaf || (
+      genericTextFont(style) && fontSize !== null && Number.isFinite(Number(fontSize[1])) && Number(fontSize[1]) > 0 &&
+      (textStyle.textBaseline ?? 'top') === 'top' &&
+      typeof (textStyle.lineHeight ?? 13) === 'number' &&
+      Number.isFinite(textStyle.lineHeight ?? 13) &&
+      (textStyle.lineHeight ?? 13) >= 0 &&
+      textStyle.wrap !== true &&
+      (textStyle.fit ?? 'visible') === 'visible' &&
+      (textStyle.overflow ?? 'visible') === 'visible'
+    );
+    if (!getPrimitiveDefinition(item.child.type) || isKnownLayoutType(item.child.type) || isLayoutComponent(item.child.type) || !supportedTextLeaf || item.query || item.alignSelf !== 'auto' ||
         style.position !== undefined || item.crossAuto || typeof style.flexBasis !== 'number' ||
         typeof style.height !== 'number' || item.paddingMain !== 0 || item.paddingCross !== 0 ||
         item.marginMainBefore !== 0 || item.marginMainAfter !== 0 || item.marginCrossBefore !== 0 || item.marginCrossAfter !== 0 ||

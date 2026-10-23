@@ -1,4 +1,5 @@
 import { contentBoxStyle } from './box-sizing.js';
+import { canvasMeasurementService } from './canvas-measurement.js';
 import { experimentalLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
 import { prepareKnownLayoutDescendants, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
@@ -138,17 +139,7 @@ function renderGrid(
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
   const prepared = experimentalLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
   const children = prepared?.children ?? prepareLayoutChildren(props.children, 'Grid');
-  const service = {
-    measureText(value: string, font: string) {
-      ctx.save();
-      try {
-        ctx.font = font;
-        return ctx.measureText(value);
-      } finally {
-        ctx.restore();
-      }
-    },
-  };
+  const service = canvasMeasurementService(ctx);
   const nativeRegion = prepared?.region ?? (experimentalLayout ? mountedLayoutRegion() : undefined);
   if (experimentalLayout && !nativeRegion) throw new Error('Experimental Grid requires its mounted native region.');
   const placements = prepared?.placements ?? resolveGridPlacements(
@@ -208,7 +199,7 @@ if (experimentalLayout) registerKnownLayoutPreflight(Grid, (element, style, cont
     const options = normalizeGridOptions(style as Readonly<GridStyle>, content);
     const ctx = GLOBAL_STATE.renderContext;
     if (!ctx) throw new Error('Known Grid preparation requires a Canvas measurement context.');
-    const service = { measureText(value: string, font: string) { ctx.save(); try { ctx.font = font; return ctx.measureText(value); } finally { ctx.restore(); } } };
+    const service = canvasMeasurementService(ctx);
     const region = slot.acquire();
     const placements = resolveGridPlacements(content, children, options, { service, measureElement: (child, constraints) => measureElement(child, constraints, service) }, region);
     const plan: PreparedLayoutPlan = { region, content, children, placements };

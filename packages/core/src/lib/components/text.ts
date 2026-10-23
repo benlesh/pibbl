@@ -180,6 +180,13 @@ export const Text = definePrimitive<
       constraints,
       service,
     ),
+  measureBaselines: ({ props, style, allocation, service }) =>
+    measureTextBaselines(
+      materializeTextContent(props),
+      style,
+      allocation,
+      service,
+    ),
 });
 registerOpaqueStyleProperties(Text, [
   'font',
@@ -190,6 +197,49 @@ registerOpaqueStyleProperties(Text, [
   'textBaseline',
   'textAlign',
 ]);
+
+
+function measureTextBaselines(
+  text: string,
+  style: Readonly<TextStyle>,
+  allocation: Readonly<{ width: number; height: number }>,
+  service: CanvasMeasurementService,
+) {
+  if (text.length === 0) return { status: 'unsupported' as const, reason: 'Text baseline measurement requires nonempty text' };
+  const measureAtBaseline = service.measureTextAtBaseline;
+  if (!measureAtBaseline) {
+    return {
+      status: 'unsupported' as const,
+      reason: 'Text baseline measurement requires CanvasMeasurementService.measureTextAtBaseline',
+    };
+  }
+  const font = style.font ?? '13px sans-serif';
+  const textBaseline = style.textBaseline ?? 'top';
+  const layout = resolveTextLayout(
+    value => measureAtBaseline.call(service, value, { font, textBaseline }),
+    text,
+    { ...style, x: 0, y: 0, width: allocation.width, height: allocation.height },
+  );
+  const firstLine = layout.lines[0];
+  const lastLine = layout.lines[layout.lines.length - 1];
+  if (!firstLine || !lastLine) {
+    return { status: 'unsupported' as const, reason: 'Text does not resolve a line for baseline measurement' };
+  }
+  const firstMetrics = measureAtBaseline.call(service, firstLine.text, { font, textBaseline });
+  const first = firstLine.y - firstMetrics.alphabeticBaseline;
+  let last = first;
+  if (lastLine !== firstLine) {
+    const lastMetrics = measureAtBaseline.call(service, lastLine.text, { font, textBaseline });
+    last = lastLine.y - lastMetrics.alphabeticBaseline;
+  }
+  if (!Number.isFinite(first) || !Number.isFinite(last)) {
+    return {
+      status: 'unsupported' as const,
+      reason: 'Canvas text metrics do not provide a finite alphabeticBaseline for Text baseline measurement',
+    };
+  }
+  return { status: 'measured' as const, first, last };
+}
 
 function measureTextStyle(
   text: string,

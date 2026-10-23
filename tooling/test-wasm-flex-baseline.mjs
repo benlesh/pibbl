@@ -12,6 +12,36 @@ try {
   const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
   const state = async () => JSON.parse(await frame.locator('pre').innerText());
   const counters = () => sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
+  await sandbox.evaluate(() => {
+    const canvas = document.querySelector('canvas'), context = canvas.getContext('2d'), original = context.fillText.bind(context);
+    globalThis.__PIBBL_TEXT_BASELINE_DRAWS__ = [];
+    context.fillText = (text, x, y, maxWidth) => {
+      if (text === 'Ag') globalThis.__PIBBL_TEXT_BASELINE_DRAWS__.push({ x, y, font: context.font, baseline: context.textBaseline, matrix: [...context.getTransform().toFloat64Array()] });
+      original(text, x, y, maxWidth);
+    };
+  });
+  const textDraws = async () => sandbox.evaluate(basis => {
+    const canvas = document.querySelector('canvas'), context = canvas.getContext('2d'), inverse = new DOMMatrix([basis.a,basis.b,basis.c,basis.d,basis.e,basis.f]).inverse();
+    return globalThis.__PIBBL_TEXT_BASELINE_DRAWS__.map(draw => {
+      const matrix = new DOMMatrix(draw.matrix), origin = inverse.transformPoint(matrix.transformPoint({ x: draw.x, y: draw.y }));
+      context.save();
+      try {
+        context.font = draw.font;
+        context.textBaseline = 'top';
+        const top = context.measureText('Ag').actualBoundingBoxAscent;
+        const left = context.measureText('Ag').actualBoundingBoxLeft;
+        const right = context.measureText('Ag').actualBoundingBoxRight;
+        const descent = context.measureText('Ag').actualBoundingBoxDescent;
+        context.textBaseline = 'alphabetic';
+        const alphabetic = context.measureText('Ag').actualBoundingBoxAscent;
+        const alpha = inverse.transformPoint(matrix.transformPoint({ x: draw.x, y: draw.y + alphabetic - top }));
+        const hitTopLeft = inverse.transformPoint(matrix.transformPoint({ x: draw.x - left, y: draw.y - top }));
+        const hitBottomRight = inverse.transformPoint(matrix.transformPoint({ x: draw.x + right, y: draw.y + descent }));
+        return { font: draw.font, origin, alpha, hitTopLeft, hitBottomRight };
+      } finally { context.restore(); }
+    });
+  }, (await state()).basis);
+  const clearTextDraws = () => sandbox.evaluate(() => { globalThis.__PIBBL_TEXT_BASELINE_DRAWS__.length = 0; });
   const click = async (x, y) => {
     const box = await frame.locator('canvas').boundingBox(), scale = Math.min(box.width / 760, box.height / 460);
     await frame.locator('canvas').click({ position: { x: (box.width - 760 * scale) / 2 + x * scale, y: (box.height - 460 * scale) / 2 + y * scale } });
@@ -52,6 +82,7 @@ try {
   // Clear and settle the preceding card focus before isolating paint work.
   await click(700,410);
   const beforePaint=await counters(), calls=(await state()).calls;
+  await clearTextDraws();
   await click(480,110);
   assert.deepEqual((await state()).calls,calls);
   const painted=await counters(); assert.equal(painted.solves,beforePaint.solves); assert.equal(painted.nodeCreates,beforePaint.nodeCreates); assert.equal(painted.crossPlacements,beforePaint.crossPlacements);
@@ -60,9 +91,36 @@ try {
     return [...document.querySelector('canvas').getContext('2d').getImageData(Math.floor(point.x),Math.floor(point.y),1,1).data];
   },(await state()).basis);
   assert.deepEqual(pixel,[110,62,121,255]);
+  const initialText = await textDraws();
+  assert.equal(initialText.length, 2);
+  const initialSmall = initialText.find(value => value.font === '10px monospace'), initialLarge = initialText.find(value => value.font === '20px sans-serif');
+  assert.ok(initialSmall && initialLarge);
+  assert.ok(Math.abs(initialSmall.alpha.y - initialLarge.alpha.y) < 0.01, 'initial live Canvas baselines align');
+  await click((initialSmall.hitTopLeft.x + initialSmall.hitBottomRight.x) / 2, (initialSmall.hitTopLeft.y + initialSmall.hitBottomRight.y) / 2);
+  assert.deepEqual((await state()).textHits, ['text']);
+  await clearTextDraws();
+  await click(700,110);
+  const changedTextState = await state(), changedText = await textDraws();
+  assert.equal(changedTextState.textFont, '16px monospace');
+  const changedSmall = changedText.find(value => value.font === '16px monospace'), changedLarge = changedText.find(value => value.font === '20px sans-serif');
+  assert.ok(changedSmall && changedLarge);
+  assert.notEqual(changedSmall.origin.y, initialSmall.origin.y);
+  assert.ok(Math.abs(changedSmall.alpha.y - changedLarge.alpha.y) < 0.01, 'changed live Canvas baselines align');
+  await click((changedSmall.hitTopLeft.x + changedSmall.hitBottomRight.x) / 2, (changedSmall.hitTopLeft.y + changedSmall.hitBottomRight.y) / 2);
+  assert.deepEqual((await state()).textHits, ['text', 'text']);
+  await click(700,410);
+  await page.waitForTimeout(180);
+  const beforeTextPaint = await counters();
+  await clearTextDraws();
+  await click(480,110);
+  const textPainted = await counters();
+  assert.equal(textPainted.solves, beforeTextPaint.solves);
+  assert.equal(textPainted.crossPlacements, beforeTextPaint.crossPlacements);
+  assert.equal(textPainted.nodeCreates, beforeTextPaint.nodeCreates);
+  assert.equal(textPainted.measuredLeaves, beforeTextPaint.measuredLeaves);
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
   const disposed=await sandbox.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();});
   assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements],[0,0,0]);assert.equal(await frame.locator('pre').count(),0);assert.deepEqual(errors,[]);
-  console.warn(JSON.stringify({base,initial:initial.boxes,shifted:shifted.boxes,wider:wider.boxes,builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
+  console.warn(JSON.stringify({base,initial:initial.boxes,shifted:shifted.boxes,wider:wider.boxes,text:{initialSmall,initialLarge,changedSmall,changedLarge},builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
 } finally { await browser.close(); }

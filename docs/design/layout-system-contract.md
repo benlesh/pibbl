@@ -1585,7 +1585,7 @@ receive the final finite content width and height at local origin0,0. The native
 WASM cross-placement path computes the common ascent starting at zero and each
 offset as common ascent minus that leaf's first baseline. This matches pinned
 Yoga3.2.1 numeric-provider probes, including signed/out-of-box baselines. Last
-baseline placement, automatic Text font metrics, nested containers, wrapping,
+baseline placement, multiline/custom-font Text metrics, nested containers, wrapping,
 reverse/RTL, automatic cross size and decorated/margin/position/query/aspect leaves
 remain outside this first admission. This adds no public operation selector.
 
@@ -1598,9 +1598,22 @@ measurement dependencies, invalidation uses existing allocation revisions, and
 removal/disposal releases the same owner. No second scheduler or persistent
 measurement observer system is introduced. Ordinary builds retain their diagnostic.
 
-The public first-baseline lesson draws labels at explicitly supplied offsets. Its
-mixed fonts illustrate common Canvas positions without claiming native font-metric
-parity. The pinned numeric oracle's callback counts are provenance, not a Pibbl
+Text has a bounded built-in baseline provider for nonempty unwrapped visible
+content, fixed allocated width/height, a finite positive generic pixel font and
+the default/top Canvas baseline. `CanvasMeasurementService.measureTextAtBaseline`
+is an optional pure method taking text and named font/baseline options. First-party
+layout services save and restore the exact Canvas state on success or failure;
+the original `measureText(text, font)` contract is unchanged. Text reuses its paint
+line layout and obtains the alphabetic coordinate as draw-origin y minus the
+measured `alphabeticBaseline`. Missing capability or nonfinite metrics is explicit
+unsupported; there is no inferred font-size/bounding-box fallback. Single-line
+first and last offsets agree. Service method receivers are preserved.
+
+The public first-baseline lesson includes both explicitly supplied offsets and a
+live Canvas Text panel. Its different generic fonts use actual host metrics;
+public tests independently derive expected baseline coordinates from top versus
+alphabetic ink-ascent measurements. This is paint/baseline/hit agreement, without
+claiming native font-metric parity. The pinned numeric oracle's callback counts are provenance, not a Pibbl
 performance or callback-count requirement.
 
 ### Source-order Canvas integration preservation

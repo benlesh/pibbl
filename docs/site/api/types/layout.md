@@ -84,8 +84,13 @@ strokes remain independent. See [`resolveBox`](#/api/functions/resolve-box).
 ## CanvasMeasurementService
 
 `CanvasMeasurementService` supplies the caller-owned Canvas measurement
-operation used by pure `measureElement`; it cannot render or acquire runtime
-resources.
+operations used by pure measurement; they cannot render or acquire runtime
+resources. Existing `measureText(text, font)` remains available. Optional
+`measureTextAtBaseline(text, { font, textBaseline })` returns ordinary Canvas
+`TextMetrics` for that exact font/baseline state and restores the host context.
+Text baseline providers require this capability and a finite `alphabeticBaseline`;
+absence is an explicit unsupported result, rather than a guessed font offset.
+The measured coordinate is local to the final content allocation.
 
 ## Constraints
 
@@ -190,7 +195,10 @@ The experimental `alignItems: "first-baseline"` aligns direct fixed primitive
 leaves in a finite LTR nowrap row after final allocation. See
 [BaselineMeasureInput](#/api/types/layout#baselinemeasureinput) and the
 [first-baseline example](#/examples/layout/wasm-flex-baseline). Other baseline
-modes and automatic Text baselines remain outside this first subset.
+modes remain outside this first subset. Direct nonempty single-line Text with
+fixed dimensions, generic pixel fonts, visible fit/overflow and the default top
+Canvas baseline supplies real host metrics through the optional measurement
+service. Multiline and custom-font lifecycle rules remain subsequent work.
 
 ## FlowProps
 

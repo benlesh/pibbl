@@ -1,5 +1,5 @@
 import {
-  Flex, Rectangle, Text, FocusManagement, definePrimitive, signal, computed,
+  Flex, Group, Rectangle, Text, FocusManagement, definePrimitive, signal, computed,
   useCanvasContext, useLayoutBox, useConst, useReaction, untracked,
   type SystemStyle, type LayoutBox, type PibblNode, type BaselineMeasureInput, type BaselinesResult,
 } from "@pibbl/core";
@@ -15,6 +15,8 @@ type ResolvedCardStyle = CardStyle & { width: number; height: number };
 
 function createBaselineContent() {
   const second = signal(30), owner = signal(180), paint = signal("#426b61");
+  const textFont = signal("10px monospace");
+  const textHits: string[] = [];
   const secondLabel = computed(() => String(second.get()));
   const guide = computed(() => 210 + Math.max(0,12,second.get(),24));
   const boxes = new Map<Name, LayoutBox>(), stamps = new Map<Name, number>();
@@ -55,6 +57,8 @@ function createBaselineContent() {
       <Rectangle onClick={() => paint.update(value => value === "#426b61" ? "#6e3e79" : "#426b61")} style={{ left: 460, top: 96, width: 200, height: 36, fill: "#6e3e79", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 472, top: 106, font: "14px sans-serif", fill: "#ffffff" }}>Paint indicator</Text>
       <Rectangle pointerEvents="none" style={{ left: 460, top: 144, width: 200, height: 8, fill: paint }} />
+      <Rectangle onClick={() => textFont.update(value => value === "10px monospace" ? "16px monospace" : "10px monospace")} style={{ left: 676, top: 96, width: 56, height: 36, fill: "#a63758", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 684, top: 106, font: "12px sans-serif", fill: "#ffffff" }}>Text</Text>
       <Text pointerEvents="none" style={{ left: 28, top: 160, font: "14px sans-serif", fill: "#475569" }}>A/B supply offsets. C has no provider and uses its bottom edge.</Text>
       <FocusManagement><Flex style={{ left: 28, top: 210, width: owner, height: 80, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
         <BaselineCard key="A" id="A" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#426b61" }} />
@@ -63,13 +67,20 @@ function createBaselineContent() {
       </Flex></FocusManagement>
       <Rectangle pointerEvents="none" style={{ left: 28, top: guide, width: owner, height: 1, fill: "#d16642", opacity: .6 }} />
       <Text pointerEvents="none" style={{ left: 28, top: 330, font: "14px sans-serif", fill: "#475569" }}>Click the cards at their new positions. Tab follows A → B → C.</Text>
-      <Text pointerEvents="none" style={{ left: 28, top: 360, font: "14px sans-serif", fill: "#475569" }}>Declared offsets align the labels; this example makes no native font-metric claim.</Text>
+      <Text pointerEvents="none" style={{ left: 28, top: 360, font: "14px sans-serif", fill: "#475569" }}>The Text panel uses live Canvas metrics; it makes no native font-metric claim.</Text>
+      <Text pointerEvents="none" style={{ left: 28, top: 386, font: "13px sans-serif", fill: "#475569" }}>Automatic Text first baseline</Text>
+      <Group onClick={(event) => { if (event.target !== event.currentTarget) textHits.push("text"); }}>
+        <Flex style={{ left: 28, top: 404, width: 180, height: 36, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
+          <Text key="text-small" style={{ width: 70, height: 32, flexBasis: 70, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: textFont, textBaseline: "top", wrap: false, fit: "visible", overflow: "visible", fill: "#426b61" }}>Ag</Text>
+          <Text key="text-large" style={{ width: 90, height: 32, flexBasis: 90, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: "20px sans-serif", textBaseline: "top", wrap: false, fit: "visible", overflow: "visible", fill: "#a63758" }}>Ag</Text>
+        </Flex>
+      </Group>
     </>;
   }
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {
@@ -78,7 +89,7 @@ export function WasmFlexBaselineExample() {
   if (!diagnostics) return <Text style={{ left: 28, top: 24, font: "18px sans-serif", fill: "#19375b" }}>This example needs the experimental layout build.</Text>;
   const content = useConst(createBaselineContent);
   useReaction(() => {
-    const panel = document.createElement("pre"); panel.style.cssText = "font:12px monospace;white-space:pre-wrap;padding:12px;background:#e7e5df;color:#19375b";
+    const panel = document.createElement("pre"); panel.style.cssText = "font:12px monospace;white-space:pre-wrap;overflow-wrap:anywhere;min-width:0;max-width:100%;box-sizing:border-box;padding:12px;background:#e7e5df;color:#19375b";
     canvas.insertAdjacentElement("afterend", panel);
     const refresh = () => { panel.textContent = untracked(content.read); };
     refresh(); const timer = window.setInterval(refresh, 100);

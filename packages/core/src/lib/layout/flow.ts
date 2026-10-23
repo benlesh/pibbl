@@ -1,4 +1,5 @@
 import { contentBoxStyle } from './box-sizing.js';
+import { canvasMeasurementService } from './canvas-measurement.js';
 import { experimentalLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
 import { prepareKnownLayoutDescendants, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
@@ -170,7 +171,7 @@ export const Flow = definePrimitive<
 
 function prepareFlowAllocation(props: FlowProps, style: Readonly<FlowStyle>, content: Readonly<LayoutBox>, ctx: RenderingContext2D, region?: LayoutRegion): { children: readonly PibblElement<any>[]; placements: FlowPlacement[] } {
   const children = prepareLayoutChildren(props.children, 'Flow');
-  const service = { measureText(value: string, font: string) { ctx.save(); try { ctx.font = font; return ctx.measureText(value); } finally { ctx.restore(); } } };
+  const service = canvasMeasurementService(ctx);
   const placements = resolveFlowPlacements(content, children, style, { service, measureElement: (child, constraints) => measureElement(child, constraints, service) }, region);
   return { children, placements };
 }

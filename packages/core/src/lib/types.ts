@@ -334,6 +334,22 @@ export interface CanvasMeasurementService {
    * @returns Canvas text metrics for the supplied text and font.
    */
   measureText(text: string, font: string): TextMetrics;
+  /**
+   * Measures text with the requested Canvas baseline state. Providers that do not
+   * implement this optional capability cannot supply Text baseline composition.
+   * @param text - Text to measure.
+   * @param options - Exact Canvas font and baseline configuration. See {@link CanvasMeasurementService}.
+   * @returns Canvas metrics in the requested baseline coordinate system.
+   */
+  measureTextAtBaseline?(
+    text: string,
+    options: Readonly<{
+      /** Canvas font configuration. See {@link CanvasMeasurementService}. */
+      font: string;
+      /** Canvas drawing baseline for the returned metrics. See {@link CanvasMeasurementService}. */
+      textBaseline: CanvasTextBaseline;
+    }>,
+  ): TextMetrics;
 }
 
 /**
