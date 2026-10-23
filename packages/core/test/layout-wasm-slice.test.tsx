@@ -4907,7 +4907,9 @@ it.runIf(experimentalLayout)('jumps directly to the latest public proof and pres
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 540; document.body.append(canvas);
   const controller = createExampleMount(WasmYogaMigrationExample)(canvas, { fixtures: fullYogaMigrationFixtures }); controllers.push(controller); await nextFrame();
   const last = yogaReference.cases.at(-1)!;
-  const firstName = 'relativeStaticFixture' in last
+  const firstName = 'decoratedRelativeStaticFixture' in last
+    ? yogaReference.cases.find(fixture => 'decoratedRelativeStaticFixture' in fixture)!.name
+    : 'relativeStaticFixture' in last
     ? yogaReference.cases.find(fixture => 'relativeStaticFixture' in fixture)!.name
     : last.name.replace(/-resized$/, '');
   clickCanvas(canvas, 650, 158); await nextFrame();

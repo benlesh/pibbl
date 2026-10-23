@@ -1609,7 +1609,7 @@
         "covers": ["flex.auto-margin", "flex.min-max"]
       }
     ],
-    "limit": "326 records:232 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "330 records:236 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -2570,7 +2570,8 @@
       "evidence": {
         "positive": [
           "packages/core/test/layout-relative-position.test.tsx: public static to relative slots, LTR/RTL precedence, right/bottom only, forwarded style consumed once",
-          "tooling/packed-layout-consumer.mjs: installed relativeStatic receipt"
+          "tooling/packed-layout-consumer.mjs: installed relativeStatic and decoratedRelativeStatic receipts",
+          "packages/core/test/layout-decorated-relative-position.test.tsx: asymmetric parent padding/border content origin and slots"
         ],
         "negative": [
           "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
@@ -2584,10 +2585,13 @@
           "position-relative-all-ltr",
           "position-relative-all-rtl",
           "position-relative-right-bottom-ltr",
-          "position-relative-right-bottom-rtl"
+          "position-relative-right-bottom-rtl",
+          "position-decorated-static-all-ltr",
+          "position-decorated-static-all-rtl",
+          "position-decorated-relative-all-ltr",
+          "position-decorated-relative-all-rtl"
         ],
         "missing": [
-          "decorated parent padding/border",
           "absolute participation and opposite anchoring",
           "nested static nodes",
           "column/wrap positioning",

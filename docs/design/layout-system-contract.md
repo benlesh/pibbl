@@ -57,6 +57,10 @@ out-of-flow system:
   In LTR, `left` takes precedence over `right`; in RTL, `right` takes
   precedence over `left`; `top` takes precedence over `bottom`. The losing
   opposite inset is ignored. A sole right or bottom inset shifts negatively.
+- Parent padding and layout borders first establish the ordinary content-box
+  slot. Relative offsets apply after that allocation; they do not add those
+  decorations again. Four pinned decorated-parent cases cover static/relative
+  placement in LTR/RTL.
 
 `Absolute` keeps its existing independent `left`/`top` contract. This slice
 does not add absolute positioning, right/bottom anchoring, containing blocks,

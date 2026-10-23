@@ -2,8 +2,9 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice120 `a9d79df8` (bounded explicit direct-Flex static/relative positioning).
-Consolidation40 for118–120 passes below (one corrected sequential-walk selector).
+Latest delivery is slice121 (decorated-parent static/relative evidence).
+Slice120 is `a9d79df8` (bounded explicit direct-Flex static/relative positioning).
+Consolidation40 is `d06c7fc6` for118–120 (one corrected sequential-walk selector).
 Slice119 is `346bc95d` (concise public corpus and exhaustive private rehearsal).
 Slice118 is `19bd8853` (measurement-only reactive column content evidence).
 Slice117 is `dd7f292f` (finite column custom-provider exact-width measurement).
@@ -3282,16 +3283,41 @@ Normal25-file matrix203passed/356skipped559 in3.85s, log
 No production/kernel/ABI change, status promotion, baseline rewrite or Node24
 aggregate trust claim. Source/built/installed120 receipts remain current.
 
-## [NEXT] Decorated-parent static and relative positioning evidence (slice121)
+## Slice121 delivered: decorated-parent static and relative evidence
 
-Verify the same direct finite row-nowrap API with asymmetric padding and layout
-border on a204×104 border-box parent, yielding160×60 content. Add four isolated
-pinned static/relative × LTR/RTL cases, public semantic geometry/hit/focus/keyed
-identity/paint reuse/cleanup, source/built replay and installed proof. Evidence
-only if existing production passes; do not invent a production RED. Preserve
-positioning status experimental and all7release gates open. Then advance a
-material remaining absolute participation/containing-block gap rather than
-multiplying supported relative permutations. Full-program review stays at the end.
+Evidence-only: existing runtime passes the focused public test before any
+production edit. Parent204×104 border-box with border2 and asymmetric padding
+L10/R30/T20/B20 has content origin12,22 and content160×60. Static LTR A/B
+at12,22/72,22; static RTL122,22/62,22; relative LTR24,30/72,22;
+relative RTL104,30/62,22. Native Yoga3.2.1 reproduction adds four matching
+cases:330total,236matches/94classified. No runtime/ABI/kernel change.
+
+Public test proves exact boxes, stable keyed stamps/native nodes, focus
+continuity, former/new targets, source-order overlap, receiver-owned paint reuse
+and all three teardown counters. Initial1pass; final focused5pass/413skip418,
+including120 forwarding and latest navigation. Source/built each4matches,
+227core/dist inputs, errors[]/cleanup[0,0,0]. Logs
+`/tmp/pibbl-slice121-public-initial.txt`, `...focused.txt`, `...source.txt`,
+`...built.txt`. Screenshot inspected without baseline changes. Installed
+`decoratedRelativeStatic` receipt passes245dist inputs and strict Bundler/NodeNext
+consumers using unchanged120artifact SHA256
+`d3c231540ffe509de5960e66bce28dcaa6fd2af0fddf4063effab415cf96c893`;
+log `/tmp/pibbl-slice121-packed.txt`. Types and changed-code lint pass; scoped
+evidence review found no material issue. Positioning remains experimental:
+8complete/12experimental/6partial/6missing/1excluded, all7gates open. No Node24
+trust claim or full-program completion.
+
+## [NEXT] Direct Flex absolute participation (slice122)
+
+Advance a material placement gap rather than another relative permutation.
+Verify exact pinned Yoga absolute inset origins before public design: explicit
+insets use the inner-border/padding-box edge, while no-inset alignment may use
+content geometry. First slice admits finite explicitly sized direct children,
+excludes them from in-flow allocation, preserves authored source paint/hit order,
+and supplies current containing bounds without adding a nested containing-block
+cascade. Present the bounded public signature and exact numeric inset policy
+before implementation, then public RED, source/built and installed evidence.
+Broader auto sizing, nested containing blocks and Absolute lowering stay tracked.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
