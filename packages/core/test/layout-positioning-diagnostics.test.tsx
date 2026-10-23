@@ -189,7 +189,7 @@ describe('static containing-block direction boundary', () => {
 describe('bounded absolute wrapped Text height', () => {
   const style = { position: 'absolute' as const, width: 40, height: 'auto' as const, left: 12, bottom: 10, minWidth: 0, minHeight: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10 };
   it.runIf(experimentalLayout).each([
-    ['unwrapped', { ...style, wrap: false }],
+    ['ellipsized fit', { ...style, fit: 'ellipsis' as const }],
     ['clipped fit', { ...style, fit: 'clip' as const }],
     ['squished fit', { ...style, fit: 'squish' as const }],
     ['clipped overflow', { ...style, overflow: 'clip' as const }],
@@ -209,11 +209,24 @@ describe('bounded absolute natural Text width', () => {
     ['ellipsized fit', { ...style, fit: 'ellipsis' as const }],
     ['clipped overflow', { ...style, overflow: 'clip' as const }],
     ['custom font', { ...style, font: '10px AppFont' }],
-    ['both automatic axes', { ...style, height: 'auto' as const }],
+    ['wrapped both automatic axes', { ...style, height: 'auto' as const, wrap: true }],
   ])('rejects natural Text width with %s', (_name, textStyle) => {
     expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={textStyle}>aaaa aaaa</Text></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
   it.runIf(experimentalLayout)('rejects responsive Text width measurement', () => {
     expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={{ ...style, when: [{ query: { minWidth: 0 }, style: { fill: '#a63758' } }] }}>aaaa aaaa</Text></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+});
+
+
+describe('bounded both-auto Text measurement', () => {
+  const style = { position: 'absolute' as const, width: 'auto' as const, height: 'auto' as const, right: 18, bottom: 10, minWidth: 0, minHeight: 0, flexShrink: 0, wrap: false, font: '10px monospace' };
+  it.runIf(experimentalLayout).each([
+    ['both-auto aspect', { ...style, aspectRatio: 2 }],
+    ['horizontal pair with natural height', { ...style, left: 12 }],
+    ['vertical pair with natural width', { ...style, top: 8 }],
+    ['non-generic font', { ...style, font: '10px AppFont' }],
+  ])('rejects %s before introducing constraint feedback', (_name, textStyle) => {
+    expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={textStyle}>aaaa aaaa</Text></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
 });

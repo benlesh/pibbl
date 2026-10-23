@@ -130,9 +130,9 @@ end retain offsets when the child exceeds the content dimension. Physical insets
 and their precedence do not change with main direction. An inset on one axis does
 not change the other axis's content alignment. `alignSelf` is not admitted.
 
-This admission does not add intrinsic sizing, percentage insets, nested
-general containing-block selection, Flow/Grid/Layer participation, or a migration of
-the existing `Absolute` convenience component. The first admission excludes
+General intrinsic sizing outside the bounded profiles below, percentage insets, nested
+general containing-block selection, Flow/Grid/Layer participation, and migration of
+the existing `Absolute` convenience component remain outside this admission. The first admission excludes
 direct layout-component children, child box decoration, margins, nonnumeric
 or automatic bounds, nonzero flex factors, and responsive style queries. Automatic or
 omitted axes without both physical insets or admitted aspect derivation reject explicitly, as do unsupported
@@ -165,8 +165,7 @@ focus and target order. Measurement uses the existing pure receiver transaction:
 provider signal reads are measurement-owned, hooks/paint/writes remain forbidden,
 unsupported results and exceptions publish no successful snapshot, and returned
 sizes must be finite and nonnegative. No box is inferred from an ordinary function
-component. Both-auto natural
-sizing, broader Text/font or image intrinsic sizing, responsive queries, margins
+component. Both-auto custom-provider sizing, broader Text/font or image intrinsic sizing, responsive queries, margins
 and child decoration remain outside this admission.
 
 Direct built-in `Text` may use automatic or omitted absolute height at a declared
@@ -176,7 +175,7 @@ provider measures real Canvas text at exact declared width and unbounded height;
 a measurement-only copy omits automatic height, while final settlement retains
 the authored style and applies numeric bounds and physical anchoring afterward.
 Opposing vertical insets and aspect derivation retain precedence and need no text
-query. Custom fonts, fitted/clipped content and both-auto Text remain outside these admissions.
+query. Generic unwrapped Text also measures natural ink height at a declared numeric width; its height is the existing sum of Canvas ink ascent and descent. Custom fonts and fitted/clipped content remain outside these admissions.
 
 Direct unwrapped Text also supports automatic/omitted absolute width at declared
 finite numeric height, with the same generic font and visible fit/overflow policy.
@@ -184,7 +183,21 @@ The callback receives unbounded width and exact declared height; its measurement
 copy omits automatic width. Natural width follows Text's existing Canvas ink-bounds
 contract (`actualBoundingBoxLeft + actualBoundingBoxRight`), not character advance
 width. Final bounds and physical right/left anchoring apply to this measured width.
-Wrapped natural width and both-auto Text remain outside this admission.
+Generic unwrapped Text may also leave both absolute dimensions automatic/omitted
+when neither axis has an opposing inset pair and no aspect ratio is supplied.
+One measurement receives `[0, Infinity]` on both axes using a copy that omits both
+dimensions. Its existing Canvas ink width and height settle independently, then
+numeric bounds clamp each axis and ordinary inset/alignment placement applies.
+The allocation origin is distinct from the glyph's ink edge: baseline/ascent and
+left-bearing offsets retain Text's existing rendering behavior. This unbounded
+query does not add available-width shrink-to-fit or reflow after width bounds.
+Content can change width without changing ink height; font metrics may change both.
+
+Wrapped natural width, wrapped both-auto sizing, both-auto aspect ratios and mixed
+opposing-pair/natural-axis measurement feedback remain outside this admission.
+Existing fully paired derivation and one-auto paired/aspect precedence remain.
+The both-axis query reuses the same owned region identities and revision-scoped
+measurement cache with a private `both` key; no additional resource graph exists.
 
 Native text fixtures use labeled synthetic
 metrics as sizing probes; they do not establish Canvas font parity.

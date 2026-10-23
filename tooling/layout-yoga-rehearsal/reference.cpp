@@ -2692,6 +2692,33 @@ static void absoluteTextWidthCases() {
   }
 }
 
+
+static float absoluteTextBothWidth = 0, absoluteTextBothHeight = 0;
+static YGMeasureMode absoluteTextBothWidthMode = YGMeasureModeUndefined, absoluteTextBothHeightMode = YGMeasureModeUndefined;
+static YGSize absoluteTextBothMeasure(YGNodeConstRef, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+  absoluteTextBothWidth = width; absoluteTextBothHeight = height;
+  absoluteTextBothWidthMode = widthMode; absoluteTextBothHeightMode = heightMode;
+  // Three aaaa words using a 6px synthetic glyph/space source: 84px × 20px.
+  // This captures Yoga's constraint envelope only; it is not Canvas font parity.
+  return {84, 20};
+}
+static void absoluteTextBothCases() {
+  for (int column = 0; column < 2; ++column) for (int rtl = 0; rtl < 2; ++rtl) {
+    absoluteTextBothWidth = absoluteTextBothHeight = 0;
+    absoluteTextBothWidthMode = absoluteTextBothHeightMode = YGMeasureModeUndefined;
+    auto config = YGConfigNew(); YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config); YGNodeStyleSetPositionType(root, YGPositionTypeRelative); YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, 204); YGNodeStyleSetHeight(root, 104); YGNodeStyleSetFlexDirection(root, column ? YGFlexDirectionColumn : YGFlexDirectionRow); YGNodeStyleSetFlexWrap(root, YGWrapNoWrap); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetGap(root, YGGutterAll, 10);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10); YGNodeStyleSetPadding(root, YGEdgeRight, 30); YGNodeStyleSetPadding(root, YGEdgeTop, 20); YGNodeStyleSetPadding(root, YGEdgeBottom, 20); YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    auto a = YGNodeNewWithConfig(config), text = YGNodeNewWithConfig(config), c = YGNodeNewWithConfig(config);
+    for (auto flow : {a, c}) { YGNodeStyleSetWidth(flow, 50); YGNodeStyleSetHeight(flow, 20); YGNodeStyleSetFlexGrow(flow, 0); YGNodeStyleSetFlexShrink(flow, 0); setMinZero(flow); }
+    YGNodeStyleSetPositionType(text, YGPositionTypeAbsolute); YGNodeStyleSetPosition(text, YGEdgeRight, 18); YGNodeStyleSetPosition(text, YGEdgeBottom, 10); YGNodeStyleSetFlexGrow(text, 0); YGNodeStyleSetFlexShrink(text, 0); setMinZero(text); YGNodeSetMeasureFunc(text, absoluteTextBothMeasure);
+    YGNodeInsertChild(root, a, 0); YGNodeInsertChild(root, text, 1); YGNodeInsertChild(root, c, 2); YGNodeCalculateLayout(root, YGUndefined, YGUndefined, rtl ? YGDirectionRTL : YGDirectionLTR);
+    std::cout << ",{\"name\":\"position-absolute-text-both-auto-" << (column ? "column" : "row") << '-' << (rtl ? "rtl" : "ltr") << "\",\"width\":204,\"height\":104,\"gap\":10,\"flexDirection\":\"" << (column ? "column" : "row") << "\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr") << "\",\"containerStyle\":{\"position\":\"relative\",\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\"},\"absoluteTextBothFixture\":true,\"classification\":\"native-font-metric-source\",\"comparisonLabel\":\"Yoga synthetic 6px callback is query-source provenance only; Pibbl derives both Text dimensions from active Canvas ink bounds.\",\"textValue\":\"aaaa aaaa aaaa\",\"nativeMeasurementConstraints\":{\"width\":\"" << measureModeName(absoluteTextBothWidthMode) << "\",\"widthValue\":"; if (std::isfinite(absoluteTextBothWidth)) std::cout << absoluteTextBothWidth; else std::cout << "\"unbounded\""; std::cout << ",\"height\":\"" << measureModeName(absoluteTextBothHeightMode) << "\",\"heightValue\":"; if (std::isfinite(absoluteTextBothHeight)) std::cout << absoluteTextBothHeight; else std::cout << "\"unbounded\""; std::cout << "},\"boxes\":["; printBox(a); std::cout << ','; printBox(text); std::cout << ','; printBox(c); std::cout << "],\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"position\":\"absolute\",\"width\":\"auto\",\"height\":\"auto\",\"right\":18,\"bottom\":10,\"font\":\"10px monospace\",\"wrap\":false,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -2856,5 +2883,6 @@ int main() {
   absoluteWrapCases();
   absoluteTextHeightCases();
   absoluteTextWidthCases();
+  absoluteTextBothCases();
   std::cout << "]\n";
 }

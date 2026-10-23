@@ -169,6 +169,9 @@ export interface PositioningStyle extends SystemStyle {
    * measure automatic height at declared numeric width through the same owned query.
    * Unwrapped Text may measure automatic width at declared numeric height, using
    * its existing Canvas ink-bounds width before bounds and physical anchoring.
+   * Generic unwrapped Text also supports natural ink height and both automatic
+   * dimensions through one unbounded query before independent numeric clamps;
+   * mixed opposing-pair/natural feedback and both-auto aspect remain excluded.
    * Normal LTR wrapped rows also accept fixed numeric absolute leaves with explicit
    * left/top, no right/bottom/aspect and no nonzero minimum or maximum bounds.
    * On the documented finite direct-child path, automatic absolute axes resolve

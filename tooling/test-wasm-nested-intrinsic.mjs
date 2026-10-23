@@ -144,6 +144,8 @@ try {
       assert.equal(receipt.absoluteParticipation, true, 'Installed absolute child must leave flow and preserve source-order interaction');
       assert.equal(receipt.absoluteWrappedParticipation, true, 'Installed wrapped absolute children must remain out of Flex lines while source order, targets, identity, paint reuse, and cleanup remain exact');
       assert.equal(receipt.absoluteTextHeight, true, 'Installed Text must measure one automatic absolute height through actual Canvas wrapping, preserve physical anchoring across nowrap directions, and clean up exactly');
+      assert.equal(receipt.absoluteTextBoth, true, 'Installed plain unwrapped Text must measure one both-auto natural ink box, remeasure owned text metrics, reuse sibling paint, and release exactly');
+      assert.equal(receipt.absoluteTextBothFontMetrics, 'actual-canvas-ink-bounds', 'Installed both-auto Text proof must use host Canvas ink metrics, not synthetic native font parity');
       assert.equal(receipt.absoluteTextWidth, true, 'Installed Text must measure one automatic absolute width from actual Canvas ink bounds, preserve its physical right anchor across nowrap directions, and clean up exactly');
       assert.equal(receipt.absoluteTextWidthFontMetrics, 'actual-canvas-ink-bounds', 'Installed natural Text width proof must use host Canvas ink metrics rather than claim synthetic native font parity');
       assert.equal(receipt.decoratedRelativeStatic, true, 'Installed decorated positioning must resolve padding/border before relative offsets');

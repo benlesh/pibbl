@@ -768,16 +768,23 @@ function resolveFlexPlacements(
       const definition = getPrimitiveDefinition(child.type);
       const hasPairedMeasurement = !!definition?.measureIntrinsic && !!definition.measure;
       const measurableText = child.type === Text &&
+        (normalized.wrap === undefined || typeof normalized.wrap === 'boolean') &&
         (normalized.fit === undefined || normalized.fit === 'visible') &&
         (normalized.overflow === undefined || normalized.overflow === 'visible') && genericTextFont(normalized);
-      const naturalWidth = (normalized.width === undefined || normalized.width === 'auto') &&
+      const unwrappedText = measurableText && normalized.wrap !== true;
+      const automaticWidth = normalized.width === undefined || normalized.width === 'auto';
+      const automaticHeight = normalized.height === undefined || normalized.height === 'auto';
+      const naturalBoth = unwrappedText && automaticWidth && automaticHeight && normalized.aspectRatio === undefined &&
+        (normalized.left === undefined || normalized.right === undefined) &&
+        (normalized.top === undefined || normalized.bottom === undefined);
+      const naturalWidth = naturalBoth || automaticWidth &&
         typeof normalized.height === 'number' && Number.isFinite(normalized.height) &&
         normalized.aspectRatio === undefined && (normalized.left === undefined || normalized.right === undefined) &&
-        (hasPairedMeasurement || measurableText && (normalized.wrap === undefined || normalized.wrap === false));
-      const naturalHeight = (normalized.height === undefined || normalized.height === 'auto') &&
+        (hasPairedMeasurement || unwrappedText);
+      const naturalHeight = naturalBoth || automaticHeight &&
         typeof normalized.width === 'number' && Number.isFinite(normalized.width) &&
         normalized.aspectRatio === undefined && (normalized.top === undefined || normalized.bottom === undefined) &&
-        (hasPairedMeasurement || measurableText && normalized.wrap === true);
+        (hasPairedMeasurement || measurableText);
       assertSupportedAbsoluteFlexPosition(child, normalized, options, container, preparedStyleQuery(prepared), naturalWidth, naturalHeight);
       const measurementToken = naturalWidth || naturalHeight ? region?.absoluteMeasurementIdentity(child.type,
         child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`) : undefined;
@@ -1307,28 +1314,32 @@ function resolveAbsoluteFlexPlacement(
   let measuredWidth: number | undefined;
   let measuredHeight: number | undefined;
   if (measurement) {
-    const measurementAxis = automaticWidth ? 'width' : 'height';
+    const measurementAxis = automaticWidth && automaticHeight ? 'both' : automaticWidth ? 'width' : 'height';
     const measuredChild = clonePibblElement(child);
     // Text's measure callback uses an omitted natural axis. Keep authored
     // automatic dimensions on the original descriptor for final settlement.
-    const measuredStyle = child.type === Text ? measurementAxis === 'width' ?
-      { ...style, width: undefined } : { ...style, height: undefined } : style;
+    const measuredStyle = child.type === Text ? measurementAxis === 'both' ?
+      { ...style, width: undefined, height: undefined } : measurementAxis === 'width' ?
+        { ...style, width: undefined } : { ...style, height: undefined } : style;
     setPreNormalizedStyle(measuredChild, measuredStyle, child, receiverToken, query);
-    const fixedAxis = measurementAxis === 'width' ? style.height as number : style.width as number;
-    const result = measureConstrainedIntrinsicElement(measuredChild, measurementAxis === 'width' ? {
+    const fixedAxis = measurementAxis === 'both' ? 0 : measurementAxis === 'width' ? style.height as number : style.width as number;
+    const result = measureConstrainedIntrinsicElement(measuredChild, measurementAxis === 'both' ? {
+      minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
+    } : measurementAxis === 'width' ? {
       minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: fixedAxis, maxHeight: fixedAxis,
     } : {
       minWidth: fixedAxis, maxWidth: fixedAxis, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
     }, measurement.service, region && measurementToken ? {
       cache: region, token: measurementToken,
-      key: `absolute-size:${measurementAxis}:${allocationInputRevision()}:${fixedAxis}`,
+      key: measurementAxis === 'both' ? `absolute-size:both:${allocationInputRevision()}` :
+        `absolute-size:${measurementAxis}:${allocationInputRevision()}:${fixedAxis}`,
       recordMeasurement: recordWasmMeasurement,
     } : undefined);
     if (result.status !== 'measured') {
       throw childDiagnostic(child, measurementAxis, 'auto', paddingBox, `absolute natural ${measurementAxis} requires supported pure measurement: ${result.reason}`);
     }
-    if (measurementAxis === 'width') measuredWidth = result.size.width;
-    else measuredHeight = result.size.height;
+    if (measurementAxis !== 'height') measuredWidth = result.size.width;
+    if (measurementAxis !== 'width') measuredHeight = result.size.height;
   }
   const settledStyle = automaticWidth || automaticHeight ? {
     ...style,

@@ -2,8 +2,9 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice138 `b84f5322` (built-in unwrapped Text natural absolute width).
-Consolidation46 for136–138 is this checkpoint commit.
+Latest delivery is slice139 (unwrapped Text natural height and both-auto ink dimensions; this commit).
+Slice138 is `b84f5322` (unwrapped Text natural absolute width).
+Consolidation46 is `c72afa72` for136–138.
 Slice137 is `3ad9598a` (wrapped Text automatic absolute height).
 Slice136 is `6c30acfb` (fixed physical-inset absolute leaves in normal wrapped rows).
 Slice135 is `65b8bb94` (fixed declarative containing chains across nowrap directions).
@@ -99,11 +100,11 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:487 records:385 geometry matches,98 preserved-semantic comparisons and4 explicitly classified native font-source comparisons. Seven recorded column-width queries deliberately differ (five custom providers, two Text).
+Current corpus:491 records:385 geometry matches,98 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
-Click Latest for Text natural width; four cases compare row/column LTR/RTL using live Canvas ink metrics and explicit native-query provenance.
+Click Latest for both-auto Text ink dimensions; four cases compare row/column LTR/RTL using live Canvas metrics and explicit native-query provenance.
 The public lesson is `#/examples/layout/wasm-yoga-migration`.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -3984,24 +3985,57 @@ were emitted; no assertions failed. Logs
 `/tmp/pibbl-consolidation46-{focused,normal,docs}.txt`. Documentation109 mutation
 probes pass. This is bounded consolidation, not the Node24 aggregate trust gate.
 
-## [NEXT] Natural unwrapped Text height and both-auto ink dimensions (139)
+## Slice139 delivered: natural unwrapped Text height and both-auto dimensions
 
-Direct generic unwrapped visible Text may use natural height at a numeric width
-or both automatic dimensions, avoiding an arbitrary failure when the same Text
-changes from automatic to explicit width. Use the existing Canvas ink-bounds
-contract; one unbounded-both query on a measurement copy omitting both axes can
-supply both natural dimensions. Preserve existing identity/revision keys, apply
-numeric bounds afterward and reuse physical anchoring. Keep both-auto aspect and
-mixed opposing-pair/measurement feedback outside admission; fully paired existing
-derivation and one-auto pair/aspect precedence remain unchanged.
+Generic unwrapped visible Text now supports natural ink height at numeric width
+and both automatic dimensions across finite nowrap directions. One unbounded-both
+measurement omits both dimensions on its private copy, settles the existing Canvas
+ink width/height, then independently clamps bounds and reuses ordinary placement.
+The existing region identity/cache uses `absolute-size:both` with allocation revision;
+no ABI, resource graph or cache-admission expansion. Fully paired derivation and
+one-auto pair/aspect precedence remain; both-auto aspect and mixed pair/measurement
+feedback reject explicitly. This is not available-width shrink-to-fit or CSS reflow.
 
-Public RED must use actual Canvas metrics and distinguish allocation origin from
-glyph bounds/baseline offsets. Content changes width; font changes can change both
-axes. Native synthetic probes remain classified query-source evidence, not stored
-platform geometry. Add the minimal runnable public slice first, then harden cache,
-constraints, source focus/hits and cleanup proportionately. Image/nested intrinsic
-ownership, wider wrapping, containing overrides, hidden/contents, transactional
-publication and release gates remain open.
+Public RED `/tmp/pibbl-slice139-public-red.txt` captured missing admission before
+production. Real Canvas tests distinguish allocation origin from glyph bearing/
+baseline offsets. Two-to-three words move width; font10→16 changes both dimensions.
+Focus precedes interaction, old/new bands miss/hit correctly, stable plain Text
+reuses paint measurements, automatic→numeric width keeps natural height, both-auto
+bounds clamp independently, empty content remeasures, and removal detaches sources
+before keyed restore/exact cleanup. Obsolete unwrapped-height/both-auto rejection
+cases were updated to actual remaining exclusions. Scoped core review clean.
+
+Four classified native6px callback probes are query-source evidence, not platform
+font boxes. The initial temp probe omitted right/bottom and was corrected before
+normative corpus generation. Source/built4each use227source/dist inputs, derive live
+Canvas ink dimensions/origin/glyph offsets, assert A/C flow slots and keys, targets,
+conservative interactive paint work and cleanup[0,0,0], no errors. Two column
+callbacks have explicit at-most200 width versus Pibbl unbounded width. Screenshot
+inspected. Corpus491 comprises385matches/98preserved-semantic/8font-source cases;
+nine query differences are separately recorded, not a full491-case replay.
+
+Fresh Node26.9.0/macOS Chromium: focused4files81pass/2skip83; normal43pass/40skip83;
+Latest1pass/413skip414. Types, changed lint, docs109 mutation probes, JSDoc and
+public5/full491 boundary pass. Fresh build then isolated packed consumer succeeds
+245installed inputs, strict Bundler/NodeNext, actual Canvas both-auto origins,
+content/font ownership, stable paint cache reuse, removal/restore and exact cleanup,
+plus104 auto-margin cases. Tarball SHA256
+`bd8558745da14be7fc1e2c2b3c96a5b535f9f6eed4a052e1f71b9deb37185120`.
+Logs `/tmp/pibbl-slice139-{public-red,public-green,focused,normal,latest,source,built,packed,types,lint,docs}.txt`.
+No kernel change, font parity, full491-case replay, speed or Node24 trust claim.
+Fixed33/all seven open release gates unchanged.
+
+## [NEXT] Explicitly anchored absolute profiles in wrapped Flex (140)
+
+Evaluate the coherent existing absolute sizing family across normal/reversed
+wrapping and main/writing directions. Require at least one physical inset on each
+axis in wrapped contexts, avoiding new no-inset static-position/alignment policy.
+Reuse existing fixed/bounded/pair/aspect/measurement validation and non-flow source
+placement instead of delivering repeated direction-only admissions. Pin native
+geometry/query provenance and a focused public RED before changing the guard;
+provide the minimal runnable slice before broader hardening. Image intrinsic
+ownership, general containing blocks, participation, transactionality and release
+exits remain separate. Consolidate139–141 after the third delivered slice.
 
 ### Finite positioning exit matrix after134
 
@@ -4010,7 +4044,7 @@ This refines existing manifest entries; it adds no capability or release gate.
 | Existing exit                             | Evidence still required before closing it                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Direct static/relative/absolute placement | All accepted main directions and wrapping contexts, inset precedence and no-inset alignment, logical/percentage policy, supported child box and size constraints; pinned semantic geometry plus public paint/hit/focus evidence. Static/relative leaves and fixed/opposing-inset absolute sizing/bounds cover nowrap directions; direct primitive static/relative and absolute fixed/derived/provider paths cover nowrap directions; positioned direct fixed neutral-flex nowrap Flex owners cover main directions; other known owners retain their prior boundary. |
-| Absolute intrinsic dimensions             | Broader Text/font and image contributions beyond137 exact-width wrapped Text height, both-auto sizing, nested described owners and supported constraint feedback. The paired-provider one-auto paths in128–129 do not supply these contracts.                                                                                                                                                                                                                                                                                                                       |
+| Absolute intrinsic dimensions             | Broader Text/font and image contributions beyond137–139 bounded generic Text profiles, both-auto sizing, nested described owners and supported constraint feedback. The paired-provider one-auto paths in128–129 do not supply these contracts.                                                                                                                                                                                                                                                                                                                     |
 | General containing-block ownership        | Exact override, transformed/opaque/boxless ancestry policy and lifecycle evidence, retaining legacy omission only where specified. Direct static Flex chains alone do not close it.                                                                                                                                                                                                                                                                                                                                                                                 |
 | Hidden/contents participation             | Declared retention/disposal, boxless layout contribution, identity, source order, clips, events and visibility transitions; current implementation is missing.                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Transactional publication                 | Position, hit, focus, HTML and external-layer geometry must publish or roll back coherently through the accepted root-wide preparation/ownership model. Per-region measurement rollback is bounded evidence only.                                                                                                                                                                                                                                                                                                                                                   |
