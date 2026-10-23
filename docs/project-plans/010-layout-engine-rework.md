@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice108 (wrapped-row measured Text cross-auto sizing).
+Latest delivery is slice108 `35eef93b` (wrapped-row measured Text cross-auto sizing).
+Consolidation36 passes for106–108, recorded below.
 Slice107 is `7b599250` (automatic-width Text cross-auto sizing).
 Slice106 is `33832012` (measured built-in Flex owner cross-auto sizing).
 Slice105 is `931ecc2f` (measured custom primitive cross-auto sizing).
@@ -2778,14 +2779,37 @@ Toggle wrapping, then Toggle comparison width. Fixed33 counts5complete/
 11experimental/8partial/8missing/1excluded; auto-margin partial, all7gates open.
 Node26.9.0, no Node24 aggregate trust or controlled performance claim.
 
-## [NEXT] Consolidation 36 for slices 106–108
+### Consolidation 36 completed for delivery slices 106–108
 
-Run the bounded combined layout/measurement/ownership suites in experimental and
-ordinary modes before the next implementation expansion. Reuse fresh source/
-built/installed receipts without unchanged duplicate replays. Then select the
-nearest fixed-manifest exit; source-order preservation through reverse/RTL and
-Group/Layer/filter composition is being inspected, without claiming completion
-from older bounded evidence. Final whole-codebase review stays at program end.
+Separate106 `33832012`,107 `7b599250`,108 `35eef93b`. Fresh combined11-file
+Chromium verification passes502tests/9skips511 in77.98s. Ordinary mode passes
+169tests/342skips511 in2.88s (9files pass/2skip). This covers public layout,
+Text auto basis/minimum, measurement purity, structural card, paint reuse,
+Flex/box/measurement/length internals and native loader. Expected negative-case
+diagnostics are asserted; no failures. Logs:
+`/tmp/pibbl-consolidation36-focused.txt` and
+`/tmp/pibbl-consolidation36-normal.txt`.
+
+Reuse fresh108 source/built full Text controls proof (built469inputs), installed
+wrapped/automatic-width Text receipts and104auto+24direction cases/230inputs/
+strict types, scoped no-material-finding reviews and docs/JSDoc/catalog/types/lint.
+Corpus307=213matches+94classified and native v5/68649bytes unchanged. No new
+native unit run claimed. Node26.9.0/pnpm11.21.0deps/Chromium/macOSarm64; no Node24
+aggregate trust or controlled performance claim. Fixed33 counts remain5complete/
+11experimental/8partial/8missing/1excluded; all7release gates remain open.
+
+## [NEXT] Source-order Canvas composition evidence (slice 109)
+
+Address the fixed `integration.source-order-canvas` entry's remaining reverse/RTL
+and Group/Layer/filter preservation evidence. Use a public overlapping layout
+whose later source child remains the top painted and hit target as spatial
+positions mirror, including nontrivial composition. Preserve source keyboard
+order and keyed identity; decorative opt-out must change targeting without
+changing paint. Prove resource ownership and source/built/installed surfaces.
+Inspect existing passing behavior first: this may be an evidence-only slice,
+not a production change. Do not claim capability completion until its stated
+missing evidence is covered. Consolidate109–111 afterward; final whole-codebase
+review stays at full program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
