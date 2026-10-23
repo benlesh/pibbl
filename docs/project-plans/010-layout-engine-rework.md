@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice135 (fixed declarative containing chains across nowrap directions; this commit).
+Latest delivery is slice135 `65b8bb94` (fixed declarative containing chains across nowrap directions).
+Consolidation45 for133–135 is this checkpoint commit.
 Slice134 is `4faba1f1` (paired absolute providers across main directions).
 Slice133 is `f639bce8` (absolute aspect main directions).
 Slice132 is `43f17fc1` (opposing-inset absolute size/bounds main directions).
@@ -3854,10 +3855,17 @@ Logs `/tmp/pibbl-slice135-{focused,normal,navigation-green,source-final,built,pa
 No kernel change, full477-case replay, speed, Node24 trust or release-completion
 claim. Fixed33 capability denominator and seven open release gates unchanged.
 
-## [NEXT] Consolidation45 for slices133–135
+## Consolidation45 completed for slices133–135
 
-Run the bounded experimental and normal regression lanes, record fresh results,
-then deliver fixed physical-inset absolute placement in finite normal wrapped rows
+Fresh Node26.9.0/macOS Chromium regression:29 files,613passed/11skipped624
+in79.61s experimental; normal231passed/393skipped624 in4.08s. Expected negative
+measurement diagnostics were emitted; no assertions failed. Logs
+`/tmp/pibbl-consolidation45-{focused,normal,docs}.txt`. Documentation109 mutation
+probes pass. This is bounded consolidation, not the Node24 aggregate trust gate.
+
+## [NEXT] Fixed absolute participation in finite wrapped rows (slice136)
+
+Deliver fixed physical-inset absolute placement in finite normal wrapped rows
 as slice136. Existing API suffices; pin native geometry and public failing evidence
 before extending the nowrap guard. Keep broader sizing/alignment/wrapping policies
 outside that first runnable slice.
