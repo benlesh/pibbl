@@ -311,6 +311,10 @@ paddingL20/R20/T10/B30 and border2. A definite width60 capped at maxWidth25%
 receives25→40 from content cross100→160; its100%-width leaves consume that width
 once, while C stays at74,132. Width-only updates reuse main solves/lines and
 this definite path also performs no pure measurement.
+With declared width20/minWidth60% in that same column owner, the nested width
+and100%-width leaves become60→96; C moves from94,132 to130,132. A point formerly
+on C can become part of A1, following source-order targeting of the new geometry.
+This definite minimum path likewise performs no pure measurement.
 Finite nested Flex allocations resolve percentages from the final inner content
 box, after outer line allocation. Pinned row/column × nowrap/wrap resize cases
 include inner40% dimensions/bases and10% gaps: allocated main81→51 gives child

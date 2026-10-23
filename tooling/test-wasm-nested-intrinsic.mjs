@@ -123,6 +123,7 @@ try {
       assert.equal(receipt.nestedDecoratedCrossMin, true, 'Installed package must retain decorated row-reverse nested percentage cross geometry, targets, identity, bounded measurement, and cleanup');
       assert.equal(receipt.nestedDecoratedCrossMax, true, 'Installed package must retain decorated row-reverse nested percentage cross caps, expansion targets, identity, pure paint reuse, and cleanup');
       assert.equal(receipt.nestedDecoratedColumnCrossMax, true, 'Installed package must retain decorated column-reverse nested percentage cross caps, expansion targets, identity, pure paint reuse, and cleanup');
+      assert.equal(receipt.nestedDecoratedColumnCrossMin, true, 'Installed package must retain decorated column-reverse nested percentage cross floors, C-to-leaf target movement, identity, pure paint reuse, and cleanup');
       console.warn('Packed auto margins: 104 fixture cases passed');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');

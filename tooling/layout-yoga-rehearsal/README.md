@@ -499,3 +499,11 @@ The column-reverse decorated cap uses width144→204/height244 and content cross
 checks both records; add `--latest-proof` to use the new direct comparison control.
 Next case and Next section retain their behavior. Corpus316=222matches/94classified;
 auto104/direction24 and the native binary remain unchanged.
+
+### Definite nested column cross minimum (slice 116)
+
+The decorated column-reverse minWidth60% pair turns declared width20 into60→96,
+with100%-width leaves matching the allocation and C moving x94→130 at y132.
+Point100,136 transfers C→A1, then the new C target remains reachable. Use
+`--nested-decorated-column-cross-min --latest-proof` for direct source/built replay.
+Corpus318=224matches/94classified; auto104/direction24 remain unchanged.

@@ -1915,7 +1915,8 @@
           "Nested row Flex minHeight60% under owner height100\u2192160 expands its line60\u219296 while fixed inner leaves retain40\u00d720 geometry",
           "Decorated border-box244\u00d7144\u2192204 with padding/border leaves content200\u00d7100\u2192160; reversed nested minHeight60% gives60\u219296 and world C y94\u2192130",
           "Definite decorated reverse nested height60 capped by maxHeight25% gives25\u219240; 100% leaf heights consume that allocation once",
-          "Decorated column-reverse definite width60/maxWidth25% and 100%-width children resolve25\u219240 from content cross100\u2192160"
+          "Decorated column-reverse definite width60/maxWidth25% and 100%-width children resolve25\u219240 from content cross100\u2192160",
+          "Decorated column-reverse definite width20/minWidth60% gives nested width60\u219296 and C x94\u2192130 from content cross100\u2192160"
         ],
         "negative": [
           "opposing limits rejection",
@@ -1930,7 +1931,8 @@
           "Nested following target moves y72\u2192108; old point misses, keyed leaves/native nodes survive, paint-only solves/lines reuse with one pure measure per preparation",
           "Decorated reverse nested world leaves remain132/172,22; following target moves, keys/native solves/lines reuse, one pure measurement remains on paint",
           "Expanded leaf extent admits a formerly empty point, preserves keys/main solves/lines/nodes, and performs zero pure measurements",
-          "Column leaf expansion admits formerly empty52,136; width-only updates preserve keys/main solves/lines, and paint uses zero pure measures"
+          "Column leaf expansion admits formerly empty52,136; width-only updates preserve keys/main solves/lines, and paint uses zero pure measures",
+          "Point100,136 transfers from C to expanded A1 while new C remains targetable; keys/main solves/lines reuse, zero paint measurement"
         ],
         "yogaCases": [
           "cap",
@@ -1960,10 +1962,12 @@
           "nested-cross-max-decorated-row-reverse",
           "nested-cross-max-decorated-row-reverse-resized",
           "nested-cross-max-decorated-column-reverse",
-          "nested-cross-max-decorated-column-reverse-resized"
+          "nested-cross-max-decorated-column-reverse-resized",
+          "nested-cross-min-decorated-column-reverse",
+          "nested-cross-min-decorated-column-reverse-resized"
         ],
         "missing": [
-          "broader column/reversed/decorated percentage bounds and additional nested minimum/maximum combinations",
+          "reverse/decorated main-axis percentage floors/caps beyond the bounded nested cross-bound matrix",
           "indefinite owner policy and explicit measure modes"
         ]
       }

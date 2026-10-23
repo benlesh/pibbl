@@ -30,6 +30,7 @@ const nestedCrossMinOnly = process.argv.includes('--nested-cross-min');
 const nestedDecoratedCrossMinOnly = process.argv.includes('--nested-decorated-cross-min');
 const nestedDecoratedCrossMaxOnly = process.argv.includes('--nested-decorated-cross-max');
 const nestedDecoratedColumnCrossMaxOnly = process.argv.includes('--nested-decorated-column-cross-max');
+const nestedDecoratedColumnCrossMinOnly = process.argv.includes('--nested-decorated-column-cross-min');
 const latestProof = process.argv.includes('--latest-proof');
 const browser = await chromium.launch({ headless: true });
 try {
@@ -71,8 +72,12 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = nestedDecoratedColumnCrossMaxOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedColumnCrossMaxFixture) : nestedDecoratedCrossMaxOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedCrossMaxFixture) : nestedDecoratedCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedCrossMinFixture) : nestedCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedCrossMinFixture) : roundingOnly ? reference.cases.filter(fixture => fixture.roundingFixture) : ownerCrossAutoOnly ? reference.cases.filter(fixture => fixture.ownerCrossAutoFixture) : customCrossAutoOnly ? reference.cases.filter(fixture => fixture.customCrossAutoFixture) : textCrossAutoOnly ? reference.cases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? reference.cases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? reference.cases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (nestedDecoratedColumnCrossMaxOnly) {
+  const cases = nestedDecoratedColumnCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedColumnCrossMinFixture) : nestedDecoratedColumnCrossMaxOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedColumnCrossMaxFixture) : nestedDecoratedCrossMaxOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedCrossMaxFixture) : nestedDecoratedCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedCrossMinFixture) : nestedCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedCrossMinFixture) : roundingOnly ? reference.cases.filter(fixture => fixture.roundingFixture) : ownerCrossAutoOnly ? reference.cases.filter(fixture => fixture.ownerCrossAutoFixture) : customCrossAutoOnly ? reference.cases.filter(fixture => fixture.customCrossAutoFixture) : textCrossAutoOnly ? reference.cases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? reference.cases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? reference.cases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (nestedDecoratedColumnCrossMinOnly) {
+    if (latestProof) await click(650, 158);
+    else for(let section=0;section<26;section++) await click(520,158);
+  }
+  else if (nestedDecoratedColumnCrossMaxOnly) {
     if (latestProof) await click(650, 158);
     else for(let section=0;section<25;section++) await click(520,158);
   }
@@ -146,15 +151,17 @@ try {
       previousDirectionStamps = { B: state.stamps.B }; previousLiveNames = ['B'];
       continue;
     }
-    if (fixture.nestedCrossMinFixture || fixture.nestedDecoratedCrossMinFixture || fixture.nestedDecoratedCrossMaxFixture || fixture.nestedDecoratedColumnCrossMaxFixture) {
+    if (fixture.nestedCrossMinFixture || fixture.nestedDecoratedCrossMinFixture || fixture.nestedDecoratedCrossMaxFixture || fixture.nestedDecoratedColumnCrossMaxFixture || fixture.nestedDecoratedColumnCrossMinFixture) {
       const inspector = await frame.locator('pre').innerText();
       const state = JSON.parse(inspector.split('nested cross min state: ')[1]);
       const columnMaximum = Boolean(fixture.nestedDecoratedColumnCrossMaxFixture);
+      const columnMinimum = Boolean(fixture.nestedDecoratedColumnCrossMinFixture);
       const maximum = Boolean(fixture.nestedDecoratedCrossMaxFixture || columnMaximum);
-      const nestedBoxes = fixture.nestedCrossBoxes ?? fixture.nestedDecoratedBoxes ?? fixture.nestedDecoratedMaxBoxes ?? fixture.nestedDecoratedColumnMaxBoxes;
-      assert.equal(state.decorated, Boolean(fixture.nestedDecoratedCrossMinFixture || maximum), `${fixture.name}: inspector marks decorated root`);
+      const nestedBoxes = fixture.nestedCrossBoxes ?? fixture.nestedDecoratedBoxes ?? fixture.nestedDecoratedMaxBoxes ?? fixture.nestedDecoratedColumnMaxBoxes ?? fixture.nestedDecoratedColumnMinBoxes;
+      assert.equal(state.decorated, Boolean(fixture.nestedDecoratedCrossMinFixture || maximum || columnMinimum), `${fixture.name}: inspector marks decorated root`);
       assert.equal(state.maximum, maximum, `${fixture.name}: inspector marks maximum branch`);
-      assert.equal(state.column, columnMaximum, `${fixture.name}: inspector marks column maximum branch`);
+      assert.equal(state.column, Boolean(columnMaximum || columnMinimum), `${fixture.name}: inspector marks column branch`);
+      assert.equal(state.minimum, columnMinimum, `${fixture.name}: inspector marks column minimum branch`);
       assert.deepEqual([state.boxes.A1, state.boxes.A2], nestedBoxes, `${fixture.name}: fixed nested leaves`);
       assert.deepEqual([state.boxes.B, state.boxes.C], expected.slice(1), `${fixture.name}: following sibling boxes`);
       const layout = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
@@ -167,18 +174,23 @@ try {
         assert.equal(layout.lineFormations, previousNestedCross.layout.lineFormations, `${fixture.name}: height-only resize reuses line formation`);
         assert.ok(layout.crossPlacements > previousNestedCross.layout.crossPlacements, `${fixture.name}: height-only resize replaces cross placements`);
         assert.equal(layout.nodeCreates, previousNestedCross.layout.nodeCreates, `${fixture.name}: stable keys reuse native nodes`);
-        if (!maximum) {
+        if (!maximum && !columnMinimum) {
           await click(392 + expected[1].x + 4, 240 + expected[1].y + 4);
           assert.ok((await frame.locator('pre').innerText()).includes('selected: B'), `${fixture.name}: sibling remains selectable`);
           const oldFollowing = previousNestedCross.following;
           await click(392 + oldFollowing.x + 4, 240 + oldFollowing.y + 4);
           assert.ok((await frame.locator('pre').innerText()).includes('selected: B'), `${fixture.name}: former C point is now empty`);
-        } else {
+        } else if (maximum) {
           await click(392 + expected[1].x + 4, 240 + expected[1].y + 4);
           assert.ok((await frame.locator('pre').innerText()).includes('selected: B'), `${fixture.name}: sibling remains selectable`);
           const maximumPoint = columnMaximum ? { x: 52, y: 136 } : { x: 136, y: 52 };
           await click(392 + maximumPoint.x, 240 + maximumPoint.y);
           assert.ok((await frame.locator('pre').innerText()).includes('selected: A1'), `${fixture.name}: newly exposed leaf targets`);
+        } else {
+          await click(392 + 100, 240 + 136);
+          assert.ok((await frame.locator('pre').innerText()).includes('selected: A1'), `${fixture.name}: former C point becomes minimum leaf`);
+          await click(392 + 134, 240 + 136);
+          assert.ok((await frame.locator('pre').innerText()).includes('selected: C'), `${fixture.name}: moved C targets`);
         }
       } else if (maximum) {
         await click(392 + expected[1].x + 4, 240 + expected[1].y + 4);
@@ -186,6 +198,9 @@ try {
         const maximumPoint = columnMaximum ? { x: 52, y: 136 } : { x: 136, y: 52 };
         await click(392 + maximumPoint.x, 240 + maximumPoint.y);
         assert.ok((await frame.locator('pre').innerText()).includes('selected: B'), `${fixture.name}: capped leaf point begins outside allocation`);
+      } else if (columnMinimum) {
+        await click(392 + 100, 240 + 136);
+        assert.ok((await frame.locator('pre').innerText()).includes('selected: C'), `${fixture.name}: minimum leaf point begins in C`);
       }
       for (const [leafIndex, leaf] of nestedBoxes.entries()) {
         await click(392 + leaf.x + 4, 240 + leaf.y + 4);
@@ -200,7 +215,7 @@ try {
       assert.equal(afterPaint.solves, beforePaint.solves, `${fixture.name}: paint reuse preserves main solve`);
       assert.equal(afterPaint.lineFormations, beforePaint.lineFormations, `${fixture.name}: paint reuse preserves lines`);
       assert.equal(afterPaint.nodeCreates, beforePaint.nodeCreates, `${fixture.name}: paint reuse preserves nodes`);
-      assert.equal(afterPaint.measuredLeaves, beforePaint.measuredLeaves + (maximum ? 0 : 1), `${fixture.name}: ${maximum ? 'definite maximum avoids measurement' : 'row owner remeasures once for paint'}`);
+      assert.equal(afterPaint.measuredLeaves, beforePaint.measuredLeaves + (maximum || columnMinimum ? 0 : 1), `${fixture.name}: ${maximum || columnMinimum ? 'definite cross bound avoids measurement' : 'row owner remeasures once for paint'}`);
       previousNestedCross = { stamps: state.stamps, layout, following };
       previousDirectionStamps = state.stamps;
       previousLiveNames = ['A1', 'A2', 'B', 'C'];
@@ -315,7 +330,7 @@ try {
   const last = cases.at(-1);
   const lastBoxes = last.pibblBoxes ?? last.boxes;
   const column = last.flexDirection.startsWith('column');
-  if (!roundingOnly && !nestedCrossMinOnly && !nestedDecoratedCrossMinOnly && !nestedDecoratedCrossMaxOnly && !nestedDecoratedColumnCrossMaxOnly && !last.directionMatrixFixture && last.gap > 0) {
+  if (!roundingOnly && !nestedCrossMinOnly && !nestedDecoratedCrossMinOnly && !nestedDecoratedCrossMaxOnly && !nestedDecoratedColumnCrossMaxOnly && !nestedDecoratedColumnCrossMinOnly && !last.directionMatrixFixture && last.gap > 0) {
   const gap = column ? Math.min(...lastBoxes.map(box => box.y + box.height)) + 6 : Math.min(...lastBoxes.map(box => box.x + box.width)) + 6;
   await click(column ? 396+lastBoxes[0].x : 392+gap, column ? 240+gap : 244+lastBoxes[0].y);
   assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(64+lastBoxes.length)}`));

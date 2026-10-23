@@ -1527,6 +1527,24 @@ static void nestedCrossMaximumDecoratedColumnReverseCases() {
   }
 }
 
+
+static void nestedCrossMinimumDecoratedColumnReverseCases() {
+  for (int resize=0; resize<2; ++resize) {
+    const bool resized=resize==1; auto config=YGConfigNew(); YGConfigSetUseWebDefaults(config,false); YGConfigSetPointScaleFactor(config,0); YGConfigSetErrata(config,YGErrataNone);
+    auto root=YGNodeNewWithConfig(config); YGNodeStyleSetBoxSizing(root,YGBoxSizingBorderBox); YGNodeStyleSetWidth(root,resized?204:144); YGNodeStyleSetHeight(root,244); YGNodeStyleSetFlexDirection(root,YGFlexDirectionColumnReverse); YGNodeStyleSetFlexWrap(root,YGWrapWrap); YGNodeStyleSetGap(root,YGGutterAll,12); YGNodeStyleSetAlignItems(root,YGAlignStretch); YGNodeStyleSetAlignContent(root,YGAlignFlexStart); YGNodeStyleSetPadding(root,YGEdgeLeft,20); YGNodeStyleSetPadding(root,YGEdgeRight,20); YGNodeStyleSetPadding(root,YGEdgeTop,10); YGNodeStyleSetPadding(root,YGEdgeBottom,30); YGNodeStyleSetBorder(root,YGEdgeAll,2);
+    auto nested=YGNodeNewWithConfig(config); YGNodeStyleSetWidth(nested,20); YGNodeStyleSetHeight(nested,80); YGNodeStyleSetFlexBasis(nested,80); YGNodeStyleSetFlexGrow(nested,0); YGNodeStyleSetFlexShrink(nested,0); YGNodeStyleSetFlexDirection(nested,YGFlexDirectionColumn); YGNodeStyleSetAlignItems(nested,YGAlignStretch); setMinZero(nested); YGNodeStyleSetMinWidthPercent(nested,60);
+    for(int leafIndex=0;leafIndex<2;++leafIndex){auto leaf=YGNodeNewWithConfig(config); YGNodeStyleSetWidthPercent(leaf,100); YGNodeStyleSetHeight(leaf,40); YGNodeStyleSetFlexGrow(leaf,0); YGNodeStyleSetFlexShrink(leaf,0); setMinZero(leaf); YGNodeInsertChild(nested,leaf,leafIndex);}
+    YGNodeInsertChild(root,nested,0);
+    for(int index=1;index<3;++index){auto child=YGNodeNewWithConfig(config);YGNodeStyleSetWidth(child,index==1?40:20);YGNodeStyleSetHeight(child,80);YGNodeStyleSetFlexBasis(child,80);YGNodeStyleSetFlexGrow(child,0);YGNodeStyleSetFlexShrink(child,0);setMinZero(child);YGNodeInsertChild(root,child,index);}
+    YGNodeCalculateLayout(root,YGUndefined,YGUndefined,YGDirectionLTR); auto a=YGNodeGetChild(root,0);
+    std::cout<<",{\"name\":\"nested-cross-min-decorated-column-reverse"<<(resized?"-resized":"")<<"\",\"width\":"<<(resized?204:144)<<",\"height\":244,\"gap\":12,\"flexDirection\":\"column-reverse\",\"flexWrap\":\"wrap\",\"nestedDecoratedColumnCrossMinFixture\":true,\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":20,\"right\":20,\"top\":10,\"bottom\":30},\"borderWidth\":2,\"alignItems\":\"stretch\",\"alignContent\":\"flex-start\"},\"boxes\":[";
+    for(int index=0;index<3;++index){if(index)std::cout<<',';printBox(YGNodeGetChild(root,index));}
+    std::cout<<"],\"nestedDecoratedColumnMinBoxes\":[";for(int leafIndex=0;leafIndex<2;++leafIndex){if(leafIndex)std::cout<<',';printBox(YGNodeGetChild(a,leafIndex),YGNodeLayoutGetLeft(a),YGNodeLayoutGetTop(a));}
+    std::cout<<"],\"nestedOwnerStyle\":{\"width\":20,\"height\":80,\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":\"60%\",\"minHeight\":0,\"flexDirection\":\"column\",\"alignItems\":\"stretch\"},\"nestedItemStyles\":[{\"width\":\"100%\",\"height\":40,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":\"100%\",\"height\":40,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}],\"itemStyles\":[{\"width\":20,\"height\":80,\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":\"60%\",\"minHeight\":0},{\"width\":40,\"height\":80,\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":20,\"height\":80,\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}] }";
+    YGNodeFreeRecursive(root);YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1670,5 +1688,6 @@ int main() {
   nestedCrossMinimumDecoratedReverseCases();
   nestedCrossMaximumDecoratedReverseCases();
   nestedCrossMaximumDecoratedColumnReverseCases();
+  nestedCrossMinimumDecoratedColumnReverseCases();
   std::cout << "]\n";
 }
