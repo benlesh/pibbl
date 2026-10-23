@@ -6,6 +6,7 @@ import { isSignal, untracked } from '../signals/graph.js';
 import type { LayoutBox } from './types.js';
 
 export interface AllocationSettings {
+  layoutDirection: 'ltr' | 'rtl';
   flexDirection: string;
   flexWrap: string;
   justifyContent: string;
@@ -33,7 +34,7 @@ export class FlexAllocationCache {
     const previous = this.settings;
     if (!previous || this.input?.deref() !== input || this.revision !== revision ||
         box.width !== this.width || box.height !== this.height ||
-        previous.flexDirection !== settings.flexDirection || previous.flexWrap !== settings.flexWrap ||
+        previous.layoutDirection !== settings.layoutDirection || previous.flexDirection !== settings.flexDirection || previous.flexWrap !== settings.flexWrap ||
         previous.justifyContent !== settings.justifyContent || previous.alignItems !== settings.alignItems ||
         previous.alignContent !== settings.alignContent || previous.rowGap !== settings.rowGap ||
         previous.columnGap !== settings.columnGap) return;
@@ -46,6 +47,7 @@ export class FlexAllocationCache {
     this.width = box.width;
     this.height = box.height;
     this.settings = {
+      layoutDirection: settings.layoutDirection,
       flexDirection: settings.flexDirection, flexWrap: settings.flexWrap,
       justifyContent: settings.justifyContent, alignItems: settings.alignItems,
       alignContent: settings.alignContent, rowGap: settings.rowGap, columnGap: settings.columnGap,

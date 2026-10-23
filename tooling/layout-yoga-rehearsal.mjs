@@ -92,7 +92,7 @@ if (source) {
         useWebDefaults: false,
         pointScaleFactor: 0,
         errata: "none",
-        direction: "LTR",
+        direction: "LTR except fixtures with explicit layoutDirection",
         flexDirection: "explicit row/column/reverse per case",
         alignItems: "explicit containerStyle when present; otherwise flex-start",
         alignContent: "explicit containerStyle when present; otherwise flex-start",

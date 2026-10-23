@@ -1,3 +1,4 @@
+import { getLayoutDirection } from '../layout/context.js';
 import { isLayoutComponent, prepareLayoutComponent } from '../layout/define-layout-component.js';
 import { isKnownLayoutType, registerKnownLayoutPreflight, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedBoundaryChildren, takePreparedBoundaryChildren, retainPreparedBoundarySubtree } from '../layout/prepared-root.js';
 import { prepareLayoutChildren, prepareDirectChildStyle, resolveContainerBox } from '../layout/absolute.js';
@@ -84,6 +85,8 @@ interface LayerSlot {
   interactionLayer: PibblInteractionLayer;
   logicalWidth: number;
   logicalHeight: number;
+  /** Direction used for the currently retained child bitmap. */
+  layoutDirection: 'ltr' | 'rtl' | undefined;
   focusRenderRevision: number | undefined;
   retainedTree: LayerNodeSnapshot | undefined;
 }
@@ -140,6 +143,7 @@ function renderLayer(
       interactionLayer,
       logicalWidth: width,
       logicalHeight: height,
+      layoutDirection: undefined,
       focusRenderRevision: undefined,
       retainedTree: undefined,
     } satisfies LayerSlot;
@@ -155,6 +159,8 @@ function renderLayer(
   const offscreenCanvas = slot.canvas;
   const layerPibbl = getPibblInstance(offscreenCanvas);
   if (experimentalLayout) setInstanceAllocationParent(layerPibbl, parentInstance);
+  const layoutDirection = getLayoutDirection();
+  const directionChanged = slot.layoutDirection !== layoutDirection;
   const dimensionsChanged = slot.logicalWidth !== width ||
     slot.logicalHeight !== height;
   const surfaceChanged =
@@ -178,6 +184,7 @@ function renderLayer(
   const shouldRender =
     GLOBAL_STATE.componentIsMounting ||
     dimensionsChanged ||
+    directionChanged ||
     surfaceChanged ||
     !haveSameLayerNodeTree(slot.retainedTree, nextRoot) ||
     slot.focusRenderRevision !== focusRenderRevision ||
@@ -194,14 +201,22 @@ function renderLayer(
     slot.logicalHeight = height;
 
     const renderedRevision = layerPibbl.requestedRenderRevision;
-    executeRender(
-      offscreenCanvas,
-      getCurrentPibblInstance().renderTimestamp,
-      nextRoot,
-      false,
-    );
-    completeInstanceRenderRevision(layerPibbl, renderedRevision);
-    slot.retainedTree = snapshotLayerNodeTree(nextRoot);
+    const previousRootLayoutDirection = layerPibbl.rootLayoutDirection;
+    layerPibbl.rootLayoutDirection = layoutDirection;
+    try {
+      executeRender(
+        offscreenCanvas,
+        getCurrentPibblInstance().renderTimestamp,
+        nextRoot,
+        false,
+      );
+      completeInstanceRenderRevision(layerPibbl, renderedRevision);
+      slot.retainedTree = snapshotLayerNodeTree(nextRoot);
+      slot.layoutDirection = layoutDirection;
+    } catch (error) {
+      layerPibbl.rootLayoutDirection = previousRootLayoutDirection;
+      throw error;
+    }
   } else {
     if (experimentalLayout) retainPreparedBoundarySubtree(preparedBoundary);
     parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerPibbl);

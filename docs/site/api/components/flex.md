@@ -57,12 +57,12 @@ each line; source keys, paint/hit priority and tab order stay unchanged. Cross-l
 stacking stays forward. `flex-start` and `flex-end` follow the selected main direction.
 The experimental build also accepts `flexWrap: "wrap-reverse"`, including reversed
 main axes. It reverses cross lines and cross start/end alignment while preserving
-source order. Normal JavaScript Flex and RTL remain outside this experimental slice.
+source order. Normal JavaScript Flex retains the forward LTR subset.
 Use [Flip axes in the keyed collection example](#/examples/layout/wasm-flex-keyed-wrap)
 to compare placement with its separate Reverse order control. Click either collection heading to flip cross lines.
 
 `justifyContent`, `alignItems`, `alignContent`, and child `alignSelf` also accept
-`"start"` and `"end"`. In current LTR layout these stay at left/top and
+`"start"` and `"end"`. In LTR layout these stay at left/top and
 right/bottom respectively, including reversed axes and cross lines. In contrast,
 `"flex-start"` and `"flex-end"` follow the selected Flex direction. Forward axes
 accept these values in both builds. The keyed collection example's Cross edge
@@ -154,3 +154,14 @@ reused for cross-only resizing. Non-stretch automatic width and intrinsic main
 height remain outside wrapped-column support. In the
 [comparison example](#/examples/layout/wasm-yoga-migration), click Next section
 five times for these percentage cross-bound cases.
+
+The experimental build accepts `layoutDirection: "ltr" | "rtl"`. Omission inherits
+the enclosing layout direction; a root defaults to LTR. Ordinary components,
+`Group`, and `Clip` preserve it; `Layer` forwards it to its child surface and
+redraws when it changes. Explicit `"ltr"` overrides inherited RTL. A signal can
+supply the direction. RTL mirrors row main placement and column cross placement,
+including reversed axes and lines. Physical margins stay physical; logical
+`start`/`end` follow direction, while `flex-start`/`flex-end` follow the flex axis.
+It does not reorder source paint, hits, focus traversal, or text glyphs. Logical
+edge properties and RTL outside experimental Flex remain unsupported. Try
+**LTR ⇄** in [keyed wrapped collections](#/examples/layout/wasm-flex-keyed-wrap).

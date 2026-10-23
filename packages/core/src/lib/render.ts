@@ -420,8 +420,8 @@ function prepareComponentScope<P>(
     const previous = componentRefs.layoutEntry;
     const allocation = captureLayoutBox(previous?.allocation, layout.allocation);
     const percentageBasis = captureLayoutBox(previous?.percentageBasis, layout.percentageBasis);
-    if (allocation !== previous?.allocation || percentageBasis !== previous?.percentageBasis) {
-      componentRefs.layoutEntry = Object.freeze({ allocation, percentageBasis });
+    if (allocation !== previous?.allocation || percentageBasis !== previous?.percentageBasis || layout.layoutDirection !== previous?.layoutDirection) {
+      componentRefs.layoutEntry = Object.freeze({ allocation, percentageBasis, layoutDirection: layout.layoutDirection });
     }
   }
   return componentRefs;

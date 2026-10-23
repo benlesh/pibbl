@@ -1,3 +1,4 @@
+import { getLayoutDirection } from './context.js';
 import { peekPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type { BoxStyle } from '../style/types.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
@@ -103,7 +104,7 @@ export class PreparedLayoutSlot {
 }
 const activeDescriptions = new WeakMap<PibblRenderTransaction, Set<PibblElement<any>>>();
 const slots = new WeakMap<PibblComponentRefs<any>, Map<Function, Map<string, PreparedLayoutSlot>>>();
-const plans = new WeakMap<PibblRenderTransaction, Map<PreparedLayoutSlot, { plan: PreparedLayoutPlan; claimed: boolean }>>();
+const plans = new WeakMap<PibblRenderTransaction, Map<PreparedLayoutSlot, { plan: PreparedLayoutPlan; direction: 'ltr' | 'rtl'; claimed: boolean }>>();
 export function stagePreparedLayoutPlan(slot: PreparedLayoutSlot, plan: PreparedLayoutPlan): void {
   const transaction = GLOBAL_STATE.renderTransaction!;
   let pending = plans.get(transaction);
@@ -113,14 +114,14 @@ export function stagePreparedLayoutPlan(slot: PreparedLayoutSlot, plan: Prepared
     transaction.onFinish(() => { for (const [slot, entry] of owned) if (!entry.claimed) slot.dispose(); owned.clear(); plans.delete(transaction); });
   }
   if (pending.has(slot)) throw new Error('Duplicate known layout occurrence during preparation.');
-  pending.set(slot, { plan, claimed: false });
+  pending.set(slot, { plan, direction: getLayoutDirection(), claimed: false });
 }
 export function claimPreparedLayoutPlan(element: PibblElement<any>, content: Readonly<LayoutBox>): PreparedLayoutPlan | undefined {
   const transaction = GLOBAL_STATE.renderTransaction;
   const slot = getElementMetadata(element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
   if (!transaction || !slot) return;
   const entry = plans.get(transaction)?.get(slot);
-  if (!entry || entry.claimed || entry.plan.content.width !== content.width || entry.plan.content.height !== content.height) throw new Error('Prepared layout plan does not match its allocation.');
+  if (!entry || entry.claimed || entry.direction !== getLayoutDirection() || entry.plan.content.width !== content.width || entry.plan.content.height !== content.height) throw new Error('Prepared layout plan does not match its allocation.');
   if (entry.plan.region) slot.claim(entry.plan.region); else slot.claimBoundary();
   entry.claimed = true;
   return entry.plan;
@@ -156,7 +157,7 @@ export function hasPreparedChildStyles(): boolean {
 }
 
 
-const boundaryChildren = new WeakMap<PibblRenderTransaction, Map<PreparedLayoutSlot, { children: readonly PibblElement<any>[]; claimed: boolean }>>();
+const boundaryChildren = new WeakMap<PibblRenderTransaction, Map<PreparedLayoutSlot, { children: readonly PibblElement<any>[]; direction: 'ltr' | 'rtl'; claimed: boolean }>>();
 export function stagePreparedBoundaryChildren(slot: PreparedLayoutSlot, children: readonly PibblElement<any>[]): void {
   const transaction = GLOBAL_STATE.renderTransaction!;
   let pending = boundaryChildren.get(transaction);
@@ -166,14 +167,14 @@ export function stagePreparedBoundaryChildren(slot: PreparedLayoutSlot, children
     transaction.onFinish(() => { for (const [slot, entry] of owned) if (!entry.claimed) slot.dispose(); owned.clear(); boundaryChildren.delete(transaction); });
   }
   if (pending.has(slot)) throw new Error('Duplicate known layout boundary during preparation.');
-  pending.set(slot, { children, claimed: false });
+  pending.set(slot, { children, direction: getLayoutDirection(), claimed: false });
 }
 export function takePreparedBoundaryChildren(element: PibblElement<any>): readonly PibblElement<any>[] | undefined {
   const transaction = GLOBAL_STATE.renderTransaction;
   const slot = getElementMetadata(element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
   if (!transaction || !slot) return;
   const entry = boundaryChildren.get(transaction)?.get(slot);
-  if (!entry || entry.claimed) throw new Error('Prepared boundary children are stale.');
+  if (!entry || entry.claimed || entry.direction !== getLayoutDirection()) throw new Error('Prepared boundary children are stale.');
   entry.claimed = true; slot.claimBoundary(); return entry.children;
 }
 /** A clean Layer keeps the mounted descendants that already own these plans. */
@@ -183,7 +184,7 @@ export function retainPreparedBoundarySubtree(element: PibblElement<any>): void 
   if (!transaction || !slot) return;
   retainPreparedSubtree(slot, plans.get(transaction), boundaryChildren.get(transaction));
 }
-function retainPreparedSubtree(parent: PreparedLayoutSlot, pending: Map<PreparedLayoutSlot, { plan: PreparedLayoutPlan; claimed: boolean }> | undefined, boundaries: Map<PreparedLayoutSlot, { children: readonly PibblElement<any>[]; claimed: boolean }> | undefined): void {
+function retainPreparedSubtree(parent: PreparedLayoutSlot, pending: Map<PreparedLayoutSlot, { plan: PreparedLayoutPlan; direction: 'ltr' | 'rtl'; claimed: boolean }> | undefined, boundaries: Map<PreparedLayoutSlot, { children: readonly PibblElement<any>[]; direction: 'ltr' | 'rtl'; claimed: boolean }> | undefined): void {
   for (const entries of parent.children.values()) for (const child of entries.values()) {
     const entry = pending?.get(child);
     if (entry) entry.claimed = true;

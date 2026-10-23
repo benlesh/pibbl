@@ -336,7 +336,7 @@ start/end alignment, including combination with reverse main direction. Physical
 cross margins follow that selected cross direction; line membership, identities,
 source paint/event priority and tab order stay unchanged. Same-membership line flips
 reuse allocation/measurement and main placement, rerunning cross placement only.
-RTL remains unsupported.
+Experimental Flex additionally supports inherited `layoutDirection`, as specified below.
 
 The experimental allocator also supports direct-item numeric physical
 `margin`, `marginTop`, `marginRight`, `marginBottom` and `marginLeft`. Values are
@@ -744,6 +744,26 @@ Flex accepts `start` and `end` for `justifyContent`, `alignItems`,
 `alignContent`, and child `alignSelf`. In the current LTR layout these anchor
 to the physical left/top and right/bottom edges, respectively. Unlike
 `flex-start`/`flex-end`, they keep those edges under experimental reversed main
-axes and `wrap-reverse`. Normal forward axes accept the same values. RTL
-inheritance remains unsupported. Alignment changes preserve source paint and
+axes and `wrap-reverse`. Normal forward axes accept the same values. Experimental `layoutDirection: "rtl"` reflects horizontal placement, so logical
+start/end follow inline direction. Alignment changes preserve source paint and
 hit order and do not recreate native nodes or rerun numeric allocation.
+
+## Experimental inherited inline direction
+
+`FlexStyle.layoutDirection?: 'ltr' | 'rtl'` is additive and does not overload
+`Flow.direction`. Omission inherits the current layout context; roots default
+to LTR. Explicit LTR overrides an inherited RTL value. Ordinary components,
+Group and Clip are transparent. Layer forwards direction to its child root,
+invalidates a retained bitmap on a change, and restores the prior child-root
+direction after failure. Normal JavaScript Flex rejects RTL.
+
+Effective main reversal is authored main reversal XOR RTL for rows. Effective
+cross reversal is authored wrap reversal XOR RTL for columns. Logical alignment
+normalizes authored reversal before that reflection. Physical margins keep their
+physical edges. Source traversal, paint/hit priority, focus order and glyph
+rendering remain unchanged. Existing allocation contexts, receiver signal inputs,
+prepared plans and placement caches carry direction; no separate cascade or
+scheduler is introduced. Plans reject mismatched direction before adoption. The
+WASM cross-placement ABI is identified by the `layout_abi_v1` export marker;
+older modules are rejected before publishing compiled code. Logical start/end
+edge fields remain a subsequent capability.

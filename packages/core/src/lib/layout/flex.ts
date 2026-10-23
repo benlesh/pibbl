@@ -50,7 +50,7 @@ import {
   prepareLayoutChildren,
   resolveContainerBox,
 } from './absolute.js';
-import { pushLayoutBox } from './context.js';
+import { getLayoutDirection, pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { measureElement, withIsolatedRenderState } from './measure.js';
@@ -76,13 +76,15 @@ type CrossAlignment = 'stretch' | 'flex-start' | 'flex-end' | 'center';
  * @see {@link Flex}
  */
 export interface FlexStyle extends BoxStyle, LayoutItemStyle {
+  /** Inherited inline direction. Roots default to LTR. See {@link Flex}. */
+  layoutDirection?: 'ltr' | 'rtl';
   /** The main axis along which flex children are placed. See {@link FlexDirection}. */
   flexDirection?: FlexDirection;
   /** Whether children may wrap onto additional flex lines. See {@link FlexWrap}. */
   flexWrap?: FlexWrap;
-  /** Distribution along the main axis. start/end keep physical LTR edges under reversal. See {@link MainAlignment}. */
+  /** Distribution along the main axis. start/end follow layout direction independently of axis reversal. See {@link MainAlignment}. */
   justifyContent?: MainAlignment | 'start' | 'end';
-  /** Cross alignment. start/end keep physical LTR edges under wrap-reverse. See {@link CrossAlignment}. */
+  /** Cross alignment. start/end follow layout direction independently of wrap reversal. See {@link CrossAlignment}. */
   alignItems?: CrossAlignment | 'start' | 'end';
   /**
    * Distribution of wrapped flex lines within the available cross-axis space. See
@@ -117,6 +119,7 @@ export interface FlexMeasurementInput {
 }
 
 interface ResolvedFlexStyle extends SystemStyle {
+  layoutDirection: 'ltr' | 'rtl';
   box: ResolvedBoxStyle;
   overflow: 'visible' | 'clip';
   flexDirection: FlexDirection;
@@ -180,7 +183,7 @@ function renderFlex(
     width: content.width,
     height: content.height,
   });
-  const releaseLayout = pushLayoutBox(localContent);
+  const releaseLayout = pushLayoutBox(localContent, style);
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
   const service = flexMeasurementService(ctx);
   const prepared = experimentalLayout ? claimPreparedFlexPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
@@ -293,7 +296,8 @@ export const Flex = definePrimitive<
 // A known Absolute sibling boundary resolves these receiver inputs before any
 // sibling's opaque component executes. Geometry still solves in normal traversal.
 if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, content, receiver, slot) => {
-  normalizeFlexOptions(style as Readonly<FlexStyle>, content);
+  const options = normalizeFlexOptions(style as Readonly<FlexStyle>, content);
+  const releaseLayout = pushLayoutBox(content, options);
   const previous = GLOBAL_STATE.primitiveReceiverToken;
   GLOBAL_STATE.primitiveReceiverToken = receiver;
   try {
@@ -321,7 +325,7 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
     const plan = prepareFlexAllocation(element.props as FlexProps, resolved, content, flexMeasurementService(ctx), region);
     prepareFlexDescendants(plan, slot);
     stagePreparedLayoutPlan(slot, { ...plan, region });
-  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
+  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; releaseLayout(); }
 });
 
 /** Known descendants prepare only after this boundary's own allocation settles. */
@@ -631,8 +635,10 @@ function resolveFlexPlacements(
   assertFiniteBox(container);
   const options = normalizeFlexOptions(style, container);
   const row = isRowDirection(options.flexDirection);
-  const reverse = options.flexDirection === 'row-reverse' || options.flexDirection === 'column-reverse';
-  const wrapReverse = options.flexWrap === 'wrap-reverse';
+  const authoredReverse = options.flexDirection === 'row-reverse' || options.flexDirection === 'column-reverse';
+  const reverse = authoredReverse !== (row && options.layoutDirection === 'rtl');
+  const authoredWrapReverse = options.flexWrap === 'wrap-reverse';
+  const wrapReverse = authoredWrapReverse !== (!row && options.layoutDirection === 'rtl');
   const mainSize = row ? container.width : container.height;
   const crossSize = row ? container.height : container.width;
   const mainGap = row ? options.columnGap : options.rowGap;
@@ -733,7 +739,7 @@ function resolveFlexPlacements(
       (normalized.minWidth === undefined || normalized.minWidth === 0) &&
       normalized.maxWidth === undefined && normalized.maxHeight === undefined &&
       !preparedStyleQuery(prepared) && genericTextFont(normalized);
-    const alignment = normalizeItemAlignment(normalized.alignSelf, child, container, wrapReverse);
+    const alignment = normalizeItemAlignment(normalized.alignSelf, child, container, authoredWrapReverse);
     if (experimentalLayout && !row && options.flexWrap !== 'nowrap' &&
       (needsMeasuredMain && !measuredColumnWrapText || aspectRatio === undefined && crossAuto && effectiveAlignment(alignment, options.alignItems) !== 'stretch')) {
       throw childDiagnostic(child, needsMeasuredMain ? mainProperty : crossProperty, 'auto', container,
@@ -958,7 +964,7 @@ function resolveFlexPlacements(
     resolveLineCrossSizes(lines, crossSize, crossGap, options.alignContent, options.flexWrap === 'wrap');
   }
 
-  const crossPlacements = region?.placeCross(items, crossSize, options.alignItems, wrappedRegion ? { gap: crossGap, alignContent: options.alignContent, reverse: wrapReverse } : undefined);
+  const crossPlacements = region?.placeCross(items, crossSize, options.alignItems, { reverse: wrapReverse, wrap: wrappedRegion ? { gap: crossGap, alignContent: options.alignContent } : undefined });
   const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent, reverse);
   const placements: FlexPlacement[] = [];
   let mainIndex = 0;
@@ -1295,6 +1301,10 @@ function normalizeFlexOptions(
   style: Readonly<FlexStyle>,
   container: Readonly<LayoutBox>,
 ) {
+  const layoutDirection = style.layoutDirection ?? getLayoutDirection();
+  if (layoutDirection !== 'ltr' && !(experimentalLayout && layoutDirection === 'rtl')) {
+    throw optionDiagnostic('layoutDirection', layoutDirection, container);
+  }
   const flexDirection = style.flexDirection ?? 'row';
   if (flexDirection !== 'row' && flexDirection !== 'column' &&
       !(experimentalLayout && (flexDirection === 'row-reverse' || flexDirection === 'column-reverse'))) {
@@ -1326,6 +1336,7 @@ function normalizeFlexOptions(
   const columnGap = nonnegativeGap(gap, 'gap', container, container.width);
   const rowGap = typeof gap === 'number' ? columnGap : nonnegativeGap(gap, 'gap', container, container.height);
   return {
+    layoutDirection,
     flexDirection: flexDirection as FlexDirection,
     flexWrap: flexWrap as FlexWrap,
     justifyContent: justifyContent as MainAlignment,

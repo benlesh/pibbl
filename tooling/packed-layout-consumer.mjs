@@ -100,7 +100,9 @@ const margin: FlexItemStyle = { aspectRatio: 3, alignSelf: 'start', margin: 5, m
 export const rectangle = createElement(Rectangle, { style: { width: 20, height: 20, ...margin } });
 // @ts-expect-error Gap strings are percentages, not CSS pixel lengths.
 export const invalidGap = createElement(Flex, { style: { gap: '10px' }, children: rectangle });
-export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40, gap: '10%', rowGap: '20%', columnGap: 5, flexDirection: 'row-reverse', flexWrap: 'wrap-reverse', justifyContent: 'start', alignItems: 'end', alignContent: 'start' }, children: rectangle });
+// @ts-expect-error Inline direction is a closed policy.
+export const invalidDirection = createElement(Flex, { style: { layoutDirection: 'sideways' }, children: rectangle });
+export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40, layoutDirection: 'rtl', gap: '10%', rowGap: '20%', columnGap: 5, flexDirection: 'row-reverse', flexWrap: 'wrap-reverse', justifyContent: 'start', alignItems: 'end', alignContent: 'start' }, children: rectangle });
 `);
   for (const resolution of ["Bundler", "NodeNext"]) {
     await writeFile(
@@ -135,12 +137,17 @@ export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40
   await writeFile(
     join(consumer, "entry.ts"),
     `import { WasmFlexNestedIntrinsicExample } from './example';
-import { createElement, Absolute, Flex, Rectangle, Text, signal } from '@pibbl/core';
+import { createElement, Absolute, Flex, Layer, Rectangle, Text, signal } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
 const receipt = globalThis.__PIBBL_PACKED_PROOF__;
 if(receipt.modules || receipt.instances || receipt.frames) throw Error('Import-time work');
 receipt.importInert = true;
 globalThis.requestAnimationFrame = receipt.request;
+const directionCanvas=document.createElement('canvas');directionCanvas.width=100;directionCanvas.height=60;directionCanvas.style.cssText='width:100px;height:60px';document.body.append(directionCanvas);
+const inlineDirection=signal<'ltr'|'rtl'>('ltr');let directionHits=0;
+const directionLayer=createElement(Layer,{style:{width:100,height:40,minWidth:0,minHeight:0,flexShrink:0},children:createElement(Flex,{style:{width:100,height:40},children:createElement(Rectangle,{style:{width:20,height:20,minWidth:0,minHeight:0,flexShrink:0,fill:'red'},onClick:()=>directionHits++})})});
+const directionController=pibblSync(directionCanvas,createElement(Flex,{style:{width:100,height:40,layoutDirection:inlineDirection},children:directionLayer}));
+try{const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));const click=(x:number)=>{const rect=directionCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])directionCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+5,bubbles:true,button:0}));};await frame();click(5);const before=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();inlineDirection.set('rtl');await frame();click(5);click(85);if(directionHits!==2)throw Error('installed inherited RTL Layer targets');const ctx=directionCanvas.getContext('2d')!;if(ctx.getImageData(5,5,1,1).data[3]!==0||ctx.getImageData(85,5,1,1).data[0]!==255)throw Error('installed RTL Layer pixels');if((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==before.nodeCreates)throw Error('installed RTL identity');receipt.layoutDirection=true;}finally{directionController.dispose();directionCanvas.remove();}
 const aspectCanvas = document.createElement('canvas'); aspectCanvas.width=120; aspectCanvas.height=140; aspectCanvas.style.cssText='width:120px;height:140px'; document.body.append(aspectCanvas);
 receipt.textCrossHits=0;
 const aspectController=pibblSync(aspectCanvas,createElement(Absolute,{style:{width:120,height:140},children:[

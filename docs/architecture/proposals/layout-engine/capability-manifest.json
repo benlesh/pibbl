@@ -1413,19 +1413,26 @@
       "id": "direction.rtl-and-logical-edges",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "absent",
-      "status": "missing",
-      "unresolvedPolicy": "Implementation direction is authorized; direction signature and logical-versus-physical precedence need exact definitions.",
+      "current": "experimental inherited Flex LTR/RTL direction across row/column reversal, transparent components and Layer; logical edge fields remain absent",
+      "status": "partial",
+      "unresolvedPolicy": "Direction and edge precedence are authorized; logical edge runtime/type/native precedence evidence remains outstanding.",
       "evidence": {
-        "positive": [],
-        "negative": [],
-        "interaction": [],
-        "yogaCases": [],
+        "positive": [
+          "slice88: inherited direction and explicit LTR override; row/column/reverse placement"
+        ],
+        "negative": [
+          "normal JavaScript RTL rejected; invalid direction rejected; stale ABI rejected"
+        ],
+        "interaction": [
+          "source/built keyed wrap mirroring, stable stamps, moved hits, paint reuse, cleanup",
+          "installed package direction signal reaches retained Layer"
+        ],
+        "yogaCases": [
+          "layout-direction-{row,row-reverse,column,column-reverse}-{ltr,rtl}"
+        ],
         "missing": [
-          "horizontal RTL",
-          "edge precedence",
-          "reverse",
-          "percentages"
+          "logical edge fields and precedence",
+          "logical edge percentages"
         ]
       }
     },

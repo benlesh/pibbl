@@ -151,6 +151,7 @@ export function executeRender(
     GLOBAL_STATE.layoutStack = [{
       allocation: pibblInstance.rootLayoutBox,
       percentageBasis: pibblInstance.rootLayoutBox,
+      layoutDirection: pibblInstance.rootLayoutDirection,
     }];
 
     const renderGeneration = ++pibblInstance.renderGeneration;

@@ -537,6 +537,20 @@ static void wrappedReversePercentageMarginCases() {
   }
 }
 
+static void layoutDirectionCases() {
+  const YGFlexDirection directions[] = {YGFlexDirectionRow,YGFlexDirectionRowReverse,YGFlexDirectionColumn,YGFlexDirectionColumnReverse};
+  const char* names[] = {"row", "row-reverse", "column", "column-reverse"};
+  for (int axis = 0; axis < 4; ++axis) for (int rtl = 0; rtl < 2; ++rtl) {
+    auto config=YGConfigNew(); YGConfigSetUseWebDefaults(config,false); YGConfigSetPointScaleFactor(config,0); YGConfigSetErrata(config,YGErrataNone);
+    auto root=YGNodeNewWithConfig(config); YGNodeStyleSetWidth(root,240); YGNodeStyleSetHeight(root,120); YGNodeStyleSetFlexDirection(root,directions[axis]); YGNodeStyleSetAlignItems(root,YGAlignFlexStart); YGNodeStyleSetJustifyContent(root,YGJustifyFlexStart); YGNodeStyleSetGap(root,YGGutterAll,12);
+    auto a=YGNodeNewWithConfig(config); YGNodeStyleSetWidth(a,40); YGNodeStyleSetHeight(a,24); YGNodeStyleSetFlexShrink(a,0); YGNodeStyleSetMinWidth(a,0); YGNodeStyleSetMinHeight(a,0); YGNodeStyleSetMargin(a,YGEdgeLeft,8); YGNodeStyleSetMargin(a,YGEdgeRight,20); YGNodeStyleSetMargin(a,YGEdgeTop,3); YGNodeStyleSetMargin(a,YGEdgeBottom,7);
+    auto b=YGNodeNewWithConfig(config); YGNodeStyleSetWidth(b,30); YGNodeStyleSetHeight(b,20); YGNodeStyleSetFlexShrink(b,0); YGNodeStyleSetMinWidth(b,0); YGNodeStyleSetMinHeight(b,0); YGNodeStyleSetMargin(b,YGEdgeLeft,5); YGNodeStyleSetMargin(b,YGEdgeRight,9); YGNodeStyleSetMargin(b,YGEdgeTop,2); YGNodeStyleSetMargin(b,YGEdgeBottom,4);
+    YGNodeInsertChild(root,a,0); YGNodeInsertChild(root,b,1); YGNodeCalculateLayout(root,YGUndefined,YGUndefined,rtl?YGDirectionRTL:YGDirectionLTR);
+    std::cout << ",{\"name\":\"layout-direction-" << names[axis] << '-' << (rtl?"rtl":"ltr") << "\",\"width\":240,\"height\":120,\"gap\":12,\"flexDirection\":\"" << names[axis] << "\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (rtl?"rtl":"ltr") << "\",\"containerStyle\":{\"alignItems\":\"flex-start\",\"justifyContent\":\"flex-start\"},\"boxes\":["; printBox(a); std::cout << ','; printBox(b); std::cout << "],\"itemStyles\":[{\"width\":40,\"height\":24,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"marginLeft\":8,\"marginRight\":20,\"marginTop\":3,\"marginBottom\":7},{\"width\":30,\"height\":20,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"marginLeft\":5,\"marginRight\":9,\"marginTop\":2,\"marginBottom\":4}]}";
+    YGNodeFreeRecursive(root);YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -658,5 +672,6 @@ int main() {
   wrappedPercentageMarginCases();
   wrappedReversePercentageMarginCases();
   nestedPercentageGapCases();
+  layoutDirectionCases();
   std::cout << "]\n";
 }

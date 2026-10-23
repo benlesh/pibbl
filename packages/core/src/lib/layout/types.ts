@@ -60,6 +60,7 @@ export interface LayoutBox extends Size {
 
 /** @internal Temporary render-time allocation and containing-block basis. */
 export interface LayoutContext {
+  layoutDirection?: 'ltr' | 'rtl';
   allocation: Readonly<LayoutBox>;
   percentageBasis: Readonly<LayoutBox>;
 }

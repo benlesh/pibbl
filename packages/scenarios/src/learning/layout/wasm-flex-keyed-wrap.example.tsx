@@ -18,6 +18,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
   const keys = signal(["A", "B", "C"]);
   const selected = signal("none");
   const ink = signal("#19375b");
+  const layoutDirection = signal<"ltr" | "rtl">("ltr");
   const reverseAxes = signal(false);
   const reverseLines = signal(false);
   const crossEdge = signal<"flex-start" | "start" | "end">("flex-start");
@@ -111,6 +112,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
             top: 180,
             width: 360,
             height: 220,
+            layoutDirection,
             flexDirection: rowDirection,
             flexWrap: wrapDirection,
             gap: 12,
@@ -133,6 +135,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
             top: 180,
             width: 292,
             height: 180,
+            layoutDirection,
             flexDirection: columnDirection,
             flexWrap: wrapDirection,
             gap: 12,
@@ -288,6 +291,9 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
       >
         Columns · click to flip lines
       </Text>
+      <Text style={{ left: 648, top: 150, cursor: "pointer", font: "bold 14px sans-serif", fill: "#19375b" }} onClick={() => layoutDirection.update(value => value === "ltr" ? "rtl" : "ltr")}>
+        {layoutDirection.get().toUpperCase()} ⇄
+      </Text>
       <Collections />
     </>
   );
@@ -304,6 +310,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
     panel.textContent = JSON.stringify({
       lane: read ? "experimental WASM" : "normal JavaScript",
       keys: keys.get(),
+      layoutDirection: layoutDirection.get(),
       reverseAxes: reverseAxes.get(),
       reverseLines: reverseLines.get(),
       crossEdge: crossEdge.get(),
@@ -312,7 +319,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
       boxes: Object.fromEntries(boxes),
       layout: read?.() ?? {},
       limits:
-        "Finite row/declared-column wrap only; no intrinsic wrapped-container sizing, RTL or Yoga parity claim. Reversing data preserves source paint order.",
+        "Finite row/declared-column wrap only; no intrinsic wrapped-container sizing or logical edge properties. RTL mirrors placement; reversing data preserves source paint order. Reversing data preserves source paint order.",
     });
   };
   refresh();

@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice87 `aac241f6` (wrap-reverse percentage physical margins).
+Latest delivery is slice88 (inherited Flex layoutDirection; this commit).
+Previous delivery is slice87 `aac241f6` (wrap-reverse percentage physical margins).
 Slice86 is `cd55cff0` (wrapped percentage physical margins).
 Slice85 is `e4ea5c0d` (finite nested percentage wrapping evidence).
 Slice84 is `86030541` (allocated-nowrap percentage physical margins).
@@ -37,9 +38,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; the single next slice is88, additive inherited Flex layoutDirection. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; the single next slice is89, logical-edge precedence and a first margin edge slice. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles135 records:116matches/19classified differences; click A/B/C targets.
+cycles143 records:124matches/19classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1882,30 +1883,66 @@ authorized and is the next material capability, with no Flow.direction rename or
 general style inheritance system. Final whole-codebase review remains deferred
 until every accepted program exit is complete.
 
-## [NEXT] Additive inherited Flex layout direction (slice 88)
+## Slice 88 delivered — inherited Flex layout direction
 
-The public contract is now authorized: `FlexStyle.layoutDirection?: 'ltr'|'rtl'`,
-without overloading Flow.direction. RootLTR is backward-compatible; omission
-inherits through existing layout contexts, ordinary components/Group/Clip are
-transparent, and Layer forwards inherited direction. ExplicitLTR overrides it.
-Logical start/end follow layout direction; flex-start/end follow the flex axis;
-physical edges remain physical. Future logical precedence is specific over
-shorthand, then logical over physical at equal specificity, independent of object
-order; validate exact cases against pinned Yoga before locking public logical fields.
-Do not introduce a generalized style cascade or new logical edge vocabulary in88.
+Adds experimental `FlexStyle.layoutDirection?: 'ltr'|'rtl'`, default LTR at a
+root, inherited through ordinary components, Group, Clip and layout contexts,
+with explicit LTR override and Layer forwarding. Main and cross placement use
+axis-specific RTL reflection; logical alignment normalizes authored reversal.
+Physical margins and source paint/hit/focus order remain physical/source ordered.
+Direction is a receiver layout input, part of allocation-cache and component
+entry snapshots, and a prepared-plan/boundary adoption guard. A retained Layer
+redraws for direction changes and restores its child-root direction on failure.
+The native nowrap cross call now accepts reversal; `layout_abi_v1` rejects older
+compiled modules before publication without eagerly creating an instance.
 
-First public red: signal LTR↔RTL, asymmetric physical margins, nested inheritance
-and explicitLTRoverride, stable keys/source paint/hit order and old/new targets.
-Capture direction in existing allocation/component/preflight/cache context and
-restore it with existing finally ownership. Pin native row/column and reverse
-geometry. Effective main reverse is authored reverse XOR RTL for rows; effective
-cross reverse is authored wrap-reverse XOR RTL for columns, with logical alignment
-normalization using authored reversal. Wrapped cross already has the needed bit;
-nowrap place_cross hard-codes false and needs a minimal reverse argument/ABI update
-if column RTL is included. Add its100-wide/20-child RTL x80 failing case before code.
-Provide a focused visible Studio example before broader Layer/preflight/cross-axis
-hardening, then source/built/installed/types/cleanup and proportional verification.
-Consolidation85–87 runs before88 implementation; no final whole-codebase review yet.
+Public RED: three row/inheritance tests failed before production changes, then
+column cross x80 and retained-Layer target movement failed before those fixes.
+The first Layer fixture needed the pre-existing explicit minimum/shrink contract;
+its corrected RED then failed at the actual stale target. Five focused contracts
+pass, with stable mounts/nodes, paint reuse, moved hits and exact disposal.
+
+Fresh macOS/Node26.9.0/pnpm11.21.0 dependencies/Chromium evidence:
+
+- Full experimental slice and loader lane:254pass/3skip (257total), including
+  all143 public reference records. Ordinary focused direction/ABI rejection:
+  6pass/252skip. Final focused direction/ABI lane after the negative guard test:
+  11pass/247skip (258total). No Node24 aggregate-trust result is claimed.
+- Pinned Yoga3.2.1 commit042f5013152eb81c1552dec945b88f7b95ca350f reproduces
+  eight row/column/reverse × LTR/RTL cases with asymmetric physical margins.
+  Corpus143 =124native matches +19preserved classified differences.
+- Source5192 and built5193 RTL example replays passed; built proof469inputs,
+  stable stamps, mirrored geometry, moved target, unchanged paint-only counters,
+  cleanup0/0/0 and errors[]. The preview servers remained live; a sandboxed
+  localhost check falsely suggested otherwise, and attempted restart correctly
+  reported port-in-use. No duplicate server was created.
+- Fresh offline installed tarball SHA256
+  `154dbdae13ad871763e51a192b39b24402bbf7e66aead0f6ca872403a4f1e32d`,
+  230installed-dist inputs, Bundler/NodeNext pass. Installed RTL signal moves
+  a retained Layer's pixels and targets without native-node recreation.
+- Generated kernel65432bytes,10native Rust tests pass. Typecheck and private
+  package build pass. Focused consistency checks accompany this commit.
+
+Hands-on: http://127.0.0.1:5192/#/examples/layout/wasm-flex-keyed-wrap;
+click LTR ⇄ and inspect row/column mirroring, keyed mount stamps and targets.
+This is a slice ready for feedback, not feature completion. Fixed33 now has
+4complete/11experimental/8partial/9missing/1excluded; all7release gates stayopen.
+Logical edge fields and precedence remain incomplete, as do the other recorded
+whole-program exits. Review of the changed implementation found no material
+findings; final whole-codebase review remains at program completion.
+
+## [NEXT] Logical-edge precedence and first margin edge slice (slice 89)
+
+Keep additive layoutDirection and the fixed33/seven-gate denominator. First pin
+native start/end versus physical margin, specific-edge versus shorthand, signed
+percentage and explicit-zero precedence in both directions and declaration
+orders. Select concise public logical-margin names consistent with the existing
+margin fields and API guidance; record exact signatures/precedence before code.
+Deliver one observable nested RTL/LTR edge toggle through the public example,
+with RED geometry/hit evidence, source/built/installed declarations, stable keys
+and cleanup. Do not introduce a generalized cascade or alter unrelated layout
+families. Reuse the existing implementation helper and scoped reviewer. Complete
+89 and90 before consolidation30; no final whole-codebase review yet.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

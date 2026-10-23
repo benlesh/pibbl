@@ -196,4 +196,4 @@ not supported. Layer raster sizing retains its separate width/height policy.
 Flex alignment values include `start` and `end` on `FlexStyle.justifyContent`,
 `alignItems`, `alignContent`, and `FlexItemStyle.alignSelf`. These keep their
 physical LTR edges under experimental main/cross reversal; `flex-start` and
-`flex-end` follow the reversed Flex axes. RTL inheritance is not implemented.
+`flex-end` follow the reversed Flex axes. Experimental `FlexStyle.layoutDirection?: "ltr" | "rtl"` inherits through layout contexts and Layers, defaults to LTR at a root, and permits explicit LTR override. RTL mirrors row main and column cross placement; logical edges remain unsupported.

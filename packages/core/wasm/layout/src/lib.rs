@@ -84,8 +84,10 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64) -> u32 {
-    with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, false))
+pub extern "C" fn layout_abi_v1() -> u32 { 1 }
+#[no_mangle]
+pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
+    with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
 }
 fn align_cross(records: &mut [f64], size: f64, reverse: bool) -> u32 {
     if !size.is_finite() || size < 0.0 { return 1; }

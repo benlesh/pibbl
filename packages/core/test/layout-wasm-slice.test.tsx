@@ -1,6 +1,6 @@
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createElement, Absolute, Overlay, Flex, Grid, Flow, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, defineLayoutComponent } from '@pibbl/core';
+import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, defineLayoutComponent } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
@@ -806,7 +806,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
         maxHeight: column && capped && index === 0 ? 30 : undefined,
       } }); });
       const gapContent = (fixture.name.startsWith('gap-percent-') || fixture.name.startsWith('margin-percent-')) ? {x:10,y:20,width:fixture.width-40,height:fixture.height-60} : {x:0,y:0,width:fixture.width,height:fixture.height};
-      expect(layoutFlex(gapContent, children, { flexDirection: fixture.flexDirection as 'row' | 'column' | 'row-reverse' | 'column-reverse', flexWrap: fixture.flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse', alignContent: 'flex-start', alignItems: 'flex-start', gap: fixture.gap, ...(fixture.containerStyle as FlexStyle | undefined) }, measurement)).toEqual(expected);
+      expect(layoutFlex(gapContent, children, { flexDirection: fixture.flexDirection as 'row' | 'column' | 'row-reverse' | 'column-reverse', flexWrap: fixture.flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse', layoutDirection: 'layoutDirection' in fixture ? fixture.layoutDirection as 'ltr' | 'rtl' : undefined, alignContent: 'flex-start', alignItems: 'flex-start', gap: fixture.gap, ...(fixture.containerStyle as FlexStyle | undefined) }, measurement)).toEqual(expected);
       for (const [index,box] of expected.entries()) {
         clickCanvas(canvas,394+box.x,242+box.y); await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${String.fromCharCode(65+index)}`);
       }
@@ -2840,4 +2840,45 @@ it.runIf(experimentalLayout)('resolves signed percentage shorthand with specific
  const expected=[{x:-5,y:0,width:20,height:10}];
  expect(layoutFlex({x:0,y:0,width:100,height:100},[first],{},measurement)).toEqual(expected);
  expect(layoutFlex({x:0,y:0,width:100,height:100},[second],{},measurement)).toEqual(expected);
+});
+
+for(const reversed of [false,true]){
+ it.runIf(experimentalLayout)(`places finite RTL ${reversed?'row-reverse':'row'} with physical margins`,()=>{
+  const children=[createElement(Rectangle,{style:{width:40,height:24,minWidth:0,minHeight:0,flexShrink:0,marginLeft:8,marginRight:20,marginTop:3,marginBottom:7}}),createElement(Rectangle,{style:{width:30,height:20,minWidth:0,minHeight:0,flexShrink:0,marginLeft:5,marginRight:9,marginTop:2,marginBottom:4}})];
+  const options={flexDirection:reversed?'row-reverse' as const:'row' as const,layoutDirection:'rtl' as const,gap:12,alignItems:'flex-start' as const};
+  expect(layoutFlex({x:0,y:0,width:240,height:120},children,options,measurement)).toEqual([{x:reversed?8:180,y:3,width:40,height:24},{x:reversed?85:121,y:2,width:30,height:20}]);
+ });
+}
+it.runIf(experimentalLayout)('inherits a signal layout direction through ordinary components Group and Clip with explicit LTR override',async()=>{
+ const baseline=snapshotWasmLayoutDiagnostics(),direction=signal<'ltr'|'rtl'>('ltr'),fill=signal('red');let inheritedHits=0,overrideHits=0,mounts=0;
+ const clip=new Path2D();clip.rect(0,0,100,40);
+ function Leaf({override,first,style:_style}:{override:boolean;first:boolean;style:Record<string,unknown>}){useConst(()=>{mounts++;});const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill},onClick:()=>{if(first){if(override)overrideHits++;else inheritedHits++;}}});}
+ function Branch({override,style:_style}:{override:boolean;style:Record<string,unknown>}){const box=useLayoutBox();const innerStyle={width:box.width,height:box.height,gap:10,layoutDirection:override?'ltr' as const:undefined};return createElement(Group,{children:createElement(Clip,{style:{d:clip},children:createElement(Flex,{style:innerStyle,children:[true,false].map(first=>createElement(Leaf,{key:String(first),override,first,style:{width:20,height:20,minWidth:0,minHeight:0,flexShrink:0}}))})})});}
+ const canvas=document.createElement('canvas');canvas.width=320;canvas.height=80;document.body.append(canvas);
+ const rootStyle={width:300,height:60,layoutDirection:direction};const root=createElement(Flex,{style:rootStyle,children:[false,true].map(override=>createElement(Branch,{key:String(override),override,style:{width:100,height:40,minWidth:0,minHeight:0,flexShrink:0}}))});
+ const controller=pibbl(canvas,root);controllers.push(controller);await nextFrame();clickCanvas(canvas,5,5);clickCanvas(canvas,105,5);expect([inheritedHits,overrideHits,mounts]).toEqual([1,1,4]);const initial=snapshotWasmLayoutDiagnostics();
+ direction.set('rtl');await nextFrame();clickCanvas(canvas,5,5);expect(inheritedHits).toBe(1);clickCanvas(canvas,285,5);clickCanvas(canvas,105,5);expect([inheritedHits,overrideHits,mounts]).toEqual([2,2,4]);const mirrored=snapshotWasmLayoutDiagnostics();expect(mirrored.nodeCreates).toBe(initial.nodeCreates);expect(mirrored.measuredLeaves).toBe(initial.measuredLeaves);
+ fill.set('blue');await nextFrame();const painted=snapshotWasmLayoutDiagnostics();expect(painted.solves).toBe(mirrored.solves);expect(painted.mainPlacements).toBe(mirrored.mainPlacements);expect(painted.crossPlacements).toBe(mirrored.crossPlacements);
+ controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+});
+
+it.runIf(experimentalLayout)('places finite RTL column on the right cross edge',()=>{
+ const child=createElement(Rectangle,{style:{width:20,height:10,minWidth:0,minHeight:0,flexShrink:0}});
+ expect(layoutFlex({x:0,y:0,width:100,height:60},[child],{layoutDirection:'rtl',flexDirection:'column',alignItems:'flex-start'},measurement)).toEqual([{x:80,y:0,width:20,height:10}]);
+});
+it.runIf(experimentalLayout)('forwards direction changes through a retained Layer',async()=>{
+ const baseline=snapshotWasmLayoutDiagnostics(),direction=signal<'ltr'|'rtl'>('ltr');let hits=0,mounts=0;
+ function Leaf(){useConst(()=>{mounts++;});return createElement(Rectangle,{style:{width:20,height:20,fill:'red'},onClick:()=>hits++});}
+ const layer=createElement(Layer,{style:{width:100,height:40,minWidth:0,minHeight:0,flexShrink:0},children:createElement(Flex,{style:{width:100,height:40},children:createElement(Leaf,{style:{width:20,height:20,minWidth:0,minHeight:0,flexShrink:0}})})});
+ const canvas=document.createElement('canvas');canvas.width=100;canvas.height=60;document.body.append(canvas);
+ const controller=pibbl(canvas,createElement(Flex,{style:{width:100,height:40,layoutDirection:direction},children:layer}));controllers.push(controller);await nextFrame();clickCanvas(canvas,5,5);expect(hits).toBe(1);const initial=snapshotWasmLayoutDiagnostics();
+ direction.set('rtl');await nextFrame();clickCanvas(canvas,5,5);expect(hits).toBe(1);clickCanvas(canvas,85,5);expect(hits).toBe(2);expect(mounts).toBe(1);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+ controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+});
+
+it('rejects invalid layout direction before allocating native nodes',()=>{
+ const before=snapshotWasmLayoutDiagnostics();
+ expect(()=>layoutFlex({x:0,y:0,width:100,height:40},[],{layoutDirection:'sideways' as 'rtl'},measurement)).toThrow(/layoutDirection/);
+ if(!experimentalLayout)expect(()=>layoutFlex({x:0,y:0,width:100,height:40},[],{layoutDirection:'rtl'},measurement)).toThrow(/layoutDirection/);
+ const after=snapshotWasmLayoutDiagnostics();expect(after.activeNodes).toBe(before.activeNodes);expect(after.activeArenas).toBe(before.activeArenas);
 });

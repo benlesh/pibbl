@@ -6,6 +6,11 @@ export function hasParentLayoutAllocation(): boolean {
   return (GLOBAL_STATE.layoutStack?.length ?? 0) > 1;
 }
 
+/** @internal Inherited inline direction; roots default to LTR. */
+export function getLayoutDirection(): 'ltr' | 'rtl' {
+  return GLOBAL_STATE.layoutStack?.at(-1)?.layoutDirection ?? 'ltr';
+}
+
 export function getLayoutBox(): Readonly<LayoutBox> {
   const context = GLOBAL_STATE.layoutStack?.at(-1);
   if (!context) {
@@ -27,11 +32,12 @@ export function getPercentageBasis(): Readonly<LayoutBox> {
  * previous allocation.
  *
  * @param box - Parent allocation to expose to child layout hooks. See {@link LayoutBox}.
+ * @param options - Optional resolved inline direction; omission inherits the parent. See {@link LayoutBox}.
  * @returns A function restoring the previous layout box.
  *
  * @see {@link LayoutBox}
  */
-export function pushLayoutBox(box: Readonly<LayoutBox>): () => void {
+export function pushLayoutBox(box: Readonly<LayoutBox>, options?: { readonly layoutDirection?: 'ltr' | 'rtl' }): () => void {
   const stack = GLOBAL_STATE.layoutStack;
   if (!stack) {
     throw new Error('No Pibbl layout context is available');
@@ -40,7 +46,7 @@ export function pushLayoutBox(box: Readonly<LayoutBox>): () => void {
   if (!parent) {
     throw new Error('No Pibbl parent layout context is available');
   }
-  const context = { allocation: box, percentageBasis: parent.allocation };
+  const context = { allocation: box, percentageBasis: parent.allocation, layoutDirection: options?.layoutDirection ?? parent.layoutDirection ?? 'ltr' };
   stack.push(context);
   let active = true;
   return () => {

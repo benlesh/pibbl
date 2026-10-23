@@ -481,6 +481,7 @@ export interface InternalIdentityHint {
 export interface PibblComponentRefs<P> {
   /** Last traversal entry context, not proof that this evaluation painted successfully. */
   layoutEntry?: Readonly<{
+    layoutDirection?: 'ltr' | 'rtl';
     allocation: Readonly<LayoutBox>;
     percentageBasis: Readonly<LayoutBox>;
   }>;
@@ -677,6 +678,8 @@ export interface PibblInstance {
   /** Current child-to-parent mapping for focus geometry outside hit order. */
   focusParentBridge: PibblNestedPaintEntry | undefined;
   rootLayoutBox: Readonly<LayoutBox>;
+  /** Internal inherited direction used when this instance begins a root layout context. */
+  rootLayoutDirection: 'ltr' | 'rtl';
   surface: PibblSurfaceState;
   /** Feature-owned resources, installed only by imported optional entries. */
   optionalServices: Map<symbol, OptionalService>;
