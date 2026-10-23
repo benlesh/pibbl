@@ -9,6 +9,7 @@ import { resolveLocalOffset } from './resolve-built-in.js';
 import type { Length } from './types.js';
 
 const PLACEMENT_HANDOFF = Symbol('pibbl.placement-handoff');
+const PLACEMENT_DERIVED_ABSOLUTE_AXES = Symbol('pibbl.placement-derived-absolute-axes');
 
 type PropsWithStyle = Record<PropertyKey, unknown> & {
   readonly style?: unknown;
@@ -32,6 +33,35 @@ function hasPositioning(style: Readonly<Record<PropertyKey, unknown>>): boolean 
     return !!patch && typeof patch === 'object' &&
       (Object.hasOwn(patch, 'position') || Object.hasOwn(patch, 'left') || Object.hasOwn(patch, 'right') || Object.hasOwn(patch, 'top') || Object.hasOwn(patch, 'bottom'));
   });
+}
+
+/** @internal Marks only a fresh placement-owned style; authored style objects are never changed. */
+export function markDerivedAbsoluteAxes(style: SystemStyle, width: boolean, height: boolean): void {
+  (style as Record<PropertyKey, unknown>)[PLACEMENT_DERIVED_ABSOLUTE_AXES] = (width ? 1 : 0) | (height ? 2 : 0);
+}
+
+/** @internal Substitutes settled axes only across an exact forwarded placement handoff. */
+export function resolveForwardedDerivedAbsoluteAxes(
+  style: Readonly<SystemStyle>,
+  source: Readonly<SystemStyle> | undefined,
+): Readonly<SystemStyle> {
+  if (source === undefined) return style;
+  const axes = (source as Record<PropertyKey, unknown>)[PLACEMENT_DERIVED_ABSOLUTE_AXES] as number | undefined;
+  if (!axes || !samePositioning(style, source)) return style;
+  const raw = style as Readonly<Record<string, unknown>>;
+  const settled = source as Readonly<Record<string, unknown>>;
+  const width = (axes & 1) !== 0 && (raw.width === undefined || raw.width === 'auto') && typeof settled.width === 'number' ? settled.width : raw.width;
+  const height = (axes & 2) !== 0 && (raw.height === undefined || raw.height === 'auto') && typeof settled.height === 'number' ? settled.height : raw.height;
+  if (Object.is(width, raw.width) && Object.is(height, raw.height)) return style;
+  return Object.freeze({ ...raw, width, height }) as Readonly<SystemStyle>;
+}
+
+function samePositioning(style: Readonly<SystemStyle>, source: Readonly<SystemStyle>): boolean {
+  const left = style as Readonly<Record<string, unknown>>;
+  const right = source as Readonly<Record<string, unknown>>;
+  return Object.is(left.position, right.position) && Object.is(left.left, right.left) &&
+    Object.is(left.right, right.right) && Object.is(left.top, right.top) &&
+    Object.is(left.bottom, right.bottom);
 }
 
 /** @internal Marks a placed function component's object style for forwarding. */
@@ -103,9 +133,11 @@ export function getPlacementHandoffSource(
 export function consumePlacementHandoff(
   style: Readonly<SystemStyle>,
 ): Readonly<SystemStyle> {
-  if (getPlacementHandoffSource(style) === undefined) return style;
-  const withoutHandoff = { ...(style as Record<PropertyKey, unknown>) };
+  const record = style as Record<PropertyKey, unknown>;
+  if (record[PLACEMENT_HANDOFF] === undefined && record[PLACEMENT_DERIVED_ABSOLUTE_AXES] === undefined) return style;
+  const withoutHandoff = { ...record };
   delete withoutHandoff[PLACEMENT_HANDOFF];
+  delete withoutHandoff[PLACEMENT_DERIVED_ABSOLUTE_AXES];
   return Object.freeze(withoutHandoff) as Readonly<SystemStyle>;
 }
 
@@ -127,9 +159,10 @@ export interface PositioningStyle extends SystemStyle {
    * Experimental direct-Flex placement mode. In a finite row-nowrap Flex, static
    * keeps the allocated slot and ignores insets; relative offsets final geometry
    * once without moving siblings; absolute stays out of sibling allocation, using
-   * the padding box for explicit insets and content alignment for omitted axes
-   * on the documented finite direct-child path. Omission
-   * retains legacy local left/top behavior.
+   * the padding box for explicit insets and content alignment for omitted axes.
+   * On the documented finite direct-child path, an automatic absolute width or
+   * height requires opposing numeric physical insets and resolves to their
+   * remaining padding-box extent. Omission retains legacy local left/top behavior.
    */
   position?: 'static' | 'relative' | 'absolute';
   /** Left edge coordinate or inset. Explicit Flex modes currently accept finite numeric insets only. See {@link Length}. */

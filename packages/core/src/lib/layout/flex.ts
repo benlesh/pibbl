@@ -54,6 +54,7 @@ import {
 import { getLayoutDirection, pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
+import { markDerivedAbsoluteAxes } from '../style/positioning.js';
 import { measureElement, measureIntrinsicElement, measureConstrainedIntrinsicElement, withIsolatedRenderState } from './measure.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
 import type { Constraints, LayoutBox } from './types.js';
@@ -1242,7 +1243,15 @@ function resolveAbsoluteFlexPlacement(
   const right = numericAbsoluteInset(style.right, 'right', child, paddingBox);
   const top = numericAbsoluteInset(style.top, 'top', child, paddingBox);
   const bottom = numericAbsoluteInset(style.bottom, 'bottom', child, paddingBox);
-  const resolved = resolveDirectChildBox(paddingBox, child, 'absolute', style);
+  const automaticWidth = style.width === undefined || style.width === 'auto';
+  const automaticHeight = style.height === undefined || style.height === 'auto';
+  const settledStyle = automaticWidth || automaticHeight ? {
+    ...style,
+    width: automaticWidth ? resolveAbsoluteAutoSize(left, right, paddingBox.width, 'width', child, paddingBox) : style.width,
+    height: automaticHeight ? resolveAbsoluteAutoSize(top, bottom, paddingBox.height, 'height', child, paddingBox) : style.height,
+  } : style;
+  if (automaticWidth || automaticHeight) markDerivedAbsoluteAxes(settledStyle, automaticWidth, automaticHeight);
+  const resolved = resolveDirectChildBox(paddingBox, child, 'absolute', settledStyle);
   const width = resolved.borderBox.width;
   const height = resolved.borderBox.height;
   const x = left !== undefined || right !== undefined ?
@@ -1259,8 +1268,26 @@ function resolveAbsoluteFlexPlacement(
     box: { x: finiteRelativePlacement(x, 'left', child, paddingBox), y: finiteRelativePlacement(y, 'top', child, paddingBox), width, height },
     usedWidth,
     usedHeight,
-    element: childWithUsedSize(child, style, usedWidth, usedHeight, receiverToken, query),
+    element: childWithUsedSize(child, settledStyle, usedWidth, usedHeight, receiverToken, query),
   };
+}
+
+function resolveAbsoluteAutoSize(
+  start: number | undefined,
+  end: number | undefined,
+  available: number,
+  property: 'width' | 'height',
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): number {
+  if (start === undefined || end === undefined) {
+    throw childDiagnostic(child, property, 'auto', container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: automatic absolute size requires both physical insets on its axis');
+  }
+  const size = available - start - end;
+  if (!Number.isFinite(size)) {
+    throw childDiagnostic(child, property, size, container, 'derived absolute size must remain finite');
+  }
+  return Math.max(0, size);
 }
 
 function resolveAbsoluteMainAlignment(
@@ -1763,9 +1790,15 @@ function assertSupportedAbsoluteFlexPosition(
   if (!experimentalLayout || options.flexDirection !== 'row' || options.flexWrap !== 'nowrap') {
     throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires a finite row nowrap Flex allocation');
   }
-  if (typeof style.width !== 'number' || !Number.isFinite(style.width) || style.width < 0 ||
-      typeof style.height !== 'number' || !Number.isFinite(style.height) || style.height < 0) {
-    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires explicit finite numeric width and height');
+  const automaticWidth = style.width === undefined || style.width === 'auto';
+  const automaticHeight = style.height === undefined || style.height === 'auto';
+  if ((!automaticWidth && (typeof style.width !== 'number' || !Number.isFinite(style.width) || style.width < 0)) ||
+      (!automaticHeight && (typeof style.height !== 'number' || !Number.isFinite(style.height) || style.height < 0))) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires finite numeric dimensions or automatic dimensions with opposing physical insets');
+  }
+  if ((automaticWidth && (style.left === undefined || style.right === undefined)) ||
+      (automaticHeight && (style.top === undefined || style.bottom === undefined))) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: automatic absolute size requires both physical insets on its axis');
   }
   if (style.alignSelf !== undefined) {
     throw childDiagnostic(child, 'alignSelf', style.alignSelf, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently uses parent alignItems only');

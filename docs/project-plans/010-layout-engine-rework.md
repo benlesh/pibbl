@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice123 `51bc20ad` (fixed absolute children with axis-wise alignment).
+Latest delivery is slice124 (opposing-inset derived absolute dimensions; this commit).
+Slice123 is `51bc20ad` (fixed absolute children with axis-wise alignment).
 Consolidation41 for121–123 passes below.
 Slice122 is `057873a3` (bounded direct-Flex absolute participation).
 Slice121 is `f4605ef2` (decorated-parent static/relative evidence).
@@ -3410,18 +3411,44 @@ and new positioning tests compose successfully. No source/built/installed receip
 was replaced by a documentation claim. No kernel/ABI/baseline change, capability
 promotion or Node24 trust claim. All7release gates remain open.
 
-## [NEXT] Opposing-inset derived absolute dimensions (slice124)
+## Slice124 delivered: opposing-inset derived absolute dimensions
 
-Use the existing `width: "auto"`/`height: "auto"` vocabulary (or omitted dimension
-on a function child's style) only when both numeric opposing insets on that axis
-are present. Derive against the parent's inner-border/padding-box dimension,
-clamp a negative finite result to zero, then preserve LTRleft/RTLright/top
-placement precedence. Unpaired automatic axes remain unsupported rather than
-inventing intrinsic measurement. Public outcome: decorated owner204×104→244×124
-with L12/R18/T8/B10 yields170×82→210×102 at14,10, while siblings keep flow
-slots. Add public RED first; preserve explicit-size alignment, source-order,
-receiver metadata, focus/keys/targets and exact teardown. No new API, ABI,
-containing-block cascade, margins, bounds or decoration admission.
+Direct experimental row-nowrap Flex absolute children admit an auto or omitted
+axis only with both physical numeric insets. Finite padding-box subtraction
+precedes clamping to zero; LTRleft/RTLright/top precedence is preserved. Public
+204×104→244×124 owner produces170×82→210×102 at14,10. Explicit-size alignment
+is unchanged. No intrinsic measurement, containing-block cascade or ABI change.
+
+Public RED established unsupported auto dimensions; direct rendering then passed
+while forwarded Rectangle failed. Private placement-owned axis bits now preserve
+computed dimensions through exact object forwarding, after authored normalization
+and before primitive resolution. Private markers are stripped before callbacks.
+Final focused2files40pass; broader3files445pass/8skip453; normal30pass/10skip40.
+Types and changed-code lint pass. Scoped core review has no material findings.
+Pinned corpus347records/253matches/94classified, including4new initial/resized
+LTR/RTL cases. Source/built4 match,227core/dist inputs, errors[] and cleanup[0,0,0].
+RTL A is fully occluded by B: exact boxes and overlap targeting are asserted;
+exposed-target selection partitions later rectangle edges rather than guessing.
+Previous alignment6cases pass. Built public5case rerun passes469inputs and zero
+private corpus requests; first concurrent run failed its existing custom-provider
+click assertion, so this is a successful rerun, not an uninterrupted first pass.
+Screenshot inspected; no baseline rewrite. Fresh installed package passes245dist
+inputs, Bundler/NodeNext, absoluteDerivedSize and prior lifecycle proofs plus104
+auto-margin fixtures. Tarball SHA256
+`4304a9333ab4208050ffad0fb76f68e5621d1a8d699b35efb2add9a2427db11a`.
+Documentation109RED probes and public JSDoc checks pass. Logs under
+`/tmp/pibbl-slice124-{focused,normal,packed,built,alignment,public-built-rerun,docs}.txt`.
+EnvironmentNode26.9.0/macOSChromium; no Node24 aggregate trust claim. Kernel
+remains68649bytes with unchanged v5 SHA. Counts remain8complete/12experimental/
+6partial/6missing/1excluded; all7release gates remain open.
+
+## [NEXT] Absolute containing-block ownership (slice125)
+
+Resolve the next material positioning gap through a focused public contract and
+failing test: nested static ownership and the containing block for absolute
+children. Preserve source-order composition, one-time forwarding and teardown.
+Present any difficult-to-reverse public choice before implementation. Do not
+expand unrelated layout families or claim general intrinsic sizing.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

@@ -40,8 +40,9 @@ const relativePositionOnly = process.argv.includes('--relative-position');
 const decoratedRelativePositionOnly = process.argv.includes('--decorated-relative-position');
 const absoluteParticipationOnly = process.argv.includes('--absolute-participation');
 const absoluteAlignmentOnly = process.argv.includes('--absolute-alignment');
+const absoluteDerivedOnly = process.argv.includes('--absolute-derived-size');
 const latestProof = process.argv.includes('--latest-proof');
-const focusedReplay = nestedCrossMatrixOnly || nestedPercentagesOnly || marginOnly || intrinsicOnly || logicalBordersOnly || logicalPaddingOnly || directionMatrixOnly || autoMarginsOnly || autoOpposingOnly || autoShorthandOnly || ownerCrossAutoOnly || customCrossAutoOnly || textCrossAutoOnly || crossAutoDirectionsOnly || crossAutoMarginsOnly || wrappedAutoMarginsOnly || crossOnly || paddingOnly || gapOnly || aspectOnly || percentageOnly || roundingOnly || nestedCrossMinOnly || nestedDecoratedCrossMinOnly || nestedDecoratedCrossMaxOnly || nestedDecoratedColumnCrossMaxOnly || nestedDecoratedColumnCrossMinOnly || relativePositionOnly || decoratedRelativePositionOnly || absoluteParticipationOnly || absoluteAlignmentOnly;
+const focusedReplay = nestedCrossMatrixOnly || nestedPercentagesOnly || marginOnly || intrinsicOnly || logicalBordersOnly || logicalPaddingOnly || directionMatrixOnly || autoMarginsOnly || autoOpposingOnly || autoShorthandOnly || ownerCrossAutoOnly || customCrossAutoOnly || textCrossAutoOnly || crossAutoDirectionsOnly || crossAutoMarginsOnly || wrappedAutoMarginsOnly || crossOnly || paddingOnly || gapOnly || aspectOnly || percentageOnly || roundingOnly || nestedCrossMinOnly || nestedDecoratedCrossMinOnly || nestedDecoratedCrossMaxOnly || nestedDecoratedColumnCrossMaxOnly || nestedDecoratedColumnCrossMinOnly || relativePositionOnly || decoratedRelativePositionOnly || absoluteParticipationOnly || absoluteAlignmentOnly || absoluteDerivedOnly;
 if (publicConcise && focusedReplay) throw new Error('--public replays only the concise default corpus; focused family replay belongs to the private full lab');
 const route = publicConcise ? '#/examples/layout/wasm-yoga-migration' : '#/testing/layout-yoga-migration';
 const browser = await chromium.launch({ headless: true });
@@ -113,7 +114,7 @@ try {
     await page.waitForTimeout(240);
   };
   const availableCases = publicConcise ? reference.cases.filter(fixture => publicFixtureNames.has(fixture.name)) : reference.cases;
-  const cases = nestedCrossMatrixOnly ? availableCases.filter(fixture => fixture.nestedCrossMinFixture || fixture.nestedDecoratedCrossMinFixture || fixture.nestedDecoratedCrossMaxFixture || fixture.nestedDecoratedColumnCrossMaxFixture || fixture.nestedDecoratedColumnCrossMinFixture) : absoluteAlignmentOnly ? availableCases.filter(fixture => fixture.absoluteAlignmentFixture) : absoluteParticipationOnly ? availableCases.filter(fixture => fixture.absoluteParticipationFixture) : decoratedRelativePositionOnly ? availableCases.filter(fixture => fixture.decoratedRelativeStaticFixture) : relativePositionOnly ? availableCases.filter(fixture => fixture.relativeStaticFixture) : nestedPercentagesOnly ? availableCases.filter(fixture => fixture.name.startsWith('nested-percent-gap-')) : customColumnMeasureOnly ? availableCases.filter(fixture => fixture.customColumnMeasureFixture) : nestedDecoratedColumnCrossMinOnly ? availableCases.filter(fixture => fixture.nestedDecoratedColumnCrossMinFixture) : nestedDecoratedColumnCrossMaxOnly ? availableCases.filter(fixture => fixture.nestedDecoratedColumnCrossMaxFixture) : nestedDecoratedCrossMaxOnly ? availableCases.filter(fixture => fixture.nestedDecoratedCrossMaxFixture) : nestedDecoratedCrossMinOnly ? availableCases.filter(fixture => fixture.nestedDecoratedCrossMinFixture) : nestedCrossMinOnly ? availableCases.filter(fixture => fixture.nestedCrossMinFixture) : roundingOnly ? availableCases.filter(fixture => fixture.roundingFixture) : ownerCrossAutoOnly ? availableCases.filter(fixture => fixture.ownerCrossAutoFixture) : customCrossAutoOnly ? availableCases.filter(fixture => fixture.customCrossAutoFixture) : textCrossAutoOnly ? availableCases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? availableCases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? availableCases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? availableCases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? availableCases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? availableCases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? availableCases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? availableCases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? availableCases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? availableCases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? availableCases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? availableCases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? availableCases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? availableCases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? availableCases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? availableCases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? availableCases.filter(fixture => fixture.name.startsWith('percent-')) : availableCases;
+  const cases = nestedCrossMatrixOnly ? availableCases.filter(fixture => fixture.nestedCrossMinFixture || fixture.nestedDecoratedCrossMinFixture || fixture.nestedDecoratedCrossMaxFixture || fixture.nestedDecoratedColumnCrossMaxFixture || fixture.nestedDecoratedColumnCrossMinFixture) : absoluteDerivedOnly ? availableCases.filter(fixture => fixture.absoluteDerivedSizeFixture) : absoluteAlignmentOnly ? availableCases.filter(fixture => fixture.absoluteAlignmentFixture) : absoluteParticipationOnly ? availableCases.filter(fixture => fixture.absoluteParticipationFixture) : decoratedRelativePositionOnly ? availableCases.filter(fixture => fixture.decoratedRelativeStaticFixture) : relativePositionOnly ? availableCases.filter(fixture => fixture.relativeStaticFixture) : nestedPercentagesOnly ? availableCases.filter(fixture => fixture.name.startsWith('nested-percent-gap-')) : customColumnMeasureOnly ? availableCases.filter(fixture => fixture.customColumnMeasureFixture) : nestedDecoratedColumnCrossMinOnly ? availableCases.filter(fixture => fixture.nestedDecoratedColumnCrossMinFixture) : nestedDecoratedColumnCrossMaxOnly ? availableCases.filter(fixture => fixture.nestedDecoratedColumnCrossMaxFixture) : nestedDecoratedCrossMaxOnly ? availableCases.filter(fixture => fixture.nestedDecoratedCrossMaxFixture) : nestedDecoratedCrossMinOnly ? availableCases.filter(fixture => fixture.nestedDecoratedCrossMinFixture) : nestedCrossMinOnly ? availableCases.filter(fixture => fixture.nestedCrossMinFixture) : roundingOnly ? availableCases.filter(fixture => fixture.roundingFixture) : ownerCrossAutoOnly ? availableCases.filter(fixture => fixture.ownerCrossAutoFixture) : customCrossAutoOnly ? availableCases.filter(fixture => fixture.customCrossAutoFixture) : textCrossAutoOnly ? availableCases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? availableCases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? availableCases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? availableCases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? availableCases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? availableCases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? availableCases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? availableCases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? availableCases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? availableCases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? availableCases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? availableCases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? availableCases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? availableCases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? availableCases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? availableCases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? availableCases.filter(fixture => fixture.name.startsWith('percent-')) : availableCases;
   assert.ok(cases.length > 0, 'requested replay must have fixtures');
   if (publicConcise) assert.equal(availableCases.length, 5, 'public corpus must stay concise');
   if (nestedCrossMatrixOnly) { for (let section = 0; section < 22; section++) await click(520, 158); }
@@ -122,7 +123,8 @@ try {
     if (publicConcise || latestProof) await click(650, 158);
     else for(let section=0;section<27;section++) await click(520,158);
   }
-  else if (absoluteAlignmentOnly) { await click(650, 158); }
+  else if (absoluteDerivedOnly) { await click(650, 158); }
+  else if (absoluteAlignmentOnly) { for (let section = 0; section < 31; section++) await click(520, 158); }
   else if (absoluteParticipationOnly) { for (let section = 0; section < 30; section++) await click(520, 158); }
   else if (decoratedRelativePositionOnly) {
     for (let section = 0; section < 29; section++) await click(520, 158);
@@ -174,6 +176,7 @@ try {
   let previousCustomColumn;
   let previousTextCrossSiblingStamp;
   let previousDirectionStamps;
+  const coveredTargets = [];
   let previousLiveNames = [];
   for (const [index, fixture] of cases.entries()) {
     console.warn(`Replay ${index+1}/${cases.length}: ${fixture.name}`);
@@ -244,23 +247,40 @@ try {
       previousLiveNames = ['A', 'B'];
       continue;
     }
-    if (fixture.absoluteParticipationFixture || fixture.absoluteAlignmentFixture) {
-      const label = fixture.absoluteAlignmentFixture ? 'absolute alignment state: ' : 'absolute participation state: ';
+    if (fixture.absoluteParticipationFixture || fixture.absoluteAlignmentFixture || fixture.absoluteDerivedSizeFixture) {
+      const label = fixture.absoluteDerivedSizeFixture ? 'absolute derived size state: ' : fixture.absoluteAlignmentFixture ? 'absolute alignment state: ' : 'absolute participation state: ';
       const state = JSON.parse((await frame.locator('pre').innerText()).split(label)[1]);
       assert.deepEqual([state.boxes.A, state.boxes.B, state.boxes.C], expected, `${fixture.name}: flow and absolute boxes`);
       for (const name of ['A', 'B', 'C']) {
-        if (previousDirectionStamps) assert.equal(state.stamps[name], previousDirectionStamps[name], `${fixture.name}: stable ${name} key`);
+        if (previousDirectionStamps && previousLiveNames.includes(name)) assert.equal(state.stamps[name], previousDirectionStamps[name], `${fixture.name}: stable ${name} key`);
       }
       // Find an exposed point for each authored box; later paint wins overlap.
       for (let target = 0; target < expected.length; target++) {
         const box = expected[target];
         let point;
-        for (let y = box.y + 2; y < box.y + box.height - 1 && !point; y += 2) {
-          for (let x = box.x + 2; x < box.x + box.width - 1; x += 2) {
+        const xs = [box.x, box.x + box.width], ys = [box.y, box.y + box.height];
+        for (let later = target + 1; later < expected.length; later++) {
+          const cover = expected[later];
+          if (cover.x > box.x && cover.x < box.x + box.width) xs.push(cover.x);
+          if (cover.x + cover.width > box.x && cover.x + cover.width < box.x + box.width) xs.push(cover.x + cover.width);
+          if (cover.y > box.y && cover.y < box.y + box.height) ys.push(cover.y);
+          if (cover.y + cover.height > box.y && cover.y + cover.height < box.y + box.height) ys.push(cover.y + cover.height);
+        }
+        xs.sort((first, second) => first - second); ys.sort((first, second) => first - second);
+        for (let yi = 0; yi < ys.length - 1 && !point; yi++) {
+          if (ys[yi] === ys[yi + 1]) continue;
+          for (let xi = 0; xi < xs.length - 1; xi++) {
+            if (xs[xi] === xs[xi + 1]) continue;
+            const x = (xs[xi] + xs[xi + 1]) / 2, y = (ys[yi] + ys[yi + 1]) / 2;
             if (!expected.slice(target + 1).some(later => x >= later.x && x <= later.x + later.width && y >= later.y && y <= later.y + later.height)) { point = {x, y}; break; }
           }
         }
-        assert.ok(point, `${fixture.name}: target ${target} has exposed geometry`);
+        if (!point) {
+          assert.ok(fixture.absoluteDerivedSizeFixture && fixture.layoutDirection === 'rtl' && target === 0,
+            `${fixture.name}: only the natively fully covered RTL A may lack an exposed point`);
+          coveredTargets.push(`${fixture.name}:A`);
+          continue; // Exact boxes and overlap assertions still prove its occlusion.
+        }
         await click(392 + point.x, 240 + point.y);
         assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(65 + target)}`), `${fixture.name}: exposed target ${target} at ${JSON.stringify(point)}; mouse ${JSON.stringify(await sandbox.evaluate(() => globalThis.__PIBBL_REPLAY_MOUSE__))}; ${(await frame.locator('pre').innerText()).match(/selected: [^\n]+/)?.[0]}`);
       }
@@ -531,7 +551,7 @@ try {
   const last = cases.at(-1);
   const lastBoxes = last.pibblBoxes ?? last.boxes;
   const column = last.flexDirection.startsWith('column');
-  if (!absoluteAlignmentOnly && !absoluteParticipationOnly && !relativePositionOnly && !decoratedRelativePositionOnly && !roundingOnly && !nestedCrossMinOnly && !nestedDecoratedCrossMinOnly && !nestedDecoratedCrossMaxOnly && !nestedDecoratedColumnCrossMaxOnly && !nestedDecoratedColumnCrossMinOnly && !customColumnMeasureOnly && !last.directionMatrixFixture && last.gap > 0) {
+  if (!absoluteDerivedOnly && !absoluteAlignmentOnly && !absoluteParticipationOnly && !relativePositionOnly && !decoratedRelativePositionOnly && !roundingOnly && !nestedCrossMinOnly && !nestedDecoratedCrossMinOnly && !nestedDecoratedCrossMaxOnly && !nestedDecoratedColumnCrossMaxOnly && !nestedDecoratedColumnCrossMinOnly && !customColumnMeasureOnly && !last.directionMatrixFixture && last.gap > 0) {
   const gap = column ? Math.min(...lastBoxes.map(box => box.y + box.height)) + 6 : Math.min(...lastBoxes.map(box => box.x + box.width)) + 6;
   await click(column ? 396+lastBoxes[0].x : 392+gap, column ? 240+gap : 244+lastBoxes[0].y);
   assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(64+lastBoxes.length)}`));
@@ -551,5 +571,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements], [0, 0, 0]);
   assert.deepEqual(errors, []);
-  console.warn(JSON.stringify({ base, route, publicConcise, commit: reference.commit, cases: cases.map(value => value.name), coreInputs: proof?.coreInputs.length ?? null, builtInputs: built ? proof?.coreInputs.length ?? null : null, catalogUrls, catalogSurface, privateCorpusRequests: privateCorpusRequests.length, customColumnContentMutation: customColumnMeasureOnly, matched: cases.filter(value => !value.pibblBoxes).length, classified: cases.filter(value => value.pibblBoxes).map(value => value.name), cleanup: [0, 0, 0], errors }));
+  console.warn(JSON.stringify({ base, route, publicConcise, commit: reference.commit, cases: cases.map(value => value.name), coreInputs: proof?.coreInputs.length ?? null, builtInputs: built ? proof?.coreInputs.length ?? null : null, catalogUrls, catalogSurface, privateCorpusRequests: privateCorpusRequests.length, customColumnContentMutation: customColumnMeasureOnly, coveredTargets, matched: cases.filter(value => !value.pibblBoxes).length, classified: cases.filter(value => value.pibblBoxes).map(value => value.name), cleanup: [0, 0, 0], errors }));
 } finally { await browser.close(); }

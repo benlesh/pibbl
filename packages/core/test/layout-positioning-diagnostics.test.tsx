@@ -88,7 +88,9 @@ describe('bounded direct-Flex absolute admission', () => {
     expect(mount(node)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
   it.each([
-    ['automatic width', { ...fixed, width: undefined }],
+    ['automatic width without opposing insets', { ...fixed, width: undefined }],
+    ['automatic height without opposing insets', { ...fixed, height: 'auto' as const }],
+    ['derived overflow before zero clamping', { ...fixed, width: 'auto' as const, left: 1e308, right: 1e308 }],
     ['percentage width', { ...fixed, width: '50%' as const }],
     ['percentage inset', { ...fixed, left: '10%' as const }],
     ['nonfinite inset', { ...fixed, left: Infinity }],

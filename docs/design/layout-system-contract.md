@@ -70,8 +70,8 @@ JavaScript Flex support.
 ### Experimental direct-Flex absolute participation
 
 A finite experimental row-nowrap Flex also accepts a direct child with
-`position: "absolute"`, explicit finite numeric width and height, and optional
-finite numeric physical insets. The child leaves line allocation:
+`position: "absolute"`, finite numeric dimensions or a bounded automatic
+axis, and optional finite numeric physical insets. The child leaves line allocation:
 its width, height and flex factors do not consume a sibling slot or an extra gap.
 It remains at its authored position in paint order, pointer targeting and focus
 navigation. Its ordinary keyed identity and receiver-owned inputs remain active.
@@ -79,9 +79,13 @@ navigation. Its ordinary keyed identity and receiver-owned inputs remain active.
 Explicit insets follow Yoga's inner-border/padding-box reference: the left/top
 origin includes the parent border but not its padding. Right/bottom measure from
 the opposite inner border edge. With both horizontal insets, left wins in LTR
-and right wins in RTL; top wins vertically. Width and height stay explicit rather
-than stretching between opposite insets. Placement is resolved before world
-transforms, and forwarded placement is consumed once.
+and right wins in RTL; top wins vertically. A width or height may instead be `"auto"` or omitted only when both finite
+physical insets on that axis are supplied. The parent inner-border/padding-box
+extent minus those two insets becomes the finite used dimension; the arithmetic
+must remain finite and a negative remainder clamps to zero. This derives one
+placement allocation only—it does not measure the child, infer intrinsic size,
+or add opposite-inset stretch semantics outside that bounded axis. Placement is
+resolved before world transforms, and forwarded placement is consumed once.
 
 On an axis without either inset, the fixed child aligns within the parent content
 box instead. Horizontal alignment uses `justifyContent`: start and space-between
@@ -91,12 +95,13 @@ the fixed height at cross-start. Center and end retain their offsets when the
 child exceeds the content dimension. An explicit inset on one axis does not
 change the other axis's content alignment. `alignSelf` is not admitted.
 
-This admission does not add intrinsic or automatic absolute sizing, percentage
-insets, nested containing-block selection, Flow/Grid/Layer participation, or a migration of the existing `Absolute` convenience component.
-The first admission excludes direct layout-component children, child box
-decoration, margins, nonzero bounds, nonzero flex factors, and responsive style
-queries. Unsupported contexts, omitted required sizing and unsupported inset
-values reject explicitly.
+This admission does not add intrinsic sizing, percentage insets, nested
+containing-block selection, Flow/Grid/Layer participation, or a migration of
+the existing `Absolute` convenience component. The first admission excludes
+direct layout-component children, child box decoration, margins, nonzero
+bounds, nonzero flex factors, and responsive style queries. Automatic or
+omitted axes without both physical insets reject explicitly, as do unsupported
+contexts and inset values.
 
 `PibblRenderLayerStyle` accepts the shared box and layout-item fields. Each
 omitted layer dimension uses its current finite logical allocation; an explicit
@@ -1096,7 +1101,6 @@ follows [Flexbox main-axis alignment](https://www.w3.org/TR/css-flexbox-1/#main-
 an independent Chromium CSS fixture confirms the first row at10/60 and second
 row at60 for three40px items in100px with10px gaps.
 
-
 ### Bounded experimental cross-axis auto margins
 
 Finite nowrap/wrapped/wrap-reverse rows and columns accept physical and logical
@@ -1124,7 +1128,6 @@ Chromium CSS independently gives A y20/0/10 for top/bottom/both in a40px line,
 with a following line at50. This follows the
 [Flexbox cross-axis rule](https://www.w3.org/TR/css-flexbox-1/#cross-alignment).
 
-
 The slice101 direction extension maps cross-auto flags through effective cross
 reversal before calling the same native allocator. No new record bit or placement
 path is needed. Wrapped lines are at least as large as their items’ outer cross
@@ -1139,7 +1142,6 @@ difference; twelve opposing-auto cases match native. Full cross family48 therefo
 contains16native matches and32classified differences. Source paint/Tab order,
 keyed focus, moved hit targets and exact disposal remain unchanged.
 
-
 The uniform `margin` field also accepts `FlexMargin`. Auto shorthand supplies all
 four physical auto edges; explicit physical edges override only their edge and
 logical inline edges override their resolved physical edge. Numeric zero therefore
@@ -1152,7 +1154,6 @@ intrinsic auto-margin measurement retain their existing diagnostics. Source,
 built and installed shorthand fixtures cover all/left-zero/top-zero/start-zero in
 LTR/RTL. Mounted overrides preserve keyed focus, geometry/hits and paint reuse.
 
-
 Bounded opposing auto-margin evidence also covers flexible growth consuming free
 space, max-width freezing before remainder absorption, min-width shrink freezing,
 a numeric opposite edge, and cross-axis min/max before auto distribution. A capped
@@ -1163,7 +1164,6 @@ and existing center alignment places them at−10/30. Pinned Yoga instead starts
 at0/40; `css-nonpositive-auto-alignment` explicitly labels the preserved CSS rule.
 Independent Chromium CSS verifies all eight expected boxes. Other automatic/intrinsic
 cross sizing remains unsupported; the auto-margin capability is still partial.
-
 
 ### Measured direct Text cross-auto sizing
 
@@ -1190,7 +1190,6 @@ parity claim. The browser uses ordinary Canvas Text. Source/built instrumentatio
 normalizes draws through the actual root transform before comparing logical
 geometry, so Studio scaling is not mistaken for a layout difference.
 
-
 ### Measured direct custom primitive cross-auto sizing
 
 A direct `definePrimitive` child with both pure `measureIntrinsic` and `measure`
@@ -1210,7 +1209,6 @@ Missing either provider, automatic width, wrapped rows, aspect sizing, column
 automatic cross size and pure intrinsic owners remain unsupported. A required
 final-width measurement failure prevents earlier paint, releases layout ownership
 and permits clean remount.
-
 
 ### Measured wrapped Flex owner cross-auto sizing
 
@@ -1233,7 +1231,6 @@ Paint-only sibling updates reuse native solves and identities, but this wrapped
 owner performs one existing pure measurement per preparation. It is not admitted
 to the existing column/Text snapshot cache; broader owner caching remains open.
 
-
 ### Natural-width Text cross-auto sizing
 
 Direct generic wrapped `Text` in a finite experimental nowrap row may omit width
@@ -1252,7 +1249,6 @@ width entries retain existing reuse; the automatic-minimum query still records
 one pure request per preparation. Sibling paint reuses native solves and nodes.
 Public draws, empty-margin and old/new target points, focus preservation and
 exact cleanup cover the mounted transition.
-
 
 ### Measured Text cross-auto sizing in wrapped rows
 

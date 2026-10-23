@@ -108,15 +108,17 @@ feature does not provide containing blocks,
 percent-inset resolution, wrapping, or other layout-family support.
 
 Experimental direct row-nowrap Flex children may also select `position: "absolute"`
-with explicit finite numeric width/height and optional numeric physical
-insets. This excludes the child from Flex line allocation while preserving authored
-paint/target/focus order. Insets reference the parent's inner border edge; padding
+with finite numeric width/height, or an automatic/omitted axis paired with
+both finite numeric physical insets on that axis. This excludes the child from
+Flex line allocation while preserving authored paint/target/focus order. Insets reference the parent's inner border edge; padding
 does not shift an explicit inset. LTR prefers left, RTL prefers right, and top
 prefers bottom. An axis with no inset uses parent content-box alignment via
 `justifyContent` or `alignItems`; stretch leaves fixed height at cross-start.
-Direct layout children, child box decoration, margins, nonzero sizing bounds
-and flex factors remain unsupported, along with automatic sizing and nested
-containing blocks.
+For a paired automatic axis, the remaining padding-box extent after both
+insets becomes the used dimension and a negative remainder clamps to zero; this
+does not invoke intrinsic measurement. Direct layout children, child box
+decoration, margins, nonzero sizing bounds and flex factors remain unsupported,
+along with unpaired automatic sizing and nested containing blocks.
 
 ## FlexMargin
 
@@ -292,7 +294,6 @@ minimum width cannot exceed preferred width. Heights describe the content at the
 corresponding intrinsic width and need not be ordered. Existing `measure` is
 unchanged. A definite basis and explicit `minWidth: 0` avoid intrinsic queries.
 
-
 Direct custom primitives with both pure `measureIntrinsic` and `measure` providers
 may also use measured automatic height in a finite experimental nowrap row at
 declared numeric width, without aspect sizing or prepared queries. Resolve
@@ -300,7 +301,6 @@ participation styles with `resolveStyle` and return allocated drawing dimensions
 The Studio custom cross-auto section lays out eight jobs: width80→40 changes
 height20→40 and top80→60. Wrapping rows, automatic widths, columns and pure
 intrinsic owners remain outside this bounded contract.
-
 
 A direct built-in `Flex` owner also supports measured automatic height with
 cross-auto margins in a finite experimental nowrap row. Its inner layout must be
@@ -310,7 +310,6 @@ an error even under stretch. The Studio owner cross-auto section shows three
 jobs changing height60→90 and top60→30 as width160→90. Other layout-owner and
 pure intrinsic auto-margin shapes remain deferred.
 
-
 The direct generic wrapped Text cross-auto subset also accepts omitted or
 `'auto'` width with automatic basis, zero grow, positive/default shrink and no
 main min/max. Visible/default fit/overflow and no query/aspect sizing remain
@@ -318,7 +317,6 @@ required. Natural Canvas width supplies its basis; final allocated width control
 line count before auto-margin placement. In the Text comparison, a140→100px
 row with a40px sibling changes one10px line at y90 to two at y80/90. This is
 host Text sizing, without a native font-parity claim.
-
 
 Direct generic wrapped Text with finite numeric declared width also supports
 measured automatic height/cross-auto margins in an experimental LTR row/wrap

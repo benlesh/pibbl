@@ -24,6 +24,7 @@ import {
   consumePlacementHandoff,
   getPlacementSignalHandoff,
   getPlacementHandoffSource,
+  resolveForwardedDerivedAbsoluteAxes,
   resolveStandalonePosition,
   type PositioningStyle,
 } from './positioning.js';
@@ -138,6 +139,12 @@ export function resolveElementStyle<
     getSpecifiedStyle(element),
   ) ?? getPlacementSignalHandoff(element);
   const handoffStyle = consumePlacementHandoff(resolvedInput);
+  const forwarded = forwardedStyle as Readonly<PositioningStyle> | undefined;
+  if (forwarded?.position === 'absolute') {
+    assertExplicitPositionBoundary(
+      handoffStyle as Readonly<PositioningStyle>, forwarded, isPlacementConsumed(element), context,
+    );
+  }
   const ordinaryFilter = extractSystemFilter(handoffStyle);
   const transitionFilters = handoffStyle.transition === undefined ? undefined : resolveTransitionBinding(handoffStyle.transition);
   const combined = transitionFilters?.length ? [...(ordinaryFilter === undefined ? [] : Array.isArray(ordinaryFilter) ? ordinaryFilter : [ordinaryFilter]), ...transitionFilters] : ordinaryFilter;
@@ -152,14 +159,14 @@ export function resolveElementStyle<
           withoutSystemFilter(handoffStyle) as SpecifiedStyle<S>,
         ) :
         withoutSystemFilter(handoffStyle) as unknown as Readonly<N>;
+  const normalizedDimensions = resolveForwardedDerivedAbsoluteAxes(normalizedInput, forwardedStyle) as Readonly<N>;
   const usedSize = allocatedContentSizes.get(element);
   allocatedContentSizes.delete(element);
-  const normalized = usedSize ? allocatedContentBoxStyle(normalizedInput, usedSize.width, usedSize.height) as Readonly<N> : normalizedInput;
+  const normalized = usedSize ? allocatedContentBoxStyle(normalizedDimensions, usedSize.width, usedSize.height) as Readonly<N> : normalizedDimensions;
   const resolved = definition.resolveStyle ?
       definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;
   const positioning = normalized as Readonly<PositioningStyle>;
-  const forwarded = forwardedStyle as Readonly<PositioningStyle> | undefined;
   assertExplicitPositionBoundary(positioning, forwarded, isPlacementConsumed(element), context);
   const hasLeft = positioning.left !== undefined;
   const hasTop = positioning.top !== undefined;

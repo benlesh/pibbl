@@ -63,7 +63,15 @@ const relativeFlex = (
         fill: "#2563eb",
       }}
     />
-    <Rectangle style={{ width: 50, height: 20, flexGrow: 0, flexShrink: 0, fill: "#f59e0b" }} />
+    <Rectangle
+      style={{
+        width: 50,
+        height: 20,
+        flexGrow: 0,
+        flexShrink: 0,
+        fill: "#f59e0b",
+      }}
+    />
   </Flex>
 );
 ```
@@ -80,7 +88,16 @@ allocation while keeping its authored paint, target and focus order:
 ```tsx
 <Flex style={{ width: 160, height: 60, gap: 10, alignItems: "flex-start" }}>
   <Rectangle style={{ width: 50, height: 20, flexShrink: 0, fill: "teal" }} />
-  <Rectangle style={{ position: "absolute", width: 30, height: 20, left: 12, top: 8, fill: "tomato" }} />
+  <Rectangle
+    style={{
+      position: "absolute",
+      width: 30,
+      height: 20,
+      left: 12,
+      top: 8,
+      fill: "tomato",
+    }}
+  />
   <Rectangle style={{ width: 50, height: 20, flexShrink: 0, fill: "gold" }} />
 </Flex>
 ```
@@ -92,9 +109,13 @@ right wins in RTL, and top wins over bottom. On an axis without an inset, the
 fixed child uses parent content-box `justifyContent` or `alignItems` alignment.
 For example center/flex-end puts a30×20 child at77,62 inside the decorated
 204×104 parent from the positioning rehearsal; supplying left12 changes only x
-to14. Stretch keeps the fixed height at cross-start. Omitted sizing,
-percentage insets, direct layout children, child box decoration, margins and
-nested containing-block selection remain unsupported.
+to14. Stretch keeps the fixed height at cross-start. A width or height may be `"auto"` or omitted only when both finite numeric
+physical insets for that axis are present; Pibbl uses the remaining inner-border
+extent, after subtracting those insets, and clamps a negative result to zero.
+This is finite placement arithmetic, not intrinsic measurement. An automatic
+or omitted axis without both insets, percentage insets, direct layout children,
+child box decoration, margins and nested containing-block selection remain
+unsupported.
 
 The experimental `layout-wasm` Studio build additionally supports finite numeric
 physical margins in finite rows and columns, with nowrap or wrap. `margin` sets all four edges;
@@ -288,7 +309,6 @@ space using only the auto slots on each actual line; a line without auto slots
 keeps its justification. The comparison explicitly labels differences from the
 pinned Yoga implementation.
 
-
 Direct wrapped `Text` in a finite experimental nowrap row may use automatic height
 with a cross-auto margin at declared numeric width. Use a generic font and
 visible/default fit and overflow; aspect sizing and prepared queries are excluded.
@@ -298,7 +318,6 @@ width80→40 changing height20→30 and moving the Text top80→70 without repla
 Opaque components, wrapping rows, column automatic cross sizing and pure
 intrinsic owners retain their existing diagnostics.
 
-
 Direct custom primitives with both pure `measureIntrinsic` and `measure` providers
 may also use measured automatic height in a finite experimental nowrap row at
 declared numeric width, without aspect sizing or prepared queries. Resolve
@@ -306,7 +325,6 @@ participation styles with `resolveStyle` and return allocated drawing dimensions
 The Studio custom cross-auto section lays out eight jobs: width80→40 changes
 height20→40 and top80→60. Wrapping rows, automatic widths, columns and pure
 intrinsic owners remain outside this bounded contract.
-
 
 A direct built-in `Flex` owner also supports measured automatic height with
 cross-auto margins in a finite experimental nowrap row. Its inner layout must be
@@ -316,7 +334,6 @@ an error even under stretch. The Studio owner cross-auto section shows three
 jobs changing height60→90 and top60→30 as width160→90. Other layout-owner and
 pure intrinsic auto-margin shapes remain deferred.
 
-
 The direct generic wrapped Text cross-auto subset also accepts omitted or
 `'auto'` width with automatic basis, zero grow, positive/default shrink and no
 main min/max. Visible/default fit/overflow and no query/aspect sizing remain
@@ -324,7 +341,6 @@ required. Natural Canvas width supplies its basis; final allocated width control
 line count before auto-margin placement. In the Text comparison, a140→100px
 row with a40px sibling changes one10px line at y90 to two at y80/90. This is
 host Text sizing, without a native font-parity claim.
-
 
 Direct generic wrapped Text with finite numeric declared width also supports
 measured automatic height/cross-auto margins in an experimental LTR row/wrap

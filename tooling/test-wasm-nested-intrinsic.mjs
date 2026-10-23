@@ -129,6 +129,7 @@ try {
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');
       assert.equal(receipt.absoluteAlignment, true, 'Installed no-inset axes must use content alignment and preserve explicit inset axes');
+      assert.equal(receipt.absoluteDerivedSize, true, 'Installed opposing insets must derive a finite auto absolute size, preserve forwarding, source order, identity and cleanup');
       assert.equal(receipt.absoluteParticipation, true, 'Installed absolute child must leave flow and preserve source-order interaction');
       assert.equal(receipt.decoratedRelativeStatic, true, 'Installed decorated positioning must resolve padding/border before relative offsets');
       assert.equal(receipt.relativeStatic, true, 'Installed static/relative placement must preserve slots and move final geometry once');

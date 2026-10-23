@@ -195,9 +195,12 @@ scientific notation, malformed strings, and non-finite results reject.
   hit and focus order. Explicit numeric insets use the inner-border/padding-box
   edge; an axis without an inset uses parent content-box alignment through
   `justifyContent`/`alignItems`. LTR prefers left, RTL prefers right, and top
-  prefers bottom. Width/height remain explicit. Automatic sizes, percentages,
-  child decoration/margins/bounds, direct layout children and nested containing
-  blocks are outside this admission; see the layout contract for exact limits.
+  prefers bottom. An automatic or omitted width/height is admitted only with
+  opposing finite physical insets on that axis; their remaining padding-box
+  extent becomes the finite used size and clamps at zero. This does not measure
+  the child. Percentages, unpaired automatic axes, child decoration/margins/
+  bounds, direct layout children and nested containing blocks are outside this
+  admission; see the layout contract for exact limits.
 - Experimental `paddingStart` and `paddingEnd` override their direction-mapped
   physical padding edge, including zero and independent of declaration order.
   Values are nonnegative; percentages require actual allocated Flex ownership and

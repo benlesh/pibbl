@@ -1805,6 +1805,64 @@ static void absoluteAlignmentCases() {
   }
 }
 
+
+static void absoluteDerivedSizeCases() {
+  for (int variant = 0; variant < 4; ++variant) {
+    const bool rtl = variant == 2 || variant == 3;
+    const bool resized = variant == 1 || variant == 3;
+    const float rootWidth = resized ? 244 : 204;
+    const float rootHeight = resized ? 124 : 104;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false);
+    YGConfigSetPointScaleFactor(config, 0);
+    YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, rootWidth);
+    YGNodeStyleSetHeight(root, rootHeight);
+    YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
+    YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+    YGNodeStyleSetGap(root, YGGutterAll, 10);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10);
+    YGNodeStyleSetPadding(root, YGEdgeRight, 30);
+    YGNodeStyleSetPadding(root, YGEdgeTop, 20);
+    YGNodeStyleSetPadding(root, YGEdgeBottom, 20);
+    YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    for (int item = 0; item < 3; ++item) {
+      auto child = YGNodeNewWithConfig(config);
+      if (item == 1) {
+        YGNodeStyleSetPositionType(child, YGPositionTypeAbsolute);
+        YGNodeStyleSetPosition(child, YGEdgeLeft, 12);
+        YGNodeStyleSetPosition(child, YGEdgeRight, 18);
+        YGNodeStyleSetPosition(child, YGEdgeTop, 8);
+        YGNodeStyleSetPosition(child, YGEdgeBottom, 10);
+      } else {
+        YGNodeStyleSetWidth(child, 50);
+        YGNodeStyleSetHeight(child, 20);
+        YGNodeStyleSetFlexGrow(child, 0);
+        YGNodeStyleSetFlexShrink(child, 0);
+        YGNodeStyleSetMinWidth(child, 0);
+        YGNodeStyleSetMinHeight(child, 0);
+      }
+      YGNodeInsertChild(root, child, item);
+    }
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, rtl ? YGDirectionRTL : YGDirectionLTR);
+    std::cout << ",{\"name\":\"position-absolute-derived-auto-" << (rtl ? "rtl" : "ltr") << (resized ? "-resized" : "")
+              << "\",\"width\":" << rootWidth << ",\"height\":" << rootHeight << ",\"gap\":10,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr")
+              << "\",\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\"},\"absoluteDerivedSizeFixture\":true,\"boxes\":[";
+    for (int item = 0; item < 3; ++item) {
+      auto child = YGNodeGetChild(root, item);
+      if (item) std::cout << ',';
+      std::cout << "{\"x\":" << YGNodeLayoutGetLeft(child) << ",\"y\":" << YGNodeLayoutGetTop(child)
+                << ",\"width\":" << YGNodeLayoutGetWidth(child) << ",\"height\":" << YGNodeLayoutGetHeight(child) << "}";
+    }
+    std::cout << "],\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":\"auto\",\"height\":\"auto\",\"position\":\"absolute\",\"left\":12,\"right\":18,\"top\":8,\"bottom\":10},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root);
+    YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1954,5 +2012,6 @@ int main() {
   decoratedRelativeStaticCases();
   absoluteParticipationCases();
   absoluteAlignmentCases();
+  absoluteDerivedSizeCases();
   std::cout << "]\n";
 }

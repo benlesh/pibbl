@@ -8,6 +8,7 @@ import {
   measureElement,
   signal,
   type FlexItemStyle,
+  type BoxStyle,
   type RectStyle,
   type PibblResponsiveStyle,
   useCanvasContext,
@@ -294,4 +295,127 @@ it.runIf(experimentalLayout)('centers an overflowing no-inset absolute child for
   </Flex>));
   await nextFrame();
   expect(worldBox).toEqual({ x: -8, y: 62, width: 200, height: 20 });
+});
+
+
+it.runIf(experimentalLayout)('derives a fixed absolute child size from opposing physical insets without changing Flex siblings', async () => {
+  type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const ownerWidth = signal(204);
+  const ownerHeight = signal(104);
+  const hits: string[] = [];
+  const focused: string[] = [];
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+  let nextStamp = 1;
+
+  function Probe({ name, style: _style }: { readonly name: string; readonly style: PlacementStyle }) {
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    const stamp = useConst(() => nextStamp++);
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return <Rectangle
+      keyboardFocusable
+      onFocus={() => focused.push(name)}
+      onClick={() => hits.push(name)}
+      style={{ width: box.width, height: box.height, cursor: 'pointer', fill: name === 'absolute' ? '#a63758' : '#19375b' }}
+    />;
+  }
+
+  const ordinary: PlacementStyle = { width: 50, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 };
+  const absolute: PlacementStyle = {
+    width: 'auto', height: 'auto', minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+    position: 'absolute', left: 12, right: 18, top: 8, bottom: 10,
+  };
+  const canvas = document.createElement('canvas'); canvas.width = 244; canvas.height = 124; document.body.append(canvas);
+  const controller = pibbl(canvas, <FocusManagement><Flex style={{
+    width: ownerWidth, height: ownerHeight, boxSizing: 'border-box',
+    padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2,
+    flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start', gap: 10,
+  }}>
+    <Probe key="A" name="A" style={ordinary} />
+    <Probe key="absolute" name="absolute" style={absolute} />
+    <Probe key="C" name="C" style={ordinary} />
+  </Flex></FocusManagement>);
+  controllers.push(controller);
+  await nextFrame();
+
+  expect([...boxes.values()]).toEqual([
+    { x: 12, y: 22, width: 50, height: 20, stamp: 1 },
+    { x: 14, y: 10, width: 170, height: 82, stamp: 2 },
+    { x: 72, y: 22, width: 50, height: 20, stamp: 3 },
+  ]);
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['A', 'absolute', 'C']);
+  clickCanvas(canvas, 20, 15);
+  clickCanvas(canvas, 80, 26); // C is later in source order over the absolute box.
+  expect(hits).toEqual(['absolute', 'C']);
+  const mounted = snapshotWasmLayoutDiagnostics();
+
+  ownerWidth.set(244); ownerHeight.set(124);
+  await nextFrame();
+  expect([...boxes.values()]).toEqual([
+    { x: 12, y: 22, width: 50, height: 20, stamp: 1 },
+    { x: 14, y: 10, width: 210, height: 102, stamp: 2 },
+    { x: 72, y: 22, width: 50, height: 20, stamp: 3 },
+  ]);
+  clickCanvas(canvas, 190, 20); // newly allocated absolute extent.
+  expect(hits).toEqual(['absolute', 'C', 'absolute']);
+  const resized = snapshotWasmLayoutDiagnostics();
+  expect(resized.nodeCreates).toBe(mounted.nodeCreates);
+  expect([...boxes.values()].map(box => box.stamp)).toEqual([1, 2, 3]);
+
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+  ]);
+});
+
+
+it.runIf(experimentalLayout).each([false, true])('resolves automatic Rectangle dimensions before paint and hit testing, forwarded=%s', async forwarded => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const ownerWidth = signal(204), ownerHeight = signal(104);
+  const hits: string[] = [];
+  function Forwarded({ style }: { readonly style: PibblResponsiveStyle<RectStyle & FlexItemStyle> }) {
+    return <Rectangle onClick={() => hits.push('absolute')} style={{ ...style, fill: '#19375b' }} />;
+  }
+  const style = { position: 'absolute' as const, width: 'auto' as const, height: 'auto' as const,
+    left: 12, right: 18, top: 8, bottom: 10 };
+  const canvas = document.createElement('canvas'); canvas.width = 244; canvas.height = 124; document.body.append(canvas);
+  const controller = pibbl(canvas, <Flex style={{ width: ownerWidth, height: ownerHeight, boxSizing: 'border-box',
+    padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2 }}>
+    {forwarded ? <Forwarded style={style} /> : <Rectangle onClick={() => hits.push('absolute')} style={{ ...style, fill: '#19375b' }} />}
+  </Flex>);
+  controllers.push(controller); await nextFrame();
+  clickCanvas(canvas, 20, 20); clickCanvas(canvas, 200, 100);
+  expect(hits).toEqual(['absolute']);
+  expect([...canvas.getContext('2d')!.getImageData(200, 100, 1, 1).data]).toEqual([0, 0, 0, 0]);
+  ownerWidth.set(244); ownerHeight.set(124); await nextFrame();
+  clickCanvas(canvas, 200, 100);
+  expect(hits).toEqual(['absolute', 'absolute']);
+  expect([...canvas.getContext('2d')!.getImageData(200, 100, 1, 1).data]).toEqual([25, 55, 91, 255]);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+  ]);
+});
+
+
+it.runIf(experimentalLayout).each(['ltr', 'rtl'] as const)('clamps omitted derived dimensions to zero while preserving %s inset precedence', async direction => {
+  let worldBox: { x: number; y: number; width: number; height: number } | undefined;
+  function Empty({ style: _style }: { readonly style: BoxStyle & FlexItemStyle }) {
+    const box = useLayoutBox(), transform = useCanvasContext().getTransform();
+    worldBox = { x: transform.e, y: transform.f, width: box.width, height: box.height };
+    return null;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 204; canvas.height = 104; document.body.append(canvas);
+  controllers.push(pibbl(canvas, <Flex style={{ width: 204, height: 104, boxSizing: 'border-box',
+    padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2, layoutDirection: direction }}>
+    <Empty style={{ position: 'absolute', left: 120, right: 120, top: 60, bottom: 60 }} />
+  </Flex>));
+  await nextFrame();
+  expect(worldBox).toEqual({ x: direction === 'ltr' ? 122 : 82, y: 62, width: 0, height: 0 });
 });
