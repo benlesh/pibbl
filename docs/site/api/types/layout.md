@@ -9,6 +9,8 @@ typeDomain: layout
 symbols:
   [
     AbsoluteStyle,
+    BaselineMeasureInput,
+    BaselinesResult,
     BoxStyle,
     CanvasMeasurementService,
     Constraints,
@@ -53,6 +55,22 @@ they do not retain drawing commands. Style is local and never cascades.
 
 `AbsoluteStyle` is the declared container style for `Absolute`, including its
 finite box and the independent `left`/`top` placement vocabulary for children.
+
+## BaselineMeasureInput
+
+`measureBaselines` receives readonly resolved `props`, normalized `style`, the final
+local content `allocation` (`x:0`, `y:0`), and the pure Canvas measurement `service`.
+The first experimental consumer is a direct fixed primitive in a finite LTR
+nowrap row with `alignItems: "first-baseline"`. Queries run after main allocation.
+
+## BaselinesResult
+
+Returns `{ status: "measured", first, last }` with finite ordered logical offsets
+from the content box's top edge, or `{ status: "unsupported", reason }`. Negative
+and out-of-box offsets are preserved. The first alignment consumes `first`; the
+result contract always supplies both offsets. A missing capability uses the
+content bottom edge. A declared provider that fails does not take that fallback.
+See [the baseline example](#/examples/layout/wasm-flex-baseline).
 
 ## BoxStyle
 
@@ -167,6 +185,12 @@ Experimental finite allocated Flex accepts `gap`, `rowGap`, and `columnGap` as
 `number | Percentage`. Column percentages use content width; row percentages use
 content height, including column Flex. Intrinsic/max-only percentage-gap owners
 remain unsupported.
+
+The experimental `alignItems: "first-baseline"` aligns direct fixed primitive
+leaves in a finite LTR nowrap row after final allocation. See
+[BaselineMeasureInput](#/api/types/layout#baselinemeasureinput) and the
+[first-baseline example](#/examples/layout/wasm-flex-baseline). Other baseline
+modes and automatic Text baselines remain outside this first subset.
 
 ## FlowProps
 

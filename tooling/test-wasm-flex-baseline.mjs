@@ -1,0 +1,68 @@
+import { strict as assert } from 'node:assert';
+import { chromium } from 'playwright';
+const base = process.argv[2] ?? 'http://127.0.0.1:5192';
+const built = process.argv.includes('--built');
+const browser = await chromium.launch({ headless: true });
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } }), errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto(`${base}/#/examples/layout/wasm-flex-baseline`);
+  const host = page.locator('iframe[srcdoc]'); await host.waitFor(); await host.scrollIntoViewIfNeeded();
+  const frame = page.frameLocator('iframe[srcdoc]'); await frame.locator('pre').waitFor();
+  const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
+  const state = async () => JSON.parse(await frame.locator('pre').innerText());
+  const counters = () => sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
+  const click = async (x, y) => {
+    const box = await frame.locator('canvas').boundingBox(), scale = Math.min(box.width / 760, box.height / 460);
+    await frame.locator('canvas').click({ position: { x: (box.width - 760 * scale) / 2 + x * scale, y: (box.height - 460 * scale) / 2 + y * scale } });
+    await page.waitForTimeout(180);
+  };
+  const geometry = (actual, width, first) => {
+    const baseline = Math.max(0,12,first,24), cellWidth = width / 3;
+    const expected = { A: [28,210+baseline-12,cellWidth,20], B: [28+cellWidth,210+baseline-first,cellWidth,40], C: [28+cellWidth*2,210+baseline-24,cellWidth,24] };
+    for (const id of ['A','B','C']) {
+      assert.ok(Math.abs(actual[id].x - expected[id][0]) < 1e-9, `${id} x`);
+      assert.ok(Math.abs(actual[id].y - expected[id][1]) < 1e-9, `${id} y`);
+      assert.equal(actual[id].width, expected[id][2]); assert.equal(actual[id].height, expected[id][3]);
+    }
+  };
+  const initial = await state(); geometry(initial.boxes,180,30);
+  assert.deepEqual(initial.allocations.A, { x:0,y:0,width:60,height:20 });
+  assert.deepEqual(initial.allocations.B, { x:0,y:0,width:60,height:40 });
+  await sandbox.evaluate(() => { const canvas = document.querySelector('canvas'); canvas.blur(); canvas.focus(); });
+  for (let index=0;index<2;index++) await frame.locator('canvas').press('Tab');
+  await page.waitForTimeout(180); assert.deepEqual((await state()).focused,['A','B','C']);
+  await click(32,229); assert.deepEqual((await state()).hits,['A']);
+  const before = await counters(); await click(40,110);
+  const shifted = await state(); geometry(shifted.boxes,180,34);
+  assert.ok(shifted.calls.B > initial.calls.B);
+  assert.deepEqual(shifted.stamps,initial.stamps);
+  assert.equal((await counters()).nodeCreates,before.nodeCreates);
+  await click(32,229); assert.deepEqual((await state()).hits,['A']);
+  await click(32,249); assert.deepEqual((await state()).hits,['A','A']);
+  await click(90,215); assert.equal((await state()).hits.at(-1),'B');
+  await click(260,110);
+  const wider = await state(); geometry(wider.boxes,240,34);
+  assert.deepEqual(wider.allocations.A,{x:0,y:0,width:80,height:20});
+  assert.deepEqual(wider.allocations.B,{x:0,y:0,width:80,height:40});
+  assert.deepEqual(wider.stamps,initial.stamps);
+  const hitCount=wider.hits.length;
+  await click(90,215); assert.equal((await state()).hits.length,hitCount);
+  await click(110,215); assert.equal((await state()).hits.at(-1),'B');
+  // Clear and settle the preceding card focus before isolating paint work.
+  await click(700,410);
+  const beforePaint=await counters(), calls=(await state()).calls;
+  await click(480,110);
+  assert.deepEqual((await state()).calls,calls);
+  const painted=await counters(); assert.equal(painted.solves,beforePaint.solves); assert.equal(painted.nodeCreates,beforePaint.nodeCreates); assert.equal(painted.crossPlacements,beforePaint.crossPlacements);
+  const pixel=await sandbox.evaluate(basis=>{
+    const point=new DOMMatrix([basis.a,basis.b,basis.c,basis.d,basis.e,basis.f]).transformPoint({x:480,y:148});
+    return [...document.querySelector('canvas').getContext('2d').getImageData(Math.floor(point.x),Math.floor(point.y),1,1).data];
+  },(await state()).basis);
+  assert.deepEqual(pixel,[110,62,121,255]);
+  const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
+  if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
+  const disposed=await sandbox.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();});
+  assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements],[0,0,0]);assert.equal(await frame.locator('pre').count(),0);assert.deepEqual(errors,[]);
+  console.warn(JSON.stringify({base,initial:initial.boxes,shifted:shifted.boxes,wider:wider.boxes,builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
+} finally { await browser.close(); }

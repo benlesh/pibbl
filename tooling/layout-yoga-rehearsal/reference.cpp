@@ -2976,6 +2976,51 @@ static void relativePercentageInsetRecord(YGFlexDirection direction, YGWrap wrap
 }
 static void relativePercentageInsetCases() { const YGFlexDirection directions[] = {YGFlexDirectionRow,YGFlexDirectionRowReverse,YGFlexDirectionColumn,YGFlexDirectionColumnReverse}; const YGWrap wraps[] = {YGWrapWrap,YGWrapWrapReverse}; for (auto direction:directions) for (auto wrap:wraps) for (int rtl=0;rtl<2;++rtl) for (int profile=0;profile<3;++profile) relativePercentageInsetRecord(direction,wrap,rtl?YGDirectionRTL:YGDirectionLTR,profile,false); relativePercentageInsetRecord(YGFlexDirectionRow,YGWrapWrap,YGDirectionLTR,1,true); relativePercentageInsetRecord(YGFlexDirectionColumnReverse,YGWrapWrapReverse,YGDirectionRTL,2,true); }
 
+
+
+struct BaselineProbeCall { float width = -1; float height = -1; int calls = 0; };
+static BaselineProbeCall baselineProviderA, baselineProviderB;
+static float baselineProviderAValue = 12, baselineProviderBValue = 30;
+static float baselineProviderAFunc(YGNodeConstRef, float width, float height) {
+  baselineProviderA = { width, height, baselineProviderA.calls + 1 };
+  return baselineProviderAValue;
+}
+static float baselineProviderBFunc(YGNodeConstRef, float width, float height) {
+  baselineProviderB = { width, height, baselineProviderB.calls + 1 };
+  return baselineProviderBValue;
+}
+static void baselineProviderCases() {
+  struct BaselineCase { const char* name; float a; float b; };
+  const BaselineCase cases[] = {
+    {"initial", 12, 30}, {"updated", 12, 34},
+    {"negative-a", -4, 30}, {"overheight-a", 28, 30},
+  };
+  for (const auto current : cases) {
+    baselineProviderA = {}; baselineProviderB = {};
+    baselineProviderAValue = current.a; baselineProviderBValue = current.b;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(root, 180); YGNodeStyleSetHeight(root, 80);
+    YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow); YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetAlignItems(root, YGAlignBaseline);
+    auto a = YGNodeNewWithConfig(config), b = YGNodeNewWithConfig(config), c = YGNodeNewWithConfig(config);
+    YGNodeRef nodes[] = {a, b, c}; const float heights[] = {20, 40, 24};
+    for (int index = 0; index < 3; ++index) {
+      YGNodeStyleSetWidth(nodes[index], 40); YGNodeStyleSetHeight(nodes[index], heights[index]);
+      YGNodeStyleSetFlexBasis(nodes[index], 40); YGNodeStyleSetFlexGrow(nodes[index], 1); YGNodeStyleSetFlexShrink(nodes[index], 0);
+      setMinZero(nodes[index]); YGNodeInsertChild(root, nodes[index], index);
+    }
+    YGNodeSetBaselineFunc(a, baselineProviderAFunc); YGNodeSetBaselineFunc(b, baselineProviderBFunc);
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+    std::cout << ",{\"name\":\"baseline-provider-" << current.name
+      << "\",\"width\":180,\"height\":80,\"gap\":0,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"baselineProviderFixture\":true,\"containerStyle\":{\"alignItems\":\"baseline\"},\"baselineProviders\":[{\"value\":" << current.a << ",\"width\":" << baselineProviderA.width << ",\"height\":" << baselineProviderA.height << ",\"calls\":" << baselineProviderA.calls << "},{\"value\":" << current.b << ",\"width\":" << baselineProviderB.width << ",\"height\":" << baselineProviderB.height << ",\"calls\":" << baselineProviderB.calls << "}],\"boxes\":[";
+    printBox(a); std::cout << ','; printBox(b); std::cout << ','; printBox(c);
+    std::cout << "],\"itemStyles\":[{\"width\":40,\"height\":20,\"flexBasis\":40,\"flexGrow\":1,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":40,\"height\":40,\"flexBasis\":40,\"flexGrow\":1,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":40,\"height\":24,\"flexBasis\":40,\"flexGrow\":1,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -3148,5 +3193,6 @@ int main() {
   relativePercentageInsetCases();
   decoratedReverseMainPercentageCases();
   decoratedReverseMainSymmetricPercentageCases();
+  baselineProviderCases();
   std::cout << "]\n";
 }

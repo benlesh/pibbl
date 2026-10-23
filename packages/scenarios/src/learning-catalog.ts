@@ -4392,6 +4392,31 @@ const drafts = [
     load: () => import("./learning/layout/wasm-flex-intrinsic-wrap.example"),
   },
   {
+    slug: "wasm-flex-baseline",
+    title: "Experimental WASM first baseline",
+    shortTitle: "WASM first baseline",
+    section: "layout",
+    order: 148,
+    summary: "Pure custom providers align baseline offsets after final Flex allocation while an unprovided leaf uses its bottom edge.",
+    api: ["Flex", "definePrimitive", "signal", "useLayoutBox"],
+    objectives: [
+      "Provide explicit first and last baseline offsets through one pure capability.",
+      "Keep baseline-aligned paint, input, identity and final-size queries synchronized after changes.",
+    ],
+    prompts: {
+      gesture: "Move B baseline, resize the owner, and click the moved cards. Paint only should reuse successful provider results. Tab follows A, B, C.",
+      code: "BaselineCard declares measureBaselines; BottomCard omits it. Both use the same ordinary drawing composition and final allocation.",
+    },
+    apiNotes: [
+      "Experimental finite LTR nowrap rows and direct fixed primitive leaves only. This is first-baseline placement, not automatic Text font metrics or last-baseline alignment.",
+      "Offsets are finite and ordered, including values outside the content box. A missing provider uses its bottom edge; a declared unsupported provider diagnoses before paint. No native font-parity or performance claim.",
+    ],
+    canvas: { width: 760, height: 460 },
+    related: ["wasm-flex-intrinsic-primitive", "wasm-flex-text", "flex"],
+    exportName: "WasmFlexBaselineExample",
+    load: () => import("./learning/layout/wasm-flex-baseline.example"),
+  },
+  {
     slug: "wasm-flex-intrinsic-primitive",
     title: "Experimental WASM custom intrinsic leaves",
     shortTitle: "WASM intrinsic leaves",

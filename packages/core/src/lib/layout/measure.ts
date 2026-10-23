@@ -25,10 +25,13 @@ import type {
   CanvasMeasurementService,
   MeasureResult,
   IntrinsicSizesResult,
+  BaselinesResult,
+  BaselineMeasureInput,
+  SystemStyle,
 } from '../types.js';
 import type { PibblElement } from '../element/types.js';
 import { prepareElementPolicies } from '../element/children.js';
-import type { Constraints } from './types.js';
+import type { Constraints, LayoutBox } from './types.js';
 import { isSignal, trackSignalDependency, withSignalTracking, type SignalNode, withSignalDependencyRole, untracked, withSignalWriteForbidden } from '../signals/graph.js';
 
 export type {
@@ -73,8 +76,8 @@ export function measureElement(
 export interface PrimitiveMeasurementEntry {
   readonly props: object;
   readonly key: string;
-  readonly result: IntrinsicSizesResult | MeasureResult;
-  readonly intrinsic: boolean;
+  readonly result: IntrinsicSizesResult | MeasureResult | BaselinesResult;
+  readonly mode: 'intrinsic' | 'finite' | 'baseline';
   readonly dependencies: readonly SignalNode<unknown>[];
   readonly inputSnapshot: readonly unknown[] | undefined;
 }
@@ -122,6 +125,108 @@ export function measureIntrinsicElement(element: PibblElement<any>, constraints:
 export function measureConstrainedIntrinsicElement(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, options?: PrimitiveMeasurementOptions): MeasureResult {
   return measurePrimitiveInput(element, constraints, service, false, options);
 }
+
+/** @internal Pure first/last baseline query at one final content allocation. */
+export function measureBaselineElement(
+  element: PibblElement<any>,
+  allocation: Readonly<LayoutBox>,
+  service: CanvasMeasurementService,
+  options?: PrimitiveMeasurementOptions,
+): BaselinesResult {
+  const transaction = GLOBAL_STATE.renderTransaction;
+  const receiver = getPrimitiveReceiverToken(element);
+  const mode = getStyleMeasurementMode() ? 'recursive' : GLOBAL_STATE.componentRefs ? 'mounted-intrinsic' : 'standalone-root';
+  const key = `baseline:${options?.key ?? ''}`;
+  const constraints = {
+    minWidth: allocation.width, maxWidth: allocation.width,
+    minHeight: allocation.height, maxHeight: allocation.height,
+  };
+  return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () => withReceiverInputProvision(transaction, receiver, () => withSignalDependencyRole('measurement', () => {
+    const inputSnapshot = intrinsicInputSnapshot(element);
+    let receivers = transaction && intrinsicTransactions.get(transaction);
+    let entries = options && receivers?.get(options.token);
+    let entry = options && (entries?.get(key) ?? options.cache.readPrimitiveMeasurement(options.token, key));
+    if (!entry || entry.mode !== 'baseline' || entry.props !== element.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot)) {
+      options?.recordMeasurement();
+      const dependencies: SignalNode<unknown>[] = [];
+      const result = withSignalTracking({ addDependency(node) { if (!dependencies.includes(node)) dependencies.push(node); } }, () =>
+        withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
+          measureBaselineInput(element, allocation, constraints, service),
+        )));
+      entry = { props: element.props, key, result, mode: 'baseline', dependencies, inputSnapshot };
+      if (options && transaction && inputSnapshot && result.status === 'measured') {
+        if (!receivers) { receivers = new WeakMap(); intrinsicTransactions.set(transaction, receivers); }
+        if (!entries) { entries = new Map(); receivers.set(options.token, entries); }
+        entries.set(key, entry);
+        const snapshot = entry;
+        transaction.onFinish(success => { if (success) options.cache.writePrimitiveMeasurement(options.token, snapshot); });
+      }
+    }
+    for (const node of entry.dependencies) trackSignalDependency(node, 'measurement');
+    return entry.result as BaselinesResult;
+  })));
+}
+
+function measureBaselineInput(
+  original: PibblElement<any>,
+  allocation: Readonly<LayoutBox>,
+  constraints: Readonly<Constraints>,
+  service: CanvasMeasurementService,
+): BaselinesResult {
+  const element = prepareElementPolicies(original, 'measureBaselines');
+  recordLayoutMeasurement();
+  const definition = getPrimitiveDefinition(element.type);
+  const component = element.type.name || 'Anonymous';
+  if (isLayoutComponent(element.type)) {
+    return { status: 'unsupported', reason: 'baseline providers currently require a direct custom primitive' };
+  }
+  if (!definition?.measureBaselines) {
+    return { status: 'unsupported', reason: `${component} does not provide baseline measurement` };
+  }
+  const preNormalized = takePreNormalizedStyle(element);
+  if (preNormalized?.query && getStyleMeasurementMode() !== 'standalone-root') {
+    rejectResponsiveMeasurement(element);
+  }
+  const inputs = resolvePrimitiveInputs(element, definition, preNormalized, {
+    width: allocation.width, height: allocation.height,
+  });
+  const specifiedStyle = withoutSystemFilter(preNormalized?.style ?? inputs.style ?? EMPTY_STYLE);
+  let normalized = preNormalized ? specifiedStyle : definition.normalizeStyle ?
+    definition.normalizeStyle(specifiedStyle) : specifiedStyle;
+  if (hasPercentageBoxPadding(normalized as Readonly<BoxStyle>)) {
+    return { status: 'unsupported', reason: 'percentage padding requires an actual finite Flex owner allocation' };
+  }
+  if ('boxSizing' in normalized && normalized.boxSizing !== undefined) {
+    normalized = contentBoxStyle(normalized as Readonly<BoxStyle>, {
+      width: allocation.width, height: allocation.height,
+      context: { component, algorithm: 'baseline measurement', constraints },
+    });
+  }
+  const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
+  GLOBAL_STATE.primitiveReceiverToken = getPrimitiveReceiverToken(element) ?? createPrimitiveReceiverToken();
+  try {
+    const result = definition.measureBaselines({
+      props: inputs.props,
+      style: normalized,
+      allocation: { x: 0, y: 0, width: allocation.width, height: allocation.height },
+      service,
+    } as BaselineMeasureInput<Record<PropertyKey, unknown>, SystemStyle>);
+    if (result.status === 'unsupported') return result;
+    if (result.status !== 'measured' || !Number.isFinite(result.first) || !Number.isFinite(result.last) || result.first > result.last) {
+      throw layoutDiagnostic({
+        component, property: 'measureBaselines', value: result,
+        algorithm: 'baseline measurement', constraints,
+        reason: 'first and last baselines must be finite with first not after last',
+      });
+    }
+    return { status: 'measured', first: result.first, last: result.last };
+  } catch (error) {
+    if (error instanceof UnsupportedResponsiveMeasurement) return { status: 'unsupported', reason: error.message };
+    throw error;
+  } finally {
+    GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
+  }
+}
 function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, intrinsic: true, options?: PrimitiveMeasurementOptions): IntrinsicSizesResult;
 function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, intrinsic: false, options?: PrimitiveMeasurementOptions): MeasureResult;
 function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, intrinsic: boolean, options?: PrimitiveMeasurementOptions): IntrinsicSizesResult | MeasureResult {
@@ -135,7 +240,8 @@ function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly
     let receivers = transaction && intrinsicTransactions.get(transaction);
     let entries = options && receivers?.get(options.token);
     let entry = options && (entries?.get(key) ?? options.cache.readPrimitiveMeasurement(options.token, key));
-    if (!entry || entry.intrinsic !== intrinsic || entry.props !== element.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot)) {
+    const entryMode = intrinsic ? 'intrinsic' : 'finite';
+    if (!entry || entry.mode !== entryMode || entry.props !== element.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot)) {
       options?.recordMeasurement();
       const dependencies: SignalNode<unknown>[] = [];
       const result = withSignalTracking({ addDependency(node) { if (!dependencies.includes(node)) dependencies.push(node); } }, () =>
@@ -143,7 +249,7 @@ function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly
           measureElementInternal(element, constraints, service, context, true) :
           measureElementInternal(element, constraints, service, context, false, true),
         )));
-      entry = { props: element.props, key, result, intrinsic, dependencies, inputSnapshot };
+      entry = { props: element.props, key, result, mode: entryMode, dependencies, inputSnapshot };
       if (options && transaction && inputSnapshot && result.status === 'measured') {
         if (!receivers) { receivers = new WeakMap(); intrinsicTransactions.set(transaction, receivers); }
         if (!entries) { entries = new Map(); receivers.set(options.token, entries); }
@@ -153,7 +259,7 @@ function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly
       }
     }
     for (const node of entry.dependencies) trackSignalDependency(node, 'measurement');
-    return entry.result;
+    return entry.result as IntrinsicSizesResult | MeasureResult;
   })));
 }
 

@@ -1564,6 +1564,40 @@ no cache guard is weakened. The public Flex/Text lesson shows a right-aligned
 column label beside the existing row comparison. Canvas metrics define its
 width; there is no synthetic native font-parity claim or new public API.
 
+### Experimental first-baseline primitive composition
+
+`PrimitiveCapabilities.measureBaselines` is a separate pure operation with
+`BaselineMeasureInput` (`props`, normalized `style`, final local content
+`allocation`, `service`) and fixed `BaselinesResult`. Successful results contain
+finite `first` and `last` offsets from the content top, with `first <= last`.
+Negative and out-of-box values are valid; they are not clamped. A missing
+capability uses the content bottom edge. A declared unsupported result, invalid
+result or thrown callback fails preparation instead of silently taking a fallback.
+
+The first consumer is experimental `alignItems: "first-baseline"` in a finite LTR
+nowrap row of direct fixed primitive leaves. Main sizes settle first; providers
+receive the final finite content width and height at local origin0,0. The native
+WASM cross-placement path computes the common ascent starting at zero and each
+offset as common ascent minus that leaf's first baseline. This matches pinned
+Yoga3.2.1 numeric-provider probes, including signed/out-of-box baselines. Last
+baseline placement, automatic Text font metrics, nested containers, wrapping,
+reverse/RTL, automatic cross size and decorated/margin/position/query/aspect leaves
+remain outside this first admission. This adds no public operation selector.
+
+Provider reads use existing measurement-role receiver dependencies. Queries forbid
+hooks, writes and rendering work through the existing isolated pure boundary;
+only successful transactions publish scalar result snapshots to the region-owned
+bounded cache. The key includes final dimensions and normalized measurement inputs.
+Stable descriptors may reuse a result on unrelated sibling paint. A provider receives its full normalized style; changes to its own style conservatively requery it. Signal changes replace
+measurement dependencies, invalidation uses existing allocation revisions, and
+removal/disposal releases the same owner. No second scheduler or persistent
+measurement observer system is introduced. Ordinary builds retain their diagnostic.
+
+The public first-baseline lesson draws labels at explicitly supplied offsets. Its
+mixed fonts illustrate common Canvas positions without claiming native font-metric
+parity. The pinned numeric oracle's callback counts are provenance, not a Pibbl
+performance or callback-count requirement.
+
 ### Source-order Canvas integration preservation
 
 Layout changes positions, never source traversal order. Finite reversed/RTL Flex

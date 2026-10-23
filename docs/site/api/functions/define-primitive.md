@@ -46,3 +46,14 @@ Declared cross dimensions and intrinsic-only providers keep their existing paths
 Unsupported finite results diagnose instead of publishing stale height. The
 [intrinsic-leaf example](#/examples/layout/wasm-flex-intrinsic-primitive) exposes
 Adaptive owner and Adaptive paint controls for this bounded behavior.
+
+The experimental `measureBaselines` capability returns a fixed
+[BaselinesResult](#/api/types/layout#baselinesresult) from a
+[BaselineMeasureInput](#/api/types/layout#baselinemeasureinput) at the final content
+allocation. A finite LTR nowrap Flex row can use `alignItems: "first-baseline"`
+with direct fixed primitive leaves. The provider is pure, measurement-owned and
+cached only through successful existing receiver transactions. Missing providers
+use the content bottom edge; declared unsupported, nonfinite or unordered results
+diagnose before painting. Offsets may be negative or outside the content box.
+Existing `measure` and `measureIntrinsic` remain separate operations. See the
+[baseline composition](#/examples/layout/wasm-flex-baseline).

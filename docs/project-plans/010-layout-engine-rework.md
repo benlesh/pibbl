@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice155 (public mixed-track spanning Grid evidence).
+Latest delivery is slice156 (experimental first-baseline provider composition).
+Slice155 is `7c60ab49` (public mixed-track spanning Grid evidence).
 Slice154 is `a3d817fa` (column Text natural cross-width with auto side margin).
 Slice153 is `4bd6ff9b` (exact caller-height column measurement).
 Consolidation51 is `35ff8f3b` for151–153.
@@ -4716,17 +4717,60 @@ must not silently assign that obligation elsewhere and declare the entry done.
 capabilities remain9 complete/11 experimental/6 partial/6 missing/1 excluded,
 all7 gates open. This closes finite public evidence debt, not the broad capability.
 
-## [NEXT] Slice156: first baseline-provider composition
+## Slice156 ready for feedback: final-allocation baseline providers
 
-Address the existing missing `flex.baselines` prerequisite through the approved
-distinct `measureBaselines` operation and fixed result shape. Resolve exact input,
-fallback/failure and final-allocation timing for a minimal runnable finite row
-composition before production code. Present the concrete public signatures and
-application example, then establish a focused failing public test and implement
-one end-to-end slice. Retain first/last, multiline, nested and broad directional
-exits explicitly; do not replace them with repeated finite-profile examples.
-After156, consolidate154–156 and reassess the unchanged fixed33/seven-gate exits.
-Root remains sole repository writer; helpers supply read-only notes or /tmp patches.
+The public `measureBaselines` operation receives resolved props, full normalized
+style, a final local content allocation and measurement service. Its fixed result
+contains finite ordered first/last offsets or an explicit unsupported reason.
+Signed and out-of-box offsets are valid. Missing providers use the content bottom;
+declared failure does not fall back. Experimental finite LTR nowrap rows admit
+`alignItems: "first-baseline"` on direct fixed primitive leaves. WASM ABI v6 owns
+the numeric cross placement after final main allocation; JavaScript does not
+replace the resulting coordinates.
+
+Installed offline tarball proof passed strict Bundler/NodeNext types and browser
+lifecycle with245dist inputs, SHA256
+`03616e652bdbf989577dc9030a7168b909309b7febe54aad97b123e80dfa2fd5`.
+Detachment checks snapshot after required sibling reflow, then require the removed
+provider signal to leave queries, solves, cross placement and node counts unchanged.
+Ordinary mode passed14tests with4experimental cases skipped.
+
+Public tests failed before production implementation. Fresh Node24.15/Chromium
+focused tests passed17 with1 normal-only case skipped across2files. Coverage
+includes final allocation, signal changes, source focus and moved hit targets,
+invalid offsets, writes/render-hook purity, conservative own-style invalidation,
+unrelated sibling paint reuse and exact cleanup. The pinned Rust1.99 kernel has
+14 passing tests and a69,628-byte matching generated binary (SHA256
+`119b451f28fcbbd7467692a7bd3316f89a4c0639def99fe842d87c8482234b90`).
+Pinned Yoga3.2.1 source regeneration independently reproduced721 records:530
+unclassified,183 preserved semantic differences and8 native-font-source records.
+Four new numeric-provider cases replayed in source and built with final width60,
+negative/out-of-box offsets, missing-provider fallback and cleanup `[0,0,0]`.
+This is four-case runtime evidence, not a721-case replay or font-parity claim.
+
+Hands-on: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-baseline` (built5193
+same path). Move B's supplied baseline, resize the owner, paint the separate
+indicator, click the moved cards and Tab through A/B/C. Source and built drivers
+passed geometry, final widths60→80, stable identity, hit/focus, paint reuse,
+indicator pixels and teardown with no browser errors; built used469dist inputs.
+The earlier paint-count failure combined focus settling with a provider's own
+style change; the final example isolates unrelated sibling paint. The earlier
+built startup failure was a stale Vite source glob, corrected by restarting its
+existing dedicated server. No cache revision guard was weakened.
+
+Typecheck, public JSDoc, documentation, Studio catalog/search and focused lint
+passed; catalog171lessons/12snapshots/33labs. Read-only focused review found no
+material issue. `flex.baselines` moves only missing→experimental: fixed33 now
+9complete/12experimental/6partial/5missing/1excluded, all7gates open. Automatic
+Text fonts, multiline, nested propagation, last-baseline alignment and broader
+layout admission remain accepted obligations. No aggregate trust claim.
+
+## [NEXT] Consolidation52: slices154–156
+
+Consolidate the changed public measurement, Grid evidence and baseline paths in
+experimental and ordinary modes, then reassess the shortest sound flex-core gate
+closure without shrinking the fixed33 targets. Root remains sole repository
+writer; reused helpers provide independent review or temporary patch proposals.
 
 ### Finite positioning exit matrix after134
 

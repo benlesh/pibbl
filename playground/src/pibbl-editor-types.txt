@@ -434,6 +434,7 @@ export interface MeshTransformOptions {
     resolveStyle?: (style: NormalizedStyle<N>, context: Readonly<StyleResolutionContext>) => ResolvedStyle<R>;
     measure?: (input: MeasureInput<PrimitiveProgramProps<P>, N>) => MeasureResult;
     measureIntrinsic?: (input: IntrinsicMeasureInput<PrimitiveProgramProps<P>, N>) => IntrinsicSizesResult;
+    measureBaselines?: (input: BaselineMeasureInput<PrimitiveProgramProps<P>, N>) => BaselinesResult;
   }
   type PrimitiveCapabilityArguments<P, S extends SystemStyle, N extends SystemStyle, R extends SystemStyle> = RequiresResolver<R> extends true ? [capabilities: never] : RequiresResolver<S> extends true ? [capabilities: Readonly<PrimitiveCapabilities<P, S, N, R>> & { resolveStyle: NonNullable<PrimitiveCapabilities<P, S, N, R>['resolveStyle']> }] : [capabilities?: Readonly<PrimitiveCapabilities<P, S, N, R>>];
   export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
@@ -572,7 +573,7 @@ export interface MeshTransformOptions {
   export interface OverlayProps extends PibblEventHandlers { children: PibblNodeInput }
   export interface FlowStyle extends BoxStyle, LayoutItemStyle { direction?: 'horizontal' | 'vertical'; wrap?: boolean; gap?: number; lineGap?: number; alignItems?: 'start' | 'center' | 'end' | 'stretch' }
   export interface FlowProps extends PibblEventHandlers { children: PibblNodeInput }
-  export interface FlexStyle extends BoxStyle, LayoutItemStyle { layoutDirection?: 'ltr' | 'rtl'; flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse'; flexWrap?: 'nowrap' | 'wrap' | 'wrap-reverse'; justifyContent?: 'start' | 'end' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; alignItems?: 'start' | 'end' | 'stretch' | 'flex-start' | 'flex-end' | 'center'; alignContent?: 'start' | 'end' | 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; gap?: number | Percentage; rowGap?: number | Percentage; columnGap?: number | Percentage }
+  export interface FlexStyle extends BoxStyle, LayoutItemStyle { layoutDirection?: 'ltr' | 'rtl'; flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse'; flexWrap?: 'nowrap' | 'wrap' | 'wrap-reverse'; justifyContent?: 'start' | 'end' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; alignItems?: 'first-baseline' | 'start' | 'end' | 'stretch' | 'flex-start' | 'flex-end' | 'center'; alignContent?: 'start' | 'end' | 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; gap?: number | Percentage; rowGap?: number | Percentage; columnGap?: number | Percentage }
   export interface FlexProps extends PibblEventHandlers { children: PibblNodeInput }
   export type GridTrack = number | `${number}%` | `${number}fr`;
   export interface GridStyle extends BoxStyle, LayoutItemStyle { gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
@@ -584,6 +585,8 @@ export interface MeshTransformOptions {
   export interface IntrinsicConstraints { readonly width: IntrinsicAxisConstraints; readonly height: IntrinsicAxisConstraints }
   export interface IntrinsicMeasureInput<P,S extends SystemStyle = SystemStyle> { readonly props:Readonly<P>; readonly style:NormalizedStyle<S>; readonly constraints:Readonly<IntrinsicConstraints>; readonly service:CanvasMeasurementService }
   export type IntrinsicSizesResult = Readonly<{status:'measured';minContent:Readonly<Size>;maxContent:Readonly<Size>}> | Readonly<{status:'unsupported';reason:string}>;
+  export interface BaselineMeasureInput<P, S extends SystemStyle = SystemStyle> { readonly props: Readonly<P>; readonly style: NormalizedStyle<S>; readonly allocation: Readonly<LayoutBox>; readonly service: CanvasMeasurementService }
+  export type BaselinesResult = Readonly<{status:'measured';first:number;last:number}> | Readonly<{status:'unsupported';reason:string}>;
   export interface MeasureInput<P, S extends SystemStyle = SystemStyle> { props: Readonly<P>; style: NormalizedStyle<S>; constraints: Readonly<Constraints>; service: CanvasMeasurementService; measureElement(element: PibblElement<any>, constraints: Readonly<Constraints>): MeasureResult }
   export interface LayoutDiagnosticContext { component?: string; algorithm?: string; constraints?: Readonly<Constraints> }
   export interface LayoutDiagnosticInput extends LayoutDiagnosticContext { property: string; value: unknown; reason: string }

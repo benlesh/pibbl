@@ -84,10 +84,35 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v5() -> u32 { 5 }
+pub extern "C" fn layout_abi_v6() -> u32 { 6 }
 #[no_mangle]
 pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
+}
+/// First-baseline placement reuses the cross buffer. In this mode only, slot 8
+/// carries a signed first-baseline offset; ordinary margin placement never enters it.
+#[no_mangle]
+pub extern "C" fn place_first_baseline(handle: u32, generation: u32, size: f64) -> u32 {
+    with_arena(handle, generation, 1, |arena| align_first_baseline(&mut arena.cross, size))
+}
+fn align_first_baseline(records: &mut [f64], size: f64) -> u32 {
+    if !size.is_finite() || size < 0.0 { return 1; }
+    let mut max_ascent = 0.0_f64;
+    for n in records.chunks_exact(STRIDE) {
+        // Baseline mode is admitted by JS only for fixed, undecorated, no-margin leaves.
+        // Slot 8 is signed and intentionally may lie outside the content box.
+        if !n[0].is_finite() || n[0] < 0.0 || n[1] != 0.0
+            || !n[2].is_finite() || n[2] < 0.0 || n[3].is_nan() || n[2] > n[3]
+            || n[4] != 0.0 || n[5] != 1.0 || !n[8].is_finite() || n[9] != 0.0 { return 1; }
+        max_ascent = max_ascent.max(n[8]);
+    }
+    for n in records.chunks_exact_mut(STRIDE) {
+        let offset = max_ascent - n[8];
+        if !offset.is_finite() { return 1; }
+        n[6] = n[0];
+        n[7] = offset;
+    }
+    0
 }
 fn align_cross(records: &mut [f64], size: f64, reverse: bool) -> u32 {
     if !size.is_finite() || size < 0.0 { return 1; }
@@ -637,6 +662,22 @@ mod tests {
         assert_eq!(arena_dispose(b,gb),1);
     }
 
+    #[test] fn first_baseline_keeps_signed_offsets_and_uses_max_ascent() {
+        let mut records = [20., 0., 0., f64::INFINITY, 0., 1., 0., 0., 12., 0., 40., 0., 0., f64::INFINITY, 0., 1., 0., 0., 30., 0.];
+        assert_eq!(align_first_baseline(&mut records, 60.), 0);
+        assert_eq!((records[6], records[7], records[16], records[17]), (20., 18., 40., 0.));
+        records[8] = -4.;
+        assert_eq!(align_first_baseline(&mut records, 60.), 0);
+        assert_eq!(records[7], 34.);
+        records[8] = 28.;
+        assert_eq!(align_first_baseline(&mut records, 60.), 0);
+        assert_eq!(records[7], 2.);
+        records[8] = -4.; records[18] = -2.;
+        assert_eq!(align_first_baseline(&mut records, 60.), 0);
+        assert_eq!((records[7], records[17]), (4., 2.));
+        records[8] = f64::NAN;
+        assert_eq!(align_first_baseline(&mut records, 60.), 1);
+    }
     #[test] fn cross_auto_slots_override_alignment_without_rewriting_numeric_margins() {
         let mut record = [20.,0.,0.,f64::INFINITY,0.,7.,0.,0.,0.,0.];
         assert_eq!(align_cross(&mut record,40.,false),0);

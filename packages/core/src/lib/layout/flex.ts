@@ -55,7 +55,7 @@ import { getLayoutDirection, pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { markDerivedAbsoluteAxes } from '../style/positioning.js';
-import { measureElement, measureIntrinsicElement, measureConstrainedIntrinsicElement, withIsolatedRenderState } from './measure.js';
+import { measureElement, measureIntrinsicElement, measureConstrainedIntrinsicElement, measureBaselineElement, withIsolatedRenderState } from './measure.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
 import type { Constraints, LayoutBox } from './types.js';
 
@@ -69,6 +69,7 @@ type MainAlignment =
   | 'space-around'
   | 'space-evenly';
 type CrossAlignment = 'stretch' | 'flex-start' | 'flex-end' | 'center';
+type ItemCrossAlignment = CrossAlignment | 'first-baseline';
 
 /**
  * Supported geometry and presentation properties for Flex.
@@ -87,7 +88,7 @@ export interface FlexStyle extends BoxStyle, LayoutItemStyle {
   /** Distribution along the main axis. start/end follow layout direction independently of axis reversal. See {@link MainAlignment}. */
   justifyContent?: MainAlignment | 'start' | 'end';
   /** Cross alignment. start/end follow layout direction independently of wrap reversal. See {@link CrossAlignment}. */
-  alignItems?: CrossAlignment | 'start' | 'end';
+  alignItems?: ItemCrossAlignment | 'start' | 'end';
   /**
    * Distribution of wrapped flex lines within the available cross-axis space. See
    * {@link CrossAlignment}, {@link MainAlignment}.
@@ -123,6 +124,7 @@ export interface FlexMeasurementInput {
 // Parent input is private metadata, not a recursively validated resolved value.
 const FLEX_ABSOLUTE_BOX_STYLE = Symbol('pibbl.flex-absolute-box-style');
 const FLEX_INHERITED_CONTAINING_BOX = Symbol('pibbl.flex-inherited-containing-box');
+const FLEX_FIRST_BASELINE = Symbol('pibbl.flex-first-baseline');
 
 interface ResolvedFlexStyle extends SystemStyle {
   layoutDirection: 'ltr' | 'rtl';
@@ -132,6 +134,8 @@ interface ResolvedFlexStyle extends SystemStyle {
   flexWrap: FlexWrap;
   justifyContent: MainAlignment;
   alignItems: CrossAlignment;
+  /** True only when the authored item alignment was first-baseline. */
+  [FLEX_FIRST_BASELINE]: boolean;
   alignContent: CrossAlignment | MainAlignment;
   rowGap: number;
   columnGap: number;
@@ -170,6 +174,8 @@ interface FlexItem {
   query?: PreparedQuery;
   relativeX: number;
   relativeY: number;
+  /** Signed first-baseline offset resolved after final main allocation. */
+  firstBaseline?: number;
   sourceIndex: number;
 }
 
@@ -808,6 +814,9 @@ function resolveFlexPlacements(
     }
     assertSupportedChildPosition('Flex', child, normalized, true);
     rejectUnsupportedItemFields(child, normalized, container);
+    if (options[FLEX_FIRST_BASELINE] && normalized.position === 'absolute') {
+      throw childDiagnostic(child, 'position', 'absolute', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: absolute children are outside first-baseline composition');
+    }
     if (normalized.position === 'absolute') {
       const definition = getPrimitiveDefinition(child.type);
       const hasPairedMeasurement = !!definition?.measureIntrinsic && !!definition.measure;
@@ -1269,6 +1278,30 @@ function resolveFlexPlacements(
       } else if (constrainedProvider) throw childDiagnostic(item.child, 'height', 'auto', container, `final-width measurement is required but unsupported: ${result.reason}`);
     }
   }
+  if (options[FLEX_FIRST_BASELINE]) {
+    assertSupportedFirstBaselineFlex(options, items, container, region !== undefined);
+    for (const item of items) {
+      const allocation = { x: 0, y: 0, width: item.targetMain, height: item.preferredCross };
+      const definition = getPrimitiveDefinition(item.child.type);
+      if (!definition?.measureBaselines) {
+        item.firstBaseline = allocation.height;
+        continue;
+      }
+      const measurementChild = clonePibblElement(item.child);
+      const measuredStyle: SystemStyle & { width: number; height: number } = { ...item.normalized, width: allocation.width, height: allocation.height };
+      setPreNormalizedStyle(measurementChild, measuredStyle, item.child, item.receiverToken, item.query);
+      const result = measureBaselineElement(measurementChild, allocation, measurement.service, region ? {
+        cache: region,
+        token: item.layoutToken ?? item.receiverToken,
+        key: `${allocationInputRevision()}:${allocation.width}:${allocation.height}:${JSON.stringify(measurementStyle(item.normalized))}`,
+        recordMeasurement: recordWasmMeasurement,
+      } : undefined);
+      if (result.status === 'unsupported') {
+        throw childDiagnostic(item.child, 'measureBaselines', 'unsupported', container, `first-baseline alignment requires a baseline result: ${result.reason}`);
+      }
+      item.firstBaseline = result.first;
+    }
+  }
   if (region) {
     // Per-item wrapped line cross offsets are produced by the kernel below.
     for (const line of lines) { line.crossSize = crossSize; line.crossOffset = 0; }
@@ -1276,7 +1309,11 @@ function resolveFlexPlacements(
     resolveLineCrossSizes(lines, crossSize, crossGap, options.alignContent, options.flexWrap === 'wrap');
   }
 
-  const crossPlacements = region?.placeCross(items, crossSize, options.alignItems, { reverse: wrapReverse, wrap: wrappedRegion ? { gap: crossGap, alignContent: options.alignContent } : undefined });
+  const crossPlacements = region?.placeCross(items, crossSize, options.alignItems, {
+    reverse: wrapReverse,
+    wrap: wrappedRegion ? { gap: crossGap, alignContent: options.alignContent } : undefined,
+    baseline: options[FLEX_FIRST_BASELINE],
+  });
   const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent, reverse, hasAutoMainMargins ? items : undefined);
   let mainIndex = 0;
   let crossIndex = 0;
@@ -1785,6 +1822,28 @@ function distributeAlignment(
   return { start: 0, between: 0 };
 }
 
+function assertSupportedFirstBaselineFlex(
+  options: Readonly<ReturnType<typeof normalizeFlexOptions>>,
+  items: readonly FlexItem[],
+  container: Readonly<LayoutBox>,
+  mounted: boolean,
+): void {
+  if (!mounted || !experimentalLayout || options.layoutDirection !== 'ltr' || options.flexDirection !== 'row' || options.flexWrap !== 'nowrap') {
+    throw optionDiagnostic('alignItems', 'first-baseline', container, 'requires a mounted experimental finite LTR row-nowrap Flex');
+  }
+  for (const item of items) {
+    const style = item.normalized;
+    if (!getPrimitiveDefinition(item.child.type) || isKnownLayoutType(item.child.type) || isLayoutComponent(item.child.type) || item.child.type === Text || item.query || item.alignSelf !== 'auto' ||
+        style.position !== undefined || item.crossAuto || typeof style.flexBasis !== 'number' ||
+        typeof style.height !== 'number' || item.paddingMain !== 0 || item.paddingCross !== 0 ||
+        item.marginMainBefore !== 0 || item.marginMainAfter !== 0 || item.marginCrossBefore !== 0 || item.marginCrossAfter !== 0 ||
+        item.autoMainBefore || item.autoMainAfter || item.autoCrossBefore || item.autoCrossAfter ||
+        item.aspectRatio !== undefined || item.relativeX !== 0 || item.relativeY !== 0) {
+      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct fixed undecorated primitive leaves with no margins, position, query, aspect ratio, or alignSelf override');
+    }
+  }
+}
+
 function isRowDirection(direction: unknown): boolean {
   return direction === undefined || direction === 'row' || direction === 'row-reverse';
 }
@@ -1815,9 +1874,10 @@ function normalizeFlexOptions(
     'justifyContent',
     container,
   );
+  const requestedAlignItems = normalizeLogicalAlignment((style as Readonly<Partial<ResolvedFlexStyle>>)[FLEX_FIRST_BASELINE] ? 'first-baseline' : style.alignItems ?? 'stretch', flexWrap === 'wrap-reverse');
   const alignItems = supported(
-    normalizeLogicalAlignment(style.alignItems ?? 'stretch', flexWrap === 'wrap-reverse'),
-    ['stretch', 'flex-start', 'flex-end', 'center'],
+    requestedAlignItems,
+    experimentalLayout ? ['stretch', 'flex-start', 'flex-end', 'center', 'first-baseline'] : ['stretch', 'flex-start', 'flex-end', 'center'],
     'alignItems',
     container,
   );
@@ -1835,7 +1895,8 @@ function normalizeFlexOptions(
     flexDirection: flexDirection as FlexDirection,
     flexWrap: flexWrap as FlexWrap,
     justifyContent: justifyContent as MainAlignment,
-    alignItems: alignItems as CrossAlignment,
+    alignItems: alignItems === 'first-baseline' ? 'flex-start' : alignItems as CrossAlignment,
+    [FLEX_FIRST_BASELINE]: alignItems === 'first-baseline',
     alignContent: alignContent as CrossAlignment | MainAlignment,
     rowGap: style.rowGap === undefined ? rowGap : nonnegativeGap(style.rowGap, 'rowGap', container, container.height),
     columnGap: style.columnGap === undefined ? columnGap : nonnegativeGap(style.columnGap, 'columnGap', container, container.width),

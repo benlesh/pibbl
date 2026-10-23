@@ -352,6 +352,8 @@ export type {
   IntrinsicConstraints,
   IntrinsicMeasureInput,
   IntrinsicSizesResult,
+  BaselineMeasureInput,
+  BaselinesResult,
   MeasureResult,
   PixelGridAlignment,
   NormalizedStyle,

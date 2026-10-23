@@ -1649,7 +1649,7 @@
         "classification": "exact finite decorated reverse main-axis symmetric percentage bound with explicit numeric basis/minimum policy"
       }
     ],
-    "limit": "717 pinned native records:526 without a divergence classification,183 preserved semantic differences and8 native-font-source records. Fresh public runtime verification is limited to named replay receipts; this is not a717-case runtime replay or general intrinsic, percentage, auto-margin, font or CSS parity claim."
+    "limit": "721 pinned native records:530 without a divergence classification,183 preserved semantic differences and8 native-font-source records. Fresh public runtime verification is limited to named replay receipts; this is not a721-case runtime replay or general intrinsic, percentage, auto-margin, font or CSS parity claim."
   },
   "gateGroups": [
     {
@@ -2614,19 +2614,32 @@
       "id": "flex.baselines",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "absent",
-      "status": "missing",
-      "unresolvedPolicy": "Implementation direction is authorized; baseline-provider and missing-baseline fallback contracts need exact definitions.",
+      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR nowrap rows of direct fixed primitive leaves, missing-provider content-bottom fallback and explicit failure diagnostics",
+      "status": "experimental",
+      "unresolvedPolicy": "Automatic Text/font metrics, multiline and nested baseline propagation, last-baseline alignment, wrapping, reverse/RTL and broader leaf admission remain open.",
       "evidence": {
-        "positive": [],
-        "negative": [],
-        "interaction": [],
-        "yogaCases": [],
+        "positive": [
+          "packages/core/test/layout-flex-baseline.test.tsx",
+          "packages/scenarios/src/learning/layout/wasm-flex-baseline.example.tsx",
+          "tooling/packed-layout-consumer.mjs"
+        ],
+        "negative": [
+          "packages/core/test/layout-flex-baseline.test.tsx",
+          "packages/core/src/lib/layout/wasm/loader.test.ts"
+        ],
+        "interaction": ["tooling/test-wasm-flex-baseline.mjs"],
+        "yogaCases": [
+          "baseline-provider-initial",
+          "baseline-provider-updated",
+          "baseline-provider-negative-a",
+          "baseline-provider-overheight-a"
+        ],
         "missing": [
-          "mixed fonts",
+          "automatic mixed-font metrics",
           "multiline Text",
           "nested containers",
-          "first/last baseline"
+          "last-baseline alignment",
+          "wrapping/reverse/RTL"
         ]
       }
     },

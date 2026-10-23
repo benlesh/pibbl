@@ -423,6 +423,39 @@ export type IntrinsicSizesResult =
   | Readonly<{ /** Successful intrinsic query. */ status: 'measured'; /** Minimum unbroken content size. See {@link Size}. */ minContent: Readonly<Size>; /** Preferred content size. See {@link Size}. */ maxContent: Readonly<Size> }>
   | Readonly<{ /** Unsupported intrinsic query. */ status: 'unsupported'; /** Actionable explanation. */ reason: string }>;
 
+/** Final-allocation input for a pure custom baseline query. See {@link PrimitiveCapabilities}. */
+export interface BaselineMeasureInput<P, S extends SystemStyle = SystemStyle> {
+  /** Resolved receiver inputs. See {@link MeasureInput}. */
+  readonly props: Readonly<P>;
+  /** Normalized content style. See {@link NormalizedStyle}. */
+  readonly style: NormalizedStyle<S>;
+  /** Final local content allocation; origin is always `{ x: 0, y: 0 }`. See {@link LayoutBox}. */
+  readonly allocation: Readonly<LayoutBox>;
+  /** Pure Canvas measurements. See {@link CanvasMeasurementService}. */
+  readonly service: CanvasMeasurementService;
+}
+/**
+ * First/last baseline offsets from content top, or explicit inability to provide them.
+ * Finite offsets may be negative or outside the content box; first must not exceed last.
+ * @see {@link BaselineMeasureInput}
+ * @see {@link PrimitiveCapabilities}
+ */
+export type BaselinesResult =
+  | Readonly<{
+      /** Successful baseline query. See {@link BaselinesResult}. */
+      status: 'measured';
+      /** First logical baseline offset from the content top. See {@link BaselinesResult}. */
+      first: number;
+      /** Last logical baseline offset, at or after first. See {@link BaselinesResult}. */
+      last: number;
+    }>
+  | Readonly<{
+      /** Explicit inability to supply baselines. See {@link BaselinesResult}. */
+      status: 'unsupported';
+      /** Actionable explanation; does not select the missing-provider fallback. See {@link BaselinesResult}. */
+      reason: string;
+    }>;
+
 /**
  * The synchronous drawing callback of a custom primitive.
  *
@@ -506,6 +539,12 @@ export interface PrimitiveCapabilities<
    * @returns Finite ordered content sizes or unsupported. See {@link IntrinsicSizesResult}.
    */
   measureIntrinsic?: (input: IntrinsicMeasureInput<PrimitiveProgramProps<P>, N>) => IntrinsicSizesResult;
+  /**
+   * Pure first/last baseline provider at the final content allocation.
+   * @param input - Resolved inputs and final local allocation. See {@link BaselineMeasureInput}.
+   * @returns Finite ordered offsets or unsupported. See {@link BaselinesResult}.
+   */
+  measureBaselines?: (input: BaselineMeasureInput<PrimitiveProgramProps<P>, N>) => BaselinesResult;
 }
 
 export interface InternalIdentityHint {
