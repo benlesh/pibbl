@@ -6,6 +6,7 @@ import {
   definePrimitive,
   signal,
   type Signal,
+  type WritableSignal,
   type SystemStyle,
   useCanvasContext,
   useConst,
@@ -21,6 +22,7 @@ interface IntrinsicChipStyle extends SystemStyle {
 }
 
 let providerCalls = 0;
+let adaptiveFiniteCalls = 0;
 
 const IntrinsicChip = definePrimitive<{ minimum: Signal<number> }, IntrinsicChipStyle>(
   function renderIntrinsicChip(_props, _style, context) {
@@ -41,6 +43,41 @@ const IntrinsicChip = definePrimitive<{ minimum: Signal<number> }, IntrinsicChip
   },
 );
 
+const AdaptiveIntrinsicChip = definePrimitive<{ hits: WritableSignal<number> }, IntrinsicChipStyle>(
+  function renderAdaptiveIntrinsicChip(props) {
+    const box = useLayoutBox();
+    return (
+      <Rectangle
+        onClick={() => props.hits.update(value => value + 1)}
+        style={{
+          width: box.width,
+          height: box.height,
+          fill: "#6e3e79",
+          cursor: "pointer",
+        }}
+      />
+    );
+  },
+  {
+    preserveSignalProps: ["hits"],
+    measureIntrinsic: () => ({
+      status: "measured" as const,
+      minContent: { width: 0, height: 20 },
+      maxContent: { width: 100, height: 20 },
+    }),
+    measure: ({ constraints }) => {
+      adaptiveFiniteCalls++;
+      return {
+        status: "measured" as const,
+        size: {
+          width: Math.min(100, constraints.maxWidth),
+          height: constraints.maxWidth >= 100 ? 20 : 40,
+        },
+      };
+    },
+  },
+);
+
 function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
   const minimum = signal(40);
   const owner = signal(80);
@@ -49,16 +86,21 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
   const escapeLabel = computed(() => escaped.get() ? "0" : "none");
   const paint = signal("#426b61");
   const followerHits = signal(0);
+  const adaptiveOwner = signal(140);
+  const adaptivePaint = signal("#426b61");
+  const adaptiveHits = signal(0);
   const stamp = ++nextStamp;
   let disposed = false;
 
   function Button({
     x,
+    y = 96,
     label,
     click,
     fill = "#19375b",
   }: {
     x: number;
+    y?: number;
     label: string;
     click(): void;
     fill?: string;
@@ -69,7 +111,7 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
           onClick={click}
           style={{
             left: x,
-            top: 96,
+            top: y,
             width: 160,
             height: 36,
             fill,
@@ -78,7 +120,7 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
         />
         <Text
           pointerEvents="none"
-          style={{ left: x + 12, top: 106, font: "14px sans-serif", fill: "#ffffff" }}
+          style={{ left: x + 12, top: y + 10, font: "14px sans-serif", fill: "#ffffff" }}
         >
           {label}
         </Text>
@@ -147,7 +189,48 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
           }}
         />
       </Flex>
-      <Text style={{ left: 28, top: 204, font: "14px sans-serif", fill: "#475569" }}>
+      <Text style={{ left: 380, top: 140, font: "bold 14px sans-serif", fill: "#19375b" }}>
+        Final-width adaptive leaf
+      </Text>
+      <Flex
+        style={{
+          left: 380,
+          top: 164,
+          width: adaptiveOwner,
+          height: 60,
+          flexDirection: "row",
+          alignItems: "flex-start",
+        }}
+      >
+        <AdaptiveIntrinsicChip
+          hits={adaptiveHits}
+          style={{ flexBasis: 100, flexShrink: 1, minWidth: 0 }}
+        />
+        <Rectangle
+          style={{
+            width: 40,
+            height: 20,
+            minWidth: 0,
+            flexShrink: 0,
+            fill: adaptivePaint,
+          }}
+        />
+      </Flex>
+      <Button
+        x={380}
+        y={250}
+        label="Adaptive owner"
+        click={() => adaptiveOwner.update(value => value === 140 ? 100 : 140)}
+        fill="#6e3e79"
+      />
+      <Button
+        x={556}
+        y={250}
+        label="Adaptive paint"
+        click={() => adaptivePaint.update(value => value === "#426b61" ? "#a63758" : "#426b61")}
+        fill="#426b61"
+      />
+      <Text style={{ left: 28, top: 220, font: "14px sans-serif", fill: "#475569" }}>
         Preferred: 100 × 20 · intrinsic minimum: {minimum} · owner: {owner} · explicit minWidth: {escapeLabel}
       </Text>
     </>
@@ -162,7 +245,7 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
   canvas.insertAdjacentElement("afterend", panel);
   const refresh = () => {
     panel.textContent = read
-      ? `EXPERIMENTAL WASM · ${Object.entries(read()).map(([key, value]) => `${key}: ${value}`).join(" · ")}\nprovider calls: ${providerCalls} · stamp: ${stamp} · follower hits: ${followerHits.get()} · minimum: ${minimum.get()} · owner: ${owner.get()} · escape: ${escaped.get()} · disposed: ${disposed}`
+      ? `EXPERIMENTAL WASM · ${Object.entries(read()).map(([key, value]) => `${key}: ${value}`).join(" · ")}\nprovider calls: ${providerCalls} · stamp: ${stamp} · follower hits: ${followerHits.get()} · minimum: ${minimum.get()} · owner: ${owner.get()} · escape: ${escaped.get()}\nadaptive owner: ${adaptiveOwner.get()} · adaptive hits: ${adaptiveHits.get()} · adaptive finite calls: ${adaptiveFiniteCalls} · adaptive paint: ${adaptivePaint.get()} · disposed: ${disposed}`
       : "Normal JS build. Start Studio with --mode layout-wasm to inspect the experimental intrinsic provider.";
   };
   refresh();

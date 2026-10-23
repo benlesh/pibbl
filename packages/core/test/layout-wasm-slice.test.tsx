@@ -193,6 +193,71 @@ it.runIf(experimentalLayout)('uses a pure intrinsic provider for finite nowrap r
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
+type IntrinsicFinalWidthStyle = import('@pibbl/core').SystemStyle & {
+  flexBasis?: number;
+  flexShrink?: number;
+  minWidth?: number;
+};
+
+it.runIf(experimentalLayout)('remeasures a custom intrinsic leaf at its final shrunken width before publishing its hit box', async () => {
+  const ownerWidth = signal(140);
+  const paint = signal('blue');
+  const hits = signal(0);
+  let finiteMeasureCalls = 0;
+  const finiteQueries: Array<[number, number]> = [];
+  const Provider = definePrimitive<{ hits: typeof hits }, IntrinsicFinalWidthStyle>(props => {
+    const box = useLayoutBox();
+    return <Rectangle
+      onClick={() => props.hits.update(value => value + 1)}
+      style={{ width: box.width, height: box.height, fill: 'red', cursor: 'pointer' }}
+    />;
+  }, {
+    preserveSignalProps: ['hits'],
+    measureIntrinsic: () => ({
+      status: 'measured' as const,
+      minContent: { width: 0, height: 20 },
+      maxContent: { width: 100, height: 20 },
+    }),
+    measure: ({ constraints }) => {
+      finiteMeasureCalls++;
+      finiteQueries.push([constraints.minWidth, constraints.maxWidth]);
+      return {
+        status: 'measured' as const,
+        size: {
+          width: Math.min(100, constraints.maxWidth),
+          height: constraints.maxWidth >= 100 ? 20 : 40,
+        },
+      };
+    },
+  });
+  const canvas = document.createElement('canvas');
+  canvas.width = 140; canvas.height = 60; document.body.append(canvas);
+  const controller = pibbl(canvas, <Flex style={{ width: ownerWidth, height: 60, alignItems: 'flex-start' }}>
+    <Provider hits={hits} style={{ flexBasis: 100, flexShrink: 1, minWidth: 0 }} />
+    <Rectangle style={{ width: 40, height: 20, flexShrink: 0, minWidth: 0, fill: paint }} />
+  </Flex>);
+  controllers.push(controller);
+  await nextFrame();
+  const context = canvas.getContext('2d')!;
+  expect([...context.getImageData(30, 30, 1, 1).data]).toEqual([0, 0, 0, 0]);
+  clickCanvas(canvas, 30, 30);
+  expect(hits.get()).toBe(0);
+
+  ownerWidth.set(100);
+  await nextFrame();
+  expect([...context.getImageData(30, 30, 1, 1).data]).toEqual([255, 0, 0, 255]);
+  clickCanvas(canvas, 30, 30);
+  expect(hits.get()).toBe(1);
+  expect(finiteQueries).toContainEqual([60, 60]);
+  expect(finiteQueries).toContainEqual([100, 100]);
+  const afterFinalWidth = finiteMeasureCalls;
+
+  paint.set('green');
+  await nextFrame();
+  expect(finiteMeasureCalls).toBe(afterFinalWidth);
+  expect([...context.getImageData(60, 5, 1, 1).data]).toEqual([0, 128, 0, 255]);
+});
+
 it.runIf(experimentalLayout)('classifies declared Flex/Text inputs before coalescing their redraw', async () => {
   const { Flex, signal } = await import('@pibbl/core');
   const { pibblSync: pibbl } = await import('@pibbl/core/sync');
@@ -3167,4 +3232,55 @@ it.runIf(experimentalLayout)('measures exact-fit and next-line wrapped border bo
 it.skipIf(experimentalLayout)('retains ordinary wrapped intrinsic rejection',()=>{
  const root=createElement(Flex,{style:{width:160,flexWrap:'wrap'},children:createElement(Rectangle,{style:{width:70,height:20,minWidth:0,minHeight:0,flexShrink:0}})});
  expect(measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service).status).toBe('unsupported');
+});
+
+it.runIf(experimentalLayout)('retains declared cross dimensions and intrinsic-only custom leaves',()=>{
+ type Style=IntrinsicFinalWidthStyle & {height?:number};
+ const Declared=definePrimitive<{tag?:string},Style>(()=>undefined,{measureIntrinsic:()=>{throw Error('unnecessary intrinsic query');},measure:()=>{throw Error('unnecessary finite query');}});
+ const declared=createElement(Declared,{style:{height:15,flexBasis:100,flexShrink:1,minWidth:0}});
+ expect(layoutFlex({x:0,y:0,width:80,height:60},[declared],{alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:80,height:15}]);
+ const IntrinsicOnly=definePrimitive<{tag?:string},Style>(()=>undefined,{measureIntrinsic:()=>({status:'measured',minContent:{width:0,height:20},maxContent:{width:100,height:20}})});
+ const intrinsic=createElement(IntrinsicOnly,{style:{flexShrink:1}});
+ const sibling=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,flexShrink:0}});
+ expect(layoutFlex({x:0,y:0,width:100,height:60},[intrinsic,sibling],{alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:60,height:20},{x:60,y:0,width:40,height:20}]);
+});
+it.runIf(experimentalLayout)('passes exact zero width only when it is the real custom allocation',()=>{
+ const queries:Array<[number,number]>=[];
+ const Leaf=definePrimitive<{tag?:string},IntrinsicFinalWidthStyle>(()=>undefined,{measureIntrinsic:()=>({status:'measured',minContent:{width:0,height:0},maxContent:{width:100,height:20}}),measure:({constraints})=>{queries.push([constraints.minWidth,constraints.maxWidth]);return {status:'measured',size:{width:constraints.maxWidth,height:constraints.maxWidth===0?0:20}};}});
+ const child=createElement(Leaf,{style:{flexBasis:100,flexShrink:1,minWidth:0}});
+ const sibling=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,flexShrink:0}});
+ expect(layoutFlex({x:0,y:0,width:40,height:60},[child,sibling],{alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:0,height:0},{x:0,y:0,width:40,height:20}]);
+ expect(queries).toContainEqual([0,0]);
+});
+it.runIf(experimentalLayout)('adopts finite-only custom measurement dependencies again after cache hits',async()=>{
+ const extra=signal(20),paint=signal('blue');let calls=0;
+ const Leaf=definePrimitive<{extra:typeof extra},IntrinsicFinalWidthStyle>(()=>{const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:'red'}});},{preserveSignalProps:['extra'],measureIntrinsic:()=>({status:'measured',minContent:{width:0,height:20},maxContent:{width:100,height:20}}),measure:({props,constraints})=>{calls++;return{status:'measured',size:{width:Math.min(100,constraints.maxWidth),height:constraints.maxWidth>=100?20:20+props.extra.get()}};}});
+ const canvas=document.createElement('canvas');canvas.width=100;canvas.height=80;document.body.append(canvas);
+ const controller=pibbl(canvas,createElement(Flex,{style:{width:100,height:80,alignItems:'flex-start'},children:[createElement(Leaf,{extra,style:{flexBasis:100,flexShrink:1,minWidth:0}}),createElement(Rectangle,{style:{width:40,height:20,flexShrink:0,minWidth:0,fill:paint}})]}));controllers.push(controller);await nextFrame();
+ const before=calls;paint.set('green');await nextFrame();expect(calls).toBe(before);
+ expect(canvas.getContext('2d')!.getImageData(20,45,1,1).data[3]).toBe(0);
+ extra.set(30);await nextFrame();expect(calls).toBeGreaterThan(before);expect([...canvas.getContext('2d')!.getImageData(20,45,1,1).data]).toEqual([255,0,0,255]);
+ const disposed=snapshotWasmLayoutDiagnostics(),atDispose=calls;controller.dispose();extra.set(40);await nextFrame();expect(calls).toBe(atDispose);expect(snapshotWasmLayoutDiagnostics().activeNodes).toBeLessThan(disposed.activeNodes);
+});
+it.runIf(experimentalLayout)('fails final-width custom preparation before earlier paint and can remount cleanly',async()=>{
+ const owner=signal(140),fail=signal(false);let evaluations=0;
+ function Probe(_props:{style:Record<string,unknown>}){evaluations++;const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:20,fill:'red'}});}
+ const Leaf=definePrimitive<{tag?:string},IntrinsicFinalWidthStyle>(()=>{const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:'red'}});},{measureIntrinsic:()=>({status:'measured',minContent:{width:0,height:20},maxContent:{width:100,height:20}}),measure:({constraints})=>fail.get()&&constraints.minWidth===constraints.maxWidth?{status:'unsupported',reason:'finite provider unavailable'}:{status:'measured',size:{width:Math.min(100,constraints.maxWidth),height:constraints.maxWidth>=100?20:40}}});
+ const scene=createElement(Absolute,{style:{width:260,height:80},children:[createElement(Flex,{style:{width:80,height:60},children:createElement(Probe,{style:{width:80,height:20,minWidth:0}})}),createElement(Flex,{style:{left:100,width:owner,height:60,alignItems:'flex-start'},children:[createElement(Leaf,{style:{flexBasis:100,flexShrink:1,minWidth:0}}),createElement(Rectangle,{style:{width:40,height:20,minWidth:0,flexShrink:0,fill:'blue'}})]})]});
+ const canvas=document.createElement('canvas');canvas.width=260;canvas.height=80;document.body.append(canvas);
+ const errors:unknown[]=[];const prevent=(event:ErrorEvent)=>{errors.push(event.error);event.preventDefault();};window.addEventListener('error',prevent);
+ try{const baseline=snapshotWasmLayoutDiagnostics();const controller=pibbl(canvas,scene);controllers.push(controller);await nextFrame();expect(evaluations).toBe(1);
+  owner.set(100);fail.set(true);await nextFrame();expect(errors.some(error=>error instanceof Error&&error.message.includes('final-width measurement is required but unsupported: finite provider unavailable'))).toBe(true);expect(evaluations).toBe(1);expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);expect(snapshotWasmLayoutDiagnostics().cachedMeasurements).toBe(baseline.cachedMeasurements);
+  fail.set(false);controllers.push(pibbl(canvas,scene));await nextFrame();expect(evaluations).toBe(2);expect([...canvas.getContext('2d')!.getImageData(120,30,1,1).data]).toEqual([255,0,0,255]);
+ }finally{window.removeEventListener('error',prevent);}
+});
+
+it.runIf(experimentalLayout)('supplies custom final content width with border-box insets exactly once',()=>{
+ const queries:Array<[number,number]>=[];
+ type Style=IntrinsicFinalWidthStyle & {padding?:number;borderWidth?:number;boxSizing?:'border-box'|'content-box'};
+ const Leaf=definePrimitive<{tag?:string},Style>(()=>undefined,{measureIntrinsic:()=>({status:'measured',minContent:{width:0,height:20},maxContent:{width:100,height:20}}),measure:({constraints})=>{queries.push([constraints.minWidth,constraints.maxWidth]);return {status:'measured',size:{width:constraints.maxWidth,height:constraints.maxWidth<100?40:20}};}});
+ const child=createElement(Leaf,{style:{boxSizing:'border-box',padding:5,borderWidth:5,flexBasis:100,flexShrink:1,minWidth:0}});
+ const sibling=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,flexShrink:0}});
+ expect(layoutFlex({x:0,y:0,width:100,height:100},[child,sibling],{alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:60,height:60},{x:60,y:0,width:40,height:20}]);
+ expect(queries).toContainEqual([40,40]);
 });

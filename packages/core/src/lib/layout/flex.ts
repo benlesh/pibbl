@@ -53,7 +53,7 @@ import {
 import { getLayoutDirection, pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
-import { measureElement, measureIntrinsicElement, withIsolatedRenderState } from './measure.js';
+import { measureElement, measureIntrinsicElement, measureConstrainedIntrinsicElement, withIsolatedRenderState } from './measure.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
 import type { Constraints, LayoutBox } from './types.js';
 
@@ -811,7 +811,7 @@ function resolveFlexPlacements(
         receiverToken,
         preparedStyleQuery(prepared),
       );
-      const result = measureFlexChild(measurementChild, constraints, normalized, layoutToken ?? receiverToken, measurement, region, preparedStyleQuery(prepared));
+      const result = measureFlexChild(measurementChild, constraints, normalized, layoutToken ?? receiverToken, measurement, region, preparedStyleQuery(prepared), experimentalLayout && row && options.flexWrap === 'nowrap');
       if (result.status === 'measured') {
         measured = result.size;
       } else if (needsMeasuredMain || (crossAuto && effectiveAlignment(
@@ -990,20 +990,22 @@ function resolveFlexPlacements(
       if (!Number.isFinite(outerCross)) throw childDiagnostic(item.child, 'aspectRatio', item.aspectRatio, container, 'derived cross size must be finite');
       item.preferredCross = clamp(Math.max(0, outerCross - item.paddingCross), item.minCross, item.maxCross) + item.paddingCross;
     }
-    // Text height depends on its used width, not its pre-flex basis.
+    // Width-dependent content uses the settled content allocation.
     if (row) for (const item of line.items) {
-      if (!item.crossAuto || (item.child.type !== Text && !(experimentalLayout && item.child.type === Flex))) continue;
+      const definition = experimentalLayout && options.flexWrap === 'nowrap' && !item.query && item.aspectRatio === undefined ? getPrimitiveDefinition(item.child.type) : undefined;
+      const constrainedProvider = !!definition?.measureIntrinsic && !!definition.measure;
+      if (!item.crossAuto || (item.child.type !== Text && !(experimentalLayout && item.child.type === Flex) && !constrainedProvider)) continue;
       if (item.child.type === Flex && item.normalized.width === item.targetMain) continue;
       const measuredStyle = { ...item.normalized, width: item.targetMain };
       const child = clonePibblElement(item.child);
       setPreNormalizedStyle(child, measuredStyle, item.child, item.receiverToken, item.query);
       const result = measureFlexChild(child, {
-        minWidth: 0, maxWidth: item.targetMain,
+        minWidth: constrainedProvider ? item.targetMain : 0, maxWidth: item.targetMain,
         minHeight: 0, maxHeight: container.height,
-      }, measuredStyle, item.layoutToken ?? item.receiverToken, measurement, region, item.query);
+      }, measuredStyle, item.layoutToken ?? item.receiverToken, measurement, region, item.query, constrainedProvider);
       if (result.status === 'measured') {
         item.preferredCross = clamp(result.size.height, item.minCross, item.maxCross) + item.paddingCross;
-      }
+      } else if (constrainedProvider) throw childDiagnostic(item.child, 'height', 'auto', container, `final-width measurement is required but unsupported: ${result.reason}`);
     }
   }
   if (region) {
@@ -1142,8 +1144,10 @@ function intrinsicTextSnapshot(child: PibblElement<any>, style: Readonly<BoxStyl
 function measureFlexChild(
   child: PibblElement<any>, constraints: Constraints,
   style: Readonly<BoxStyle & Record<string, unknown>>, token: object,
-  measurement: FlexMeasurementInput, region?: LayoutRegion, query?: PreparedQuery,
+  measurement: FlexMeasurementInput, region?: LayoutRegion, query?: PreparedQuery, constrainedProvider = false,
 ): MeasureResult {
+  const definition = constrainedProvider && !query ? getPrimitiveDefinition(child.type) : undefined;
+  if (definition?.measureIntrinsic && definition.measure) return measureConstrainedIntrinsicElement(child, constraints, measurement.service, region ? { cache: region, token, key: JSON.stringify([allocationInputRevision(), measurementStyle(style), constraints]), recordMeasurement: recordWasmMeasurement } : undefined);
   const content = region && child.type === Text ? prepareLayoutTextContent(
     child.props, { receiverToken: getPrimitiveReceiverToken(child) },
   ) : undefined;

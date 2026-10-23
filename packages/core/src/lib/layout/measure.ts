@@ -70,18 +70,19 @@ export function measureElement(
 }
 
 /** @internal Passive snapshot owned and released by one layout region. */
-export interface IntrinsicMeasurementEntry {
+export interface PrimitiveMeasurementEntry {
   readonly props: object;
   readonly key: string;
-  readonly result: IntrinsicSizesResult;
+  readonly result: IntrinsicSizesResult | MeasureResult;
+  readonly intrinsic: boolean;
   readonly dependencies: readonly SignalNode<unknown>[];
   readonly inputSnapshot: readonly unknown[] | undefined;
 }
-interface IntrinsicCache {
-  readIntrinsic(token: object): IntrinsicMeasurementEntry | undefined;
-  writeIntrinsic(token: object, entry: IntrinsicMeasurementEntry): void;
+interface PrimitiveMeasurementCache {
+  readPrimitiveMeasurement(token: object, key: string): PrimitiveMeasurementEntry | undefined;
+  writePrimitiveMeasurement(token: object, entry: PrimitiveMeasurementEntry): void;
 }
-const intrinsicTransactions = new WeakMap<object, WeakMap<object, IntrinsicMeasurementEntry>>();
+const intrinsicTransactions = new WeakMap<object, WeakMap<object, Map<string, PrimitiveMeasurementEntry>>>();
 
 // Conservative admission: mutable nested props or custom style records always
 // remeasure. Scalar snapshots also detect production-mode in-place scalar writes.
@@ -107,36 +108,53 @@ function sameIntrinsicInputs(left: readonly unknown[] | undefined, right: readon
   return true;
 }
 
-/** @internal Runs the same pure receiver transaction for a custom intrinsic leaf. */
-export function measureIntrinsicElement(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, options?: { cache: IntrinsicCache; token: object; key: string; recordMeasurement: () => void }): IntrinsicSizesResult {
+interface PrimitiveMeasurementOptions {
+  cache: PrimitiveMeasurementCache;
+  token: object;
+  key: string;
+  recordMeasurement: () => void;
+}
+/** @internal Paired content contributions through the existing pure receiver transaction. */
+export function measureIntrinsicElement(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, options?: PrimitiveMeasurementOptions): IntrinsicSizesResult {
+  return measurePrimitiveInput(element, constraints, service, true, options);
+}
+/** @internal Finite custom measurement through the same receiver transaction and cache. */
+export function measureConstrainedIntrinsicElement(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, options?: PrimitiveMeasurementOptions): MeasureResult {
+  return measurePrimitiveInput(element, constraints, service, false, options);
+}
+function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, intrinsic: true, options?: PrimitiveMeasurementOptions): IntrinsicSizesResult;
+function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, intrinsic: false, options?: PrimitiveMeasurementOptions): MeasureResult;
+function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, intrinsic: boolean, options?: PrimitiveMeasurementOptions): IntrinsicSizesResult | MeasureResult {
   const transaction = GLOBAL_STATE.renderTransaction;
   const receiver = getPrimitiveReceiverToken(element);
   const context: MeasurementContext = { active: new Set(), stack: [] };
   const mode = getStyleMeasurementMode() ? 'recursive' : GLOBAL_STATE.componentRefs ? 'mounted-intrinsic' : 'standalone-root';
-  return withReceiverInputProvision(transaction, receiver, () => withSignalDependencyRole('measurement', () => {
+  const key = `${intrinsic ? 'intrinsic' : 'finite'}:${options?.key ?? ''}`;
+  return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () => withReceiverInputProvision(transaction, receiver, () => withSignalDependencyRole('measurement', () => {
     const inputSnapshot = intrinsicInputSnapshot(element);
-    let entries = transaction && intrinsicTransactions.get(transaction);
-    let entry = options && (entries?.get(options.token) ?? options.cache.readIntrinsic(options.token));
-    if (!entry || entry.key !== options?.key || entry.props !== element.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot)) {
+    let receivers = transaction && intrinsicTransactions.get(transaction);
+    let entries = options && receivers?.get(options.token);
+    let entry = options && (entries?.get(key) ?? options.cache.readPrimitiveMeasurement(options.token, key));
+    if (!entry || entry.intrinsic !== intrinsic || entry.props !== element.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot)) {
       options?.recordMeasurement();
       const dependencies: SignalNode<unknown>[] = [];
       const result = withSignalTracking({ addDependency(node) { if (!dependencies.includes(node)) dependencies.push(node); } }, () =>
-        withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () =>
-          withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
-            measureElementInternal(element, constraints, service, context, true),
-          )),
-        ));
-      entry = { props: element.props, key: options?.key ?? '', result, dependencies, inputSnapshot };
+        withStyleMeasurement(mode, () => withIsolatedRenderState(() => intrinsic ?
+          measureElementInternal(element, constraints, service, context, true) :
+          measureElementInternal(element, constraints, service, context, false, true),
+        )));
+      entry = { props: element.props, key, result, intrinsic, dependencies, inputSnapshot };
       if (options && transaction && inputSnapshot && result.status === 'measured') {
-        if (!entries) { entries = new WeakMap(); intrinsicTransactions.set(transaction, entries); }
-        entries.set(options.token, entry);
+        if (!receivers) { receivers = new WeakMap(); intrinsicTransactions.set(transaction, receivers); }
+        if (!entries) { entries = new Map(); receivers.set(options.token, entries); }
+        entries.set(key, entry);
         const snapshot = entry;
-        transaction.onFinish(success => { if (success) options.cache.writeIntrinsic(options.token, snapshot); });
+        transaction.onFinish(success => { if (success) options.cache.writePrimitiveMeasurement(options.token, snapshot); });
       }
     }
     for (const node of entry.dependencies) trackSignalDependency(node, 'measurement');
     return entry.result;
-  }));
+  })));
 }
 
 interface MeasurementContext {
@@ -145,13 +163,14 @@ interface MeasurementContext {
 }
 
 function measureElementInternal(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, context: MeasurementContext, intrinsic: true): IntrinsicSizesResult;
-function measureElementInternal(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, context: MeasurementContext, intrinsic?: false): MeasureResult;
+function measureElementInternal(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, context: MeasurementContext, intrinsic?: false, providerInputs?: boolean): MeasureResult;
 function measureElementInternal(
   element: PibblElement<any>,
   constraints: Readonly<Constraints>,
   service: CanvasMeasurementService,
   context: MeasurementContext,
   intrinsic = false,
+  providerInputs = false,
 ): MeasureResult | IntrinsicSizesResult {
   element = prepareElementPolicies(element, 'measureElement');
   recordLayoutMeasurement();
@@ -200,7 +219,7 @@ function measureElementInternal(
     const readInputs = () => resolvePrimitiveInputs(element, definition!, preNormalized, {
       width: constraints.maxWidth, height: constraints.maxHeight,
     });
-    const inputs = intrinsic ? readInputs() : untracked(readInputs);
+    const inputs = intrinsic || providerInputs ? readInputs() : untracked(readInputs);
     const specifiedStyle = withoutSystemFilter(
       preNormalized?.style ?? inputs.style ?? EMPTY_STYLE,
     );

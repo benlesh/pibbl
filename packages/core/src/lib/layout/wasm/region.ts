@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import type { IntrinsicMeasurementEntry } from '../measure.js';
+import type { PrimitiveMeasurementEntry } from '../measure.js';
 import type { FlexAllocationCache } from '../flex-allocation-cache.js';
 import { readyLayoutModule } from './module.js';
 import { GLOBAL_STATE } from '../../global-state.js';
@@ -273,12 +273,19 @@ export class LayoutRegion {
   private crossSize = -1;
   private crossRecords: readonly (readonly number[])[] = [];
   private crossResults: readonly { outerCross: number; offset: number }[] = [];
-  private readonly intrinsicMeasurements = new Map<object, IntrinsicMeasurementEntry>();
-  readIntrinsic(token: object): IntrinsicMeasurementEntry | undefined { return this.intrinsicMeasurements.get(token); }
-  writeIntrinsic(token: object, entry: IntrinsicMeasurementEntry): void {
+  private readonly intrinsicMeasurements = new Map<object, Map<string, PrimitiveMeasurementEntry>>();
+  readPrimitiveMeasurement(token: object, key: string): PrimitiveMeasurementEntry | undefined {
+    const entries = this.intrinsicMeasurements.get(token), entry = entries?.get(key);
+    if (entry) { entries!.delete(key); entries!.set(key, entry); }
+    return entry;
+  }
+  writePrimitiveMeasurement(token: object, entry: PrimitiveMeasurementEntry): void {
     if (!this.layoutOwner?.has(this.handle, this.generation)) return;
-    if (!this.intrinsicMeasurements.has(token)) counters.cachedMeasurements++;
-    this.intrinsicMeasurements.set(token, entry);
+    let entries = this.intrinsicMeasurements.get(token);
+    if (!entries) { entries = new Map(); this.intrinsicMeasurements.set(token, entries); }
+    if (entries.has(entry.key)) { entries.delete(entry.key); counters.cachedMeasurements--; }
+    else if (entries.size >= 3) { entries.delete(entries.keys().next().value!); counters.cachedMeasurements--; }
+    entries.set(entry.key, entry); counters.cachedMeasurements++;
   }
   private readonly measurements = new Map<object, Map<string, { width: number; height: number }>>();
 
@@ -305,7 +312,8 @@ export class LayoutRegion {
     entries.set(key, { ...size }); counters.cachedMeasurements++;
   }
   private releaseMeasurements(token: object): void {
-    if (this.intrinsicMeasurements.delete(token)) counters.cachedMeasurements--;
+    counters.cachedMeasurements -= this.intrinsicMeasurements.get(token)?.size ?? 0;
+    this.intrinsicMeasurements.delete(token);
     if (this.textMaximums?.delete(token)) counters.cachedMeasurements--;
     counters.cachedMeasurements -= this.measurements.get(token)?.size ?? 0;
     this.measurements.delete(token);

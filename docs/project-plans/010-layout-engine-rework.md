@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice93 `a7c36733` (finite wrapped-row intrinsic height).
+Latest delivery is slice94 (final-width custom measurement), recorded below.
+Slice93 is `a7c36733` (finite wrapped-row intrinsic height).
 Slice92 is `02f21ea3` (custom intrinsic providers).
 Slice91 is `3f943f70` (logical layout borders).
 Slice90 is `c997f41e` (logical padding).
@@ -43,7 +44,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; the single next delivery is94, final-width custom leaf measurement. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; the single next delivery is95, the remaining wrapped/reverse/min/max direction exit. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles179 records:156matches/23classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -2217,18 +2218,55 @@ Fixed33 counts, parsed fresh from the manifest:4complete,11experimental,8partial
 Final whole-codebase review remains at full program end. Continue the fixed
 program after this consolidation; do not create a new denominator or stop here.
 
-## [NEXT] Final-width custom intrinsic leaf measurement (slice 94)
+## Slice 94 delivered — final-width custom finite measurement
 
-No new API. A direct custom primitive supplying `measureIntrinsic` and existing
-`measure` can compute its automatic cross height after the finite nowrap row
-chooses its final content width. Give the finite callback that exact allocated
-width; keep the paired intrinsic contribution separate. A140→100 owner beside a
-40px sibling yields custom width100→60 and measured height20→40, with the tall
-paint/hit target published together. Preserve intrinsic-only providers and declared
-cross dimensions. Unsupported finite results diagnose; no stale-size fallback.
-Use existing receiver transaction, conservative cache admission/dependency replay
-and exact cleanup. Start with the prepared focused public RED, deliver a runnable
-example, then bounded hardening/source/built/installed checks and separate commit.
+No public API change. Direct primitives with both `measureIntrinsic` and existing
+`measure` can compute automatic cross height after a finite nowrap row settles
+content width. The finite callback receives exact horizontal bounds; intrinsic
+contributions remain distinct. Real zero allocations query exact zero; declared
+cross dimensions, aspect, query restrictions and intrinsic-only paths remain.
+Unsupported finite results fail preparation instead of retaining stale height.
+
+The focused public RED showed missing y30 paint/target after owner140→100 shrank
+the leaf100→60. GREEN makes height20→40 and its click region grow together.
+The existing intrinsic-leaf lesson now has Adaptive owner/paint controls at right,
+while all original left controls continue to pass. Source/built replays preserve
+stamp1, cache sibling-only paint, return to the short leaf, and dispose0/0/0.
+Built uses469 core inputs. A canvas screenshot was inspected; no baseline changed.
+URL `http://127.0.0.1:5192/#/examples/layout/wasm-flex-intrinsic-primitive`.
+
+Successful intrinsic/finite snapshots share the existing region owner with
+separate query keys and a three-entry per-occurrence bound. Publication remains
+transaction-only; hits replay receiver dependencies. Conservative mutable-input
+admission and full-style snapshots remain. Finite-only signal reads survive
+cache hits and detach on dispose. Explicit cross-size bypass, intrinsic-only
+fallback, actual zero width, border-box content width/insets once, unsupported
+preflight before earlier paint, exact failed ownership cleanup and remount pass.
+
+Fresh two-file layout/measurement suite:346passed/7skipped (353); ordinary:
+80passed/273skipped (353). Actual processes exited0. Packed Bundler/NodeNext and
+installed width/height/target movement, return-width, identity, paint reuse and
+exact global disposal pass:230inputs, SHA256
+`3e8042b107ec4948368c27c817bf3bc53f32203db171bd60694421e7c4ed1432`.
+Types, changed-code lint, catalog/index, documentation109RED probes, JSDoc and
+whitespace pass. Scoped review reports no material findings. Node26.9.0/Chromium;
+no Node24 aggregate gate claim. Native kernel/corpus179/156matches/23classified
+unchanged. Custom-leaf capability remains partial: broader exact/at-most/unbounded
+consumers, nested owner feedback and baselines remain. Group94–96 consolidates
+only after96. Final whole-codebase review stays at full program end.
+
+## [NEXT] Wrapped/reverse/min/max direction exit (slice 95)
+
+Keep the fixed33 denominator. Complete the nearest remaining whole-entry exit for
+`direction.rtl-and-logical-edges`: pin four main directions × wrap/wrap-reverse ×
+LTR/RTL with logical padding/borders, logical-only margins and min/max bounds;
+prove public semantic geometry, keyed focus retention, Tab source order, topmost
+paint/hits and exact cleanup. Reuse88–91 explicit child override, invalid-direction,
+Layer inheritance and classified physical/logical-margin evidence. Mixed margin
+width divergences stay attributed to `flex.margin`; do not advertise universal
+Yoga parity or close a group gate. Native16-case and focused focus-test drafts
+exist only in `/tmp`; inspect and establish public evidence before production.
+No new API or extra reviewer. Promote only if stated exit evidence actually passes.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

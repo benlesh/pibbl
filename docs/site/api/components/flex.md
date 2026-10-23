@@ -200,3 +200,9 @@ sibling from the measured line height. Try the
 [intrinsic wrapped row](#/examples/layout/wasm-flex-intrinsic-wrap).
 Percentage-dependent owners, flexible children, Text/custom providers, intrinsic
 width, and column/reverse/RTL intrinsic wrapping remain outside this bounded path.
+
+In an experimental finite nowrap row, a direct custom primitive with both
+`measureIntrinsic` and `measure` can supply height at the final content width.
+Finite measurement receives that width as both horizontal constraint bounds;
+layout and pointer targets use the resulting height in the same publication.
+Declared heights and intrinsic-only leaves keep their existing behavior.

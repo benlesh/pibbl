@@ -1051,9 +1051,9 @@
       "id": "flex.automatic-minimum",
       "target": "parity",
       "group": "flex-core",
-      "current": "experimental bounded wrapped Text content minima; direct empty Rectangle zero content minima with numeric/percentage dimensions; numeric empty Rectangle intrinsic Flex contributions",
+      "current": "experimental bounded wrapped Text content minima; direct empty Rectangle zero content minima with numeric/percentage dimensions; numeric empty Rectangle contributions; direct paired custom intrinsic row minima and exact-width finite cross measurement",
       "status": "experimental",
-      "unresolvedPolicy": "Native bounded Text policy is selected; general intrinsic providers, other fitting/overflow modes and Yoga conversion differences remain unresolved.",
+      "unresolvedPolicy": "Bounded Text and direct paired custom row providers are implemented; general intrinsic graphs, other fitting/overflow modes and Yoga conversion differences remain unresolved.",
       "evidenceRefs": [
         "packages/core/test/layout-text-auto-minimum.test.tsx",
         "docs/design/layout-system-contract.md",
@@ -1538,7 +1538,7 @@
       "id": "measurement.custom-leaf",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "pure measure plus experimental paired intrinsic providers for direct custom primitives in finite nowrap Flex rows; scalar/signal snapshot reuse and mutable-input correctness",
+      "current": "pure measure plus experimental paired intrinsic providers and exact settled-width finite height for direct custom primitives in finite nowrap Flex rows; scalar/signal snapshot reuse and mutable-input correctness",
       "status": "partial",
       "unresolvedPolicy": "Paired intrinsic callback is implemented for the bounded direct-leaf consumer; baselines and broader intrinsic consumers remain open.",
       "evidenceRefs": [
@@ -1546,7 +1546,7 @@
         "packages/core/src/lib/define-primitive.test.tsx"
       ],
       "evidence": {
-        "positive": ["measure callbacks", "finite-row paired intrinsic contribution, purity, retry and validation"],
+        "positive": ["measure callbacks", "finite-row paired intrinsic contribution, purity, retry and validation", "exact final-width finite cross height, declared-size/intrinsic-only compatibility and real zero width"],
         "negative": ["opaque component measurement unsupported", "unsupported intrinsic provider with explicit basis/minimum escape", "mutable nested inputs conservatively remeasure"],
         "interaction": ["reactive intrinsic minimum moves the public target; unrelated sibling paint reuses snapshot; exact disposal"],
         "yogaCases": [],

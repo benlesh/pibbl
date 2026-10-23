@@ -893,3 +893,31 @@ This does not add intrinsic-width solving, column/reverse/RTL wrapping, flexible
 child redistribution, percentage-dependent sizing, Text/custom providers inside
 wrapped owners, or an arbitrary nested intrinsic graph. Unsupported shapes retain
 explicit diagnostics. The ordinary JavaScript build retains its existing scope.
+
+### Experimental custom finite measurement at settled row width
+
+A direct primitive that provides both `measureIntrinsic` and existing `measure`
+can determine its automatic cross height after a finite nowrap Flex row settles
+the main allocation. The paired intrinsic result remains the contribution for
+basis/minimum; finite `measure` receives exact chosen content width through
+`constraints.minWidth === constraints.maxWidth`. Real zero-width allocations may
+therefore query exact zero; zero is never a synthetic min-content approximation.
+Existing cross availability is retained, and parent bounds/insets are applied
+through normal allocation exactly once. Declared cross dimensions, aspect sizing,
+responsive-query restrictions and intrinsic-only providers retain their existing
+paths. Wrapped/column custom-provider graphs are not added by this behavior.
+
+An unsupported finite result is a final-width diagnostic, not permission to keep
+a stale preferred height. Failures roll back preparation before earlier sibling
+paint and release owned resources; remount is supported. Finite-only signal reads
+are staged for the receiving primitive, including adoption on cache hits. Public
+`measure` and `MeasureInput` signatures remain unchanged.
+
+Intrinsic and finite snapshots share the existing region owner but use distinct
+query keys, with at most three successful passive snapshots per occurrence.
+Publication occurs only on transaction success. Scalar/signal admission, complete
+style snapshots, mutable nested-input remeasurement and explicit teardown remain
+as above. Providers must expose changing inputs through props/style, tracked
+signals, or an explicit layout invalidation; hidden mutable closure state is not
+a reactive input. Unrelated sibling paint reuses finite measurements. The public
+example proves width100→60 changes height20→40 together with paint and hit bounds.

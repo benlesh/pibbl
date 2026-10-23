@@ -3,6 +3,7 @@ import { chromium } from 'playwright';
 
 const base=process.argv[2]??'http://127.0.0.1:5192';
 const built=process.argv.includes('--built');
+const finalWidth=process.argv.includes('--final-width');
 const browser=await chromium.launch({headless:true});
 try {
   const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];
@@ -38,9 +39,16 @@ try {
   await click(103,174);assert.equal(await value('follower hits'),3);await click(53,174);assert.equal(await value('follower hits'),4);
   const beforePaint=await state();await click(636,114);const painted=await state();
   assert.equal(painted.stamp,1);assert.equal(painted.providerCalls,beforePaint.providerCalls,'paint-only input must not query intrinsic sizes');assert.equal(painted.measuredLeaves,beforePaint.measuredLeaves,'paint-only input must not measure');
+  if(finalWidth){
+    await click(410,194);assert.equal(await value('adaptive hits'),0);
+    await click(460,268);await click(410,194);assert.equal(await value('adaptive hits'),1);
+    const calls=await value('adaptive finite calls'),measures=await value('measuredLeaves');
+    await click(636,268);assert.equal(await value('adaptive finite calls'),calls);assert.equal(await value('measuredLeaves'),measures);
+    await click(460,268);await click(410,194);assert.equal(await value('adaptive hits'),1);
+  }
   const sandbox=page.frames().find(value=>value.url()==='about:srcdoc');const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
   const disposed=await sandbox.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();});
   assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements],[0,0,0]);assert.deepEqual(errors,[]);
-  console.warn(JSON.stringify({base,initial,minimum70,protectedOverflow,escaped,painted,builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
+  console.warn(JSON.stringify({base,finalWidth,initial,minimum70,protectedOverflow,escaped,painted,builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
 } finally { await browser.close(); }

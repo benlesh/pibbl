@@ -37,3 +37,12 @@ Ordinary `measure` remains unchanged. Providers are pure and use the existing
 receiver dependency and teardown transaction. Mutable nested inputs and changes
 to the provider's own style conservatively remeasure; unrelated sibling paint
 can reuse a successful snapshot.
+
+For a direct custom leaf with both capabilities in a finite nowrap Flex row,
+`measure` also runs at the settled content width when cross height is automatic.
+Its `constraints.minWidth` and `.maxWidth` both equal that width. It can return a
+width-dependent height while `measureIntrinsic` remains the basis/minimum input.
+Declared cross dimensions and intrinsic-only providers keep their existing paths.
+Unsupported finite results diagnose instead of publishing stale height. The
+[intrinsic-leaf example](#/examples/layout/wasm-flex-intrinsic-primitive) exposes
+Adaptive owner and Adaptive paint controls for this bounded behavior.

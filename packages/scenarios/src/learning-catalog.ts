@@ -4370,7 +4370,7 @@ const drafts = [
     section: "layout",
     order: 146,
     summary:
-      "A custom primitive supplies paired intrinsic content sizes to a finite Flex row, keeping the following target in the same allocated geometry.",
+      "Custom primitives supply paired intrinsic content sizes and finite height at the settled width, keeping paint and targets aligned in a Flex row.",
     api: ["Flex", "definePrimitive", "signal", "useLayoutBox"],
     objectives: [
       "Use one pure custom intrinsic provider for a direct finite row leaf.",
@@ -4378,9 +4378,9 @@ const drafts = [
     ],
     prompts: {
       gesture:
-        "Toggle Minimum and Owner, then click the blue follower. Minimum escape permits shrink below the provider minimum. Paint only changes the follower pigment without requesting intrinsic work.",
+        "Toggle Minimum and Owner, then click the follower. Minimum escape permits shrink below its minimum. On the right, Adaptive owner narrows and raises the leaf; Adaptive paint recolors its sibling without another finite query.",
       code:
-        "IntrinsicChip returns minContent and maxContent together. Its renderer paints the public allocation from useLayoutBox(); the provider never paints or allocates resources.",
+        "IntrinsicChip returns paired content sizes. AdaptiveIntrinsicChip also supplies measure at the settled content width. Both render from useLayoutBox; measurement never paints or allocates resources.",
     },
     apiNotes: [
       "Experimental direct custom primitive in a finite nowrap row only; no nested provider, baseline, Grid, Flow, column, or general intrinsic-layout claim.",
