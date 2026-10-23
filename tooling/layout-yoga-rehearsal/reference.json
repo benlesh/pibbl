@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "1876d96192a015c1df5e837ef22891e188263280c4e3a7956d084767fd7e8eae",
+  "probeSha256": "bb893514ce52e902d892067bcad0b664076f5894447a9e50d553554acc60c30c",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -22058,6 +22058,286 @@
         },
         {
           "width": 40,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-bounds-auto-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteBoundsFixture": true,
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 10,
+          "width": 100,
+          "height": 90
+        },
+        {
+          "x": 72,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "left": 12,
+          "right": 18,
+          "top": 8,
+          "bottom": 10,
+          "width": "auto",
+          "height": "auto",
+          "maxWidth": 100,
+          "minHeight": 90
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-bounds-auto-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteBoundsFixture": true,
+      "boxes": [
+        {
+          "x": 122,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 84,
+          "y": 10,
+          "width": 100,
+          "height": 90
+        },
+        {
+          "x": 62,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "left": 12,
+          "right": 18,
+          "top": 8,
+          "bottom": 10,
+          "width": "auto",
+          "height": "auto",
+          "maxWidth": 100,
+          "minHeight": 90
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-bounds-fixed-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteBoundsFixture": true,
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 10,
+          "width": 60,
+          "height": 10
+        },
+        {
+          "x": 72,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "left": 12,
+          "right": 18,
+          "top": 8,
+          "bottom": 10,
+          "width": 30,
+          "height": 20,
+          "minWidth": 60,
+          "maxHeight": 10
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-bounds-fixed-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteBoundsFixture": true,
+      "boxes": [
+        {
+          "x": 122,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 124,
+          "y": 10,
+          "width": 60,
+          "height": 10
+        },
+        {
+          "x": 62,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "left": 12,
+          "right": 18,
+          "top": 8,
+          "bottom": 10,
+          "width": 30,
+          "height": 20,
+          "minWidth": 60,
+          "maxHeight": 10
+        },
+        {
+          "width": 50,
           "height": 20,
           "flexGrow": 0,
           "flexShrink": 0,

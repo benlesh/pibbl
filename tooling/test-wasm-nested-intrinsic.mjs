@@ -131,6 +131,7 @@ try {
       assert.equal(receipt.absoluteAlignment, true, 'Installed no-inset axes must use content alignment and preserve explicit inset axes');
       assert.equal(receipt.absoluteContainingBlock, true, 'Installed static Flex inherits its ancestor box while relative and omitted Flex own their local absolute child');
       assert.equal(receipt.absoluteDerivedSize, true, 'Installed opposing insets must derive a finite auto absolute size, preserve forwarding, source order, identity and cleanup');
+      assert.equal(receipt.absoluteBounds, true, 'Installed absolute numeric bounds must clamp fixed and opposing-inset automatic axes before LTR/RTL placement, source-order targeting, identity and cleanup');
       assert.equal(receipt.absoluteParticipation, true, 'Installed absolute child must leave flow and preserve source-order interaction');
       assert.equal(receipt.decoratedRelativeStatic, true, 'Installed decorated positioning must resolve padding/border before relative offsets');
       assert.equal(receipt.relativeStatic, true, 'Installed static/relative placement must preserve slots and move final geometry once');

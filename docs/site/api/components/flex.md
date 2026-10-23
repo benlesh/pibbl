@@ -112,10 +112,14 @@ For example center/flex-end puts a30×20 child at77,62 inside the decorated
 to14. Stretch keeps the fixed height at cross-start. A width or height may be `"auto"` or omitted only when both finite numeric
 physical insets for that axis are present; Pibbl uses the remaining inner-border
 extent, after subtracting those insets, and clamps a negative result to zero.
+Finite numeric `minWidth`, `maxWidth`, `minHeight`, and `maxHeight` then clamp
+both fixed and derived axes before left/right/top/bottom precedence chooses the
+final origin. A numeric minimum above its maximum rejects; this preserves
+Pibbl's existing validation rather than Yoga's minimum-wins conflict behavior.
 This is finite placement arithmetic, not intrinsic measurement. An automatic
-or omitted axis without both insets, percentage insets, direct layout children,
-child box decoration, margins and general nested containing-block selection remain
-unsupported.
+or omitted axis without both insets, percentage insets, nonnumeric or automatic
+bounds, direct layout children, child box decoration, margins and general nested
+containing-block selection remain unsupported.
 
 The experimental `layout-wasm` Studio build additionally supports finite numeric
 physical margins in finite rows and columns, with nowrap or wrap. `margin` sets all four edges;

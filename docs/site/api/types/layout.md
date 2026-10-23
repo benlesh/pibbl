@@ -116,9 +116,12 @@ prefers bottom. An axis with no inset uses parent content-box alignment via
 `justifyContent` or `alignItems`; stretch leaves fixed height at cross-start.
 For a paired automatic axis, the remaining padding-box extent after both
 insets becomes the used dimension and a negative remainder clamps to zero; this
-does not invoke intrinsic measurement. Direct layout children, child box
-decoration, margins, nonzero sizing bounds and flex factors remain unsupported,
-along with unpaired automatic sizing and general nested containing blocks.
+does not invoke intrinsic measurement. Finite numeric min/max bounds then clamp
+fixed or derived axes before physical-inset precedence places them. A numeric
+minimum above its maximum rejects; percent and automatic bounds remain outside
+this admission. Direct layout children, child box decoration, margins and flex
+factors remain unsupported, along with unpaired automatic sizing and general
+nested containing blocks.
 
 ## FlexMargin
 

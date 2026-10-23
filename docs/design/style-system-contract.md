@@ -197,9 +197,13 @@ scientific notation, malformed strings, and non-finite results reject.
   `justifyContent`/`alignItems`. LTR prefers left, RTL prefers right, and top
   prefers bottom. An automatic or omitted width/height is admitted only with
   opposing finite physical insets on that axis; their remaining padding-box
-  extent becomes the finite used size and clamps at zero. This does not measure
-  the child. Percentages, unpaired automatic axes, child decoration/margins/
-  bounds, direct layout children and general nested containing blocks are outside this
+  extent becomes the finite used size and clamps at zero. Finite numeric
+  min/max bounds then clamp fixed or derived axes before physical inset
+  precedence places them; a numeric minimum above its maximum rejects rather
+  than following Yoga's minimum-wins conflict behavior. This does not measure
+  the child. Percentages, unpaired automatic axes, nonnumeric or automatic
+  bounds, child decoration/margins, direct layout children and general nested
+  containing blocks are outside this
   admission; see the layout contract for exact limits.
   Direct declarative nested Flex boxes additionally pass the containing box through
   explicit static ancestors; relative and omitted-position Flex boxes establish

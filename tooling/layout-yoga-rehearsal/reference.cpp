@@ -1932,6 +1932,71 @@ static void nestedContainingBlockCases() {
   }
 }
 
+static void absoluteBoundsCases() {
+  // Pibbl deliberately rejects min > max; retain no Yoga record for that
+  // contradictory input because it is not a Pibbl parity case.
+  for (int variant = 0; variant < 4; ++variant) {
+    const bool fixed = variant >= 2;
+    const bool rtl = (variant & 1) != 0;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false);
+    YGConfigSetPointScaleFactor(config, 0);
+    YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetPositionType(root, YGPositionTypeRelative);
+    YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, 204);
+    YGNodeStyleSetHeight(root, 104);
+    YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
+    YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+    YGNodeStyleSetGap(root, YGGutterAll, 10);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10);
+    YGNodeStyleSetPadding(root, YGEdgeRight, 30);
+    YGNodeStyleSetPadding(root, YGEdgeTop, 20);
+    YGNodeStyleSetPadding(root, YGEdgeBottom, 20);
+    YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    for (int item = 0; item < 3; ++item) {
+      auto child = YGNodeNewWithConfig(config);
+      if (item == 1) {
+        YGNodeStyleSetPositionType(child, YGPositionTypeAbsolute);
+        YGNodeStyleSetPosition(child, YGEdgeLeft, 12);
+        YGNodeStyleSetPosition(child, YGEdgeRight, 18);
+        YGNodeStyleSetPosition(child, YGEdgeTop, 8);
+        YGNodeStyleSetPosition(child, YGEdgeBottom, 10);
+        if (fixed) {
+          YGNodeStyleSetWidth(child, 30);
+          YGNodeStyleSetHeight(child, 20);
+          YGNodeStyleSetMinWidth(child, 60);
+          YGNodeStyleSetMaxHeight(child, 10);
+        } else {
+          YGNodeStyleSetMaxWidth(child, 100);
+          YGNodeStyleSetMinHeight(child, 90);
+        }
+      } else {
+        YGNodeStyleSetWidth(child, 50);
+        YGNodeStyleSetHeight(child, 20);
+        YGNodeStyleSetFlexGrow(child, 0);
+        YGNodeStyleSetFlexShrink(child, 0);
+        YGNodeStyleSetMinWidth(child, 0);
+        YGNodeStyleSetMinHeight(child, 0);
+      }
+      YGNodeInsertChild(root, child, item);
+    }
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, rtl ? YGDirectionRTL : YGDirectionLTR);
+    std::cout << ",{\"name\":\"position-absolute-bounds-" << (fixed ? "fixed" : "auto") << '-' << (rtl ? "rtl" : "ltr")
+              << "\",\"width\":204,\"height\":104,\"gap\":10,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr")
+              << "\",\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\"},\"absoluteBoundsFixture\":true,\"boxes\":[";
+    for (int item = 0; item < 3; ++item) { if (item) std::cout << ','; printBox(YGNodeGetChild(root, item)); }
+    std::cout << "],\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"position\":\"absolute\",\"left\":12,\"right\":18,\"top\":8,\"bottom\":10";
+    if (fixed) std::cout << ",\"width\":30,\"height\":20,\"minWidth\":60,\"maxHeight\":10";
+    else std::cout << ",\"width\":\"auto\",\"height\":\"auto\",\"maxWidth\":100,\"minHeight\":90";
+    std::cout << "},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root);
+    YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -2083,5 +2148,6 @@ int main() {
   absoluteAlignmentCases();
   absoluteDerivedSizeCases();
   nestedContainingBlockCases();
+  absoluteBoundsCases();
   std::cout << "]\n";
 }

@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice125 (declarative static Flex containing-block ownership; this commit).
+Latest delivery is slice126 (numeric absolute size bounds; this commit).
+Slice125 is `6603731e` (declarative static Flex containing-block ownership).
 Slice124 is `77452150` (opposing-inset derived absolute dimensions).
 Slice123 is `51bc20ad` (fixed absolute children with axis-wise alignment).
 Consolidation41 for121–123 passes below.
@@ -3476,14 +3477,42 @@ Logs `/tmp/pibbl-slice125-{public-red,public-green,hardening,preflight-rerun,fin
 No kernel/ABI change, baseline rewrite, capability promotion or Node24 trust claim.
 Counts remain8complete/12experimental/6partial/6missing/1excluded; all7gates open.
 
-## [NEXT] Numeric absolute size bounds (slice126)
+## Slice126 delivered: numeric absolute size bounds
 
-Admit existing finite numeric min/max width/height on direct absolute children,
-clamping fixed and paired-inset-derived dimensions before inset precedence.
-Preserve Pibbl's explicit rejection of contradictory bounds (Yoga minimum-wins
-behavior remains a classified difference). Public RED first, native evidence,
-source/built/installed proof and separate commit; then consolidation42 for124–126.
-Intrinsic measurement, percentage bounds, margins and child decoration stay open.
+Existing finite numeric min/max width/height now clamp direct absolute fixed and
+paired-inset-derived dimensions before physical inset precedence. Four direct
+scalar validators admit only finite nonnegative numbers. Existing box resolution
+owns clamping and min>max rejection; no duplicate bound algorithm, API or ABI.
+Yoga minimum-wins contradictory bounds remain an intentional diagnostic difference.
+
+Public RED fixed/auto tests establish prior rejection. Two-file final47pass;
+normal35pass/15skip50. Selected4files36pass/427skip463 includes latest/cycle/
+containing and absolute boundaries. New negatives cover percentage/negative/
+nonfinite/contradictory bounds. Native probe and4new corpus cases confirm auto
+maxWidth100/minHeight90 yields100×90 at14,10LTR /84,10RTL; fixed30×20 with
+minWidth60/maxHeight10 yields60×10 at14,10LTR /124,10RTL. Full recorded corpus
+355cases/261native matches/94classified. No full uninterrupted355-case browser
+claim. Source/built4pass227core/dist inputs, errors[]/cleanup[0,0,0]; source also
+replays125's4containing cases. Built public5cases pass469editor inputs with
+zero private corpus requests. In RTL auto, B fully covers A: exposed-point search
+proves full containment, records it and preserves exact geometry and overlap hits.
+First replay's narrow124-only occlusion admission was updated for this exact
+natively covered case; no target assertion was discarded. Screenshot inspected.
+Fresh final installed package after JSDoc update245dist inputs, Bundler/NodeNext,
+absoluteBounds and prior placement/104auto-margin proofs pass. Tarball SHA256
+`d5054e64919bd41881e62b71eda59becba77553e7c392703f2e2cb7459988025`.
+Types, changed-code lint, docs109RED probes/JSDoc and scoped core review pass.
+Logs `/tmp/pibbl-slice126-{public-red,auto-red,public-green,normal,focused,source-rerun,built,containing,packed-final,docs}.txt`.
+Node26.9.0/macOSChromium; kernel68649bytes/SHA unchanged. Counts remain
+8complete/12experimental/6partial/6missing/1excluded; all7gates open.
+Consolidation42 for124–126 follows as a separate evidence checkpoint.
+
+## [NEXT] Bounded absolute aspect-ratio derivation (slice127)
+
+Investigate exactly one automatic axis derived from the other explicit numeric
+axis through existing finite aspectRatio. Native precedence and a public RED
+must establish the bounded contract before production. Do not infer intrinsic
+measurement or silently expand both-auto, percentage or decorated child cases.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

@@ -1831,13 +1831,27 @@ function assertSupportedAbsoluteFlexPosition(
   if (style.alignSelf !== undefined) {
     throw childDiagnostic(child, 'alignSelf', style.alignSelf, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently uses parent alignItems only');
   }
+  validateAbsoluteBound(style.minWidth, 'minWidth', child, container);
+  validateAbsoluteBound(style.maxWidth, 'maxWidth', child, container);
+  validateAbsoluteBound(style.minHeight, 'minHeight', child, container);
+  validateAbsoluteBound(style.maxHeight, 'maxHeight', child, container);
   if (query || style.aspectRatio !== undefined || style.flexBasis !== undefined && style.flexBasis !== 'auto' ||
       (style.flexGrow !== undefined && style.flexGrow !== 0) || (style.flexShrink !== undefined && style.flexShrink !== 0) ||
-      (style.minWidth !== undefined && style.minWidth !== 0) || style.maxWidth !== undefined ||
-      (style.minHeight !== undefined && style.minHeight !== 0) || style.maxHeight !== undefined ||
       style.boxSizing !== undefined || style.padding !== undefined || style.paddingStart !== undefined || style.paddingEnd !== undefined ||
       style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined || hasFlexMargin(style)) {
-    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute excludes measurement, bounds, flex factors, margins, and child box decoration in this slice');
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute excludes measurement, flex factors, margins, and child box decoration in this slice');
+  }
+}
+
+function validateAbsoluteBound(
+  value: unknown,
+  property: 'minWidth' | 'maxWidth' | 'minHeight' | 'maxHeight',
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): void {
+  if (value === undefined) return;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    throw childDiagnostic(child, property, value, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute size bounds currently require nonnegative finite numbers');
   }
 }
 

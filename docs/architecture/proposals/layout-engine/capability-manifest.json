@@ -1609,7 +1609,7 @@
         "covers": ["flex.auto-margin", "flex.min-max"]
       }
     ],
-    "limit": "351 records:257 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "355 records:261 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -2564,7 +2564,7 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "experimental direct finite row-nowrap Flex static/relative plus absolute participation with fixed or opposing-inset-derived dimensions and axis-wise fixed-size alignment in LTR/RTL; legacy local offsets and dedicated Absolute retained; direct declarative static Flex chains inherit the nearest containing box, relative and legacy omitted Flex establish local boxes",
+      "current": "experimental direct finite row-nowrap Flex static/relative plus absolute participation with fixed or opposing-inset-derived dimensions and axis-wise fixed-size alignment in LTR/RTL; legacy local offsets and dedicated Absolute retained; direct declarative static Flex chains inherit the nearest containing box, relative and legacy omitted Flex establish local boxes; finite numeric absolute min/max clamps fixed and derived sizes before placement",
       "status": "experimental",
       "unresolvedPolicy": "Intrinsic absolute sizing, explicit containing-block overrides, opaque/transformed ancestry and wider layout admission remain open.",
       "evidence": {
@@ -2574,7 +2574,8 @@
           "packages/core/test/layout-decorated-relative-position.test.tsx: asymmetric parent padding/border content origin and slots",
           "packages/core/test/layout-absolute-participation.test.tsx: source-order absolute participation, known preflight and explicit intrinsic exclusion",
           "slice124: public direct and forwarded automatic dimensions, resize, finite-before-clamp validation, zero-size precedence; installed absoluteDerivedSize receipt",
-          "slice125: direct static chains, relative reset, legacy omitted ownership, decorated ancestor resize; installed absoluteContainingBlock receipt"
+          "slice125: direct static chains, relative reset, legacy omitted ownership, decorated ancestor resize; installed absoluteContainingBlock receipt",
+          "slice126: fixed/derived numeric absolute bounds, resize, RTL precedence and rejection of invalid/contradictory bounds; installed absoluteBounds receipt"
         ],
         "negative": [
           "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
@@ -2613,7 +2614,11 @@
           "position-containing-static-ltr",
           "position-containing-static-rtl",
           "position-containing-relative-ltr",
-          "position-containing-relative-rtl"
+          "position-containing-relative-rtl",
+          "position-absolute-bounds-auto-ltr",
+          "position-absolute-bounds-auto-rtl",
+          "position-absolute-bounds-fixed-ltr",
+          "position-absolute-bounds-fixed-rtl"
         ],
         "missing": [
           "absolute intrinsic dimensions",

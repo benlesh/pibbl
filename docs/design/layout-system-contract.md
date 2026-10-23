@@ -82,10 +82,16 @@ the opposite inner border edge. With both horizontal insets, left wins in LTR
 and right wins in RTL; top wins vertically. A width or height may instead be `"auto"` or omitted only when both finite
 physical insets on that axis are supplied. The parent inner-border/padding-box
 extent minus those two insets becomes the finite used dimension; the arithmetic
-must remain finite and a negative remainder clamps to zero. This derives one
-placement allocation only—it does not measure the child, infer intrinsic size,
-or add opposite-inset stretch semantics outside that bounded axis. Placement is
-resolved before world transforms, and forwarded placement is consumed once.
+must remain finite and a negative remainder clamps to zero. Finite numeric
+`minWidth`, `maxWidth`, `minHeight`, and `maxHeight` then clamp both explicitly
+sized and opposing-inset-derived axes before inset precedence chooses their
+final origin. A contradictory numeric minimum greater than its numeric maximum
+rejects; Pibbl deliberately preserves this existing validation rather than
+adopting Yoga's minimum-wins behavior. Percent and automatic bounds remain
+unsupported. This derives one placement allocation only—it does not measure the
+child, infer intrinsic size, or add opposite-inset stretch semantics outside
+that bounded axis. Placement is resolved before world transforms, and forwarded
+placement is consumed once.
 
 On an axis without either inset, the fixed child aligns within the parent content
 box instead. Horizontal alignment uses `justifyContent`: start and space-between
@@ -98,8 +104,8 @@ change the other axis's content alignment. `alignSelf` is not admitted.
 This admission does not add intrinsic sizing, percentage insets, nested
 general containing-block selection, Flow/Grid/Layer participation, or a migration of
 the existing `Absolute` convenience component. The first admission excludes
-direct layout-component children, child box decoration, margins, nonzero
-bounds, nonzero flex factors, and responsive style queries. Automatic or
+direct layout-component children, child box decoration, margins, nonnumeric
+or automatic bounds, nonzero flex factors, and responsive style queries. Automatic or
 omitted axes without both physical insets reject explicitly, as do unsupported
 contexts and inset values.
 
