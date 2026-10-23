@@ -2661,6 +2661,37 @@ static void absoluteTextHeightCases() {
   }
 }
 
+static float absoluteTextWidthQuery = 0;
+static YGMeasureMode absoluteTextWidthMode = YGMeasureModeUndefined;
+static float absoluteTextHeightQuery = 0;
+static YGMeasureMode absoluteTextHeightMode = YGMeasureModeUndefined;
+static YGSize absoluteTextWidthMeasure(YGNodeConstRef, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+  absoluteTextWidthQuery = width; absoluteTextWidthMode = widthMode;
+  absoluteTextHeightQuery = height; absoluteTextHeightMode = heightMode;
+  // Synthetic source callback: three `aaaa` words, 6px glyphs/spaces = 84px.
+  // It is provenance for Yoga's query envelope, never Canvas font parity.
+  return {84, 20};
+}
+static const char* measureModeName(YGMeasureMode mode) {
+  return mode == YGMeasureModeExactly ? "exact" : mode == YGMeasureModeAtMost ? "at-most" : "undefined";
+}
+static void absoluteTextWidthCases() {
+  for (int column = 0; column < 2; ++column) for (int rtl = 0; rtl < 2; ++rtl) {
+    absoluteTextWidthQuery = absoluteTextHeightQuery = 0;
+    absoluteTextWidthMode = absoluteTextHeightMode = YGMeasureModeUndefined;
+    auto config = YGConfigNew(); YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config); YGNodeStyleSetPositionType(root, YGPositionTypeRelative); YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, 204); YGNodeStyleSetHeight(root, 104); YGNodeStyleSetFlexDirection(root, column ? YGFlexDirectionColumn : YGFlexDirectionRow); YGNodeStyleSetFlexWrap(root, YGWrapNoWrap); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetGap(root, YGGutterAll, 10);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10); YGNodeStyleSetPadding(root, YGEdgeRight, 30); YGNodeStyleSetPadding(root, YGEdgeTop, 20); YGNodeStyleSetPadding(root, YGEdgeBottom, 20); YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    auto a = YGNodeNewWithConfig(config), text = YGNodeNewWithConfig(config), c = YGNodeNewWithConfig(config);
+    for (auto flow : {a, c}) { YGNodeStyleSetWidth(flow, 50); YGNodeStyleSetHeight(flow, 20); YGNodeStyleSetFlexGrow(flow, 0); YGNodeStyleSetFlexShrink(flow, 0); setMinZero(flow); }
+    YGNodeStyleSetPositionType(text, YGPositionTypeAbsolute); YGNodeStyleSetWidthAuto(text); YGNodeStyleSetHeight(text, 20); YGNodeStyleSetPosition(text, YGEdgeRight, 18); YGNodeStyleSetPosition(text, YGEdgeTop, 8); YGNodeStyleSetFlexGrow(text, 0); YGNodeStyleSetFlexShrink(text, 0); setMinZero(text); YGNodeSetMeasureFunc(text, absoluteTextWidthMeasure);
+    YGNodeInsertChild(root, a, 0); YGNodeInsertChild(root, text, 1); YGNodeInsertChild(root, c, 2); YGNodeCalculateLayout(root, YGUndefined, YGUndefined, rtl ? YGDirectionRTL : YGDirectionLTR);
+    std::cout << ",{\"name\":\"position-absolute-text-width-" << (column ? "column" : "row") << '-' << (rtl ? "rtl" : "ltr") << "\",\"width\":204,\"height\":104,\"gap\":10,\"flexDirection\":\"" << (column ? "column" : "row") << "\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr") << "\",\"containerStyle\":{\"position\":\"relative\",\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\"},\"absoluteTextWidthFixture\":true,\"classification\":\"native-font-metric-source\",\"comparisonLabel\":\"Yoga synthetic 6px callback is query-source provenance only; Pibbl derives Text width from the active Canvas font.\",\"textValue\":\"aaaa aaaa aaaa\",\"nativeMeasurementConstraints\":{\"width\":\"" << measureModeName(absoluteTextWidthMode) << "\",\"widthValue\":"; if (std::isfinite(absoluteTextWidthQuery)) std::cout << absoluteTextWidthQuery; else std::cout << "\"unbounded\""; std::cout << ",\"height\":\"" << measureModeName(absoluteTextHeightMode) << "\",\"heightValue\":"; if (std::isfinite(absoluteTextHeightQuery)) std::cout << absoluteTextHeightQuery; else std::cout << "\"unbounded\""; std::cout << "},\"boxes\":["; printBox(a); std::cout << ','; printBox(text); std::cout << ','; printBox(c); std::cout << "],\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"position\":\"absolute\",\"width\":\"auto\",\"height\":20,\"right\":18,\"top\":8,\"font\":\"10px monospace\",\"wrap\":false,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -2824,5 +2855,6 @@ int main() {
   nestedContainingBlockDirectionCases();
   absoluteWrapCases();
   absoluteTextHeightCases();
+  absoluteTextWidthCases();
   std::cout << "]\n";
 }

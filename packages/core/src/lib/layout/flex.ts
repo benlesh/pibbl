@@ -767,16 +767,17 @@ function resolveFlexPlacements(
     if (normalized.position === 'absolute') {
       const definition = getPrimitiveDefinition(child.type);
       const hasPairedMeasurement = !!definition?.measureIntrinsic && !!definition.measure;
-      const naturalWidth = (normalized.width === undefined || normalized.width === 'auto') &&
-        typeof normalized.height === 'number' && Number.isFinite(normalized.height) &&
-        normalized.aspectRatio === undefined && (normalized.left === undefined || normalized.right === undefined) && hasPairedMeasurement;
-      const measuredTextHeight = child.type === Text && normalized.wrap === true &&
+      const measurableText = child.type === Text &&
         (normalized.fit === undefined || normalized.fit === 'visible') &&
         (normalized.overflow === undefined || normalized.overflow === 'visible') && genericTextFont(normalized);
+      const naturalWidth = (normalized.width === undefined || normalized.width === 'auto') &&
+        typeof normalized.height === 'number' && Number.isFinite(normalized.height) &&
+        normalized.aspectRatio === undefined && (normalized.left === undefined || normalized.right === undefined) &&
+        (hasPairedMeasurement || measurableText && (normalized.wrap === undefined || normalized.wrap === false));
       const naturalHeight = (normalized.height === undefined || normalized.height === 'auto') &&
         typeof normalized.width === 'number' && Number.isFinite(normalized.width) &&
         normalized.aspectRatio === undefined && (normalized.top === undefined || normalized.bottom === undefined) &&
-        (hasPairedMeasurement || measuredTextHeight);
+        (hasPairedMeasurement || measurableText && normalized.wrap === true);
       assertSupportedAbsoluteFlexPosition(child, normalized, options, container, preparedStyleQuery(prepared), naturalWidth, naturalHeight);
       const measurementToken = naturalWidth || naturalHeight ? region?.absoluteMeasurementIdentity(child.type,
         child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`) : undefined;
@@ -1308,10 +1309,11 @@ function resolveAbsoluteFlexPlacement(
   if (measurement) {
     const measurementAxis = automaticWidth ? 'width' : 'height';
     const measuredChild = clonePibblElement(child);
-    // Text's measure callback uses an omitted height for natural wrapping. Keep
-    // authored automatic height on the original descriptor for final settlement.
-    setPreNormalizedStyle(measuredChild, measurementAxis === 'height' && child.type === Text ?
-      { ...style, height: undefined } : style, child, receiverToken, query);
+    // Text's measure callback uses an omitted natural axis. Keep authored
+    // automatic dimensions on the original descriptor for final settlement.
+    const measuredStyle = child.type === Text ? measurementAxis === 'width' ?
+      { ...style, width: undefined } : { ...style, height: undefined } : style;
+    setPreNormalizedStyle(measuredChild, measuredStyle, child, receiverToken, query);
     const fixedAxis = measurementAxis === 'width' ? style.height as number : style.width as number;
     const result = measureConstrainedIntrinsicElement(measuredChild, measurementAxis === 'width' ? {
       minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: fixedAxis, maxHeight: fixedAxis,

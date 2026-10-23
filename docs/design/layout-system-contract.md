@@ -176,8 +176,17 @@ provider measures real Canvas text at exact declared width and unbounded height;
 a measurement-only copy omits automatic height, while final settlement retains
 the authored style and applies numeric bounds and physical anchoring afterward.
 Opposing vertical insets and aspect derivation retain precedence and need no text
-query. Custom fonts, unwrapped/fitted/clipped content, both-auto and natural Text
-width are outside this admission. Native text fixtures use labeled synthetic
+query. Custom fonts, fitted/clipped content and both-auto Text remain outside these admissions.
+
+Direct unwrapped Text also supports automatic/omitted absolute width at declared
+finite numeric height, with the same generic font and visible fit/overflow policy.
+The callback receives unbounded width and exact declared height; its measurement
+copy omits automatic width. Natural width follows Text's existing Canvas ink-bounds
+contract (`actualBoundingBoxLeft + actualBoundingBoxRight`), not character advance
+width. Final bounds and physical right/left anchoring apply to this measured width.
+Wrapped natural width and both-auto Text remain outside this admission.
+
+Native text fixtures use labeled synthetic
 metrics as sizing probes; they do not establish Canvas font parity.
 
 Stable scalar/signal inputs can reuse successful snapshots under the existing

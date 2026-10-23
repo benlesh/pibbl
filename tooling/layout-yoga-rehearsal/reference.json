@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "a163d7291bb64594f703472e4b05597b0c87c2647a76a3d386b3667325c07e2a",
+  "probeSha256": "e311261831e1036b5ee60b9214874e36ec0a4c34327321e48b6808bcec99f9d2",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -15,7 +15,7 @@
     "flexWrap": "explicit nowrap/wrap/wrap-reverse per case",
     "gap": "explicit numeric or allocated-axis percentage per case; nested owners use10%",
     "shrink": "explicit itemStyles when present; nested outer items1 and inner leaves0; otherwise1 except floor/border cases0",
-    "comparison": "native boxes match except explicitly classified partial-factor/freeze, CSS safe-overflow reverse and preserved physical-margin cases; pibblBoxes are expected Pibbl contract geometry",
+    "comparison": "native boxes match except explicitly classified preserved semantics and native font-metric source probes; pibblBoxes, when present, are expected Pibbl contract geometry; font probes derive portable expectations from live Canvas metrics",
     "padding": "explicit numeric/percentage item or container padding per case; asymmetric physical3/5/7/11 in border cases; otherwise0",
     "boxSizing": "explicit item/container boxSizing per case; rectangle-percent-content-box uses content-box; otherwise Yoga default",
     "border": "physical left2/right4/top6/bottom8 in asymmetric border cases; otherwise 0"
@@ -31608,6 +31608,334 @@
           "wrap": true,
           "font": "10px monospace",
           "lineHeight": 10,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-text-width-row-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "position": "relative",
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteTextWidthFixture": true,
+      "classification": "native-font-metric-source",
+      "comparisonLabel": "Yoga synthetic 6px callback is query-source provenance only; Pibbl derives Text width from the active Canvas font.",
+      "textValue": "aaaa aaaa aaaa",
+      "nativeMeasurementConstraints": {
+        "width": "undefined",
+        "widthValue": "unbounded",
+        "height": "exact",
+        "heightValue": 20
+      },
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 100,
+          "y": 10,
+          "width": 84,
+          "height": 20
+        },
+        {
+          "x": 72,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "right": 18,
+          "top": 8,
+          "font": "10px monospace",
+          "wrap": false,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-text-width-row-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "position": "relative",
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteTextWidthFixture": true,
+      "classification": "native-font-metric-source",
+      "comparisonLabel": "Yoga synthetic 6px callback is query-source provenance only; Pibbl derives Text width from the active Canvas font.",
+      "textValue": "aaaa aaaa aaaa",
+      "nativeMeasurementConstraints": {
+        "width": "undefined",
+        "widthValue": "unbounded",
+        "height": "exact",
+        "heightValue": 20
+      },
+      "boxes": [
+        {
+          "x": 122,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 100,
+          "y": 10,
+          "width": 84,
+          "height": 20
+        },
+        {
+          "x": 62,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "right": 18,
+          "top": 8,
+          "font": "10px monospace",
+          "wrap": false,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-text-width-column-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "position": "relative",
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteTextWidthFixture": true,
+      "classification": "native-font-metric-source",
+      "comparisonLabel": "Yoga synthetic 6px callback is query-source provenance only; Pibbl derives Text width from the active Canvas font.",
+      "textValue": "aaaa aaaa aaaa",
+      "nativeMeasurementConstraints": {
+        "width": "at-most",
+        "widthValue": 200,
+        "height": "exact",
+        "heightValue": 20
+      },
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 100,
+          "y": 10,
+          "width": 84,
+          "height": 20
+        },
+        {
+          "x": 12,
+          "y": 52,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "right": 18,
+          "top": 8,
+          "font": "10px monospace",
+          "wrap": false,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-text-width-column-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "position": "relative",
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteTextWidthFixture": true,
+      "classification": "native-font-metric-source",
+      "comparisonLabel": "Yoga synthetic 6px callback is query-source provenance only; Pibbl derives Text width from the active Canvas font.",
+      "textValue": "aaaa aaaa aaaa",
+      "nativeMeasurementConstraints": {
+        "width": "at-most",
+        "widthValue": 200,
+        "height": "exact",
+        "heightValue": 20
+      },
+      "boxes": [
+        {
+          "x": 122,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 100,
+          "y": 10,
+          "width": 84,
+          "height": 20
+        },
+        {
+          "x": 122,
+          "y": 52,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "right": 18,
+          "top": 8,
+          "font": "10px monospace",
+          "wrap": false,
           "minWidth": 0,
           "minHeight": 0,
           "flexGrow": 0,

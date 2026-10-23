@@ -95,7 +95,7 @@ if (source) {
         flexWrap: "explicit nowrap/wrap/wrap-reverse per case",
         gap: "explicit numeric or allocated-axis percentage per case; nested owners use10%",
         shrink: "explicit itemStyles when present; nested outer items1 and inner leaves0; otherwise1 except floor/border cases0",
-        comparison: "native boxes match except explicitly classified partial-factor/freeze, CSS safe-overflow reverse and preserved physical-margin cases; pibblBoxes are expected Pibbl contract geometry",
+        comparison: "native boxes match except explicitly classified preserved semantics and native font-metric source probes; pibblBoxes, when present, are expected Pibbl contract geometry; font probes derive portable expectations from live Canvas metrics",
         padding: "explicit numeric/percentage item or container padding per case; asymmetric physical3/5/7/11 in border cases; otherwise0",
         boxSizing: "explicit item/container boxSizing per case; rectangle-percent-content-box uses content-box; otherwise Yoga default",
         border: "physical left2/right4/top6/bottom8 in asymmetric border cases; otherwise 0",

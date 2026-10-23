@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice137 (built-in wrapped Text automatic absolute height; this commit).
+Latest delivery is slice138 (built-in unwrapped Text natural absolute width; this commit).
+Slice137 is `3ad9598a` (wrapped Text automatic absolute height).
 Slice136 is `6c30acfb` (fixed physical-inset absolute leaves in normal wrapped rows).
 Slice135 is `65b8bb94` (fixed declarative containing chains across nowrap directions).
 Consolidation45 is `bf71abc6` for133–135.
@@ -97,11 +98,11 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:483 records,385 geometry matches and98 classified geometry differences; five recorded column-width provider queries deliberately differ.
+Current corpus:487 records:385 geometry matches,98 preserved-semantic comparisons and4 explicitly classified native font-source comparisons. Seven recorded column-width queries deliberately differ (five custom providers, two Text).
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
-Click Latest for wrapped Text automatic height; Next case changes width/content across four sizing probes.
+Click Latest for Text natural width; four cases compare row/column LTR/RTL using live Canvas ink metrics and explicit native-query provenance.
 The public lesson is `#/examples/layout/wasm-yoga-migration`.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -3935,17 +3936,52 @@ Logs `/tmp/pibbl-slice137-{public-red-corrected,public-both,focused-final,normal
 No kernel change, speed claim, Node24 trust or release completion. Fixed33 and
 seven open release gates unchanged.
 
-## [NEXT] Direct Text natural absolute width (138)
+## Slice138 delivered: direct Text natural absolute width
 
-Use existing Text/Flex APIs for exactly one automatic width at declared finite
-numeric height, unwrapped generic-font visible Text, all nowrap directions.
-Reuse the unbounded-width/exact-height measurement and omit width only on the
-measurement copy; preserve paired-inset/aspect and numeric clamp semantics.
-Prove right-anchor motion with real Canvas metrics and content signals. Native
-synthetic metrics must be classified explicitly, with portable browser expectations
-derived from actual Canvas measurement rather than platform-specific stored boxes.
-Column native at-most query differences must remain explicit. Add focused public
-RED and runnable proof before hardening. Consolidate136–138 after this third slice.
+Direct generic unwrapped Text now measures automatic/omitted absolute width at a
+declared finite numeric height across every nowrap direction and LTR/RTL. Omitted
+or visible fit/overflow required. Existing Text natural width means Canvas ink
+bounds (`actualBoundingBoxLeft + actualBoundingBoxRight`), not advance width.
+Only the measurement copy omits automatic width; original style retains numeric
+bounds and physical anchoring. Paired insets/aspect win without measurement.
+No public API, ABI, graph/cache namespace or conservative revision policy change.
+
+Public RED captured the missing admission before runtime edits:
+`/tmp/pibbl-slice138-public-red.txt`. Real Canvas tests cover eight flow states,
+right-anchored miss-to-hit content growth, source focus, stable keys/native nodes,
+interactive paint remeasurement versus stable plain cache reuse, font/height/content
+changes, detached signals, keyed removal/restore and exact cleanup. Paint-origin
+checks cover paired insets/aspect/pair precedence and min/max after measurement.
+Negative coverage keeps wrapped, fitted/clipped/custom-font/both-auto and responsive
+Text outside admission. A test-only responsive function was corrected to the
+supported `style.when` query vocabulary before the final green run.
+
+Four native6px source probes are classified `native-font-metric-source`, without
+platform-specific Pibbl boxes. Source/built4each derive Text ink width from live
+Canvas, assert exact physical draw origin, glyph hits, recorded A/C flow geometry,
+identity, conservative paint work and cleanup[0,0,0], no errors. They report zero
+font geometry matches and four source classifications; two column callbacks are
+explicit native at-most200 versus Pibbl unbounded queries. Screenshot inspected.
+Corpus487 comprises385 geometry matches,98 preserved-semantic comparisons and
+four font-source comparisons; seven query differences are separately recorded.
+
+Fresh Node26.9.0/macOS Chromium: focused3files75pass/2skip77; normal43pass/34skip77;
+Latest1pass/413skip414. Types, changed lint, docs109 mutation probes, JSDoc and
+public5/full487 boundary pass. Scoped review clean. Fresh package build followed
+by isolated consumer succeeds245installed inputs, strict Bundler/NodeNext, actual
+Canvas ink-width anchor/content/focus/targets/ownership, and104 auto-margin cases.
+Tarball SHA256 `7ce71ee925c6784952dd98b7818e77dc106b29207982a082e93a67ded5722c05`.
+Logs `/tmp/pibbl-slice138-{public-red,public-green,public-both,focused-final,normal,latest,source,built,packed,types-final,lint,docs}.txt`.
+No kernel change, full487-case replay, font parity, speed or Node24 trust claim.
+Fixed33 capabilities and all seven open release gates unchanged.
+
+## [NEXT] Consolidation46 for slices136–138
+
+Run the bounded experimental and normal regression lanes with the new public
+Text/wrapped-positioning files, record fresh results, then select the next material
+intrinsic sizing contract. Both-auto, image/nested ownership, wider wrapping,
+containing overrides, hidden/contents, transactionality and release gates remain
+open; none is closed merely by adding comparison records.
 
 ### Finite positioning exit matrix after134
 

@@ -199,3 +199,21 @@ describe('bounded absolute wrapped Text height', () => {
     expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={textStyle}>aaaa aaaa</Text></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
 });
+
+
+describe('bounded absolute natural Text width', () => {
+  const style = { position: 'absolute' as const, width: 'auto' as const, height: 20, right: 18, top: 8, minWidth: 0, minHeight: 0, flexShrink: 0, wrap: false, font: '10px monospace' };
+  it.runIf(experimentalLayout).each([
+    ['wrapped', { ...style, wrap: true }],
+    ['clipped fit', { ...style, fit: 'clip' as const }],
+    ['ellipsized fit', { ...style, fit: 'ellipsis' as const }],
+    ['clipped overflow', { ...style, overflow: 'clip' as const }],
+    ['custom font', { ...style, font: '10px AppFont' }],
+    ['both automatic axes', { ...style, height: 'auto' as const }],
+  ])('rejects natural Text width with %s', (_name, textStyle) => {
+    expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={textStyle}>aaaa aaaa</Text></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+  it.runIf(experimentalLayout)('rejects responsive Text width measurement', () => {
+    expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={{ ...style, when: [{ query: { minWidth: 0 }, style: { fill: '#a63758' } }] }}>aaaa aaaa</Text></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+});

@@ -2571,7 +2571,7 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "experimental finite nowrap static/relative primitive placement and fixed/opposing-inset/aspect-derived absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets; paired-provider natural sizing and bounded generic wrapped Text automatic height across nowrap directions with explicit native query provenance; direct declarative nowrap static containing chains across main directions with fixed numeric neutral-flex owners; omitted-position legacy retained; fixed physical left/top absolute leaves also supported in normal LTR row wrap",
+      "current": "experimental finite nowrap static/relative primitive placement and fixed/opposing-inset/aspect-derived absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets; paired-provider natural sizing and bounded generic wrapped Text automatic height and unwrapped Text natural ink width across nowrap directions with explicit native query provenance; direct declarative nowrap static containing chains across main directions with fixed numeric neutral-flex owners; omitted-position legacy retained; fixed physical left/top absolute leaves also supported in normal LTR row wrap",
       "status": "experimental",
       "unresolvedPolicy": "Intrinsic absolute sizing, explicit containing-block overrides, opaque/transformed ancestry and wider layout admission remain open.",
       "evidence": {
@@ -2593,7 +2593,8 @@
           "slice134: paired absolute natural width/height across all four nowrap directions and LTR/RTL; exact Pibbl envelopes, explicit native column-query provenance, stable paint reuse, measurement signals, removal/restore and cleanup; installed absoluteMeasuredMain receipt",
           "slice135: fixed numeric neutral-flex direct nowrap containing chains across directions; public cross-direction geometry/identity/resize/cleanup and 18 native/source/built cases",
           "slice136: fixed physical-inset absolute leaves excluded from normal LTR wrapped row lines; public resize, source focus/hits, identity, paint reuse and teardown; native/source/built two-case proof and installed absoluteWrappedParticipation receipt",
-          "slice137: direct generic wrapped Text automatic absolute height at declared numeric width, real Canvas line origins/hits, content/font/width signal ownership, interactive conservative remeasurement, plain stable cache reuse/removal/restore, bounds and pair/aspect precedence; installed absoluteTextHeight receipt"
+          "slice137: direct generic wrapped Text automatic absolute height at declared numeric width, real Canvas line origins/hits, content/font/width signal ownership, interactive conservative remeasurement, plain stable cache reuse/removal/restore, bounds and pair/aspect precedence; installed absoluteTextHeight receipt",
+          "slice138: direct generic unwrapped Text natural absolute ink width at declared numeric height, live Canvas right-anchor/glyph geometry, content/font/height ownership, cache and cleanup; classified native font-source probes with column query provenance; installed absoluteTextWidth receipt"
         ],
         "negative": [
           "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
@@ -2802,7 +2803,7 @@
       "id": "measurement.custom-leaf",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom providers with one exact declared and one unbounded natural axis across finite nowrap main directions; native column-width query differences labeled separately from deterministic geometry",
+      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom providers with one exact declared and one unbounded natural axis across finite nowrap main directions; native column-width query differences labeled separately from deterministic geometry; bounded built-in wrapped Text height and unwrapped ink width use the same owned query with real Canvas metrics",
       "status": "partial",
       "unresolvedPolicy": "Paired intrinsic callback is implemented for the bounded direct-leaf consumer; baselines and broader intrinsic consumers remain open.",
       "evidenceRefs": [
@@ -2822,7 +2823,8 @@
           "finite LTR column paired provider exact width40/60 and unbounded natural height40/30 with following-target movement",
           "finite-column measurement-only signal dependency moves following targets; unrelated paint reuses constrained snapshots",
           "slice128: pure absolute width query at exact height, measurement-owned signals, conservative layout revision and stable sibling-paint reuse",
-          "slices129/134: symmetric exact-width natural height and both absolute provider profiles across directions, query-before-bounds, owned signals, removal/restore and explicit native column-width query differences"
+          "slices129/134: symmetric exact-width natural height and both absolute provider profiles across directions, query-before-bounds, owned signals, removal/restore and explicit native column-width query differences",
+          "slices137/138: built-in Text width-driven wrapped height and unwrapped natural ink width, conservative interactive callbacks versus stable plain cache reuse, font/content/dimension changes, bounds/precedence and exact teardown"
         ],
         "negative": [
           "opaque component measurement unsupported",
