@@ -1093,7 +1093,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
   // This walk advances Next case through the contiguous original families. Later
   // sections (including rounding) have dedicated semantic tests and browser drivers.
-  const cases=yogaReference.cases.filter(fixture=>!('decoratedReverseMainPercentFixture' in fixture) && !('relativePercentageInsetFixture' in fixture) && !('absolutePercentageInsetFixture' in fixture) && !('absoluteWrappedAlignmentFixture' in fixture) && !('relativeWrappedDirectionFixture' in fixture) && !('absoluteAnchoredWrapFixture' in fixture) && !('absoluteTextBothFixture' in fixture) && !('absoluteTextWidthFixture' in fixture) && !('absoluteTextHeightFixture' in fixture) && !('absoluteWrapFixture' in fixture) && !('nestedContainingBlockDirectionFixture' in fixture) && !('absoluteMeasuredMainFixture' in fixture) && !('absoluteMainAspectFixture' in fixture) && !('absoluteMainBoundsFixture' in fixture) && !('relativeMainDirectionFixture' in fixture) && !('absoluteMainDirectionFixture' in fixture) && !('absoluteMeasuredHeightFixture' in fixture) && !('absoluteMeasuredWidthFixture' in fixture) && !('absoluteAspectFixture' in fixture) && !('absoluteBoundsFixture' in fixture) && !('nestedContainingBlockFixture' in fixture) && !('absoluteDerivedSizeFixture' in fixture) && !('absoluteAlignmentFixture' in fixture) && !('absoluteParticipationFixture' in fixture) && !('relativeStaticFixture' in fixture) && !('decoratedRelativeStaticFixture' in fixture) && !('customColumnMeasureFixture' in fixture) && !('nestedDecoratedColumnCrossMinFixture' in fixture) && !('nestedDecoratedColumnCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
+  const cases=yogaReference.cases.filter(fixture=>!('decoratedReverseMainSymmetricFixture' in fixture) && !('decoratedReverseMainPercentFixture' in fixture) && !('relativePercentageInsetFixture' in fixture) && !('absolutePercentageInsetFixture' in fixture) && !('absoluteWrappedAlignmentFixture' in fixture) && !('relativeWrappedDirectionFixture' in fixture) && !('absoluteAnchoredWrapFixture' in fixture) && !('absoluteTextBothFixture' in fixture) && !('absoluteTextWidthFixture' in fixture) && !('absoluteTextHeightFixture' in fixture) && !('absoluteWrapFixture' in fixture) && !('nestedContainingBlockDirectionFixture' in fixture) && !('absoluteMeasuredMainFixture' in fixture) && !('absoluteMainAspectFixture' in fixture) && !('absoluteMainBoundsFixture' in fixture) && !('relativeMainDirectionFixture' in fixture) && !('absoluteMainDirectionFixture' in fixture) && !('absoluteMeasuredHeightFixture' in fixture) && !('absoluteMeasuredWidthFixture' in fixture) && !('absoluteAspectFixture' in fixture) && !('absoluteBoundsFixture' in fixture) && !('nestedContainingBlockFixture' in fixture) && !('absoluteDerivedSizeFixture' in fixture) && !('absoluteAlignmentFixture' in fixture) && !('absoluteParticipationFixture' in fixture) && !('relativeStaticFixture' in fixture) && !('decoratedRelativeStaticFixture' in fixture) && !('customColumnMeasureFixture' in fixture) && !('nestedDecoratedColumnCrossMinFixture' in fixture) && !('nestedDecoratedColumnCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
@@ -2987,6 +2987,91 @@ it.runIf(experimentalLayout).each([
   expect(fixtures.map((fixture) => fixture.name)).toEqual(expect.arrayContaining(fixtureNames));
   expect(fixtures.find(fixture => fixture.name === fixtureNames[0])?.boxes).toEqual(expectedInitial);
   expect(fixtures.find(fixture => fixture.name === fixtureNames[1])?.boxes).toEqual(expectedResized);
+  const main = signal(initialMain), fill = signal('#426b61');
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number }>();
+  const stamps = new Map<string, number>();
+  let mounts = 0, nextStamp = 1, hits = 0;
+  function Card({ name, style: _style, interactive }: { name: string; style: BoxStyle & FlexItemStyle; interactive?: boolean }) {
+    const stamp = useConst(() => { mounts++; return nextStamp++; });
+    const box = useLayoutBox(), transform = useCanvasContext().getTransform();
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height });
+    stamps.set(name, stamp);
+    return createElement(Rectangle, {
+      onClick: interactive ? () => { hits++; } : undefined,
+      style: { width: box.width, height: box.height, fill },
+    });
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 220; document.body.append(canvas);
+  const column = axis === 'column-reverse';
+  const root = createElement(Flex, {
+    style: {
+      width: column ? 84 : main,
+      height: column ? main : 84,
+      boxSizing: 'border-box',
+      padding: { left: 10, right: 30, top: 20, bottom: 20 },
+      borderWidth: 2,
+      flexDirection: axis,
+      gap: 12,
+      alignItems: 'flex-start',
+      alignContent: 'flex-start',
+    },
+    children: [
+      createElement(Card, { key: 'A', name: 'A', interactive: true, style: firstStyle }),
+      createElement(Card, { key: 'B', name: 'B', style: secondStyle }),
+    ],
+  });
+  const controller = pibbl(canvas, root); controllers.push(controller); await nextFrame();
+  expect([boxes.get('A'), boxes.get('B')]).toEqual(expectedInitial);
+  clickCanvas(canvas, oldPoint.x, oldPoint.y); expect(hits).toBe(1);
+  const mounted = snapshotWasmLayoutDiagnostics(), mountedStamps = new Map(stamps);
+  main.set(resizedMain); await nextFrame();
+  expect([boxes.get('A'), boxes.get('B')]).toEqual(expectedResized);
+  expect(stamps).toEqual(mountedStamps); expect(mounts).toBe(2);
+  clickCanvas(canvas, oldPoint.x, oldPoint.y); expect(hits).toBe(1);
+  clickCanvas(canvas, newPoint.x, newPoint.y); expect(hits).toBe(2);
+  const resized = snapshotWasmLayoutDiagnostics();
+  expect(resized.solves).toBeGreaterThan(mounted.solves); expect(resized.nodeCreates).toBe(mounted.nodeCreates);
+  fill.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(resized.solves); expect(painted.nodeCreates).toBe(resized.nodeCreates); expect(mounts).toBe(2);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+});
+
+it.runIf(experimentalLayout).each([
+  {
+    label: 'row-reverse percentage shrink floor',
+    fixtureNames: ['decorated-main-floor-row-reverse', 'decorated-main-floor-row-reverse-resized'],
+    axis: 'row-reverse' as const,
+    initialMain: 144,
+    resizedMain: 184,
+    initial: [{ x: 42, y: 22, width: 70, height: 10 }, { x: 12, y: 22, width: 18, height: 10 }],
+    resized: [{ x: 54, y: 22, width: 98, height: 10 }, { x: 12, y: 22, width: 30, height: 10 }],
+    firstStyle: { width: 80, height: 10, flexBasis: 80, flexGrow: 0, flexShrink: 1, minWidth: '70%' as const, minHeight: 0 },
+    secondStyle: { width: 80, height: 10, flexBasis: 80, flexGrow: 0, flexShrink: 1, minWidth: 0, minHeight: 0 },
+    oldPoint: { x: 45, y: 27 },
+    newPoint: { x: 60, y: 27 },
+  },
+  {
+    label: 'column-reverse percentage grow cap',
+    fixtureNames: ['decorated-main-cap-column-reverse', 'decorated-main-cap-column-reverse-resized'],
+    axis: 'column-reverse' as const,
+    initialMain: 144,
+    resizedMain: 184,
+    initial: [{ x: 12, y: 97, width: 10, height: 25 }, { x: 12, y: 22, width: 10, height: 63 }],
+    resized: [{ x: 12, y: 127, width: 10, height: 35 }, { x: 12, y: 22, width: 10, height: 93 }],
+    firstStyle: { width: 10, height: 40, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, maxHeight: '25%' as const },
+    secondStyle: { width: 10, height: 40, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0 },
+    oldPoint: { x: 17, y: 100 },
+    newPoint: { x: 17, y: 130 },
+  },
+])('preserves the remaining decorated reverse main-axis percentage roles through owner resize: $label', async ({ fixtureNames, axis, initialMain, resizedMain, initial: expectedInitial, resized: expectedResized, firstStyle, secondStyle, oldPoint, newPoint }) => {
+  const fixtures = yogaReference.cases.filter((fixture) => 'decoratedReverseMainSymmetricFixture' in fixture);
+  expect(fixtures.map((fixture) => fixture.name)).toEqual(expect.arrayContaining(fixtureNames));
+  expect(fixtures.find((fixture) => fixture.name === fixtureNames[0])?.boxes).toEqual(expectedInitial);
+  expect(fixtures.find((fixture) => fixture.name === fixtureNames[1])?.boxes).toEqual(expectedResized);
   const main = signal(initialMain), fill = signal('#426b61');
   const baseline = snapshotWasmLayoutDiagnostics();
   const boxes = new Map<string, { x: number; y: number; width: number; height: number }>();
@@ -5278,7 +5363,9 @@ it.runIf(experimentalLayout)('jumps directly to the latest public proof and pres
     await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`· ${expected} ·`);
   }
   const last = yogaReference.cases.at(-1)!;
-  const firstName = 'decoratedReverseMainPercentFixture' in last
+  const firstName = 'decoratedReverseMainSymmetricFixture' in last
+    ? yogaReference.cases.find(fixture => 'decoratedReverseMainSymmetricFixture' in fixture)!.name
+    : 'decoratedReverseMainPercentFixture' in last
     ? yogaReference.cases.find(fixture => 'decoratedReverseMainPercentFixture' in fixture)!.name
     : 'relativePercentageInsetFixture' in last
     ? yogaReference.cases.find(fixture => 'relativePercentageInsetFixture' in fixture)!.name

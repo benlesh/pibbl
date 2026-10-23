@@ -20,8 +20,9 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest evidence delivery is slice150 `f592b00c` (decorated reverse main percentage bounds).
-Consolidation50 records the combined148–150 verification below.
+Latest evidence delivery is slice151 (symmetric decorated reverse main bounds).
+Slice150 is `f592b00c` (decorated reverse main percentage bounds).
+Consolidation50 is `a88ea6c4` for148–150.
 Latest runtime delivery is slice149 `bc74da58` (bounded column provider automatic minimum).
 Slice148 is `91b36dca` (reverse composition capability evidence).
 Slice147 is `f6e45350` (logical absolute insets).
@@ -4487,14 +4488,45 @@ The fixed33 capabilities remain9 complete,11 experimental,6 partial,6 missing
 and1 excluded, with all7 release gates open. Accepted broad intrinsic, placement,
 transactional publication, Grid, migration and release exits remain explicit.
 
-## [NEXT] Symmetric decorated reverse main bounds (151)
+## Slice151 delivered: symmetric decorated reverse main bounds
 
-Complete the finite role matrix with row-reverse percentage shrink floor and
-column-reverse percentage grow cap, each outer144→184. Independent pinned native
-probe verified row A70→98/B18→30 and column A25→35/B63→93 at decorated content
-origin12,22. Add exact native/public/source/built/installed receipts and retain
-indefinite-owner/explicit-measure policy as a separate unresolved exit. No solver
-change is justified without a failing public contract, and no new API is planned.
+Four separately flagged, appended native records complete the finite role matrix:
+row-reverse minWidth70% and column-reverse maxHeight25%, outer144→184/content
+main100→140. Row A(42,22,70,10)→(54,22,98,10), B18→30 at12,22; column
+A(12,97,10,25)→(12,127,10,35), B63→93 at12,22. No solver/API changed.
+The native source was compiled from pinned Yoga3.2.1 with point scale0/no web
+defaults/no errata, then regenerated independently. The corpus now has717
+records:526 without divergence classification,183 preserved semantic differences
+and8 native-font-source records. No full717-case public runtime claim is made.
+
+Fresh Node24.15/Chromium focused checks5 passed (417 skipped): both new public
+resize/hit/key/paint/disposal cases, both prior150 cases and Latest-proof
+navigation. The public test agrees with the native record geometry. The Node24
+installed proof passed strict Bundler/NodeNext and runtime245 inputs, separate
+`reverseDecoratedMainSymmetricBounds=true` receipt, exact cleanup; tarball SHA256
+`ff1748ef54ed7c0f8f41cd8aae028524be03a20038fb82b92830052168da2c7a`.
+
+Node26.9/Chromium source and built private replays each passed4 native matches,
+227 inputs, A/B targets and previously empty points transferring to B after
+resize, stable keys/nodes, paint solve reuse, cleanup `[0,0,0]`, errors `[]`.
+The prior150 four-case source replay also passed. Named section navigation now
+reaches both families independently of which proof is newest; latest-navigation
+and legacy-walk test coverage includes the new flag. Source:
+`http://127.0.0.1:5192/#/testing/layout-yoga-migration`; built5193 same route.
+Public default corpus remains5 cases and agrees with717-record source.
+Typecheck/changed-code lint passed. Scoped review found no material issues; documentation checks passed109 RED
+mutation probes. `flex.min-max` stays partial only for the separate indefinite-owner
+and explicit-measure-mode policy. Fixed ledger9/11/6/6/1 and all7 release gates
+remain unchanged; no aggregate trust claim.
+
+## [NEXT] Indefinite-owner min/max contract (152)
+
+Audit the accepted indefinite-owner/explicit-measure-mode exit against existing
+public constraints, paired providers and percentage-cycle rules. State the
+smallest observable behavior and any material policy choice before implementation;
+reuse existing APIs where sufficient. Do not interpret width-paired intrinsic
+heights as axis-independent minima or silently solve cyclic percentages by fixed
+points/zero substitution. The broader intrinsic keyword capability stays separate.
 
 ### Finite positioning exit matrix after134
 

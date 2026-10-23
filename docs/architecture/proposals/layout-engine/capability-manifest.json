@@ -1627,9 +1627,29 @@
         "id": "decorated-main-floor-column-reverse-resized",
         "covers": ["flex.min-max", "box.box-sizing"],
         "classification": "exact finite decorated reverse main-axis percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-floor-row-reverse",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis symmetric percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-floor-row-reverse-resized",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis symmetric percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-cap-column-reverse",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis symmetric percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-cap-column-reverse-resized",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis symmetric percentage bound with explicit numeric basis/minimum policy"
       }
     ],
-    "limit": "713 pinned native records:522 without a divergence classification,183 preserved semantic differences and8 native-font-source records. Fresh public runtime verification is limited to named replay receipts; this is not a713-case runtime replay or general intrinsic, percentage, auto-margin, font or CSS parity claim."
+    "limit": "717 pinned native records:526 without a divergence classification,183 preserved semantic differences and8 native-font-source records. Fresh public runtime verification is limited to named replay receipts; this is not a717-case runtime replay or general intrinsic, percentage, auto-margin, font or CSS parity claim."
   },
   "gateGroups": [
     {
@@ -1936,7 +1956,8 @@
           "Definite decorated reverse nested height60 capped by maxHeight25% gives25\u219240; 100% leaf heights consume that allocation once",
           "Decorated column-reverse definite width60/maxWidth25% and 100%-width children resolve25\u219240 from content cross100\u2192160",
           "Decorated column-reverse definite width20/minWidth60% gives nested width60\u219296 and C x94\u2192130 from content cross100\u2192160",
-          "Decorated row-reverse maxWidth25% under content width100→140 freezes A at25→35 while column-reverse minHeight70% under content height100→140 floors A70→98 with negative free space"
+          "Decorated row-reverse maxWidth25% under content width100→140 freezes A at25→35 while column-reverse minHeight70% under content height100→140 floors A70→98 with negative free space",
+          "Symmetric decorated row-reverse minWidth70% floors A70→98 and column-reverse maxHeight25% caps A25→35 across content main100→140; both complementary sibling extents match pinned native output"
         ],
         "negative": [
           "opposing limits rejection",
@@ -1989,12 +2010,13 @@
           "decorated-main-cap-row-reverse",
           "decorated-main-cap-row-reverse-resized",
           "decorated-main-floor-column-reverse",
-          "decorated-main-floor-column-reverse-resized"
+          "decorated-main-floor-column-reverse-resized",
+          "decorated-main-floor-row-reverse",
+          "decorated-main-floor-row-reverse-resized",
+          "decorated-main-cap-column-reverse",
+          "decorated-main-cap-column-reverse-resized"
         ],
-        "missing": [
-          "remaining reverse/decorated main-axis role combinations beyond the bounded row cap and column floor pairs",
-          "indefinite owner policy and explicit measure modes"
-        ]
+        "missing": ["indefinite owner policy and explicit measure modes"]
       }
     },
     {
