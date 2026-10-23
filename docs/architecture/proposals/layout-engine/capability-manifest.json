@@ -65,9 +65,11 @@
       { "id": "row-wrap", "covers": ["flex.row-column-nowrap-wrap", "flex.numeric-gap"], "classification": "exact finite three-item source-formed lines; numeric basis/minimum/gap" },
       { "id": "row-wrap-reverse", "covers": ["flex.reverse-and-wrap-reverse", "flex.row-column-nowrap-wrap"], "classification": "exact finite reversed cross placement; source A/B/C order unchanged" },
       { "id": "border-box-floor-bounds", "covers": ["box.box-sizing", "flex.min-max"], "classification": "exact explicit padding floor and finite outer bounds" },
-      { "id": "border-box-percentage", "covers": ["box.box-sizing", "flex.grow-shrink-basis"], "classification": "exact definite percentage basis and cross size before inset conversion" }
+      { "id": "border-box-percentage", "covers": ["box.box-sizing", "flex.grow-shrink-basis"], "classification": "exact definite percentage basis and cross size before inset conversion" },
+      { "id": "border-box-asymmetric-row", "covers": ["box.box-sizing", "box.padding-and-layout-border"], "classification": "exact physical numeric insets; row basis54" },
+      { "id": "border-box-asymmetric-column", "covers": ["box.box-sizing", "box.padding-and-layout-border"], "classification": "exact physical numeric insets; column basis62" }
     ],
-    "limit": "Fourteen exact finite row/column/reverse/wrap fixtures, content-box padding and border-box floor/bounds/percentage conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
+    "limit": "Sixteen exact finite row/column/reverse/wrap fixtures, content-box padding, border-box floor/bounds/percentage and asymmetric row/column border conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
   "gateGroups": [
     {
@@ -843,7 +845,7 @@
       "id": "migration.versioned-yoga-conversion",
       "target": "parity",
       "group": "migration-and-conformance",
-      "current": "fourteen-case pinned row/column/reverse/wrap rehearsal, including content-box conversion and border-box floor/bounds/percentage geometry",
+      "current": "sixteen-case pinned row/column/reverse/wrap rehearsal, including content-box conversion and border-box floor/bounds/percentage geometry",
       "status": "experimental",
       "unresolvedPolicy": "Implementation direction is authorized; conversion/analyzer return contracts and supported compatibility policy remain to be specified.",
       "evidenceRefs": [
@@ -852,7 +854,7 @@
         "packages/core/test/layout-wasm-slice.test.tsx"
       ],
       "evidence": {
-        "positive": ["fourteen-case Yoga 3.2.1 rehearsal"],
+        "positive": ["sixteen-case Yoga 3.2.1 rehearsal"],
         "negative": ["no profile or public selector"],
         "interaction": ["migration example resize"],
         "yogaCases": [
@@ -869,7 +871,9 @@
           "row-wrap",
           "row-wrap-reverse",
           "border-box-floor-bounds",
-          "border-box-percentage"
+          "border-box-percentage",
+          "border-box-asymmetric-row",
+          "border-box-asymmetric-column"
         ],
         "missing": [
           "style/tree analysis",

@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "c5ecc0971820b1aa443218a7cb8f407c994314c6fc0018f6536dc54066daaf50",
+  "probeSha256": "55daa8db0832be6f87bb52c2072fee19f48c50fb5a99566fe70b1e13d29f052e",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -14,10 +14,10 @@
     "alignContent": "flex-start",
     "flexWrap": "explicit nowrap/wrap/wrap-reverse per case",
     "gap": "explicit per case; 0 or 12",
-    "shrink": "1 except border-box-floor-bounds uses 0",
-    "padding": "10 in rectangle-percent-content-box and border-box cases; otherwise 0",
+    "shrink": "1 except border-box-floor-bounds and asymmetric border cases use 0",
+    "padding": "10 in content-box/initial border-box cases; asymmetric physical 3/5/7/11 in border cases; otherwise 0",
     "boxSizing": "content-box in rectangle-percent-content-box; explicit border-box in border-box cases; otherwise Yoga default",
-    "border": 0
+    "border": "physical left2/right4/top6/bottom8 in asymmetric border cases; otherwise 0"
   },
   "cases": [
     {
@@ -337,6 +337,50 @@
           "y": 0,
           "width": 90,
           "height": 60
+        }
+      ]
+    },
+    {
+      "name": "border-box-asymmetric-row",
+      "width": 200,
+      "height": 100,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 54,
+          "height": 62
+        },
+        {
+          "x": 66,
+          "y": 0,
+          "width": 54,
+          "height": 62
+        }
+      ]
+    },
+    {
+      "name": "border-box-asymmetric-column",
+      "width": 100,
+      "height": 160,
+      "gap": 12,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 54,
+          "height": 62
+        },
+        {
+          "x": 0,
+          "y": 74,
+          "width": 54,
+          "height": 62
         }
       ]
     }

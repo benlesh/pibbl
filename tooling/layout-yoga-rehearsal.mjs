@@ -90,10 +90,10 @@ if (source) {
         alignContent: "flex-start",
         flexWrap: "explicit nowrap/wrap/wrap-reverse per case",
         gap: "explicit per case; 0 or 12",
-        shrink: "1 except border-box-floor-bounds uses 0",
-        padding: "10 in rectangle-percent-content-box and border-box cases; otherwise 0",
+        shrink: "1 except border-box-floor-bounds and asymmetric border cases use 0",
+        padding: "10 in content-box/initial border-box cases; asymmetric physical 3/5/7/11 in border cases; otherwise 0",
         boxSizing: "content-box in rectangle-percent-content-box; explicit border-box in border-box cases; otherwise Yoga default",
-        border: 0,
+        border: "physical left2/right4/top6/bottom8 in asymmetric border cases; otherwise 0",
       },
       cases: JSON.parse(execFileSync(executable, { encoding: "utf8" })),
     };

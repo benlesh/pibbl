@@ -336,6 +336,50 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         "height": 60
       }
     ]
+  },
+  {
+    "name": "border-box-asymmetric-row",
+    "width": 200,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 54,
+        "height": 62
+      },
+      {
+        "x": 66,
+        "y": 0,
+        "width": 54,
+        "height": 62
+      }
+    ]
+  },
+  {
+    "name": "border-box-asymmetric-column",
+    "width": 100,
+    "height": 160,
+    "gap": 12,
+    "flexDirection": "column",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 54,
+        "height": 62
+      },
+      {
+        "x": 0,
+        "y": 74,
+        "width": 54,
+        "height": 62
+      }
+    ]
   }
 ] as const;
   // END YOGA REFERENCE
@@ -376,7 +420,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         </Text>
         {!wrapped && box.width >= 50 && <Text
           pointerEvents="none"
-          style={{ left: column ? 4 : 12, top: column ? 16 : 38, font: column ? "10px monospace" : "12px monospace", fill: ink }}
+          style={{ left: column ? 4 : 12, top: column ? 16 : 38, font: column ? box.width < 80 ? "7px monospace" : "10px monospace" : "12px monospace", fill: ink }}
         >{column ? `${box.width} × ${box.height} px` : `${box.width} px`}</Text>}
       </>
     );
@@ -387,6 +431,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
     const boxed = fixture.name.startsWith("border-box-");
     const floor = fixture.name === "border-box-floor-bounds";
     const percentBox = fixture.name === "border-box-percentage";
+    const asymmetricBorder = fixture.name.startsWith("border-box-asymmetric-");
     const column = fixture.flexDirection.startsWith("column");
     const compact = column || wrapped;
     const shrinking = fixture.name === "shrink" || fixture.name === "column-shrink";
@@ -441,7 +486,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
               style={{
                 left: 28 + box.x + (column ? 4 : 12),
                 top: 240 + box.y + (column ? 16 : 38),
-                font: column ? "10px monospace" : "12px monospace",
+                font: column ? box.width < 80 ? "7px monospace" : "10px monospace" : "12px monospace",
                 fill: "#19375b",
               }}
             >{column ? `${box.width} × ${box.height} px` : `${box.width} px`}</Text>}
@@ -476,17 +521,18 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             column={column}
             wrapped={wrapped}
             style={{
-              flexBasis: percentBox ? "70%" : floor ? 8 : column ? shrinking ? 80 : 20 : shrinking ? 180 : 60,
+              flexBasis: asymmetricBorder ? column ? 62 : 54 : percentBox ? "70%" : floor ? 8 : column ? shrinking ? 80 : 20 : shrinking ? 180 : 60,
               flexGrow: boxed || wrapped || shrinking ? 0 : 1,
-              flexShrink: floor ? 0 : 1,
+              flexShrink: floor || asymmetricBorder ? 0 : 1,
               boxSizing: boxed ? "border-box" : undefined,
-              padding: boxed ? 10 : undefined,
+              padding: asymmetricBorder ? { left: 3, right: 5, top: 7, bottom: 11 } : boxed ? 10 : undefined,
+              borderWidth: asymmetricBorder ? { left: 2, right: 4, top: 6, bottom: 8 } : undefined,
               minWidth: percentBox ? 110 : column ? undefined : shrinking ? 120 : 0,
               minHeight: column ? shrinking ? 60 : 0 : undefined,
               maxHeight: fixture.name === "column-cap" || fixture.name === "column-reverse-cap" ? 30 : undefined,
-              width: column ? 80 : undefined,
+              width: column ? asymmetricBorder ? 54 : 80 : undefined,
               maxWidth: floor ? 8 : percentBox ? "60%" : fixture.name === "cap" || fixture.name === "row-reverse-cap" ? 80 : undefined,
-              height: percentBox ? "60%" : boxed ? 60 : wrapped ? 20 : 80,
+              height: asymmetricBorder ? column ? undefined : 62 : percentBox ? "60%" : boxed ? 60 : wrapped ? 20 : 80,
             }}
           />
           <Panel
@@ -494,16 +540,17 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             column={column}
             wrapped={wrapped}
             style={{
-              flexBasis: percentBox ? "70%" : floor ? 80 : column ? shrinking ? 80 : 20 : shrinking ? 180 : 60,
+              flexBasis: asymmetricBorder ? column ? 62 : 54 : percentBox ? "70%" : floor ? 80 : column ? shrinking ? 80 : 20 : shrinking ? 180 : 60,
               flexGrow: boxed || wrapped || shrinking ? 0 : 1,
-              flexShrink: floor ? 0 : 1,
+              flexShrink: floor || asymmetricBorder ? 0 : 1,
               boxSizing: boxed ? "border-box" : undefined,
-              padding: boxed ? 10 : undefined,
+              padding: asymmetricBorder ? { left: 3, right: 5, top: 7, bottom: 11 } : boxed ? 10 : undefined,
+              borderWidth: asymmetricBorder ? { left: 2, right: 4, top: 6, bottom: 8 } : undefined,
               minWidth: floor ? 100 : column ? undefined : 0,
               minHeight: column ? 0 : undefined,
               maxWidth: floor ? 110 : undefined,
-              width: column ? 80 : undefined,
-              height: percentBox ? "60%" : boxed ? 60 : wrapped ? 20 : 80,
+              width: column ? asymmetricBorder ? 54 : 80 : undefined,
+              height: asymmetricBorder ? column ? undefined : 62 : percentBox ? "60%" : boxed ? 60 : wrapped ? 20 : 80,
             }}
           />
           {wrapped && <Panel name="C" wrapped style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 1, minWidth: 0 }} />}
@@ -512,8 +559,8 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         <Text
           style={{
             left: 28,
-            top: 354,
-            font: "14px monospace",
+            top: 410,
+            font: "12px monospace",
             fill: "#19375b",
           }}
         >{`${fixture.name} · parent ${fixture.width} × ${fixture.height} px · ${fixture.flexDirection} · gap ${fixture.gap} px`}</Text>
@@ -536,12 +583,12 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
       <Text
         style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}
       >
-        Fourteen pinned cases. Left is recorded geometry, not a live Yoga runtime.
+        Sixteen pinned cases. Left is recorded geometry, not a live Yoga runtime.
       </Text>
       <Text
         style={{ left: 28, top: 100, font: "13px sans-serif", fill: "#475569" }}
       >
-        Explicit axes/wrap/reverse and shrink 1; empty boxes and explicit content/border-box padding conversions.
+        Explicit axes, wrapping and shrink; empty boxes, box sizing, padding and layout borders.
       </Text>
       <Rectangle
         style={{
@@ -590,14 +637,14 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
       <Text
         style={{
           left: 28,
-          top: 402,
+          top: 440,
           width: 700,
           wrap: true,
-          font: "13px sans-serif",
+          font: "11px sans-serif",
           fill: "#475569",
         }}
       >
-        Experimental finite numeric subset only. One explicit padding conversion does not establish general CSS/Yoga parity or font migration.
+        Finite recorded cases only; general CSS/Yoga parity and font migration remain unproven.
       </Text>
     </>
   );

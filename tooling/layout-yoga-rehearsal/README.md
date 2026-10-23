@@ -59,7 +59,13 @@ height60: A basis8/max8 floors at20, B basis80/min100/max110 becomes100, gap12.
 shrink1, gap0; A min110/max60% and B min0 settle at110/90 outer widths.
 Content widths are90/70 and content height40. Both target identities are replayed.
 
-These fourteen exact geometries do not prove general percentages, intrinsic box
+Two asymmetric-border fixtures add row basis54 and column basis62, each with
+outer54×62 and combined content insets left5/right9/top13/bottom19. Row B starts
+atx66; column B starts aty74. They select border-box, grow0/shrink0, physical
+padding left3/right5/top7/bottom11 and layout borders left2/right4/top6/bottom8.
+These borders reserve layout space; the comparison paints its own full footprint.
+
+These sixteen exact geometries do not prove general percentages, intrinsic box
 sizing, automatic minima, text, fractional precision, general wrapping interactions, combined main/cross
 reversal or RTL. No Yoga implementation is bundled in Studio.
 

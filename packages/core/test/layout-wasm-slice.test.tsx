@@ -773,9 +773,11 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
       const shrinking = fixture.name === 'shrink' || fixture.name === 'column-shrink';
       const boxed = fixture.name.startsWith('border-box-');
       const floor = fixture.name === 'border-box-floor-bounds';
+      const asymmetricBorder = fixture.name.startsWith('border-box-asymmetric-');
       const wrapped = fixture.flexWrap !== 'nowrap';
       const capped = fixture.name.endsWith('cap');
       const children = fixture.boxes.map((_box,index) => {
+        if (asymmetricBorder) return createElement(Rectangle, { style: { boxSizing: 'border-box', width: column ? 54 : 'auto', height: column ? 'auto' : 62, flexBasis: column ? 62 : 54, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, padding: { left: 3, right: 5, top: 7, bottom: 11 }, borderWidth: { left: 2, right: 4, top: 6, bottom: 8 } } });
         if (boxed) return createElement(Rectangle, { style: { boxSizing: 'border-box', width: 80, height: floor ? 60 : '60%', padding: 10, flexBasis: floor ? index === 0 ? 8 : 80 : '70%', flexGrow: 0, flexShrink: floor ? 0 : 1, minWidth: floor ? index === 0 ? 0 : 100 : index === 0 ? 110 : 0, maxWidth: floor ? index === 0 ? 8 : 110 : index === 0 ? '60%' : undefined } });
         return createElement(Rectangle, { style: {
         width: column ? 80 : 60, height: wrapped ? 20 : 80,
@@ -796,7 +798,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
         expect(canvas.nextElementSibling?.textContent).toContain(`selected: ${String.fromCharCode(64+fixture.boxes.length)}`);
       }
     }
-    if (fixture.flexWrap === 'nowrap' && fixture.name !== 'border-box-floor-bounds') expect(fixture.boxes.reduce((sum,box) => sum+(column ? box.height : box.width),fixture.gap*(fixture.boxes.length-1))).toBe(column ? fixture.height : fixture.width);
+    if (fixture.flexWrap === 'nowrap' && fixture.name !== 'border-box-floor-bounds' && !fixture.name.startsWith('border-box-asymmetric-')) expect(fixture.boxes.reduce((sum,box) => sum+(column ? box.height : box.width),fixture.gap*(fixture.boxes.length-1))).toBe(column ? fixture.height : fixture.width);
   }
   const beforePaint = snapshotWasmLayoutDiagnostics();
   clickCanvas(canvas,300,158); await nextFrame();
@@ -2216,4 +2218,8 @@ it('keeps Layer raster sizing independent from layout border and padding insets'
   expect([...canvas.getContext('2d')!.getImageData(81,39,1,1).data]).toEqual([0,0,0,0]);
   expect([...canvas.getContext('2d')!.getImageData(79,41,1,1).data]).toEqual([0,0,0,0]);
   controller.dispose();
+});
+
+it('records pinned asymmetric layout-border geometry on both Flex axes', () => {
+  expect(yogaReference.cases.map(fixture => fixture.name)).toEqual(expect.arrayContaining(['border-box-asymmetric-row','border-box-asymmetric-column']));
 });

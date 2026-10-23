@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice70 (explicit layout border widths).
+Latest delivery is slice71 (pinned asymmetric layout-border conformance).
+Slice70 is `b7d5dc68` (explicit layout border widths).
 Slice69 is `9b530832` (Studio runtime dependency invalidation).
 Slice68 is `df3d0974` (pinned border-box bounds and percentage conformance).
 Slice67 is `16fe904e` (coherent content-box/border-box sizing).
@@ -20,9 +21,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is71, pinned asymmetric layout-border conformance. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is72, finite outer-box aspect ratios. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles fourteen fixtures, including border-box bounds/percentages; click A/B/C targets.
+cycles sixteen fixtures, including asymmetric border-box row/column cases; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1175,14 +1176,30 @@ findings; no duplicate review. Logs `/tmp/pibbl-slice70-*`.
 Node26.9.0/pnpm11.21.0deps/Chromium. Kernel65282bytes unchanged. No parity, speed
 or Node24 full-trust claim; all seven gates remain open.
 
-## [NEXT] Pinned asymmetric layout-border conformance (slice 71)
+### Slice 71 — pinned asymmetric layout-border conformance
 
-Add two independent Yoga3.2.1 border-box fixtures to the existing corpus/public
-comparison: row basis54 and column basis62 with asymmetric padding3/5/7/11 and
-borders2/4/6/8. Both outer54×62; second targets rowx66 and columny74. Preserve
-source order, content origin5,13 and distinct paint behavior. No percentage or
-logical borders, intrinsic provider expansion or new comparison harness.
-Group24 remains70–72, then bounded consolidation.
+The independent Yoga3.2.1 corpus now has16 cases. New row/column fixtures use
+border-box sizing, padding left3/right5/top7/bottom11 and borders2/4/6/8. Both
+outer54×62; B is atx66 in row and y74 in column. Native generation, independent
+no-write reproduction, compiler/probe provenance and embedded public record agree.
+Missing-record RED preceded additions. Public semantic loop checks all positions,
+sizes, target identities and gap misses. Focused7pass/102skip, types/lint pass.
+Source5192 and built5193 replay16cases with zero errors and cleanup0/0/0;469private
+built core inputs. Visual inspection found the tall column caption overlap;
+caption now sits below the boxes and final source/built replay passes again.
+No baseline rewritten. Runtime/kernel unchanged from70; packed230 receipt remains70.
+Logs `/tmp/pibbl-slice71-*`; Node26.9.0/Chromium/Apple C++20. This bounded corpus
+does not establish broad border/intrinsic or CSS/Yoga parity. All seven gates open.
+
+## [NEXT] Finite outer-box aspect ratios (slice 72)
+
+Select positive finite numeric `BoxStyle.aspectRatio` as outer width divided by
+outer height, matching independently probed pinned Yoga. Resolve the definite
+axis through boxSizing/insets first, derive the missing outer axis, then subtract
+insets once. Both explicit dimensions win; establish finite bounds and Flex
+final-main sizing rules before production. Public row/column and inset evidence
+first. Intrinsic indefinite/fixed-point cases remain outside the first slice;
+Layer keeps its separate raster contract. Group24 is70–72, then consolidation.
 
 ### Consolidation 23 completed for delivery slices 67–69
 
