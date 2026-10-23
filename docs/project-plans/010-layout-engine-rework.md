@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice105 (measured custom primitive cross-auto sizing), recorded below.
+Latest delivery is slice105 `931ecc2f` (measured custom primitive cross-auto sizing).
+Consolidation35 for103–105 passes, recorded below.
 Slice104 is `9c974fe1` (measured Text cross-auto sizing).
 Slice103 is `d8e5bf09` (opposing auto-margin bounds evidence).
 Slice102 is `dc0565a6` (auto shorthand and edge precedence).
@@ -2671,12 +2672,31 @@ http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration — Next section19ti
 Auto-margin remains partial; fixed33 counts5complete/11experimental/8partial/
 8missing/1excluded and all7gates open. No Node24 aggregate trust claim.
 
-## [NEXT] Consolidation 35 for slices 103–105
+### Consolidation 35 completed for delivery slices 103–105
 
-Run the bounded combined layout/measurement/ownership suites in experimental and
-ordinary modes before selecting the next implementation gap. Preserve the fixed
-capability denominator and remaining wrapping/column/layout automatic cross and
-pure intrinsic owner gaps. Final whole-codebase review stays at full program end.
+Separate103 `d8e5bf09`,104 `9c974fe1`,105 `931ecc2f`. Fresh combined11-file
+Chromium verification passes486tests/9skips495 in77.74s. Ordinary mode passes
+169tests/326skips495 in2.88s (9files pass/2skip). This covers public layout,
+Text auto basis/minimum, measurement purity, structural card, paint reuse,
+Flex/box/measurement/length internals and native loader. Expected negative-case
+diagnostics are asserted; no test failures. Logs:
+`/tmp/pibbl-consolidation35-focused.txt` and
+`/tmp/pibbl-consolidation35-normal.txt`.
+
+Reuse slice105 source/built2 custom cases, built469 inputs, installed102auto+
+24direction cases/230inputs/strict types,305native records211matches94classified,
+scoped no-material-finding review and fresh docs/JSDoc/catalog/types/lint receipts.
+Native v5 remains68649bytes; no new native test or binary change claimed.
+Node26.9.0/pnpm11.21.0deps/Chromium/macOSarm64; no Node24 aggregate trust or
+controlled wall-clock performance claim. Fixed33 counts remain5complete,
+11experimental,8partial,8missing,1excluded; all7gates remain open.
+
+## [NEXT] Select bounded remaining automatic cross-sizing gap (slice 106)
+
+Inspect the remaining wrapping/column/layout automatic cross and pure intrinsic
+owner gaps against existing public measurement paths, then establish one focused
+public failing contract before implementation. Do not mark auto-margin complete
+from finite evidence. Final whole-codebase review stays at full program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
