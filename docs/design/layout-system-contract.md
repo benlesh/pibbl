@@ -950,7 +950,7 @@ therefore query exact zero; zero is never a synthetic min-content approximation.
 Existing cross availability is retained, and parent bounds/insets are applied
 through normal allocation exactly once. Declared cross dimensions, aspect sizing,
 responsive-query restrictions and intrinsic-only providers retain their existing
-paths. Wrapped/column custom-provider graphs are not added by this behavior.
+paths. Wrapped/reverse/RTL custom-provider graphs are not added by this row behavior. The bounded forward-column case below is separate.
 
 An unsupported finite result is a final-width diagnostic, not permission to keep
 a stale preferred height. Failures roll back preparation before earlier sibling
@@ -966,6 +966,31 @@ as above. Providers must expose changing inputs through props/style, tracked
 signals, or an explicit layout invalidation; hidden mutable closure state is not
 a reactive input. Unrelated sibling paint reuses finite measurements. The public
 example proves width100→60 changes height20→40 together with paint and hit bounds.
+
+### Experimental finite column custom-provider main measurement
+
+A direct `definePrimitive` with both pure `measureIntrinsic` and `measure` may
+supply an automatic height as the main contribution of a finite experimental
+`flexDirection: "column"`, LTR, `nowrap` Flex. The item has an automatic basis,
+zero grow/shrink, explicit `minHeight: 0`, a declared finite nonnegative numeric content
+width, no aspect ratio or prepared style query, and no active cross-axis bound
+beyond an omitted or zero `minWidth` and an omitted `maxWidth`. It is not a
+wrapped-column admission.
+
+The parent calls finite `measure` with `constraints.minWidth ===
+constraints.maxWidth` at that declared content width and `maxHeight` unbounded.
+The paired intrinsic provider is required to enter the existing constrained
+provider cache; it does not introduce a second measurement system or an
+intrinsic width query. The resulting finite height is the column's automatic
+main size, so following children move before paint. The eight-job example uses
+20px columns and 10px rows: width40→60 resolves height40→30 and moves its
+20px follower y40→30. Allocation-width changes replace the constrained snapshot;
+paint-only changes reuse it and native nodes.
+
+Columns with automatic/indefinite width, nonzero growth/shrink, missing `minHeight: 0`,
+active cross bounds, responsive queries, aspect ratio, reverse/RTL direction,
+wrapping, providers missing either callback, and opaque components retain their
+existing conservative behavior. Normal JavaScript Flex remains unchanged.
 
 ## Experimental main-axis auto margins
 

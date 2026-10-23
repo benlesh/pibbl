@@ -507,3 +507,9 @@ with100%-width leaves matching the allocation and C moving x94→130 at y132.
 Point100,136 transfers C→A1, then the new C target remains reachable. Use
 `--nested-decorated-column-cross-min --latest-proof` for direct source/built replay.
 Corpus318=224matches/94classified; auto104/direction24 remain unchanged.
+
+Slice117 adds two isolated `customColumnMeasureFixture` cases. A finite forward
+LTR nowrap column measures the8-job custom callback at exact width40→60, yielding
+height40→30 and moving its20px follower y40→30. Both use explicit minHeight0,
+automatic basis and zero grow/shrink. This is numeric callback geometry, not font
+parity or a general intrinsic graph. Corpus:320cases,226matches/94classified.

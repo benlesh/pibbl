@@ -1545,6 +1545,31 @@ static void nestedCrossMinimumDecoratedColumnReverseCases() {
   }
 }
 
+
+static void customColumnMeasureCases() {
+  for (int resize = 0; resize < 2; ++resize) {
+    const int width = resize ? 60 : 40;
+    customMeasureCalls = 0;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(root, 120); YGNodeStyleSetHeight(root, 140);
+    YGNodeStyleSetFlexDirection(root, YGFlexDirectionColumn); YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+    auto queue = YGNodeNewWithConfig(config), follower = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(queue, width); YGNodeStyleSetHeightAuto(queue); YGNodeStyleSetFlexBasisAuto(queue); YGNodeStyleSetFlexGrow(queue, 0); YGNodeStyleSetFlexShrink(queue, 0); setMinZero(queue);
+    YGNodeSetMeasureFunc(queue, customCellMeasure);
+    YGNodeStyleSetWidth(follower, 20); YGNodeStyleSetHeight(follower, 20); YGNodeStyleSetFlexGrow(follower, 0); YGNodeStyleSetFlexShrink(follower, 0); setMinZero(follower);
+    YGNodeInsertChild(root, queue, 0); YGNodeInsertChild(root, follower, 1);
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+    std::cout << ",{\"name\":\"custom-column-measure" << (resize ? "-resized" : "")
+              << "\",\"width\":120,\"height\":140,\"gap\":0,\"flexDirection\":\"column\",\"flexWrap\":\"nowrap\",\"containerStyle\":{\"alignItems\":\"flex-start\",\"alignContent\":\"flex-start\"},\"customColumnMeasureFixture\":true,\"customMeasure\":{\"kind\":\"deterministic-cell-callback\",\"jobs\":8,\"cellWidth\":20,\"rowHeight\":10,\"columns\":\"max(1,floor(width/20))\",\"rows\":\"ceil(8/columns)\",\"exactWidth\":true,\"calls\":" << customMeasureCalls << "},\"boxes\":[";
+    printBox(queue); std::cout << ','; printBox(follower);
+    std::cout << "],\"itemStyles\":[{\"width\":" << width << ",\"height\":\"auto\",\"flexBasis\":\"auto\",\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":20,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1689,5 +1714,6 @@ int main() {
   nestedCrossMaximumDecoratedReverseCases();
   nestedCrossMaximumDecoratedColumnReverseCases();
   nestedCrossMinimumDecoratedColumnReverseCases();
+  customColumnMeasureCases();
   std::cout << "]\n";
 }

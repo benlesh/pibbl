@@ -38,7 +38,7 @@ export type {
 } from '../types.js';
 
 /**
- * Measures an element against finite constraints using the supplied Canvas measurement service.
+ * Measures an element against logical size constraints using the supplied Canvas measurement service.
  *
  * @param element - Element whose declared measurement capability is used. See {@link PibblElement}.
  * @param constraints - Available size constraints in logical units. See {@link Constraints}.

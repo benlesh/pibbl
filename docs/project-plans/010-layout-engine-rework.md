@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice116 (definite nested column percentage cross minima).
+Latest delivery is slice117 (finite column custom-provider exact-width measurement).
+Slice116 is `42e182cb` (definite nested column percentage cross minima).
 Slice115 is `6e1e1d3e` (column caps and one-click Latest proof).
 Slice114 is `4070b037` (definite nested percentage cross maxima).
 Consolidation38 passes below for112–114.
@@ -3081,18 +3082,41 @@ Node26.9.0/Chromium, no Node24 aggregate trust claim. Hands-on source/built port
 5192/5193, `#/examples/layout/wasm-yoga-migration`: Latest proof then Next case;
 section26 remains available. Inspect wider leaves, moved C and target transfer.
 
-## [NEXT] Finite-column custom primitive exact-width measurement (slice 117)
+## Slice 117: finite-column custom-provider exact-width measurement
 
-Use the existing paired measureIntrinsic/measure callbacks and numeric Constraints
-without a new API. A finite nowrap LTR column with a numeric-width/auto-height,
-minHeight0/basisauto/zero-grow direct primitive should measure at that exact width
-before main placement. Reuse the8-job20×10 queue: width40→60 needs height40→30 and
-moves a20px follower y40→30. Establish a focused failing public test first, then
-implement only this bounded admission through the existing constrained-provider
-cache. Keep indefinite owners, automatic minimum height and wrapping/reversal
-outside this slice. Provide source/built/installed evidence and exact ownership,
-then consolidate115–117 before further expansion. Final whole-codebase review
-remains at full program end.
+The public failing test reproduced a40px-wide eight-job custom queue measuring at
+its120px parent availability and returning20px height instead of40px. The bounded
+experimental forward LTR nowrap column now passes exact numeric content width
+and unbounded natural height to the existing paired provider cache. With explicit
+minHeight0/basisauto/grow0/shrink0, width40→60 gives height40→30 and moves the
+following20px target y40→30. Existing public callbacks/signatures are unchanged.
+Cross bounds, automatic width, reverse/RTL/wrap and general intrinsic graphs stay
+outside this admission. `measurement.custom-leaf` remains partial; all7 release
+gates remain open and the fixed33-capability denominator is unchanged.
+
+Fresh public RED then GREEN:1passed/411skipped412; measurement/purity/cache
+3files16passed. Source/built comparison replay matches both new pinned Yoga cases,
+469private built inputs, stable keyed identity, old/new follower targets, paint-only
+measurement/solve reuse and exact native cleanup. Screenshot inspected. Native
+reproduction now contains320cases:226matches and94classified differences. Kernel
+remains68649bytes, fingerprint unchanged. Types/changed-code lint pass. Environment
+Node26.9.0/macOS Chromium; no Node24 aggregate trust claim.
+
+Scoped review caught two proof/scope issues: the installed fixture recreated child
+descriptors and therefore correctly lost conservative cache reuse; it now keeps
+stable descriptors like the public test. The runtime admission was narrowed to
+zero shrink, matching the delivered contract. Final installed-package rebuild passes245installed dist inputs, strict
+Bundler/NodeNext consumers, the custom-column receipt,104auto-margin fixtures
+and lifecycle cleanup; tarball SHA256
+`ec98002ca94fb39b3e74edb100c2d446b11d9114c5b7041d7d2fa4cbcda05985`.
+Documentation109compiler RED probes, public JSDoc, catalog/discovery and
+source/built final replays pass. No Rust changes or fresh Rust test claim.
+
+## [NEXT] Consolidation39 for slices115–117
+
+Run the existing23-file experimental and normal matrix after the separate117
+commit, record fresh counts, and select the next bounded public-API slice. Full
+program completion and the final whole-codebase review remain outstanding.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

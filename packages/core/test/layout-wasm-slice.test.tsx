@@ -869,7 +869,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
   // This walk advances Next case through the contiguous original families. Later
   // sections (including rounding) have dedicated semantic tests and browser drivers.
-  const cases=yogaReference.cases.filter(fixture=>!('nestedDecoratedColumnCrossMinFixture' in fixture) && !('nestedDecoratedColumnCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
+  const cases=yogaReference.cases.filter(fixture=>!('customColumnMeasureFixture' in fixture) && !('nestedDecoratedColumnCrossMinFixture' in fixture) && !('nestedDecoratedColumnCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
@@ -4913,4 +4913,77 @@ it.runIf(experimentalLayout)('jumps directly to the latest public proof and pres
   }
   clickCanvas(canvas, 520, 158); await nextFrame();
   await expect.poll(() => canvas.nextElementSibling?.textContent).toContain('· grow ·');
+});
+
+
+it.runIf(experimentalLayout)('measures a finite column custom queue at its exact allocated width before placing the following target', async () => {
+  type QueueStyle = import('@pibbl/core').SystemStyle & {
+    width?: number;
+    height?: number | 'auto';
+    minWidth?: number;
+    minHeight?: number;
+    flexBasis?: number | 'auto';
+    flexGrow?: number;
+    flexShrink?: number;
+  };
+  type ResolvedQueueStyle = import('@pibbl/core').SystemStyle & { width: number; height: number };
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const queueWidth = signal(40);
+  const followerPaint = signal('#2f6b97');
+  const hits: string[] = [];
+  const exactQueries: Array<[number, number]> = [];
+  const rendered: Array<{ width: number; height: number; stamp: number }> = [];
+  let nextStamp = 1;
+  const Queue = definePrimitive<{}, QueueStyle, QueueStyle, ResolvedQueueStyle>(() => {
+    const box = useLayoutBox();
+    const stamp = useConst(() => nextStamp++);
+    rendered.push({ width: box.width, height: box.height, stamp });
+    return <Rectangle
+      onClick={() => hits.push('queue')}
+      style={{ width: box.width, height: box.height, fill: '#d6e3db', cursor: 'pointer' }}
+    />;
+  }, {
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({
+      status: 'measured' as const,
+      minContent: { width: 20, height: 80 },
+      maxContent: { width: 160, height: 10 },
+    }),
+    measure: ({ constraints }) => {
+      exactQueries.push([constraints.minWidth, constraints.maxWidth]);
+      const columns = Math.max(1, Math.floor(constraints.maxWidth / 20));
+      return {
+        status: 'measured' as const,
+        size: { width: constraints.maxWidth, height: Math.ceil(8 / columns) * 10 },
+      };
+    },
+  });
+  const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 140; document.body.append(canvas);
+  const root = <Flex style={{ width: 120, height: 140, flexDirection: 'column', alignItems: 'flex-start' }}>
+    <Queue key="queue" style={{ width: queueWidth, height: 'auto', minWidth: 0, minHeight: 0, flexBasis: 'auto', flexGrow: 0, flexShrink: 0 }} />
+    <Rectangle key="follower" onClick={() => hits.push('follower')} style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: followerPaint, cursor: 'pointer' }} />
+  </Flex>;
+  const controller = pibbl(canvas, root); controllers.push(controller); await nextFrame();
+  expect(rendered.at(-1)).toEqual({ width: 40, height: 40, stamp: 1 });
+  expect(exactQueries).toEqual([[40, 40]]);
+  clickCanvas(canvas, 10, 55); expect(hits).toEqual(['follower']);
+  const initial = snapshotWasmLayoutDiagnostics();
+  queueWidth.set(60); await nextFrame();
+  expect(rendered.at(-1)).toEqual({ width: 60, height: 30, stamp: 1 });
+  expect(exactQueries).toEqual([[40, 40], [60, 60]]);
+  const resized = snapshotWasmLayoutDiagnostics();
+  expect(resized.solves).toBeGreaterThan(initial.solves);
+  expect(resized.nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, 10, 55); expect(hits).toEqual(['follower']);
+  clickCanvas(canvas, 10, 35); expect(hits).toEqual(['follower', 'follower']);
+  const callsBeforePaint = exactQueries.length;
+  followerPaint.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(exactQueries).toHaveLength(callsBeforePaint);
+  expect(painted.solves).toBe(resized.solves);
+  expect(painted.measuredLeaves).toBe(resized.measuredLeaves);
+  expect(painted.nodeCreates).toBe(resized.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });

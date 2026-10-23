@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "f725b20872dc1850bb77210f6f8ce55dbb7eac4786f849408b3404199204e46e",
+  "probeSha256": "f0184ff1c88df0d61f4b77ced28f79d94a4cb56144bbbbca0becf2d049f5e156",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -579,7 +579,7 @@
           "width": 0,
           "height": 80,
           "flexBasis": 0,
-          "flexGrow": 1e30,
+          "flexGrow": 1e+30,
           "flexShrink": 0,
           "minWidth": 0,
           "maxWidth": 1000000
@@ -588,7 +588,7 @@
           "width": 0,
           "height": 80,
           "flexBasis": 0,
-          "flexGrow": 2e30,
+          "flexGrow": 2e+30,
           "flexShrink": 0,
           "minWidth": 0,
           "maxWidth": 1000000
@@ -19913,6 +19913,118 @@
           "width": 20,
           "height": 80,
           "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "custom-column-measure",
+      "width": 120,
+      "height": 140,
+      "gap": 0,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "alignContent": "flex-start"
+      },
+      "customColumnMeasureFixture": true,
+      "customMeasure": {
+        "kind": "deterministic-cell-callback",
+        "jobs": 8,
+        "cellWidth": 20,
+        "rowHeight": 10,
+        "columns": "max(1,floor(width/20))",
+        "rows": "ceil(8/columns)",
+        "exactWidth": true,
+        "calls": 1
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 40,
+          "width": 20,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": "auto",
+          "flexBasis": "auto",
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 20,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "custom-column-measure-resized",
+      "width": 120,
+      "height": 140,
+      "gap": 0,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "alignContent": "flex-start"
+      },
+      "customColumnMeasureFixture": true,
+      "customMeasure": {
+        "kind": "deterministic-cell-callback",
+        "jobs": 8,
+        "cellWidth": 20,
+        "rowHeight": 10,
+        "columns": "max(1,floor(width/20))",
+        "rows": "ceil(8/columns)",
+        "exactWidth": true,
+        "calls": 1
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 60,
+          "height": 30
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 20,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 60,
+          "height": "auto",
+          "flexBasis": "auto",
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 20,
+          "height": 20,
           "flexGrow": 0,
           "flexShrink": 0,
           "minWidth": 0,

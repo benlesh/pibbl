@@ -31,6 +31,7 @@ const nestedDecoratedCrossMinOnly = process.argv.includes('--nested-decorated-cr
 const nestedDecoratedCrossMaxOnly = process.argv.includes('--nested-decorated-cross-max');
 const nestedDecoratedColumnCrossMaxOnly = process.argv.includes('--nested-decorated-column-cross-max');
 const nestedDecoratedColumnCrossMinOnly = process.argv.includes('--nested-decorated-column-cross-min');
+const customColumnMeasureOnly = process.argv.includes('--custom-column-measure');
 const latestProof = process.argv.includes('--latest-proof');
 const browser = await chromium.launch({ headless: true });
 try {
@@ -72,8 +73,12 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = nestedDecoratedColumnCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedColumnCrossMinFixture) : nestedDecoratedColumnCrossMaxOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedColumnCrossMaxFixture) : nestedDecoratedCrossMaxOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedCrossMaxFixture) : nestedDecoratedCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedCrossMinFixture) : nestedCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedCrossMinFixture) : roundingOnly ? reference.cases.filter(fixture => fixture.roundingFixture) : ownerCrossAutoOnly ? reference.cases.filter(fixture => fixture.ownerCrossAutoFixture) : customCrossAutoOnly ? reference.cases.filter(fixture => fixture.customCrossAutoFixture) : textCrossAutoOnly ? reference.cases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? reference.cases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? reference.cases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (nestedDecoratedColumnCrossMinOnly) {
+  const cases = customColumnMeasureOnly ? reference.cases.filter(fixture => fixture.customColumnMeasureFixture) : nestedDecoratedColumnCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedColumnCrossMinFixture) : nestedDecoratedColumnCrossMaxOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedColumnCrossMaxFixture) : nestedDecoratedCrossMaxOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedCrossMaxFixture) : nestedDecoratedCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedCrossMinFixture) : nestedCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedCrossMinFixture) : roundingOnly ? reference.cases.filter(fixture => fixture.roundingFixture) : ownerCrossAutoOnly ? reference.cases.filter(fixture => fixture.ownerCrossAutoFixture) : customCrossAutoOnly ? reference.cases.filter(fixture => fixture.customCrossAutoFixture) : textCrossAutoOnly ? reference.cases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? reference.cases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? reference.cases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (customColumnMeasureOnly) {
+    if (latestProof) await click(650, 158);
+    else for(let section=0;section<27;section++) await click(520,158);
+  }
+  else if (nestedDecoratedColumnCrossMinOnly) {
     if (latestProof) await click(650, 158);
     else for(let section=0;section<26;section++) await click(520,158);
   }
@@ -114,6 +119,7 @@ try {
   if (logicalBordersOnly) await click(520,158);
   let previousOwner;
   let previousNestedCross;
+  let previousCustomColumn;
   let previousTextCrossSiblingStamp;
   let previousDirectionStamps;
   let previousLiveNames = [];
@@ -149,6 +155,41 @@ try {
       assert.ok((await frame.locator('pre').innerText()).includes('selected: B'), `${fixture.name}: sibling center targets B`);
       previousTextCrossSiblingStamp = state.stamps.B;
       previousDirectionStamps = { B: state.stamps.B }; previousLiveNames = ['B'];
+      continue;
+    }
+    if (fixture.customColumnMeasureFixture) {
+      const state = JSON.parse((await frame.locator('pre').innerText()).split('custom column state: ')[1]);
+      assert.deepEqual([state.boxes.A, state.boxes.B], expected, `${fixture.name}: exact measured column boxes`);
+      const layout = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
+      if (previousCustomColumn) {
+        assert.equal(state.stamps.A, previousCustomColumn.stamps.A, `${fixture.name}: provider key remains stable`);
+        assert.equal(state.stamps.B, previousCustomColumn.stamps.B, `${fixture.name}: sibling key remains stable`);
+        assert.ok(state.measureCalls > previousCustomColumn.measureCalls, `${fixture.name}: width change queries the paired provider`);
+        assert.ok(layout.measuredLeaves > previousCustomColumn.layout.measuredLeaves, `${fixture.name}: width change records constrained measurement`);
+        assert.equal(layout.nodeCreates, previousCustomColumn.layout.nodeCreates, `${fixture.name}: width change reuses native nodes`);
+        await click(392 + 10, 240 + 55);
+        const oldPoint = JSON.parse((await frame.locator('pre').innerText()).split('custom column state: ')[1]);
+        assert.equal(oldPoint.hits, state.hits, `${fixture.name}: former B point is empty`);
+        await click(392 + 10, 240 + 35);
+        assert.ok((await frame.locator('pre').innerText()).includes('selected: B'), `${fixture.name}: moved B targets`);
+      } else {
+        await click(392 + 10, 240 + 55);
+        assert.ok((await frame.locator('pre').innerText()).includes('selected: B'), `${fixture.name}: initial B targets`);
+      }
+      await click(392 + expected[0].x + 4, 240 + expected[0].y + 4);
+      assert.ok((await frame.locator('pre').innerText()).includes('selected: A'), `${fixture.name}: provider targets`);
+      const beforePaint = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
+      const beforePaintState = JSON.parse((await frame.locator('pre').innerText()).split('custom column state: ')[1]);
+      await click(354, 158);
+      const afterPaint = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
+      const afterPaintState = JSON.parse((await frame.locator('pre').innerText()).split('custom column state: ')[1]);
+      assert.equal(afterPaint.measuredLeaves, beforePaint.measuredLeaves, `${fixture.name}: paint does not measure`);
+      assert.equal(afterPaint.solves, beforePaint.solves, `${fixture.name}: paint reuses main solve`);
+      assert.equal(afterPaint.nodeCreates, beforePaint.nodeCreates, `${fixture.name}: paint reuses nodes`);
+      assert.equal(afterPaintState.measureCalls, beforePaintState.measureCalls, `${fixture.name}: paint preserves provider cache`);
+      previousCustomColumn = { stamps: state.stamps, layout, measureCalls: state.measureCalls };
+      previousDirectionStamps = state.stamps;
+      previousLiveNames = ['A', 'B'];
       continue;
     }
     if (fixture.nestedCrossMinFixture || fixture.nestedDecoratedCrossMinFixture || fixture.nestedDecoratedCrossMaxFixture || fixture.nestedDecoratedColumnCrossMaxFixture || fixture.nestedDecoratedColumnCrossMinFixture) {
@@ -330,7 +371,7 @@ try {
   const last = cases.at(-1);
   const lastBoxes = last.pibblBoxes ?? last.boxes;
   const column = last.flexDirection.startsWith('column');
-  if (!roundingOnly && !nestedCrossMinOnly && !nestedDecoratedCrossMinOnly && !nestedDecoratedCrossMaxOnly && !nestedDecoratedColumnCrossMaxOnly && !nestedDecoratedColumnCrossMinOnly && !last.directionMatrixFixture && last.gap > 0) {
+  if (!roundingOnly && !nestedCrossMinOnly && !nestedDecoratedCrossMinOnly && !nestedDecoratedCrossMaxOnly && !nestedDecoratedColumnCrossMaxOnly && !nestedDecoratedColumnCrossMinOnly && !customColumnMeasureOnly && !last.directionMatrixFixture && last.gap > 0) {
   const gap = column ? Math.min(...lastBoxes.map(box => box.y + box.height)) + 6 : Math.min(...lastBoxes.map(box => box.x + box.width)) + 6;
   await click(column ? 396+lastBoxes[0].x : 392+gap, column ? 240+gap : 244+lastBoxes[0].y);
   assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(64+lastBoxes.length)}`));

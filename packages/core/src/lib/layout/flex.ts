@@ -831,6 +831,15 @@ function resolveFlexPlacements(
       (normalized.minWidth === undefined || normalized.minWidth === 0) &&
       normalized.maxWidth === undefined && normalized.maxHeight === undefined &&
       !preparedStyleQuery(prepared) && genericTextFont(normalized);
+    const measuredColumnProviderDefinition = experimentalLayout && !row && options.flexDirection === 'column' &&
+      options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' && needsMeasuredMain &&
+      aspectRatio === undefined && typeof declared.width === 'number' && typeof normalized.width === 'number' &&
+      Number.isFinite(normalized.width) && normalized.width >= 0 && declared.minHeight === 0 &&
+      grow === 0 && shrink === 0 && (normalized.minWidth === undefined || normalized.minWidth === 0) &&
+      normalized.maxWidth === undefined && !preparedStyleQuery(prepared) ?
+      getPrimitiveDefinition(child.type) : undefined;
+    const measuredColumnProvider = !!measuredColumnProviderDefinition?.measureIntrinsic &&
+      !!measuredColumnProviderDefinition.measure;
     const alignment = normalizeItemAlignment(normalized.alignSelf, child, container, authoredWrapReverse);
     if (experimentalLayout && !row && options.flexWrap !== 'nowrap' &&
       (needsMeasuredMain && !measuredColumnWrapText || aspectRatio === undefined && crossAuto && effectiveAlignment(alignment, options.alignItems) !== 'stretch')) {
@@ -846,10 +855,10 @@ function resolveFlexPlacements(
     if (intrinsicSizes) measured = intrinsicSizes.maxContent;
     if (!intrinsicSizes && !deferredIntrinsicColumn && (needsMeasuredMain || aspectRatio === undefined && (needsMeasuredCross || crossAuto))) {
       const constraints = {
-        minWidth: measuredColumnWrapText ? normalized.width as number : 0,
-        maxWidth: measuredColumnWrapText ? normalized.width as number : container.width,
+        minWidth: measuredColumnWrapText || measuredColumnProvider ? normalized.width as number : 0,
+        maxWidth: measuredColumnWrapText || measuredColumnProvider ? normalized.width as number : container.width,
         minHeight: 0,
-        maxHeight: measuredColumnWrapText ? Number.POSITIVE_INFINITY : container.height,
+        maxHeight: measuredColumnWrapText || measuredColumnProvider ? Number.POSITIVE_INFINITY : container.height,
       };
       const measurementChild = clonePibblElement(child);
       setPreNormalizedStyle(
@@ -859,7 +868,7 @@ function resolveFlexPlacements(
         receiverToken,
         preparedStyleQuery(prepared),
       );
-      const result = measureFlexChild(measurementChild, constraints, normalized, layoutToken ?? receiverToken, measurement, region, preparedStyleQuery(prepared), experimentalLayout && row && options.flexWrap === 'nowrap');
+      const result = measureFlexChild(measurementChild, constraints, normalized, layoutToken ?? receiverToken, measurement, region, preparedStyleQuery(prepared), (experimentalLayout && row && options.flexWrap === 'nowrap') || measuredColumnProvider);
       if (result.status === 'measured') {
         measured = result.size;
       } else if (measuredFlexCrossAuto || needsMeasuredMain || (crossAuto && effectiveAlignment(
