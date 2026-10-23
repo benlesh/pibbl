@@ -37,7 +37,9 @@ try {
   assert.equal(initial.width, 500);
   assert.ok(Math.abs(initial.boxes.relative.x - 262.8) < .001);
   assert.equal(initial.boxes.relative.y, 220);
-  assert.equal(initial.boxes.badge.x, 382);
+  assert.deepEqual(initial.boxes.badge, { x: 353, y: 338, width: 125, height: 34.8 });
+  const badgePixel = async box => sandbox.evaluate(({x,y}) => { const canvas=document.querySelector('canvas'),scale=Math.min(canvas.width/760,canvas.height/460); return [...canvas.getContext('2d').getImageData(Math.round((canvas.width-760*scale)/2+(x+4)*scale),Math.round((canvas.height-460*scale)/2+(y+4)*scale),1,1).data]; }, box);
+  assert.deepEqual(await badgePixel(initial.boxes.badge), [166, 55, 88, 255]);
   await sandbox.evaluate(() => { globalThis.__PERCENT_LESSON_DRAWS__ = []; });
   await click(initial.boxes.relative.x + 4, initial.boxes.relative.y + 4);
   assert.equal((await state()).selected, 'relative');
@@ -52,7 +54,8 @@ try {
   await click(40, 118);
   const narrow = await state();
   assert.equal(narrow.width, 360);
-  assert.equal(narrow.boxes.badge.x, 256);
+  assert.deepEqual(narrow.boxes.badge, { x: 252, y: 338, width: 100, height: 34.8 });
+  assert.deepEqual(await badgePixel(narrow.boxes.badge), [166, 55, 88, 255]);
   const narrowLines = await sandbox.evaluate(() => globalThis.__PERCENT_LESSON_DRAWS__.filter(draw => draw.font.includes('13px')).length);
   assert.ok(narrowLines > wideLines, `natural Text must reflow: ${wideLines} to ${narrowLines} draw lines`);
   await click(narrow.boxes.badge.x + 4, narrow.boxes.badge.y + 4);

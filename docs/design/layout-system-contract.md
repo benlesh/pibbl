@@ -82,7 +82,7 @@ JavaScript Flex support.
 ### Experimental direct-Flex absolute participation
 
 A finite experimental Flex also accepts a direct child with
-`position: "absolute"` and finite numeric or admitted automatic dimensions.
+`position: "absolute"` and finite numeric, percentage, or admitted automatic dimensions.
 Physical insets are optional in every admitted finite wrapping mode. The child leaves line allocation:
 its width, height and flex factors do not consume a sibling slot or an extra gap.
 It remains at its authored position in paint order, pointer targeting and focus
@@ -97,6 +97,18 @@ resolved arithmetic, malformed percentages and automatic insets reject. Existing
 physical precedence, paired-auto derivation, aspect, bounds and natural measurement
 then use those scalar insets. Relative physical percentages instead use the
 parent content box, as described above.
+
+Absolute width/height and min/max bounds also accept decimal percentages.
+Horizontal sizes use the selected padding-box width; vertical sizes use its
+height. Resolve declared sizes before aspect derivation or fixed-axis provider
+queries, then apply bounds before anchoring. Negative/nonfinite resolved sizes,
+malformed percentages and contradictory bounds reject. Opposing-inset automatic
+sizes keep their existing precedence. Exact forwarded styles and signals consume
+allocated sizes once; no measurement cache key or allocation revision changes.
+For a200×100 padding box,50% sizes yield100×50; minWidth60% and maxHeight25%
+yield120×25. A40% width with automatic height and aspectRatio2 yields80×40.
+Natural Text and paired-provider profiles use the resolved declared fixed axis.
+Existing direct-child, measurement and decoration restrictions still apply.
 
 All four main directions, LTR/RTL and nowrap/wrap/wrap-reverse reuse the same
 fixed/bounded, opposing-inset, aspect, paired-provider and admitted Text sizing

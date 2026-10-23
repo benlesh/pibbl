@@ -778,11 +778,11 @@ function resolveFlexPlacements(
         (normalized.left === undefined || normalized.right === undefined) &&
         (normalized.top === undefined || normalized.bottom === undefined);
       const naturalWidth = naturalBoth || automaticWidth &&
-        typeof normalized.height === 'number' && Number.isFinite(normalized.height) &&
+        isAbsoluteSizeInput(normalized.height) &&
         normalized.aspectRatio === undefined && (normalized.left === undefined || normalized.right === undefined) &&
         (hasPairedMeasurement || unwrappedText);
       const naturalHeight = naturalBoth || automaticHeight &&
-        typeof normalized.width === 'number' && Number.isFinite(normalized.width) &&
+        isAbsoluteSizeInput(normalized.width) &&
         normalized.aspectRatio === undefined && (normalized.top === undefined || normalized.bottom === undefined) &&
         (hasPairedMeasurement || measurableText);
       assertSupportedAbsoluteFlexPosition(child, normalized, container, preparedStyleQuery(prepared), naturalWidth, naturalHeight);
@@ -1309,8 +1309,21 @@ function resolveAbsoluteFlexPlacement(
   const right = resolveFlexInset(style.right, 'right', child, paddingBox);
   const top = resolveFlexInset(style.top, 'top', child, paddingBox);
   const bottom = resolveFlexInset(style.bottom, 'bottom', child, paddingBox);
-  const automaticWidth = style.width === undefined || style.width === 'auto';
-  const automaticHeight = style.height === undefined || style.height === 'auto';
+  const specifiedWidth = resolveAbsoluteSize(style.width, 'width', paddingBox.width, child, paddingBox);
+  const specifiedHeight = resolveAbsoluteSize(style.height, 'height', paddingBox.height, child, paddingBox);
+  const specifiedMinWidth = resolveAbsoluteSize(style.minWidth, 'minWidth', paddingBox.width, child, paddingBox);
+  const specifiedMaxWidth = resolveAbsoluteSize(style.maxWidth, 'maxWidth', paddingBox.width, child, paddingBox);
+  const specifiedMinHeight = resolveAbsoluteSize(style.minHeight, 'minHeight', paddingBox.height, child, paddingBox);
+  const specifiedMaxHeight = resolveAbsoluteSize(style.maxHeight, 'maxHeight', paddingBox.height, child, paddingBox);
+  const sizingStyle = specifiedWidth === style.width && specifiedHeight === style.height &&
+    specifiedMinWidth === style.minWidth && specifiedMaxWidth === style.maxWidth &&
+    specifiedMinHeight === style.minHeight && specifiedMaxHeight === style.maxHeight ? style : {
+      ...style, width: specifiedWidth, height: specifiedHeight,
+      minWidth: specifiedMinWidth, maxWidth: specifiedMaxWidth,
+      minHeight: specifiedMinHeight, maxHeight: specifiedMaxHeight,
+    };
+  const automaticWidth = specifiedWidth === undefined || specifiedWidth === 'auto';
+  const automaticHeight = specifiedHeight === undefined || specifiedHeight === 'auto';
   let measuredWidth: number | undefined;
   let measuredHeight: number | undefined;
   if (measurement) {
@@ -1319,10 +1332,10 @@ function resolveAbsoluteFlexPlacement(
     // Text's measure callback uses an omitted natural axis. Keep authored
     // automatic dimensions on the original descriptor for final settlement.
     const measuredStyle = child.type === Text ? measurementAxis === 'both' ?
-      { ...style, width: undefined, height: undefined } : measurementAxis === 'width' ?
-        { ...style, width: undefined } : { ...style, height: undefined } : style;
+      { ...sizingStyle, width: undefined, height: undefined } : measurementAxis === 'width' ?
+        { ...sizingStyle, width: undefined } : { ...sizingStyle, height: undefined } : sizingStyle;
     setPreNormalizedStyle(measuredChild, measuredStyle, child, receiverToken, query);
-    const fixedAxis = measurementAxis === 'both' ? 0 : measurementAxis === 'width' ? style.height as number : style.width as number;
+    const fixedAxis = measurementAxis === 'both' ? 0 : measurementAxis === 'width' ? specifiedHeight as number : specifiedWidth as number;
     const result = measureConstrainedIntrinsicElement(measuredChild, measurementAxis === 'both' ? {
       minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
     } : measurementAxis === 'width' ? {
@@ -1342,10 +1355,10 @@ function resolveAbsoluteFlexPlacement(
     if (measurementAxis !== 'width') measuredHeight = result.size.height;
   }
   const settledStyle = automaticWidth || automaticHeight ? {
-    ...style,
-    width: automaticWidth ? measuredWidth ?? resolveAbsoluteAutoSize(left, right, paddingBox.width, 'width', child, paddingBox, style.aspectRatio === undefined ? undefined : (style.height as number) * style.aspectRatio) : style.width,
-    height: automaticHeight ? measuredHeight ?? resolveAbsoluteAutoSize(top, bottom, paddingBox.height, 'height', child, paddingBox, style.aspectRatio === undefined ? undefined : (style.width as number) / style.aspectRatio) : style.height,
-  } : style;
+    ...sizingStyle,
+    width: automaticWidth ? measuredWidth ?? resolveAbsoluteAutoSize(left, right, paddingBox.width, 'width', child, paddingBox, sizingStyle.aspectRatio === undefined ? undefined : (specifiedHeight as number) * sizingStyle.aspectRatio) : specifiedWidth,
+    height: automaticHeight ? measuredHeight ?? resolveAbsoluteAutoSize(top, bottom, paddingBox.height, 'height', child, paddingBox, sizingStyle.aspectRatio === undefined ? undefined : (specifiedWidth as number) / sizingStyle.aspectRatio) : specifiedHeight,
+  } : sizingStyle;
   if (automaticWidth || automaticHeight) markDerivedAbsoluteAxes(settledStyle, automaticWidth, automaticHeight);
   const resolved = resolveDirectChildBox(paddingBox, child, 'absolute', settledStyle);
   const width = resolved.borderBox.width;
@@ -1915,12 +1928,12 @@ function assertSupportedAbsoluteFlexPosition(
   }
   const automaticWidth = style.width === undefined || style.width === 'auto';
   const automaticHeight = style.height === undefined || style.height === 'auto';
-  if ((!automaticWidth && (typeof style.width !== 'number' || !Number.isFinite(style.width) || style.width < 0)) ||
-      (!automaticHeight && (typeof style.height !== 'number' || !Number.isFinite(style.height) || style.height < 0))) {
-    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires finite numeric dimensions or automatic dimensions with opposing physical insets');
+  if ((!automaticWidth && !isAbsoluteSizeInput(style.width)) ||
+      (!automaticHeight && !isAbsoluteSizeInput(style.height))) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires finite nonnegative numeric or percentage dimensions, or admitted automatic dimensions');
   }
   if (style.aspectRatio !== undefined && automaticWidth === automaticHeight) {
-    throw childDiagnostic(child, 'aspectRatio', style.aspectRatio, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute aspectRatio currently requires exactly one automatic axis and one finite numeric axis');
+    throw childDiagnostic(child, 'aspectRatio', style.aspectRatio, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute aspectRatio currently requires exactly one automatic axis and one finite numeric or percentage axis');
   }
   if (style.aspectRatio === undefined && ((!naturalWidth && automaticWidth && (style.left === undefined || style.right === undefined)) ||
       (!naturalHeight && automaticHeight && (style.top === undefined || style.bottom === undefined)))) {
@@ -1948,9 +1961,26 @@ function validateAbsoluteBound(
   container: Readonly<LayoutBox>,
 ): void {
   if (value === undefined) return;
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
-    throw childDiagnostic(child, property, value, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute size bounds currently require nonnegative finite numbers');
+  if (!isAbsoluteSizeInput(value)) {
+    throw childDiagnostic(child, property, value, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute size bounds currently require nonnegative finite numbers or percentages');
   }
+}
+
+function isAbsoluteSizeInput(value: unknown): boolean {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 || isPercentage(value);
+}
+
+function resolveAbsoluteSize(
+  value: unknown,
+  property: 'width' | 'height' | 'minWidth' | 'maxWidth' | 'minHeight' | 'maxHeight',
+  reference: number,
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): number | 'auto' | undefined {
+  if (!isPercentage(value)) return value as number | 'auto' | undefined;
+  const resolved = resolveLength(value as Percentage, reference, property, childContext(child, container))!;
+  if (resolved < 0) throw childDiagnostic(child, property, value, container, 'absolute sizes must resolve to nonnegative finite numbers');
+  return resolved;
 }
 
 function resolveFlexInset(

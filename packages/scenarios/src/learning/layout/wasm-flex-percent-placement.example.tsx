@@ -46,7 +46,7 @@ function createWasmFlexPercentPlacementExampleContent(canvas: HTMLCanvasElement)
     return <>
     <Rectangle style={{ width: 760, height: 460, fill: "#f3f0e8" }} />
     <Text style={{ left: 28, top: 24, font: "bold 24px sans-serif", fill: "#19375b" }}>WASM · Physical percent placement</Text>
-    <Text pointerEvents="none" style={{ left: 28, top: 62, width: 680, wrap: true, font: "14px sans-serif", fill: "#475569" }}>Responsive cards wrap at 500 → 360 px. The red badge stays physically anchored to the padding box; click the green card to inspect its relative percentage offset.</Text>
+    <Text pointerEvents="none" style={{ left: 28, top: 62, width: 680, wrap: true, font: "14px sans-serif", fill: "#475569" }}>Responsive cards wrap at 500 → 360 px. The red badge uses percentage size, bounds, and a physical padding-box anchor; click the green card to inspect its relative percentage offset.</Text>
     <Button x={28} label="Resize cards" onClick={() => width.update(value => value === 500 ? 360 : 500)} />
     <Button x={224} label="Toggle relative offset" onClick={() => relative.update(value => !value)} />
     <Rectangle pointerEvents="none" style={{ left: 28, top: 164, width, height: 232, fill: "#ede9dd", cornerRadius: 8 }} />
@@ -54,10 +54,10 @@ function createWasmFlexPercentPlacementExampleContent(canvas: HTMLCanvasElement)
       <Text key="intro" pointerEvents="none" style={{ width: textWidth, height: "auto", minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, wrap: true, lineHeight: 17, font: "13px sans-serif", fill: "#19375b" }}>Report queue · 6 jobs. Natural Text wraps at the allocated card width.</Text>
       <RelativeCard key="relative" style={{ width: 120, height: 68, minWidth: 0, minHeight: 0, position: relative.get() ? "relative" : "static", left: "10%", right: "15%", top: "20%", bottom: "10%" }} />
       <Text key="summary" pointerEvents="none" style={{ width: textWidth, height: "auto", minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, wrap: true, lineHeight: 17, font: "13px sans-serif", fill: "#19375b" }}>Latency · 24 ms p95. Resize to move this natural-height card onto the next line.</Text>
-      <Badge key="badge" style={{ position: "absolute", width: 96, height: 30, right: "10%", top: "75%", minWidth: 0, minHeight: 0 }} />
+      <Badge key="badge" style={{ position: "absolute", width: "25%", minWidth: 100, maxWidth: 140, height: "15%", minHeight: 30, maxHeight: 40, right: "10%", top: "75%" }} />
     </Flex>
     <Text pointerEvents="none" style={{ left: 44, top: 414, font: "bold 13px sans-serif", fill: "#19375b" }}>Click the green relative card</Text>
-    <Text pointerEvents="none" style={{ left: 44, top: 438, font: "13px sans-serif", fill: "#475569" }}>The red badge uses absolute right/top percentages. The direct Text cards retain natural height.</Text>
+    <Text pointerEvents="none" style={{ left: 44, top: 438, font: "13px sans-serif", fill: "#475569" }}>The red badge uses percentage size and bounds plus absolute right/top percentages. The direct Text cards retain natural height.</Text>
   </>;
   }
   const panel = document.createElement("pre");

@@ -4257,16 +4257,16 @@ const drafts = [
     section: "layout",
     order: 12014,
     summary:
-      "A responsive wrapped card row keeps direct Text natural height while relative and absolute percentage placement use their documented physical boxes.",
+      "A responsive wrapped card row keeps direct Text natural height while relative offsets and bounded absolute percentage placement use their documented physical boxes.",
     api: ["Flex", "Rectangle", "Text", "signal", "useLayoutBox"],
     objectives: [
       "Resize a finite wrapped card row and observe final-width Text reflow.",
-      "Compare a relative content-box percentage offset with an absolute padding-box percentage badge.",
+      "Compare a relative content-box percentage offset with an absolute padding-box badge whose percentage size is bounded as the owner resizes.",
     ],
     prompts: {
       gesture:
         "Resize cards, toggle the green card's relative offset, then click the green card and the red badge.",
-      code: "The direct Text leaves use natural height. The relative card and absolute badge use the same public physical inset fields with different documented reference boxes.",
+      code: "The direct Text leaves use natural height. The relative card uses content-box percentage insets; the absolute badge uses padding-box percentage insets, percentage size, and finite bounds.",
     },
     apiNotes: [
       "Experimental finite Flex only. Relative percentages resolve against the parent content box; absolute percentages resolve against the selected padding box.",

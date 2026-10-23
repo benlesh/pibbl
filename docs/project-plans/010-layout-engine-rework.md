@@ -17,10 +17,12 @@ owner. Layout type headings/frontmatter now follow the required alphabetical
 order. The comparison driver checks the actual `grow` flow gap per fixture and
 navigates the containing-direction section rather than the newer Latest proof.
 No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
-Slice145 remains the next runtime slice; its percentage-size public tests have
-failed against the current numeric-only admission before production changes.
+Slice145 started with two public tests failing numeric-only admission before
+production changes; its completed evidence is recorded below.
 
-Latest delivery is slice144 `ced23362` (physical percentage static/relative insets).
+Latest runtime delivery is slice145 (finite percentage absolute dimensions/bounds), in this commit.
+Slice144 is `ced23362` (physical percentage static/relative insets).
+The public lesson companion for142–144 is `4cbc1ea6`.
 Consolidation48 is `70b2a85e` for142–144.
 Slice143 is `f644de8c` (physical percentage absolute insets).
 Slice142 is `357167b2` (wrapped absolute omitted-axis alignment).
@@ -4232,15 +4234,39 @@ logs `/tmp/pibbl-consolidation48-{focused,normal}.txt` and
 Node24 aggregate trust remain unchanged. Public composition usability work is
 independent of this completed correctness checkpoint.
 
-## [NEXT] Finite percentage absolute dimensions and bounds (145)
+## Completed slice145 — finite percentage absolute dimensions and bounds
 
-Resolve percentage width/height and min/max against the selected padding box
-before existing aspect/provider calculations and bounds validation. Preserve
-original style forwarding, owner resize/input revisions, natural query/cache
-contracts and Pibbl contradictory-bound rejection. Pin a focused public RED and
-explicit type/browser/package evidence for the coherent existing sizing family;
-no child decorations, logical insets, both-auto custom provider or ABI expansion.
-Consolidation48 is complete; preserve separate commits for145 onward.
+Absolute width/height and min/max use the selected padding-box dimensions before
+aspect derivation, paired-auto bounds and pure-provider fixed-axis queries.
+Authored forwarding and signals consume the final allocated size once. Existing
+allocation input revisions, measurement cache ownership, ABI, public exports and
+Pibbl contradictory-bound rejection are preserved. Opaque component providers,
+child decorations, logical insets and both-auto custom providers remain outside.
+The initial provider test incorrectly hid a primitive behind an ordinary function;
+the corrected test exercises the supported direct primitive boundary.
+
+Fresh macOS/Chromium evidence under Node24.15.0, installed pnpm11.21 dependencies:
+seven focused files86 passed/2 skipped (88), normal lane44 passed/44 skipped (88),
+public lesson one passed/414 skipped (415). Source and built lesson geometry,
+red/green pixels,11→12 Text reflow, hits and cleanup `[0,0,0]` pass; built uses469
+dist inputs. Badge width changes125→100 and height remains34.8. Typecheck,
+changed-code lint, docs109 RED probes, JSDoc6555 links and Studio docs pass.
+Isolated installed tarball proof passed Bundler/NodeNext,245 installed dist
+inputs, percentage-size geometry/hits/focus/paint reuse and exact cleanup.
+Tarball SHA256: `1a09cb045e5dd109e001d1c38d4c0a65aa15f3f570a5dc5f66a4c0cc30462bba`.
+Scoped review found no material issue. Native pinned Yoga sizing probe agrees
+for percentage sizes, bounds, paired auto and aspect; contradictory min/max
+remains an explicitly preserved Pibbl rejection rather than Yoga's clamping.
+No full709-case replay or aggregate trust claim. Fixed33 statuses and seven
+open release gates remain unchanged. Logs: `/tmp/pibbl-slice145-*`.
+
+## [NEXT] Wrapped declarative positioning owners (146)
+
+Establish the smallest fixed direct Flex-owner profile for static/relative
+participation in a wrapped parent, preserving source flow, child-local geometry
+and containing-box ownership. First pin the supported public RED and diagnostics;
+unknown/opaque/transformed ancestry and automatic/intrinsic owner sizing stay
+outside until their separate contracts are demonstrated. No new public API.
 
 ### Finite positioning exit matrix after134
 
