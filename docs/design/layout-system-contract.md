@@ -180,9 +180,12 @@ containing Flex's padding box to its absolute descendants. A direct nested Flex
 with `position: "relative"` establishes its own containing box. Omitted position
 keeps the existing Pibbl local Flex boundary; it does not adopt Yoga's static
 default. The top-level Flex is the fallback owner. This admission is limited to
-direct declarative Flex chains with both parent and nested static child using
-row/nowrap. Other direction chains reject before containing metadata is attached;
-this adds no public containing-block override.
+direct declarative nowrap Flex chains. Row-to-row chains retain their existing
+admission. Other parent/child main-direction combinations require the nested owner
+to declare finite nonnegative numeric width and height, zero grow and shrink, and
+an omitted or automatic basis. Wrapped, automatic-sized, flexing, opaque, and
+non-Flex owners remain outside this extension; it adds no public containing-block
+override.
 
 The ancestor box is translated into each static Flex's local content coordinates
 using settled placement and padding/border insets. Absolute children retain their

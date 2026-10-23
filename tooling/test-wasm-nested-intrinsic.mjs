@@ -134,6 +134,7 @@ try {
       assert.equal(receipt.absoluteMainBounds, true, 'Installed opposing-inset automatic boxes and numeric clamps must preserve physical geometry across every nowrap direction and RTL');
       assert.equal(receipt.absoluteMainAspect, true, 'Installed one-auto absolute aspect boxes must derive from declared dimensions, clamp after derivation, and preserve paired-inset precedence without measurement');
       assert.equal(receipt.absoluteContainingBlock, true, 'Installed static Flex inherits its ancestor box while relative and omitted Flex own their local absolute child');
+      assert.equal(receipt.nestedContainingBlockDirections, true, 'Installed direct static and relative Flex chains must preserve ancestor/local containing boxes across nowrap main directions, targets, identity, paint reuse, and cleanup');
       assert.equal(receipt.absoluteDerivedSize, true, 'Installed opposing insets must derive a finite auto absolute size, preserve forwarding, source order, identity and cleanup');
       assert.equal(receipt.absoluteAspect, true, 'Installed absolute aspect sizing preserves declared-axis bounds and opposing-inset precedence without measurement');
       assert.equal(receipt.absoluteMeasuredWidth, true, 'Installed paired providers must measure an unbounded automatic absolute width at exact declared height, remeasure conservatively on owner resize and provider input, detach on keyed removal, and clean up');

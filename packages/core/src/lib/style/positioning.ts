@@ -159,8 +159,8 @@ export interface PositioningStyle extends SystemStyle {
    * Experimental direct-Flex placement mode. In a finite nowrap Flex, static
    * keeps the allocated slot and ignores insets; relative offsets final geometry
    * once without moving siblings. Non-row static/relative admission covers primitive
-   * leaves; physical offsets retain their sign through main reversal. Nested static
-   * containing chains stay row-only. Absolute stays out of sibling allocation, using
+   * leaves and fixed numeric direct nowrap Flex chains with zero grow/shrink and
+   * omitted or automatic basis; physical offsets retain their sign through main reversal. Absolute stays out of sibling allocation, using
    * the padding box for explicit insets and content alignment for omitted axes.
    * Fixed numeric and opposing-inset automatic absolute boxes support all nowrap
    * main directions and RTL, with numeric bounds applied before anchoring.

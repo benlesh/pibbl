@@ -159,11 +159,11 @@ describe('bounded direct-Flex absolute admission', () => {
 describe('static containing-block direction boundary', () => {
   const absolute = { position: 'absolute' as const, width: 30, height: 20, left: 12, top: 8 };
   it.each([
-    ['column parent with row static child', 'column' as const, 'row' as const],
-    ['row parent with column static child', 'row' as const, 'column' as const],
+    ['growing static child in column parent', 'column' as const, 'row' as const],
+    ['growing column static child in row parent', 'row' as const, 'column' as const],
   ])('rejects %s instead of extending static containing ownership', (_name, outerDirection, innerDirection) => {
     expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: outerDirection, flexWrap: 'nowrap' }}>
-      <Flex style={{ position: 'static', width: 80, height: 60, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+      <Flex style={{ position: 'static', width: 80, height: 60, minWidth: 0, minHeight: 0, flexGrow: 1, flexShrink: 0,
         flexDirection: innerDirection, flexWrap: 'nowrap', alignItems: 'flex-start' }}>
         <Rectangle style={absolute} />
       </Flex>

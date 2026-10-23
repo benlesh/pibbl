@@ -382,10 +382,11 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
       // existing placement metadata. Nothing is attached to authored props/styles.
       if (child.type === Flex && (prepared.style as FlexStyle).position === 'static') {
         const childStyle = prepared.style as FlexStyle;
-        if (style.flexDirection !== 'row' || style.flexWrap !== 'nowrap' ||
-            (childStyle.flexDirection ?? 'row') !== 'row' || (childStyle.flexWrap ?? 'nowrap') !== 'nowrap') {
+        const nonRowChain = style.flexDirection !== 'row' || (childStyle.flexDirection ?? 'row') !== 'row';
+        if (style.flexWrap !== 'nowrap' || (childStyle.flexWrap ?? 'nowrap') !== 'nowrap' ||
+            nonRowChain && !isFixedNowrapFlexContainingChild(childStyle)) {
           throw childDiagnostic(child, 'position', 'static', plan.content,
-            'PIBBL_LAYOUT_UNSUPPORTED_POSITION: static containing-block inheritance currently requires a direct row nowrap Flex chain');
+            'PIBBL_LAYOUT_UNSUPPORTED_POSITION: non-row static containing-block inheritance requires a fixed numeric direct nowrap Flex chain');
         }
         containingBox ??= resolveFlexContainingBox(style, plan.content);
         const insets = normalizeBoxInsets(prepared.style as FlexStyle, childContext(child, plan.content));
@@ -799,7 +800,7 @@ function resolveFlexPlacements(
     let relativeY = 0;
     const position = normalized.position;
     if (position !== undefined) {
-      assertSupportedRelativeFlexPosition(child, position, options, container);
+      assertSupportedRelativeFlexPosition(child, normalized, options, container);
       const left = numericRelativeInset(normalized.left, 'left', child, container);
       const right = numericRelativeInset(normalized.right, 'right', child, container);
       const top = numericRelativeInset(normalized.top, 'top', child, container);
@@ -1947,19 +1948,31 @@ function numericAbsoluteInset(
 
 function assertSupportedRelativeFlexPosition(
   child: PibblElement<any>,
-  position: unknown,
+  style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
   options: Readonly<Pick<ResolvedFlexStyle, 'flexDirection' | 'flexWrap' | 'layoutDirection'>>,
   container: Readonly<LayoutBox>,
 ): void {
+  const position = style.position;
   if (!experimentalLayout || (position !== 'static' && position !== 'relative')) {
     throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: uses an unsupported Flex placement mode');
   }
   if (options.flexWrap !== 'nowrap') {
     throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: currently requires a finite nowrap Flex allocation');
   }
-  if (options.flexDirection !== 'row' && (isKnownLayoutType(child.type) || isLayoutComponent(child.type))) {
-    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: non-row static and relative placement currently supports direct primitive leaves without containing-block expansion');
+  const childStyle = style as Readonly<FlexStyle & FlexItemStyle>;
+  const nonRowChain = options.flexDirection !== 'row' || child.type === Flex && (childStyle.flexDirection ?? 'row') !== 'row';
+  if (nonRowChain && (isKnownLayoutType(child.type) || isLayoutComponent(child.type)) &&
+      (child.type !== Flex || !isFixedNowrapFlexContainingChild(childStyle))) {
+    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: non-row positioned layout children require a fixed numeric direct nowrap Flex chain');
   }
+}
+
+function isFixedNowrapFlexContainingChild(style: Readonly<FlexStyle & FlexItemStyle>): boolean {
+  return (style.flexWrap ?? 'nowrap') === 'nowrap' &&
+    typeof style.width === 'number' && Number.isFinite(style.width) && style.width >= 0 &&
+    typeof style.height === 'number' && Number.isFinite(style.height) && style.height >= 0 &&
+    (style.flexGrow ?? 0) === 0 && (style.flexShrink ?? 1) === 0 &&
+    (style.flexBasis === undefined || style.flexBasis === 'auto');
 }
 
 function numericRelativeInset(
