@@ -427,7 +427,7 @@ export interface MeshTransformOptions {
   } : unknown;
   export type PrimitiveInput<P, S extends SystemStyle = SystemStyle> = SignalProgramProps<P> & StyleField<PibblResponsiveStyle<SpecifiedStyle<S>>>;
   export type PrimitiveRender<P, R extends SystemStyle = SystemStyle> = (props: Readonly<PrimitiveProgramProps<P>>, style: ResolvedStyle<R>, context: RenderingContext2D) => PibblNode[] | PibblNode | void;
-  export type PreservedSignalPropKey<P> = { [K in keyof PrimitiveProgramProps<P>]-?: [PrimitiveProgramProps<P>[K]] extends [never] ? never : [NonNullable<PrimitiveProgramProps<P>[K]>] extends [never] ? never : [NonNullable<PrimitiveProgramProps<P>[K]>] extends [Signal<any>] ? K : never }[keyof PrimitiveProgramProps<P>];
+  type PreservedSignalPropKey<P> = { [K in keyof PrimitiveProgramProps<P>]-?: [PrimitiveProgramProps<P>[K]] extends [never] ? never : [NonNullable<PrimitiveProgramProps<P>[K]>] extends [never] ? never : [NonNullable<PrimitiveProgramProps<P>[K]>] extends [Signal<any>] ? K : never }[keyof PrimitiveProgramProps<P>];
   export interface PrimitiveCapabilities<P, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N> {
     preserveSignalProps?: readonly PreservedSignalPropKey<P>[];
     normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;

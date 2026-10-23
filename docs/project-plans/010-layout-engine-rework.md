@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice156 (experimental first-baseline provider composition).
+Latest delivery is consolidation52 for154–156.
+Slice156 is `5e819d2f` (experimental first-baseline provider composition).
 Slice155 is `7c60ab49` (public mixed-track spanning Grid evidence).
 Slice154 is `a3d817fa` (column Text natural cross-width with auto side margin).
 Slice153 is `4bd6ff9b` (exact caller-height column measurement).
@@ -4765,12 +4766,40 @@ material issue. `flex.baselines` moves only missing→experimental: fixed33 now
 Text fonts, multiline, nested propagation, last-baseline alignment and broader
 layout admission remain accepted obligations. No aggregate trust claim.
 
-## [NEXT] Consolidation52: slices154–156
+## Consolidation52: slices154–156
 
-Consolidate the changed public measurement, Grid evidence and baseline paths in
-experimental and ordinary modes, then reassess the shortest sound flex-core gate
-closure without shrinking the fixed33 targets. Root remains sole repository
-writer; reused helpers provide independent review or temporary patch proposals.
+Fresh Node24.15/Playwright Chromium verification: experimental715passed/12skipped
+across48files (727tests),83.09s; ordinary261passed/466skipped,4.76s. This extends
+the prior lane with GridStudy evidence, first-baseline public behavior and Grid
+unit contracts. The first experimental attempt was stopped after identifying
+stale corpus navigation: appended baseline cases must not join the original
+contiguous-family walk, and Latest must select the new baseline family. The final
+run includes those explicit navigation corrections. No runtime fix was needed.
+
+Source/built/editor export parity initially caught stale ordinary build output,
+then an existing editor-only exported `PreservedSignalPropKey` helper. Refreshing
+the ordinary build and keeping that helper private restored exact parity; runtime
+and Three addon checks passed. Typecheck, changed-test lint and generated kernel
+integrity passed. Concise public corpus remains5cases matching the full721record
+reference. The156 source/built public lesson, four-case private replays and strict
+installed-package proof remain separate fresh receipts, not a full corpus replay.
+No aggregate trust or capability/gate promotion is claimed.
+
+## [NEXT] Slice157: resolve the indefinite percentage-bound policy
+
+The shortest substantive flex-core exit is the existing `flex.min-max` policy
+gap. More finite geometry profiles do not close it. Exact finite caller width or
+height is already an acyclic containing basis; maximum-only and unbounded
+availability are not. A proposed staged independent result cannot be inferred
+from the current Flex measurement graph, because children determine the owner
+whose percentage bounds determine those children. Preserve rejection until a
+concrete rule is supported by the pinned oracle and accepted design. Inspect
+Yoga's intrinsic/final phases and prove the selected rule with one public slice;
+do not silently use the maximum, zero, or arbitrary fixed-point iteration.
+Automatic-minimum's broader text/font, image, aspect and fitting policies remain
+the other flex-core exit. Fixed33 stays9complete/12experimental/6partial/5missing/
+1excluded and all7release gates remain open. Root remains sole repository writer;
+helpers provide independent read-only policy research and review.
 
 ### Finite positioning exit matrix after134
 
