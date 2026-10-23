@@ -29,3 +29,11 @@ const Dot = definePrimitive(function renderDot(props) {
 The exact generic contracts are in the Elements and components type reference;
 primitive painting receives Pibbl's active [`Canvas`](#/api/types/canvas-runtime#canvas) context.
 See [Custom components and primitives](#/learn/guides/custom-components-and-primitives).
+
+The experimental `measureIntrinsic` capability returns both intrinsic content
+sizes through [IntrinsicSizesResult](#/api/types/layout#intrinsicsizesresult).
+Its first consumer is a direct custom primitive in a finite nowrap Flex row.
+Ordinary `measure` remains unchanged. Providers are pure and use the existing
+receiver dependency and teardown transaction. Mutable nested inputs and changes
+to the provider's own style conservatively remeasure; unrelated sibling paint
+can reuse a successful snapshot.

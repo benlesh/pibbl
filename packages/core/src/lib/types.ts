@@ -393,6 +393,36 @@ export interface MeasureInput<P, S extends SystemStyle = SystemStyle> {
   ): MeasureResult;
 }
 
+/** Available logical size along one intrinsic query axis. See {@link IntrinsicConstraints}. */
+export type IntrinsicAxisConstraints =
+  | Readonly<{ /** Finite availability. */ kind: 'bounded'; /** Minimum logical length. */ min: number; /** Maximum logical length. */ max: number }>
+  | Readonly<{ /** No finite upper bound. */ kind: 'unbounded'; /** Minimum logical length. */ min: number }>;
+
+/** Explicit axis availability for intrinsic measurement. See {@link IntrinsicMeasureInput}. */
+export interface IntrinsicConstraints {
+  /** Horizontal availability. See {@link IntrinsicAxisConstraints}. */
+  readonly width: IntrinsicAxisConstraints;
+  /** Vertical availability. See {@link IntrinsicAxisConstraints}. */
+  readonly height: IntrinsicAxisConstraints;
+}
+
+/** Pure custom-leaf input for both intrinsic contributions. See {@link PrimitiveCapabilities}. */
+export interface IntrinsicMeasureInput<P, S extends SystemStyle = SystemStyle> {
+  /** Resolved receiver inputs. See {@link MeasureInput}. */
+  readonly props: Readonly<P>;
+  /** Normalized content style. See {@link NormalizedStyle}. */
+  readonly style: NormalizedStyle<S>;
+  /** Tagged available dimensions. See {@link IntrinsicConstraints}. */
+  readonly constraints: Readonly<IntrinsicConstraints>;
+  /** Pure Canvas measurements. See {@link CanvasMeasurementService}. */
+  readonly service: CanvasMeasurementService;
+}
+
+/** Both content-box intrinsic contributions or explicit failure. See {@link IntrinsicMeasureInput}. */
+export type IntrinsicSizesResult =
+  | Readonly<{ /** Successful intrinsic query. */ status: 'measured'; /** Minimum unbroken content size. See {@link Size}. */ minContent: Readonly<Size>; /** Preferred content size. See {@link Size}. */ maxContent: Readonly<Size> }>
+  | Readonly<{ /** Unsupported intrinsic query. */ status: 'unsupported'; /** Actionable explanation. */ reason: string }>;
+
 /**
  * The synchronous drawing callback of a custom primitive.
  *
@@ -470,6 +500,12 @@ export interface PrimitiveCapabilities<
    * @returns Measured dimensions or an unsupported measurement result. See {@link MeasureResult}.
    */
   measure?: (input: MeasureInput<PrimitiveProgramProps<P>, N>) => MeasureResult;
+  /**
+   * Measures both intrinsic content contributions without painting, hooks or writes.
+   * @param input - Resolved inputs and explicit availability. See {@link IntrinsicMeasureInput}.
+   * @returns Finite ordered content sizes or unsupported. See {@link IntrinsicSizesResult}.
+   */
+  measureIntrinsic?: (input: IntrinsicMeasureInput<PrimitiveProgramProps<P>, N>) => IntrinsicSizesResult;
 }
 
 export interface InternalIdentityHint {

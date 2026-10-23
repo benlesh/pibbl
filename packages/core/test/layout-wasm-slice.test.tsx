@@ -1,6 +1,6 @@
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, defineLayoutComponent } from '@pibbl/core';
+import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, defineLayoutComponent, definePrimitive } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
@@ -145,6 +145,51 @@ it.runIf(experimentalLayout)('retains reactive Text measurements on paint-only u
   expect(snapshotWasmLayoutDiagnostics().frames).toBe(painted.frames + 1);
   expect(snapshotWasmLayoutDiagnostics().measuredLeaves).toBeGreaterThan(painted.measuredLeaves);
   expect(draw.mock.calls.some(call => call[0] === 'UPDATED')).toBe(true);
+});
+
+type IntrinsicLeafTestStyle = import('@pibbl/core').SystemStyle & { height?:number; flexShrink?:number; minWidth?:number };
+
+it.runIf(experimentalLayout)('uses a pure intrinsic provider for finite nowrap row minima, reactivity, paint reuse and disposal', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const ownerWidth = signal(80), minimum = signal(40), minimumOverride = signal<number | undefined>(undefined), paint = signal('blue');
+  let intrinsicCalls = 0;
+  const Provider = definePrimitive<{ minimum: number }, IntrinsicLeafTestStyle>((_props, _style, context) => {
+    context.fillStyle = 'red';
+    context.fillRect(0, 0, 200, 20);
+  }, {
+    measureIntrinsic: ({ props, constraints }) => {
+      intrinsicCalls++;
+      expect(constraints.width.kind).toBe('bounded');
+      expect(constraints.height.kind).toBe('bounded');
+      return { status: 'measured' as const, minContent: { width: props.minimum, height: 20 }, maxContent: { width: 100, height: 20 } };
+    },
+  });
+  const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 30; document.body.append(canvas);
+  const controller = pibbl(canvas, createElement(Flex, { style: { width: ownerWidth, height: 20, alignItems: 'flex-start' }, children: [
+    createElement(Provider, { minimum, style: { height: 20, flexShrink: 1, minWidth: minimumOverride } }),
+    createElement(Rectangle, { style: { width: 20, height: 20, flexShrink: 0, minWidth: 0, fill: paint } }),
+  ] }));
+  controllers.push(controller); await nextFrame();
+  const context = canvas.getContext('2d')!;
+  expect([...context.getImageData(59, 5, 1, 1).data]).toEqual([255, 0, 0, 255]);
+  expect([...context.getImageData(60, 5, 1, 1).data]).toEqual([0, 0, 255, 255]);
+  const initialCalls = intrinsicCalls;
+  minimumOverride.set(0); ownerWidth.set(40); await nextFrame();
+  expect([...context.getImageData(19, 5, 1, 1).data]).toEqual([255, 0, 0, 255]);
+  expect([...context.getImageData(20, 5, 1, 1).data]).toEqual([0, 0, 255, 255]);
+  minimumOverride.set(undefined); ownerWidth.set(80); minimum.set(70); await nextFrame();
+  expect(intrinsicCalls).toBeGreaterThan(initialCalls);
+  expect([...context.getImageData(69, 5, 1, 1).data]).toEqual([255, 0, 0, 255]);
+  expect([...context.getImageData(70, 5, 1, 1).data]).toEqual([0, 0, 255, 255]);
+  const beforePaint = intrinsicCalls;
+  paint.set('green'); await nextFrame();
+  expect(intrinsicCalls).toBe(beforePaint);
+  minimum.set(40); await nextFrame();
+  expect(intrinsicCalls).toBeGreaterThan(beforePaint);
+  expect([...context.getImageData(60, 5, 1, 1).data]).toEqual([0, 128, 0, 255]);
+  controller.dispose();
+  expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);
+  expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
 it.runIf(experimentalLayout)('classifies declared Flex/Text inputs before coalescing their redraw', async () => {
@@ -2999,4 +3044,66 @@ for(const property of ['borderStartWidth','borderEndWidth'] as const)for(const v
 }
 it.skipIf(experimentalLayout)('rejects logical borders in ordinary box layout',()=>{
  for(const edge of [{borderStartWidth:0},{borderEndWidth:10}]){const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,...edge}});expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/logical layout borders/);}
+});
+
+it.runIf(experimentalLayout)('uses custom intrinsic content for a finite row basis and automatic minimum',()=>{
+ let calls=0;
+ const Leaf=definePrimitive<{tag?:string}, IntrinsicLeafTestStyle>(()=>undefined,{measureIntrinsic:()=>{calls++;return {status:'measured',minContent:{width:40,height:20},maxContent:{width:100,height:20}};}});
+ const child=createElement(Leaf,{style:{height:20,flexShrink:1}});
+ const sibling=createElement(Rectangle,{style:{width:20,height:20,minWidth:0,flexShrink:0}});
+ expect(layoutFlex({x:0,y:0,width:80,height:30},[child,sibling],{alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:60,height:20},{x:60,y:0,width:20,height:20}]);
+ expect(calls).toBe(1);
+ const zero=createElement(Leaf,{style:{height:20,flexShrink:1,minWidth:0}});
+ expect(layoutFlex({x:0,y:0,width:40,height:30},[zero,sibling],{alignItems:'flex-start'},measurement).map(box=>box.width)).toEqual([20,20]);
+});
+
+it.runIf(experimentalLayout)('remeasures mutable nested intrinsic inputs during a paint-triggered traversal',async()=>{
+ const data={minimum:40}; const paint=signal('blue');
+ const Leaf=definePrimitive<{data:typeof data},IntrinsicLeafTestStyle>(()=>undefined,{measureIntrinsic:({props})=>({status:'measured',minContent:{width:props.data.minimum,height:20},maxContent:{width:100,height:20}})});
+ const canvas=document.createElement('canvas');canvas.width=120;canvas.height=30;document.body.append(canvas);
+ const controller=pibbl(canvas,createElement(Flex,{style:{width:80,height:20,alignItems:'flex-start'},children:[createElement(Leaf,{data,style:{height:20,flexShrink:1}}),createElement(Rectangle,{style:{width:20,height:20,minWidth:0,flexShrink:0,fill:paint}})]}));controllers.push(controller);await nextFrame();
+ data.minimum=70;paint.set('green');await nextFrame();
+ expect([...canvas.getContext('2d')!.getImageData(70,5,1,1).data]).toEqual([0,128,0,255]);
+ expect(canvas.getContext('2d')!.getImageData(60,5,1,1).data[3]).toBe(0);
+});
+
+it.runIf(experimentalLayout)('keeps intrinsic heights independent and applies box insets once',()=>{
+ type Style=IntrinsicLeafTestStyle & {padding?:number;borderWidth?:number};
+ const Leaf=definePrimitive<{tag?:string},Style>(()=>undefined,{measureIntrinsic:()=>({status:'measured',minContent:{width:40,height:60},maxContent:{width:100,height:20}})});
+ const child=createElement(Leaf,{style:{flexShrink:1,padding:5,borderWidth:5}});
+ const sibling=createElement(Rectangle,{style:{width:20,height:20,minWidth:0,flexShrink:0}});
+ expect(layoutFlex({x:0,y:0,width:80,height:100},[child,sibling],{alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:60,height:40},{x:60,y:0,width:20,height:20}]);
+});
+it.runIf(experimentalLayout)('bypasses unsupported intrinsic providers with definite basis and explicit minimum',()=>{
+ let calls=0;
+ type Style=IntrinsicLeafTestStyle & {flexBasis?:number};
+ const Leaf=definePrimitive<{tag?:string},Style>(()=>undefined,{measureIntrinsic:()=>{calls++;return {status:'unsupported',reason:'custom shaping unavailable'};}});
+ const child=createElement(Leaf,{style:{height:20,flexBasis:100,flexShrink:1,minWidth:0}});
+ expect(layoutFlex({x:0,y:0,width:40,height:30},[child],{},measurement)[0].width).toBe(40);expect(calls).toBe(0);
+ const demanded=createElement(Leaf,{style:{height:20,flexShrink:1}});
+ expect(()=>layoutFlex({x:0,y:0,width:40,height:30},[demanded],{},measurement)).toThrow(/custom shaping unavailable/);
+});
+it.runIf(experimentalLayout)('forbids intrinsic provider writes and retries after a thrown provider',()=>{
+ const source=signal(0);let fail=true;
+ const Leaf=definePrimitive<{tag?:string},IntrinsicLeafTestStyle>(()=>undefined,{measureIntrinsic:()=>{if(fail)source.set(1);return {status:'measured',minContent:{width:10,height:20},maxContent:{width:30,height:20}};}});
+ const child=createElement(Leaf,{style:{height:20,flexShrink:1}});
+ expect(()=>layoutFlex({x:0,y:0,width:40,height:30},[child],{},measurement)).toThrow(/Signal writes are forbidden/);expect(source.get()).toBe(0);fail=false;
+ expect(layoutFlex({x:0,y:0,width:40,height:30},[child],{},measurement)[0].width).toBe(30);
+});
+
+it.runIf(experimentalLayout)('invalidates intrinsic snapshots when the provider consumes its own paint style',async()=>{
+ const fill=signal('red');
+ type Style=IntrinsicLeafTestStyle & {fill?:string};
+ const Leaf=definePrimitive<{tag?:string},Style>(()=>undefined,{measureIntrinsic:({style})=>({status:'measured',minContent:{width:style.fill==='red'?40:70,height:20},maxContent:{width:100,height:20}})});
+ const canvas=document.createElement('canvas');canvas.width=120;canvas.height=30;document.body.append(canvas);
+ const controller=pibbl(canvas,createElement(Flex,{style:{width:80,height:20,alignItems:'flex-start'},children:[createElement(Leaf,{style:{height:20,flexShrink:1,fill}}),createElement(Rectangle,{style:{width:20,height:20,minWidth:0,flexShrink:0,fill:'blue'}})]}));controllers.push(controller);await nextFrame();
+ fill.set('green');await nextFrame();
+ expect(canvas.getContext('2d')!.getImageData(60,5,1,1).data[3]).toBe(0);
+ expect([...canvas.getContext('2d')!.getImageData(70,5,1,1).data]).toEqual([0,0,255,255]);
+});
+
+for(const invalid of ['negative-min','nonfinite-max','inverted-width','negative-height'] as const)it.runIf(experimentalLayout)(`rejects invalid intrinsic contribution ${invalid}`,()=>{
+ const Leaf=definePrimitive<{tag?:string},IntrinsicLeafTestStyle>(()=>undefined,{measureIntrinsic:()=>({status:'measured',minContent:{width:invalid==='negative-min'?-1:invalid==='inverted-width'?101:40,height:invalid==='negative-height'?-1:20},maxContent:{width:invalid==='nonfinite-max'?NaN:100,height:20}})});
+ const child=createElement(Leaf,{style:{height:20,flexShrink:1}});
+ expect(()=>layoutFlex({x:0,y:0,width:80,height:30},[child],{},measurement)).toThrow(/finite|nonnegative|min-content/);
 });

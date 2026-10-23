@@ -1,3 +1,4 @@
+import { withReceiverInputProvision } from '../signals/input-provision.js';
 import type { BoxStyle } from '../style/types.js';
 import { hasPercentageBoxPadding } from './box-insets.js';
 import { contentBoxStyle } from './box-sizing.js';
@@ -8,11 +9,13 @@ import { GLOBAL_STATE } from '../global-state.js';
 import { EMPTY_STYLE } from '../style/empty-style.js';
 import {
   takePreNormalizedStyle,
+  peekPreNormalizedStyle,
   withoutSystemFilter,
 } from '../style/resolve-dispatch.js';
 import {
   createPrimitiveReceiverToken,
   getPrimitiveDefinition,
+  getPrimitiveProgramProps,
   getPrimitiveReceiverToken,
   getElementMetadata,
 } from '../element/metadata.js';
@@ -21,11 +24,12 @@ import { recordLayoutMeasurement } from './diagnostics.js';
 import type {
   CanvasMeasurementService,
   MeasureResult,
+  IntrinsicSizesResult,
 } from '../types.js';
 import type { PibblElement } from '../element/types.js';
 import { prepareElementPolicies } from '../element/children.js';
 import type { Constraints } from './types.js';
-import { untracked, withSignalWriteForbidden } from '../signals/graph.js';
+import { isSignal, trackSignalDependency, withSignalTracking, type SignalNode, withSignalDependencyRole, untracked, withSignalWriteForbidden } from '../signals/graph.js';
 
 export type {
   CanvasMeasurementService,
@@ -65,17 +69,90 @@ export function measureElement(
   );
 }
 
+/** @internal Passive snapshot owned and released by one layout region. */
+export interface IntrinsicMeasurementEntry {
+  readonly props: object;
+  readonly key: string;
+  readonly result: IntrinsicSizesResult;
+  readonly dependencies: readonly SignalNode<unknown>[];
+  readonly inputSnapshot: readonly unknown[] | undefined;
+}
+interface IntrinsicCache {
+  readIntrinsic(token: object): IntrinsicMeasurementEntry | undefined;
+  writeIntrinsic(token: object, entry: IntrinsicMeasurementEntry): void;
+}
+const intrinsicTransactions = new WeakMap<object, WeakMap<object, IntrinsicMeasurementEntry>>();
+
+// Conservative admission: mutable nested props or custom style records always
+// remeasure. Scalar snapshots also detect production-mode in-place scalar writes.
+function intrinsicInputSnapshot(element: PibblElement<any>): unknown[] | undefined {
+  const props = getPrimitiveProgramProps<Record<string, unknown>>(element);
+  const style = peekPreNormalizedStyle(element)?.style as Readonly<Record<string, unknown>> | undefined;
+  const snapshot: unknown[] = [];
+  for (const key of Object.keys(props)) {
+    const value = props[key];
+    if (value !== null && (typeof value === 'object' && !isSignal(value) || typeof value === 'function')) return;
+    snapshot.push(key, value);
+  }
+  if (style) for (const key of Object.keys(style)) {
+    const value = style[key];
+    if (value !== null && (typeof value === 'object' || typeof value === 'function')) return;
+    snapshot.push(key, value);
+  }
+  return snapshot;
+}
+function sameIntrinsicInputs(left: readonly unknown[] | undefined, right: readonly unknown[] | undefined): boolean {
+  if (!left || !right || left.length !== right.length) return false;
+  for (let index=0; index<left.length; index++) if (!Object.is(left[index], right[index])) return false;
+  return true;
+}
+
+/** @internal Runs the same pure receiver transaction for a custom intrinsic leaf. */
+export function measureIntrinsicElement(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, options?: { cache: IntrinsicCache; token: object; key: string; recordMeasurement: () => void }): IntrinsicSizesResult {
+  const transaction = GLOBAL_STATE.renderTransaction;
+  const receiver = getPrimitiveReceiverToken(element);
+  const context: MeasurementContext = { active: new Set(), stack: [] };
+  const mode = getStyleMeasurementMode() ? 'recursive' : GLOBAL_STATE.componentRefs ? 'mounted-intrinsic' : 'standalone-root';
+  return withReceiverInputProvision(transaction, receiver, () => withSignalDependencyRole('measurement', () => {
+    const inputSnapshot = intrinsicInputSnapshot(element);
+    let entries = transaction && intrinsicTransactions.get(transaction);
+    let entry = options && (entries?.get(options.token) ?? options.cache.readIntrinsic(options.token));
+    if (!entry || entry.key !== options?.key || entry.props !== element.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot)) {
+      options?.recordMeasurement();
+      const dependencies: SignalNode<unknown>[] = [];
+      const result = withSignalTracking({ addDependency(node) { if (!dependencies.includes(node)) dependencies.push(node); } }, () =>
+        withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () =>
+          withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
+            measureElementInternal(element, constraints, service, context, true),
+          )),
+        ));
+      entry = { props: element.props, key: options?.key ?? '', result, dependencies, inputSnapshot };
+      if (options && transaction && inputSnapshot && result.status === 'measured') {
+        if (!entries) { entries = new WeakMap(); intrinsicTransactions.set(transaction, entries); }
+        entries.set(options.token, entry);
+        const snapshot = entry;
+        transaction.onFinish(success => { if (success) options.cache.writeIntrinsic(options.token, snapshot); });
+      }
+    }
+    for (const node of entry.dependencies) trackSignalDependency(node, 'measurement');
+    return entry.result;
+  }));
+}
+
 interface MeasurementContext {
   active: Set<PibblElement<any>>;
   stack: PibblElement<any>[];
 }
 
+function measureElementInternal(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, context: MeasurementContext, intrinsic: true): IntrinsicSizesResult;
+function measureElementInternal(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, context: MeasurementContext, intrinsic?: false): MeasureResult;
 function measureElementInternal(
   element: PibblElement<any>,
   constraints: Readonly<Constraints>,
   service: CanvasMeasurementService,
   context: MeasurementContext,
-): MeasureResult {
+  intrinsic = false,
+): MeasureResult | IntrinsicSizesResult {
   element = prepareElementPolicies(element, 'measureElement');
   recordLayoutMeasurement();
   const type = element.type;
@@ -96,6 +173,7 @@ function measureElementInternal(
       reason: 'cyclic measurement dependency is not supported',
     });
   }
+  if (intrinsic && isLayoutComponent(type)) return { status: 'unsupported', reason: 'intrinsic providers currently require a direct custom primitive' };
   if (isLayoutComponent(type)) {
     context.active.add(source);
     context.stack.push(element);
@@ -106,10 +184,10 @@ function measureElementInternal(
       context.active.delete(source);
     }
   }
-  if (!definition?.measure) {
+  if (intrinsic ? !definition?.measureIntrinsic : !definition?.measure) {
     return {
       status: 'unsupported',
-      reason: `${component} does not provide measurement`,
+      reason: `${component} does not provide ${intrinsic ? 'intrinsic measurement' : 'measurement'}`,
     };
   }
 
@@ -119,25 +197,32 @@ function measureElementInternal(
     if (preNormalized?.query && getStyleMeasurementMode() !== 'standalone-root') {
       rejectResponsiveMeasurement(element);
     }
-    const inputs = untracked(() => resolvePrimitiveInputs(element, definition, preNormalized, {
+    const readInputs = () => resolvePrimitiveInputs(element, definition!, preNormalized, {
       width: constraints.maxWidth, height: constraints.maxHeight,
-    }));
+    });
+    const inputs = intrinsic ? readInputs() : untracked(readInputs);
     const specifiedStyle = withoutSystemFilter(
       preNormalized?.style ?? inputs.style ?? EMPTY_STYLE,
     );
     let normalized = preNormalized ?
         specifiedStyle :
-      definition.normalizeStyle ?
-          definition.normalizeStyle(specifiedStyle) :
+      definition!.normalizeStyle ?
+          definition!.normalizeStyle!(specifiedStyle) :
           specifiedStyle;
     if (hasPercentageBoxPadding(normalized as Readonly<BoxStyle>)) return { status: 'unsupported', reason: 'percentage padding requires an actual finite Flex owner allocation' };
     if ('boxSizing' in normalized && normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized as Readonly<BoxStyle>, { width: constraints.maxWidth, height: constraints.maxHeight, context: { component, algorithm: 'measurement', constraints } });
     const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
     GLOBAL_STATE.primitiveReceiverToken =
       getPrimitiveReceiverToken(element) ?? createPrimitiveReceiverToken();
-    let result: MeasureResult;
+    let result: MeasureResult | IntrinsicSizesResult;
     try {
-      result = withStyleMeasurement('recursive', () => definition.measure!({
+      result = withStyleMeasurement('recursive', () => intrinsic ? definition!.measureIntrinsic!({
+        props: inputs.props, style: normalized, service,
+        constraints: {
+          width: Number.isFinite(constraints.maxWidth) ? { kind: 'bounded', min: constraints.minWidth, max: constraints.maxWidth } : { kind: 'unbounded', min: constraints.minWidth },
+          height: Number.isFinite(constraints.maxHeight) ? { kind: 'bounded', min: constraints.minHeight, max: constraints.maxHeight } : { kind: 'unbounded', min: constraints.minHeight },
+        },
+      }) : definition!.measure!({
         props: inputs.props,
         style: normalized,
         constraints,
@@ -149,6 +234,14 @@ function measureElementInternal(
       GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
     }
     if (result.status === 'unsupported') return result;
+    if ('minContent' in result) {
+      validateMeasuredSize(result.minContent.width, 'minContent.width', component, constraints);
+      validateMeasuredSize(result.minContent.height, 'minContent.height', component, constraints);
+      validateMeasuredSize(result.maxContent.width, 'maxContent.width', component, constraints);
+      validateMeasuredSize(result.maxContent.height, 'maxContent.height', component, constraints);
+      if (result.minContent.width > result.maxContent.width) throw layoutDiagnostic({ component, property: 'measureIntrinsic', value: result, algorithm: 'measurement', constraints, reason: 'min-content width must not exceed max-content width' });
+      return result;
+    }
     validateMeasuredSize(result.size.width, 'width', component, constraints);
     validateMeasuredSize(result.size.height, 'height', component, constraints);
     return result;
@@ -198,7 +291,7 @@ export function withIsolatedRenderState<T>(work: () => T): T {
 
 function validateMeasuredSize(
   value: number,
-  property: 'width' | 'height',
+  property: string,
   component: string,
   constraints: Readonly<Constraints>,
 ): void {

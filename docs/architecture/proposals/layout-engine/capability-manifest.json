@@ -1538,23 +1538,23 @@
       "id": "measurement.custom-leaf",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "pure leaf measurement exists",
+      "current": "pure measure plus experimental paired intrinsic providers for direct custom primitives in finite nowrap Flex rows; scalar/signal snapshot reuse and mutable-input correctness",
       "status": "partial",
-      "unresolvedPolicy": "Implementation direction is authorized; baseline and optional intrinsic-query extensions still need exact contracts.",
+      "unresolvedPolicy": "Paired intrinsic callback is implemented for the bounded direct-leaf consumer; baselines and broader intrinsic consumers remain open.",
       "evidenceRefs": [
         "packages/core/src/lib/layout/layout-jsx.test.tsx",
         "packages/core/src/lib/define-primitive.test.tsx"
       ],
       "evidence": {
-        "positive": ["measure callbacks"],
-        "negative": ["opaque component measurement unsupported"],
-        "interaction": [],
+        "positive": ["measure callbacks", "finite-row paired intrinsic contribution, purity, retry and validation"],
+        "negative": ["opaque component measurement unsupported", "unsupported intrinsic provider with explicit basis/minimum escape", "mutable nested inputs conservatively remeasure"],
+        "interaction": ["reactive intrinsic minimum moves the public target; unrelated sibling paint reuses snapshot; exact disposal"],
         "yogaCases": [],
         "missing": [
           "exact/at-most/unbounded",
-          "invalidation",
+          "broader nested invalidation and owner feedback",
           "baselines",
-          "callback count and exceptions"
+          "broader callback-count and constraint matrix"
         ]
       }
     },

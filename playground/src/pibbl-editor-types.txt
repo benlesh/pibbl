@@ -427,10 +427,13 @@ export interface MeshTransformOptions {
   } : unknown;
   export type PrimitiveInput<P, S extends SystemStyle = SystemStyle> = SignalProgramProps<P> & StyleField<PibblResponsiveStyle<SpecifiedStyle<S>>>;
   export type PrimitiveRender<P, R extends SystemStyle = SystemStyle> = (props: Readonly<PrimitiveProgramProps<P>>, style: ResolvedStyle<R>, context: RenderingContext2D) => PibblNode[] | PibblNode | void;
+  export type PreservedSignalPropKey<P> = { [K in keyof PrimitiveProgramProps<P>]-?: [PrimitiveProgramProps<P>[K]] extends [never] ? never : [NonNullable<PrimitiveProgramProps<P>[K]>] extends [never] ? never : [NonNullable<PrimitiveProgramProps<P>[K]>] extends [Signal<any>] ? K : never }[keyof PrimitiveProgramProps<P>];
   export interface PrimitiveCapabilities<P, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N> {
+    preserveSignalProps?: readonly PreservedSignalPropKey<P>[];
     normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;
     resolveStyle?: (style: NormalizedStyle<N>, context: Readonly<StyleResolutionContext>) => ResolvedStyle<R>;
     measure?: (input: MeasureInput<PrimitiveProgramProps<P>, N>) => MeasureResult;
+    measureIntrinsic?: (input: IntrinsicMeasureInput<PrimitiveProgramProps<P>, N>) => IntrinsicSizesResult;
   }
   type PrimitiveCapabilityArguments<P, S extends SystemStyle, N extends SystemStyle, R extends SystemStyle> = RequiresResolver<R> extends true ? [capabilities: never] : RequiresResolver<S> extends true ? [capabilities: Readonly<PrimitiveCapabilities<P, S, N, R>> & { resolveStyle: NonNullable<PrimitiveCapabilities<P, S, N, R>['resolveStyle']> }] : [capabilities?: Readonly<PrimitiveCapabilities<P, S, N, R>>];
   export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
@@ -574,6 +577,10 @@ export interface MeshTransformOptions {
 
   export interface CanvasMeasurementService { measureText(text: string, font: string): TextMetrics }
   export type MeasureResult = { status: 'measured'; size: Readonly<Size> } | { status: 'unsupported'; reason: string };
+  export type IntrinsicAxisConstraints = Readonly<{kind:'bounded';min:number;max:number}> | Readonly<{kind:'unbounded';min:number}>;
+  export interface IntrinsicConstraints { readonly width: IntrinsicAxisConstraints; readonly height: IntrinsicAxisConstraints }
+  export interface IntrinsicMeasureInput<P,S extends SystemStyle = SystemStyle> { readonly props:Readonly<P>; readonly style:NormalizedStyle<S>; readonly constraints:Readonly<IntrinsicConstraints>; readonly service:CanvasMeasurementService }
+  export type IntrinsicSizesResult = Readonly<{status:'measured';minContent:Readonly<Size>;maxContent:Readonly<Size>}> | Readonly<{status:'unsupported';reason:string}>;
   export interface MeasureInput<P, S extends SystemStyle = SystemStyle> { props: Readonly<P>; style: NormalizedStyle<S>; constraints: Readonly<Constraints>; service: CanvasMeasurementService; measureElement(element: PibblElement<any>, constraints: Readonly<Constraints>): MeasureResult }
   export interface LayoutDiagnosticContext { component?: string; algorithm?: string; constraints?: Readonly<Constraints> }
   export interface LayoutDiagnosticInput extends LayoutDiagnosticContext { property: string; value: unknown; reason: string }

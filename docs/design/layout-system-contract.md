@@ -841,3 +841,30 @@ before content-box/border-box conversion and inset floors. These widths reserve
 layout space; painted strokes remain independent. Layer’s own raster dimensions
 and child origin retain their existing physical-border behavior. Raw logical
 border inputs remain ineligible for frozen allocation caching.
+
+### Experimental custom intrinsic providers
+
+`definePrimitive` accepts optional `measureIntrinsic(input): IntrinsicSizesResult`,
+separate from unchanged `measure`. It receives resolved props, normalized style,
+pure Canvas measurements and width/height availability tagged bounded or unbounded.
+The first consumer is a direct custom primitive in a finite nowrap Flex row.
+The paired min/max content widths supply the automatic minimum and auto basis;
+padding, borders and margins are applied by the parent exactly once. Declared
+cross dimensions retain their usual precedence. Explicit `minWidth: 0` and a
+definite basis avoid the intrinsic query. Unsupported queries diagnose the missing
+contribution; no synthetic width-zero legacy callback approximation is used.
+
+All returned dimensions must be finite and nonnegative, with min-content width
+no greater than max-content width. Each height describes content at that intrinsic
+width, so height ordering is not required. Hooks, paint and signal writes are
+forbidden during measurement. Exceptions propagate without publishing a result.
+
+Successful snapshots publish only after transaction success and are owned by the
+existing layout region. Cache hits replay the same receiver dependency provision;
+signal invalidation and teardown use existing runtime ownership. Persistent reuse
+is conservative: scalar/signal inputs and scalar normalized styles can reuse a
+snapshot when their values, availability and allocation revision agree. Mutable
+nested props/styles remeasure. Own paint-style changes also remeasure because a
+provider can read its entire style; the example demonstrates unrelated sibling
+paint reuse. This is not a general nested intrinsic graph, unbounded consumer,
+baseline provider, column/wrap, Flow or Grid implementation.

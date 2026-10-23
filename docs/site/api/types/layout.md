@@ -28,6 +28,10 @@ symbols:
     LayoutDiagnosticInput,
     LayoutItemStyle,
     Length,
+    IntrinsicAxisConstraints,
+    IntrinsicConstraints,
+    IntrinsicMeasureInput,
+    IntrinsicSizesResult,
     MeasureInput,
     MeasureResult,
     OverlayStyle,
@@ -222,3 +226,26 @@ before content-box/border-box conversion and inset floors. These widths reserve
 layout space; painted strokes remain independent. Layer’s own raster dimensions
 and child origin retain their existing physical-border behavior. Raw logical
 border inputs remain ineligible for frozen allocation caching.
+
+## IntrinsicAxisConstraints
+
+One available axis is `{ kind: "bounded", min, max }` or
+`{ kind: "unbounded", min }`, in logical units.
+
+## IntrinsicConstraints
+
+Explicit `width` and `height` availability for an intrinsic query.
+
+## IntrinsicMeasureInput
+
+`measureIntrinsic` receives resolved `props`, normalized `style`, tagged
+`constraints` and the pure Canvas measurement `service`. The first experimental
+consumer is a direct custom primitive in a finite nowrap Flex row.
+
+## IntrinsicSizesResult
+
+Returns `{ status: "measured", minContent, maxContent }` with content-box sizes,
+or `{ status: "unsupported", reason }`. Dimensions are finite and nonnegative;
+minimum width cannot exceed preferred width. Heights describe the content at the
+corresponding intrinsic width and need not be ordered. Existing `measure` is
+unchanged. A definite basis and explicit `minWidth: 0` avoid intrinsic queries.

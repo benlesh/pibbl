@@ -40,7 +40,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slice91 is delivered below; the single next slice is92, the intrinsic-provider contract. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–92 are delivered below; the single next slice is93, a known Flex intrinsic owner. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles159 records:136matches/23classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -2099,18 +2099,58 @@ Direction and box capabilities remain partial: broader combined direction,
 intrinsic and owner-feedback exits are outstanding. Fixed33 capabilities and all
 seven release gates remain open; whole-codebase review stays at full program end.
 
-## [NEXT] Intrinsic provider contract (slice 92)
+## Slice 92 delivered — custom intrinsic content providers
 
-Implement the accepted distinct `measureIntrinsic` primitive capability returning
-both min-content and max-content sizes, with explicit bounded/unbounded available
-axes. Keep existing `measure` unchanged. Present concrete application code and
-signatures before production. Start with one direct custom leaf in finite row
-nowrap Flex: automatic basis/minimum, explicit zero minimum escape, reactive
-content and paint-only reuse, public source/built/installed evidence and exact
-cleanup. Preserve pure transactional measurement, finite validation, unsupported
-and thrown-error behavior. No synthetic zero-width/unbounded legacy-measure
-fallback. Baselines are a later distinct capability. Reuse helpers and one scoped
-reviewer. Keep one NEXT and commit each slice separately.
+Adds distinct optional `measureIntrinsic` to `definePrimitive`, preserving
+`measure`. Public input contains resolved props, normalized style, pure Canvas
+measurement service and explicitly tagged bounded/unbounded axes. One result
+returns min/max content sizes. First consumer: a direct custom primitive in a
+finite nowrap Flex row. Parent applies insets once; automatic minimum and auto
+basis consume the respective widths. Finite/nonnegative dimensions and width
+ordering are checked; heights at different intrinsic widths need not be ordered.
+Definite basis plus explicit minimum bypasses a provider. Unsupported explains the
+missing contribution; thrown callbacks roll back, signal writes remain forbidden.
+
+A public focused RED preceded production. Three initial provider/mutable-data
+regressions pass. Fresh combined layout/measurement-purity run:320passed/6skipped
+(326); subsequent cache adoption/own-style tests:2passed,322skipped; intrinsic
+invalid-size matrix:4passed,324skipped. Ordinary suite:79passed/248skipped (327).
+Public source/built interaction controls pass with stamp1, moved follower targets,
+provider calls5 unchanged by sibling paint and zero disposal counters. Built uses
+469 inputs. Source URL:
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-intrinsic-primitive`.
+
+Snapshots publish only on successful transaction completion and belong to the
+existing layout region. Cache hits replay receiver dependencies; a post-hit
+source update is tested. Conservative scalar/signal admission rejects mutable
+nested inputs. Own style changes remeasure because providers can inspect full
+style; sibling paint reuse is the demonstrated claim. Scoped review caught the
+mutable-input and height-ordering issues; both have focused regression evidence.
+Studio’s preexisting omitted preserveSignalProps declaration was synchronized
+so the example compiles through the editor as well as runtime consumers.
+
+Fresh packed consumer passes Bundler/NodeNext and installed finite rows, reactive
+minimum, overflow, zero-minimum escape, target movement, reuse, identity and global
+exact disposal:230 inputs, SHA256
+`d05a09ff3cb535fb6aa10a39d69c3736e7cb8e9349cd0df4bc2ca89d6f848b32`.
+Types, changed-TypeScript lint, scenario catalog/discovery, documentation109 RED
+probes, public JSDoc and whitespace pass. Node26.9.0/Chromium; no Node24 aggregate
+trust claim. Native kernel and corpus177/154matches/23classified are unchanged.
+Custom measurement remains partial; broader intrinsic owners, constraints,
+baselines and feedback still need evidence. Fixed33/seven gates remain open.
+
+## [NEXT] Known Flex intrinsic owner (slice 93)
+
+Advance the existing intrinsic owner graph through supported public Flex, without
+another API. Probe prepared-owner adoption of direct custom intrinsic leaves first;
+if current recursive preparation already covers it, preserve that evidence and
+implement the concrete missing finite-width wrapped row intrinsic-height case.
+Start with declared finite child dimensions/minima, numeric gaps/insets and one
+known parent allocation. Settle line geometry before painting and move the
+following footer’s target when width changes. Do not discover opaque component
+internals or approximate intrinsic callbacks. First public RED→runnable source,
+then bounded hardening, source/built/installed verification and separate commit.
+After93 consolidate91–93; final whole-codebase review remains at full program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

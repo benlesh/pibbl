@@ -89,9 +89,18 @@ try {
     ),
   );
   await writeFile(join(consumer, "margin-types.ts"), `
-import { createElement, Rectangle, Flex, type FlexItemStyle, type BoxStyle } from '@pibbl/core';
+import { createElement, Rectangle, Flex, definePrimitive, type FlexItemStyle, type BoxStyle, type IntrinsicAxisConstraints, type IntrinsicConstraints, type IntrinsicMeasureInput, type IntrinsicSizesResult, type SystemStyle } from '@pibbl/core';
 const box: BoxStyle = { boxSizing: 'border-box', width: '50%', height: 30, padding: {left: '10%', top: '5%', right: 4, bottom: 0}, paddingStart: 0, paddingEnd: '15%', borderWidth: { left: 2, right: 4 }, borderStartWidth: 0, borderEndWidth: 30 };
 export const sized = createElement(Rectangle, { style: { ...box, width: 100, height: 30 } });
+type IntrinsicStyle = SystemStyle & { height?: number; flexShrink?: number; minWidth?: number };
+const bounded: IntrinsicAxisConstraints = { kind: 'bounded', min: 0, max: 80 };
+const unbounded: IntrinsicAxisConstraints = { kind: 'unbounded', min: 0 };
+const intrinsicConstraints: IntrinsicConstraints = { width: bounded, height: unbounded };
+const intrinsicResult: IntrinsicSizesResult = { status: 'measured', minContent: { width: 40, height: 20 }, maxContent: { width: 100, height: 20 } };
+const intrinsicInput = (input: IntrinsicMeasureInput<{ minimum: number }, IntrinsicStyle>): IntrinsicSizesResult => input.constraints.width.kind === 'bounded' ? { ...intrinsicResult, minContent: { width: input.props.minimum, height: 20 } } : { status: 'unsupported', reason: 'finite row required' };
+export const intrinsic = definePrimitive<{ minimum: number }, IntrinsicStyle>((_props, _style, context) => { context.fillRect(0, 0, 1, 1); }, { measureIntrinsic: intrinsicInput });
+void intrinsicConstraints;
+
 // @ts-expect-error Box sizing is a closed policy, not arbitrary CSS.
 const invalidBox: BoxStyle = { boxSizing: 'padding-box' };
 // @ts-expect-error Percentage layout borders remain unsupported.
@@ -139,7 +148,7 @@ export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40
   await writeFile(
     join(consumer, "entry.ts"),
     `import { WasmFlexNestedIntrinsicExample } from './example';
-import { createElement, Absolute, Flex, Layer, Rectangle, Text, signal } from '@pibbl/core';
+import { createElement, Absolute, Flex, Layer, Rectangle, Text, definePrimitive, signal, type SystemStyle } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
 const receipt = globalThis.__PIBBL_PACKED_PROOF__;
 if(receipt.modules || receipt.instances || receipt.frames) throw Error('Import-time work');
@@ -158,6 +167,13 @@ const inlineBorderCanvas=document.createElement('canvas');inlineBorderCanvas.wid
 const inlineBorderStart=signal(0),inlineBorderDirection=signal<'ltr'|'rtl'>('rtl'),inlineBorderInk=signal('red');let inlineBorderHits=0;
 const inlineBorderController=pibblSync(inlineBorderCanvas,createElement(Flex,{style:{width:200,height:100,layoutDirection:'rtl',alignItems:'flex-start'},children:createElement(Flex,{style:{width:100,height:60,boxSizing:'border-box',layoutDirection:inlineBorderDirection,minWidth:0,minHeight:0,flexShrink:0,borderWidth:{left:8,right:20,top:5,bottom:5},borderStartWidth:inlineBorderStart},children:createElement(Rectangle,{style:{width:'100%',height:'100%',minWidth:0,minHeight:0,flexShrink:0,fill:inlineBorderInk},onClick:()=>inlineBorderHits++})})}));
 try{const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));const click=(x:number)=>{const rect=inlineBorderCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])inlineBorderCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+10,bubbles:true,button:0}));};await frame();click(195);const initial=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();inlineBorderStart.set(30);await frame();click(195);click(155);if(inlineBorderHits!==2)throw Error('installed logical border start targets');inlineBorderDirection.set('ltr');await frame();click(110);click(145);if(inlineBorderHits!==3)throw Error('installed logical border receiver direction');const ctx=inlineBorderCanvas.getContext('2d')!;if(ctx.getImageData(110,10,1,1).data[3]!==0||ctx.getImageData(145,10,1,1).data[0]!==255)throw Error('installed logical border pixels');const before=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();inlineBorderInk.set('green');await frame();const after=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();for(const key of ['solves','mainPlacements','crossPlacements','measuredLeaves'])if(before[key]!==after[key])throw Error('installed logical border paint reuse');if(after.nodeCreates!==initial.nodeCreates)throw Error('installed logical border identity');receipt.logicalBorders=true;}finally{inlineBorderController.dispose();inlineBorderCanvas.remove();}
+type IntrinsicProviderStyle=SystemStyle & {height?:number;flexShrink?:number;minWidth?:number};
+let intrinsicProviderCalls=0;
+const IntrinsicProvider=definePrimitive<{minimum:number},IntrinsicProviderStyle>((_props,_style,context)=>{context.fillStyle='red';context.fillRect(0,0,200,20);},{measureIntrinsic:({props,constraints})=>{intrinsicProviderCalls++;if(constraints.width.kind!=='bounded'||constraints.height.kind!=='bounded')return{status:'unsupported',reason:'finite row required'};return{status:'measured',minContent:{width:props.minimum,height:20},maxContent:{width:100,height:20}};}});
+const intrinsicCanvas=document.createElement('canvas');intrinsicCanvas.width=120;intrinsicCanvas.height=30;intrinsicCanvas.style.cssText='width:120px;height:30px';document.body.append(intrinsicCanvas);
+const intrinsicOwner=signal(80),intrinsicMinimum=signal(40),intrinsicMinimumOverride=signal<number|undefined>(undefined),intrinsicPaint=signal('blue');let intrinsicHits=0;
+const intrinsicController=pibblSync(intrinsicCanvas,createElement(Flex,{style:{width:intrinsicOwner,height:20,alignItems:'flex-start'},children:[createElement(IntrinsicProvider,{minimum:intrinsicMinimum,style:{height:20,flexShrink:1,minWidth:intrinsicMinimumOverride}}),createElement(Rectangle,{onClick:()=>intrinsicHits++,style:{width:20,height:20,minWidth:0,flexShrink:0,fill:intrinsicPaint}})]}));
+try{const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));const click=(x:number)=>{const rect=intrinsicCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])intrinsicCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+5,bubbles:true,button:0}));};await frame();click(65);const initial=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();const initialCalls=intrinsicProviderCalls;intrinsicMinimum.set(70);await frame();click(65);click(75);if(intrinsicHits!==2||intrinsicProviderCalls<=initialCalls)throw Error('installed intrinsic provider minimum target or query');intrinsicOwner.set(40);await frame();click(75);if(intrinsicHits!==3)throw Error('installed intrinsic provider protected overflow target');intrinsicMinimumOverride.set(0);await frame();click(75);click(25);if(intrinsicHits!==4)throw Error('installed intrinsic provider explicit minimum escape target');const before=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__(),calls=intrinsicProviderCalls;intrinsicPaint.set('green');await frame();const after=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();if(intrinsicProviderCalls!==calls||after.measuredLeaves!==before.measuredLeaves)throw Error('installed intrinsic provider following paint measure');if(after.nodeCreates!==initial.nodeCreates)throw Error('installed intrinsic provider identity');receipt.intrinsicProvider=true;}finally{intrinsicController.dispose();intrinsicCanvas.remove();}
 const aspectCanvas = document.createElement('canvas'); aspectCanvas.width=120; aspectCanvas.height=140; aspectCanvas.style.cssText='width:120px;height:140px'; document.body.append(aspectCanvas);
 receipt.textCrossHits=0;
 const aspectController=pibblSync(aspectCanvas,createElement(Absolute,{style:{width:120,height:140},children:[

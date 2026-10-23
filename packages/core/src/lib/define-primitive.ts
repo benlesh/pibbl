@@ -158,6 +158,7 @@ export function defineBackendPrimitive<
     normalizeStyle: capabilities.normalizeStyle,
     resolveStyle: capabilities.resolveStyle,
     measure: capabilities.measure,
+    measureIntrinsic: capabilities.measureIntrinsic,
   });
   return component;
 }

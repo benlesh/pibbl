@@ -15,7 +15,7 @@ const unsupportedProperties = ['order'] as const;
 import { ResponsiveStylePreparation, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
-import { getChildPrimitiveReceiverToken, getPrimitiveReceiverToken } from '../element/metadata.js';
+import { getChildPrimitiveReceiverToken, getPrimitiveReceiverToken, getPrimitiveDefinition } from '../element/metadata.js';
 import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
@@ -53,7 +53,7 @@ import {
 import { getLayoutDirection, pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
-import { measureElement, withIsolatedRenderState } from './measure.js';
+import { measureElement, measureIntrinsicElement, withIsolatedRenderState } from './measure.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
 import type { Constraints, LayoutBox } from './types.js';
 
@@ -721,7 +721,19 @@ function resolveFlexPlacements(
     // An empty authored rectangle has no intrinsic content contribution. Keep
     // opaque/child-bearing primitives conservative without evaluating children.
     const automaticRectangleMinimum = hasEmptyRectangleMinimum(child, normalized, preparedStyleQuery(prepared), true);
-    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum) {
+    const customIntrinsic = experimentalLayout && row && options.flexWrap === 'nowrap' &&
+      !preparedStyleQuery(prepared) && !!getPrimitiveDefinition(child.type)?.measureIntrinsic &&
+      (basisValue === 'auto' && (normalized.width === undefined || normalized.width === 'auto') || shrink > 0 && normalized.minWidth === undefined);
+    let intrinsicSizes: Extract<import('../types.js').IntrinsicSizesResult, { status: 'measured' }> | undefined;
+    if (customIntrinsic) {
+      const measurementChild = clonePibblElement(child);
+      setPreNormalizedStyle(measurementChild, normalized, child, receiverToken);
+      const result = measureIntrinsicElement(measurementChild, { minWidth: 0, maxWidth: container.width, minHeight: 0, maxHeight: container.height }, measurement.service, region ? { cache: region, token: layoutToken ?? receiverToken, recordMeasurement: recordWasmMeasurement, key: JSON.stringify([allocationInputRevision(), measurementStyle(normalized), container.width, container.height]) } : undefined);
+      if (result.status === 'unsupported') throw childDiagnostic(child, 'measureIntrinsic', 'unsupported', container, `intrinsic measurement is required but unsupported: ${result.reason}; supply a definite basis and explicit minWidth: 0 to avoid the query`);
+      intrinsicSizes = result;
+    }
+
+    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum && !intrinsicSizes) {
       throw childDiagnostic(
         child,
         minimumProperty,
@@ -764,7 +776,8 @@ function resolveFlexPlacements(
     // width without measuring its intrinsic height. Resolve bounds/padding first.
     const deferredIntrinsicColumn = aspectRatio === undefined && experimentalLayout && !row && knownIntrinsicLayout &&
       needsMeasuredMain && crossAuto && effectiveAlignment(alignment, options.alignItems) === 'stretch';
-    if (!deferredIntrinsicColumn && (needsMeasuredMain || aspectRatio === undefined && (needsMeasuredCross || crossAuto))) {
+    if (intrinsicSizes) measured = intrinsicSizes.maxContent;
+    if (!intrinsicSizes && !deferredIntrinsicColumn && (needsMeasuredMain || aspectRatio === undefined && (needsMeasuredCross || crossAuto))) {
       const constraints = {
         minWidth: measuredColumnWrapText ? normalized.width as number : 0,
         maxWidth: measuredColumnWrapText ? normalized.width as number : container.width,
@@ -816,6 +829,10 @@ function resolveFlexPlacements(
       child,
       container,
     );
+    if (intrinsicSizes && normalized.minWidth === undefined && shrink > 0) {
+      minMain = Math.min(intrinsicSizes.minContent.width, maxMain,
+        typeof specifiedMain === 'number' ? specifiedMain : Number.POSITIVE_INFINITY);
+    }
     if (automaticTextMinimum) {
       if (region) recordWasmMeasurement();
       const contentMinimum = measureLayoutTextMinimumWidth(child.props, {

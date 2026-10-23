@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+import type { IntrinsicMeasurementEntry } from '../measure.js';
 import type { FlexAllocationCache } from '../flex-allocation-cache.js';
 import { readyLayoutModule } from './module.js';
 import { GLOBAL_STATE } from '../../global-state.js';
@@ -272,6 +273,13 @@ export class LayoutRegion {
   private crossSize = -1;
   private crossRecords: readonly (readonly number[])[] = [];
   private crossResults: readonly { outerCross: number; offset: number }[] = [];
+  private readonly intrinsicMeasurements = new Map<object, IntrinsicMeasurementEntry>();
+  readIntrinsic(token: object): IntrinsicMeasurementEntry | undefined { return this.intrinsicMeasurements.get(token); }
+  writeIntrinsic(token: object, entry: IntrinsicMeasurementEntry): void {
+    if (!this.layoutOwner?.has(this.handle, this.generation)) return;
+    if (!this.intrinsicMeasurements.has(token)) counters.cachedMeasurements++;
+    this.intrinsicMeasurements.set(token, entry);
+  }
   private readonly measurements = new Map<object, Map<string, { width: number; height: number }>>();
 
   private textMaximums: Map<object, { content: string; font: string; width: number }> | undefined;
@@ -297,6 +305,7 @@ export class LayoutRegion {
     entries.set(key, { ...size }); counters.cachedMeasurements++;
   }
   private releaseMeasurements(token: object): void {
+    if (this.intrinsicMeasurements.delete(token)) counters.cachedMeasurements--;
     if (this.textMaximums?.delete(token)) counters.cachedMeasurements--;
     counters.cachedMeasurements -= this.measurements.get(token)?.size ?? 0;
     this.measurements.delete(token);
@@ -397,6 +406,7 @@ export class LayoutRegion {
     this.layoutOwner = undefined; this.handle = 0; this.generation = 0;
     counters.activeNodes -= this.records.size;
     for (const token of this.measurements.keys()) this.releaseMeasurements(token);
+    for (const token of this.intrinsicMeasurements.keys()) this.releaseMeasurements(token);
     if (this.textMaximums) for (const token of this.textMaximums.keys()) this.releaseMeasurements(token);
     this.textMaximums = undefined;
     this.records.clear(); this.identities.clear(); this.results = []; this.order = []; this.main = -1; this.gap = -1;

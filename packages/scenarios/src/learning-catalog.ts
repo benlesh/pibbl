@@ -4335,6 +4335,35 @@ const drafts = [
     load: () => import("./learning/layout/wasm-flex-column-wrap.example"),
   },
   {
+    slug: "wasm-flex-intrinsic-primitive",
+    title: "Experimental WASM custom intrinsic leaf",
+    shortTitle: "WASM intrinsic leaf",
+    section: "layout",
+    order: 146,
+    summary:
+      "A custom primitive supplies paired intrinsic content sizes to a finite Flex row, keeping the following target in the same allocated geometry.",
+    api: ["Flex", "definePrimitive", "signal", "useLayoutBox"],
+    objectives: [
+      "Use one pure custom intrinsic provider for a direct finite row leaf.",
+      "Compare automatic minimum protection with the explicit minWidth: 0 escape while preserving the following target.",
+    ],
+    prompts: {
+      gesture:
+        "Toggle Minimum and Owner, then click the blue follower. Minimum escape permits shrink below the provider minimum. Paint only changes the follower pigment without requesting intrinsic work.",
+      code:
+        "IntrinsicChip returns minContent and maxContent together. Its renderer paints the public allocation from useLayoutBox(); the provider never paints or allocates resources.",
+    },
+    apiNotes: [
+      "Experimental direct custom primitive in a finite nowrap row only; no nested provider, baseline, Grid, Flow, column, or general intrinsic-layout claim.",
+      "Unsupported providers retain the existing actionable automatic-minimum diagnostic; minWidth: 0 is the explicit escape.",
+    ],
+    canvas: { width: 760, height: 360 },
+    related: ["wasm-flex-intrinsic-text", "wasm-flex-constraints", "flex"],
+
+    exportName: "WasmFlexIntrinsicPrimitiveExample",
+    load: () => import("./learning/layout/wasm-flex-intrinsic-primitive.example"),
+  },
+  {
     slug: "wasm-logical-padding",
     title: "Experimental logical padding and borders",
     shortTitle: "WASM logical insets",
