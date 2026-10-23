@@ -1390,6 +1390,72 @@ static void roundingCases() {
   YGConfigFree(config);
 }
 
+
+static void nestedCrossMinimumDecoratedReverseCases() {
+  for (int resize = 0; resize < 2; ++resize) {
+    const bool resized = resize == 1;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false);
+    YGConfigSetPointScaleFactor(config, 0);
+    YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, 244);
+    YGNodeStyleSetHeight(root, resized ? 204 : 144);
+    YGNodeStyleSetFlexDirection(root, YGFlexDirectionRowReverse);
+    YGNodeStyleSetFlexWrap(root, YGWrapWrap);
+    YGNodeStyleSetGap(root, YGGutterAll, 12);
+    YGNodeStyleSetAlignItems(root, YGAlignStretch);
+    YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10);
+    YGNodeStyleSetPadding(root, YGEdgeRight, 30);
+    YGNodeStyleSetPadding(root, YGEdgeTop, 20);
+    YGNodeStyleSetPadding(root, YGEdgeBottom, 20);
+    YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+
+    auto nested = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(nested, 80);
+    YGNodeStyleSetFlexBasis(nested, 80);
+    YGNodeStyleSetFlexGrow(nested, 0);
+    YGNodeStyleSetFlexShrink(nested, 0);
+    YGNodeStyleSetFlexDirection(nested, YGFlexDirectionRow);
+    YGNodeStyleSetAlignItems(nested, YGAlignFlexStart);
+    setMinZero(nested);
+    YGNodeStyleSetMinHeightPercent(nested, 60);
+    for (int leafIndex = 0; leafIndex < 2; ++leafIndex) {
+      auto leaf = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(leaf, 40);
+      YGNodeStyleSetHeight(leaf, 20);
+      YGNodeStyleSetFlexGrow(leaf, 0);
+      YGNodeStyleSetFlexShrink(leaf, 0);
+      setMinZero(leaf);
+      YGNodeInsertChild(nested, leaf, leafIndex);
+    }
+    YGNodeInsertChild(root, nested, 0);
+    for (int index = 1; index < 3; ++index) {
+      auto child = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(child, 80);
+      YGNodeStyleSetHeight(child, index == 1 ? 40 : 20);
+      YGNodeStyleSetFlexBasis(child, 80);
+      YGNodeStyleSetFlexGrow(child, 0);
+      YGNodeStyleSetFlexShrink(child, 0);
+      setMinZero(child);
+      YGNodeInsertChild(root, child, index);
+    }
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+    auto a = YGNodeGetChild(root, 0);
+    std::cout << ",{\"name\":\"nested-cross-min-decorated-row-reverse" << (resized ? "-resized" : "")
+              << "\",\"width\":244,\"height\":" << (resized ? 204 : 144)
+              << ",\"gap\":12,\"flexDirection\":\"row-reverse\",\"flexWrap\":\"wrap\",\"nestedDecoratedCrossMinFixture\":true,\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"stretch\",\"alignContent\":\"flex-start\"},\"boxes\":[";
+    for (int index = 0; index < 3; ++index) { if (index) std::cout << ','; printBox(YGNodeGetChild(root, index)); }
+    std::cout << "],\"nestedDecoratedBoxes\":[";
+    for (int leafIndex = 0; leafIndex < 2; ++leafIndex) { if (leafIndex) std::cout << ','; printBox(YGNodeGetChild(a, leafIndex), YGNodeLayoutGetLeft(a), YGNodeLayoutGetTop(a)); }
+    std::cout << "],\"nestedOwnerStyle\":{\"width\":80,\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":\"60%\",\"flexDirection\":\"row\",\"alignItems\":\"flex-start\"},\"nestedItemStyles\":[{\"width\":40,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":40,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}],\"itemStyles\":[{\"width\":80,\"height\":\"auto\",\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":\"60%\"},{\"width\":80,\"height\":40,\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":80,\"height\":20,\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}] }";
+    YGNodeFreeRecursive(root);
+    YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1530,5 +1596,6 @@ int main() {
   ownerCrossAutoCases();
   roundingCases();
   nestedCrossMinimumCases();
+  nestedCrossMinimumDecoratedReverseCases();
   std::cout << "]\n";
 }

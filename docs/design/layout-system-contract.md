@@ -298,6 +298,11 @@ row Flex with two fixed40×20 children. In a200-wide wrapped row, owner height
 The inner leaves retain their logical geometry and identity. This inner automatic
 row height performs one pure measurement per preparation; it has no new snapshot
 cache admission. Paint-only updates reuse native solves, lines and numeric nodes.
+The same nested minimum is evidenced in a row-reverse wrapped border-box owner
+244×144→204 with padding10/30/20/20 and border2. Its final content size is
+200×100→160: A remains at132,22, fixed inner leaves at132/172,22, and C moves
+y94→130. Decorations are removed before the percentage cross bound resolves;
+world reversal does not alter the containing content size.
 Finite nested Flex allocations resolve percentages from the final inner content
 box, after outer line allocation. Pinned row/column × nowrap/wrap resize cases
 include inner40% dimensions/bases and10% gaps: allocated main81→51 gives child

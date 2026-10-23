@@ -472,3 +472,12 @@ private-built mounts. The installed consumer repeats the behavior. One pure
 measurement per preparation remains; no new row snapshot cache is claimed.
 The corpus is310=216matches+94classified; auto104/direction24 are unchanged.
 Broader reverse/decorated bounds and indefinite-owner policy remain outstanding.
+
+### Decorated reversed nested cross minimum (slice 113)
+
+`nested-cross-min-decorated-row-reverse[-resized]` pins the content owner after
+border/padding:244×144→204 border box gives200×100→160 content. A remains132,22
+and grows60→96; C moves132,94→130. `--nested-decorated-cross-min` checks actual
+public nested leaves, B/C world geometry, keys, targets, native reuse and cleanup.
+The312-record corpus now has218matches/94classified differences. Surface height
+must admit the204-high root; a180-high viewport changes the actual constraints.

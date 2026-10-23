@@ -869,7 +869,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
   // This walk advances Next case through the contiguous original families. Later
   // sections (including rounding) have dedicated semantic tests and browser drivers.
-  const cases=yogaReference.cases.filter(fixture=>!('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
+  const cases=yogaReference.cases.filter(fixture=>!('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
@@ -4532,6 +4532,49 @@ it.runIf(experimentalLayout).each([
   const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 'auto', wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', ...style } as import('@pibbl/core').TextStyle });
   expect(() => layoutFlex({ x: 0, y: 0, width: 140, height: 100 }, [text], {}, measurement)).toThrow(/auto cross-axis margins/);
 });
+
+it.runIf(experimentalLayout)('preserves a decorated row-reverse nested percentage cross minimum through a height-only resize', async () => {
+  const fixtures = yogaReference.cases.filter((fixture) => 'nestedDecoratedCrossMinFixture' in fixture);
+  expect(fixtures.map((fixture) => fixture.name)).toEqual(['nested-cross-min-decorated-row-reverse', 'nested-cross-min-decorated-row-reverse-resized']);
+  const [initialFixture, resizedFixture] = fixtures;
+  const height = signal(144), fill = signal('#426b61');
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const leafBoxes = new Map<string, { x: number; y: number; width: number; height: number }>();
+  const stamps = new Map<string, number>();
+  let nextStamp = 1, mounts = 0, cHits = 0;
+  function Leaf({ name, style: _style }: { name: string; style: Record<string, unknown> }) {
+    const stamp = useConst(() => { mounts++; return nextStamp++; });
+    const box = useLayoutBox();
+    stamps.set(name, stamp);
+    const transform = useCanvasContext().getTransform();
+    leafBoxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height });
+    return createElement(Rectangle, { pointerEvents: 'none', style: { width: box.width, height: box.height, fill } });
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 280; canvas.height = 240; document.body.append(canvas);
+  const root = createElement(Flex, { style: { width: 244, height, boxSizing: 'border-box', padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2, flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, alignItems: 'stretch', alignContent: 'flex-start' }, children: [
+    createElement(Flex, { key: 'A', style: { width: 80, height: 'auto', flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: '60%', alignItems: 'flex-start' }, children: ['A1','A2'].map(name => createElement(Leaf, { key: name, name, style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 } })) }),
+    createElement(Rectangle, { key: 'B', style: { width: 80, height: 40, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: '#6e3e79' } }),
+    createElement(Rectangle, { key: 'C', onClick: () => cHits++, style: { width: 80, height: 20, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill } }),
+  ] });
+  const controller = pibbl(canvas, root); controllers.push(controller); await nextFrame();
+  expect(initialFixture.boxes).toEqual([{ x: 132, y: 22, width: 80, height: 60 }, { x: 40, y: 22, width: 80, height: 40 }, { x: 132, y: 94, width: 80, height: 20 }]);
+  expect(initialFixture.nestedDecoratedBoxes).toEqual([{ x: 132, y: 22, width: 40, height: 20 }, { x: 172, y: 22, width: 40, height: 20 }]);
+  expect(leafBoxes).toEqual(new Map([['A1', { x: 132, y: 22, width: 40, height: 20 }], ['A2', { x: 172, y: 22, width: 40, height: 20 }]]));
+  clickCanvas(canvas, 136, 98); expect(cHits).toBe(1);
+  const initial = snapshotWasmLayoutDiagnostics(), initialStamps = new Map(stamps);
+  height.set(204); await nextFrame();
+  expect(resizedFixture.boxes).toEqual([{ x: 132, y: 22, width: 80, height: 96 }, { x: 40, y: 22, width: 80, height: 40 }, { x: 132, y: 130, width: 80, height: 20 }]);
+  expect(resizedFixture.nestedDecoratedBoxes).toEqual([{ x: 132, y: 22, width: 40, height: 20 }, { x: 172, y: 22, width: 40, height: 20 }]);
+  expect(leafBoxes).toEqual(new Map([['A1', { x: 132, y: 22, width: 40, height: 20 }], ['A2', { x: 172, y: 22, width: 40, height: 20 }]]));
+  expect(stamps).toEqual(initialStamps); expect(mounts).toBe(2);
+  clickCanvas(canvas, 136, 98); expect(cHits).toBe(1);
+  clickCanvas(canvas, 136, 134); expect(cHits).toBe(2);
+  const resized = snapshotWasmLayoutDiagnostics(); expect(resized.solves).toBe(initial.solves); expect(resized.crossPlacements).toBeGreaterThan(initial.crossPlacements); expect(resized.nodeCreates).toBe(initial.nodeCreates);
+  fill.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics(); expect(painted.solves).toBe(resized.solves); expect(painted.lineFormations).toBe(resized.lineFormations); expect(painted.measuredLeaves).toBe(resized.measuredLeaves + 1); expect(painted.nodeCreates).toBe(resized.nodeCreates); expect(mounts).toBe(2);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+});
+
 
 it.runIf(experimentalLayout)('accepts explicit automatic Text width with cross-auto placement', () => {
   const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 'auto', wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto' } });

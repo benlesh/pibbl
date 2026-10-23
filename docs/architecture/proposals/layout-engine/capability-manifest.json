@@ -1896,7 +1896,7 @@
       "id": "flex.min-max",
       "target": "parity",
       "group": "flex-core",
-      "current": "numeric bounds, definite-owner percentage main-axis caps/floors and wrapped stretched cross bounds in row/column, including owner resize; intrinsic percentage owners remain explicitly unsupported; bounded direct nested row Flex cross minimum resolves from a definite wrapped outer owner",
+      "current": "numeric bounds, definite-owner percentage main-axis caps/floors and wrapped stretched cross bounds in row/column, including owner resize; intrinsic percentage owners remain explicitly unsupported; bounded direct nested row Flex cross minimum resolves from a definite wrapped outer owner; decorated border-box row-reverse/wrap nested cross minima use the final content owner",
       "status": "partial",
       "evidenceRefs": [
         "packages/core/src/lib/layout/flex.test.ts",
@@ -1912,7 +1912,8 @@
           "definite percentage grow caps and shrink floors in both axes",
           "200\u2192240 cap owner and100\u2192140 floor owner pairs",
           "wrapped auto-cross stretch minimum60% expands line size and maximum25% caps the item in both axes",
-          "Nested row Flex minHeight60% under owner height100\u2192160 expands its line60\u219296 while fixed inner leaves retain40\u00d720 geometry"
+          "Nested row Flex minHeight60% under owner height100\u2192160 expands its line60\u219296 while fixed inner leaves retain40\u00d720 geometry",
+          "Decorated border-box244\u00d7144\u2192204 with padding/border leaves content200\u00d7100\u2192160; reversed nested minHeight60% gives60\u219296 and world C y94\u2192130"
         ],
         "negative": [
           "opposing limits rejection",
@@ -1924,7 +1925,8 @@
           "owner resize recomputes percent limits and moves hit targets in the same frame",
           "two mounted identities and native nodes preserved",
           "source/built focused eight-case plus prior-case checks; installed signal-driven cap/hit check",
-          "Nested following target moves y72\u2192108; old point misses, keyed leaves/native nodes survive, paint-only solves/lines reuse with one pure measure per preparation"
+          "Nested following target moves y72\u2192108; old point misses, keyed leaves/native nodes survive, paint-only solves/lines reuse with one pure measure per preparation",
+          "Decorated reverse nested world leaves remain132/172,22; following target moves, keys/native solves/lines reuse, one pure measurement remains on paint"
         ],
         "yogaCases": [
           "cap",
@@ -1948,10 +1950,12 @@
           "cross-percent-column-max",
           "cross-percent-column-max-resized",
           "nested-cross-min-row",
-          "nested-cross-min-row-resized"
+          "nested-cross-min-row-resized",
+          "nested-cross-min-decorated-row-reverse",
+          "nested-cross-min-decorated-row-reverse-resized"
         ],
         "missing": [
-          "broader reverse/decorated percentage-bound matrix and additional nested axes/bounds",
+          "broader column/reversed/decorated percentage bounds and additional nested minimum/maximum combinations",
           "indefinite owner policy and explicit measure modes"
         ]
       }
