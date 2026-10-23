@@ -104,6 +104,7 @@ try {
       assert.equal(receipt.wrappedAspectRatio, true, 'Installed package must move wrapped ratio paint and targets after resize');
       assert.equal(receipt.frozenPartial, true, 'Installed package must use initially frozen sizes for partial factors');
       assert.equal(receipt.safeOverflow, true, 'Installed package must use safe overflow start');
+      assert.equal(receipt.wrapReversePercentageMargins, true, 'Installed wrap-reverse percentages preserve numeric geometry, moved targets and identity');
       assert.equal(receipt.wrappedPercentageMargins, true, 'Installed wrapped percentage margins preserve physical offsets and moved targets');
       assert.equal(receipt.nestedPercentageWrapping, true, 'Installed nested percentages must use final row/column nowrap/wrap owners across all eight native cases');
       assert.equal(receipt.percentageMargins, true, 'Installed percentage margins must use allocated content width and move paint/targets');

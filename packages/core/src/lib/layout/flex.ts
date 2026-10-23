@@ -668,7 +668,6 @@ function resolveFlexPlacements(
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
     assertSupportedChildPosition('Flex', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
-    if (options.flexWrap === 'wrap-reverse' && (isPercentage(normalized.margin) || isPercentage(normalized.marginTop) || isPercentage(normalized.marginRight) || isPercentage(normalized.marginBottom) || isPercentage(normalized.marginLeft))) throw childDiagnostic(child, 'margin', 'percentage', container, 'percentage margins in wrap-reverse remain unsupported; use finite nowrap or wrap allocation');
     const allMargin = allocatedMargin(normalized.margin, 'margin', child, container);
     const marginTop = allocatedMargin(normalized.marginTop === undefined ? allMargin : normalized.marginTop, 'marginTop', child, container);
     const marginRight = allocatedMargin(normalized.marginRight === undefined ? allMargin : normalized.marginRight, 'marginRight', child, container);

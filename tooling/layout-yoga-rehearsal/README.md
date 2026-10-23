@@ -438,3 +438,14 @@ eight records: four nowrap matches and four wrapped differences. Source/built an
 installed pixels/targets/cache/identity/cleanup checks cover both row/column pairs.
 Wrap-reverse percentages remain explicitly rejected until their own numeric
 preservation proof; auto/logical margins and indefinite owners remain gaps.
+
+## Wrap-reverse percentage margins (slice 87)
+
+Four additional `margin-percent-*-wrap-reverse*` records lock existing Pibbl numeric
+physical-offset geometry before percentage admission. Yoga native boxes remain
+separate from the explicitly classified Pibbl boxes, including negative visible
+coordinates and padded reversed-cross differences. The margin section now has12
+records: four nowrap matches and eight wrapped/reversed classifications. Actual
+source/built/installed pixels and targets, owner resize, paint reuse, identity and
+cleanup are checked. Intrinsic/indefinite owners and logical/auto margins remain
+explicit gaps; there is no new margin API or native ABI.

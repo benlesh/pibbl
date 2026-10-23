@@ -2755,7 +2755,7 @@ it.runIf(experimentalLayout)('moves allocated percentage margin paint and hit ta
 });
 it.runIf(experimentalLayout)('rejects percentage margins without supported allocated ownership',()=>{
   const child=createElement(Rectangle,{style:{width:20,height:20,minWidth:0,margin:'10%'}});
-  expect(()=>layoutFlex({x:0,y:0,width:100,height:100},[child],{flexWrap:'wrap-reverse'},measurement)).toThrow(/wrap-reverse/);
+  expect(()=>layoutFlex({x:0,y:0,width:Number.POSITIVE_INFINITY,height:100},[child],{flexWrap:'wrap-reverse'},measurement)).toThrow(/property width.*Infinity/);
   const root=createElement(Flex,{style:{width:100},children:child});
   expect(measureElement(root,{minWidth:0,maxWidth:100,minHeight:0,maxHeight:100},service)).toMatchObject({status:'unsupported'});
 });
@@ -2813,3 +2813,31 @@ for(const column of [false,true]){
   controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
  });
 }
+for(const column of [false,true])for(const resized of [false,true]){
+ it.runIf(experimentalLayout)(`preserves numeric offsets for ${column?'column':'row'} wrap-reverse percentage margins ${resized?'resized':'initial'}`,()=>{
+  const width=resized?320:260,box={x:10,y:20,width,height:resized?190:140};
+  const item=(percent:boolean)=>createElement(Rectangle,{style:{width:60,height:30,flexBasis:column?30:60,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,marginLeft:percent?'10%':width*.1,marginRight:percent?'15%':width*.15,marginTop:percent?'5%':width*.05,marginBottom:percent?'20%':width*.2}});
+  const following=createElement(Rectangle,{style:{width:136,height:81,flexBasis:column?81:136,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0}});
+  const options={flexDirection:column?'column':'row',flexWrap:'wrap-reverse',alignItems:'flex-start',alignContent:'flex-start'} as const;
+  const expected=column?[{x:resized?222:171,y:resized?36:33,width:60,height:30},{x:resized?54:9,y:20,width:136,height:81}]:[{x:resized?42:36,y:resized?116:78,width:60,height:30},{x:resized?150:10,y:resized?129:-16,width:136,height:81}];
+  expect(layoutFlex(box,[item(false),following],options,measurement)).toEqual(expected);
+  expect(layoutFlex(box,[item(true),following],options,measurement)).toEqual(expected);
+ });
+}
+for(const column of [false,true]){
+ it.runIf(experimentalLayout)(`moves ${column?'column':'row'} wrap-reverse percentage margin targets with stable nodes`,async()=>{
+  const baseline=snapshotWasmLayoutDiagnostics(),width=signal(300),height=signal(200),fill=signal('red');let hits=0;
+  const canvas=document.createElement('canvas');canvas.width=400;canvas.height=280;document.body.append(canvas);
+  const root=createElement(Flex,{style:{width,height,boxSizing:'border-box',padding:{left:10,right:30,top:20,bottom:40},flexDirection:column?'column':'row',flexWrap:'wrap-reverse',alignContent:'flex-start',alignItems:'flex-start'},children:[createElement(Rectangle,{style:{width:60,height:30,flexBasis:column?30:60,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,marginLeft:'10%',marginRight:'15%',marginTop:'5%',marginBottom:'20%',fill}}),createElement(Rectangle,{style:{width:136,height:81,flexBasis:column?81:136,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,fill:'blue'},onClick:()=>hits++})]});
+  const controller=pibbl(canvas,root);controllers.push(controller);await nextFrame();clickCanvas(canvas,column?11:12,column?22:5);expect(hits).toBe(1);const before=snapshotWasmLayoutDiagnostics();fill.set('green');await nextFrame();const painted=snapshotWasmLayoutDiagnostics();expect(painted.solves).toBe(before.solves);expect(painted.lineFormations).toBe(before.lineFormations);expect(painted.measuredLeaves).toBe(before.measuredLeaves);
+  width.set(360);height.set(250);await nextFrame();clickCanvas(canvas,column?11:12,column?22:5);expect(hits).toBe(1);clickCanvas(canvas,column?56:152,column?22:131);expect(hits).toBe(2);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
+  controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+ });
+}
+it.runIf(experimentalLayout)('resolves signed percentage shorthand with specific zero edges independent of declaration order',()=>{
+ const first=createElement(Rectangle,{style:{width:20,height:10,minWidth:0,minHeight:0,flexShrink:0,margin:'10%',marginLeft:'-5%',marginTop:0}});
+ const second=createElement(Rectangle,{style:{marginTop:0,marginLeft:'-5%',margin:'10%',width:20,height:10,minWidth:0,minHeight:0,flexShrink:0}});
+ const expected=[{x:-5,y:0,width:20,height:10}];
+ expect(layoutFlex({x:0,y:0,width:100,height:100},[first],{},measurement)).toEqual(expected);
+ expect(layoutFlex({x:0,y:0,width:100,height:100},[second],{},measurement)).toEqual(expected);
+});

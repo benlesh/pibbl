@@ -350,17 +350,20 @@ clamp the final signed accumulation at zero, without clamping individual margins
 Margin receiver inputs are layout roles. Finite row/column wrapping includes
 margins in line formation and line cross extents, including negative overlap.
 Other layout families reject these fields; normal JavaScript Flex retains its diagnostic.
-Finite allocated nowrap and wrap Flex rows and columns also accept percentage physical
+Finite allocated nowrap, wrap and wrap-reverse Flex rows and columns also accept percentage physical
 margins. All four edges resolve against the actual parent content width, including
 top/bottom; e.g. outer300 with L10/R30 padding gives content260, so L10%=26 and
 T5%=13. Owner resize reruns placement without remounting; paint-only changes reuse
-layout. Intrinsic measurement, wrap-reverse percentage margins, auto and logical
-margins remain unsupported. Percentage syntax and finite arithmetic use the shared
+layout. Intrinsic measurement, auto and logical margins remain unsupported. Percentage syntax and finite arithmetic use the shared
 length resolver. Numeric wrapped-margin behavior remains unchanged. Percentage wrapping preserves the same
 physical leading cross offset: at outer300×200 with L10/R30/T20/B40 padding,
 A60×30 with marginsL10%/R15%/T5%/B20% starts36,33. Pinned Yoga3.2.1 instead starts
 36,20 in row wrap or10,33 in column wrap. These are labeled preserved physical-margin
-placement differences, not percentage-resolution parity or numeric behavior changes.
+placement differences, not percentage-resolution parity or numeric behavior changes. Wrap-reverse also preserves numeric geometry: initial row A36,78/B10,-16
+and column A171,33/B9,20; after outer360×250 resize row A42,116/B150,129 and
+column A222,36/B54,20. Native Yoga reversed-cross differences are explicitly
+recorded rather than changing Pibbl offsets. Signed percentage margins and explicit
+zero specific edges follow the same precedence independently of declaration order.
 
 The shared private WASM records are ten f64 slots: nonnegative sizing/padding
 inputs and bounds retain their validation; signed leading/trailing margins occupy
