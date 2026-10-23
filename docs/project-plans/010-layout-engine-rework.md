@@ -1160,6 +1160,29 @@ and Layer's separate raster-sizing policy. Public asymmetric row/column evidence
 comes first. No percentage/logical border aliases or new painting semantics.
 Group24 is70–72 after consolidation23 for67–69.
 
+### Consolidation 23 completed for delivery slices 67–69
+
+Separate67 `16fe904e`,68 `df3d0974`,69 `9b530832`. Public opt-in border-box
+sizing,14-case pinned native corpus and live Studio dependency refresh are
+implemented. Fresh bounded Chromium consolidation:272passed/1normal-onlyskip
+across12 files: public WASM slice, box/Flex/Grid/Flow/Absolute/Overlay/measurement/
+JSX layout, native loader, HTML Layer and focus ownership. This selected suite
+is not the same file set as consolidation22; totals are fresh scoped receipts.
+Log `/tmp/pibbl-consolidation23-focused.txt`.
+
+Source14-case replay68 and canonical built14-case replay69 pass; built468inputs,
+errors[] and exact zero ownership cleanup. Native independent reproduction68,
+normal focused cases68, types/lint69 and durable real-server refresh69 pass.
+Last packed receipt67:229installed-dist inputs, Bundler/NodeNext explicit
+boxSizing declarations, Node geometry and browser lifecycle. No runtime/kernel
+change68/69 requires repeating that receipt. Kernel65282bytes/eight native tests
+unchanged; no baseline rewritten. Node26.9.0/pnpm11.21.0deps/Chromium, not Node24
+full trust. Fixed33 capabilities/seven open gates unchanged. Full Flex/box/RTL/
+aspect, intrinsic/providers, participation, prepared topology/minimal visits,
+atomic Canvas/hit/focus/HTML publication, standalone/framework/Pibbl migrations,
+broad pinned corpus, reproducible performance, Node24 trust and final separate
+critical review remain outstanding. The single next slice70 is above.
+
 ### Consolidation 22 completed for delivery slices 64–66
 
 Separate64 `f5639a2e`,65 `fcfea332`,66 `6648bf66`. The pinned native Yoga3.2.1
