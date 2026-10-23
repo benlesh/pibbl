@@ -280,8 +280,15 @@ An explicitly experimental `layout-wasm` Studio/test build, and the unpublished
 `layout-wasm-built` local Studio lane, use the same public
 Flex surface with a private f64 WASM allocator and main/cross-axis placement.
 It supports nowrap rows/columns, finite row wrap, and finite column wrap with
-declared height/flexBasis and width; wrapped line formation,
-per-line allocation and line/item offsets run in WASM. Direct Text in rows is remeasured
+declared height/flexBasis and a declared or stretched automatic width; wrapped line formation,
+per-line allocation and line/item offsets run in WASM. Stretched automatic
+cross sizes in wrapped columns use the established line cross size and finite
+owner-relative cross bounds. Cross minimum60% at owner cross100→160 expands the
+line60→96 and moves the next line72→108 with gap12; maximum25% caps the item25→40
+while a40-unit sibling keeps the next line at52. Source-order paint/hit targets
+move with those boxes; cross-only updates reuse main solving/line formation.
+Auto main height/basis and non-stretch automatic cross measurement remain
+unsupported in wrapped columns. Direct Text in rows is remeasured
 at its final per-line content width before line cross sizes settle. Main-axis
 minimums remain explicit except for two bounded native policies. A direct empty
 Rectangle with no authored children property, no responsive query and finite

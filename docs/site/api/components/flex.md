@@ -144,3 +144,13 @@ Raw percentage padding outside an allocated Flex child and pure intrinsic
 measurement remain unsupported; borders remain numeric. In the
 [comparison example](#/examples/layout/wasm-yoga-migration), click Next section
 four times to inspect content-box and border-box cases.
+
+Experimental wrapped columns also accept automatic cross width when the item
+stretches and has a declared main height or basis. Percentage `minWidth`/`maxWidth`
+use the finite owner content width; rows use `minHeight`/`maxHeight` against content
+height. A minimum can enlarge the line and move following lines; a maximum caps
+the item without shrinking a larger fixed sibling's line. Main-axis solving is
+reused for cross-only resizing. Non-stretch automatic width and intrinsic main
+height remain outside wrapped-column support. In the
+[comparison example](#/examples/layout/wasm-yoga-migration), click Next section
+five times for these percentage cross-bound cases.

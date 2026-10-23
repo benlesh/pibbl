@@ -234,6 +234,79 @@ static void percentagePaddingCases() {
 
 // Validation-only harness: the proposed function has a leading comma for a reference emitter.
 
+static void wrappedCrossPercentageCases() {
+  for (int axis = 0; axis < 2; ++axis) {
+    const bool column = axis == 1;
+    for (int bound = 0; bound < 2; ++bound) {
+      const bool minimum = bound == 0;
+      for (int resize = 0; resize < 2; ++resize) {
+        const bool resized = resize == 1;
+        const float cross = resized ? 160 : 100;
+        auto config = YGConfigNew();
+        YGConfigSetUseWebDefaults(config, false);
+        YGConfigSetPointScaleFactor(config, 0);
+        YGConfigSetErrata(config, YGErrataNone);
+        auto root = YGNodeNewWithConfig(config);
+        YGNodeStyleSetWidth(root, column ? cross : 200);
+        YGNodeStyleSetHeight(root, column ? 200 : cross);
+        YGNodeStyleSetFlexDirection(root, column ? YGFlexDirectionColumn : YGFlexDirectionRow);
+        YGNodeStyleSetFlexWrap(root, YGWrapWrap);
+        YGNodeStyleSetAlignItems(root, YGAlignStretch);
+        YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+        YGNodeStyleSetGap(root, YGGutterAll, 12);
+        for (int item = 0; item < 3; ++item) {
+          auto child = YGNodeNewWithConfig(config);
+          if (column) YGNodeStyleSetHeight(child, 80); else YGNodeStyleSetWidth(child, 80);
+          YGNodeStyleSetFlexBasis(child, 80);
+          YGNodeStyleSetFlexGrow(child, 0);
+          YGNodeStyleSetFlexShrink(child, 0);
+          YGNodeStyleSetMinWidth(child, 0);
+          YGNodeStyleSetMinHeight(child, 0);
+          if (item == 0) {
+            if (column) {
+              if (minimum) YGNodeStyleSetMinWidthPercent(child, 60);
+              else YGNodeStyleSetMaxWidthPercent(child, 25);
+            } else {
+              if (minimum) YGNodeStyleSetMinHeightPercent(child, 60);
+              else YGNodeStyleSetMaxHeightPercent(child, 25);
+            }
+          } else if (item == 1) {
+            if (column) YGNodeStyleSetWidth(child, 40); else YGNodeStyleSetHeight(child, 40);
+          } else {
+            if (column) YGNodeStyleSetWidth(child, 20); else YGNodeStyleSetHeight(child, 20);
+          }
+          YGNodeInsertChild(root, child, item);
+        }
+        YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+        std::cout << ",{\"name\":\"cross-percent-" << (column ? "column" : "row")
+                  << '-' << (minimum ? "min" : "max") << (resized ? "-resized" : "")
+                  << "\",\"width\":" << (column ? cross : 200) << ",\"height\":" << (column ? 200 : cross)
+                  << ",\"gap\":12,\"flexDirection\":\"" << (column ? "column" : "row")
+                  << "\",\"flexWrap\":\"wrap\",\"containerStyle\":{\"alignItems\":\"stretch\",\"alignContent\":\"flex-start\"},\"boxes\":[";
+        for (int item = 0; item < 3; ++item) {
+          if (item) std::cout << ',';
+          auto child = YGNodeGetChild(root, item);
+          std::cout << "{\"x\":" << YGNodeLayoutGetLeft(child) << ",\"y\":" << YGNodeLayoutGetTop(child)
+                    << ",\"width\":" << YGNodeLayoutGetWidth(child) << ",\"height\":" << YGNodeLayoutGetHeight(child) << '}';
+        }
+        std::cout << "],\"itemStyles\":[{";
+        if (column) std::cout << "\"width\":\"auto\",\"height\":80";
+        else std::cout << "\"width\":80,\"height\":\"auto\"";
+        std::cout << ",\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"min" << (column ? "Height\":0" : "Width\":0");
+        if (minimum) std::cout << ",\"min" << (column ? "Width\":\"60%\"" : "Height\":\"60%\"");
+        else std::cout << ",\"min" << (column ? "Width\":0,\"maxWidth\":\"25%\"" : "Height\":0,\"maxHeight\":\"25%\"");
+        std::cout << "},{\"width\":" << (column ? 40 : 80) << ",\"height\":" << (column ? 80 : 40)
+                  << ",\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}"
+                  << ",{\"width\":" << (column ? 20 : 80) << ",\"height\":" << (column ? 80 : 20)
+                  << ",\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+        YGNodeFreeRecursive(root); YGConfigFree(config);
+      }
+    }
+  }
+}
+
+// Validation-only harness; function records begin with a comma for the reference emitter.
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -350,5 +423,6 @@ int main() {
   wrappedAspectCases();
   percentageGapCases();
   percentagePaddingCases();
+  wrappedCrossPercentageCases();
   std::cout << "]\n";
 }

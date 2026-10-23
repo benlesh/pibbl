@@ -721,11 +721,12 @@ function resolveFlexPlacements(
       (specifiedMain === undefined || specifiedMain === 'auto');
     if (aspectRatio !== undefined && needsMeasuredMain) throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'requires a definite main dimension or flexBasis; intrinsic aspect sizing is unsupported');
     const crossAuto = specifiedCross === undefined || specifiedCross === 'auto';
-    if (experimentalLayout && !row && options.flexWrap !== 'nowrap' && (needsMeasuredMain || aspectRatio === undefined && crossAuto)) {
-      throw childDiagnostic(child, needsMeasuredMain ? mainProperty : crossProperty, 'auto', container,
-        'Experimental WASM column wrap requires a declared height or flexBasis and a declared width; intrinsic item sizes are unsupported.');
-    }
     const alignment = normalizeItemAlignment(normalized.alignSelf, child, container, wrapReverse);
+    if (experimentalLayout && !row && options.flexWrap !== 'nowrap' &&
+      (needsMeasuredMain || aspectRatio === undefined && crossAuto && effectiveAlignment(alignment, options.alignItems) !== 'stretch')) {
+      throw childDiagnostic(child, needsMeasuredMain ? mainProperty : crossProperty, 'auto', container,
+        'Experimental WASM column wrap requires a declared height or flexBasis and a declared width or stretched automatic width; intrinsic item sizes are unsupported.');
+    }
     const needsMeasuredCross = aspectRatio === undefined && crossAuto && alignment !== 'stretch' &&
       options.alignItems !== 'stretch';
     // A finite column cross allocation determines a stretched built-in child's

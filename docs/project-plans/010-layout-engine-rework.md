@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice81 `732ef064` (finite allocated-child percentage padding).
+Latest delivery is slice82 (wrapped stretched cross sizing and percentage bounds).
+Slice81 is `732ef064` (finite allocated-child percentage padding).
 Slice80 is `fe6d6bc1` (finite allocated-owner percentage gaps).
 Slice79 is `dbffc7c1` (settled-column percentage cross constraints).
 Slice78 is `a96ee4a2` (finite wrapped aspect-ratio participation).
@@ -31,9 +32,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is complete; the single next slice is82, stretched automatic cross sizing and percentage bounds in wrapped columns. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; the single next slice is83, bounded direct Text measured main sizes in wrapped columns. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles107 records:96matches/11classified CSS differences; click A/B/C targets.
+cycles115 records:104matches/11classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1603,19 +1604,57 @@ rewrite. Node26.9.0/pnpm11.21.0deps/Chromium; no Node24 aggregate trust/speed cl
 Fixed33 remains3complete,12experimental,7partial,10missing,1excluded; all seven gates
 open. No additional Flex core entry can honestly close from this evidence alone.
 
-## [NEXT] Wrapped stretched cross sizing and percentage bounds (slice 82)
+## Slice 82 delivered — wrapped stretched cross sizing and percentage bounds
 
-Pin finite row/column wrapped percentage cross minimum/maximum fixtures with
-explicit main basis and an auto-cross stretched first item, fixed-cross siblings,
-owner cross100→160. Native evidence: minimum60% expands line cross60→96 and moves
-the next line72→108; maximum25% caps the first item25→40 while a40-unit sibling
-keeps next-line offset52 stable. Current column-wrap guard rejects the stretched
-auto-cross case: a real finite allocation gap. Add failing public tests before
-relaxing only that restriction, preserve intrinsic/auto-main and non-stretch
-cross measurement rejection, and prove paint/hit/identity/source order/cleanup
-through the existing comparison and installed package. No new public signature,
-no max-only inferred definiteness, no broad intrinsic graph closure or denominator
-change. Keep min/max partial until its remaining owner/intrinsic policy is resolved.
+Wrapped experimental columns now admit automatic cross width when stretched and
+main height/basis is explicit. Cross percentage bounds use actual owner content
+cross size, matching row behavior. Measured auto main and non-stretch automatic
+cross cases remain rejected, including alignSelf overriding a stretched parent.
+No public signature or native ABI change.
+
+TDD initial2column failures/3passing controls become5passing. Four mounted signal
+cases prove min/max behavior, old/new hit geometry, stable nodes, exact disposal,
+and reuse of main solve/line formation on cross-only resize. Negative malformed,
+negative, opposing cross limits and intrinsic boundaries included. Final focused
+Chromium209passed/2normal-onlyskips in1file, including all115public oracle records;
+normal focused9passed. Logs `/tmp/pibbl-slice82-{red,green,mounted,focused,normal}.txt`.
+Pinned Yoga eight new row/column min/max cross-resize fixtures: corpus115,
+104matches/11prior classified differences. At cross100→160, minimum60% produces
+60→96 line cross and moves following line72→108; maximum25% produces25→40 item
+cross while fixed sibling40 retains following line52.
+
+Source5192/built5193 eight new-case replays plus prior grow targets pass, with
+actual worktree catalog760×540,469private built dist inputs, errors[], cleanup0/0/0.
+Initial source driver expected main solves to increase; actual correct cross-only
+reuse exposed that assertion error. Revised proof requires equal main solves/line
+formations and increased cross placement instead. Initial failure retained beside
+successful `/tmp/pibbl-slice82-source-fixed.txt`; built receipt
+`/tmp/pibbl-slice82-built.txt`. Packed actual column-wrap auto-width minimum moves
+paint and following target,230installed dist inputs/Bundler/NodeNext/exact cleanup.
+Tarball SHA256 `cbf73e070e11cbe6a995e46f868d66dd43dbc8d8794e76ac5f5e8c35829fb950`.
+Types/lint/JSDoc/format/provenance and documentation109REDmutation probes pass.
+Root reviewed the focused guard delta; no extra duplicate review. Kernel65383bytes
+unchanged, no screenshot baseline rewrite. Node26.9.0; no aggregate trust claim.
+
+Fixed33 remains3complete,12experimental,7partial,10missing,1excluded; all seven gates
+open. This closes a finite wrapping/minmax prerequisite, not a complete entry.
+Flex core still needs nested percentage/broader wrapping coverage, RTL and combined
+reversal coverage, broader bound/indefinite owner policy, and automatic minima
+outside current Text/empty Rectangle policy. No denominator narrowing.
+
+## [NEXT] Bounded direct Text main measurement in wrapped columns (slice 83)
+
+Admit only direct Text whose explicit numeric content width makes wrapped height
+determinate before native line formation: wrap true, generic px font, visible fit,
+auto basis/height, explicit minHeight0, grow0/shrink0, no responsive or percentage
+cross width/bounds. Add failing public measurement and mounted ownership tests
+before changing the existing measured-main column-wrap restriction. Reuse the
+existing host Text measurement/cache and pass numeric height to native wrapping;
+no callback ABI, font parity claim or second measurement system. Expose short/long
+Text changes and following keyed card movement in the existing column-wrap example,
+with source/built/installed target, paint-only reuse and cleanup evidence. Keep
+other providers, unknown components, indefinite widths and intrinsic owners
+unsupported. Broaden only after this bounded path is observable and verified.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

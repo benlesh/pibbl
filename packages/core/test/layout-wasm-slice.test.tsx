@@ -2649,3 +2649,53 @@ it.runIf(!experimentalLayout)('keeps percentage padding unsupported in ordinary 
   const child=createElement(Rectangle,{style:{width:50,height:20,flexShrink:0,minWidth:0,padding:'10%'}});
   expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/padding/);
 });
+
+for(const axis of ['row','column'] as const)for(const bound of ['min','max'] as const){
+  it.runIf(experimentalLayout)(`allocates wrapped ${axis} stretched automatic cross with percentage ${bound} bounds`,()=>{
+    const column=axis==='column';const crossProperty=column?'Width':'Height';
+    const children=[createElement(Rectangle,{style:{width:column?'auto':80,height:column?80:'auto',flexBasis:80,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,[bound+crossProperty]:bound==='min'?'60%':'25%'}}),...[40,20].map(cross=>createElement(Rectangle,{style:{width:column?cross:80,height:column?80:cross,flexBasis:80,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0}}))];
+    for(const cross of [100,160]){
+      const a=bound==='min'?cross*.6:Math.min(40,cross*.25),offset=bound==='min'?a+12:52;
+      expect(layoutFlex({x:0,y:0,width:column?cross:200,height:column?200:cross},children,{flexDirection:axis,flexWrap:'wrap',gap:12,alignItems:'stretch',alignContent:'flex-start'},measurement)).toEqual(column?[{x:0,y:0,width:a,height:80},{x:0,y:92,width:40,height:80},{x:offset,y:0,width:20,height:80}]:[{x:0,y:0,width:80,height:a},{x:92,y:0,width:80,height:40},{x:0,y:offset,width:80,height:20}]);
+    }
+  });
+}
+it.runIf(experimentalLayout)('keeps wrapped column measured main and non-stretched automatic cross unsupported',()=>{
+  const container={x:0,y:0,width:100,height:200};
+  const automaticMain=createElement(Rectangle,{style:{width:20,height:'auto',minHeight:0}});
+  expect(()=>layoutFlex(container,[automaticMain],{flexDirection:'column',flexWrap:'wrap'},measurement)).toThrow(/declared height or flexBasis/);
+  const automaticCross=createElement(Rectangle,{style:{width:'auto',height:80,flexBasis:80,minHeight:0}});
+  expect(()=>layoutFlex(container,[automaticCross],{flexDirection:'column',flexWrap:'wrap',alignItems:'center'},measurement)).toThrow(/declared width/);
+});
+
+for(const axis of ['row','column'] as const)for(const bound of ['min','max'] as const){
+  it.runIf(experimentalLayout)(`moves wrapped ${axis} percentage ${bound} cross targets without repeating the main solve`,async()=>{
+    const column=axis==='column',cross=signal(100);let aHits=0,cHits=0;const baseline=snapshotWasmLayoutDiagnostics();
+    const a=createElement(Rectangle,{onClick:()=>aHits++,style:{width:column?'auto':80,height:column?80:'auto',flexBasis:80,flexShrink:0,minWidth:0,minHeight:0,[bound+(column?'Width':'Height')]:bound==='min'?'60%':'25%',fill:'red'}});
+    const siblings=[40,20].map((size,index)=>createElement(Rectangle,{onClick:index?()=>cHits++:undefined,style:{width:column?size:80,height:column?80:size,flexBasis:80,flexShrink:0,minWidth:0,minHeight:0,fill:index?'blue':'green'}}));
+    const root=createElement(Flex,{style:{width:column?cross:200,height:column?200:cross,flexDirection:axis,flexWrap:'wrap',gap:12,alignItems:'stretch',alignContent:'flex-start'},children:[a,...siblings]});
+    const canvas=document.createElement('canvas');canvas.width=220;canvas.height=220;document.body.append(canvas);const controller=pibbl(canvas,root);controllers.push(controller);await nextFrame();
+    const point=(value:number)=>column?{x:value,y:5}:{x:5,y:value};const old=point(bound==='min'?76:30);
+    clickCanvas(canvas,old.x,old.y);expect(bound==='min'?cHits:aHits).toBe(bound==='min'?1:0);
+    const mounted=snapshotWasmLayoutDiagnostics();cross.set(160);await nextFrame();
+    clickCanvas(canvas,old.x,old.y);expect(bound==='min'?cHits:aHits).toBe(bound==='min'?1:1);
+    if(bound==='min'){const next=point(112);expect([...canvas.getContext('2d')!.getImageData(next.x,next.y,1,1).data]).toEqual([0,0,255,255]);clickCanvas(canvas,next.x,next.y);expect(cHits).toBe(2);}
+    const resized=snapshotWasmLayoutDiagnostics();expect(resized.nodeCreates).toBe(mounted.nodeCreates);expect(resized.solves).toBe(mounted.solves);expect(resized.lineFormations).toBe(mounted.lineFormations);expect(resized.crossPlacements).toBeGreaterThan(mounted.crossPlacements);
+    controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+  });
+}
+
+it.runIf(experimentalLayout)('honors a non-stretch alignSelf override when guarding wrapped automatic column cross size',()=>{
+  const child=createElement(Rectangle,{style:{width:'auto',height:80,flexBasis:80,minHeight:0,alignSelf:'center'}});
+  expect(()=>layoutFlex({x:0,y:0,width:100,height:200},[child],{flexDirection:'column',flexWrap:'wrap',alignItems:'stretch'},measurement)).toThrow(/declared width/);
+});
+for(const value of ['-10%','NaN%','Infinity%']){
+  it.runIf(experimentalLayout)(`rejects wrapped automatic column cross bound ${value}`,()=>{
+    const child=createElement(Rectangle,{style:{width:'auto',height:80,flexBasis:80,minHeight:0,minWidth:0,maxWidth:value as '10%'}});
+    expect(()=>layoutFlex({x:0,y:0,width:100,height:200},[child],{flexDirection:'column',flexWrap:'wrap',alignItems:'stretch'},measurement)).toThrow(/maxWidth/);
+  });
+}
+it.runIf(experimentalLayout)('rejects opposing wrapped automatic column percentage cross bounds',()=>{
+  const child=createElement(Rectangle,{style:{width:'auto',height:80,flexBasis:80,minHeight:0,minWidth:'75%',maxWidth:'25%'}});
+  expect(()=>layoutFlex({x:0,y:0,width:100,height:200},[child],{flexDirection:'column',flexWrap:'wrap',alignItems:'stretch'},measurement)).toThrow(/minimum/);
+});

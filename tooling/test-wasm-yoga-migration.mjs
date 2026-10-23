@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 const reference = JSON.parse(readFileSync(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8'));
 const base = process.argv[2] ?? 'http://127.0.0.1:5192';
 const built = process.argv.includes('--built');
+const crossOnly = process.argv.includes('--wrapped-cross-bounds');
 const paddingOnly = process.argv.includes('--percentage-padding');
 const gapOnly = process.argv.includes('--percentage-gaps');
 const aspectOnly = process.argv.includes('--wrapped-aspect');
@@ -33,17 +34,18 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (percentageOnly || aspectOnly || gapOnly || paddingOnly) {
+  const cases = crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (percentageOnly || aspectOnly || gapOnly || paddingOnly || crossOnly) {
     assert.ok((await frame.locator('pre').innerText()).includes('grow'));
     await click(396,244);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: A'));
     await click(552,244);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: B'));
     await click(520,158);
-    if (aspectOnly || gapOnly || paddingOnly) await click(520,158);
-    if (gapOnly || paddingOnly) await click(520,158);
-    if (paddingOnly) await click(520,158);
+    if (aspectOnly || gapOnly || paddingOnly || crossOnly) await click(520,158);
+    if (gapOnly || paddingOnly || crossOnly) await click(520,158);
+    if (paddingOnly || crossOnly) await click(520,158);
+    if (crossOnly) await click(520,158);
   }
   let previousOwner;
   for (const [index, fixture] of cases.entries()) {
@@ -52,19 +54,34 @@ try {
     assert.ok((await frame.locator('pre').innerText()).includes(fixture.name));
     if (fixture.classification) assert.ok((await frame.locator('pre').innerText()).includes(fixture.comparisonLabel), 'Classified difference must be explicitly labeled');
     const expected = fixture.pibblBoxes ?? fixture.boxes;
-    if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-') || fixture.name.startsWith('gap-percent-') || fixture.name.startsWith('padding-percent-')) && fixture.name.endsWith('-resized')) {
+    if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-') || fixture.name.startsWith('gap-percent-') || fixture.name.startsWith('padding-percent-') || fixture.name.startsWith('cross-percent-')) && fixture.name.endsWith('-resized')) {
       assert.equal(previousOwner.name, fixture.name.replace('-resized',''));
       const resized = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
-      assert.ok(resized.solves > previousOwner.layout.solves);
+      const crossBounds = fixture.name.startsWith('cross-percent-');
+      if (crossBounds) {
+        assert.equal(resized.solves, previousOwner.layout.solves, 'Cross-only resize must reuse the main solve');
+        assert.equal(resized.lineFormations, previousOwner.layout.lineFormations);
+        assert.ok(resized.crossPlacements > previousOwner.layout.crossPlacements);
+      } else {
+        assert.ok(resized.solves > previousOwner.layout.solves);
+        assert.equal(resized.measuredLeaves, previousOwner.layout.measuredLeaves);
+      }
       assert.equal(resized.nodeCreates, previousOwner.layout.nodeCreates);
-      assert.equal(resized.measuredLeaves, previousOwner.layout.measuredLeaves);
       const column = fixture.flexDirection === 'column';
+      if (crossBounds && fixture.name.includes('-max')) {
+        await click(column ? 422 : 396, column ? 244 : 270);
+        assert.ok((await frame.locator('pre').innerText()).includes('selected: A'), 'Expanded cross cap must expose the new target edge');
+      }
       await click(396 + expected[0].x,244 + expected[0].y);
       assert.ok((await frame.locator('pre').innerText()).includes('selected: A'));
       const aspect = fixture.name.startsWith('aspect-wrap-');
       const percentageGap = fixture.name.startsWith('gap-percent-') || fixture.name.startsWith('padding-percent-');
       const oldCross = fixture.flexWrap === 'wrap-reverse' ? 45 : 145;
-      if (!fixture.name.startsWith('padding-percent-') || fixture.name.includes('content-box')) {
+      if (crossBounds && fixture.name.includes('-min')) {
+        await click(396 + previousOwner.boxes[2].x,244 + previousOwner.boxes[2].y);
+        assert.ok((await frame.locator('pre').innerText()).includes('selected: A'), 'Former following-line target must move after cross minimum resize');
+      }
+      if (!crossBounds && (!fixture.name.startsWith('padding-percent-') || fixture.name.includes('content-box'))) {
       await click(percentageGap ? 396 + previousOwner.boxes[1].x : aspect ? column ? 392 + oldCross : 396 : column ? 396 : 458, percentageGap ? 244 + previousOwner.boxes[1].y : aspect ? column ? 244 : 240 + oldCross : column ? 306 : 244);
       assert.ok((await frame.locator('pre').innerText()).includes('selected: A'), 'Former target must stop selecting B after owner resize');
       }
@@ -73,7 +90,7 @@ try {
       await click(392 + box.x + 4, 240 + box.y + 4);
       assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(65+index)}`), `${fixture.name}: target ${index}; ${(await frame.locator('pre').innerText()).slice(-350)}`);
     }
-    if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-') || fixture.name.startsWith('gap-percent-') || fixture.name.startsWith('padding-percent-')) && !fixture.name.endsWith('-resized')) previousOwner = {name:fixture.name,boxes:expected,layout:await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__())};
+    if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-') || fixture.name.startsWith('gap-percent-') || fixture.name.startsWith('padding-percent-') || fixture.name.startsWith('cross-percent-')) && !fixture.name.endsWith('-resized')) previousOwner = {name:fixture.name,boxes:expected,layout:await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__())};
   }
   assert.ok(catalogUrls.length > 0, 'Studio replay must observe its actual catalog source');
   let catalogSurface;
