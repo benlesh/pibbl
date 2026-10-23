@@ -915,7 +915,33 @@ function resolveFlexPlacements(
       intrinsicSizes = result;
     }
 
-    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum && !intrinsicSizes) {
+    // Intrinsic-pair heights belong to their respective widths. A column floor
+    // instead needs natural content height measured at its declared exact width.
+    const columnMinimumDefinition = experimentalLayout && options.flexDirection === 'column' &&
+      options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' &&
+      typeof basisValue === 'number' && Number.isFinite(basisValue) && basisValue >= 0 &&
+      grow === 0 && shrink > 0 && normalized.minHeight === undefined &&
+      (normalized.height === undefined || normalized.height === 'auto' || typeof normalized.height === 'number') &&
+      (normalized.maxHeight === undefined || typeof normalized.maxHeight === 'number') &&
+      typeof declared.width === 'number' && typeof normalized.width === 'number' &&
+      Number.isFinite(normalized.width) && normalized.width >= 0 && aspectRatio === undefined &&
+      (normalized.minWidth === undefined || normalized.minWidth === 0) &&
+      normalized.maxWidth === undefined && !preparedStyleQuery(prepared) ?
+      getPrimitiveDefinition(child.type) : undefined;
+    let columnMinimumSize: { width: number; height: number } | undefined;
+    if (columnMinimumDefinition?.measureIntrinsic && columnMinimumDefinition.measure) {
+      const measurementChild = clonePibblElement(child);
+      setPreNormalizedStyle(measurementChild, normalized, child, receiverToken);
+      const result = measureFlexChild(measurementChild, {
+        minWidth: normalized.width as number, maxWidth: normalized.width as number,
+        minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
+      }, normalized, layoutToken ?? receiverToken, measurement, region, undefined, true);
+      if (result.status === 'unsupported') throw childDiagnostic(child, 'minHeight', 'auto', container,
+        `exact-width automatic minimum measurement is required but unsupported: ${result.reason}`);
+      columnMinimumSize = result.size;
+    }
+
+    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum && !intrinsicSizes && !columnMinimumSize) {
       throw childDiagnostic(
         child,
         minimumProperty,
@@ -929,7 +955,7 @@ function resolveFlexPlacements(
     const crossProperty = row ? 'height' : 'width';
     const mainReference = mainSize;
     const crossReference = crossSize;
-    let measured: { width: number; height: number } | undefined;
+    let measured: { width: number; height: number } | undefined = columnMinimumSize;
     const specifiedMain = normalized[mainProperty];
     const specifiedCross = normalized[crossProperty];
     const needsMeasuredMain = basisValue === 'auto' &&
@@ -1022,6 +1048,10 @@ function resolveFlexPlacements(
     );
     if (intrinsicSizes && normalized.minWidth === undefined && shrink > 0) {
       minMain = Math.min(intrinsicSizes.minContent.width, maxMain,
+        typeof specifiedMain === 'number' ? specifiedMain : Number.POSITIVE_INFINITY);
+    }
+    if (columnMinimumSize) {
+      minMain = Math.min(columnMinimumSize.height, maxMain,
         typeof specifiedMain === 'number' ? specifiedMain : Number.POSITIVE_INFINITY);
     }
     if (automaticTextMinimum) {

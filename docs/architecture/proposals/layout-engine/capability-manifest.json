@@ -1975,9 +1975,9 @@
       "id": "flex.automatic-minimum",
       "target": "parity",
       "group": "flex-core",
-      "current": "experimental bounded wrapped Text content minima; direct empty Rectangle zero content minima with numeric/percentage dimensions; numeric empty Rectangle contributions; direct paired custom intrinsic row minima and exact-width finite cross measurement",
+      "current": "experimental bounded wrapped Text content minima; direct empty Rectangle zero content minima with numeric/percentage dimensions; numeric empty Rectangle contributions; direct paired custom intrinsic row minima, exact-width finite cross measurement and bounded finite column natural-height minima",
       "status": "experimental",
-      "unresolvedPolicy": "Bounded Text and direct paired custom row providers are implemented; general intrinsic graphs, other fitting/overflow modes and Yoga conversion differences remain unresolved.",
+      "unresolvedPolicy": "Bounded Text and direct paired custom row/finite-column providers are implemented; general intrinsic graphs, other fitting/overflow modes and Yoga conversion differences remain unresolved.",
       "evidenceRefs": [
         "packages/core/test/layout-text-auto-minimum.test.tsx",
         "docs/design/layout-system-contract.md",
@@ -1988,6 +1988,7 @@
       "evidence": {
         "positive": [
           "public Text automatic/zero-minimum comparison",
+          "paired direct finite column provider exact-width natural height, explicit-zero escape and measurement-only signal invalidation",
           "empty Rectangle direct row/column shrink, explicit minimum and no-shrink precedence",
           "percentage Rectangle row/column shrink",
           "outer padding floor under zero content minimum",

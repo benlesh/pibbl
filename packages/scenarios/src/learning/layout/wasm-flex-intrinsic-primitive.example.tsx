@@ -15,13 +15,17 @@ import {
 } from "@pibbl/core";
 
 interface IntrinsicChipStyle extends SystemStyle {
+  readonly width?: number;
   readonly height?: number;
   readonly flexBasis?: number;
+  readonly flexGrow?: number;
   readonly flexShrink?: number;
   readonly minWidth?: number;
+  readonly minHeight?: number;
 }
 
 let providerCalls = 0;
+let columnMeasureCalls = 0;
 let adaptiveFiniteCalls = 0;
 
 const IntrinsicChip = definePrimitive<{ minimum: Signal<number> }, IntrinsicChipStyle>(
@@ -35,10 +39,20 @@ const IntrinsicChip = definePrimitive<{ minimum: Signal<number> }, IntrinsicChip
     measureIntrinsic: ({ props }) => {
       providerCalls++;
       return ({
-      status: "measured" as const,
-      minContent: { width: props.minimum.get(), height: 20 },
-      maxContent: { width: 100, height: 20 },
-    });
+        status: "measured" as const,
+        minContent: { width: props.minimum.get(), height: 20 },
+        maxContent: { width: 100, height: 20 },
+      });
+    },
+    measure: ({ props, constraints }) => {
+      columnMeasureCalls++;
+      return {
+        status: "measured" as const,
+        size: {
+          width: constraints.maxWidth,
+          height: props.minimum.get(),
+        },
+      };
     },
   },
 );
@@ -86,6 +100,7 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
   const escapeLabel = computed(() => escaped.get() ? "0" : "none");
   const paint = signal("#426b61");
   const followerHits = signal(0);
+  const columnFollowerHits = signal(0);
   const adaptiveOwner = signal(140);
   const adaptivePaint = signal("#426b61");
   const adaptiveHits = signal(0);
@@ -233,6 +248,41 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
       <Text style={{ left: 28, top: 220, font: "14px sans-serif", fill: "#475569" }}>
         Preferred: 100 × 20 · intrinsic minimum: {minimum} · owner: {owner} · explicit minWidth: {escapeLabel}
       </Text>
+      <Text style={{ left: 72, top: 234, font: "bold 12px sans-serif", fill: "#19375b" }}>
+        Exact-width column minimum
+      </Text>
+      <Flex
+        style={{
+          left: 28,
+          top: 250,
+          width: 20,
+          height: 40,
+          flexDirection: "column",
+          alignItems: "flex-start",
+        }}
+      >
+        <IntrinsicChip
+          minimum={minimum}
+          style={{
+            width: 20,
+            flexBasis: 100,
+            flexGrow: 0,
+            flexShrink: 1,
+            minHeight: minimumOverride,
+          }}
+        />
+        <Rectangle
+          onClick={() => columnFollowerHits.update(value => value + 1)}
+          style={{
+            width: 20,
+            height: 20,
+            minHeight: 0,
+            flexShrink: 0,
+            fill: paint,
+            cursor: "pointer",
+          }}
+        />
+      </Flex>
     </>
   );
   const read = (
@@ -245,7 +295,7 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
   canvas.insertAdjacentElement("afterend", panel);
   const refresh = () => {
     panel.textContent = read
-      ? `EXPERIMENTAL WASM · ${Object.entries(read()).map(([key, value]) => `${key}: ${value}`).join(" · ")}\nprovider calls: ${providerCalls} · stamp: ${stamp} · follower hits: ${followerHits.get()} · minimum: ${minimum.get()} · owner: ${owner.get()} · escape: ${escaped.get()}\nadaptive owner: ${adaptiveOwner.get()} · adaptive hits: ${adaptiveHits.get()} · adaptive finite calls: ${adaptiveFiniteCalls} · adaptive paint: ${adaptivePaint.get()} · disposed: ${disposed}`
+      ? `EXPERIMENTAL WASM · ${Object.entries(read()).map(([key, value]) => `${key}: ${value}`).join(" · ")}\nprovider calls: ${providerCalls} · column measure calls: ${columnMeasureCalls} · stamp: ${stamp} · follower hits: ${followerHits.get()} · column follower hits: ${columnFollowerHits.get()} · minimum: ${minimum.get()} · owner: ${owner.get()} · escape: ${escaped.get()}\nadaptive owner: ${adaptiveOwner.get()} · adaptive hits: ${adaptiveHits.get()} · adaptive finite calls: ${adaptiveFiniteCalls} · adaptive paint: ${adaptivePaint.get()} · disposed: ${disposed}`
       : "Normal JS build. Start Studio with --mode layout-wasm to inspect the experimental intrinsic provider.";
   };
   refresh();

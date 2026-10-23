@@ -125,6 +125,7 @@ try {
       assert.equal(receipt.nestedDecoratedColumnCrossMax, true, 'Installed package must retain decorated column-reverse nested percentage cross caps, expansion targets, identity, pure paint reuse, and cleanup');
       assert.equal(receipt.nestedDecoratedColumnCrossMin, true, 'Installed package must retain decorated column-reverse nested percentage cross floors, C-to-leaf target movement, identity, pure paint reuse, and cleanup');
       assert.equal(receipt.customColumnMeasure, true, 'Installed package must measure a finite column custom queue at its exact width, move the follower target, reuse nodes on paint, and clean up');
+      assert.equal(receipt.columnAutomaticProviderMinimum, true, 'Installed paired providers must use their exact-width finite measurement as the automatic column minimum, preserve the minHeight zero escape, targets, paint reuse and cleanup');
       console.warn('Packed auto margins: 104 fixture cases passed');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');

@@ -224,6 +224,200 @@ it.runIf(experimentalLayout)('uses a pure intrinsic provider for finite nowrap r
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
+
+type ColumnAutomaticProviderStyle = import('@pibbl/core').SystemStyle & {
+  width?: number;
+  height?: number;
+  flexBasis?: number;
+  flexShrink?: number;
+  minHeight?: number;
+  fill?: string;
+};
+
+it.runIf(experimentalLayout)('uses a paired provider exact-width measurement as the automatic finite column minimum', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const contentMinimum = signal(40);
+  const minimumOverride = signal<number | undefined>(undefined);
+  const footerPaint = signal('#19375b');
+  const footerHits = signal(0);
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+  const queries: Array<[number, number, number, number]> = [];
+  let serial = 0;
+  let finiteCalls = 0;
+  const Provider = definePrimitive<{}, ColumnAutomaticProviderStyle>(() => {
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    const stamp = useConst(() => ++serial);
+    boxes.set('provider', { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return <Rectangle style={{ width: box.width, height: box.height, fill: '#a63758' }} />;
+  }, {
+    // Heights deliberately disagree: they describe the height at different
+    // intrinsic widths and must not be treated as an ordered main-axis pair.
+    measureIntrinsic: () => ({ status: 'measured' as const, minContent: { width: 20, height: 90 }, maxContent: { width: 100, height: 10 } }),
+    measure: ({ constraints }) => {
+      finiteCalls++;
+      queries.push([constraints.minWidth, constraints.maxWidth, constraints.minHeight, constraints.maxHeight]);
+      return { status: 'measured' as const, size: { width: constraints.maxWidth, height: contentMinimum.get() } };
+    },
+  });
+  const Footer = definePrimitive<{}, ColumnAutomaticProviderStyle>((_props, style) => {
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    const stamp = useConst(() => ++serial);
+    boxes.set('footer', { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return <Rectangle onClick={() => footerHits.update(value => value + 1)} style={{ width: box.width, height: box.height, fill: style.fill, cursor: 'pointer' }} />;
+  });
+  const canvas = document.createElement('canvas');
+  canvas.width = 20; canvas.height = 100; document.body.append(canvas);
+  const controller = pibbl(canvas, <Flex style={{ width: 20, height: 40, flexDirection: 'column', alignItems: 'flex-start' }}>
+    <Provider key="provider" style={{ width: 20, flexBasis: 100, flexShrink: 1, minHeight: minimumOverride }} />
+    <Footer key="footer" style={{ width: 20, height: 20, minHeight: 0, flexShrink: 0, fill: footerPaint }} />
+  </Flex>);
+  controllers.push(controller);
+  await nextFrame();
+  expect(boxes.get('provider')).toMatchObject({ x: 0, y: 0, width: 20, height: 40 });
+  expect(boxes.get('footer')).toMatchObject({ x: 0, y: 40, width: 20, height: 20 });
+  expect(queries).toContainEqual([20, 20, 0, Number.POSITIVE_INFINITY]);
+  clickCanvas(canvas, 10, 50);
+  expect(footerHits.get()).toBe(1);
+  const initial = snapshotWasmLayoutDiagnostics();
+  const stamps = [boxes.get('provider')!.stamp, boxes.get('footer')!.stamp];
+
+  contentMinimum.set(70);
+  await nextFrame();
+  expect(boxes.get('provider')).toMatchObject({ y: 0, height: 70 });
+  expect(boxes.get('footer')).toMatchObject({ y: 70, height: 20 });
+  clickCanvas(canvas, 10, 50);
+  expect(footerHits.get()).toBe(1);
+  clickCanvas(canvas, 10, 75);
+  expect(footerHits.get()).toBe(2);
+  expect(finiteCalls).toBeGreaterThan(1);
+  expect([boxes.get('provider')!.stamp, boxes.get('footer')!.stamp]).toEqual(stamps);
+
+  const automaticPaintCalls = finiteCalls;
+  const automaticPaintLayout = snapshotWasmLayoutDiagnostics();
+  footerPaint.set('#426b61');
+  await nextFrame();
+  expect(finiteCalls).toBe(automaticPaintCalls);
+  expect(snapshotWasmLayoutDiagnostics().solves).toBe(automaticPaintLayout.solves);
+
+  minimumOverride.set(0);
+  await nextFrame();
+  expect(boxes.get('provider')).toMatchObject({ y: 0, height: 20 });
+  expect(boxes.get('footer')).toMatchObject({ y: 20, height: 20 });
+  clickCanvas(canvas, 10, 50);
+  expect(footerHits.get()).toBe(2);
+  clickCanvas(canvas, 10, 25);
+  expect(footerHits.get()).toBe(3);
+
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  const beforePaintCalls = finiteCalls;
+  footerPaint.set('#19375b');
+  await nextFrame();
+  expect(finiteCalls).toBe(beforePaintCalls);
+  expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforePaint.solves);
+  expect([boxes.get('provider')!.stamp, boxes.get('footer')!.stamp]).toEqual(stamps);
+  expect([...canvas.getContext('2d')!.getImageData(10, 25, 1, 1).data]).toEqual([25, 55, 91, 255]);
+
+  controller.dispose();
+  expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);
+  expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
+  expect(snapshotWasmLayoutDiagnostics().cachedMeasurements).toBe(baseline.cachedMeasurements);
+  contentMinimum.set(90);
+  await nextFrame();
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+});
+
+
+type ColumnAutomaticMinimumBoundaryStyle = Omit<BoxStyle & FlexItemStyle, 'when'>;
+type ColumnMinimumResolvedStyle = import('@pibbl/core').SystemStyle & { width: number; height: number };
+const resolveColumnMinimumStyle = (_style: Readonly<ColumnAutomaticMinimumBoundaryStyle>, context: { allocation: { width: number; height: number } }) => ({ width: context.allocation.width, height: context.allocation.height });
+
+it.runIf(experimentalLayout)('keeps automatic column minima paired, exact-width, and bounded by numeric main-axis styles', async () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 20;
+  canvas.height = 80;
+  document.body.append(canvas);
+  const observedHeights: number[] = [];
+  let pairedCalls = 0;
+  let intrinsicOnlyCalls = 0;
+  let measureOnlyCalls = 0;
+  const Paired = definePrimitive<{}, ColumnAutomaticMinimumBoundaryStyle, ColumnAutomaticMinimumBoundaryStyle, ColumnMinimumResolvedStyle>(() => {
+    observedHeights.push(useLayoutBox().height);
+    return undefined;
+  }, {
+    resolveStyle: resolveColumnMinimumStyle,
+    measureIntrinsic: () => ({
+      status: 'measured' as const,
+      minContent: { width: 20, height: 90 },
+      maxContent: { width: 100, height: 10 },
+    }),
+    measure: ({ constraints }) => {
+      pairedCalls++;
+      expect(constraints).toMatchObject({ minWidth: 20, maxWidth: 20, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY });
+      return { status: 'measured' as const, size: { width: 20, height: 40 } };
+    },
+  });
+  const IntrinsicOnly = definePrimitive<{}, ColumnAutomaticMinimumBoundaryStyle, ColumnAutomaticMinimumBoundaryStyle, ColumnMinimumResolvedStyle>(() => undefined, {
+    resolveStyle: resolveColumnMinimumStyle,
+    measureIntrinsic: () => {
+      intrinsicOnlyCalls++;
+      return {
+        status: 'measured' as const,
+        minContent: { width: 20, height: 90 },
+        maxContent: { width: 100, height: 10 },
+      };
+    },
+  });
+  const MeasureOnly = definePrimitive<{}, ColumnAutomaticMinimumBoundaryStyle, ColumnAutomaticMinimumBoundaryStyle, ColumnMinimumResolvedStyle>(() => undefined, {
+    resolveStyle: resolveColumnMinimumStyle,
+    measure: () => {
+      measureOnlyCalls++;
+      return { status: 'measured' as const, size: { width: 20, height: 40 } };
+    },
+  });
+  const root = (Provider: typeof Paired, style: ColumnAutomaticMinimumBoundaryStyle) => (
+    <Flex style={{ width: 20, height: 40, flexDirection: 'column', alignItems: 'flex-start' }}>
+      <Provider style={{ width: 20, flexBasis: 100, flexGrow: 0, flexShrink: 1, ...style }} />
+      <Rectangle style={{ width: 20, height: 20, minHeight: 0, flexShrink: 0 }} />
+    </Flex>
+  );
+
+  const explicitMinimum = pibbl(canvas, root(Paired, { minHeight: 0 }));
+  await nextFrame();
+  expect(pairedCalls).toBe(0);
+  explicitMinimum.dispose();
+
+  const errors: unknown[] = [];
+  const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+  window.addEventListener('error', prevent);
+  try {
+    for (const [Provider, style] of [
+      [IntrinsicOnly, {}], [MeasureOnly, {}],
+      [Paired, { height: '50%' }], [Paired, { maxHeight: '50%' }],
+    ] as const) {
+      const before = errors.length;
+      const rejected = pibbl(canvas, root(Provider as typeof Paired, style));
+      await nextFrame();
+      expect(errors.length).toBe(before + 1);
+      expect(String(errors.at(-1))).toMatch(/explicit main-axis minimum/);
+      rejected.dispose();
+    }
+    expect(intrinsicOnlyCalls).toBe(0);
+    expect(measureOnlyCalls).toBe(0);
+    expect(pairedCalls).toBe(0);
+  } finally { window.removeEventListener('error', prevent); }
+
+  const fixedHeight = pibbl(canvas, root(Paired, { height: 30 }));
+  await nextFrame();
+  expect(observedHeights.at(-1)).toBe(30);
+  fixedHeight.dispose();
+  const cappedHeight = pibbl(canvas, root(Paired, { maxHeight: 25 }));
+  await nextFrame();
+  expect(observedHeights.at(-1)).toBe(25);
+  cappedHeight.dispose();
+});
+
 type IntrinsicFinalWidthStyle = import('@pibbl/core').SystemStyle & {
   flexBasis?: number;
   flexShrink?: number;

@@ -1175,7 +1175,31 @@ snapshot when their values, availability and allocation revision agree. Mutable
 nested props/styles remeasure. Own paint-style changes also remeasure because a
 provider can read its entire style; the example demonstrates unrelated sibling
 paint reuse. This is not a general nested intrinsic graph or general unbounded consumer,
-baseline provider, column/wrap, Flow or Grid implementation.
+baseline provider, general column/wrap, Flow or Grid implementation.
+
+### Experimental finite column custom-provider automatic minimum
+
+A direct primitive with both `measureIntrinsic` and `measure` can supply an
+omitted automatic `minHeight` in a finite LTR `column`, `nowrap` Flex. This bounded
+path requires a declared finite numeric content width, finite numeric basis,
+zero grow, positive shrink, no aspect ratio or prepared style query, no active
+cross bounds beyond omitted/zero `minWidth`, and omitted `maxWidth`.
+
+The parent queries `measure` at that exact content width with unbounded available
+height. Its finite natural content height supplies the automatic main minimum,
+limited by numeric specified height and `maxHeight` before ordinary Flex shrink.
+It does not interpret either intrinsic-pair height as a column minimum: those
+heights remain associated with their respective intrinsic widths. Numeric padding,
+borders and margins retain the existing content/outer box rules.
+
+An explicit `minHeight: 0` with definite basis avoids this minimum query and
+permits shrink below the content height. A signal read only by the finite provider
+invalidates the existing constrained snapshot; unrelated sibling paint reuses it.
+The layout region owns dependencies and cached measurements through teardown.
+Automatic basis, automatic/percentage width, reverse/RTL/wrapping, active cross
+bounds, aspect ratio, responsive queries, unpaired or opaque providers retain
+existing diagnostics outside their separately documented admissions. Percentage
+padding retains the existing unsupported finite-measurement diagnostic.
 
 ### Experimental finite wrapped-row intrinsic height
 

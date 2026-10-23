@@ -20,7 +20,9 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest runtime delivery is slice147 `f6e45350` (logical absolute insets).
+Latest runtime delivery is slice149 (bounded column provider automatic minimum).
+Slice148 is `91b36dca` (reverse composition capability evidence).
+Slice147 is `f6e45350` (logical absolute insets).
 Consolidation49 is `67428b3b` for145–147.
 Slice146 is `3db077ea` (fixed direct wrapped containing owners).
 Slice145 is `c70ac2fd` (finite percentage absolute dimensions/bounds).
@@ -4391,15 +4393,47 @@ The reverse capability is complete within its finite supported contract. The fix
 excluded; all7 group release gates remain open. This closes a capability proof
 gap, not the whole Flex gate or default migration.
 
-## [NEXT] Column custom-provider automatic minimum (149)
+## Slice149 delivered: column custom-provider automatic minimum
 
-Use the existing paired `definePrimitive` intrinsic provider through a direct
-finite LTR column/nowrap Flex. Establish a failing public test for an omitted
-minHeight honoring min-content height, explicit-zero escape, reactive floor
-changes and matching follower geometry/targets. Extend the existing intrinsic
-provider lesson once runnable. No new API or general intrinsic graph is planned;
-other admissions and the automatic-minimum capability remain bounded until their
-own accepted evidence is complete.
+The paired custom-provider API now supplies a bounded column automatic minimum
+through its existing finite `measure` callback at exact declared content width.
+No intrinsic-pair height was reinterpreted: those describe content at different
+widths. The path is direct, finite LTR column/nowrap, numeric basis and width,
+zero grow, positive shrink, no active cross bounds/aspect/query, numeric main
+height/bounds only. Explicit `minHeight:0` avoids the minimum query. Existing
+region cache, allocation revision and dependency/teardown ownership remain intact.
+
+The public regression failed on the original explicit-minHeight diagnostic.
+It uses deliberately different intrinsic heights90/10 but finite natural height
+40→70; the following target moves y40→70, then y20 on explicit-zero escape.
+Keys remain stable; sibling paint reuses the automatic floor snapshot and solves;
+disposal detaches resources and measurement-only signals. The existing public
+lesson adds the compact column at bottom left, sharing Minimum/Escape/Paint
+controls. Source: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-intrinsic-primitive`;
+built: `http://127.0.0.1:5193/#/examples/layout/wasm-flex-intrinsic-primitive`.
+
+Fresh Node24.15/Chromium focused provider/minimum tests11 passed (413 skipped),
+plus the strengthened automatic-paint test1 passed (416 skipped). Normal Flex
+unit tests40 passed; the selected experimental-only normal lane423 skipped.
+Node26.9/Chromium source and built lesson drivers passed both column-minimum and
+prior final-width checks,469 built inputs, cleanup `[0,0,0]`, no browser errors.
+The Node24 installed tarball proof passed strict Bundler/NodeNext and runtime,
+245 dist inputs, `columnAutomaticProviderMinimum=true`, tarball SHA256
+`ff1748ef54ed7c0f8f41cd8aae028524be03a20038fb82b92830052168da2c7a`.
+Typecheck, changed-code lint,170-lesson catalog and documentation checks passed
+(109 RED mutation probes). Scoped review corrected percentage-main admission;
+the boundary test passed (1 passed/417 skipped), covering explicit-zero no-query,
+unpaired and percentage pre-query rejection, and numeric clamps. No native
+parity, capability promotion, group release or aggregate trust claim.
+
+## [NEXT] Main-axis bound release evidence (150)
+
+Audit the accepted `flex.min-max` reverse/decorated main-axis percentage cap/floor
+gap against existing native fixtures and public source/built/installed receipts.
+Add only genuinely missing finite geometry, resized target and lifecycle evidence;
+retain explicit indefinite-owner policy and measure-mode requirements. The fixed
+33-entry denominator remains9 complete,11 experimental,6 partial,6 missing and1
+excluded. All7 release gates remain open; capability counts are not slice counts.
 
 ### Finite positioning exit matrix after134
 
