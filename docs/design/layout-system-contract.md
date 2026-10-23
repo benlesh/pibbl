@@ -42,8 +42,9 @@ A child's parent-relative placement lives in its own specified style:
 ### Experimental direct-Flex static and relative insets
 
 Experimental finite `Flex` additionally accepts an explicit direct-child
-`position: "static" | "relative"` in a row, nowrap allocation under either
-LTR or RTL. This is a placement adjustment, not a new containing-block or
+`position: "static" | "relative"` in any nowrap main direction under either
+LTR or RTL. The expanded non-row admission covers direct or exactly-forwarded
+primitive leaves; known layout children retain the row-only boundary. This is a placement adjustment, not a new containing-block or
 out-of-flow system:
 
 - Omitting `position` preserves the existing parent-owned placement behavior
@@ -60,7 +61,10 @@ out-of-flow system:
 - Parent padding and layout borders first establish the ordinary content-box
   slot. Relative offsets apply after that allocation; they do not add those
   decorations again. Four pinned decorated-parent cases cover static/relative
-  placement in LTR/RTL.
+  placement in LTR/RTL. Authored main-axis reversal changes the allocated slot
+  but never negates the final physical offset. Yoga 3.2.1 reverses the relative
+  offset in reversed main axes; the pinned corpus retains those native boxes
+  and separately classifies Pibbl's preserved physical `pibblBoxes`.
 
 `Absolute` keeps its existing independent `left`/`top` contract. This slice
 does not add absolute positioning, right/bottom anchoring, containing blocks,
@@ -171,8 +175,9 @@ containing Flex's padding box to its absolute descendants. A direct nested Flex
 with `position: "relative"` establishes its own containing box. Omitted position
 keeps the existing Pibbl local Flex boundary; it does not adopt Yoga's static
 default. The top-level Flex is the fallback owner. This admission is limited to
-direct declarative Flex chains and the documented finite row-nowrap positioning
-subset; it adds no public containing-block override.
+direct declarative Flex chains with both parent and nested static child using
+row/nowrap. Other direction chains reject before containing metadata is attached;
+this adds no public containing-block override.
 
 The ancestor box is translated into each static Flex's local content coordinates
 using settled placement and padding/border insets. Absolute children retain their

@@ -32,7 +32,8 @@ const basicFlex = (
 Explore the [Flex live example](#/examples/layout/flex).
 
 Experimental layout also provides a bounded direct-child placement adjustment
-for a finite row-nowrap Flex allocation. `position: "static"` keeps the normal
+for a finite nowrap Flex allocation in any main direction. Expanded non-row
+placement supports direct or exactly-forwarded primitive leaves. `position: "static"` keeps the normal
 slot and ignores insets. `position: "relative"` keeps the normal slot, then
 offsets its final geometry without moving siblings. In LTR, `left` wins over
 `right`; in RTL, `right` wins over `left`; `top` wins over `bottom`.
@@ -370,6 +371,11 @@ with left12/top8, static yields world12,8; relative yields32,18. The inner flow
 slot is unchanged. This does not infer containing boxes through opaque
 components, Group, Clip, Layer, transforms, Flow or Grid, and adds no public
 override. See the layout contract for the bounded admission.
+
+Relative offsets keep their physical final-world sign under main reversal.
+The private Yoga comparison labels the four reversed-relative differences;
+Pibbl preserves its existing physical-offset contract. Nested static containing
+chains remain limited to row/nowrap parent and child Flex boxes.
 
 ### Experimental fixed absolute main directions
 

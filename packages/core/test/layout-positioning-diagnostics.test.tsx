@@ -52,12 +52,14 @@ describe('explicit direct-Flex position modes', () => {
     ['Overlay', <Overlay style={{ width: 200, height: 100 }}><Rectangle style={positioned} /></Overlay>],
     ['Flow', <Flow style={{ width: 200, height: 100 }}><Rectangle style={positioned} /></Flow>],
     ['Grid', <Grid style={{ width: 200, height: 100, gridTemplateColumns: [200], gridTemplateRows: [100] }}><Rectangle style={positioned} /></Grid>],
-    ['column Flex', <Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={positioned} /></Flex>],
     ['wrapped Flex', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={positioned} /></Flex>],
-  ] as const)('rejects relative placement in %s outside the finite row-nowrap contract', (_name, node) => {
+  ] as const)('rejects relative placement in %s outside the finite nowrap contract', (_name, node) => {
     expect(mount(node)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
 
+  it.runIf(!experimentalLayout)('rejects relative column placement in the normal runtime', () => {
+    expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={positioned} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
   it('rejects right and bottom without an explicit mode instead of dropping them', () => {
     expect(mount(<Flex style={{ width: 200, height: 100 }}>
       <Rectangle style={{ right: 18, bottom: 10, width: 50, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0 }} />
@@ -140,5 +142,20 @@ describe('bounded direct-Flex absolute admission', () => {
     ['child padding', { ...fixed, padding: 1 }],
   ] as const)('rejects unsupported absolute %s instead of changing flow', (_name, style) => {
     expect(mount(<Flex style={{ width: 200, height: 100 }}><Rectangle style={style as RectStyle} /></Flex>)).toThrow();
+  });
+});
+
+describe('static containing-block direction boundary', () => {
+  const absolute = { position: 'absolute' as const, width: 30, height: 20, left: 12, top: 8 };
+  it.each([
+    ['column parent with row static child', 'column' as const, 'row' as const],
+    ['row parent with column static child', 'row' as const, 'column' as const],
+  ])('rejects %s instead of extending static containing ownership', (_name, outerDirection, innerDirection) => {
+    expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: outerDirection, flexWrap: 'nowrap' }}>
+      <Flex style={{ position: 'static', width: 80, height: 60, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+        flexDirection: innerDirection, flexWrap: 'nowrap', alignItems: 'flex-start' }}>
+        <Rectangle style={absolute} />
+      </Flex>
+    </Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
 });

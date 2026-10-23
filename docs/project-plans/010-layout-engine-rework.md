@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice130 (fixed absolute placement across all Flex main directions; this commit).
+Latest delivery is slice131 (physical static/relative placement across all Flex main directions; this commit).
+Slice130 is `2bbe4181` (fixed absolute main directions).
 Slice129 is `398dfa54` (bounded measured absolute natural height).
 Slice128 is `2539ff32` (bounded measured absolute natural width).
 Slice127 is `dfc5843c` (bounded absolute aspect-ratio derivation).
@@ -89,11 +90,11 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:383 records,289 native matches and94 classified differences.
+Current corpus:399 records,301 native matches and98 classified differences.
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
-Click Latest for the fixed absolute direction family; Next case advances its ten records.
+Click Latest for the static/relative direction family; Next case advances its sixteen records, including four labeled preserved differences.
 The public lesson is `#/examples/layout/wasm-yoga-migration`.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -3670,20 +3671,52 @@ Logs `/tmp/pibbl-slice130-{public-red,public-green,focused,normal,hardening,nati
 Kernel68649bytes/SHA unchanged. Node26.9.0/macOSChromium, no Node24 trust or full
 uninterrupted383-case browser claim. Fixed33 counts and all7open gates unchanged.
 
-## [NEXT] Static/relative placement across nowrap Flex main directions (slice131)
+## Slice131 delivered: physical static/relative main directions
 
-Extend the existing finite slot-translation contract to reversed rows and columns,
-with pinned direction evidence and public paint/hit/focus geometry. Preserve the
-existing direct containing-block boundary; no opaque/nested ownership expansion.
-Commit131 separately; the next consolidation follows130–132.
+Direct/exact-forwarded primitive leaves now support static/relative placement in
+all four finite nowrap directions and LTR/RTL. Static ignores insets; relative
+preserves the allocated sibling slots and applies one physical final-world
+translation. No relative offset changes sign merely because the main axis
+reverses. Four native reverse-relative records deliberately differ; raw Yoga
+boxes and classified `pibblBoxes` remain separate, with a visible Canvas label.
+No CSS-equivalence claim. Known layout children retain the row-only admission.
 
-### Finite positioning exit matrix after130
+The RED established missing leaf admission and exposed a row-parent/static-column
+metadata path previously made reachable by fixed absolute direction support.
+Containing metadata now requires both parent and static child row/nowrap before
+preflight; column-parent/static-row and row-parent/static-column reject explicitly.
+No invented owner fallback. Scoped review found no material issue in the final
+boundary/forwarding/physical translation code. No new cache, graph, ABI or native
+kernel change. RTL overlap intentionally targets later B; A's exposed edge is
+used for its own hit assertion, with a per-case exact A/B interaction sequence.
+
+Public2files49pass/2normal-onlyskip51, focused5files72pass/2skip74; normal41pass/
+33skip74. Latest navigation passes. Sixteen native records bring399cases=
+301matches+98classified. Source/built16pass:12native matches +4preserved physical
+differences,227source/dist inputs, errors[]/cleanup[0,0,0]; final screenshot
+inspected with the visible difference label. Public5/full399 boundary passes.
+Isolated installed245dist inputs, Bundler/NodeNext, explicit relativeMainDirections
+receipt, earlier placement/measurement and104auto-margin receipts pass. Tarball
+SHA256 `d6da0e9a7e0c0e1b455ab53e36fd4fa62c419cf4177c6d63f8da956486f77da5`.
+Types, changed-code lint, docs109RED probes/JSDoc pass.
+Logs `/tmp/pibbl-slice131-{public-red,public-green-final,hits-diagnostic,focused,normal,latest,native,source,built,packed,types-final,lint,docs}.txt`.
+Kernel68649bytes/SHA unchanged; Node26.9.0/macOSChromium, no Node24 trust or
+uninterrupted399-case browser claim. Fixed33/all7open gates unchanged.
+
+## [NEXT] Opposing-inset absolute sizing across main directions (slice132)
+
+Extend the existing physical opposing-inset automatic dimensions and numeric
+bounds to all four finite nowrap directions. Preserve row-only aspect/provider
+measurement and existing containing boundaries. Public RED and pinned native
+geometry precede production. Commit132 separately, then consolidate130–132.
+
+### Finite positioning exit matrix after131
 
 This refines existing manifest entries; it adds no capability or release gate.
 
 | Existing exit | Evidence still required before closing it |
 | --- | --- |
-| Direct static/relative/absolute placement | All accepted main directions and wrapping contexts, inset precedence and no-inset alignment, logical/percentage policy, supported child box and size constraints; pinned semantic geometry plus public paint/hit/focus evidence. Static/relative remains row-nowrap; fixed absolute covers nowrap directions, while broader sizing remains row-only. |
+| Direct static/relative/absolute placement | All accepted main directions and wrapping contexts, inset precedence and no-inset alignment, logical/percentage policy, supported child box and size constraints; pinned semantic geometry plus public paint/hit/focus evidence. Static/relative leaves and fixed absolute cover nowrap directions; known positioned owners and broader absolute sizing remain row-only. |
 | Absolute intrinsic dimensions | Built-in Text/font and image contributions, both-auto sizing, nested described owners and supported constraint feedback. The paired-provider one-auto paths in128–129 do not supply these contracts. |
 | General containing-block ownership | Exact override, transformed/opaque/boxless ancestry policy and lifecycle evidence, retaining legacy omission only where specified. Direct static Flex chains alone do not close it. |
 | Hidden/contents participation | Declared retention/disposal, boxless layout contribution, identity, source order, clips, events and visibility transitions; current implementation is missing. |

@@ -98,8 +98,8 @@ root ratio sizing remain outside this contract.
 `FlexItemStyle` is the direct-child participation style consumed by a `Flex`
 parent; it does not create a CSS cascade.
 
-In experimental layout, a direct child in a finite LTR or RTL row-nowrap
-`Flex` may choose `position: "static"` or `"relative"`. Static retains its
+In experimental layout, a primitive leaf in a finite LTR or RTL nowrap
+`Flex` of any main direction may choose `position: "static"` or `"relative"`. Static retains its
 ordinary Flex slot and ignores insets. Relative retains that slot, then applies
 finite numeric `left`/`right`/`top`/`bottom` once to final geometry. LTR
 prefers left over right, RTL prefers right over left, and top prefers bottom.
@@ -344,6 +344,10 @@ with left12/top8, static yields world12,8; relative yields32,18. The inner flow
 slot is unchanged. This does not infer containing boxes through opaque
 components, Group, Clip, Layer, transforms, Flow or Grid, and adds no public
 override. See the layout contract for the bounded admission.
+
+Relative translation remains physical under main reversal. Yoga's four reversed
+relative cases are recorded as deliberate differences with separate Pibbl boxes.
+This does not widen the row/nowrap nested static containing-block boundary.
 
 ### Experimental fixed absolute main directions
 

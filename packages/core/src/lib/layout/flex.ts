@@ -381,6 +381,12 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
       // Declarative static Flex boxes pass the nearest owner's padding box through
       // existing placement metadata. Nothing is attached to authored props/styles.
       if (child.type === Flex && (prepared.style as FlexStyle).position === 'static') {
+        const childStyle = prepared.style as FlexStyle;
+        if (style.flexDirection !== 'row' || style.flexWrap !== 'nowrap' ||
+            (childStyle.flexDirection ?? 'row') !== 'row' || (childStyle.flexWrap ?? 'nowrap') !== 'nowrap') {
+          throw childDiagnostic(child, 'position', 'static', plan.content,
+            'PIBBL_LAYOUT_UNSUPPORTED_POSITION: static containing-block inheritance currently requires a direct row nowrap Flex chain');
+        }
         containingBox ??= resolveFlexContainingBox(style, plan.content);
         const insets = normalizeBoxInsets(prepared.style as FlexStyle, childContext(child, plan.content));
         const x = finiteRelativePlacement(containingBox.x - placement.box.x - insets.left, 'left', child, plan.content);
@@ -1952,8 +1958,11 @@ function assertSupportedRelativeFlexPosition(
   if (!experimentalLayout || (position !== 'static' && position !== 'relative')) {
     throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: uses an unsupported Flex placement mode');
   }
-  if (options.flexDirection !== 'row' || options.flexWrap !== 'nowrap') {
-    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: currently requires a finite row nowrap Flex allocation');
+  if (options.flexWrap !== 'nowrap') {
+    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: currently requires a finite nowrap Flex allocation');
+  }
+  if (options.flexDirection !== 'row' && (isKnownLayoutType(child.type) || isLayoutComponent(child.type))) {
+    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: non-row static and relative placement currently supports direct primitive leaves without containing-block expansion');
   }
 }
 

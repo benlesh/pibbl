@@ -2271,6 +2271,86 @@ static void absoluteMainDirectionCases() {
 }
 
 
+static void relativeMainDirectionCases() {
+  struct Case { YGFlexDirection direction; bool rtl; bool relative; const char* name; };
+  const Case cases[] = {
+    {YGFlexDirectionRow, false, false, "row-static-ltr"},
+    {YGFlexDirectionRow, true, false, "row-static-rtl"},
+    {YGFlexDirectionRow, false, true, "row-relative-ltr"},
+    {YGFlexDirectionRow, true, true, "row-relative-rtl"},
+    {YGFlexDirectionRowReverse, false, false, "row-reverse-static-ltr"},
+    {YGFlexDirectionRowReverse, true, false, "row-reverse-static-rtl"},
+    {YGFlexDirectionRowReverse, false, true, "row-reverse-relative-ltr"},
+    {YGFlexDirectionRowReverse, true, true, "row-reverse-relative-rtl"},
+    {YGFlexDirectionColumn, false, false, "column-static-ltr"},
+    {YGFlexDirectionColumn, true, false, "column-static-rtl"},
+    {YGFlexDirectionColumn, false, true, "column-relative-ltr"},
+    {YGFlexDirectionColumn, true, true, "column-relative-rtl"},
+    {YGFlexDirectionColumnReverse, false, false, "column-reverse-static-ltr"},
+    {YGFlexDirectionColumnReverse, true, false, "column-reverse-static-rtl"},
+    {YGFlexDirectionColumnReverse, false, true, "column-reverse-relative-ltr"},
+    {YGFlexDirectionColumnReverse, true, true, "column-reverse-relative-rtl"},
+  };
+  for (const auto& current : cases) {
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false);
+    YGConfigSetPointScaleFactor(config, 0);
+    YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, 204);
+    YGNodeStyleSetHeight(root, 244);
+    YGNodeStyleSetFlexDirection(root, current.direction);
+    YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetGap(root, YGGutterAll, 10);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10);
+    YGNodeStyleSetPadding(root, YGEdgeRight, 30);
+    YGNodeStyleSetPadding(root, YGEdgeTop, 20);
+    YGNodeStyleSetPadding(root, YGEdgeBottom, 20);
+    YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    for (int item = 0; item < 2; ++item) {
+      auto child = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(child, 50);
+      YGNodeStyleSetHeight(child, 20);
+      YGNodeStyleSetFlexGrow(child, 0);
+      YGNodeStyleSetFlexShrink(child, 0);
+      YGNodeStyleSetMinWidth(child, 0);
+      YGNodeStyleSetMinHeight(child, 0);
+      if (item == 0) {
+        YGNodeStyleSetPositionType(child, current.relative ? YGPositionTypeRelative : YGPositionTypeStatic);
+        YGNodeStyleSetPosition(child, YGEdgeLeft, 12);
+        YGNodeStyleSetPosition(child, YGEdgeRight, 18);
+        YGNodeStyleSetPosition(child, YGEdgeTop, 8);
+        YGNodeStyleSetPosition(child, YGEdgeBottom, 10);
+      }
+      YGNodeInsertChild(root, child, item);
+    }
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, current.rtl ? YGDirectionRTL : YGDirectionLTR);
+    const bool reverse = current.direction == YGFlexDirectionRowReverse || current.direction == YGFlexDirectionColumnReverse;
+    const auto a = YGNodeGetChild(root, 0);
+    const auto b = YGNodeGetChild(root, 1);
+    std::cout << ",{\"name\":\"position-relative-main-" << current.name
+              << "\",\"width\":204,\"height\":244,\"gap\":10,\"flexDirection\":\""
+              << (current.direction == YGFlexDirectionRow ? "row" : current.direction == YGFlexDirectionRowReverse ? "row-reverse" : current.direction == YGFlexDirectionColumn ? "column" : "column-reverse")
+              << "\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (current.rtl ? "rtl" : "ltr")
+              << "\",\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\"},\"relativeMainDirectionFixture\":true,\"boxes\":[";
+    printBox(a); std::cout << ','; printBox(b); std::cout << ']';
+    if (reverse && current.relative) {
+      const bool rowReverse = current.direction == YGFlexDirectionRowReverse;
+      const float baseX = rowReverse ? (current.rtl ? 12 : 122) : (current.rtl ? 122 : 12);
+      const float baseY = rowReverse ? 22 : 202;
+      const float physicalX = baseX + (current.rtl ? -18 : 12);
+      const float physicalY = baseY + 8;
+      std::cout << ",\"classification\":\"preserved-physical-relative-offset\",\"comparisonLabel\":\"Pibbl preserves physical final-world relative offsets under main-axis reversal; Yoga differs (not parity).\",\"pibblBoxes\":[{\"x\":" << physicalX << ",\"y\":" << physicalY << ",\"width\":50,\"height\":20},";
+      printBox(b);
+      std::cout << ']';
+    }
+    std::cout << ",\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"position\":\"" << (current.relative ? "relative" : "static") << "\",\"left\":12,\"right\":18,\"top\":8,\"bottom\":10},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root);
+    YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -2427,5 +2507,6 @@ int main() {
   absoluteMeasuredWidthCases();
   absoluteMeasuredHeightCases();
   absoluteMainDirectionCases();
+  relativeMainDirectionCases();
   std::cout << "]\n";
 }

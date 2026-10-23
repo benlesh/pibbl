@@ -231,3 +231,80 @@ it.runIf(experimentalLayout)('consumes forwarded mode and opposite-only insets o
   expect([...canvas.getContext('2d')!.getImageData(61, 11, 1, 1).data]).toEqual([25, 55, 91, 255]);
   expect([...canvas.getContext('2d')!.getImageData(63, 11, 1, 1).data]).toEqual([0, 0, 0, 0]);
 });
+
+it.runIf(experimentalLayout)('preserves physical static and relative final boxes through all finite nowrap main directions', async () => {
+  type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
+  type Directionality = 'ltr' | 'rtl';
+  type PlacementStyle = RectStyle & FlexItemStyle;
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const mode = signal<'static' | 'relative'>('static');
+  const flexDirection = signal<Direction>('row');
+  const layoutDirection = signal<Directionality>('ltr');
+  const ink = signal('#19375b');
+  const hits: string[] = [];
+  const focused: string[] = [];
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+  let nextStamp = 1;
+
+  function Probe({ name, style: _style }: { readonly name: 'A' | 'B'; readonly style: PlacementStyle }) {
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    const stamp = useConst(() => nextStamp++);
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return <Rectangle keyboardFocusable onFocus={() => focused.push(name)} onClick={() => hits.push(name)} style={{
+      width: box.width, height: box.height, cursor: 'pointer', fill: name === 'A' ? ink : '#a63758',
+    }} />;
+  }
+
+  function Scene() {
+    const a: PlacementStyle = { width: 50, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+      position: mode.get(), left: 12, right: 18, top: 8, bottom: 10 };
+    const b: PlacementStyle = { width: 50, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 };
+    return <FocusManagement><Flex style={{
+      boxSizing: 'border-box', width: 204, height: 244, padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2,
+      flexDirection: flexDirection.get(), flexWrap: 'nowrap', layoutDirection: layoutDirection.get(), alignItems: 'flex-start', gap: 10,
+    }}><Probe key="A" name="A" style={a} /><Probe key="B" name="B" style={b} /></Flex></FocusManagement>;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 204; canvas.height = 244; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller);
+  await nextFrame();
+
+  const expected: readonly [Direction, Directionality, readonly [{ x: number; y: number }, { x: number; y: number }], readonly [{ x: number; y: number }, { x: number; y: number }]][] = [
+    ['row', 'ltr', [{ x: 12, y: 22 }, { x: 72, y: 22 }], [{ x: 24, y: 30 }, { x: 72, y: 22 }]],
+    ['row', 'rtl', [{ x: 122, y: 22 }, { x: 62, y: 22 }], [{ x: 104, y: 30 }, { x: 62, y: 22 }]],
+    ['row-reverse', 'ltr', [{ x: 122, y: 22 }, { x: 62, y: 22 }], [{ x: 134, y: 30 }, { x: 62, y: 22 }]],
+    ['row-reverse', 'rtl', [{ x: 12, y: 22 }, { x: 72, y: 22 }], [{ x: -6, y: 30 }, { x: 72, y: 22 }]],
+    ['column', 'ltr', [{ x: 12, y: 22 }, { x: 12, y: 52 }], [{ x: 24, y: 30 }, { x: 12, y: 52 }]],
+    ['column', 'rtl', [{ x: 122, y: 22 }, { x: 122, y: 52 }], [{ x: 104, y: 30 }, { x: 122, y: 52 }]],
+    ['column-reverse', 'ltr', [{ x: 12, y: 202 }, { x: 12, y: 172 }], [{ x: 24, y: 210 }, { x: 12, y: 172 }]],
+    ['column-reverse', 'rtl', [{ x: 122, y: 202 }, { x: 122, y: 172 }], [{ x: 104, y: 210 }, { x: 122, y: 172 }]],
+  ];
+  const actual = () => [...boxes.values()].map(({ x, y, width, height, stamp }) => ({ x, y, width, height, stamp }));
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['A', 'B']);
+  for (const [direction, writingDirection, staticBoxes, relativeBoxes] of expected) {
+    flexDirection.set(direction); layoutDirection.set(writingDirection); mode.set('static');
+    await nextFrame();
+    expect(actual()).toEqual(staticBoxes.map((box, index) => ({ ...box, width: 50, height: 20, stamp: index + 1 })));
+    mode.set('relative'); await nextFrame();
+    expect(actual()).toEqual(relativeBoxes.map((box, index) => ({ ...box, width: 50, height: 20, stamp: index + 1 })));
+    const hitStart = hits.length;
+    clickCanvas(canvas, staticBoxes[0].x + 4, staticBoxes[0].y + 4);
+    clickCanvas(canvas, relativeBoxes[0].x + 46, relativeBoxes[0].y + 4); // Exposed edge: later B covers A's left edge in RTL rows.
+    clickCanvas(canvas, relativeBoxes[1].x + 4, relativeBoxes[1].y + 4);
+    expect(hits.slice(hitStart), `${direction} ${writingDirection}`).toEqual(['A', 'B']);
+  }
+  expect(hits.filter(hit => hit === 'B').length).toBe(8);
+  expect(hits.filter(hit => hit === 'A').length).toBe(8);
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  ink.set('#426b61'); await nextFrame();
+  expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforePaint.solves);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(beforePaint.nodeCreates);
+  controller.dispose();
+  expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);
+  expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
+  expect(snapshotWasmLayoutDiagnostics().cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
