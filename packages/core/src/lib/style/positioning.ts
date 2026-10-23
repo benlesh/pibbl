@@ -162,9 +162,10 @@ export interface PositioningStyle extends SystemStyle {
    * leaves and fixed numeric direct nowrap Flex chains with zero grow/shrink and
    * omitted or automatic basis; physical offsets retain their sign through main reversal. Absolute stays out of sibling allocation, using
    * the padding box for explicit insets and content alignment for omitted axes.
-   * Fixed numeric and opposing-inset automatic absolute boxes support all nowrap
-   * main directions and RTL, with numeric bounds applied before anchoring.
-   * Paired natural providers keep their exact/unbounded query in every nowrap direction.
+   * Fixed numeric and admitted automatic absolute profiles support all main directions
+   * and RTL, with numeric bounds applied before anchoring. Wrapped allocations
+   * require a finite numeric physical anchor on each axis; no-inset alignment stays nowrap.
+   * Paired natural providers keep their exact/unbounded query in every admitted direction.
    * Direct wrapped Text with a generic pixel font and visible fit/overflow may
    * measure automatic height at declared numeric width through the same owned query.
    * Unwrapped Text may measure automatic width at declared numeric height, using
@@ -172,8 +173,6 @@ export interface PositioningStyle extends SystemStyle {
    * Generic unwrapped Text also supports natural ink height and both automatic
    * dimensions through one unbounded query before independent numeric clamps;
    * mixed opposing-pair/natural feedback and both-auto aspect remain excluded.
-   * Normal LTR wrapped rows also accept fixed numeric absolute leaves with explicit
-   * left/top, no right/bottom/aspect and no nonzero minimum or maximum bounds.
    * On the documented finite direct-child path, automatic absolute axes resolve
    * from opposing numeric physical insets. With a positive finite aspectRatio,
    * exactly one automatic axis can instead derive from its declared finite numeric opposite axis.

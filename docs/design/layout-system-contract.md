@@ -73,20 +73,21 @@ JavaScript Flex support.
 
 ### Experimental direct-Flex absolute participation
 
-A finite experimental nowrap Flex also accepts a direct child with
-`position: "absolute"`, finite numeric dimensions or a bounded automatic
-axis, and optional finite numeric physical insets. The child leaves line allocation:
+A finite experimental Flex also accepts a direct child with
+`position: "absolute"` and finite numeric or admitted automatic dimensions.
+Physical insets are optional in nowrap allocations. The child leaves line allocation:
 its width, height and flex factors do not consume a sibling slot or an extra gap.
 It remains at its authored position in paint order, pointer targeting and focus
 navigation. Its ordinary keyed identity and receiver-owned inputs remain active.
 
-A bounded normal LTR `row` with `flexWrap: "wrap"` also accepts direct absolute
-leaves with finite numeric width, height, left and top. The same padding-box
-origin and source order apply while ordinary siblings form lines independently.
-This wrapping admission excludes right/bottom or omitted insets, automatic sizes,
-aspect ratios, nonzero minimums, maximums, reversed/RTL directions and wrap-reverse.
-Existing neutral-flex, no-margin/child-decoration and no-responsive-query rules
-still apply. Owner resizing changes flow lines without reparenting keyed leaves.
+In `wrap` and `wrap-reverse` allocations, each absolute axis must have at least
+one finite numeric physical anchor (`left` or `right`, and `top` or `bottom`).
+With both axes anchored, all four main directions and LTR/RTL reuse the same
+fixed/bounded, opposing-inset, aspect, paired-provider and admitted Text sizing
+profiles described below. Both placement axes use physical inset branches, so
+this adds no wrapped no-inset alignment/static-position policy. Existing neutral
+flex, no-margin/child-decoration, no-query and direct-child restrictions remain.
+Owner resizing changes ordinary flow lines without reparenting absolute leaves.
 
 Explicit insets follow Yoga's inner-border/padding-box reference: the left/top
 origin includes the parent border but not its padding. Right/bottom measure from
@@ -114,12 +115,12 @@ remain unsupported. Without a ratio, both automatic axes may still use their
 own opposing inset pairs.
 
 Fixed finite numeric and opposing-inset automatic absolute boxes participate in
-all four experimental nowrap main directions and LTR/RTL. Numeric bounds clamp
+all four experimental main directions and LTR/RTL in nowrap or physically anchored wrapped allocations. Numeric bounds clamp
 fixed and derived axes before anchoring in every direction. Aspect derivation uses the declared opposite dimension in every direction.
 Paired natural provider measurement also supports every finite nowrap main
 direction; it retains the same direction-independent Pibbl query contract. No intrinsic query is needed for opposing-inset sizing.
 
-On an axis without either inset, the fixed child aligns within the parent content
+In nowrap allocations, on an axis without either inset, the fixed child aligns within the parent content
 box instead. `justifyContent` controls the main axis: flex-start and space-between
 use main-start, flex-end uses main-end, and center/space-around/space-evenly center.
 `alignItems` controls the cross axis; stretch keeps the declared size at
@@ -140,9 +141,9 @@ contexts and inset values.
 
 ### Experimental measured absolute size
 
-In a finite nowrap Flex of any main direction, a direct custom primitive with paired pure
+In a finite Flex of any main direction, a direct custom primitive with paired pure
 `measureIntrinsic` and `measure` providers may use exactly one automatic or omitted absolute dimension
-with an explicit finite numeric opposite dimension. Opposing insets on the
+with an explicit finite numeric opposite dimension. Wrapped allocations require a physical anchor on each axis. Opposing insets on the
 automatic axis and admitted aspect derivation retain their existing precedence.
 Otherwise the parent calls `measure` with one of these callback envelopes:
 
@@ -169,7 +170,7 @@ component. Both-auto custom-provider sizing, broader Text/font or image intrinsi
 and child decoration remain outside this admission.
 
 Direct built-in `Text` may use automatic or omitted absolute height at a declared
-finite numeric width in every finite nowrap direction. It requires `wrap: true`,
+finite numeric width in every finite main direction, with both axes physically anchored when wrapping. It requires `wrap: true`,
 a generic pixel font, and omitted/visible `fit` and `overflow`. The existing Text
 provider measures real Canvas text at exact declared width and unbounded height;
 a measurement-only copy omits automatic height, while final settlement retains

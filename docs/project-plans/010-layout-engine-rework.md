@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice139 (unwrapped Text natural height and both-auto ink dimensions; this commit).
+Latest delivery is slice140 (physically anchored absolute profiles across wrapped Flex; this commit).
+Slice139 is `f79b258f` (unwrapped Text natural height and both-auto ink dimensions).
 Slice138 is `b84f5322` (unwrapped Text natural absolute width).
 Consolidation46 is `c72afa72` for136–138.
 Slice137 is `3ad9598a` (wrapped Text automatic absolute height).
@@ -100,7 +101,7 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:491 records:385 geometry matches,98 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
+Current corpus:525 records:419 geometry matches,98 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
@@ -4025,17 +4026,41 @@ Logs `/tmp/pibbl-slice139-{public-red,public-green,focused,normal,latest,source,
 No kernel change, font parity, full491-case replay, speed or Node24 trust claim.
 Fixed33/all seven open release gates unchanged.
 
-## [NEXT] Explicitly anchored absolute profiles in wrapped Flex (140)
+## Slice140 delivered: physically anchored absolute profiles across wrapped Flex
 
-Evaluate the coherent existing absolute sizing family across normal/reversed
-wrapping and main/writing directions. Require at least one physical inset on each
-axis in wrapped contexts, avoiding new no-inset static-position/alignment policy.
-Reuse existing fixed/bounded/pair/aspect/measurement validation and non-flow source
-placement instead of delivering repeated direction-only admissions. Pin native
-geometry/query provenance and a focused public RED before changing the guard;
-provide the minimal runnable slice before broader hardening. Image intrinsic
-ownership, general containing blocks, participation, transactionality and release
-exits remain separate. Consolidate139–141 after the third delivered slice.
+Existing fixed, bounded, opposing-inset, aspect, paired-provider and admitted Text
+profiles now work across all four main directions, LTR/RTL and wrap/wrap-reverse,
+provided each physical axis has a finite numeric anchor. Flow slots, source paint,
+focus order, measurement envelopes and conservative cache rules are preserved.
+Wrapped no-inset alignment and containing-chain expansion remain outside this slice.
+
+Public RED failed on the old guard before production edits. Focused four-file WASM
+verification passed75/2skip77; normal passed43/34skip77; Latest passed1/413skip414.
+Independent two-flow unit placement and three-flow profile tests cover rewrapping,
+bounds, paired sizing, aspect and provider/Text measurement. Native/source/built
+replay passed34 geometry matches, keyed A/B/C/D identity, paint reuse and exact
+cleanup. The final built screenshot was inspected. Corpus525 is419matches,
+98preserved-semantic and8font-source comparisons; nine query differences remain
+separate. This is not a full525-case replay or a font-parity claim.
+
+Fresh package build and isolated packed consumer passed245 installed inputs,
+strict Bundler/NodeNext, wrapped positioning and actual Canvas Text ink evidence,
+plus104 auto-margin cases. Tarball SHA256
+`fdc3be65a10707009ca0f017876164db9b66a5ac77a6c60d2bff65e4d1989e5c`.
+Types, changed lint, docs109 mutation probes, JSDoc, public5/full525 boundary and
+diff checks passed. Scoped review found no material issue. Evidence corrected an
+initial packed click coordinate and extended generic keyed checks to include D.
+Logs `/tmp/pibbl-slice140-{public-red,public-green,focused-final,normal,latest,source,built,packed,types-final,lint,docs}.txt`.
+Environment remains Node26.9.0/macOS arm64/Chromium; no Node24 aggregate trust claim.
+Kernel and fixed33 capability denominator/all seven open release gates unchanged.
+
+## [NEXT] Static and relative primitive leaves in wrapped Flex (141)
+
+Pin wrapped flow participation and post-placement physical relative offsets across
+all main/writing directions with native provenance and a public failing test.
+Retain the existing boundary for wrapped known-layout containing owners. Deliver
+one coherent leaf profile, then consolidate139–141. Image intrinsic ownership,
+general containing blocks, participation, transactionality and release exits remain.
 
 ### Finite positioning exit matrix after134
 

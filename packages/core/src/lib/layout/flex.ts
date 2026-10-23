@@ -1901,7 +1901,7 @@ function finiteRelativePlacement(
 function assertSupportedAbsoluteFlexPosition(
   child: PibblElement<any>,
   style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
-  options: Readonly<Pick<ResolvedFlexStyle, 'flexDirection' | 'flexWrap' | 'layoutDirection'>>,
+  options: Readonly<Pick<ResolvedFlexStyle, 'flexWrap'>>,
   container: Readonly<LayoutBox>,
   query: PreparedQuery | undefined,
   naturalWidth = false,
@@ -1910,8 +1910,8 @@ function assertSupportedAbsoluteFlexPosition(
   if (isKnownLayoutType(child.type) || isLayoutComponent(child.type)) {
     throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute layout children and nested containing blocks are not supported in this slice');
   }
-  if (!experimentalLayout || options.flexWrap !== 'nowrap' && !isFixedLtrRowWrapAbsolute(style, options)) {
-    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires a finite nowrap Flex allocation or fixed LTR row wrap placement');
+  if (!experimentalLayout || options.flexWrap !== 'nowrap' && !hasPhysicalAbsoluteAnchors(style)) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute requires experimental Flex; wrapped placement needs a finite numeric physical anchor on each axis');
   }
   const automaticWidth = style.width === undefined || style.width === 'auto';
   const automaticHeight = style.height === undefined || style.height === 'auto';
@@ -1941,19 +1941,11 @@ function assertSupportedAbsoluteFlexPosition(
   }
 }
 
-function isFixedLtrRowWrapAbsolute(
-  style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
-  options: Readonly<Pick<ResolvedFlexStyle, 'flexDirection' | 'flexWrap' | 'layoutDirection'>>,
-): boolean {
-  return options.flexDirection === 'row' && options.flexWrap === 'wrap' && options.layoutDirection === 'ltr' &&
-    typeof style.width === 'number' && Number.isFinite(style.width) && style.width >= 0 &&
-    typeof style.height === 'number' && Number.isFinite(style.height) && style.height >= 0 &&
-    typeof style.left === 'number' && Number.isFinite(style.left) &&
-    typeof style.top === 'number' && Number.isFinite(style.top) &&
-    style.right === undefined && style.bottom === undefined && style.aspectRatio === undefined &&
-    (style.minWidth === undefined || style.minWidth === 0) &&
-    (style.minHeight === undefined || style.minHeight === 0) &&
-    style.maxWidth === undefined && style.maxHeight === undefined;
+function hasPhysicalAbsoluteAnchors(style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>): boolean {
+  return (typeof style.left === 'number' && Number.isFinite(style.left) ||
+    typeof style.right === 'number' && Number.isFinite(style.right)) &&
+    (typeof style.top === 'number' && Number.isFinite(style.top) ||
+      typeof style.bottom === 'number' && Number.isFinite(style.bottom));
 }
 
 function validateAbsoluteBound(

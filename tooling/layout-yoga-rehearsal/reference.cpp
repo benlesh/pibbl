@@ -2719,6 +2719,28 @@ static void absoluteTextBothCases() {
   }
 }
 
+
+static const char* wrapAnchorName(YGWrap value) { return value == YGWrapWrapReverse ? "wrap-reverse" : "wrap"; }
+static const char* wrapAnchorDirectionName(YGFlexDirection value) { return value == YGFlexDirectionRow ? "row" : value == YGFlexDirectionRowReverse ? "row-reverse" : value == YGFlexDirectionColumn ? "column" : "column-reverse"; }
+static void absoluteAnchoredWrapRecord(YGFlexDirection direction, YGWrap wrap, YGDirection writing, bool trailing, bool resized) {
+  auto config = YGConfigNew(); YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config); YGNodeStyleSetPositionType(root, YGPositionTypeRelative); YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+  YGNodeStyleSetWidth(root, resized ? 244 : 164); YGNodeStyleSetHeight(root, resized ? 124 : 84); YGNodeStyleSetFlexDirection(root, direction); YGNodeStyleSetFlexWrap(root, wrap); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetAlignContent(root, YGAlignFlexStart); YGNodeStyleSetGap(root, YGGutterAll, 10); YGNodeStyleSetPadding(root, YGEdgeAll, 10); YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+  auto a = YGNodeNewWithConfig(config), absolute = YGNodeNewWithConfig(config), c = YGNodeNewWithConfig(config), d = YGNodeNewWithConfig(config);
+  for (auto flow : {a, c, d}) { YGNodeStyleSetWidth(flow, 60); YGNodeStyleSetHeight(flow, 20); YGNodeStyleSetFlexGrow(flow, 0); YGNodeStyleSetFlexShrink(flow, 0); setMinZero(flow); }
+  YGNodeStyleSetPositionType(absolute, YGPositionTypeAbsolute); YGNodeStyleSetWidth(absolute, 50); YGNodeStyleSetHeight(absolute, 30); YGNodeStyleSetFlexGrow(absolute, 0); YGNodeStyleSetFlexShrink(absolute, 0); setMinZero(absolute);
+  if (trailing) { YGNodeStyleSetPosition(absolute, YGEdgeRight, 18); YGNodeStyleSetPosition(absolute, YGEdgeBottom, 10); } else { YGNodeStyleSetPosition(absolute, YGEdgeLeft, 12); YGNodeStyleSetPosition(absolute, YGEdgeTop, 8); }
+  YGNodeInsertChild(root, a, 0); YGNodeInsertChild(root, absolute, 1); YGNodeInsertChild(root, c, 2); YGNodeInsertChild(root, d, 3); YGNodeCalculateLayout(root, YGUndefined, YGUndefined, writing);
+  std::cout << ",{\"name\":\"position-absolute-anchored-wrap-" << wrapAnchorDirectionName(direction) << '-' << wrapAnchorName(wrap) << '-' << (writing == YGDirectionRTL ? "rtl" : "ltr") << '-' << (trailing ? "right-bottom" : "left-top") << (resized ? "-resized" : "") << "\",\"width\":" << (resized ? 244 : 164) << ",\"height\":" << (resized ? 124 : 84) << ",\"gap\":10,\"flexDirection\":\"" << wrapAnchorDirectionName(direction) << "\",\"flexWrap\":\"" << wrapAnchorName(wrap) << "\",\"layoutDirection\":\"" << (writing == YGDirectionRTL ? "rtl" : "ltr") << "\",\"containerStyle\":{\"position\":\"relative\",\"boxSizing\":\"border-box\",\"padding\":10,\"borderWidth\":2,\"alignItems\":\"flex-start\",\"alignContent\":\"flex-start\"},\"absoluteAnchoredWrapFixture\":true,\"boxes\":["; printBox(a); std::cout << ','; printBox(absolute); std::cout << ','; printBox(c); std::cout << ','; printBox(d); std::cout << "],\"itemStyles\":[{\"width\":60,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"position\":\"absolute\",\"width\":50,\"height\":30,\"" << (trailing ? "right\":18,\"bottom\":10" : "left\":12,\"top\":8") << ",\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":60,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":60,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
+static void absoluteAnchoredWrapCases() {
+  const YGFlexDirection directions[] = {YGFlexDirectionRow, YGFlexDirectionRowReverse, YGFlexDirectionColumn, YGFlexDirectionColumnReverse}; const YGWrap wraps[] = {YGWrapWrap, YGWrapWrapReverse};
+  for (const auto direction : directions) for (const auto wrap : wraps) for (int rtl = 0; rtl < 2; ++rtl) for (int trailing = 0; trailing < 2; ++trailing) absoluteAnchoredWrapRecord(direction, wrap, rtl ? YGDirectionRTL : YGDirectionLTR, trailing, false);
+  absoluteAnchoredWrapRecord(YGFlexDirectionRow, YGWrapWrap, YGDirectionLTR, false, true);
+  absoluteAnchoredWrapRecord(YGFlexDirectionColumnReverse, YGWrapWrapReverse, YGDirectionRTL, true, true);
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -2884,5 +2906,6 @@ int main() {
   absoluteTextHeightCases();
   absoluteTextWidthCases();
   absoluteTextBothCases();
+  absoluteAnchoredWrapCases();
   std::cout << "]\n";
 }
