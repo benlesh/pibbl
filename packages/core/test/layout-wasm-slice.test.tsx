@@ -1331,7 +1331,7 @@ it.runIf(experimentalLayout)('places numeric cross margins and rejects unsupport
   const child = () => createElement(Rectangle, { style: { width: 'auto', height: 40, minHeight: 0, margin: 5, marginLeft: 3 } });
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [child(), child()], { flexDirection: 'column' }, measurement))
     .toEqual([{ x: 3, y: 5, width: 92, height: 40 }, { x: 3, y: 55, width: 92, height: 40 }]);
-  for (const margin of [NaN, Infinity, 'bad%', 'auto', null]) {
+  for (const margin of [NaN, Infinity, 'bad%', null]) {
     const invalid = createElement(Rectangle, { style: { width: 20, height: 20, minWidth: 0, margin } as any });
     expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 30 }, [invalid], {}, measurement)).toThrow(/margin/);
   }

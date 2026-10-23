@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice102 (auto shorthand and edge precedence), recorded below.
+Latest delivery is slice102 `dc0565a6` (auto shorthand and edge precedence), recorded below.
 Slice101 is `e2418916` (finite cross-auto direction coverage).
 Slice100 is `26613e70` (bounded finite row cross auto margins).
 Slice99 is `57a74243` (wrapped per-line main auto margins).
@@ -52,7 +52,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 is next; the single next delivery is103, opposing auto-margin bounds evidence. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next delivery is103, opposing auto-margin bounds evidence. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles293 records:200matches/93classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -2563,6 +2563,26 @@ Fixed33 remains5complete/11experimental/8partial/8missing/1excluded, all7gates o
 Auto-margin remains partial. Consolidation34 of100–102 follows separately before
 another implementation slice. No baseline rewrite or Node24 aggregate claim.
 Final whole-codebase review remains at full program end.
+
+### Consolidation 34 completed for delivery slices 100–102
+
+Separate100 `26613e70`,101 `e2418916`,102 `dc0565a6`. Initial bounded11-file
+run found one obsolete assertion that uniform auto must throw;472passed/9skipped.
+The new102contract supports it. Remove only that obsolete invalid value; malformed,
+nonfinite and null values still reject. The corrected old assertion plus public
+shorthand test pass2/2; fresh full11-file Chromium run passes473/9skip(482),77.56s.
+Ordinary lane169passed/313skipped(482),9passedfiles/2skippedfiles,2.90s. Logs
+`/tmp/pibbl-consolidation34-focused.txt` (initial),
+`/tmp/pibbl-consolidation34-obsolete-negative.txt`,
+`/tmp/pibbl-consolidation34-focused-final.txt` and
+`/tmp/pibbl-consolidation34-normal.txt`; final commands exit0.
+Reuse fresh102source/built8native matches, installed90auto+24direction cases,
+230inputs/strict consumer types,293-case provenance and static checks. Unchanged
+v5/native13evidence comes from101; no duplicate review or baseline rewrite.
+Node26.9.0/pnpm11.21.0dependencies/Chromium; no Node24 aggregate trust claim.
+Fixed33 stays5complete/11experimental/8partial/8missing/1excluded, all7gates open.
+Next103 hardens the existing opposing/minmax auto gap; automatic/intrinsic cross
+sizing remains explicitly unfinished. Final whole-codebase review stays at end.
 
 ## [NEXT] Opposing auto-margin bounds evidence (slice 103)
 
