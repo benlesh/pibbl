@@ -15,6 +15,7 @@ symbols:
     Edges,
     EdgeValues,
     FlexItemStyle,
+    FlexMargin,
     FlexProps,
     FlexStyle,
     FlowProps,
@@ -96,6 +97,16 @@ root ratio sizing remain outside this contract.
 
 `FlexItemStyle` is the direct-child participation style consumed by a `Flex`
 parent; it does not create a CSS cascade.
+
+## FlexMargin
+
+`FlexMargin = number | Percentage | "auto"` describes physical left/right margins.
+Experimental finite LTR row-nowrap Flex accepts `marginLeft: "auto"` and
+`marginRight: "auto"`: auto edges are zero during flexible sizing, then divide
+remaining positive main space before `justifyContent`. With no positive space
+they remain zero and existing justification applies. Other auto-margin edges,
+wrapping, reverse/RTL containers, intrinsic measurement and the normal build
+remain unsupported. Numeric and percentage margin behavior is unchanged.
 
 ## FlexProps
 

@@ -125,6 +125,9 @@ export interface ResolvedBoxStyle {
   contentBox: LayoutBox;
 }
 
+/** Physical Flex margin value. Auto consumes remaining positive main space in experimental finite LTR row-nowrap Flex. See {@link FlexItemStyle}. */
+export type FlexMargin = number | Percentage | 'auto';
+
 /**
  * Parent-layout participation: positioning, self-alignment, flex sizing, and explicit grid placement.
  *
@@ -141,11 +144,11 @@ export interface LayoutItemStyle extends PositioningStyle {
   /** Physical top margin overriding margin. See {@link LayoutItemStyle}. */
   marginTop?: number | Percentage;
   /** Physical right margin overriding margin. See {@link LayoutItemStyle}. */
-  marginRight?: number | Percentage;
+  marginRight?: FlexMargin;
   /** Physical bottom margin overriding margin. See {@link LayoutItemStyle}. */
   marginBottom?: number | Percentage;
   /** Physical left margin overriding margin. See {@link LayoutItemStyle}. */
-  marginLeft?: number | Percentage;
+  marginLeft?: FlexMargin;
   /** Inline-start margin overriding the corresponding physical edge and margin shorthand in experimental Flex. Signed percentages use allocated content width. See {@link LayoutItemStyle}. */
   marginStart?: number | Percentage;
   /** Inline-end margin overriding the corresponding physical edge and margin shorthand in experimental Flex. See {@link LayoutItemStyle}. */

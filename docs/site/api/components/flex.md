@@ -206,3 +206,8 @@ In an experimental finite nowrap row, a direct custom primitive with both
 Finite measurement receives that width as both horizontal constraint bounds;
 layout and pointer targets use the resulting height in the same publication.
 Declared heights and intrinsic-only leaves keep their existing behavior.
+
+Experimental finite LTR row-nowrap items may use
+[`FlexMargin`](#/api/types/layout#flexmargin) on `marginLeft`/`marginRight`.
+Auto edges divide positive free space after sizing and before justification;
+with no positive space they remain zero. Other auto-margin shapes are deferred.

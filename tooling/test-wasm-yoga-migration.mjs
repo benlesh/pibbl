@@ -11,6 +11,7 @@ const intrinsicOnly = process.argv.includes('--intrinsic-wrap');
 const logicalBordersOnly = process.argv.includes('--logical-borders');
 const logicalPaddingOnly = process.argv.includes('--logical-padding');
 const directionMatrixOnly = process.argv.includes('--direction-matrix');
+const autoMarginsOnly = process.argv.includes('--auto-margins');
 const crossOnly = process.argv.includes('--wrapped-cross-bounds');
 const paddingOnly = process.argv.includes('--percentage-padding');
 const gapOnly = process.argv.includes('--percentage-gaps');
@@ -39,8 +40,9 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (directionMatrixOnly) { for(let section=0;section<11;section++) await click(520,158); }
+  const cases = autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (autoMarginsOnly) { for(let section=0;section<12;section++) await click(520,158); }
+  else if (directionMatrixOnly) { for(let section=0;section<11;section++) await click(520,158); }
   else if (intrinsicOnly) { for(let section=0;section<10;section++) await click(520,158); }
   else if (percentageOnly || aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly || logicalBordersOnly) {
     assert.ok((await frame.locator('pre').innerText()).includes('grow'));
@@ -67,9 +69,9 @@ try {
     assert.ok((await frame.locator('pre').innerText()).includes(fixture.name));
     if (fixture.classification) assert.ok((await frame.locator('pre').innerText()).includes(fixture.comparisonLabel), 'Classified difference must be explicitly labeled');
     const expected = fixture.pibblBoxes ?? fixture.boxes;
-    if (fixture.directionMatrixFixture) {
-      const state=JSON.parse((await frame.locator('pre').innerText()).split('direction matrix state: ')[1]);
-      assert.deepEqual([state.boxes.A,state.boxes.B,state.boxes.C], expected, `${fixture.name}: semantic boxes`);
+    if (fixture.directionMatrixFixture || fixture.autoMarginFixture) {
+      const state=JSON.parse((await frame.locator('pre').innerText()).split(fixture.autoMarginFixture ? 'auto margin state: ' : 'direction matrix state: ')[1]);
+      assert.deepEqual(expected.map((_box,index)=>state.boxes[String.fromCharCode(65+index)]), expected, `${fixture.name}: semantic boxes`);
       if (previousDirectionStamps) assert.deepEqual(state.stamps, previousDirectionStamps, `${fixture.name}: stable keyed panels`);
       for (const [boxIndex, box] of expected.entries()) {
         await click(392+box.x+box.width/2,240+box.y+box.height/2);

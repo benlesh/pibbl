@@ -139,6 +139,8 @@ interface FlexItem {
   paddingMain: number;
   marginMainBefore: number;
   marginMainAfter: number;
+  autoMainBefore: boolean;
+  autoMainAfter: boolean;
   marginCrossBefore: number;
   marginCrossAfter: number;
   preferredCross: number;
@@ -674,6 +676,7 @@ function resolveFlexPlacements(
   const crossGap = row ? options.rowGap : options.columnGap;
   const items: FlexItem[] = [];
   let hasAspectRatio = false;
+  let hasAutoMainMargins = false;
 
   const occurrences = new Map<object, number>();
   for (const child of children) {
@@ -708,9 +711,19 @@ function resolveFlexPlacements(
     const marginDirection = layoutChild.type === Flex ? normalized.layoutDirection ?? options.layoutDirection : options.layoutDirection;
     const logicalLeft = marginDirection === 'rtl' ? normalized.marginEnd : normalized.marginStart;
     const logicalRight = marginDirection === 'rtl' ? normalized.marginStart : normalized.marginEnd;
-    const marginRight = allocatedMargin(logicalRight !== undefined ? logicalRight : normalized.marginRight === undefined ? allMargin : normalized.marginRight, logicalRight !== undefined ? marginDirection === 'rtl' ? 'marginStart' : 'marginEnd' : 'marginRight', child, container);
+    const marginRightValue = logicalRight !== undefined ? logicalRight : normalized.marginRight === undefined ? allMargin : normalized.marginRight;
+    const marginLeftValue = logicalLeft !== undefined ? logicalLeft : normalized.marginLeft === undefined ? allMargin : normalized.marginLeft;
+    const autoMainBefore = marginLeftValue === 'auto';
+    const autoMainAfter = marginRightValue === 'auto';
+    if (autoMainBefore || autoMainAfter) {
+      if (!experimentalLayout || options.flexDirection !== 'row' || options.flexWrap !== 'nowrap' || options.layoutDirection !== 'ltr' || (logicalLeft as unknown) === 'auto' || (logicalRight as unknown) === 'auto') {
+        throw childDiagnostic(child, autoMainBefore ? 'marginLeft' : 'marginRight', 'auto', container, 'auto margins require a finite LTR row-nowrap Flex physical main edge');
+      }
+      hasAutoMainMargins = true;
+    }
+    const marginRight = allocatedMargin(autoMainAfter ? 0 : marginRightValue, logicalRight !== undefined ? marginDirection === 'rtl' ? 'marginStart' : 'marginEnd' : 'marginRight', child, container);
     const marginBottom = allocatedMargin(normalized.marginBottom === undefined ? allMargin : normalized.marginBottom, 'marginBottom', child, container);
-    const marginLeft = allocatedMargin(logicalLeft !== undefined ? logicalLeft : normalized.marginLeft === undefined ? allMargin : normalized.marginLeft, logicalLeft !== undefined ? marginDirection === 'rtl' ? 'marginEnd' : 'marginStart' : 'marginLeft', child, container);
+    const marginLeft = allocatedMargin(autoMainBefore ? 0 : marginLeftValue, logicalLeft !== undefined ? marginDirection === 'rtl' ? 'marginEnd' : 'marginStart' : 'marginLeft', child, container);
     const marginMainBefore = row ? reverse ? marginRight : marginLeft : reverse ? marginBottom : marginTop;
     const marginMainAfter = row ? reverse ? marginLeft : marginRight : reverse ? marginTop : marginBottom;
     const marginCrossBefore = row ? wrapReverse ? marginBottom : marginTop : wrapReverse ? marginRight : marginLeft;
@@ -956,7 +969,7 @@ function resolveFlexPlacements(
       baseMain,
       targetMain: baseMain,
       paddingMain,
-      marginMainBefore, marginMainAfter, marginCrossBefore, marginCrossAfter,
+      marginMainBefore, marginMainAfter, autoMainBefore, autoMainAfter, marginCrossBefore, marginCrossAfter,
       preferredCross: clamp(preferredCross, minCross, maxCross) + paddingCross,
       paddingCross,
       minMain,
@@ -1016,7 +1029,7 @@ function resolveFlexPlacements(
   }
 
   const crossPlacements = region?.placeCross(items, crossSize, options.alignItems, { reverse: wrapReverse, wrap: wrappedRegion ? { gap: crossGap, alignContent: options.alignContent } : undefined });
-  const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent, reverse);
+  const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent, reverse, hasAutoMainMargins ? items : undefined);
   const placements: FlexPlacement[] = [];
   let mainIndex = 0;
   let crossIndex = 0;

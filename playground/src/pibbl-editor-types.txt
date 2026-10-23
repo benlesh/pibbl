@@ -466,10 +466,11 @@ export interface MeshTransformOptions {
     left?: Exclude<Length, 'auto'>; top?: Exclude<Length, 'auto'>;
     alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
     justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
-    margin?: number | Percentage; marginTop?: number | Percentage; marginRight?: number | Percentage; marginBottom?: number | Percentage; marginLeft?: number | Percentage; marginStart?: number | Percentage; marginEnd?: number | Percentage;
+    margin?: number | Percentage; marginTop?: number | Percentage; marginRight?: FlexMargin; marginBottom?: number | Percentage; marginLeft?: FlexMargin; marginStart?: number | Percentage; marginEnd?: number | Percentage;
     flexBasis?: Length; flexGrow?: number; flexShrink?: number;
     gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
   }
+  export type FlexMargin = number | Percentage | 'auto';
   export type FlexItemStyle = Pick<LayoutItemStyle, 'aspectRatio' | 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft' | 'marginStart' | 'marginEnd'> & { alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'start' | 'end' };
   export interface GridItemStyle extends SystemStyle {
     gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;

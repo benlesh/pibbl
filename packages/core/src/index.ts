@@ -269,6 +269,7 @@ export type {
   CursorStyle,
   EdgeValues,
   FlexItemStyle,
+  FlexMargin,
   GridItemStyle,
   ImgStyle,
   LayoutItemStyle,

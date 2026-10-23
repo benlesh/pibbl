@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice96 (isolated direction policies), recorded below.
+Latest delivery is slice97 (finite physical main-axis auto margins), recorded below.
+Slice96 is `3548157d`; consolidation32 is `2cd27a12`.
 Slice95 is `69b187a6` (combined direction evidence).
 Slice94 is `196e8275` (final-width custom measurement).
 Slice93 is `a7c36733` (finite wrapped-row intrinsic height).
@@ -46,9 +47,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; the next delivery is97, finite main-axis auto margins. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slice97 is delivered below; the single next delivery is98, other finite nowrap main-axis auto directions. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles203 records:158matches/45classified differences; click A/B/C targets.
+cycles210 records:165matches/45classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2334,18 +2335,54 @@ intrinsic/baseline, prepared ownership/atomic publication, other participation,
 packaging migration, corpus/performance and Grid exits remain in the manifest.
 Final whole-codebase review stays at full program end.
 
-## [NEXT] Finite main-axis auto margins (slice 97)
+## Delivered finite physical main-axis auto margins (slice 97)
 
-Target the existing missing `flex.auto-margins` capability with the smallest
-public slice: finite positive-free-space LTR row-nowrap physical main edges.
-Application code should use existing Flex composition with `marginLeft: "auto"`
-or `marginRight: "auto"`; named margin data changes no return contract. Define
-exact precedence and unsupported-shape diagnostics before production. Auto slots
-are zero during flexible sizing, then divide remaining positive free space and
-suppress justify distribution; do not rerun sizing with the resulting margins.
-Prove pinned geometry, owner resize/moved hits, paint reuse, source/built/packed
-and ownership. Extend only after focused feedback evidence. Keep remaining auto
-margin directions/cross axes and all other fixed-program gaps visible.
+Public `FlexMargin = number | Percentage | "auto"` widens existing physical
+`marginLeft`/`marginRight`; no selector or alternate return contract. Supported
+consumer: finite LTR row-nowrap experimental Flex. Auto slots are0during sizing,
+then divide positive remaining free space before justification. Nonpositive free
+space leaves them0and retains existing alignment. Other auto shapes reject.
+The first public RED rejected `marginLeft:"auto"`; production then made both
+focused public tests pass. Source comparison section12 is runnable and all seven
+native cases match: left/right/both at200→260 and alignment precedence. Click
+A/B after moving; keyed stamps remain stable.
+
+A lazy Rust arena flag vector keeps allocation records/numeric margins immutable;
+no second solve or post-solve margin rewrite. Optional flag revision invalidates
+main placement only. Numeric0→auto→0 proves unchanged solves/cross placement/node
+creates and one main-placement increment per change. Public growth-before-auto,
+nonpositive space, owner resize, moved hits and paint reuse pass. Private module
+marker isv2; oldv1/earlier modules reject before publishing, entries remain inert.
+Native11tests pass, kernel67644bytes, SHA256
+`c984959e10c694d0ee4cc552f980662edada3c4e8c47428a420764fb3131f79f`.
+
+Fresh Chromium slice+loader:361pass/8skip(369); ordinary85pass/284skip(369).
+Source5192/built5193 seven cases match exact semantic boxes, stable keys and hits,
+cleanup0/errors[]; built469inputs. Fresh installed tarball strict Bundler/NodeNext,
+left/right auto type evidence and rejected cross-auto type, seven public fixtures,
+all24direction cases, target routing and per-controller cleanup pass with230inputs.
+Tarball SHA256 `56a46b7d7713d631ab4869a537af9bdc0b8e6eaa514c848b6dd83ff2d3fb2fdb`.
+Native corpus210=165matches+45classified. Types, changed-code lint, documentation
+109RED probes, JSDoc, catalog and native provenance pass. No baseline rewrites,
+Node24 aggregate trust or wall-clock performance claim.
+
+`flex.auto-margin` advances missing→partial. Fixed33 is5complete/11experimental/
+8partial/8missing/1excluded; all seven release gates remain open. Whole auto-margin
+behavior is not complete. Final whole-codebase review remains at full program end.
+Scoped review of the changed native flag storage, region cache/ownership, v2 ABI
+and TypeScript precedence/admission found no material issue.
+Group97–99 consolidates only after99.
+
+## [NEXT] Finite nowrap main-axis auto directions (slice 98)
+
+Extend the existing auto-margin capability to finite row/column forward/reverse
+and LTR/RTL main-axis edges, including logical edges where they map to the main
+axis. Keep sizing before absorption, nonpositive alignment, receiver precedence,
+identity and teardown. Present the exact additive shared margin vocabulary,
+prove a focused failing public case, then add pinned native/public geometry and
+source/built/installed moved-target evidence. Wrapping and cross-axis auto margins
+remain separate unfinished exits; do not widen into them silently. No duplicate
+writer/reviewer or denominator changes.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

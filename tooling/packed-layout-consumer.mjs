@@ -19,6 +19,7 @@ import { build } from "esbuild";
 const nestedPercentFixtures = JSON.parse(await readFile(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8')).cases.filter(value => value.nestedBoxes);
 const intrinsicWrappedHeightFixtures = JSON.parse(await readFile(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8')).cases.filter(value => value.intrinsicFixture === true);
 const directionMatrixFixtures = JSON.parse(await readFile(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8')).cases.filter(value => value.directionMatrixFixture === true);
+const autoMarginFixtures = JSON.parse(await readFile(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8')).cases.filter(value => value.autoMarginFixture === true);
 const root = fileURLToPath(new URL("../", import.meta.url));
 const consumer = await realpath(
   await mkdtemp(join(tmpdir(), "pibbl-packed-layout-")),
@@ -91,7 +92,12 @@ try {
     ),
   );
   await writeFile(join(consumer, "margin-types.ts"), `
-import { createElement, Rectangle, Flex, definePrimitive, type FlexItemStyle, type BoxStyle, type IntrinsicAxisConstraints, type IntrinsicConstraints, type IntrinsicMeasureInput, type IntrinsicSizesResult, type SystemStyle } from '@pibbl/core';
+import { createElement, Rectangle, Flex, definePrimitive, type FlexItemStyle, type FlexMargin, type BoxStyle, type IntrinsicAxisConstraints, type IntrinsicConstraints, type IntrinsicMeasureInput, type IntrinsicSizesResult, type SystemStyle } from '@pibbl/core';
+const autoMargin: FlexMargin = 'auto';
+export const autoItem = createElement(Rectangle, { style: { width: 40, height: 20, marginLeft: autoMargin, marginRight: 'auto' } });
+// @ts-expect-error Cross-axis auto margins are outside the current supported type surface.
+const autoCross: FlexItemStyle = { marginTop: 'auto' };
+void autoCross;
 const box: BoxStyle = { boxSizing: 'border-box', width: '50%', height: 30, padding: {left: '10%', top: '5%', right: 4, bottom: 0}, paddingStart: 0, paddingEnd: '15%', borderWidth: { left: 2, right: 4 }, borderStartWidth: 0, borderEndWidth: 30 };
 export const sized = createElement(Rectangle, { style: { ...box, width: 100, height: 30 } });
 type IntrinsicStyle = SystemStyle & { height?: number; flexShrink?: number; minWidth?: number };
@@ -267,6 +273,17 @@ for(const fixture of directionMatrixCases){
  try{const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));const click=(x:number,y:number)=>{const rect=directionCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])directionCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+y,bubbles:true,button:0}));};await frame();const expected='pibblBoxes' in fixture?fixture.pibblBoxes:fixture.boxes,actual=['A','B','C'].map(name=>directionBoxes.get(name));if(JSON.stringify(actual)!==JSON.stringify(expected))throw Error('installed direction matrix geometry '+fixture.name+' '+JSON.stringify({actual,expected,native:fixture.boxes}));for(const box of expected){click(box.x+1,box.y+1);}if(JSON.stringify(directionHits)!==JSON.stringify(['A','B','C']))throw Error('installed direction matrix targets '+fixture.name+' '+directionHits);}finally{directionController.dispose();directionCanvas.remove();const disposed=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();if(disposed.activeNodes!==directionBaseline.activeNodes||disposed.activeArenas!==directionBaseline.activeArenas||disposed.cachedMeasurements!==directionBaseline.cachedMeasurements)throw Error('installed direction matrix cleanup '+fixture.name);}
 }
 receipt.directionMatrix=true;
+const autoMarginCases = ${JSON.stringify(autoMarginFixtures)};
+if(autoMarginCases.length!==7)throw Error('installed auto-margin corpus');
+for(const fixture of autoMarginCases){
+ const autoCanvas=document.createElement('canvas');autoCanvas.width=fixture.width;autoCanvas.height=fixture.height;autoCanvas.style.cssText='width:'+fixture.width+'px;height:'+fixture.height+'px';document.body.append(autoCanvas);
+ const autoBaseline=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();let autoRootTransform=new DOMMatrix();const autoHits:string[]=[];const autoBoxes=new Map<string,{x:number;y:number;width:number;height:number}>();
+ const AutoPanel=({name,style}:any)=>{const box=useLayoutBox(),transform=autoRootTransform.inverse().multiply(useCanvasContext().getTransform());autoBoxes.set(name,{x:+transform.e.toFixed(3),y:+transform.f.toFixed(3),width:+box.width.toFixed(3),height:+box.height.toFixed(3)});return createElement(Rectangle,{onClick:()=>autoHits.push(name),style:{width:box.width,height:box.height,minWidth:0,minHeight:0,flexShrink:0,fill:name==='A'?'#d6e3db':name==='B'?'#e1dbca':'#426b61'}});};
+ const AutoRoot=()=>{autoRootTransform=useCanvasContext().getTransform();const containerStyle:FlexStyle=fixture.containerStyle;return createElement(Flex,{style:{width:fixture.width,height:fixture.height,flexDirection:fixture.flexDirection,flexWrap:fixture.flexWrap,gap:fixture.gap,alignItems:containerStyle.alignItems,alignContent:containerStyle.alignContent,justifyContent:'justifyContent' in containerStyle?containerStyle.justifyContent:undefined,layoutDirection:'layoutDirection' in fixture?fixture.layoutDirection:undefined},children:fixture.itemStyles.map((style:any,index:number)=>createElement(AutoPanel,{key:String.fromCharCode(65+index),name:String.fromCharCode(65+index),style}))});};
+ const autoController=pibblSync(autoCanvas,createElement(AutoRoot,{}));
+ try{const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));const click=(x:number,y:number)=>{const rect=autoCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])autoCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+y,bubbles:true,button:0}));};await frame();const expected='pibblBoxes' in fixture?fixture.pibblBoxes:fixture.boxes,names=expected.map((_:unknown,index:number)=>String.fromCharCode(65+index)),actual=names.map(name=>autoBoxes.get(name));if(JSON.stringify(actual)!==JSON.stringify(expected))throw Error('installed auto-margin geometry '+fixture.name+' '+JSON.stringify({actual,expected,native:fixture.boxes}));for(const box of expected){click(box.x+1,box.y+1);}if(JSON.stringify(autoHits)!==JSON.stringify(names))throw Error('installed auto-margin targets '+fixture.name+' '+autoHits);}finally{autoController.dispose();autoCanvas.remove();const disposed=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();if(disposed.activeNodes!==autoBaseline.activeNodes||disposed.activeArenas!==autoBaseline.activeArenas||disposed.cachedMeasurements!==autoBaseline.cachedMeasurements)throw Error('installed auto-margin cleanup '+fixture.name);}
+}
+receipt.autoMargins=true;
 const controller = pibblSync(document.querySelector('canvas')!, createElement(WasmFlexNestedIntrinsicExample, {}));
 addEventListener('pagehide', () => controller.dispose(), {once:true});`,
   );

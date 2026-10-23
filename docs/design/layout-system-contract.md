@@ -764,7 +764,7 @@ physical edges. Source traversal, paint/hit priority, focus order and glyph
 rendering remain unchanged. Existing allocation contexts, receiver signal inputs,
 prepared plans and placement caches carry direction; no separate cascade or
 scheduler is introduced. Plans reject mismatched direction before adoption. The
-WASM cross-placement ABI is identified by the `layout_abi_v1` export marker;
+WASM cross-placement ABI is identified by the `layout_abi_v2` export marker (including the optional auto-margin placement protocol);
 older modules are rejected before publishing compiled code. Logical margin edges are specified below; logical padding is specified below; numeric logical border edges are specified below.
 
 The combined slice95 direction matrix deliberately preserves two existing rules.
@@ -938,3 +938,28 @@ as above. Providers must expose changing inputs through props/style, tracked
 signals, or an explicit layout invalidation; hidden mutable closure state is not
 a reactive input. Unrelated sibling paint reuses finite measurements. The public
 example proves width100→60 changes height20→40 together with paint and hit bounds.
+
+## Experimental physical main-axis auto margins
+
+`FlexMargin = number | Percentage | "auto"` is exported for the shared physical
+`marginLeft` and `marginRight` fields. The initial auto consumer is a finite LTR
+row-nowrap experimental Flex. Numeric/percentage and logical-edge precedence are
+unchanged; other auto edges, shorthand, reverse/RTL/wrap and intrinsic measurement
+remain unsupported. The ordinary JavaScript build keeps its experimental-margin
+diagnostic.
+
+Auto edges contribute zero while flexible lengths resolve. After sizing, each
+auto slot receives an equal share of remaining positive main space and consumes
+it before justification. Nonpositive free space gives auto edges zero and keeps
+existing alignment/overflow behavior. In200px, two40px items with the first item's
+left auto margin start120/160; right auto starts0/160; both auto start60/160.
+At260px these become180/220,0/220 and90/220. Flex growth consumes space first.
+The shifted border box remains the layout/focus/hit box; auto-only space is inert.
+
+Rust owns a lazy arena scratch vector of auto flags. Allocation records and
+numeric margins are not rewritten, and placement never runs a second sizing
+solve. A separate flag revision invalidates the main-placement cache; toggling
+numeric0→auto→0 preserves solves, cross placement and native identities. Unused
+auto scratch stays unallocated. Root/region disposal releases flags with their
+owner. Module validation rejects older v1 kernels before publication without
+instantiating a version probe; public entries remain import-time inert.

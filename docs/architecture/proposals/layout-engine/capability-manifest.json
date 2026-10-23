@@ -874,6 +874,34 @@
           "direction.rtl-and-logical-edges",
           "box.padding-and-layout-border"
         ]
+      },
+      {
+        "id": "auto-margin-left",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-left-resized",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-right",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-right-resized",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-both",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-both-resized",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-left-justify-end",
+        "covers": ["flex.auto-margin"]
       }
     ],
     "limit": "135 records:116 native matches and19 explicitly classified CSS allocation/safe-overflow/physical-margin differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios, allocated-owner percentage gaps/padding/cross bounds, nowrap/wrap/wrap-reverse physical margins and finite nested percentage owners. This does not establish general intrinsic, percentage or CSS parity."
@@ -1358,16 +1386,51 @@
       "id": "flex.auto-margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "absent",
-      "status": "missing",
-      "unresolvedPolicy": "Auto-margin precedence against alignment and distribution needs a contract.",
+      "current": "experimental finite LTR row-nowrap physical marginLeft/marginRight auto slots; zero during sizing, positive free space divided after sizing before justification; nonpositive free space keeps existing alignment",
+      "status": "partial",
+      "unresolvedPolicy": "The initial finite physical row-main contract is implemented; other main directions/RTL, logical/shorthand and cross-axis auto margins, wrapping and broader min/max combinations remain outstanding.",
       "evidence": {
-        "positive": [],
-        "negative": [],
-        "interaction": [],
-        "yogaCases": [],
-        "missing": ["main/cross absorption", "min/max", "RTL/reverse"]
-      }
+        "positive": [
+          "left/right/both slots divide positive free space after flexible sizing and before justification",
+          "growth consumes space before auto slots; nonpositive free space preserves center alignment",
+          "numeric-to-auto-to-numeric toggles update main placement only without re-solving or recreating nodes",
+          "public FlexMargin type and editor declaration expose physical left/right auto; cross-edge auto remains a type error"
+        ],
+        "negative": [
+          "normal JavaScript rejects auto margin admission",
+          "column/reverse/RTL/wrapped auto shapes rejected explicitly",
+          "old v1 modules rejected before publication; root/sync imports remain inert",
+          "native flag cardinality and NaN rejected without rewriting numeric margin inputs"
+        ],
+        "interaction": [
+          "source/built seven-case semantic boxes, stable keyed stamps, moved A/B targets and zero disposal ownership",
+          "fresh installed seven-case public geometry/targets, per-controller node/arena/cache cleanup and strict Bundler/NodeNext type consumers",
+          "public mounted resize preserves stamps; paint-only preserves solves and node identity"
+        ],
+        "yogaCases": [
+          "auto-margin-left",
+          "auto-margin-left-resized",
+          "auto-margin-right",
+          "auto-margin-right-resized",
+          "auto-margin-both",
+          "auto-margin-both-resized",
+          "auto-margin-left-justify-end"
+        ],
+        "missing": [
+          "other main directions and RTL",
+          "wrapped per-line absorption",
+          "cross-axis and logical/shorthand auto margins",
+          "broader min/max and opposing margin interactions"
+        ]
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/wasm/layout/src/lib.rs",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "docs/design/layout-system-contract.md#experimental-physical-main-axis-auto-margins"
+      ]
     },
     {
       "id": "flex.numeric-gap",

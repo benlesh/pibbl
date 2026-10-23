@@ -50,6 +50,8 @@ interface Kernel {
   place_grid_cells(handle: number, generation: number): number;
   resize_cross(handle: number, generation: number, count: number): number;
   place_cross(handle: number, generation: number, size: number, reverse: number): number;
+  resize_main_auto(handle: number, generation: number, count: number): number;
+  place_main_auto(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
   place_main(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
   dispose(): void;
 }
@@ -114,6 +116,7 @@ function acquireRootOwner(mount?: PibblInstance): RootLayoutOwner {
 export interface NumericFlexItem {
   baseMain: number; minMain: number; maxMain: number; paddingMain: number;
   marginMainBefore?: number; marginMainAfter?: number;
+  autoMainBefore?: boolean; autoMainAfter?: boolean;
   grow: number; shrink: number; targetMain: number; receiverToken: object; layoutToken?: object;
 }
 export interface NumericFlexCrossItem {
@@ -364,15 +367,40 @@ export class LayoutRegion {
     }
     items.forEach((item, i) => { item.targetMain = this.results[i]; });
   }
-  placeMain(main: number, gap: number, alignment: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly', reverse = false): readonly number[] {
+  private mainAutoFlags: boolean[] | undefined;
+  private mainAutoRevision = 0;
+  placeMain(main: number, gap: number, alignment: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly', reverse = false, autoMargins?: readonly NumericFlexItem[]): readonly number[] {
     if (!this.layoutOwner?.has(this.handle, this.generation)) throw new Error('Experimental Flex main placement requires a solved region.');
     const kernel = this.layoutOwner.kernel;
     const code = ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'].indexOf(alignment);
-    const key = `${this.allocationRevision}:${main}:${gap}:${code}:${reverse ? 1 : 0}`;
+    if (autoMargins) {
+      const flags = this.mainAutoFlags ??= [];
+      let changed = flags.length !== autoMargins.length * 2;
+      for (let index = 0; index < autoMargins.length; index++) {
+        const before = autoMargins[index].autoMainBefore === true;
+        const after = autoMargins[index].autoMainAfter === true;
+        if (flags[index * 2] !== before || flags[index * 2 + 1] !== after) changed = true;
+        flags[index * 2] = before; flags[index * 2 + 1] = after;
+      }
+      flags.length = autoMargins.length * 2;
+      if (changed) this.mainAutoRevision++;
+    } else if (this.mainAutoFlags?.length) {
+      this.mainAutoFlags.length = 0; this.mainAutoRevision++;
+    }
+    const key = `${this.allocationRevision}:${main}:${gap}:${code}:${reverse ? 1 : 0}:${this.mainAutoRevision}`;
     if (key !== this.mainPlacementKey) {
       try {
+        if (autoMargins) {
+          if (this.wrap || autoMargins.length !== this.order.length) throw new Error('Auto margin placement requires a matching nowrap allocation.');
+          const autoPointer = kernel.resize_main_auto(this.handle, this.generation, this.order.length);
+          const flags = new Float64Array(kernel.memory.buffer, autoPointer, this.order.length * 2);
+          for (let index = 0; index < autoMargins.length; index++) {
+            flags[index * 2] = autoMargins[index].autoMainBefore ? 1 : 0;
+            flags[index * 2 + 1] = autoMargins[index].autoMainAfter ? 1 : 0;
+          }
+        }
         const pointer = kernel.resize(this.handle, this.generation, this.order.length);
-        const status = this.wrap ? kernel.place_wrap_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0) : kernel.place_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0);
+        const status = autoMargins ? kernel.place_main_auto(this.handle, this.generation, main, gap, code, reverse ? 1 : 0) : this.wrap ? kernel.place_wrap_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0) : kernel.place_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0);
         if (status !== 0) throw new Error(`Experimental Flex WASM main placement failed (${status}); nonfinite geometry.`);
         const output = new Float64Array(kernel.memory.buffer, pointer, this.order.length * 10);
         this.mainOffsets = this.order.map((_, i) => output[i * 10 + 7]);
@@ -418,7 +446,7 @@ export class LayoutRegion {
     if (this.textMaximums) for (const token of this.textMaximums.keys()) this.releaseMeasurements(token);
     this.textMaximums = undefined;
     this.records.clear(); this.identities.clear(); this.results = []; this.order = []; this.main = -1; this.gap = -1;
-    this.mainPlacementKey = ""; this.mainOffsets = [];
+    this.mainPlacementKey = ""; this.mainOffsets = []; this.mainAutoFlags = undefined; this.mainAutoRevision = 0;
     this.crossRecords = []; this.crossResults = []; this.crossSize = -1; this.crossModeKey = ""; this.wrap = false;
     if (owner) { try { owner.release(handle, generation); } finally { if (!this.mountOwner) owner.dispose(); } }
   }

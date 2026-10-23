@@ -112,6 +112,8 @@ try {
       assert.equal(receipt.intrinsicWrappedHeight, true, 'Installed nested row wrapping must settle auto height before placing the following column target');
       assert.equal(receipt.finalWidthIntrinsicProvider, true, 'Installed custom intrinsic leaves must remeasure at their settled finite width and update hit geometry');
       assert.equal(receipt.directionMatrix, true, 'Installed package must honor the finite logical-edge direction and wrap matrix');
+      assert.equal(receipt.autoMargins, true, 'Installed package must honor finite physical auto margins and their alignment precedence');
+      console.warn('Packed auto margins: 7 fixture cases passed');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');
       assert.equal(receipt.nestedPercentageWrapping, true, 'Installed nested percentages must use final row/column nowrap/wrap owners across all eight native cases');

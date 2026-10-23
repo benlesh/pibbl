@@ -1,7 +1,7 @@
 import { WasmFlexIntrinsicWrapExample } from '../../scenarios/src/learning/layout/wasm-flex-intrinsic-wrap.example';
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, FocusManagement, useCanvasContext, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, defineLayoutComponent, definePrimitive } from '@pibbl/core';
+import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, FocusManagement, useCanvasContext, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, type BoxStyle, type FlexItemStyle, defineLayoutComponent, definePrimitive } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
@@ -866,7 +866,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   });
   const controller = mount(canvas); controllers.push(controller); await nextFrame();
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
-  const cases=yogaReference.cases.filter(fixture=>!('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
+  const cases=yogaReference.cases.filter(fixture=>!('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
@@ -3452,4 +3452,117 @@ it.runIf(experimentalLayout)('renders, targets, and releases every pinned public
   expect(disposed.activeNodes).toBe(baseline.activeNodes);
   expect(disposed.activeArenas).toBe(baseline.activeArenas);
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+
+it.runIf(experimentalLayout)('divides positive row free space among physical auto-margin slots before justification', () => {
+  const child = (style: BoxStyle & FlexItemStyle) => createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, flexShrink: 0, ...style } });
+  const options = { justifyContent: 'flex-end' } as const;
+  const cases: readonly [string, BoxStyle & FlexItemStyle, readonly number[]][] = [
+    ['left', { marginLeft: 'auto' }, [120, 160]],
+    ['right', { marginRight: 'auto' }, [0, 160]],
+    ['both', { marginLeft: 'auto', marginRight: 'auto' }, [60, 160]],
+  ];
+  for (const [_name, margins, expected] of cases) {
+    const boxes = layoutFlex({ x: 0, y: 0, width: 200, height: 20 }, [child(margins), child({})], options, measurement);
+    expect(boxes.map(box => box.x)).toEqual(expected);
+  }
+});
+
+it.runIf(experimentalLayout)('allocates physical main-axis auto margins before justify-content and reuses the mounted public tree', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const width = signal(200);
+  const ink = signal('#19375b');
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+  const hits: string[] = [];
+  let serial = 0;
+  function Card({ name, style: _style }: { name: string; style: BoxStyle & FlexItemStyle }) {
+    const stamp = useConst(() => ++serial);
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return createElement(Rectangle, {
+      style: { width: box.width, height: box.height, fill: ink, cursor: 'pointer' },
+      onClick: () => hits.push(name),
+    });
+  }
+  function App() {
+    return createElement(Flex, { style: { width, height: 20, justifyContent: 'flex-end' }, children: [
+      createElement(Card, { key: 'A', name: 'A', style: { width: 40, height: 20, minWidth: 0, flexShrink: 0, marginLeft: 'auto' } }),
+      createElement(Card, { key: 'B', name: 'B', style: { width: 40, height: 20, minWidth: 0, flexShrink: 0 } }),
+    ] });
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 300; canvas.height = 80; document.body.append(canvas);
+  const controller = pibbl(canvas, createElement(App, {})); controllers.push(controller); await nextFrame();
+  expect(Object.fromEntries(boxes)).toEqual({
+    A: { x: 120, y: 0, width: 40, height: 20, stamp: 1 },
+    B: { x: 160, y: 0, width: 40, height: 20, stamp: 2 },
+  });
+  clickCanvas(canvas, 130, 10); await nextFrame(); expect(hits).toEqual(['A']);
+  const initial = snapshotWasmLayoutDiagnostics();
+  width.set(260); await nextFrame();
+  expect(Object.fromEntries(boxes)).toEqual({
+    A: { x: 180, y: 0, width: 40, height: 20, stamp: 1 },
+    B: { x: 220, y: 0, width: 40, height: 20, stamp: 2 },
+  });
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, 130, 10); await nextFrame(); expect(hits).toEqual(['A']);
+  clickCanvas(canvas, 190, 10); await nextFrame(); expect(hits).toEqual(['A', 'A']);
+  const resized = snapshotWasmLayoutDiagnostics();
+  ink.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(resized.solves);
+  expect(painted.nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+});
+
+it.runIf(experimentalLayout)('sizes flex growth before auto margins and keeps nonpositive free-space alignment', () => {
+  const item = (style: BoxStyle & FlexItemStyle = {}) => createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, flexShrink: 0, ...style } });
+  expect(layoutFlex({x:0,y:0,width:200,height:20}, [item({flexGrow:1,marginLeft:'auto'}),item()], {}, measurement)).toEqual([
+    {x:0,y:0,width:160,height:20},{x:160,y:0,width:40,height:20},
+  ]);
+  for (const width of [80,60]) {
+    const offset=(width-80)/2;
+    expect(layoutFlex({x:0,y:0,width,height:20}, [item({marginLeft:'auto'}),item()], {justifyContent:'center'}, measurement)).toEqual([
+      {x:offset,y:0,width:40,height:20},{x:offset+40,y:0,width:40,height:20},
+    ]);
+  }
+});
+
+it.runIf(experimentalLayout)('invalidates only main placement when a numeric edge becomes auto and restores it', async () => {
+  const baseline=snapshotWasmLayoutDiagnostics();
+  const edge=signal<import('@pibbl/core').FlexMargin>(0);
+  const canvas=document.createElement('canvas');canvas.width=200;canvas.height=20;document.body.append(canvas);
+  const controller=pibbl(canvas,<Flex style={{width:200,height:20}}>
+    <Rectangle key="A" style={{width:40,height:20,minWidth:0,flexShrink:0,marginLeft:edge,fill:'#19375b'}} />
+    <Rectangle key="B" style={{width:40,height:20,minWidth:0,flexShrink:0,fill:'#a63758'}} />
+  </Flex>);controllers.push(controller);await nextFrame();
+  const initial=snapshotWasmLayoutDiagnostics();
+  const context=canvas.getContext('2d')!;
+  edge.set('auto');await nextFrame();
+  const auto=snapshotWasmLayoutDiagnostics();
+  expect(auto.solves).toBe(initial.solves);expect(auto.mainPlacements).toBe(initial.mainPlacements+1);
+  expect(auto.nodeCreates).toBe(initial.nodeCreates);expect(auto.crossPlacements).toBe(initial.crossPlacements);
+  expect([...context.getImageData(130,10,1,1).data]).toEqual([25,55,91,255]);
+  edge.set(0);await nextFrame();
+  const restored=snapshotWasmLayoutDiagnostics();
+  expect(restored.solves).toBe(initial.solves);expect(restored.mainPlacements).toBe(auto.mainPlacements+1);
+  expect(restored.nodeCreates).toBe(initial.nodeCreates);expect(restored.crossPlacements).toBe(initial.crossPlacements);
+  expect([...context.getImageData(10,10,1,1).data]).toEqual([25,55,91,255]);
+  expect(context.getImageData(130,10,1,1).data[3]).toBe(0);
+  controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);expect(disposed.activeArenas).toBe(baseline.activeArenas);expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+it.runIf(experimentalLayout).each([
+  {flexDirection:'column' as const}, {flexDirection:'row-reverse' as const}, {flexWrap:'wrap' as const}, {layoutDirection:'rtl' as const},
+])('rejects auto main margins outside the finite LTR row-nowrap boundary %j', options => {
+  expect(()=>layoutFlex({x:0,y:0,width:200,height:80},[createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,marginLeft:'auto'}})],options,measurement)).toThrow(/finite LTR row-nowrap/);
+});
+
+it.runIf(!experimentalLayout)('keeps ordinary JavaScript auto-margin admission explicit', () => {
+  expect(()=>layoutFlex({x:0,y:0,width:200,height:20},[createElement(Rectangle,{style:{width:40,height:20,minWidth:0,marginLeft:'auto'}})],{},measurement)).toThrow(/experimental Flex engine/);
 });

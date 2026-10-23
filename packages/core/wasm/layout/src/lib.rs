@@ -2,7 +2,7 @@
 use std::cell::RefCell;
 const STRIDE: usize = 10; // basis, min, max, padding, grow, shrink, result, frozen/offset, margin before, margin after
 #[derive(Default)]
-struct Arena { nodes: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64>, flow: Vec<f64> }
+struct Arena { nodes: Vec<f64>, main_auto: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64>, flow: Vec<f64> }
 struct ArenaSlot { generation: u32, arena: Option<Arena> }
 struct ArenaPool { slots: Vec<ArenaSlot>, closed: bool }
 thread_local! {
@@ -84,7 +84,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v1() -> u32 { 1 }
+pub extern "C" fn layout_abi_v2() -> u32 { 2 }
 #[no_mangle]
 pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
@@ -235,6 +235,46 @@ fn resolve_tracks(tracks: &mut [f64], bound: f64, gap: f64) -> u32 {
 #[no_mangle]
 pub extern "C" fn place_main(handle: u32, generation: u32, main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_main(&mut arena.nodes, main, gap, alignment, reverse))
+}
+#[no_mangle]
+pub extern "C" fn resize_main_auto(handle: u32, generation: u32, count: usize) -> *mut f64 {
+    with_arena(handle, generation, std::ptr::null_mut(), |arena| {
+        let Some(length) = count.checked_mul(2) else { return std::ptr::null_mut(); };
+        arena.main_auto.resize(length, 0.0);
+        arena.main_auto.as_mut_ptr()
+    })
+}
+#[no_mangle]
+pub extern "C" fn place_main_auto(handle: u32, generation: u32, main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
+    with_arena(handle, generation, 1, |arena| align_main_auto(&mut arena.nodes, &arena.main_auto, main, gap, alignment, reverse))
+}
+fn align_main_auto(nodes: &mut [f64], flags: &[f64], main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
+    if !main.is_finite() || main < 0.0 || !gap.is_finite() || gap < 0.0 || alignment > 5 || reverse > 1 { return 1; }
+    let count = nodes.len() / STRIDE;
+    if flags.len() != count * 2 { return 1; }
+    let mut slots = 0;
+    let mut occupied = count.saturating_sub(1) as f64 * gap;
+    for index in 0..count {
+        let before = flags[index * 2]; let after = flags[index * 2 + 1];
+        if (before != 0.0 && before != 1.0) || (after != 0.0 && after != 1.0) { return 1; }
+        slots += before as usize + after as usize;
+        let n = &nodes[index * STRIDE..(index + 1) * STRIDE];
+        occupied += n[6] + n[3] + n[8] + n[9];
+    }
+    let free = main - occupied;
+    if !free.is_finite() { return 1; }
+    let consumes_free = free > 0.0 && slots > 0;
+    let share = if consumes_free { free / slots as f64 } else { 0.0 };
+    let (mut cursor, between) = distribution(free, count, if consumes_free { 0 } else { alignment }, reverse == 1);
+    for index in 0..count {
+        let n = &mut nodes[index * STRIDE..(index + 1) * STRIDE];
+        let before = n[8] + flags[index * 2] * share;
+        let after = n[9] + flags[index * 2 + 1] * share;
+        n[7] = if reverse == 1 { main - cursor - before - n[6] - n[3] } else { cursor + before };
+        cursor += n[6] + n[3] + before + after + gap + between;
+        if !n[7].is_finite() || !cursor.is_finite() { return 1; }
+    }
+    0
 }
 fn align_main(nodes: &mut [f64], main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
     if !main.is_finite() || main < 0.0 || !gap.is_finite() || gap < 0.0 || alignment > 5 || reverse > 1 { return 1; }
@@ -570,6 +610,22 @@ mod tests {
         dispose(); dispose();
         assert_eq!(arena_create(),0);
         assert_eq!(arena_dispose(b,gb),1);
+    }
+
+    #[test] fn auto_margins_place_after_sizing_without_mutating_numeric_records() {
+        let mut nodes = [40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.];
+        assert_eq!(allocate(&mut nodes,200.,0.),0);
+        assert_eq!(align_main_auto(&mut nodes,&[1.,0.,0.,0.],200.,0.,1,0),0);
+        assert_eq!((nodes[6],nodes[7],nodes[16],nodes[17]),(40.,120.,40.,160.));
+        assert_eq!((nodes[8],nodes[9],nodes[18],nodes[19]),(0.,0.,0.,0.));
+        assert_eq!(align_main_auto(&mut nodes,&[0.,1.,0.,0.],200.,0.,1,0),0);
+        assert_eq!((nodes[7],nodes[17]),(0.,160.));
+        assert_eq!(align_main_auto(&mut nodes,&[1.,1.,0.,0.],200.,0.,1,0),0);
+        assert_eq!((nodes[7],nodes[17]),(60.,160.));
+        assert_eq!(align_main_auto(&mut nodes,&[1.,0.,0.,0.],60.,0.,2,0),0);
+        assert_eq!((nodes[7],nodes[17]),(-10.,30.));
+        assert_eq!(align_main_auto(&mut nodes,&[f64::NAN,0.,0.,0.],200.,0.,0,0),1);
+        assert_eq!(align_main_auto(&mut nodes,&[],200.,0.,0,0),1);
     }
 
 }

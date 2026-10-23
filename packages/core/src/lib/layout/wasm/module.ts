@@ -29,7 +29,9 @@ export function hasReadyLayoutModule(): boolean { return compiled !== undefined;
 export function publishLayoutModule(module: WebAssembly.Module): void {
   if (compiled) return;
   const exports = WebAssembly.Module.exports(module);
-  if (!exports.some(entry => entry.name === 'layout_abi_v1' && entry.kind === 'function') ||
+  if (!exports.some(entry => entry.name === 'layout_abi_v2' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'resize_main_auto' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'place_main_auto' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'memory' && entry.kind === 'memory') ||
       !exports.some(entry => entry.name === 'solve' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'dispose' && entry.kind === 'function') ||
