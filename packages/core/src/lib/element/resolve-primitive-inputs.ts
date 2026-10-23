@@ -120,6 +120,6 @@ function styleInputRole(
   if (key === 'fill' || key === 'stroke' || key === 'opacity' || key === 'filter') return 'paint';
   if (key === 'cursor' || key === 'pointerEvents') return 'interaction';
   if (key === 'font' || key === 'lineHeight' || key === 'wrap' || key === 'fit') return 'measurement';
-  if (key === 'width' || key === 'height' || key === 'minWidth' || key === 'minHeight' || key === 'maxWidth' || key === 'maxHeight' || key === 'left' || key === 'top' || key === 'flexBasis' || key === 'flexGrow' || key === 'flexShrink' || key === 'flexDirection' || key === 'flexWrap' || key === 'justifyContent' || key === 'alignItems' || key === 'alignSelf' || key === 'alignContent' || key === 'gap' || key === 'rowGap' || key === 'columnGap' || key === 'padding' || key === 'margin' || key === 'marginTop' || key === 'marginRight' || key === 'marginBottom' || key === 'marginLeft') return 'layout';
+  if (key === 'boxSizing' || key === 'width' || key === 'height' || key === 'minWidth' || key === 'minHeight' || key === 'maxWidth' || key === 'maxHeight' || key === 'left' || key === 'top' || key === 'flexBasis' || key === 'flexGrow' || key === 'flexShrink' || key === 'flexDirection' || key === 'flexWrap' || key === 'justifyContent' || key === 'alignItems' || key === 'alignSelf' || key === 'alignContent' || key === 'gap' || key === 'rowGap' || key === 'columnGap' || key === 'padding' || key === 'margin' || key === 'marginTop' || key === 'marginRight' || key === 'marginBottom' || key === 'marginLeft') return 'layout';
   return 'unknown';
 }

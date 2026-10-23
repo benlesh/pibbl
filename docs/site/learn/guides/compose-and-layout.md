@@ -71,7 +71,10 @@ const row = (
 The `style` received by `Tile` is its specified author value. The finite local
 box calculated by the parent comes from `useLayoutBox()`. Parent placement uses
 `left`/`top`; drawing-local geometry uses `x`/`y`. `width` and `height` describe
-content boxes, padding is numeric, and `overflow: "clip"` clips both paint and
+content boxes by default. Use `boxSizing: "border-box"` to include numeric padding
+in declared dimensions, bounds and Flex basis. A border-box width100 with padding10
+has80px content; a content-box width100 has120px outer width. Padding forms a floor
+when a border-box dimension is smaller than its insets. `overflow: "clip"` clips both paint and
 target geometry without creating scrolling.
 
 ### Forwarding a placed style

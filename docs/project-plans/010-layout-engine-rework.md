@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice66 `6648bf66` (pinned Yoga wrap/cross-reversal conformance).
+Latest delivery is slice67 (coherent content-box/border-box sizing).
+Slice66 is `6648bf66` (pinned Yoga wrap/cross-reversal conformance).
 Slice65 is `fcfea332` (pinned Yoga reverse-axis conformance).
 Slice64 is `f5639a2e` (pinned Yoga column conformance).
 Slice63 is `440f7c32` (fixed-row intrinsic Grid in Flex columns).
@@ -16,7 +17,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is67, coherent content-box/border-box sizing. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is68, pinned border-box conformance and percentage coverage. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles twelve fixtures, including row wrap/cross reversal; click A/B/C targets.
 Native Grid tracks/spans and Flow wrap controls remain available.
@@ -1083,16 +1084,43 @@ match and no baseline changed. Runtime/kernel/package unchanged; last packed228
 receipt remains64. Logs `/tmp/pibbl-slice66-*`; Node26.9.0/pnpm11.21.0deps/Chromium/
 Apple C++20. No Node24/full trust, performance or broad Yoga parity claim.
 
-## [NEXT] Coherent content-box/border-box sizing (slice 67)
+### Slice 67 — coherent content-box/border-box sizing
 
-Define the exact public `boxSizing` policy before implementation: preserve current
-content-box default and add explicit border-box for dimensions, bounds and Flex
-basis together. Use existing shared box/placement/measurement seams so allocations
-subtract padding once, including prepared/cached clones and percentage resolution.
-Resolve contradictory size-versus-padding behavior explicitly; do not silently
-choose CSS overflow or equate painted stroke with layout border. Deliver one public
-row/column geometry/hit/scenario slice, then harden the broader matrix. No new WASM
-ABI should be needed. Consolidation22 for64–66 is complete; all seven gates stay open.
+`BoxStyle.boxSizing` preserves content-box by default and adds explicit border-box
+for dimensions, min/max and Flex basis together. Percentages resolve before
+padding subtraction. Content and padding-floor metadata are carried once through
+prepared/cached placements and measurement. Both JS and WASM allocators keep
+content-valued records; ABI/kernel unchanged. Border-box width8/max8 with padding10
+floors at outer20/content0, including parent overflow. Independent pinned Yoga3.2.1
+probe confirmed that policy before implementation; rejection was not selected.
+Default content-box constraints and painted-stroke semantics are unchanged.
+
+Public type RED rejected the missing field; runtime RED showed old content sizing.
+Green row/column proofs cover basis80/min100/max110/padding10, content80×10,
+basis105→content85, content-box switch→105×30, moved target100→105→125, stable
+identity and paint-only reuse. Padding-floor public overflow and percentage/outer
+bound checks pass. Review reproduced a Grid stretch double subtraction; an analogous
+Flow measurement test also failed. Both now canonicalize before assigning used
+content dimensions; focused review verified the correction, no other material issue.
+
+Focused200pass/1normal-onlyskip across six files; normal98pass/91experimental skips.
+Types/changed-code lint clean. Source/built Studio `--box-sizing` passes226public
+inputs, moved target/content sizes, paint reuse and cleanup0/0/0/0. Packed229input
+Bundler/NodeNext explicitly authors boxSizing and rejects an invalid literal; Node
+consumer checks public resolveBox geometry. Editor declaration bundle includes the
+field and its consumer compiles a literal use, alongside export/runtime parity.
+Public JSDoc and Studio docs metadata/coverage/rendering checks pass. Kernel65282
+bytes unchanged. Logs `/tmp/pibbl-slice67-*`; Node26.9.0/pnpm11.21.0deps/Chromium.
+This is a runnable first box-sizing slice, not full intrinsic/aspect/layout-border
+conformance, Node24 trust or general Yoga parity. All seven release gates remain open.
+
+## [NEXT] Pinned border-box conformance and percentage coverage (slice 68)
+
+Move the independent box-model oracle evidence into the version/commit/configuration
+bound corpus and public comparison. Include finite basis/bounds/padding and a
+percentage-resolved case, with semantic content/outer geometry and targets in
+normal/WASM lanes. Preserve current defaults and avoid new intrinsic/aspect/border
+policy. Group23 is67–69, then bounded consolidation.
 
 ### Consolidation 22 completed for delivery slices 64–66
 

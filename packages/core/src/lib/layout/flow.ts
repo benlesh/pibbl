@@ -1,3 +1,4 @@
+import { contentBoxStyle } from './box-sizing.js';
 import { experimentalLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
 import { prepareKnownLayoutDescendants, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
@@ -216,9 +217,10 @@ function resolveFlowPlacements(
       items.length,
     );
     const prepared = prepareDirectChildStyle(child, receiverToken, container);
-    const normalized = preparedStyleValue(prepared) as Readonly<
+    let normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & LayoutItemStyle
     >;
+    if (normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized, { width: container.width, height: container.height, context: { component: child.type.name || 'Anonymous', algorithm: 'flow', constraints: { minWidth: 0, maxWidth: container.width, minHeight: 0, maxHeight: container.height } } });
     assertSupportedChildPosition('Flow', child, normalized);
     const needsWidth = normalized.width === undefined || normalized.width === 'auto';
     const needsHeight = normalized.height === undefined || normalized.height === 'auto';

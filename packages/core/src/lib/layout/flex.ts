@@ -1,3 +1,4 @@
+import { contentBoxStyle } from './box-sizing.js';
 import { Grid } from './grid.js';
 import { Flow } from './flow.js';
 import type { PreparedFlexLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
@@ -390,9 +391,10 @@ function measureFlex(
       count,
     );
     const prepared = prepareDirectChildStyle(child, receiverToken, diagnosticBox, true);
-    const style = preparedStyleValue(prepared) as Readonly<
+    let style = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: diagnosticBox.width, height: diagnosticBox.height, mainAxis: row ? 'width' : 'height', context: childContext(child, diagnosticBox) });
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     rejectUnsupportedItemFields(child, style, diagnosticBox);
     const allMargin = numericMargin(style.margin, 'margin', child, diagnosticBox);
@@ -629,9 +631,10 @@ function resolveFlexPlacements(
     if (child.key === undefined) occurrences.set(child.type, occurrence + 1);
     const layoutToken = region?.identity(child.type, child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`);
     const prepared = prepareDirectChildStyle(child, receiverToken, container, true);
-    const normalized = preparedStyleValue(prepared) as Readonly<
+    let normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    if (normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized, { width: container.width, height: container.height, mainAxis: row ? 'width' : 'height', context: childContext(child, container) });
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     const knownIntrinsicLayout = child.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex &&
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';

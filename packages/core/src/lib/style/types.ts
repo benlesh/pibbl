@@ -77,6 +77,11 @@ export type EdgeValues =
  * @see {@link RectStyle}
  */
 export interface BoxStyle extends SystemStyle {
+  /** Selects whether dimensions, bounds and Flex basis include padding. Defaults to content-box.
+   * Border-box content floors at zero and the outer box floors at total axis padding.
+   * Painted stroke widths remain independent. See {@link ResolvedBoxStyle}.
+   */
+  boxSizing?: 'content-box' | 'border-box';
   /** Horizontal extent in the units of the containing geometry or surface. See {@link Length}. */
   width?: Length;
   /** Vertical extent in the units of the containing geometry or surface. See {@link Length}. */

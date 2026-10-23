@@ -11,6 +11,7 @@ const LAYOUT_PARTICIPATION_KEYS = new Set([
   'minHeight',
   'maxHeight',
   'padding',
+  'boxSizing',
   'margin',
   'marginTop',
   'marginRight',

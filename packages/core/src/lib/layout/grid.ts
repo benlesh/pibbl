@@ -1,3 +1,4 @@
+import { contentBoxStyle } from './box-sizing.js';
 import { experimentalLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
 import { prepareKnownLayoutDescendants, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
@@ -256,7 +257,8 @@ function resolveGridPlacements(
 
   for (const child of children) {
     const item = nativeItems?.[placements.length] ?? prepareGridCell(child, placements.length, container, columns.length, rows.length);
-    const { prepared, normalized, receiverToken, columnStart, columnSpan, rowStart, rowSpan } = item;
+    const { prepared, receiverToken, columnStart, columnSpan, rowStart, rowSpan } = item;
+    let normalized = item.normalized;
     const nativeBox = nativeBoxes?.[placements.length];
     const area = nativeBox ? { x: container.x + nativeBox.x, y: container.y + nativeBox.y, width: nativeBox.width, height: nativeBox.height } : {
       x: container.x + trackOffset(columns, columnStart - 1, options.columnGap),
@@ -264,6 +266,7 @@ function resolveGridPlacements(
       width: trackSpan(columns, columnStart - 1, columnSpan, options.columnGap),
       height: trackSpan(rows, rowStart - 1, rowSpan, options.rowGap),
     };
+    if (normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized, { width: area.width, height: area.height, context: childContext(child, area) });
     const widthAuto =
       normalized.width === undefined || normalized.width === 'auto';
     const heightAuto =

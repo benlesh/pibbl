@@ -17,7 +17,7 @@ import { resolveBox, type Constraints } from "@pibbl/core";
 
 `resolveBox(style, constraints, context?)` resolves public [`BoxStyle`](#/api/types/layout#boxstyle) into a
 [`ResolvedBoxStyle`](#/api/types/layout#resolvedboxstyle) with border and content boxes. It applies min/max lengths,
-padding, and finite constraint validation, and raises `LayoutDiagnostic` for
+the `boxSizing` policy, padding, and finite constraint validation, and raises `LayoutDiagnostic` for
 impossible or indefinite inputs.
 
 ```ts
@@ -31,3 +31,10 @@ const box = resolveBox({ width: "50%", padding: 12 }, constraints);
 ```
 
 It accepts [`Constraints`](#/api/types/layout#constraints) and is a public layout helper, not a retained layout engine.
+
+`boxSizing: "content-box"` is the default. With `"border-box"`, dimensions and
+bounds include padding; percentages resolve before the insets are subtracted.
+For example, width100/height30/padding10 yields an outer100×30 box and content80×10.
+Content never becomes negative: width8 with padding10 yields outer20/content0 on
+that axis, even when a declared maximum or parent bound is smaller. Opposing
+min/max values remain errors. Painted stroke widths are independent of this box.

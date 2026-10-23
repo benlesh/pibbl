@@ -1,3 +1,4 @@
+import { allocatedContentBoxStyle } from '../layout/box-sizing.js';
 import { resolveTransitionBinding } from '../transitions/binding.js';
 import { type PreparedQuery } from './responsive.js';
 import { getLayoutBox, getPercentageBasis } from '../layout/context.js';
@@ -153,7 +154,7 @@ export function resolveElementStyle<
         withoutSystemFilter(handoffStyle) as unknown as Readonly<N>;
   const usedSize = allocatedContentSizes.get(element);
   allocatedContentSizes.delete(element);
-  const normalized = usedSize ? { ...normalizedInput, width: usedSize.width, height: usedSize.height } as Readonly<N> : normalizedInput;
+  const normalized = usedSize ? allocatedContentBoxStyle(normalizedInput, usedSize.width, usedSize.height) as Readonly<N> : normalizedInput;
   const resolved = definition.resolveStyle ?
       definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;

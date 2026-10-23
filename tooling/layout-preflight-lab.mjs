@@ -31,7 +31,30 @@ else {
     }
     const state = () => lab.locator('pre').evaluate(element => JSON.parse(element.textContent));
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 1);
-    if (process.argv.includes('--intrinsic-grid')) {
+    if (process.argv.includes('--box-sizing')) {
+      await lab.getByRole('button', { name: 'Use border-box card', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).allocatedWidth === 80);
+      assert.deepEqual(await lab.locator('#subject').evaluate(canvas => [...canvas.getContext('2d').getImageData(102,5,1,1).data]), [0,0,255,255]);
+      await lab.locator('#subject').click({ position: { x: 102, y: 5 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 1);
+      await lab.getByRole('button', { name: 'Grow box basis', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).allocatedWidth === 85);
+      await lab.locator('#subject').click({ position: { x: 102, y: 5 } }); assert.equal((await state()).nativeHits, 1);
+      await lab.locator('#subject').click({ position: { x: 107, y: 5 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 2);
+      const beforePaint = await lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().solves);
+      await lab.getByRole('button', { name: 'Paint box content', exact: true }).click();
+      await lab.waitForFunction(() => document.querySelector('#subject').getContext('2d').getImageData(15,15,1,1).data[1] === 128);
+      assert.equal(await lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().solves), beforePaint);
+      await lab.getByRole('button', { name: 'Use content-box sizing', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).allocatedWidth === 105);
+      await lab.locator('#subject').click({ position: { x: 127, y: 5 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 3);
+      const disposed = await lab.evaluate(() => { dispatchEvent(new PageTransitionEvent('pagehide')); return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__(); });
+      assert.deepEqual(['activeNodes','activeArenas','activeWasmInstances','cachedMeasurements'].map(key => disposed[key]), [0,0,0,0]);
+      assert.deepEqual(errors, []);
+      console.warn(`${built ? 'Built' : 'Source'} boxSizing: content80→85→105, moved target100→105→125, paint-only solve reuse, cleanup0/0/0/0; ${coreInputs.length} public core inputs`);
+    } else if (process.argv.includes('--intrinsic-grid')) {
       const placements = () => lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().gridCellPlacements);
       const before = await placements();
       await lab.getByRole('button', { name: 'Use intrinsic Grid card', exact: true }).click();

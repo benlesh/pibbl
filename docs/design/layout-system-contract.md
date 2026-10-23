@@ -26,7 +26,8 @@ target order.
 
 ## Shared box, placement, and overflow rules
 
-Layout container `width` and `height` are content-box lengths. When omitted,
+Layout container `width` and `height` are content-box lengths by default; the
+explicit `boxSizing` policy below can select border-box lengths. When omitted,
 they consume the current finite allocation. Padding defaults to zero and
 `overflow` defaults to `"visible"`. `overflow: "clip"` clips paint and target
 geometry to the content box; it does not create scrolling.
@@ -83,6 +84,24 @@ Declared boxes control allocation and interaction geometry; drawing may still
 paint outside its declared box when overflow is visible. A container does not
 silently clip paint merely because a child overflows or uses negative local
 geometry.
+
+### Box sizing
+
+`BoxStyle.boxSizing` is `"content-box"` by default and accepts explicit
+`"border-box"`. Dimensions, min/max and Flex basis use the selected box model;
+percentages resolve first using their existing axis basis. Numeric padding is
+subtracted once for border-box inputs. Used content dimensions travel through
+prepared, measured, stretched and cached descriptors without another subtraction.
+Both normal and experimental Flex paths use the same content-valued records.
+
+For width100/height30/padding10, content-box produces content100×30 and outer120×50;
+border-box produces content80×10 and outer100×30. Border-box width8 or maxWidth8
+with padding10 produces content0 and outer20 on that axis. This padding floor can
+overflow a smaller bound or parent allocation, matching pinned Yoga3.2.1; opposing
+min/max and negative/nonfinite inputs are still rejected before conversion.
+Default content-box constraint behavior is preserved. The option does not turn
+painted stroke into a layout border, add percentage padding or expand intrinsic
+provider support. Existing Layer raster sizing rules remain separate.
 
 ## Absolute
 

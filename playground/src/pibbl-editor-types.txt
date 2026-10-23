@@ -448,6 +448,7 @@ export interface MeshTransformOptions {
   export interface Constraints { minWidth: number; maxWidth: number; minHeight: number; maxHeight: number }
   export interface StyleResolutionContext { allocation: Readonly<LayoutBox>; percentageBasis: Readonly<LayoutBox>; constraints: Readonly<Constraints>; component: string; algorithm: 'render-dispatch' }
   export interface BoxStyle extends SystemStyle {
+    boxSizing?: 'content-box' | 'border-box';
     width?: Length; height?: Length;
     minWidth?: Exclude<Length, 'auto'>; maxWidth?: Exclude<Length, 'auto'>;
     minHeight?: Exclude<Length, 'auto'>; maxHeight?: Exclude<Length, 'auto'>;

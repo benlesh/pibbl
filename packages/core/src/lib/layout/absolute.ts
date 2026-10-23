@@ -1,3 +1,4 @@
+import { allocatedContentBoxStyle } from './box-sizing.js';
 import { experimentalLayout } from './wasm/region.js';
 import { registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, takePreparedChildStyle, type PreparedLayoutPlan } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
@@ -213,11 +214,7 @@ export function childWithUsedSize(
 ): PibblElement<any> {
   const renderedChild = clonePibblElement(child);
   setPlacementConsumed(renderedChild);
-  setPreNormalizedStyle(renderedChild, Object.freeze({
-    ...style,
-    width,
-    height,
-  }), child, receiverToken, query);
+  setPreNormalizedStyle(renderedChild, Object.freeze(allocatedContentBoxStyle(style, width, height)), child, receiverToken, query);
   return renderedChild;
 }
 

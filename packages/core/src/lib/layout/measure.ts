@@ -1,3 +1,5 @@
+import type { BoxStyle } from '../style/types.js';
+import { contentBoxStyle } from './box-sizing.js';
 import { isLayoutComponent, placedLayoutComponentRoot } from './define-layout-component.js';
 import { getStyleMeasurementMode, withStyleMeasurement, rejectResponsiveMeasurement, UnsupportedResponsiveMeasurement } from '../style/responsive.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
@@ -122,11 +124,12 @@ function measureElementInternal(
     const specifiedStyle = withoutSystemFilter(
       preNormalized?.style ?? inputs.style ?? EMPTY_STYLE,
     );
-    const normalized = preNormalized ?
+    let normalized = preNormalized ?
         specifiedStyle :
       definition.normalizeStyle ?
           definition.normalizeStyle(specifiedStyle) :
           specifiedStyle;
+    if ('boxSizing' in normalized && normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized as Readonly<BoxStyle>, { width: constraints.maxWidth, height: constraints.maxHeight, context: { component, algorithm: 'measurement', constraints } });
     const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
     GLOBAL_STATE.primitiveReceiverToken =
       getPrimitiveReceiverToken(element) ?? createPrimitiveReceiverToken();

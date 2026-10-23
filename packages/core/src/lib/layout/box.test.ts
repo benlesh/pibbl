@@ -156,3 +156,14 @@ describe('resolveBox', () => {
     ).toThrow(/overlay.*width.*bogus.*overlay-layout.*minWidth.*maxWidth.*320/);
   });
 });
+
+it('floors border-box dimensions and outer bounds at padding without changing content-box constraints', () => {
+  const constraints = { minWidth: 0, maxWidth: 10, minHeight: 0, maxHeight: 10 };
+  expect(resolveBox({ boxSizing: 'border-box', width: 8, height: 8, maxWidth: 8, maxHeight: 8, padding: 10 }, constraints)).toEqual({ borderBox: { x: 0, y: 0, width: 20, height: 20 }, contentBox: { x: 10, y: 10, width: 0, height: 0 } });
+  expect(resolveBox({ width: 8, height: 8, padding: 10 }, constraints)).toEqual({ borderBox: { x: 0, y: 0, width: 10, height: 10 }, contentBox: { x: 10, y: 10, width: 0, height: 0 } });
+});
+it('resolves border-box percentages before subtracting padding and validates outer bounds first', () => {
+  const constraints = { minWidth: 0, maxWidth: 200, minHeight: 0, maxHeight: 100 };
+  expect(resolveBox({ boxSizing: 'border-box', width: '50%', height: '50%', padding: 10 }, constraints)).toEqual({ borderBox: { x: 0, y: 0, width: 100, height: 50 }, contentBox: { x: 10, y: 10, width: 80, height: 30 } });
+  expect(() => resolveBox({ boxSizing: 'border-box', width: 8, height: 8, minWidth: 9, maxWidth: 8, padding: 10 }, constraints)).toThrow(/minimum must not exceed maximum/);
+});

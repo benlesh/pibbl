@@ -258,7 +258,7 @@ try {
       const sprite = <Sprite frame={spriteFrameSignal} sampling="nearest" />;
       void sprite;
       const manipulation = useManipulation({ box });
-      return <><ManipulationFrame {...manipulation.frameProps}><DragHandle controller={manipulation} formatReadout={({ left, top }) => String(left + top)} style={{ readout: { gap: 5, active: { visible: true, fill: 'blue' } } }}><Rectangle keyboardFocusable style={{ width: 20, height: 20, cursor: 'grab' }} /></DragHandle><ResizeHandles controller={manipulation} /><RotationHandle controller={manipulation} /></ManipulationFrame><InspectionComposition /><Layer angle={1} style={{ width: 20, height: 20 }} /></>;
+      return <><ManipulationFrame {...manipulation.frameProps}><DragHandle controller={manipulation} formatReadout={({ left, top }) => String(left + top)} style={{ readout: { gap: 5, active: { visible: true, fill: 'blue' } } }}><Rectangle keyboardFocusable style={{ boxSizing: 'border-box', width: 20, height: 20, padding: 2, cursor: 'grab' }} /></DragHandle><ResizeHandles controller={manipulation} /><RotationHandle controller={manipulation} /></ManipulationFrame><InspectionComposition /><Layer angle={1} style={{ width: 20, height: 20 }} /></>;
     }
     declare const canvas: HTMLCanvasElement;
     pibbl(canvas, <App />);

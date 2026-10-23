@@ -2107,3 +2107,50 @@ it('records pinned native Yoga reverse-axis cap fixtures', () => {
 it('records pinned native Yoga row wrap and cross-reversal fixtures', () => {
   expect(yogaReference.cases.map(fixture => fixture.name)).toEqual(expect.arrayContaining(['row-wrap','row-wrap-reverse']));
 });
+
+for (const axis of ['row','column'] as const) {
+it(`uses coherent ${axis} border-box basis, bounds, content and cached geometry`, async () => {
+  const baseline = snapshotWasmLayoutDiagnostics(), mode = signal<'content-box'|'border-box'>('border-box'), basis = signal(80), fill = signal('red'); let hits = 0, mounts = 0;
+  const boxes: { width: number; height: number }[] = [];
+  function Content(_props: { style: Record<string, unknown> }) { useConst(() => { mounts++; }); const box = useLayoutBox(); boxes.push({ width: box.width, height: box.height }); return createElement(Rectangle, { style: { width: box.width, height: box.height, fill } }); }
+  const itemStyle = axis === 'row' ? { minWidth: 100, maxWidth: 110, height: 30, minHeight: 0 } : { minHeight: 100, maxHeight: 110, width: 30, minWidth: 0 };
+  const scene = createElement(Flex, { style: { width: 200, height: 200, flexDirection: axis, alignItems: 'flex-start' }, children: [
+    createElement(Flex, { key: 'box', style: { ...itemStyle, boxSizing: mode, flexBasis: basis, flexShrink: 0, padding: 10 }, children: createElement(Content, { style: { width: '100%', height: '100%', minWidth: 0, flexShrink: 0 } }) }),
+    createElement(Rectangle, { style: { width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: 'blue' }, onClick: () => hits++ }),
+  ] });
+  const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 220; document.body.append(canvas);
+  const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
+  expect(boxes.at(-1)).toEqual(axis === 'row' ? { width: 80, height: 10 } : { width: 10, height: 80 });
+  const point = (main: number) => axis === 'row' ? { x: main, y: 5 } : { x: 5, y: main };
+  let target = point(102); expect([...canvas.getContext('2d')!.getImageData(target.x,target.y,1,1).data]).toEqual([0,0,255,255]); clickCanvas(canvas,target.x,target.y); expect(hits).toBe(1);
+  basis.set(105); await nextFrame(); expect(boxes.at(-1)).toEqual(axis === 'row' ? { width: 85, height: 10 } : { width: 10, height: 85 });
+  clickCanvas(canvas,target.x,target.y); expect(hits).toBe(1); target = point(107); clickCanvas(canvas,target.x,target.y); expect(hits).toBe(2);
+  const beforePaint = snapshotWasmLayoutDiagnostics(); fill.set('green'); await nextFrame(); if (experimentalLayout) expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforePaint.solves);
+  mode.set('content-box'); await nextFrame(); expect(boxes.at(-1)).toEqual(axis === 'row' ? { width: 105, height: 30 } : { width: 30, height: 105 }); target = point(127); clickCanvas(canvas,target.x,target.y); expect(hits).toBe(3); expect(mounts).toBe(1);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeArenas,disposed.activeNodes,disposed.activeWasmInstances]).toEqual([baseline.activeArenas,baseline.activeNodes,baseline.activeWasmInstances]);
+});
+}
+
+it('preserves the public border-box padding floor beyond a too-small parent allocation', async () => {
+  const sizes: { width: number; height: number }[] = []; let hits = 0;
+  function Empty(_props: { style: Record<string, unknown> }) { const box = useLayoutBox(); sizes.push({ width: box.width, height: box.height }); return null; }
+  const canvas = document.createElement('canvas'); canvas.width = 50; canvas.height = 30; document.body.append(canvas);
+  const controller = pibbl(canvas, createElement(Flex, { style: { width: 10, height: 10, alignItems: 'flex-start' }, children: [
+    createElement(Flex, { style: { boxSizing: 'border-box', width: 8, height: 8, maxWidth: 8, maxHeight: 8, minWidth: 0, flexShrink: 0, padding: 10 }, children: createElement(Empty, { style: { width: '100%', height: '100%', minWidth: 0, flexShrink: 0 } }) }),
+    createElement(Rectangle, { style: { width: 5, height: 5, minWidth: 0, flexShrink: 0, fill: 'blue' }, onClick: () => hits++ }),
+  ] })); controllers.push(controller); await nextFrame(); expect(sizes.at(-1)).toEqual({ width: 0, height: 0 }); expect([...canvas.getContext('2d')!.getImageData(22,2,1,1).data]).toEqual([0,0,255,255]); clickCanvas(canvas,22,2); expect(hits).toBe(1); controller.dispose();
+});
+
+it('stretches a border-box Grid child without subtracting padding twice', async () => {
+  const sizes: { width: number; height: number }[] = []; let hits = 0;
+  function Content(_props: { style: Record<string, unknown> }) { const box = useLayoutBox(); sizes.push({ width: box.width, height: box.height }); return createElement(Rectangle, { style: { width: box.width, height: box.height, fill: 'red' }, onClick: () => hits++ }); }
+  const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 80; document.body.append(canvas);
+  const controller = pibbl(canvas, createElement(Grid, { style: { width: 100, height: 60, gridTemplateColumns: ['1fr'], gridTemplateRows: ['1fr'] }, children: createElement(Flex, { style: { boxSizing: 'border-box', padding: 10, gridColumnStart: 1, gridRowStart: 1 }, children: createElement(Content, { style: { width: '100%', height: '100%', minWidth: 0, flexShrink: 0 } }) }) })); controllers.push(controller); await nextFrame(); expect(sizes.at(-1)).toEqual({ width: 80, height: 40 }); expect([...canvas.getContext('2d')!.getImageData(85,45,1,1).data]).toEqual([255,0,0,255]); clickCanvas(canvas,85,45); expect(hits).toBe(1); controller.dispose();
+});
+it('uses measured border-box Flow content once before placing its following target', async () => {
+  let hits = 0; const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 60; document.body.append(canvas);
+  const controller = pibbl(canvas, createElement(Flow, { style: { width: 100, height: 60 }, children: [
+    createElement(Flex, { style: { boxSizing: 'border-box', padding: 10 }, children: createElement(Rectangle, { style: { width: 40, height: 10, minWidth: 0, flexShrink: 0, fill: 'red' } }) }),
+    createElement(Rectangle, { style: { width: 10, height: 10, fill: 'blue' }, onClick: () => hits++ }),
+  ] })); controllers.push(controller); await nextFrame(); expect([...canvas.getContext('2d')!.getImageData(65,5,1,1).data]).toEqual([0,0,255,255]); clickCanvas(canvas,45,5); expect(hits).toBe(0); clickCanvas(canvas,65,5); expect(hits).toBe(1); controller.dispose();
+});

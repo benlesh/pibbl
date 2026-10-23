@@ -52,7 +52,11 @@ finite box and the independent `left`/`top` placement vocabulary for children.
 ## BoxStyle
 
 `BoxStyle` is the shared declared-box vocabulary: dimensions, min/max limits,
-padding, and the local inputs needed to resolve a finite box.
+padding, and the local inputs needed to resolve a finite box. Its optional
+`boxSizing` policy defaults to `"content-box"`; `"border-box"` includes padding
+in dimensions, min/max and Flex basis. Percentages resolve before padding is
+subtracted, and the outer border-box size floors at total axis padding. Painted
+strokes remain independent. See [`resolveBox`](#/api/functions/resolve-box).
 
 ## CanvasMeasurementService
 

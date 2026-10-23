@@ -429,18 +429,18 @@
       "id": "box.box-sizing",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "content-box only",
-      "status": "missing",
-      "unresolvedPolicy": "Implementation direction is authorized; the public box-sizing signature and default/migration policy need exact definitions.",
+      "current": "content-box default preserved; explicit border-box dimensions, bounds, Flex basis and percentage-before-padding conversion",
+      "status": "experimental",
+      "unresolvedPolicy": "Opt-in policy selected with pinned Yoga padding floor; broad intrinsic/aspect/border interactions remain outside this slice.",
       "evidence": {
-        "positive": [],
-        "negative": [],
-        "interaction": [],
+        "positive": ["row/column basis and min/max converted once", "percentage lengths resolve before padding", "padding floor may overflow a smaller outer maximum/parent", "Grid stretch and Flow measured content avoid double conversion", "normal and WASM paths preserve content-box defaults"],
+        "negative": ["opposing outer min/max rejected before conversion", "invalid public policy literals rejected by packed types"],
+        "interaction": ["mode/basis signals move same-frame target geometry without remount", "paint-only allocation reuse", "source/built226 and installed229 input cleanup", "explicit editor/Bundler/NodeNext/Node helper policy use"],
         "yogaCases": [],
         "missing": [
-          "content-box",
-          "border-box",
-          "basis/limits/aspect interaction"
+          "pinned corpus conversion fixture",
+          "complete percentage/intrinsic and aspect interactions",
+          "layout-border integration"
         ]
       }
     },

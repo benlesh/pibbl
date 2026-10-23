@@ -1,3 +1,4 @@
+import { contentBoxStyle, borderBoxPaddingFloor } from './box-sizing.js';
 import {
   layoutDiagnostic,
   type LayoutDiagnosticContext,
@@ -33,6 +34,8 @@ export function resolveBox(
     constraints,
   };
   validateConstraints(constraints, diagnosticContext);
+  const paddingFloor = borderBoxPaddingFloor(style);
+  if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: constraints.maxWidth, height: constraints.maxHeight, context: diagnosticContext });
   const padding = normalizeEdges(style.padding, 'padding', diagnosticContext);
 
   const horizontal = resolveAxis(
@@ -45,6 +48,7 @@ export function resolveBox(
     padding.left,
     padding.right,
     diagnosticContext,
+    paddingFloor,
   );
   const vertical = resolveAxis(
     'height',
@@ -56,6 +60,7 @@ export function resolveBox(
     padding.top,
     padding.bottom,
     diagnosticContext,
+    paddingFloor,
   );
 
   return {
@@ -84,6 +89,7 @@ function resolveAxis(
   paddingStart: number,
   paddingEnd: number,
   context: Readonly<LayoutDiagnosticContext>,
+  paddingFloor: boolean,
 ): { border: number; content: number } {
   const minimumProperty = axis === 'width' ? 'minWidth' : 'minHeight';
   const maximumProperty = axis === 'width' ? 'maxWidth' : 'maxHeight';
@@ -156,10 +162,11 @@ function resolveAxis(
     axis,
     context,
   );
-  const border = Math.min(
+  const constrainedBorder = Math.min(
     constraintMaximum,
     Math.max(constraintMinimum, paddedContent),
   );
+  const border = paddingFloor ? Math.max(padding, constrainedBorder) : constrainedBorder;
   return {
     border: requireFiniteArithmetic(border, axis, context),
     content: Math.max(
