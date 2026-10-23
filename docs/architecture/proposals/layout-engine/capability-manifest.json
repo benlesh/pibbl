@@ -2170,11 +2170,12 @@
       "id": "flex.auto-margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental finite main/cross-axis auto margins in rows/columns, all main directions, nowrap/wrap/wrap-reverse and LTR/RTL; physical and logical edges; explicit finite numeric cross size and no aspect sizing for cross auto; sizing precedes positive absorption and cross auto overrides alignment; uniform auto shorthand resolves before physical/logical edge overrides; numeric main/cross min-max and opposing-slot interactions have pinned public evidence; direct generic wrapped Text and custom primitives with both pure providers in finite nowrap rows may use measured automatic height at declared numeric width; direct numeric-width LTR wrapped Flex owners measure automatic height before cross-auto placement; direct generic Text may also derive automatic width with auto basis, zero grow, positive shrink and no main bounds; direct numeric-width Text also supports bounded finite LTR wrapped rows with auto basis and zero grow/shrink",
+      "current": "experimental finite main/cross-axis auto margins in rows/columns, all main directions, nowrap/wrap/wrap-reverse and LTR/RTL; physical and logical edges; explicit finite numeric cross size and no aspect sizing for cross auto; sizing precedes positive absorption and cross auto overrides alignment; uniform auto shorthand resolves before physical/logical edge overrides; numeric main/cross min-max and opposing-slot interactions have pinned public evidence; direct generic wrapped Text and custom primitives with both pure providers in finite nowrap rows may use measured automatic height at declared numeric width; direct numeric-width LTR wrapped Flex owners measure automatic height before cross-auto placement; direct generic Text may also derive automatic width with auto basis, zero grow, positive shrink and no main bounds; direct numeric-width Text also supports bounded finite LTR wrapped rows with auto basis and zero grow/shrink; direct generic unwrapped Text in finite LTR nowrap columns measures natural width at declared numeric height with auto basis, zero grow/shrink, minHeight0 and no bounds/query/aspect",
       "status": "partial",
-      "unresolvedPolicy": "Finite explicit-cross main/cross directions, shorthand and numeric bounds are evidenced. Direct generic Text and paired pure-provider custom primitive automatic height are supported in finite nowrap rows at declared width. Natural-width Text also supports auto basis/zero grow/positive shrink/no main bounds in finite nowrap rows. Numeric-width Text also supports bounded LTR wrapped rows with auto basis and zero grow/shrink. Other automatic/layout cross sizing beyond the bounded wrapped Flex owner, broader wrapping/column Text and pure intrinsic owners remain outstanding; broader percentage/intrinsic feedback follows separate sizing gates.",
+      "unresolvedPolicy": "Finite explicit-cross main/cross directions, shorthand and numeric bounds are evidenced. Direct generic Text and paired pure-provider custom primitive automatic height are supported in finite nowrap rows at declared width. Natural-width Text also supports auto basis/zero grow/positive shrink/no main bounds in finite nowrap rows. Numeric-width Text also supports bounded LTR wrapped rows with auto basis and zero grow/shrink. Unwrapped generic column Text with numeric height and zero grow/shrink now has bounded natural-width support. Other automatic/layout cross sizing beyond these bounded owners, broader wrapping/column Text and pure intrinsic owners remain outstanding; broader percentage/intrinsic feedback follows separate sizing gates.",
       "evidence": {
         "positive": [
+          "slice154: direct generic unwrapped Text in finite LTR nowrap columns measures natural cross width with exact numeric height before auto side-margin absorption; zero grow/shrink, minHeight0, no bounds/query/aspect",
           "slice108: direct numeric-width generic Text in finite LTR row/wrap with automatic basis and zero grow/shrink measures final height before per-line cross-auto placement",
           "slice107: direct generic wrapped Text omitted/auto width derives natural auto basis and final-width height before cross-auto absorption; auto basis/zero grow/positive shrink/no main bounds only",
           "slice106: direct numeric-width LTR wrapped Flex owner measures height60 to90 before top auto absorption; unsupported intrinsic content remains required-measurement failure under stretch",
@@ -2192,14 +2193,16 @@
           "slice104: direct wrapped generic Text initial/final-width measurement precedes cross-auto absorption and suppresses stretch; width80 to40 produces height20 to30 and top80 to70 without replacing native identities"
         ],
         "negative": [
+          "slice154: wrapped/custom-font/bounded/auto-height/RTL/wrapped-container Text profiles reject before measurement; reverse and other providers remain outside the admission",
           "slice108: automatic-width, reverse/RTL/wrap-reverse, nonzero flex factors and numeric basis remain outside the wrapped Text exception",
           "slice107: automatic-width Text with numeric basis, grow, zero shrink or main min/max retains explicit rejection",
           "normal JavaScript rejects auto margin admission",
-          "unsupported automatic child cross size and aspect sizing rejected explicitly; direct Text exception rejects wrapping rows, automatic widths, custom fonts, clipping/fitting and columns",
+          "unsupported automatic child cross size and aspect sizing rejected explicitly; direct Text exceptions are limited to the documented row/column subsets; broader custom fonts, clipping/fitting and automatic main sizing reject",
           "old v1/v2/v3/v4 modules rejected before publication; root/sync imports remain inert",
           "native flag cardinality and NaN rejected without rewriting numeric margin inputs"
         ],
         "interaction": [
+          "slice154: public and installed Canvas ink geometry, direct signal text changes, glyph target transfer, source focus order, stable nodes, zero isolated column paint measurement and exact cleanup; source/built lesson coexists with the row automatic-minimum query",
           "slice108: public Text width80 to40 gives height20 to30/top20 to10, sibling x90 to50 and second line y50; actual draws/targets/focus/native identity and disposal",
           "slice107: public automatic-width Text draw positions, real targets/focus/node identity and disposal; host Canvas metrics are measured without native font-parity claim; existing automatic-minimum request per preparation remains",
           "slice106: public nested job and sibling targets, empty-margin misses, node identity, paint reuse and exact cleanup; source/built two-case replay; sibling paint reuses native solves/nodes while retaining one pure owner measurement per preparation",
@@ -2326,6 +2329,7 @@
         ]
       },
       "evidenceRefs": [
+        "tooling/test-wasm-column-text-auto-margin.mjs",
         "packages/core/test/layout-wasm-slice.test.tsx",
         "packages/core/wasm/layout/src/lib.rs",
         "tooling/layout-yoga-rehearsal/reference.json",

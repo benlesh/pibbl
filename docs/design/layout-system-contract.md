@@ -1536,6 +1536,24 @@ and top20→10 beside a60×40 sibling; a60×30 second-line sibling stays at y50.
 The first sibling moves x90→50. Browser Canvas draw/hit/identity evidence defines
 the Text contract; no native font-parity fixture is asserted.
 
+### Natural-width Text cross-auto sizing in columns
+
+A direct generic unwrapped Text child in an experimental finite LTR nowrap
+column may use automatic width with an automatic side margin. This bounded
+contract requires declared finite numeric height, automatic basis, zero grow
+and shrink, explicit minHeight0, no maximum height or width bounds, no prepared
+query/aspect sizing, and visible/default fit and overflow. Reverse, RTL, wrapping,
+automatic main height, other providers and fitting modes retain their diagnostics.
+
+The existing Text measurement receives unbounded width and exact declared height.
+Its natural Canvas ink width precedes cross-auto absorption; the margin suppresses
+stretch. Signal text changes move its draw and glyph hit bounds together while
+the following sibling retains its main slot and source focus order. Stable
+application descriptors reuse pure measurement and native solves on sibling paint;
+no cache guard is weakened. The public Flex/Text lesson shows a right-aligned
+column label beside the existing row comparison. Canvas metrics define its
+width; there is no synthetic native font-parity claim or new public API.
+
 ### Source-order Canvas integration preservation
 
 Layout changes positions, never source traversal order. Finite reversed/RTL Flex

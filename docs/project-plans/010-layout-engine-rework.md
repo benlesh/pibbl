@@ -20,7 +20,9 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest runtime delivery is slice153 `4bd6ff9b` (exact caller-height column measurement).
+Latest runtime delivery is slice154 (column Text natural cross-width with auto side margin).
+Slice153 is `4bd6ff9b` (exact caller-height column measurement).
+Consolidation51 is `35ff8f3b` for151–153.
 Slice152 is `5cb9ca57` (exact caller-width row measurement).
 Slice151 is `58dc7783` (symmetric decorated reverse main bounds).
 Slice150 is `f592b00c` (decorated reverse main percentage bounds).
@@ -4632,17 +4634,53 @@ zero substitution or convergence guesses. General intrinsic vocabulary and
 measurement ownership remain separately tracked; finite profile permutations
 are not new capabilities.
 
-## [NEXT] Slice154: column Text natural cross-width with auto side margin
+## [DONE] Slice154: column Text natural cross-width with auto side margin
 
-Use existing Text/Flex authoring in a finite LTR nowrap column. Direct generic
-unwrapped Text with numeric height, automatic width and basis, zero grow/shrink,
-no query, aspect or width bounds measures its natural width before cross-auto
-absorption. Signal text changes must move paint/hit geometry while preserving
-source focus order, sibling main slots, identities, paint reuse and exact cleanup.
-This addresses the existing `flex.auto-margin` column Text gap without changing
-indefinite percentage policy or introducing a public API. Begin with a failing
-public test, then a runnable existing lesson composition; keep reverse/RTL/wrap,
-automatic main height and broader provider graphs outside this first admission.
+A direct generic unwrapped Text in a finite LTR nowrap column now measures its
+natural cross width with unbounded width and exact declared numeric height before
+auto side-margin absorption. Automatic basis, zero grow/shrink, minHeight0 and no
+bounds/query/aspect remain required. Existing caches/ABI/API are unchanged.
+The focused public test first failed the existing margin diagnostic before the
+production change. Stable descriptors and glyph-interior points preserve actual
+Text hit semantics; no hit box is widened to the declared height.
+
+Fresh Node24.15/Chromium public checks:2 passed/422 skipped (424), including a
+six-profile boundary matrix rejecting before text measurement. Ordinary selected
+checks:1 passed/463 skipped across two files. Supported proof verifies real Canvas
+ink width, signal text shortening, paint/draw and glyph-target movement, source
+focus order, stable native identities, zero isolated column measurement/solve on
+sibling paint, and baseline resource counters after disposal. Scoped review clean.
+
+The existing Flex/Text learning composition adds a stable right-aligned column
+label. Source: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-text`;
+built5193 same route. Choose Compare auto margins, then Change column text.
+Source/built focused drivers passed: ink width81.9873046875→51.982421875,
+x518.0126953125→548.017578125, y280, moved glyph targets,469 built inputs,
+cleanup `[0,0,0]`, no errors. The adjacent row intentionally retains one existing
+automatic-minimum request on paint; the isolated column public test proves its own
+zero measurement reuse. Existing full row/wrapped/minimum lesson drivers also
+passed independently in source/built. Actual Canvas bitmap was visually inspected.
+
+Node24 installed tarball passed Bundler/NodeNext/runtime,245 dist inputs,
+`columnTextCrossAuto=true`, SHA256
+`9f32240fab1fa79dd3c4ed56f207eedd379b6097dec0555fe8b4ac9863d593df`.
+Types, changed-code lint, catalog170/12/33, docs109 RED probes/110 API programs/
+315 snippets and formatting passed. Native717-record corpus unchanged; no font
+parity, aggregate trust or release-gate closure is claimed. `flex.auto-margin`
+remains partial for its broader owner/intrinsic paths; fixed9/11/6/6/1 ledger and
+all7 gates unchanged. This slice extends an existing entry rather than closing it.
+
+## [NEXT] Slice155: public Grid mixed-track spanning resize evidence
+
+Exercise existing numeric/percentage/fr explicit tracks and two-axis spanning
+through the supported GridStudy lesson. Add owner width560→700, visible finite
+row tracks, moved overlapping targets/source priority, stable identities and
+paint-only placement reuse. Begin with a failing public lesson interaction test;
+no solver/API change or native Yoga Grid parity claim. This repairs explicit
+placement evidence debt rather than introducing more Flex profile variants.
+The current writer alone applies all repository changes; helpers supply read-only
+analysis or /tmp patch proposals. Broader intrinsic/minmax/implicit Grid exits and
+the existing fixed33/seven-gate denominator remain unchanged.
 
 ### Finite positioning exit matrix after134
 

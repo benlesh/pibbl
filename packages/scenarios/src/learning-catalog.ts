@@ -4041,12 +4041,12 @@ const drafts = [
     ],
     prompts: {
       gesture:
-        "Toggle width or Change text; reverse keys, remove B, update it while absent, then restore. Click a paragraph to inspect its key.",
+        "Toggle width or Change text; reverse keys, remove B, update it while absent, then restore. Compare auto margins also shows a natural-width column label; Change column text moves its clickable glyphs.",
       code: "Adjust the paragraph, flex basis or gap; run Studio with --mode layout-wasm.",
     },
     apiNotes: [
-      "Experimental, nowrap only. Not Yoga parity or a released replacement engine.",
-      "Compare Text minimum contrasts the word minimum with minWidth: 0; Toggle auto basis compares natural Text width with a 200px basis. Other items still require explicit minimums; no performance claim.",
+      "Experimental supported subsets only. Not Yoga parity or a released replacement engine.",
+      "Compare Text minimum contrasts the word minimum with minWidth: 0; Toggle auto basis compares natural Text width with a 200px basis. The auto-margin comparison includes wrapped rows and an unwrapped column with fixed height and automatic left margin. Other items still require explicit minimums; no performance claim.",
     ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-column-text", "flex", "responsive-styles"],

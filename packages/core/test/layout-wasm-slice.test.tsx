@@ -3,7 +3,7 @@ import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json
 import type { WasmYogaMigrationExample } from '../../scenarios/src/learning/layout/wasm-yoga-migration.example';
 type YogaMigrationFixture = NonNullable<NonNullable<Parameters<typeof WasmYogaMigrationExample>[0]>['fixtures']>[number];
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, FocusManagement, useCanvasContext, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, type BoxStyle, type FlexItemStyle, defineLayoutComponent, definePrimitive } from '@pibbl/core';
+import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, FocusManagement, useCanvasContext, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, type TextStyle, type BoxStyle, type FlexItemStyle, defineLayoutComponent, definePrimitive } from '@pibbl/core';
 import { opacity } from '@pibbl/core/filters';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
@@ -5600,4 +5600,91 @@ it.runIf(experimentalLayout)('keeps the public percentage placement lesson respo
   clickCanvas(canvas, narrow.boxes.badge.x + 4, narrow.boxes.badge.y + 4);
   await expect.poll(() => canvas.nextElementSibling?.textContent).toContain('"selected":"badge"');
   expect(narrow.units).toContain('content width / content height');
+});
+
+
+it.runIf(experimentalLayout)('measures direct unwrapped Text cross width before placing a column automatic margin', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const words = signal('aaaa aaaa aaaa');
+  const siblingInk = signal('#2f6b97');
+  const hits: string[] = [], focused: string[] = [];
+  const canvas = document.createElement('canvas'); canvas.width = 140; canvas.height = 80; document.body.append(canvas);
+  const context = canvas.getContext('2d')!;
+  context.font = '10px monospace';
+  const inkWidth = (value: string) => {
+    const metrics = context.measureText(value);
+    return metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
+  };
+  const draws: Array<{ x: number; y: number }> = [];
+  const fillText = context.fillText;
+  vi.spyOn(context, 'fillText').mockImplementation(function(this: CanvasRenderingContext2D, text, x, y, maxWidth) {
+    if (text.includes('aaaa')) { const transform = this.getTransform(); draws.push({ x: transform.e + x, y: transform.f + y }); }
+    fillText.call(this, text, x, y, maxWidth);
+  });
+  const textNode = createElement(Text, { key: 'text', keyboardFocusable: true, onFocus: () => focused.push('text'), onClick: () => hits.push('text'), children: words, style: { width: 'auto', height: 20, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: 'auto', wrap: false, font: '10px monospace', fill: '#19375b', cursor: 'pointer' } });
+  const siblingNode = createElement(Rectangle, { key: 'sibling', keyboardFocusable: true, onFocus: () => focused.push('sibling'), onClick: () => hits.push('sibling'), style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: siblingInk, cursor: 'pointer' } });
+  const root = createElement(FocusManagement, { children: createElement(Flex, { style: { width: 140, height: 80, flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'flex-start' }, children: [textNode, siblingNode] }) });
+  const controller = pibbl(canvas, root); controllers.push(controller); await nextFrame();
+  const initialWidth = inkWidth(words.get());
+  expect(initialWidth).toBeGreaterThan(80);
+  expect(draws.at(-1)).toEqual({ x: 140 - initialWidth, y: 0 });
+  canvas.blur();
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['text', 'sibling']);
+  const oldHitX = 140 - initialWidth + 2;
+  clickCanvas(canvas, oldHitX, 4); await nextFrame();
+  clickCanvas(canvas, 5, 25); await nextFrame();
+  expect(hits).toEqual(['text', 'sibling']);
+  const initial = snapshotWasmLayoutDiagnostics();
+
+  draws.length = 0; words.set('aaaa aaaa'); await nextFrame();
+  const narrowedWidth = inkWidth(words.get());
+  expect(narrowedWidth).toBeLessThan(initialWidth);
+  expect(draws.at(-1)).toEqual({ x: 140 - narrowedWidth, y: 0 });
+  const narrowed = snapshotWasmLayoutDiagnostics();
+  expect(narrowed.measuredLeaves).toBeGreaterThan(initial.measuredLeaves);
+  expect(narrowed.nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, oldHitX, 4); await nextFrame();
+  clickCanvas(canvas, 140 - narrowedWidth + 2, 4); await nextFrame();
+  expect(hits).toEqual(['text', 'sibling', 'text']);
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  siblingInk.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.measuredLeaves).toBe(beforePaint.measuredLeaves);
+  expect(painted.solves).toBe(beforePaint.solves);
+  expect(painted.nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+it.runIf(experimentalLayout)('rejects unsupported column automatic-margin Text profiles before measuring', () => {
+  const base: TextStyle & FlexItemStyle = {
+    width: 'auto', height: 20, minHeight: 0, flexGrow: 0, flexShrink: 0,
+    marginLeft: 'auto', wrap: false, overflow: 'visible', font: '10px monospace',
+  };
+  const profiles: readonly [string, TextStyle & FlexItemStyle, { readonly layoutDirection?: 'rtl'; readonly flexWrap?: 'wrap' }][] = [
+    ['wrapped', { wrap: true }, {}],
+    ['custom font', { font: '10px CustomFont' }, {}],
+    ['cross maximum', { maxWidth: 80 }, {}],
+    ['automatic main size', { height: 'auto' }, {}],
+    ['RTL', {}, { layoutDirection: 'rtl' }],
+    ['wrapped container', {}, { flexWrap: 'wrap' }],
+  ];
+  for (const [name, override, options] of profiles) {
+    let calls = 0;
+    const rejectingMeasurement = {
+      service: { measureText: (value: string) => { calls++; return { width: value.length * 10 } as TextMetrics; } },
+      measureElement: (element: Parameters<typeof measureElement>[0], constraints: Parameters<typeof measureElement>[1]) =>
+        measureElement(element, constraints, { measureText: (value: string) => { calls++; return { width: value.length * 10 } as TextMetrics; } }),
+    };
+    const child = createElement(Text, { children: 'aaaa aaaa', style: { ...base, ...override } });
+    expect(() => layoutFlex({ x: 0, y: 0, width: 140, height: 80 }, [child], {
+      flexDirection: 'column', flexWrap: options.flexWrap ?? 'nowrap', layoutDirection: options.layoutDirection ?? 'ltr', alignItems: 'flex-start',
+    }, rejectingMeasurement)).toThrow(/auto cross-axis margins require a finite numeric child cross size/);
+    expect(calls, name).toBe(0);
+  }
 });
