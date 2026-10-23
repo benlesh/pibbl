@@ -708,7 +708,7 @@ function resolveFlexPlacements(
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
     assertSupportedChildPosition('Flex', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
-    const allMargin = allocatedMargin(normalized.margin, 'margin', child, container);
+    const allMargin = normalized.margin === 'auto' ? 'auto' : allocatedMargin(normalized.margin, 'margin', child, container);
     const marginDirection = layoutChild.type === Flex ? normalized.layoutDirection ?? options.layoutDirection : options.layoutDirection;
     const logicalLeft = marginDirection === 'rtl' ? normalized.marginEnd : normalized.marginStart;
     const logicalRight = marginDirection === 'rtl' ? normalized.marginStart : normalized.marginEnd;

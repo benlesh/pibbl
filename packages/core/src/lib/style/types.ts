@@ -125,7 +125,7 @@ export interface ResolvedBoxStyle {
   contentBox: LayoutBox;
 }
 
-/** Flex edge margin value. Auto consumes remaining positive main space in experimental finite Flex main axes. See {@link FlexItemStyle}. */
+/** Flex edge margin value. Auto distributes remaining space on supported finite experimental Flex axes. See {@link FlexItemStyle}. */
 export type FlexMargin = number | Percentage | 'auto';
 
 /**
@@ -139,8 +139,8 @@ export type FlexMargin = number | Percentage | 'auto';
 export interface LayoutItemStyle extends PositioningStyle {
   /** Positive finite outer width/height ratio consumed by finite Flex, including wrapped lines. Final per-line main size derives cross size before cross bounds; intrinsic main sizing is unsupported. See {@link FlexItemStyle}. */
   aspectRatio?: number;
-  /** Uniform physical margin in logical Canvas units or a percentage of allocated Flex content width. Finite negatives are allowed; specific edges override this value. Consumed by experimental Flex only. See {@link LayoutItemStyle}. */
-  margin?: number | Percentage;
+  /** Uniform physical margin in logical Canvas units, a percentage of allocated Flex content width, or auto on supported finite Flex axes. Finite negatives are allowed; specific edges override this value. Consumed by experimental Flex only. See {@link LayoutItemStyle}. */
+  margin?: FlexMargin;
   /** Physical top margin overriding margin. See {@link LayoutItemStyle}. */
   marginTop?: FlexMargin;
   /** Physical right margin overriding margin. See {@link LayoutItemStyle}. */

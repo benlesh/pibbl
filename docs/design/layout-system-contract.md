@@ -948,7 +948,7 @@ auto margins in row/column, forward/reverse and LTR/RTL. Left/right are row main
 edges; top/bottom are column main edges. Inline start/end map through the receiving
 direction (including a child Flex's explicit override) before main/cross
 admission. Logical edges override physical edges/shorthand; numeric zero can
-suppress a physical auto edge. Cross-axis support is bounded below; shorthand and intrinsic auto
+suppress a physical auto edge. Cross-axis support is bounded below; intrinsic auto
 margins remain unsupported. The ordinary build retains its experimental-margin
 diagnostic. Numeric/percentage margin behavior is unchanged.
 
@@ -989,7 +989,7 @@ Finite nowrap/wrapped/wrap-reverse rows and columns accept physical and logical
 cross-edge auto margins when that child has a finite numeric cross size and no
 aspect-ratio sizing. Forward/reverse main directions and LTR/RTL are supported.
 Logical inline edges map through receiver direction before cross placement.
-Automatic child cross size, shorthand and intrinsic measurement remain unsupported.
+Automatic child cross size and intrinsic measurement remain unsupported.
 No new public operation or return contract is introduced.
 
 Each item distributes its own positive line cross free space equally among its
@@ -1023,3 +1023,15 @@ Twenty-four single-edge cases classify the same pinned-Yoga cross-auto precedenc
 difference; twelve opposing-auto cases match native. Full cross family48 therefore
 contains16native matches and32classified differences. Source paint/Tab order,
 keyed focus, moved hit targets and exact disposal remain unchanged.
+
+
+The uniform `margin` field also accepts `FlexMargin`. Auto shorthand supplies all
+four physical auto edges; explicit physical edges override only their edge and
+logical inline edges override their resolved physical edge. Numeric zero therefore
+removes one slot without affecting the others. It uses the same sizing and native
+main/cross placement paths; no kernel or ABI changes are needed for shorthand.
+Cross-auto requirements apply after overrides: an auto cross edge still requires
+finite numeric child cross size without aspect sizing. Normal builds and pure
+intrinsic auto-margin measurement retain their existing diagnostics. Source,
+built and installed shorthand fixtures cover all/left-zero/top-zero/start-zero in
+LTR/RTL. Mounted overrides preserve keyed focus, geometry/hits and paint reuse.

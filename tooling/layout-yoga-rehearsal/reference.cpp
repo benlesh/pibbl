@@ -1124,6 +1124,38 @@ static void autoCrossDirectionCases() {
   }
 }
 
+
+static void autoShorthandMarginCases() {
+  const char* variants[] = {"all", "left-zero", "top-zero", "start-zero"};
+  for (int rtl = 0; rtl < 2; ++rtl) {
+    for (int variant = 0; variant < 4; ++variant) {
+      auto config = YGConfigNew();
+      YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+      auto root = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(root, 200); YGNodeStyleSetHeight(root, 100); YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow); YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+      YGNodeStyleSetAlignItems(root, YGAlignCenter); YGNodeStyleSetJustifyContent(root, YGJustifyFlexStart);
+      auto a = YGNodeNewWithConfig(config), b = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(a,40); YGNodeStyleSetHeight(a,20); YGNodeStyleSetWidth(b,40); YGNodeStyleSetHeight(b,40);
+      for (auto child : {a,b}) { YGNodeStyleSetFlexGrow(child,0); YGNodeStyleSetFlexShrink(child,0); setMinZero(child); }
+      YGNodeStyleSetMarginAuto(a, YGEdgeAll);
+      if (variant == 1) YGNodeStyleSetMargin(a, YGEdgeLeft, 0);
+      if (variant == 2) YGNodeStyleSetMargin(a, YGEdgeTop, 0);
+      if (variant == 3) YGNodeStyleSetMargin(a, YGEdgeStart, 0);
+      YGNodeInsertChild(root,a,0); YGNodeInsertChild(root,b,1);
+      YGNodeCalculateLayout(root,YGUndefined,YGUndefined,rtl ? YGDirectionRTL : YGDirectionLTR);
+      std::cout << ",{\"name\":\"auto-shorthand-" << variants[variant] << '-' << (rtl ? "rtl" : "ltr")
+                << "\",\"width\":200,\"height\":100,\"gap\":0,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr")
+                << "\",\"containerStyle\":{\"alignItems\":\"center\",\"justifyContent\":\"flex-start\"},\"autoMarginFixture\":true,\"autoShorthandMarginFixture\":true,\"boxes\":[";
+      printBox(a); std::cout << ','; printBox(b); std::cout << "],\"itemStyles\":[{\"width\":40,\"height\":20,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0,\"margin\":\"auto\"";
+      if (variant == 1) std::cout << ",\"marginLeft\":0";
+      if (variant == 2) std::cout << ",\"marginTop\":0";
+      if (variant == 3) std::cout << ",\"marginStart\":0";
+      std::cout << "},{\"width\":40,\"height\":40,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0}]}";
+      YGNodeFreeRecursive(root); YGConfigFree(config);
+    }
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1257,5 +1289,6 @@ int main() {
   autoWrappedMarginCases();
   autoCrossMarginCases();
   autoCrossDirectionCases();
+  autoShorthandMarginCases();
   std::cout << "]\n";
 }

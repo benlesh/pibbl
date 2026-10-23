@@ -3710,7 +3710,7 @@ it.runIf(experimentalLayout).each([
   { label: 'row aspect cross axis', options: {}, style: { aspectRatio: 2, marginTop: 'auto' } },
   { label: 'automatic column cross width', options: { flexDirection: 'column' as const }, style: { width: 'auto', marginLeft: 'auto' } },
   { label: 'automatic logical column cross width', options: { flexDirection: 'column' as const }, style: { width: 'auto', marginStart: 'auto' } },
-  { label: 'shorthand', options: {}, style: { margin: 'auto' as never } },
+  { label: 'automatic shorthand cross size', options: {}, style: { height: 'auto', margin: 'auto' } },
 ])('keeps unsupported auto-margin shapes explicit: $label', ({ options, style }) => {
   expect(() => layoutFlex({ x: 0, y: 0, width: 200, height: 80 }, [createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, ...style } as RectStyle })], options, measurement)).toThrow(/auto.*margin/i);
 });
@@ -3863,4 +3863,60 @@ it.runIf(experimentalLayout)('maps finite column logical cross auto and overflow
     expect(place(20, { marginStart: 'auto', marginEnd: 'auto' }).x).toBe(30);
     expect(place(120, { marginStart: 'auto', marginEnd: 'auto' }).x).toBe(layoutDirection === 'ltr' ? 0 : -40);
   }
+});
+
+it.runIf(experimentalLayout)('allocates auto shorthand before specific physical overrides without replacing keyed public targets', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const overrides = signal(false);
+  const ink = signal('#2f6b97');
+  const boxes = new Map<string, { x: number; y: number; stamp: number }>();
+  const focused: string[] = [], hits: string[] = [];
+  let serial = 0;
+  function Card({ name, style: _style }: { name: string; style: BoxStyle & FlexItemStyle }) {
+    const stamp = useConst(() => ++serial);
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    boxes.set(name, { x: transform.e, y: transform.f, stamp });
+    return <Rectangle keyboardFocusable onFocus={() => focused.push(name)} onClick={() => hits.push(name)} style={{ width: box.width, height: box.height, fill: name === 'B' ? ink.get() : '#19375b', cursor: 'pointer' }} />;
+  }
+  function Scene() {
+    const specific = overrides.get();
+    return <FocusManagement><Flex style={{ width: 200, height: 100, alignItems: 'center' }}>
+      <Card key="A" name="A" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, margin: 'auto', ...(specific ? { marginLeft: 0, marginTop: 0 } : {}) }} />
+      <Card key="B" name="B" style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0 }} />
+    </Flex></FocusManagement>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 100; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  expect(boxes.get('A')).toEqual({ x: 60, y: 40, stamp: 1 });
+  expect(boxes.get('B')).toEqual({ x: 160, y: 30, stamp: 2 });
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['A', 'B']);
+  clickCanvas(canvas, 65, 45); await nextFrame(); expect(hits).toEqual(['A']);
+  const initial = snapshotWasmLayoutDiagnostics();
+  const beforeOverrideFocus = focused.slice();
+  overrides.set(true); await nextFrame();
+  expect(boxes.get('A')).toEqual({ x: 0, y: 0, stamp: 1 });
+  expect(boxes.get('B')).toEqual({ x: 160, y: 30, stamp: 2 });
+  expect(focused).toEqual(beforeOverrideFocus);
+  const overridden = snapshotWasmLayoutDiagnostics();
+  expect(overridden.solves).toBe(initial.solves);
+  expect(overridden.nodeCreates).toBe(initial.nodeCreates);
+  expect(overridden.mainPlacements).toBeGreaterThan(initial.mainPlacements);
+  expect(overridden.crossPlacements).toBeGreaterThan(initial.crossPlacements);
+  clickCanvas(canvas, 65, 45); await nextFrame(); expect(hits).toEqual(['A']);
+  clickCanvas(canvas, 5, 5); await nextFrame(); expect(hits).toEqual(['A', 'A']);
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  ink.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(beforePaint.solves);
+  expect(painted.mainPlacements).toBe(beforePaint.mainPlacements);
+  expect(painted.crossPlacements).toBe(beforePaint.crossPlacements);
+  expect(painted.nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });

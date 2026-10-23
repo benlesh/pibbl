@@ -1510,9 +1510,41 @@
           "flex.row-column-nowrap-wrap",
           "direction.rtl-and-logical-edges"
         ]
+      },
+      {
+        "id": "auto-shorthand-all-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-left-zero-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-top-zero-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-start-zero-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-all-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-left-zero-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-top-zero-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-start-zero-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
       }
     ],
-    "limit": "285 records:192 native matches and93 explicitly classified differences, including16 CSS line-local main auto and32 CSS cross-auto precedence differences. Finite direction/box/distribution/percentage/intrinsic-provider/auto-margin evidence remains bounded; this does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "293 records:200 native matches and93 explicitly classified differences, including16 CSS line-local main auto and32 CSS cross-auto precedence differences. Finite direction/box/distribution/percentage/intrinsic-provider/auto-margin evidence remains bounded; this does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -1994,23 +2026,24 @@
       "id": "flex.auto-margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental finite main/cross-axis auto margins in rows/columns, all main directions, nowrap/wrap/wrap-reverse and LTR/RTL; physical and logical edges; explicit finite numeric cross size and no aspect sizing for cross auto; sizing precedes positive absorption and cross auto overrides alignment",
+      "current": "experimental finite main/cross-axis auto margins in rows/columns, all main directions, nowrap/wrap/wrap-reverse and LTR/RTL; physical and logical edges; explicit finite numeric cross size and no aspect sizing for cross auto; sizing precedes positive absorption and cross auto overrides alignment; uniform auto shorthand resolves before physical/logical edge overrides",
       "status": "partial",
-      "unresolvedPolicy": "Finite main/cross directions and per-line wrapped absorption are supported. Shorthand, automatic/intrinsic cross sizing and broader opposing/minmax auto combinations remain outstanding.",
+      "unresolvedPolicy": "Finite main/cross directions, wrapped per-line absorption and shorthand precedence are supported. Automatic/intrinsic cross sizing and broader opposing/minmax auto combinations remain outstanding.",
       "evidence": {
         "positive": [
           "left/right/both slots divide positive free space after flexible sizing and before justification",
           "growth consumes space before auto slots; nonpositive free space preserves center alignment",
           "numeric-to-auto-to-numeric toggles update main placement only without re-solving or recreating nodes",
-          "public FlexMargin and editor declarations expose all six edge values; runtime accepts only main-axis auto and shorthand auto remains a type error",
+          "public FlexMargin and editor declarations expose six edge fields plus uniform margin auto; finite main/cross admission remains contextual",
           "slice98: four main directions \u00d7 LTR/RTL physical auto, logical row start/end and exact source-order geometry; axis/direction signals preserve keyed focus",
           "slice99: each wrapped line counts its own auto slots; a line without auto slots retains justification; 16 CSS-line-local differences explicitly classified against pinned Yoga",
           "slice100: per-line top/bottom/both cross-auto override alignment; finite explicit-height rows, reverse main/RTL, nowrap and wrap; zero/negative space overflows at start and numeric opposite margin is retained",
-          "slice101: 36 additional physical cross-auto directions; effective cross reversal maps flags through the existing native conversion; logical column inline start/end and LTR/RTL oversized-item overflow remain coherent"
+          "slice101: 36 additional physical cross-auto directions; effective cross reversal maps flags through the existing native conversion; logical column inline start/end and LTR/RTL oversized-item overflow remain coherent",
+          "slice102: uniform margin auto fills four slots before physical/logical overrides; explicit zero removes only that edge; RTL distinguishes physical left from logical start"
         ],
         "negative": [
           "normal JavaScript rejects auto margin admission",
-          "automatic child cross size, aspect sizing and shorthand auto shapes rejected explicitly",
+          "automatic child cross size, including shorthand, and aspect sizing rejected explicitly",
           "old v1/v2/v3/v4 modules rejected before publication; root/sync imports remain inert",
           "native flag cardinality and NaN rejected without rewriting numeric margin inputs"
         ],
@@ -2021,7 +2054,8 @@
           "slice98: seventeen exact native/source/built/installed auto cases; public row\u2192column\u2192RTL signal movement preserves focus/stamps/nodes, old target misses and new target hits",
           "slice99: source/built 17 wrapped cases plus installed 34-case auto family; line merge preserves keyed focus and moves targets; paint reuse and exact disposal",
           "slice100: source/built 12 cross-auto cases, 8 CSS cross-auto precedence differences plus4 native matches; installed46auto cases; cross-only flag changes preserve sizing/main placement/node identity, focus/hits and disposal",
-          "slice101: all36 expected boxes independently match Chromium CSS; public mounted matrix plus source/built replay and installed82auto cases; wrap reversal and row-to-RTL-column signals preserve keyed focus and moved targets"
+          "slice101: all36 expected boxes independently match Chromium CSS; public mounted matrix plus source/built replay and installed82auto cases; wrap reversal and row-to-RTL-column signals preserve keyed focus and moved targets",
+          "slice102: eight native/source/built exact shorthand cases, installed90auto cases with positive shorthand Bundler/NodeNext types; mounted overrides preserve keyed focus, moved hits and placement-only reuse"
         ],
         "yogaCases": [
           "auto-margin-left",
@@ -2105,10 +2139,18 @@
           "auto-cross-direction-column-reverse-wrap-reverse-both-ltr",
           "auto-cross-direction-column-reverse-wrap-reverse-before-rtl",
           "auto-cross-direction-column-reverse-wrap-reverse-after-rtl",
-          "auto-cross-direction-column-reverse-wrap-reverse-both-rtl"
+          "auto-cross-direction-column-reverse-wrap-reverse-both-rtl",
+          "auto-shorthand-all-ltr",
+          "auto-shorthand-left-zero-ltr",
+          "auto-shorthand-top-zero-ltr",
+          "auto-shorthand-start-zero-ltr",
+          "auto-shorthand-all-rtl",
+          "auto-shorthand-left-zero-rtl",
+          "auto-shorthand-top-zero-rtl",
+          "auto-shorthand-start-zero-rtl"
         ],
         "missing": [
-          "shorthand and automatic/intrinsic cross-axis auto margins",
+          "automatic/intrinsic cross-axis auto margins",
           "broader min/max and opposing margin interactions"
         ]
       },

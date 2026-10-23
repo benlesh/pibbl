@@ -212,8 +212,10 @@ Experimental finite nowrap, wrap and wrap-reverse items may use
 row/column direction, including reverse/RTL. Physical left/right apply to rows;
 top/bottom apply to columns. Logical start/end support row main edges after
 receiver-direction mapping. Auto edges divide positive free space after sizing
-and before justification; with no positive space they remain zero. Shorthand
-and intrinsic auto margins remain deferred. Finite nowrap/wrap/wrap-reverse rows
+and before justification; with no positive space they remain zero. Pure
+intrinsic auto margins remain deferred. Uniform `margin: "auto"` supplies all four
+edges before specific physical and logical overrides; explicit zero removes one
+auto slot. Finite nowrap/wrap/wrap-reverse rows
 and columns also accept physical and logical cross-auto edges on children with
 explicit numeric cross size, excluding aspect sizing. These share each item’s line
 space and override cross alignment; automatic child cross size remains deferred. Wrapped placement divides
