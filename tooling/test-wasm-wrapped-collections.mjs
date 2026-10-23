@@ -23,6 +23,14 @@ try {
   const initial = await state();
   assert.equal(initial.boxes['row:C'].y, 272); assert.equal(initial.boxes['column:C'].x, 582);
   assert.equal(initial.layout.activeNodes, 6); assert.equal(initial.layout.activeArenas, 2); assert.equal(initial.layout.activeWasmInstances, 1);
+  const rowA = initial.boxes['row:A'], rowB = initial.boxes['row:B'], rowC = initial.boxes['row:C'];
+  const columnA = initial.boxes['column:A'], columnB = initial.boxes['column:B'], columnC = initial.boxes['column:C'];
+  for (const [x,y] of [
+    [(rowA.x+rowA.width+rowB.x)/2,rowA.y+4],
+    [rowA.x+4,(rowA.y+rowA.height+rowC.y)/2],
+    [columnA.x+4,(columnA.y+columnA.height+columnB.y)/2],
+    [(columnA.x+columnA.width+columnC.x)/2,columnA.y+4],
+  ]) assert.equal((await click(x,y)).hits, initial.hits, 'Main and cross gaps in both axes must miss');
   const reversedAxes = await click(660,118);
   assert.equal(reversedAxes.reverseAxes, true);
   assert.deepEqual(reversedAxes.keys, initial.keys);
@@ -92,5 +100,5 @@ try {
   await page.waitForTimeout(180);
   assert.deepEqual(await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__()), disposed);
   assert.deepEqual(errors, []);
-  console.warn(`${sourceLane ? 'Source' : 'Built'} wrapped collection: ownership6→4→6→0, reorder keeps stamps/nodes, restore creates2, targets agree, paint reuses solves; ${proof?.coreInputs.length ?? 'source'} inputs`);
+  console.warn(`${sourceLane ? 'Source' : 'Built'} wrapped collection: ownership6→4→6→0, reorder keeps stamps/nodes, restore creates2, targets and four physical gap misses agree, paint reuses solves; ${proof?.coreInputs.length ?? 'source'} inputs`);
 } finally { await browser.close(); }

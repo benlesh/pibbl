@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice72 (finite Flex outer-box aspect ratios).
+Latest delivery is slice73 (finite numeric-gap capability evidence complete).
+Slice72 is `dc4b7d42` (finite Flex outer-box aspect ratios).
 Slice71 is `ac38f518` (pinned asymmetric layout-border conformance).
 Slice70 is `b7d5dc68` (explicit layout border widths).
 Slice69 is `9b530832` (Studio runtime dependency invalidation).
@@ -22,7 +23,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is73, close the finite numeric-gap capability evidence. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is74, resolve grow/shrink/basis differential exits. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles sixteen fixtures, including asymmetric border-box row/column cases; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -1222,16 +1223,39 @@ reused review: no material findings. Logs `/tmp/pibbl-slice72-*`.
 Node26.9.0/pnpm11.21.0deps/Chromium/Apple C++20. Kernel65282bytes unchanged.
 All seven release gates remain open; aspect remains experimental.
 
-## [NEXT] Close finite numeric-gap capability evidence (slice 73)
+### Slice 73 — finite numeric-gap capability evidence complete
 
-Close the fixed `flex.numeric-gap` preserve entry with concrete release evidence:
-empty/single-item layouts, no leading/trailing gap, wrapped line edge counts,
-physical rowGap/columnGap axes and precedence, finite validation, signal-driven
-paint/hit geometry, pinned native provenance and public source/built execution.
-Reuse existing runtime and evidence where already sufficient; fix actual failures
-only. Mark the capability complete only when these criteria pass, without closing
-the broader Flex gate or expanding the33-capability denominator. Consolidate
-70–72 as group24 first, then73–75 as group25.
+The fixed `flex.numeric-gap` preserve entry now has complete capability-level
+positive, negative, interaction and provenance evidence. Existing runtime needed
+no production correction. Empty/single/two-item count-minus-one main gaps, grow
+45/45 at0/55, wrapped physical override axes and no trailing cross-line gap are
+locked. Every gap/rowGap/columnGap rejects negative/nonfinite/percentage values,
+even for empty input. Mounted one-empty-one owns1→0→1 numeric nodes; a numeric
+gap signal moves target geometry without remount. All four physical main/cross
+gap regions miss in the public row/column collection scenario.
+
+Focused native-backed11pass/143skip in2files, normal8pass/32skip plus public
+normal signal1pass/113skip. Nine native tests pass under pinned Rust1.99.0 build;
+recompiled65282byte kernel hash unchanged (only source fingerprint regenerated).
+Source5192/built5193 wrapped collections pass ownership6→4→6→0, stable keyed
+identity/reorder, four explicit gap misses, correct targets, paint reuse and exact
+cleanup;469private built inputs. Fresh packed command230installed inputs,
+Bundler/NodeNext, installed geometry and lifecycle pass. Types/lint and native
+integrity pass. Existing16-case pinned Yoga corpus supplies numeric gap records;
+no new corpus or UI controls were needed. Logs `/tmp/pibbl-slice73-*`.
+Node26.9.0/pnpm11.21.0deps/Chromium/Rust1.99.0. No Node24 full trust or speed claim.
+No unchanged-runtime review repeated. Numeric gaps are complete for the finite
+numeric contract; percentage gaps are a separate missing capability. The engine
+remains opt-in and all seven group release gates remain open.
+
+## [NEXT] Resolve grow/shrink/basis differential exits (slice 74)
+
+Target the existing `flex.grow-shrink-basis` missing list: fractional factors,
+zero bases, huge finite factors and the release freeze corpus. Use pinned Yoga
+for its representable finite domain, classify f32/f64 range differences explicitly,
+and preserve public semantic/interaction/provenance evidence. Fix actual failures;
+do not equate finite numeric allocation with automatic-minimum or general provider
+completion. Group25 is73–75, then bounded consolidation.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

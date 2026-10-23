@@ -406,6 +406,19 @@ fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
 }
 #[cfg(test)]
 mod tests {
+    #[test] fn numeric_gap_cardinality_has_no_phantom_edges() {
+        assert_eq!(allocate(&mut [], 100., 10.), 0);
+        assert_eq!(align_main(&mut [], 100., 10., 0, 0), 0);
+        let mut one = [40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.];
+        assert_eq!(allocate(&mut one,100.,10.),0);
+        assert_eq!(align_main(&mut one,100.,10.,3,0),0);
+        assert_eq!((one[6],one[7]),(40.,0.));
+        let mut two = [40.,0.,f64::INFINITY,0.,1.,0.,0.,0.,0.,0.,40.,0.,f64::INFINITY,0.,1.,0.,0.,0.,0.,0.];
+        assert_eq!(allocate(&mut two,100.,10.),0);
+        assert_eq!(align_main(&mut two,100.,10.,0,0),0);
+        assert_eq!((two[6],two[7],two[16],two[17]),(45.,0.,45.,55.));
+    }
+
     use super::*;
     #[test] fn flow_lines_wrap_align_and_reject_invalid_inputs() {
         let mut items = [30.,20.,1.,0.,0.,0.,0.,0., 20.,10.,1.,0.,0.,0.,0.,0., 30.,15.,1.,0.,0.,0.,0.,0.];

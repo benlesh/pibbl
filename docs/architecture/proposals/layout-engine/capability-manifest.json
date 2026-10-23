@@ -19,7 +19,8 @@
     "parity": "Requires a pinned Yoga fixture, a public Pibbl fixture, semantic geometry evidence, negative evidence, interaction evidence where applicable, and classified divergences.",
     "preserve": "Requires current public-contract regression evidence and release notes for a material divergence from Yoga.",
     "beyond": "Requires a Pibbl contract and public evidence; Yoga is not an oracle for the capability.",
-    "experimental": "Does not count as released parity or a production migration promise."
+    "experimental": "Does not count as released parity or a production migration promise.",
+    "complete": "Capability-level evidence is complete for the stated supported contract. It does not close its group gate, enable the experimental engine, or substitute for final release trust."
   },
   "observationRule": "A `current` value without `evidenceRefs` is a source observation, not a test-pass claim. `evidenceRefs` identify focused executable evidence or the contract that records the current public surface.",
   "sourceReferences": [
@@ -375,19 +376,22 @@
       "id": "flex.numeric-gap",
       "target": "preserve",
       "group": "flex-core",
-      "current": "finite numeric gap, rowGap, columnGap",
-      "status": "partial",
+      "current": "finite nonnegative numeric gap/rowGap/columnGap with physical axis overrides and no phantom main/cross edge gaps",
+      "status": "complete",
       "evidenceRefs": [
         "packages/core/src/lib/layout/flex.test.ts",
         "packages/core/test/layout-wasm-slice.test.tsx",
-        "tooling/layout-yoga-rehearsal/reference.json"
+        "packages/core/wasm/layout/src/lib.rs",
+        "tooling/test-wasm-wrapped-collections.mjs",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "docs/project-plans/010-layout-engine-rework.md"
       ],
       "evidence": {
-        "positive": ["grow", "cap", "shrink"],
-        "negative": ["negative/nonfinite validation"],
-        "interaction": ["wrapped layouts"],
-        "yogaCases": ["grow", "cap", "shrink", "column-grow", "column-cap", "column-shrink"],
-        "missing": ["release wrap edge-count cases"]
+        "positive": ["default zero and physical override precedence", "empty/single/two-item count-minus-one main gaps", "two growing items45/45 at0/55", "wrapped row/column line edge counts and stretch placement", "nine pinned-toolchain native tests"],
+        "negative": ["negative/nonfinite/percentage gap,rowGap,columnGap rejected even with empty children", "four public main/cross gap regions miss targets"],
+        "interaction": ["numeric gap signal moves hit geometry without remount", "one-empty-one numeric ownership transitions", "source/built wrapped keyed targets and exact cleanup", "paint-only solver reuse"],
+        "yogaCases": ["grow", "cap", "shrink", "column-grow", "column-cap", "column-shrink", "row-wrap"],
+        "missing": []
       }
     },
     {

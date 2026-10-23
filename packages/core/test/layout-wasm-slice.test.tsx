@@ -99,21 +99,27 @@ it.runIf(experimentalLayout)('renews output views after WASM growth and never ac
   } finally { region.dispose(); }
 });
 
-it.runIf(experimentalLayout)('releases numeric records when a mounted Flex becomes empty', async () => {
+it.runIf(experimentalLayout)('releases numeric gap records across mounted one-empty-one transitions', async () => {
   const { signal } = await import('@pibbl/core');
   const { pibblSync: pibbl } = await import('@pibbl/core/sync');
   const { Flex } = await import('@pibbl/core');
-  const show = signal(true);
+  const show = signal(true); let hits = 0;
   const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 100;
   document.body.append(canvas);
   const baseline = snapshotWasmLayoutDiagnostics().activeNodes;
-  function Scene() { return <Flex style={{ width: 200, height: 100 }}>{show.get() ? <Rectangle style={{ width: 50, height: 20, minWidth: 0 }} /> : null}</Flex>; }
+  function Scene() { return <Flex style={{ width: 200, height: 100, gap: 10, justifyContent: 'space-between' }}>{show.get() ? <Rectangle style={{ width: 50, height: 20, minWidth: 0, fill: 'red' }} onClick={() => hits++} /> : null}</Flex>; }
   const controller = pibbl(canvas, <Scene />); controllers.push(controller);
   await nextFrame();
   expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline + 1);
   show.set(false);
   await nextFrame();
   expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline);
+  clickCanvas(canvas,49,10); expect(hits).toBe(0);
+  show.set(true); await nextFrame();
+  expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline+1);
+  expect([...canvas.getContext('2d')!.getImageData(49,10,1,1).data]).toEqual([255,0,0,255]);
+  clickCanvas(canvas,49,10); expect(hits).toBe(1); clickCanvas(canvas,55,10); expect(hits).toBe(1);
+  controller.dispose(); expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline);
 });
 
 it.runIf(experimentalLayout)('retains reactive Text measurements on paint-only updates', async () => {
@@ -2268,4 +2274,33 @@ it('applies outer aspect ratios after insets and clamps cross bounds independent
   expect(() => layoutFlex(container,[basis],{ flexWrap: 'wrap' },measurement)).toThrow(/nowrap/);
   const intrinsic = createElement(Rectangle,{ style: { width: 'auto',height: 50,minWidth: 0,flexShrink: 0,aspectRatio: 3 } });
   expect(() => layoutFlex(container,[intrinsic],{},measurement)).toThrow(/definite main dimension or flexBasis/);
+});
+
+it.runIf(experimentalLayout)('uses physical gap overrides without trailing wrapped line gaps', () => {
+  const row = [0,1,2].map(() => createElement(Rectangle, { style: { width: 40,height: 10,flexBasis: 40,flexShrink: 0,minWidth: 0 } }));
+  const column = [0,1,2].map(() => createElement(Rectangle, { style: { width: 10,height: 40,flexBasis: 40,flexShrink: 0,minHeight: 0 } }));
+  const options = { gap: 99,columnGap: 10,rowGap: 7,flexWrap: 'wrap',alignContent: 'stretch',alignItems: 'flex-start' } as const;
+  expect(layoutFlex({ x: 0,y: 0,width: 100,height: 100 },row,options,measurement)).toEqual([
+    { x: 0,y: 0,width: 40,height: 10 },{ x: 50,y: 0,width: 40,height: 10 },{ x: 0,y: 53.5,width: 40,height: 10 },
+  ]);
+  expect(layoutFlex({ x: 0,y: 0,width: 100,height: 100 },column,{...options,flexDirection:'column'},measurement)).toEqual([
+    { x: 0,y: 0,width: 10,height: 40 },{ x: 0,y: 47,width: 10,height: 40 },{ x: 55,y: 0,width: 10,height: 40 },
+  ]);
+});
+
+it('updates numeric gap signals and gap misses without replacing child identities', async () => {
+  const gap = signal(10); let hits = 0, mounts = 0;
+  function Card({ selected, style: _style }: { selected: boolean; style: Record<string, unknown> }) {
+    useConst(() => { mounts++; }); const box = useLayoutBox();
+    return createElement(Rectangle,{ style: { width: box.width,height: box.height,fill: selected ? 'blue' : 'red' },onClick: () => { if (selected) hits++; } });
+  }
+  const scene = createElement(Flex,{style:{width:200,height:40,columnGap:gap},children:[false,true].map(selected => createElement(Card,{key:String(selected),selected,style:{width:40,height:20,minWidth:0,flexShrink:0}}))});
+  const canvas = document.createElement('canvas');canvas.width=220;canvas.height=60;document.body.append(canvas);
+  const controller=pibbl(canvas,scene);controllers.push(controller);await nextFrame();
+  clickCanvas(canvas,45,10);expect(hits).toBe(0);clickCanvas(canvas,55,10);expect(hits).toBe(1);
+  const mounted=snapshotWasmLayoutDiagnostics();gap.set(30);await nextFrame();
+  clickCanvas(canvas,55,10);expect(hits).toBe(1);clickCanvas(canvas,75,10);expect(hits).toBe(2);expect(mounts).toBe(2);
+  expect([...canvas.getContext('2d')!.getImageData(55,10,1,1).data]).toEqual([0,0,0,0]);
+  if(experimentalLayout)expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+  controller.dispose();
 });

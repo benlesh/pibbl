@@ -506,3 +506,20 @@ it.runIf(!experimentalLayout)('retains explicit normal-build reverse-direction d
   expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [], { flexDirection: 'column-reverse' }, measurement)).toThrow(/unsupported flex direction/);
   expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [], { flexWrap: 'wrap-reverse' }, measurement)).toThrow(/unsupported flex wrap/);
 });
+
+it('uses exactly count minus one main gaps for empty, single and growing items', () => {
+  const box = { x: 0, y: 0, width: 100, height: 100 };
+  expect(layoutFlex(box, [], { gap: 10 }, measurement)).toEqual([]);
+  expect(layoutFlex(box, [item({ width: 40, flexShrink: 0 })], { gap: 10 }, measurement)).toEqual([{ x: 0, y: 0, width: 40, height: 10 }]);
+  expect(layoutFlex(box, [item({ flexBasis: 40, flexGrow: 1, flexShrink: 0 }), item({ flexBasis: 40, flexGrow: 1, flexShrink: 0 })], { columnGap: 10 }, measurement)).toEqual([
+    { x: 0, y: 0, width: 45, height: 10 }, { x: 55, y: 0, width: 45, height: 10 },
+  ]);
+});
+
+for (const property of ['gap','rowGap','columnGap'] as const) {
+  it(`rejects invalid ${property} even without children`, () => {
+    for (const value of [-1,NaN,Infinity,'10%']) {
+      expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [], { [property]: value } as any, measurement)).toThrow(new RegExp(property));
+    }
+  });
+}
