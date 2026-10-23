@@ -3,6 +3,8 @@
 ## Current checkpoint and single next slice — 2026-10-23
 
 Latest delivery is slice126 (numeric absolute size bounds; this commit).
+Consolidation42 for124–126 passes below.
+Slice126 is `0bda56ec` (numeric absolute size bounds).
 Slice125 is `6603731e` (declarative static Flex containing-block ownership).
 Slice124 is `77452150` (opposing-inset derived absolute dimensions).
 Slice123 is `51bc20ad` (fixed absolute children with axis-wise alignment).
@@ -3506,6 +3508,24 @@ Logs `/tmp/pibbl-slice126-{public-red,auto-red,public-green,normal,focused,sourc
 Node26.9.0/macOSChromium; kernel68649bytes/SHA unchanged. Counts remain
 8complete/12experimental/6partial/6missing/1excluded; all7gates open.
 Consolidation42 for124–126 follows as a separate evidence checkpoint.
+
+## Consolidation42 completed for slices124–126
+
+Separate deliveries124 `77452150`,125 `6603731e`,126 `0bda56ec`.
+Fresh28-file experimental588passed/9skipped597 in79.11s; normal225passed/
+372skipped597 in4.04s. Both uninterrupted aggregate runs pass. Logs
+`/tmp/pibbl-consolidation42-focused.txt` and `...consolidation42-normal.txt`.
+The standalone eight-case nested percentage replay also had the old broad
+nestedBoxes selector and pre119 public route/proof marker. It now selects its
+exact named family, uses the private corpus route and validates pinned provenance,
+complete ordered fixture names and actual source/dist input paths. Exact existing
+geometry, target, identity and cleanup assertions remain. Source and built8case
+replays pass,227core/dist inputs, errors[]/cleanup[0,0,0]. The first built rerun
+caught the obsolete proof marker after geometry had passed; final receipts
+`...consolidation42-nested-source-final.txt` and
+`...consolidation42-nested-built-rerun.txt` validate the new marker. Changed harness
+syntax/lint passes; no runtime change after the combined matrices. No release
+capability promotion or Node24 trust claim; all7gates remain open.
 
 ## [NEXT] Bounded absolute aspect-ratio derivation (slice127)
 

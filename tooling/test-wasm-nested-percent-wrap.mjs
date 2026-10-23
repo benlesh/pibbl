@@ -5,14 +5,14 @@ import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright';
 const base=process.argv[2]??'http://127.0.0.1:5192',built=process.argv.includes('--built');
 const reference=JSON.parse(readFileSync(new URL('./layout-yoga-rehearsal/reference.json',import.meta.url),'utf8'));
-const cases=reference.cases.filter(value=>value.nestedBoxes);
+const cases=reference.cases.filter(value=>value.name.startsWith('nested-percent-gap-'));
 assert.equal(cases.length,8);
 const browser=await chromium.launch({headless:true});
 try{
  const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[],catalogUrls=[];
  page.on('response',response=>{if(response.url().includes('/learning-catalog.ts'))catalogUrls.push(response.url());});
  page.on('pageerror',error=>errors.push(error.message));
- await page.goto(`${base}/#/examples/layout/wasm-yoga-migration`);
+ await page.goto(`${base}/#/testing/layout-yoga-migration`);
  const host=page.locator('iframe[srcdoc]');await host.waitFor({state:'attached'});await host.scrollIntoViewIfNeeded();
  const frame=page.frameLocator('iframe[srcdoc]');await frame.locator('pre').waitFor();
  const sandbox=page.frames().find(value=>value.url()==='about:srcdoc');
@@ -48,9 +48,12 @@ try{
   const match=(await response.text()).match(/slug:\s*["']wasm-yoga-migration["'][\s\S]*?canvas:\s*\{\s*width:\s*(\d+),\s*height:\s*(\d+)\s*\}/);
   assert.ok(match);assert.deepEqual([Number(match[1]),Number(match[2])],[760,540]);
  }
- const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
+ const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_YOGA_REHEARSAL_PROOF__);
+ assert.deepEqual(proof?.fixtureSource,{version:reference.version,commit:reference.commit,licenseSha256:reference.licenseSha256,probeSha256:reference.probeSha256});
+ assert.deepEqual(proof.caseNames,reference.cases.map(value=>value.name));
+ if(!built){assert.equal(proof.mode,'source');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/src/')));}
  if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
  const disposed=await sandbox.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();});
  assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements],[0,0,0]);assert.deepEqual(errors,[]);
- console.warn(JSON.stringify({base,cases:cases.map(value=>value.name),builtInputs:proof?.coreInputs.length??null,catalogUrls,cleanup:[0,0,0],errors}));
+ console.warn(JSON.stringify({base,cases:cases.map(value=>value.name),coreInputs:proof?.coreInputs.length??null,builtInputs:built?proof?.coreInputs.length??null:null,catalogUrls,cleanup:[0,0,0],errors}));
 }finally{await browser.close();}
