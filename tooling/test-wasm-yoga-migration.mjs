@@ -14,6 +14,7 @@ const directionMatrixOnly = process.argv.includes('--direction-matrix');
 const autoMarginsOnly = process.argv.includes('--auto-margins');
 const autoOpposingOnly = process.argv.includes('--auto-opposing');
 const autoShorthandOnly = process.argv.includes('--auto-shorthand');
+const ownerCrossAutoOnly = process.argv.includes('--owner-cross-auto');
 const customCrossAutoOnly = process.argv.includes('--custom-cross-auto');
 const textCrossAutoOnly = process.argv.includes('--text-cross-auto');
 const crossAutoDirectionsOnly = process.argv.includes('--cross-auto-directions');
@@ -64,8 +65,9 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = customCrossAutoOnly ? reference.cases.filter(fixture => fixture.customCrossAutoFixture) : textCrossAutoOnly ? reference.cases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? reference.cases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? reference.cases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (customCrossAutoOnly) { for(let section=0;section<19;section++) await click(520,158); }
+  const cases = ownerCrossAutoOnly ? reference.cases.filter(fixture => fixture.ownerCrossAutoFixture) : customCrossAutoOnly ? reference.cases.filter(fixture => fixture.customCrossAutoFixture) : textCrossAutoOnly ? reference.cases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? reference.cases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? reference.cases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (ownerCrossAutoOnly) { for(let section=0;section<20;section++) await click(520,158); }
+  else if (customCrossAutoOnly) { for(let section=0;section<19;section++) await click(520,158); }
   else if (textCrossAutoOnly) { for(let section=0;section<18;section++) { if (section === 17) await clearTextCrossAutoDraws(); await click(520,158); } }
   else if (autoOpposingOnly) { for(let section=0;section<17;section++) await click(520,158); }
   else if (autoShorthandOnly) { for(let section=0;section<16;section++) await click(520,158); }
@@ -128,6 +130,20 @@ try {
       previousTextCrossSiblingStamp = state.stamps.B;
       previousDirectionStamps = { B: state.stamps.B }; previousLiveNames = ['B'];
       continue;
+    }
+    if (fixture.ownerCrossAutoFixture) {
+      const state=JSON.parse((await frame.locator('pre').innerText()).split('auto margin state: ')[1]);
+      assert.deepEqual(state.boxes.B, expected[1], `${fixture.name}: sibling geometry`);
+      if(previousDirectionStamps?.B) assert.equal(state.stamps.B,previousDirectionStamps.B,`${fixture.name}: keyed sibling`);
+      await click(397,240+expected[0].y-5);
+      assert.equal(JSON.parse((await frame.locator('pre').innerText()).split('auto margin state: ')[1]).hits,state.hits,`${fixture.name}: empty margin miss`);
+      for(const leaf of fixture.ownerNestedBoxes) {
+        await click(397+leaf.x,245+leaf.y);
+        assert.ok((await frame.locator('pre').innerText()).includes('selected: A'),`${fixture.name}: nested job target`);
+      }
+      await click(397+expected[1].x,245+expected[1].y);
+      assert.ok((await frame.locator('pre').innerText()).includes('selected: B'));
+      previousDirectionStamps={B:state.stamps.B};previousLiveNames=['B'];continue;
     }
     if (fixture.directionMatrixFixture || fixture.autoMarginFixture) {
       const state=JSON.parse((await frame.locator('pre').innerText()).split(fixture.autoMarginFixture ? 'auto margin state: ' : 'direction matrix state: ')[1]);

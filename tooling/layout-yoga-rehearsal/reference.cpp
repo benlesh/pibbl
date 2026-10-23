@@ -1261,6 +1261,43 @@ static void customCrossAutoCases() {
   }
 }
 
+
+static void ownerCrossAutoCases() {
+  for (int narrow = 0; narrow < 2; ++narrow) {
+    const int ownerWidth = narrow ? 90 : 160;
+    auto config = YGConfigNew(); YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(root, 240); YGNodeStyleSetHeight(root, 120);
+    YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow); YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetAlignItems(root, YGAlignStretch); YGNodeStyleSetJustifyContent(root, YGJustifyFlexStart);
+    auto owner = YGNodeNewWithConfig(config), sibling = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(owner, ownerWidth); YGNodeStyleSetFlexDirection(owner, YGFlexDirectionRow); YGNodeStyleSetFlexWrap(owner, YGWrapWrap);
+    YGNodeStyleSetGap(owner, YGGutterAll, 10); YGNodeStyleSetAlignItems(owner, YGAlignFlexStart);
+    YGNodeStyleSetFlexGrow(owner, 0); YGNodeStyleSetFlexShrink(owner, 0); setMinZero(owner); YGNodeStyleSetMarginAuto(owner, YGEdgeTop);
+    const int heights[] = {20, 30, 20};
+    for (int index = 0; index < 3; ++index) {
+      auto leaf = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(leaf, 70); YGNodeStyleSetHeight(leaf, heights[index]);
+      YGNodeStyleSetFlexGrow(leaf, 0); YGNodeStyleSetFlexShrink(leaf, 0); setMinZero(leaf);
+      YGNodeInsertChild(owner, leaf, index);
+    }
+    YGNodeStyleSetWidth(sibling, 40); YGNodeStyleSetHeight(sibling, 40);
+    YGNodeStyleSetFlexGrow(sibling, 0); YGNodeStyleSetFlexShrink(sibling, 0); setMinZero(sibling);
+    YGNodeInsertChild(root, owner, 0); YGNodeInsertChild(root, sibling, 1);
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+    std::cout << ",{\"name\":\"owner-cross-auto-top-stretch-" << (narrow ? "narrow" : "wide")
+              << "\",\"width\":240,\"height\":120,\"gap\":0,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\""
+              << ",\"containerStyle\":{\"alignItems\":\"stretch\",\"justifyContent\":\"flex-start\"},\"autoMarginFixture\":true,\"ownerCrossAutoFixture\":true,\"boxes\":[";
+    printBox(owner); std::cout << ','; printBox(sibling);
+    std::cout << "],\"ownerNestedBoxes\":[";
+    for (int index = 0; index < 3; ++index) { if (index) std::cout << ','; printBox(YGNodeGetChild(owner, index), YGNodeLayoutGetLeft(owner), YGNodeLayoutGetTop(owner)); }
+    std::cout << "],\"ownerStyle\":{\"width\":" << ownerWidth << ",\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0,\"flexDirection\":\"row\",\"flexWrap\":\"wrap\",\"gap\":10,\"alignItems\":\"flex-start\",\"marginTop\":\"auto\"}"
+              << ",\"ownerLeafStyles\":[{\"width\":70,\"height\":20,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0},{\"width\":70,\"height\":30,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0},{\"width\":70,\"height\":20,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0}]"
+              << ",\"itemStyles\":[{\"width\":" << ownerWidth << ",\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0,\"flexDirection\":\"row\",\"flexWrap\":\"wrap\",\"gap\":10,\"alignItems\":\"flex-start\",\"marginTop\":\"auto\"},{\"width\":40,\"height\":40,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1398,5 +1435,6 @@ int main() {
   autoOpposingMarginCases();
   textCrossAutoCases();
   customCrossAutoCases();
+  ownerCrossAutoCases();
   std::cout << "]\n";
 }

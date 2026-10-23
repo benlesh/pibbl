@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice105 `931ecc2f` (measured custom primitive cross-auto sizing).
+Latest delivery is slice106 (measured built-in Flex owner cross-auto sizing).
+Slice105 is `931ecc2f` (measured custom primitive cross-auto sizing).
 Consolidation35 for103–105 passes, recorded below.
 Slice104 is `9c974fe1` (measured Text cross-auto sizing).
 Slice103 is `d8e5bf09` (opposing auto-margin bounds evidence).
@@ -58,7 +59,7 @@ Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next delivery is105, measured custom primitive cross-auto sizing. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles305 records:211matches/94classified differences; click A/B/C targets.
+cycles307 records:213matches/94classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2691,12 +2692,41 @@ Node26.9.0/pnpm11.21.0deps/Chromium/macOSarm64; no Node24 aggregate trust or
 controlled wall-clock performance claim. Fixed33 counts remain5complete,
 11experimental,8partial,8missing,1excluded; all7gates remain open.
 
-## [NEXT] Select bounded remaining automatic cross-sizing gap (slice 106)
+## Delivered measured built-in Flex owner cross-auto sizing (slice 106)
 
-Inspect the remaining wrapping/column/layout automatic cross and pure intrinsic
-owner gaps against existing public measurement paths, then establish one focused
-public failing contract before implementation. Do not mark auto-margin complete
-from finite evidence. Final whole-codebase review stays at full program end.
+A direct finite numeric-width LTR wrapped-row Flex owner with automatic height
+may absorb a cross-auto margin inside a finite nowrap row. Existing bounded
+pure measurement of direct numeric Rectangles determines height; unsupported
+intrinsic content fails even under stretch. Width160→90 changes height60→90,
+top60→30 in a120px row; following40px target moves x160→90. No new API, native
+protocol or measurement cache. Pure intrinsic auto-margin owners remain deferred.
+
+Public RED fails at the expected admission guard; final focused13tests pass/
+376skipped389, including required-measurement failure under stretch and prior
+intrinsic/provider exclusions. Public pixels, focus preservation, old/new leaf
+and sibling hits, native identity and exact cleanup pass. Sibling paint reuses
+native solves and nodes but retains one pure owner measurement per preparation;
+wrapped owner snapshot caching remains open rather than silently weakening input
+invalidation. Source/built2 native matches, built469inputs, cleanup0/errors[].
+Installed104auto+24direction cases pass with230distinputs/strict Bundler/NodeNext,
+SHA256 `1db87522d93b2727c2a527546a5d9710d7819666d18bed9c4186769822d830d9`.
+Native corpus307=213matches+94classified; both owner records contain actual
+nested Yoga nodes/boxes. Fresh types/lint/docs109RED/JSDoc/catalog/provenance pass;
+scoped review found no material issue. Native v5/68649bytes unchanged.
+
+Source: http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration — Next section20times.
+Fixed33 counts5complete/11experimental/8partial/8missing/1excluded; auto-margin
+remains partial and all7gates open. Node26.9.0/pnpm11.21.0deps/Chromium; no Node24
+aggregate trust or controlled wall-clock performance claim.
+
+## [NEXT] Automatic-width Text cross-auto sizing (slice 107)
+
+Reuse direct generic wrapped Text natural auto basis and final-width measurement
+in a finite nowrap row with automatic width/height and top auto margin. Bound to
+auto basis, zero grow, ordinary shrink and no query/aspect/main bounds; retain
+existing explicit numeric-width behavior. Prove resize-driven line count/top
+placement, actual draws/targets/focus/identity and cleanup before extending the
+boundary. Consolidate106–108 afterward; final whole-codebase review at program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

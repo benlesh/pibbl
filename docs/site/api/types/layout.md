@@ -280,3 +280,12 @@ participation styles with `resolveStyle` and return allocated drawing dimensions
 The Studio custom cross-auto section lays out eight jobs: width80→40 changes
 height20→40 and top80→60. Wrapping rows, automatic widths, columns and pure
 intrinsic owners remain outside this bounded contract.
+
+
+A direct built-in `Flex` owner also supports measured automatic height with
+cross-auto margins in a finite experimental nowrap row. Its inner layout must be
+a finite numeric-width LTR wrapped row of direct numeric Rectangles with zero
+grow/shrink, without query/aspect sizing. Unsupported intrinsic content remains
+an error even under stretch. The Studio owner cross-auto section shows three
+jobs changing height60→90 and top60→30 as width160→90. Other layout-owner and
+pure intrinsic auto-margin shapes remain deferred.

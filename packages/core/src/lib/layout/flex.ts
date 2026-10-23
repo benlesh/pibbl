@@ -731,7 +731,10 @@ function resolveFlexPlacements(
       (normalized.overflow === undefined || normalized.overflow === 'visible') && genericTextFont(normalized);
     const autoCrossDefinition = measuredAutoCross && !measuredTextCrossAuto ? getPrimitiveDefinition(child.type) : undefined;
     const measuredPrimitiveCrossAuto = !!autoCrossDefinition?.measureIntrinsic && !!autoCrossDefinition.measure;
-    if (hasAutoCrossMargin && !measuredTextCrossAuto && !measuredPrimitiveCrossAuto &&
+    const measuredFlexCrossAuto = measuredAutoCross && child.type === Flex &&
+      (normalized.flexDirection ?? 'row') === 'row' && normalized.flexWrap === 'wrap' &&
+      (normalized.layoutDirection ?? options.layoutDirection) === 'ltr';
+    if (hasAutoCrossMargin && !measuredTextCrossAuto && !measuredPrimitiveCrossAuto && !measuredFlexCrossAuto &&
         (typeof declaredCrossSize !== 'number' || !Number.isFinite(declaredCrossSize) || declaredCrossSize < 0 || aspectRatio !== undefined)) {
       throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child cross size without aspect sizing');
     }
@@ -847,7 +850,7 @@ function resolveFlexPlacements(
       const result = measureFlexChild(measurementChild, constraints, normalized, layoutToken ?? receiverToken, measurement, region, preparedStyleQuery(prepared), experimentalLayout && row && options.flexWrap === 'nowrap');
       if (result.status === 'measured') {
         measured = result.size;
-      } else if (needsMeasuredMain || (crossAuto && effectiveAlignment(
+      } else if (measuredFlexCrossAuto || needsMeasuredMain || (crossAuto && effectiveAlignment(
         alignment,
         options.alignItems,
       ) !== 'stretch')) {

@@ -4184,3 +4184,49 @@ it.runIf(experimentalLayout)('fails an automatic cross-margin custom final-width
     window.removeEventListener('error', prevent);
   }
 });
+
+it.runIf(experimentalLayout)('measures a direct wrapped Flex owner before automatic cross-margin placement', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const width = signal(160), ink = signal('#19375b');
+  const hits: string[] = [], focused: string[] = [];
+  const scene = <FocusManagement><Flex style={{ width: 240, height: 120, alignItems: 'stretch' }}>
+      <Flex key="jobs" style={{ width, minWidth: 0, flexShrink: 0, flexWrap: 'wrap', gap: 10, alignItems: 'flex-start', marginTop: 'auto' }}>
+        <Rectangle key="a" keyboardFocusable onFocus={() => focused.push('a')} onClick={() => hits.push('a')} style={{ width: 70, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#19375b' }} />
+        <Rectangle key="b" onClick={() => hits.push('b')} style={{ width: 70, height: 30, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#426b61' }} />
+        <Rectangle key="c" onClick={() => hits.push('c')} style={{ width: 70, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#6e3e79' }} />
+      </Flex>
+      <Rectangle key="sibling" keyboardFocusable onFocus={() => focused.push('sibling')} onClick={() => hits.push('sibling')} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, fill: ink }} />
+    </Flex></FocusManagement>;
+  function Scene() { return scene; }
+  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 120; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  const pixel = (x: number, y: number) => [...canvas.getContext('2d')!.getImageData(x, y, 1, 1).data];
+  expect(pixel(5, 65)).toEqual([25, 55, 91, 255]);
+  clickCanvas(canvas, 5, 55); await nextFrame(); expect(hits).toEqual([]);
+  clickCanvas(canvas, 5, 65); await nextFrame(); expect(hits).toEqual(['a']);
+  const initial = snapshotWasmLayoutDiagnostics();
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused.at(-1)).toBe('a');
+  const beforeResizeFocus = focused.slice();
+  width.set(90); await nextFrame();
+  expect(focused).toEqual(beforeResizeFocus);
+  expect(pixel(5, 35)).toEqual([25, 55, 91, 255]);
+  clickCanvas(canvas, 5, 35); await nextFrame(); expect(hits).toEqual(['a', 'a']);
+  clickCanvas(canvas, 165, 5); await nextFrame(); expect(hits).toEqual(['a', 'a']);
+  clickCanvas(canvas, 95, 5); await nextFrame(); expect(hits).toEqual(['a', 'a', 'sibling']);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+  const beforePaint = snapshotWasmLayoutDiagnostics(); ink.set('#a63758'); await nextFrame();
+  expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforePaint.solves);
+  expect(snapshotWasmLayoutDiagnostics().measuredLeaves).toBe(beforePaint.measuredLeaves + 1);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+it.runIf(experimentalLayout)('requires supported intrinsic descendants for a cross-auto Flex owner even under stretch', () => {
+  const owner = createElement(Flex, { style: { width: 90, minWidth: 0, flexShrink: 0, flexWrap: 'wrap', marginTop: 'auto' }, children: createElement(Text, { style: { width: 70, height: 20, minWidth: 0, flexShrink: 0 }, children: 'unsupported intrinsic job' }) });
+  expect(() => layoutFlex({ x: 0, y: 0, width: 240, height: 120 }, [owner], { alignItems: 'stretch' }, measurement)).toThrow(/measurement is required but unsupported/);
+});

@@ -1096,3 +1096,25 @@ Missing either provider, automatic width, wrapped rows, aspect sizing, column
 automatic cross size and pure intrinsic owners remain unsupported. A required
 final-width measurement failure prevents earlier paint, releases layout ownership
 and permits clean remount.
+
+
+### Measured wrapped Flex owner cross-auto sizing
+
+A direct built-in `Flex` child may use measured automatic height and a cross-auto
+margin inside a finite experimental nowrap row. The inner owner must have a
+declared finite nonnegative numeric width, LTR row/wrap layout and no query or
+aspect sizing. Its existing bounded intrinsic measurement admits direct empty
+numeric Rectangles with zero grow/shrink. Measurement is required even under
+outer stretch; unsupported descendants raise the existing diagnostic rather than
+using a zero or stretched height. Other layout owners and intrinsic shapes remain
+unsupported. This does not add pure intrinsic auto-margin measurement.
+
+In the public comparison, three70px jobs of heights20/30/20 with10px gap produce
+height60 at width160 and height90 at width90. A120px outer row places the owner
+at y60→30; the following40px target moves x160→90. Pinned Yoga records include
+the actual owner and absolute nested boxes. Public pixels, empty-margin misses,
+nested job/sibling hits, native identity, paint reuse and exact cleanup exercise
+the existing measurement and placement paths without a new protocol or cache.
+Paint-only sibling updates reuse native solves and identities, but this wrapped
+owner performs one existing pure measurement per preparation. It is not admitted
+to the existing column/Text snapshot cache; broader owner caching remains open.
