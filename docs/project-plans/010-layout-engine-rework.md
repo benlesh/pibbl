@@ -5,7 +5,7 @@
 Latest delivery is slice129 (bounded measured absolute natural height; this commit).
 Slice128 is `2539ff32` (bounded measured absolute natural width).
 Slice127 is `dfc5843c` (bounded absolute aspect-ratio derivation).
-Consolidation42 is `99dfdf49` for124–126; passing receipts below.
+Consolidation43 for127–129 passes below; consolidation42 is `99dfdf49` for124–126.
 Slice126 is `0bda56ec` (numeric absolute size bounds).
 Slice125 is `6603731e` (declarative static Flex containing-block ownership).
 Slice124 is `77452150` (opposing-inset derived absolute dimensions).
@@ -138,7 +138,7 @@ Exactly one implementation slice is queued.
 | Flex and native sizing                             | Implement and classify the accepted matrix: reverse/wrap-reverse, margins/auto margins, percentages/gaps, box sizing/borders, aspect ratio, baselines, RTL/logical edges, containing blocks and hidden/contents participation; positive/negative/interaction geometry fixtures for every supported entry | Current experimental subset is bounded; unresolved native minimum/provider and precedence policies require exact designs before those paths broaden                                                                                  |
 | Grid and other layout families                     | Preserve Absolute/Overlay/Flow and complete the declared Grid track/placement/implicit/intrinsic target, with mixed nested examples and semantic geometry tests                                                                                                                                          | General nested preparation and intrinsic constraints must be available first; current Grid subset is not completion                                                                                                                  |
 | Prepared transactional geometry and reactive reuse | One root-wide prepared ownership model; stable identity, changed-geometry publication, rollback/failure isolation, receiver roles and bounded invalidation; public nested component/Layer/external-renderer tests with deterministic cleanup                                                             | Shared root instances, bounded known Flex plans, pure Card/known columns and frozen allocation caches are foundations, not a full graph or atomic publication                                                                        |
-| Migration and conformance                          | Version/commit/configuration-bound Yoga corpus with explicit Pibbl conversions/divergences; supported public Pibbl migration app and documented framework-author path using the same semantics; all unsupported entries visible                                                                          | Twelve exact pinned Yoga fixtures exist, including finite row/column/reverse/wrap and the Rectangle conversion cases; the broad classified corpus remains incomplete. Standalone API details must follow the public design agreement |
+| Migration and conformance                          | Version/commit/configuration-bound Yoga corpus with explicit Pibbl conversions/divergences; supported public Pibbl migration app and documented framework-author path using the same semantics; all unsupported entries visible                                                                          | The current373-record pinned corpus covers bounded row/column/reverse/wrap and conversion paths; broad supported-matrix classification remains incomplete. Standalone API details must follow the public design agreement |
 | Reproducible performance                           | Comparable kernel, JS integration and whole Canvas workloads, structural work/allocation counts and reproducible timing receipts under documented environments                                                                                                                                           | Correct broad graph/algorithms precede timing claims; current counters demonstrate only their bounded paths                                                                                                                          |
 | Final integration and release                      | Accepted behavior migrated across consumers/docs/editor/types/packed output, source/built browser and lifecycle evidence, documented Node24/pnpm11.21 trust gate, then the requested separate hyper-critical whole-codebase review                                                                       | Full supported behavior and prior exits must land before final aggregate verification/review; Node26 receipts are not Node24 release evidence                                                                                        |
 
@@ -3626,12 +3626,44 @@ Logs `/tmp/pibbl-slice129-{public-red,public-green,focused,bounds,normal,latest-
 Kernel68649bytes/SHA unchanged; Node26.9.0/macOSChromium, no Node24 trust claim.
 Fixed33:8complete/12experimental/6partial/6missing/1excluded; all7gates open.
 
-## [NEXT] Consolidate slices127–129 (checkpoint43)
+## Consolidation43 completed for slices127–129
 
-Run the combined experimental and normal positioning/measurement/loading suite,
-retain segmented source/built/packed evidence, reconcile the finite positioning
-exit matrix, and select the next material implementation gap. Do not promote
-capabilities merely because another bounded fixture family passed.
+Separate commits127 `dfc5843c`,128 `2539ff32`,129 `398dfa54`. Fresh combined
+experimental28files601pass/9skip610 (80.14s); normal22pass-files/6skip-files,
+229pass/381skip610 (4.87s). Logs `/tmp/pibbl-consolidation43-{focused,normal}.txt`.
+Expected negative-provider diagnostics appear; no assertion failures. The combined
+run covers public positioning, provider query/ownership, cold identity rollback,
+measurement purity, known owner preparation, loading and Canvas behavior.
+Segmented source/built129 and source128 replay receipts plus installed245-input
+consumer evidence are recorded above; no uninterrupted373-case browser claim.
+Docs109RED probes/JSDoc and public5/full373 boundary pass. Types/lint pass at129.
+No baseline rewrite, capability promotion, new performance claim or Node24 trust.
+Fixed33 remains8complete/12experimental/6partial/6missing/1excluded; all7gates open.
+
+## [NEXT] Fixed absolute placement across Flex main directions (slice130)
+
+Implement the public test-first fixed-size direction contract below, then expose
+it through the private source/built rehearsal and installed public consumer.
+Commit130 separately. The next consolidation is after130–132.
+
+### Finite positioning exit matrix after129
+
+This refines existing manifest entries; it adds no capability or release gate.
+
+| Existing exit | Evidence still required before closing it |
+| --- | --- |
+| Direct static/relative/absolute placement | All accepted main directions and wrapping contexts, inset precedence and no-inset alignment, logical/percentage policy, supported child box and size constraints; pinned semantic geometry plus public paint/hit/focus evidence. Current direct row-nowrap admission is only a subset. |
+| Absolute intrinsic dimensions | Built-in Text/font and image contributions, both-auto sizing, nested described owners and supported constraint feedback. The paired-provider one-auto paths in128–129 do not supply these contracts. |
+| General containing-block ownership | Exact override, transformed/opaque/boxless ancestry policy and lifecycle evidence, retaining legacy omission only where specified. Direct static Flex chains alone do not close it. |
+| Hidden/contents participation | Declared retention/disposal, boxless layout contribution, identity, source order, clips, events and visibility transitions; current implementation is missing. |
+| Transactional publication | Position, hit, focus, HTML and external-layer geometry must publish or roll back coherently through the accepted root-wide preparation/ownership model. Per-region measurement rollback is bounded evidence only. |
+
+Selected next material slice130: fixed finite numeric absolute boxes in all four
+nowrap Flex main directions, LTR/RTL. No new public API. Explicit physical insets
+retain padding-box reference/precedence; inset-free axes use main/cross alignment
+with reverse and RTL applied once. Automatic/aspect/measured size and numeric
+bounds in expanded directions remain outside that first admission. Broader exits
+above stay open; their completion is not inferred from increasing fixture counts.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
