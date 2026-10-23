@@ -4510,7 +4510,7 @@ const drafts = [
       "Place and span every child with one-based grid coordinates.",
     ],
     prompts: {
-      gesture: "Click the spanning feature card to change its color.",
+      gesture: "Resize grid, then click the expanded B span. C and D remain above overlapping B in paint and targeting. Paint only reuses placement; Tab follows A, B, C, D.",
       code: "Change the fractional ratio or move a card to another explicit area.",
     },
     apiNotes: [

@@ -3161,25 +3161,37 @@
       "id": "grid.explicit-placement",
       "target": "beyond",
       "group": "grid-beyond-yoga",
-      "current": "public explicit subset; experimental native numeric/percentage/fr tracks and batched explicit cell areas, with JS child measurement/alignment",
+      "current": "finite explicit placement evidenced for numeric/percentage/fr tracks, positive starts/spans, numeric gaps, supported child measurement/alignment and source-order overlap; experimental mounted native per-axis tracks and batched areas preserve ordinary JavaScript behavior",
       "status": "partial",
+      "implementedContract": "Nonempty finite declared track matrices; explicit positive one-based starts/spans contained within the matrix; numeric gaps; existing self/container alignment and supported pure child measurement; source paint/hit/focus order, resize, keyed identity, unchanged-axis and paint cache reuse, exact teardown. Advanced intrinsic/minmax tracks remain required by the original explicit-placement target; implicit placement is separately tracked.",
+      "unresolvedPolicy": "The finite explicit subset is evidenced; the accepted complete declared Grid target still requires intrinsic/minmax and advanced track behavior. Intrinsic vocabulary work overlaps that prerequisite and does not remove it from this entry. Implicit/auto/dense placement is separately tracked; unsupported syntax rejects without approximation.",
       "evidence": {
         "positive": [
           "existing Grid",
+          "slice155: public border-box owner560→700 with numeric/25%/1fr tracks and a two-column/two-row span resolves B236→376 by160 while C/D retain their finite row-two areas",
           "native mixed tracks resize200\u2192260 with unchanged-axis reuse",
           "native spanning areas170\u00d745\u2192230\u00d745 and one-pixel spans after huge leading tracks"
         ],
         "negative": [
           "invalid/unresolved/stale native records rejected",
-          "WASM memory-growth result view refreshed before caching"
+          "WASM memory-growth result view refreshed before caching",
+          "missing/invalid starts, out-of-range spans and unsupported track syntax reject; no implicit tracks or silent approximation"
         ],
         "interaction": [
-          "source/built moved targets, paint-only numeric reuse and exact native teardown"
+          "source/built moved targets, paint-only numeric reuse and exact native teardown",
+          "slice155: public/source/built/installed B expansion reaches a formerly empty point; later C and D independently win overlapping targets, Tab remains A/B/C/D, stamps persist, paint reuses tracks/cells and disposal releases inspector/native ownership"
         ],
         "yogaCases": [],
-        "missing": ["spans", "intrinsic/fr/minmax tracks", "percentages"]
+        "missing": [
+          "intrinsic/auto/content/minmax explicit tracks and advanced declared-track behavior required by the accepted Grid design"
+        ]
       },
       "evidenceRefs": [
+        "docs/design/layout-system-contract.md",
+        "packages/core/test/grid-study-evidence.test.tsx",
+        "packages/scenarios/src/learning/layout/grid.example.tsx",
+        "tooling/test-wasm-grid-study.mjs",
+        "tooling/packed-layout-consumer.mjs",
         "packages/core/test/layout-wasm-slice.test.tsx",
         "packages/core/wasm/layout/src/lib.rs",
         "tooling/layout-preflight-lab.mjs",

@@ -129,6 +129,7 @@ try {
       assert.equal(receipt.columnAutomaticProviderMinimum, true, 'Installed paired providers must use their exact-width finite measurement as the automatic column minimum, preserve the minHeight zero escape, targets, paint reuse and cleanup');
       assert.equal(receipt.exactRowMeasurementBounds, true, 'Installed Flex measurement must admit only exact finite row width for percentage main bounds, preserve paired wrapper geometry, reuse paint, and clean up');
       assert.equal(receipt.exactColumnMeasurementBounds, true, 'Installed Flex measurement must admit only exact finite column height for percentage main bounds, preserve paired absolute wrapper geometry, reuse paint, and clean up');
+      assert.equal(receipt.gridExplicitSpans, true, 'Installed Grid must resolve mixed numeric, percentage and fraction tracks with two-axis explicit spans, preserve source focus and targets through resize, reuse paint and clean up');
       console.warn('Packed auto margins: 104 fixture cases passed');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');

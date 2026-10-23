@@ -929,6 +929,16 @@ The ordinary build and pure
 layout helpers retain the current JavaScript path; this is not all-family native
 adoption or additional CSS/Yoga parity.
 
+The public GridStudy composition supplies mounted resize evidence for explicit
+numeric/percentage/fr tracks and two-axis spans. A border-box owner560→700 with
+padding80, columns150/25%/1fr, rows100/1fr and gap14 resolves content400→540
+by160. B's two-column/two-row area is(244,80,236→376,160); later C and D
+retain topmost paint/targets over their overlapping row-two regions. Source Tab
+order remains A/B/C/D, keyed identities persist, paint reuses native track/cell
+placement, and disposal releases the inspector and native ownership. Canvas
+transform normalization is diagnostic only and captures the actual render basis;
+no internal layout API or Yoga Grid oracle is involved.
+
 Grid rejects missing starts, implicit tracks, auto placement, dense packing,
 automatic/content tracks, `minmax`, `repeat`, subgrid, percentage gaps, named
 areas, end-line syntax, and `order`. It never silently approximates these CSS

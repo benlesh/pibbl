@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest runtime delivery is slice154 (column Text natural cross-width with auto side margin).
+Latest delivery is slice155 (public mixed-track spanning Grid evidence).
+Slice154 is `a3d817fa` (column Text natural cross-width with auto side margin).
 Slice153 is `4bd6ff9b` (exact caller-height column measurement).
 Consolidation51 is `35ff8f3b` for151–153.
 Slice152 is `5cb9ca57` (exact caller-width row measurement).
@@ -4670,17 +4671,62 @@ parity, aggregate trust or release-gate closure is claimed. `flex.auto-margin`
 remains partial for its broader owner/intrinsic paths; fixed9/11/6/6/1 ledger and
 all7 gates unchanged. This slice extends an existing entry rather than closing it.
 
-## [NEXT] Slice155: public Grid mixed-track spanning resize evidence
+## [DONE] Slice155: public Grid mixed-track spanning resize evidence
 
-Exercise existing numeric/percentage/fr explicit tracks and two-axis spanning
-through the supported GridStudy lesson. Add owner width560→700, visible finite
-row tracks, moved overlapping targets/source priority, stable identities and
-paint-only placement reuse. Begin with a failing public lesson interaction test;
-no solver/API change or native Yoga Grid parity claim. This repairs explicit
-placement evidence debt rather than introducing more Flex profile variants.
-The current writer alone applies all repository changes; helpers supply read-only
-analysis or /tmp patch proposals. Broader intrinsic/minmax/implicit Grid exits and
-the existing fixed33/seven-gate denominator remain unchanged.
+Existing public GridStudy now demonstrates a border-box owner560→700, height320,
+padding80, columns150/25%/1fr, rows100/1fr and gap14. Content is400→540 by160.
+B spans two rows and columns: (244,80,236→376,160). Row-two C is
+(80,194,264→299,46), D is(358→393,194,122→227,46). Later C and D independently
+paint and receive clicks above B; source Tab order stays A/B/C/D. Keyed stamps
+persist and paint-only fill changes reuse native track/cell placement.
+No runtime algorithm, native ABI or public signature changed.
+
+The new public GridStudy interaction test first failed because the prior lesson
+had no resize/inspector contract. It passes after the runnable composition update.
+The initial lesson implementation explicitly adopted border-box to express its
+intended outer dimensions. Its inspector initially cached an obsolete Studio
+transform at construction; a private transparent primitive now captures the actual
+render basis before descendants. Only inverse-transformed x/y use1e-9 tolerance;
+logical widths/heights and native results remain exact. Actual bitmap inspected.
+
+Fresh macOS/Node24.15/Chromium receipts:
+
+- Public lesson1 passed in experimental and ordinary modes, including both overlap
+  targets, source focus, paint reuse and exact native/measurement/inspector cleanup.
+- Selected existing Grid/native/public suite13 passed/412 skipped (425) in2 files;
+  Grid contract suite16 passed, including invalid placement/span rejection.
+- Source and built Studio semantic geometry/pixels/input/focus/cache/cleanup passed,
+  469 built inputs, no errors. URL `http://127.0.0.1:5192/#/examples/layout/grid`;
+  built5193 same route. Drivers use the actual Canvas basis for pixel mapping.
+- Installed Node24 strict Bundler/NodeNext/runtime passed245 dist inputs,
+  `gridExplicitSpans=true`, SHA256
+  `9f32240fab1fa79dd3c4ed56f207eedd379b6097dec0555fe8b4ac9863d593df`.
+  Typecheck, changed-code lint, catalog170/12/33 and docs109 RED probes/110 API
+  programs/315 snippets passed. Scoped review findings for C overlap and focus
+  were resolved; the render-basis correction was reviewed without material issue.
+
+Relevant logs are `/tmp/pibbl-slice155-{public-ownership,normal-final,focused,
+grid-contracts,source-second,built-final,packed-final,types-basis,docs-final}.txt`.
+No Yoga Grid/font parity, aggregate trust or release-gate closure is claimed.
+
+The manifest's missing spans/fr/percentages were stale and are corrected. The
+original accepted Grid row also requires intrinsic/minmax tracks; this receipt
+must not silently assign that obligation elsewhere and declare the entry done.
+`grid.explicit-placement` remains partial for the full declared target. Fixed33
+capabilities remain9 complete/11 experimental/6 partial/6 missing/1 excluded,
+all7 gates open. This closes finite public evidence debt, not the broad capability.
+
+## [NEXT] Slice156: first baseline-provider composition
+
+Address the existing missing `flex.baselines` prerequisite through the approved
+distinct `measureBaselines` operation and fixed result shape. Resolve exact input,
+fallback/failure and final-allocation timing for a minimal runnable finite row
+composition before production code. Present the concrete public signatures and
+application example, then establish a focused failing public test and implement
+one end-to-end slice. Retain first/last, multiline, nested and broad directional
+exits explicitly; do not replace them with repeated finite-profile examples.
+After156, consolidate154–156 and reassess the unchanged fixed33/seven-gate exits.
+Root remains sole repository writer; helpers supply read-only notes or /tmp patches.
 
 ### Finite positioning exit matrix after134
 
