@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice114 (definite nested percentage cross maxima).
+Latest delivery is slice114 `4070b037` (definite nested percentage cross maxima).
+Consolidation38 passes below for112–114.
 Slice113 is `b78d69ec` (decorated reversed nested cross minima).
 Slice112 is `3453bbe3` (nested wrapped percentage cross minima).
 Consolidation37 is `7dd05604` for109–111.
@@ -67,7 +68,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; consolidation37 for109–111 passes below; the single next checkpoint is consolidation38 for112–114. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; consolidation37 for109–111 passes below; consolidation38 for112–114 passes below; the single next delivery is115, definite nested column percentage cross maxima. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles314 records:220matches/94classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -3006,15 +3007,38 @@ Node26.9.0/Chromium; no Node24 aggregate trust or controlled performance claim.
 Hands-on ports5192/5193, `#/examples/layout/wasm-yoga-migration`: Next section24
 times then Next case. Inspect taller inner leaves, unchanged C, and new A1 extent.
 
-## [NEXT] Consolidation 38 for112–114
+## Consolidation 38 completed for112–114
 
-Run the established23-file matrix in experimental and ordinary modes, preserving
-exact separate slice commits. Assess the oversized learning fixture corpus:
-projection-only extraction would break full public-browser family replay. A
-concise public projection plus a private full-corpus testing surface requires a
-bounded test-host seam; do not silently drop coverage or relax public-only imports.
-Record this assessment before choosing the next capability slice. The full
-program's final whole-codebase review remains outstanding until program end.
+Separate commits112 `3453bbe3`,113 `b78d69ec`,114 `4070b037`.
+Fresh23-file matrix: experimental528pass/9skip537 (78.92s); ordinary190pass/
+347skip537 (3.74s). Logs `/tmp/pibbl-consolidation38-focused.txt` and
+`/tmp/pibbl-consolidation38-normal.txt`. Native314=220matches+94classified,
+auto104/direction24 unchanged. Node26.9.0, Chromium; no Node24 aggregate trust or
+controlled performance claim. Fixed33 remains8complete/11experimental/6partial/
+7missing/1excluded; all7release gates remain open. No further overlapping review
+or repeated broad gate is needed without a new change or concern.
+
+Bounded readability assessment: the roughly250KB public comparison embeds the
+entire pinned corpus. Extracting a sibling data import violates the sandbox's
+public-package-only authoring boundary; public projection alone breaks full-family
+source/built Next-case replay. Safe separation needs a concise self-contained
+public projection plus a private full-corpus browser proving surface, preserving
+one generated rendering body and all existing exhaustive receipts. The existing
+catalog has no fixture-props injection. Defer extraction until that bounded test-
+host seam is concrete; do not silently reduce coverage, duplicate hand-maintained
+rendering, or add a public runtime API. This assessment is complete; readability
+cleanup remains tracked work before feature completion.
+
+## [NEXT] Definite nested column percentage cross maxima (slice 115)
+
+Rotate the finite decorated definite-max case to column-reverse/wrap: border-box
+width144→204 and height244, paddingL20/R20/T10/B30 and border2 give content cross
+100→160/main200. A has declared width60/height80 with maxWidth25%; inner column
+leaves width100%/height40 should expose the constrained cross allocation. Pin the
+actual Yoga geometry first, then verify public world boxes, newly admitted target
+extent, stable keys/native reuse, measurement cost and exact cleanup. No new API
+or indefinite intrinsic policy is implied. Final whole-codebase review remains
+at full program end, after all required implementation and release gates.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
