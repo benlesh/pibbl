@@ -4229,7 +4229,7 @@ const drafts = [
     section: "layout",
     order: 138,
     summary:
-      "Compare pinned Yoga 3.2.1 boxes with live Flex allocation, bounds, wrapped aspect ratios and percentage gaps.",
+      "Compare pinned Yoga 3.2.1 boxes with live Flex allocation, bounds, wrapped aspect ratios, percentage gaps and padding.",
     api: ["Flex", "Rectangle", "signal", "useLayoutBox"],
     objectives: [
       "Make row, shrink, minimum and gap policies explicit when translating a finite Yoga layout.",
@@ -4237,7 +4237,7 @@ const drafts = [
     ],
     prompts: {
       gesture:
-        "Next case + resize cycles recorded fixtures; Next section jumps to percentage bounds, wrapped ratios and percentage gaps. Click Pibbl boxes to compare moved targets. Paint only reuses numeric work.",
+        "Next case + resize cycles recorded fixtures; Next section jumps to percentage bounds, wrapped ratios, percentage gaps and padding. Click Pibbl boxes to compare moved targets. Paint only reuses numeric work.",
       code: "The Yoga reference is pinned to 3.2.1/042f5013152e. The after side uses public Flex fields and explicit minimums, not a compatibility selector.",
     },
     apiNotes: [

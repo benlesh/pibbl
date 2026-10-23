@@ -5,6 +5,7 @@ import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
 import { LayoutRegion, snapshotWasmLayoutDiagnostics, experimentalLayout } from '../src/lib/layout/wasm/region';
+import { frozenFlexInputs } from '../src/lib/layout/flex-allocation-cache';
 import { layoutFlex } from '../src/lib/layout/flex';
 import { createExampleMount } from "../../scenarios/src/example-host";
 
@@ -2588,4 +2589,63 @@ it.runIf(experimentalLayout)('resolves nested percentage gaps from the actual Gr
   const scene=createElement(Grid,{style:{width,height:100,gridTemplateColumns:['1fr','1fr'],gridTemplateRows:[100]},children:createElement(Flex,{style:{gridColumnStart:1,gridRowStart:1,padding:10,gap:'10%',alignItems:'flex-start'},children:[0,1].map(index=>createElement(Rectangle,{onClick:()=>{if(index===1)hits++;},style:{width:80,height:20,flexBasis:80,flexGrow:1,flexShrink:0,minWidth:0,fill:index?'blue':'red'}}))})});
   const controller=pibbl(canvas,scene);controllers.push(controller);await nextFrame();clickCanvas(canvas,112,15);expect(hits).toBe(1);const before=snapshotWasmLayoutDiagnostics();
   width.set(440);await nextFrame();clickCanvas(canvas,112,15);expect(hits).toBe(1);clickCanvas(canvas,124,15);expect(hits).toBe(2);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
+});
+
+for(const axis of ['row','column'] as const)for(const sizing of ['content-box','border-box'] as const){
+  it.runIf(experimentalLayout)(`resolves allocated ${axis} ${sizing} percentage padding from owner width`,()=>{
+    const border=sizing==='border-box';
+    const child=createElement(Rectangle,{style:{boxSizing:sizing,width:border?150:80,height:border?100:60,flexBasis:axis==='row'?border?150:80:border?100:60,flexShrink:0,minWidth:0,minHeight:0,padding:{left:'10%',right:'15%',top:'5%',bottom:'10%'}}});
+    expect(layoutFlex({x:0,y:0,width:200,height:180},[child],{flexDirection:axis,alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:border?150:130,height:border?100:90}]);
+    expect(layoutFlex({x:0,y:0,width:300,height:180},[child],{flexDirection:axis,alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:border?150:155,height:border?100:105}]);
+  });
+}
+it.runIf(experimentalLayout)('rejects percentage padding during intrinsic measurement before native allocation',()=>{
+  const child=createElement(Text,{children:'known text',style:{padding:'10%',wrap:true,minHeight:0}});
+  const owner=createElement(Flex,{style:{width:200,flexDirection:'column'},children:child});const before=snapshotWasmLayoutDiagnostics();
+  expect(measureElement(owner,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:100},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage padding')});
+  const after=snapshotWasmLayoutDiagnostics();expect(after.nodeCreates).toBe(before.nodeCreates);expect(after.activeArenas).toBe(before.activeArenas);
+});
+
+it.runIf(experimentalLayout)('moves inner paint and targets with allocated percentage padding without remount',async()=>{
+  const baseline=snapshotWasmLayoutDiagnostics();const width=signal(200);let hits=0,mounts=0;let size={width:0,height:0};
+  function Content(_props:{style:Record<string,unknown>}){useConst(()=>{mounts++;});const box=useLayoutBox();size={width:box.width,height:box.height};return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:'blue'},onClick:()=>hits++});}
+  const child=createElement(Flex,{style:{boxSizing:'border-box',width:150,height:100,flexBasis:150,flexShrink:0,minWidth:0,padding:{left:'10%',right:'15%',top:'5%',bottom:'10%'}},children:createElement(Content,{style:{width:'100%',height:'100%',minWidth:0,flexShrink:0}})});
+  const canvas=document.createElement('canvas');canvas.width=320;canvas.height=180;document.body.append(canvas);const root=createElement(Flex,{style:{width,height:180,alignItems:'flex-start'},children:child});
+  const controller=pibbl(canvas,root);controllers.push(controller);await nextFrame();expect(size).toEqual({width:100,height:70});clickCanvas(canvas,22,12);expect(hits).toBe(1);const mounted=snapshotWasmLayoutDiagnostics();
+  width.set(300);await nextFrame();expect(size).toEqual({width:75,height:55});expect([...canvas.getContext('2d')!.getImageData(22,12,1,1).data]).toEqual([0,0,0,0]);clickCanvas(canvas,22,12);expect(hits).toBe(1);clickCanvas(canvas,35,20);expect(hits).toBe(2);expect(mounts).toBe(1);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+  controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+});
+it.runIf(experimentalLayout)('keeps frozen percentage padding off the raw-input allocation cache while numeric transitions remain eligible',async()=>{
+  const fill=signal('red'),padding=signal<number|'10%'>(10);let hits=0;
+  const first=createElement(Rectangle,{style:Object.freeze({width:20,height:20,minWidth:0,flexShrink:0,padding,fill})});
+  const second=createElement(Rectangle,{onClick:()=>hits++,style:Object.freeze({width:20,height:20,minWidth:0,flexShrink:0,fill:'blue'})});
+  Object.freeze(first.props);Object.freeze(first);Object.freeze(second.props);Object.freeze(second);const children=Object.freeze([first,second]);
+  function Scene(){fill.get();return createElement(Flex,{style:{width:200,height:100,alignItems:'flex-start'},children});}
+  const canvas=document.createElement('canvas');canvas.width=200;canvas.height=100;document.body.append(canvas);const controller=pibbl(canvas,createElement(Scene,{}));controllers.push(controller);await nextFrame();expect(frozenFlexInputs(children)).toBe(true);
+  fill.set('green');await nextFrame();clickCanvas(canvas,45,5);expect(hits).toBe(1);
+  padding.set('10%');await nextFrame();expect(frozenFlexInputs(children)).toBe(false);clickCanvas(canvas,45,5);expect(hits).toBe(1);clickCanvas(canvas,65,5);expect(hits).toBe(2);const percent=snapshotWasmLayoutDiagnostics();
+  fill.set('red');await nextFrame();expect(snapshotWasmLayoutDiagnostics().allocationCacheHits).toBe(percent.allocationCacheHits);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(percent.nodeCreates);clickCanvas(canvas,65,5);expect(hits).toBe(3);
+  padding.set(10);await nextFrame();expect(frozenFlexInputs(children)).toBe(true);clickCanvas(canvas,45,5);expect(hits).toBe(4);
+});
+
+for(const Root of [Flex,Flow,Grid,Text]) {
+  it(`keeps unallocated ${Root.name} percentage padding measurement unsupported`,()=>{
+    const element=createElement(Root as typeof Flex,{style:{width:100,height:80,padding:'10%',...(Root===Grid?{gridTemplateColumns:[100],gridTemplateRows:[80]}:{})},children:Root===Text?'text':[]});
+    expect(measureElement(element,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:180},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage padding')});
+  });
+}
+
+for(const padding of ['-10%','NaN%','Infinity%',{top:'-5%',left:'10%'},{bottom:'NaN%',left:'10%'}]) {
+  it(`rejects invalid allocated percentage padding ${JSON.stringify(padding)}`,()=>{
+    const child=createElement(Rectangle,{style:{width:50,height:20,flexShrink:0,minWidth:0,padding} as unknown as RectStyle});
+    expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/padding/);
+  });
+}
+it('keeps percentage layout borders unsupported',()=>{
+  const child=createElement(Rectangle,{style:{width:50,height:20,flexShrink:0,minWidth:0,borderWidth:'10%'} as unknown as RectStyle});
+  expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/borderWidth/);
+});
+it.runIf(!experimentalLayout)('keeps percentage padding unsupported in ordinary JavaScript Flex',()=>{
+  const child=createElement(Rectangle,{style:{width:50,height:20,flexShrink:0,minWidth:0,padding:'10%'}});
+  expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/padding/);
 });

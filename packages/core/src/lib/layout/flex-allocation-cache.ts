@@ -1,3 +1,4 @@
+import { hasPercentagePadding } from './box-insets.js';
 import { Rectangle } from '../components/rect.js';
 import { Text } from '../components/text.js';
 import type { PibblElement } from '../element/types.js';
@@ -109,6 +110,9 @@ function frozenStyle(value: unknown, visiting: Set<object>): boolean {
     // These values affect pixels only and are resolved anew by the receiver.
     if (key === 'fill' || key === 'stroke' || key === 'opacity' || key === 'filter') continue;
     if (!frozenMetricValue(field.value, visiting)) return false;
+    // Cached placements carry used sizes, not canonical owner-relative padding.
+    // Keep percentage padding on the normal receiver-owned allocation path.
+    if (key === 'padding' && hasPercentagePadding(isSignal(field.value) ? field.value.get() : field.value)) return false;
   }
   return true;
 }

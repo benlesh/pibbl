@@ -558,9 +558,41 @@
       {
         "id": "gap-percent-column-wrap-resized",
         "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "padding-percent-row-content-box",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-row-content-box-resized",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-row-border-box-basis",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-row-border-box-basis-resized",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-column-content-box",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-column-content-box-resized",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-column-border-box-basis",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-column-border-box-basis-resized",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
       }
     ],
-    "limit": "Ninety-nine records:88 native matches and11 explicitly classified CSS allocation/safe-overflow differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios and allocated-owner percentage gaps. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
+    "limit": "107 records:96 native matches and11 explicitly classified CSS allocation/safe-overflow differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios and allocated-owner percentage gaps and padding. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
   "gateGroups": [
     {
@@ -1094,9 +1126,9 @@
       "id": "box.padding-and-layout-border",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "numeric padding and explicit physical numeric layout borderWidth; painted stroke remains separate",
+      "current": "numeric padding, allocated experimental Flex percentage padding and explicit physical numeric layout borderWidth; painted stroke remains separate",
       "status": "partial",
-      "unresolvedPolicy": "Physical numeric borderWidth selected; percentage/logical padding signatures and broader intrinsic interactions remain unresolved.",
+      "unresolvedPolicy": "Allocated physical percentage padding selected: all edges use containing Flex content width before box conversion. Logical padding and broader intrinsic interactions remain unresolved.",
       "evidenceRefs": [
         "docs/design/layout-system-contract.md#flex",
         "docs/architecture/proposals/layout-engine/design.md#boxes-and-units"
@@ -1104,18 +1136,34 @@
       "evidence": {
         "positive": [
           "numeric padding",
-          "asymmetric row/column border plus padding content-box and border-box geometry"
+          "asymmetric row/column border plus padding content-box and border-box geometry",
+          "all physical percentage padding uses actual owner content width including vertical edges",
+          "content-box/border-box basis conversion before solving"
         ],
         "negative": [
           "paint stroke is not a layout border",
-          "negative/nonfinite borders and inset overflow rejected"
+          "negative/nonfinite borders and inset overflow rejected",
+          "raw unallocated intrinsic percentage padding unsupported before native work",
+          "percentage borders and ordinary JavaScript padding rejected"
         ],
-        "interaction": [],
-        "yogaCases": [],
+        "interaction": [
+          "owner resize moves inner paint/hit geometry without remount",
+          "numeric-to-percentage frozen input transition",
+          "source/built and installed packed public evidence with exact disposal"
+        ],
+        "yogaCases": [
+          "padding-percent-row-content-box",
+          "padding-percent-row-content-box-resized",
+          "padding-percent-row-border-box-basis",
+          "padding-percent-row-border-box-basis-resized",
+          "padding-percent-column-content-box",
+          "padding-percent-column-content-box-resized",
+          "padding-percent-column-border-box-basis",
+          "padding-percent-column-border-box-basis-resized"
+        ],
         "missing": [
-          "percentage padding",
           "logical padding",
-          "content measurement"
+          "percentage padding outside actual Flex ownership and broader content measurement"
         ]
       }
     },

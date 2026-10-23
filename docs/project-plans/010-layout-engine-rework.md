@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice80 (finite allocated-owner percentage gaps).
+Latest delivery is slice81 (finite allocated-child percentage padding).
+Slice80 is `fe6d6bc1` (finite allocated-owner percentage gaps).
 Slice79 is `dbffc7c1` (settled-column percentage cross constraints).
 Slice78 is `a96ee4a2` (finite wrapped aspect-ratio participation).
 Slice77 is `239df577` (definite percentage bounds and worktree catalog isolation).
@@ -30,9 +31,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; the single next slice is81, finite allocated-child percentage padding. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; the next milestone is consolidation27 for slices79–81. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles99 records:88matches/11classified CSS differences; click A/B/C targets.
+cycles107 records:96matches/11classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1539,18 +1540,55 @@ Fixed33 now3complete,12experimental,7partial,10missing,1excluded. Percentage-gap
 entry is experimental; indefinite intrinsic cycles and broader nested owner graph
 still missing. All seven release gates remain open.
 
-## [NEXT] Finite allocated-child percentage padding (slice 81)
+## Slice 81 delivered — finite allocated-child percentage padding
 
-Pin native asymmetric physical percentage padding with owner width distinct from
-height. All edges use containing Flex content width. Widen only padding values,
-keep borders numeric and logical edges deferred. Require actual finite allocated
-Flex ownership; pure intrinsic/max-only and other-parent percentage padding remain
-unsupported. Present exact public types, add failing public geometry and box-sizing
-conversion tests before implementation. Resolve once before outer/content box
-conversion, and carry canonical numeric inputs into child paint/hit preparation.
-Use existing comparison source/built and installed consumer for geometry, moved
-targets and teardown. Consolidate79–81 afterward. This does not authorize cyclic
-intrinsic inference, logical padding or percentage borders.
+Padding uses EdgeValues<number|Percentage>; generic EdgeValues defaults to numeric,
+so borderWidth/normalizeEdges stay numeric. Experimental Flex resolves all physical
+padding edges from containing content width before border-box/basis conversion.
+Canonical numeric style is staged with original receiver/query ownership and used
+for paint/hit geometry. Pure unallocated measureElement explicitly returns
+unsupported; other-parent and normal raw percentage padding stay rejected. Frozen
+percentage-padding inputs conservatively bypass the raw-input allocation snapshot;
+numeric inputs retain eligibility. Numeric→percentage→numeric receiver transitions
+and actual inner content geometry are verified without remount.
+
+Five initial public cases fail before implementation and pass after. Additional
+four ownerless Flex/Flow/Grid/Text pure measurement cases fail before the explicit
+boundary check and pass after. Mounted fixture initially lacked its declared child
+minimum; corrected fixture. An attempted numeric cache-hit assertion used a generic
+component dependency that correctly invalidates allocation; replaced with explicit
+eligibility evidence plus the existing public numeric cache-hit scenario, rather
+than changing runtime invalidation semantics. Final focused Chromium199passed/
+2normal-onlyskips in2files, including all107public comparison records and numeric
+cache reuse. Ordinary boundary11passed. Logs
+`/tmp/pibbl-slice81-{red,green,unallocated-red,hardening,final-focused,cache-final,normal}.txt`.
+
+Pinned Yoga eight row/column content-box/border-box-basis resize records: corpus107,
+96matches/11prior classified differences. Owner width200→300 yields L20/R30/T10/B20
+→L30/R45/T15/B30, independent of owner height. Content80×60 becomes outer130×90
+→155×105; border150×100 content100×70→75×55. Source5192/built5193 replay eight new
+records plus prior grow targets, moved or stable targets per selected box model,
+node identity, errors[], cleanup0/0/0, actual worktree catalog760×540. Built469private
+dist inputs. Installed packed consumer proves real inner paint old-point miss/new
+point hit,230installed dist inputs, positive percentage-padding and negative
+percentage-border declarations in Bundler/NodeNext, exact final cleanup.
+Tarball SHA256 `9f9d5ad9d8a819b79358c1540e0b3fa2078fe35ccf5b14d297de4d03d02e2d5a`.
+Logs `/tmp/pibbl-slice81-{source,built,final-packed}.txt`.
+Types/lint/JSDoc/format/provenance/documentation109REDmutation probes pass. Scoped
+reused review no material findings. Kernel65383bytes unchanged; no visual baseline
+rewrite. Node26.9.0, no Node24 aggregate-trust claim. Fixed33 remains3complete,
+12experimental,7partial,10missing,1excluded; all seven release gates open.
+
+## [NEXT] Consolidation 27 — slices 79–81
+
+Commit81 separately, then run proportional combined layout, measurement and
+ownership checks and documentation/catalog/package consistency. Reuse completed
+source/built new-case and installed-package receipts rather than repeating old
+manual corpus loops. Preserve untracked dependency symlinks. Select the next
+concrete gate prerequisite afterward: finite wrapped percentage cross bounds are
+under independent native investigation; the current column-wrap stretched auto
+cross restriction is a real remaining behavior gap. No denominator redefinition,
+release enablement or final whole-codebase review at this checkpoint.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

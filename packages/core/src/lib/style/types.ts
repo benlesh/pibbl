@@ -50,20 +50,22 @@ export interface RoundedCornerStyle {
 /**
  * One inset for every edge or independently specified top, right, bottom, and left insets.
  *
+ * @typeParam T - Permitted edge values; defaults to numeric insets. Padding may opt into {@link Percentage}.
+ *
  * @see {@link BoxStyle}
  * @see {@link normalizeEdges}
  */
-export type EdgeValues =
-  | number
+export type EdgeValues<T extends number | Percentage = number> =
+  | T
   | Readonly<{
       /** Top edge value or top envelope guide. See {@link EdgeValues}. */
-      top?: number;
+      top?: T;
       /** Right edge coordinate or inset. See {@link EdgeValues}. */
-      right?: number;
+      right?: T;
       /** Bottom edge value or bottom envelope guide. See {@link EdgeValues}. */
-      bottom?: number;
+      bottom?: T;
       /** Left edge coordinate or inset. See {@link EdgeValues}. */
-      left?: number;
+      left?: T;
     }>;
 
 /**
@@ -94,8 +96,8 @@ export interface BoxStyle extends SystemStyle {
   minHeight?: Exclude<Length, 'auto'>;
   /** Maximum permitted height. See {@link Length}. */
   maxHeight?: Exclude<Length, 'auto'>;
-  /** Padding inside layout borders and outside the content box. See {@link EdgeValues}. */
-  padding?: EdgeValues;
+  /** Padding inside layout borders. Experimental allocated Flex percentages use owner content width for every edge. See {@link EdgeValues}, {@link Percentage}. */
+  padding?: EdgeValues<number | Percentage>;
   /** Layout-only physical border insets, in logical pixels. Defaults to zero; does not paint a stroke. See {@link EdgeValues}. */
   borderWidth?: EdgeValues;
   /** Selects `"visible"`, `"clip"` for overflow. See {@link BoxStyle}. */

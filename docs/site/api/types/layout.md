@@ -75,8 +75,12 @@ layout resolution and pure measurement.
 
 ## EdgeValues
 
-`EdgeValues` is the public shorthand accepted for edge values. A scalar applies
-to all sides and omitted sides resolve to zero.
+`EdgeValues<T extends number | Percentage = number>` supplies one scalar or
+independent physical edges; omitted sides resolve to zero. `padding` uses
+`EdgeValues<number | Percentage>`. In experimental allocated Flex, every padding
+percentage uses the containing content width, including top/bottom, before
+border-box conversion. Raw root/other-parent and intrinsic percentage padding
+remain unsupported. `borderWidth` and `normalizeEdges` keep numeric defaults.
 
 ## FlexItemStyle
 

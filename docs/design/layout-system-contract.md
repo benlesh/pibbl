@@ -100,8 +100,8 @@ with padding10 produces content0 and outer20 on that axis. This padding floor ca
 overflow a smaller bound or parent allocation, matching pinned Yoga3.2.1; opposing
 min/max and negative/nonfinite inputs are still rejected before conversion.
 Default content-box constraint behavior is preserved. The option does not turn
-painted stroke into a layout border, add percentage padding or expand intrinsic
-provider support. Existing Layer raster sizing rules remain separate.
+painted stroke into a layout border or expand intrinsic provider support.
+Percentage padding has the separate allocated-Flex admission below. Existing Layer raster sizing rules remain separate.
 
 `BoxStyle.borderWidth` accepts the same finite nonnegative physical numeric edge
 shorthand as padding, defaulting to zero. It reserves layout space without
@@ -111,6 +111,29 @@ has identical geometry. Flex basis/intrinsic sizing, Grid stretch and Flow
 measurement use combined insets once; border-box floors include both. Percentage
 and logical border aliases are outside this slice. `strokeWidth` remains paint.
 Layer raster sizing continues to ignore these layout fields by its existing rule.
+
+### Percentage padding in allocated Flex
+
+`BoxStyle.padding` accepts `EdgeValues<number | Percentage>`; the generic edge
+shorthand defaults to numbers, so `borderWidth` and `normalizeEdges` stay numeric.
+Only experimental direct Flex allocation resolves percentage padding. All physical
+edges use the containing Flex content width, including top/bottom; width200 yields
+L20/R30/T10/B20 from L10%/R15%/T5%/B10%. A content-box80×60 child is outer130×90;
+border-box150×100 keeps its outer box and has content100×70. At owner width300,
+the same border box has content75×55. Basis and combined border/padding insets
+convert once, before solving, and canonical numeric padding travels into prepared
+child painting/hit geometry with the original receiver and query ownership.
+
+Root/unallocated and other-parent raw percentage padding remains rejected. Pure
+`measureElement` returns unsupported before measuring a raw percentage-padded
+node; constraints/maxima do not supply an allocated owner. A child already
+canonicalized by actual Flex allocation can follow existing numeric measurement.
+Ordinary JavaScript Flex, percentage borders and logical edges remain unsupported.
+Negative/malformed/nonfinite percentage values are diagnosed. Frozen direct
+percentage-padding inputs conservatively bypass the allocation snapshot cache,
+whose fallback rebinds raw inputs; numeric inputs remain eligible. Percentage
+signals still own normal receiver subscriptions, node identities remain stable,
+and disposal releases all layout ownership.
 
 ### Finite Flex item aspect ratios
 

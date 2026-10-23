@@ -12,7 +12,7 @@ import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth, measureL
 
 const unsupportedProperties = ['order'] as const;
 
-import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
+import { ResponsiveStylePreparation, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken, getPrimitiveReceiverToken } from '../element/metadata.js';
@@ -23,7 +23,7 @@ import {
   type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
-import { normalizeBoxInsets } from './box-insets.js';
+import { normalizeBoxInsets, hasPercentagePadding, resolveAllocatedPadding } from './box-insets.js';
 import { resolveLength } from '../style/resolve-length.js';
 import { setPreNormalizedStyle, peekPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
@@ -301,8 +301,13 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
       const token = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, receiver, index);
-      const prepared = prepareDirectChildStyle(child, token, content, true);
-      const normalized = preparedStyleValue(prepared) as Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>>;
+      let prepared = prepareDirectChildStyle(child, token, content, true);
+      const specified = preparedStyleValue(prepared) as Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>>;
+      const normalized = resolveAllocatedPadding(specified, { width: content.width, context: childContext(child, content) });
+      if (normalized !== specified) {
+        if (prepared instanceof ResponsiveStylePreparation) prepared.style = normalized;
+        else prepared = normalized;
+      }
       assertSupportedChildPosition('Flex', child, normalized);
       rejectUnsupportedItemFields(child, normalized, content);
       nonnegativeFactor(normalized.flexGrow ?? 0, 'flexGrow', child, content);
@@ -396,6 +401,7 @@ function measureFlex(
     let style = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    if (hasPercentagePadding(style.padding)) return unsupportedIntrinsic('does not support percentage padding without an actual finite Flex allocation');
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     const settledColumnChild = experimentalLayout && !row && typeof input.style.width === 'number' && !heightDefinite &&
       (child.type === Text || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap');
@@ -648,6 +654,7 @@ function resolveFlexPlacements(
     let normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    if (experimentalLayout) normalized = resolveAllocatedPadding(normalized, { width: container.width, context: childContext(child, container) });
     if (normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized, { width: container.width, height: container.height, mainAxis: row ? 'width' : 'height', context: childContext(child, container) });
     const aspectRatio = normalized.aspectRatio;
     if (aspectRatio !== undefined && (typeof aspectRatio !== 'number' || !Number.isFinite(aspectRatio) || aspectRatio <= 0)) {

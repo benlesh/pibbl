@@ -89,10 +89,12 @@ try {
   );
   await writeFile(join(consumer, "margin-types.ts"), `
 import { createElement, Rectangle, Flex, type FlexItemStyle, type BoxStyle } from '@pibbl/core';
-const box: BoxStyle = { boxSizing: 'border-box', width: '50%', height: 30, padding: 10, borderWidth: { left: 2, right: 4 } };
+const box: BoxStyle = { boxSizing: 'border-box', width: '50%', height: 30, padding: {left: '10%', top: '5%', right: 4, bottom: 0}, borderWidth: { left: 2, right: 4 } };
 export const sized = createElement(Rectangle, { style: { ...box, width: 100, height: 30 } });
 // @ts-expect-error Box sizing is a closed policy, not arbitrary CSS.
 const invalidBox: BoxStyle = { boxSizing: 'padding-box' };
+// @ts-expect-error Percentage layout borders remain unsupported.
+const invalidBorder: BoxStyle = { borderWidth: '10%' };
 const margin: FlexItemStyle = { aspectRatio: 3, alignSelf: 'start', margin: 5, marginTop: -2, marginRight: 3, marginBottom: 4, marginLeft: 6 };
 export const rectangle = createElement(Rectangle, { style: { width: 20, height: 20, ...margin } });
 // @ts-expect-error Gap strings are percentages, not CSS pixel lengths.
@@ -159,6 +161,10 @@ const gapCanvas=document.createElement('canvas');gapCanvas.width=400;gapCanvas.h
 const gapWidth=signal(300),gapHeight=signal(200);let gapHits=0;
 const gapController=pibblSync(gapCanvas,createElement(Flex,{style:{boxSizing:'border-box',width:gapWidth,height:gapHeight,padding:{left:10,right:30,top:20,bottom:40},columnGap:'10%',rowGap:'20%',alignItems:'flex-start'},children:[0,1].map(index=>createElement(Rectangle,{onClick:()=>{if(index===1)gapHits++;},style:{width:100,height:30,flexBasis:100,flexGrow:1,flexShrink:0,minWidth:0,fill:index?'blue':'red'}}))}));
 try{const clickGap=(x:number)=>{const rect=gapCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])gapCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+25,bubbles:true,button:0}));};await new Promise(resolve=>requestAnimationFrame(resolve));const context=gapCanvas.getContext('2d')!;if(context.getImageData(157,25,1,1).data[2]!==255)throw Error('installed percentage gap content reference');clickGap(157);gapWidth.set(360);gapHeight.set(250);await new Promise(resolve=>requestAnimationFrame(resolve));if(context.getImageData(157,25,1,1).data[3]!==0||context.getImageData(190,25,1,1).data[2]!==255)throw Error('installed resized percentage gap');clickGap(157);clickGap(190);if(gapHits!==2)throw Error('installed percentage gap target '+gapHits);receipt.percentageGaps=true;}finally{gapController.dispose();gapCanvas.remove();}
+const paddingCanvas=document.createElement('canvas');paddingCanvas.width=320;paddingCanvas.height=180;paddingCanvas.style.cssText='width:320px;height:180px';document.body.append(paddingCanvas);
+const paddingOwner=signal(200);let paddingHits=0;
+const paddingController=pibblSync(paddingCanvas,createElement(Flex,{style:{width:paddingOwner,height:180,alignItems:'flex-start'},children:createElement(Flex,{style:{boxSizing:'border-box',width:150,height:100,flexBasis:150,flexShrink:0,minWidth:0,padding:{left:'10%',right:'15%',top:'5%',bottom:'10%'}},children:createElement(Rectangle,{style:{width:'100%',height:'100%',minWidth:0,flexShrink:0,fill:'blue'},onClick:()=>paddingHits++})})}));
+try{const clickPadding=(x:number,y:number)=>{const rect=paddingCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])paddingCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+y,bubbles:true,button:0}));};await new Promise(resolve=>requestAnimationFrame(resolve));const context=paddingCanvas.getContext('2d')!;if(context.getImageData(22,12,1,1).data[2]!==255)throw Error('installed percentage padding initial content');clickPadding(22,12);paddingOwner.set(300);await new Promise(resolve=>requestAnimationFrame(resolve));if(context.getImageData(22,12,1,1).data[3]!==0||context.getImageData(115,20,1,1).data[3]!==0||context.getImageData(35,20,1,1).data[2]!==255)throw Error('installed percentage padding resized content');clickPadding(22,12);clickPadding(35,20);if(paddingHits!==2)throw Error('installed percentage padding moved target '+paddingHits);receipt.percentagePadding=true;}finally{paddingController.dispose();paddingCanvas.remove();}
 const controller = pibblSync(document.querySelector('canvas')!, createElement(WasmFlexNestedIntrinsicExample, {}));
 addEventListener('pagehide', () => controller.dispose(), {once:true});`,
   );

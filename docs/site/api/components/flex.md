@@ -134,3 +134,13 @@ axis before specific values override it. Owner padding and borders are excluded
 from the percentage reference. Intrinsic/max-only owners remain unsupported.
 In the [comparison example](#/examples/layout/wasm-yoga-migration), click Next
 section three times to inspect the pinned percentage-gap resize cases.
+
+Experimental direct Flex children also accept percentage padding. All edges use
+the containing content width: `{ left: "10%", right: "15%", top: "5%", bottom: "10%" }`
+at width200 means20/30/10/20 logical units. Resolve padding before border-box
+conversion, so a150×100 border box contains100×70 content; at owner width300 its
+content becomes75×55. Painted content and its targets use the same resolved insets.
+Raw percentage padding outside an allocated Flex child and pure intrinsic
+measurement remain unsupported; borders remain numeric. In the
+[comparison example](#/examples/layout/wasm-yoga-migration), click Next section
+four times to inspect content-box and border-box cases.
