@@ -720,12 +720,13 @@ function resolveFlexPlacements(
     const marginLeftValue = logicalLeft !== undefined ? logicalLeft : normalized.marginLeft === undefined ? allMargin : normalized.marginLeft;
     const autoTop = marginTopValue === 'auto', autoRight = marginRightValue === 'auto';
     const autoBottom = marginBottomValue === 'auto', autoLeft = marginLeftValue === 'auto';
+    const declaredCrossSize = row ? normalized.height : normalized.width;
     if ((row ? autoTop || autoBottom : autoLeft || autoRight) &&
-        (!row || wrapReverse || typeof normalized.height !== 'number' || !Number.isFinite(normalized.height) || normalized.height < 0 || aspectRatio !== undefined)) {
-      throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child height in a row without wrap-reverse');
+        (typeof declaredCrossSize !== 'number' || !Number.isFinite(declaredCrossSize) || declaredCrossSize < 0 || aspectRatio !== undefined)) {
+      throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child cross size without aspect sizing');
     }
-    const autoCrossBefore = row && autoTop;
-    const autoCrossAfter = row && autoBottom;
+    const autoCrossBefore = row ? wrapReverse ? autoBottom : autoTop : wrapReverse ? autoRight : autoLeft;
+    const autoCrossAfter = row ? wrapReverse ? autoTop : autoBottom : wrapReverse ? autoLeft : autoRight;
     const autoMainBefore = row ? reverse ? autoRight : autoLeft : reverse ? autoBottom : autoTop;
     const autoMainAfter = row ? reverse ? autoLeft : autoRight : reverse ? autoTop : autoBottom;
     if (autoMainBefore || autoMainAfter) hasAutoMainMargins = true;

@@ -108,10 +108,10 @@ row main-axis auto margins. Auto edges are zero during flexible sizing, then
 each actual nowrap/wrapped line divides its positive remaining main space among
 its own auto slots before `justifyContent`. With no positive
 space they remain zero and existing main alignment applies. Finite nowrap/wrapped
-rows support physical top/bottom cross auto with an explicit numeric child height,
-excluding wrap-reverse and aspect sizing. Cross auto overrides alignment and uses
-the item’s own line height. Column/reversed cross axes, automatic child cross size,
-shorthand and intrinsic auto margins remain unsupported; the normal build retains
+rows and columns support physical/logical cross auto with an explicit numeric
+child cross size, including reverse/RTL and wrap-reverse, excluding aspect sizing.
+Cross auto overrides alignment and uses the item’s own line cross size. Automatic
+child cross size, shorthand and intrinsic auto margins remain unsupported; the normal build retains
 its experimental-margin diagnostic. Numeric/percentage precedence is unchanged.
 
 ## FlexProps

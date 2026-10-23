@@ -1054,6 +1054,76 @@ static void autoCrossMarginCases() {
   }
 }
 
+
+static void autoCrossDirectionCases() {
+  const YGFlexDirection directions[] = {YGFlexDirectionRow, YGFlexDirectionRowReverse, YGFlexDirectionColumn, YGFlexDirectionColumnReverse};
+  const char* names[] = {"row", "row-reverse", "column", "column-reverse"};
+  const char* edgeNames[] = {"before", "after", "both"};
+  for (int direction = 0; direction < 4; ++direction) {
+    const bool column = direction >= 2;
+    const int wrapStart = column ? 0 : 1;
+    const int wrapEnd = 2; // Rows cover wrap-reverse only; columns cover wrap and wrap-reverse.
+    for (int wrapMode = wrapStart; wrapMode < wrapEnd; ++wrapMode) {
+      for (int rtl = 0; rtl < 2; ++rtl) {
+        for (int edgeMode = 0; edgeMode < 3; ++edgeMode) {
+          auto config = YGConfigNew();
+          YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+          auto root = YGNodeNewWithConfig(config);
+          YGNodeStyleSetWidth(root, 100); YGNodeStyleSetHeight(root, 100);
+          YGNodeStyleSetFlexDirection(root, directions[direction]);
+          YGNodeStyleSetFlexWrap(root, wrapMode == 0 ? YGWrapWrap : YGWrapWrapReverse);
+          YGNodeStyleSetGap(root, YGGutterAll, 10); YGNodeStyleSetAlignItems(root, YGAlignCenter); YGNodeStyleSetAlignContent(root, YGAlignFlexStart); YGNodeStyleSetJustifyContent(root, YGJustifyFlexStart);
+          const float firstCross[] = {20, 40, 20};
+          for (int index = 0; index < 3; ++index) {
+            auto child = YGNodeNewWithConfig(config);
+            YGNodeStyleSetWidth(child, column ? firstCross[index] : 40); YGNodeStyleSetHeight(child, column ? 40 : firstCross[index]);
+            YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 0); setMinZero(child);
+            if (index == 0) {
+              const auto before = column ? YGEdgeLeft : YGEdgeTop;
+              const auto after = column ? YGEdgeRight : YGEdgeBottom;
+              if (edgeMode == 0 || edgeMode == 2) YGNodeStyleSetMarginAuto(child, before);
+              if (edgeMode == 1 || edgeMode == 2) YGNodeStyleSetMarginAuto(child, after);
+            }
+            YGNodeInsertChild(root, child, index);
+          }
+          YGNodeCalculateLayout(root, YGUndefined, YGUndefined, rtl ? YGDirectionRTL : YGDirectionLTR);
+          std::cout << ",{\"name\":\"auto-cross-direction-" << names[direction] << '-' << (wrapMode == 0 ? "wrap" : "wrap-reverse") << '-' << edgeNames[edgeMode] << '-' << (rtl ? "rtl" : "ltr")
+                    << "\",\"width\":100,\"height\":100,\"gap\":10,\"flexDirection\":\"" << names[direction]
+                    << "\",\"flexWrap\":\"" << (wrapMode == 0 ? "wrap" : "wrap-reverse") << "\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr")
+                    << "\",\"containerStyle\":{\"alignItems\":\"center\",\"alignContent\":\"flex-start\",\"justifyContent\":\"flex-start\"},\"autoMarginFixture\":true,\"autoCrossDirectionFixture\":true,\"boxes\":[";
+          for (int index = 0; index < 3; ++index) { if (index) std::cout << ','; printBox(YGNodeGetChild(root, index)); }
+          std::cout << ']';
+          if (edgeMode != 2) {
+            const bool mainReverse = column ? direction == 3 : ((direction == 1) != bool(rtl));
+            const bool crossReverse = bool(wrapMode) != (column && bool(rtl));
+            std::cout << ",\"classification\":\"css-cross-auto-precedence\",\"comparisonLabel\":\"CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.\",\"pibblBoxes\":[";
+            for (int index = 0; index < 3; ++index) {
+              if (index) std::cout << ',';
+              const int main = index == 1 ? (mainReverse ? 10 : 50) : (mainReverse ? 60 : 0);
+              const int cross = index == 2 ? (crossReverse ? 30 : 50) : (crossReverse ? 60 : 0) + (index == 0 && edgeMode == 0 ? 20 : 0);
+              std::cout << "{\"x\":" << (column ? cross : main) << ",\"y\":" << (column ? main : cross)
+                        << ",\"width\":" << (column ? firstCross[index] : 40) << ",\"height\":" << (column ? 40 : firstCross[index]) << '}';
+            }
+            std::cout << ']';
+          }
+          std::cout << ",\"itemStyles\":[";
+          for (int index = 0; index < 3; ++index) {
+            if (index) std::cout << ',';
+            std::cout << "{\"width\":" << (column ? firstCross[index] : 40) << ",\"height\":" << (column ? 40 : firstCross[index]) << ",\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0";
+            if (index == 0) {
+              if (edgeMode == 0 || edgeMode == 2) std::cout << ",\"" << (column ? "marginLeft" : "marginTop") << "\":\"auto\"";
+              if (edgeMode == 1 || edgeMode == 2) std::cout << ",\"" << (column ? "marginRight" : "marginBottom") << "\":\"auto\"";
+            }
+            std::cout << '}';
+          }
+          std::cout << "]}";
+          YGNodeFreeRecursive(root); YGConfigFree(config);
+        }
+      }
+    }
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1186,5 +1256,6 @@ int main() {
   autoMainDirectionCases();
   autoWrappedMarginCases();
   autoCrossMarginCases();
+  autoCrossDirectionCases();
   std::cout << "]\n";
 }

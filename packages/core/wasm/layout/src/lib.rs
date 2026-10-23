@@ -84,7 +84,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v4() -> u32 { 4 }
+pub extern "C" fn layout_abi_v5() -> u32 { 5 }
 #[no_mangle]
 pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
@@ -102,7 +102,6 @@ fn align_cross(records: &mut [f64], size: f64, reverse: bool) -> u32 {
         let auto_before = policy & 4 != 0;
         let auto_after = policy & 8 != 0;
         let has_auto = auto_before || auto_after;
-        if has_auto && reverse { return 1; }
         let margins = n[8] + n[9];
         if !margins.is_finite() { return 1; }
         let outer = if n[4] == 1.0 && alignment == 0 && !has_auto {
@@ -646,7 +645,8 @@ mod tests {
         record[5]=15.; assert_eq!(align_cross(&mut record,40.,false),0); assert_eq!(record[7],10.);
         assert_eq!(align_cross(&mut record,10.,false),0); assert_eq!(record[7],0.);
         record[5]=16.; assert_eq!(align_cross(&mut record,40.,false),1);
-        record[5]=7.; assert_eq!(align_cross(&mut record,40.,true),1);
+        record[5]=7.; assert_eq!(align_cross(&mut record,40.,true),0); assert_eq!(record[7],0.);
+        assert_eq!(align_cross(&mut record,10.,true),0); assert_eq!(record[7],-10.);
     }
 
     #[test] fn wrapped_auto_margins_share_free_space_per_line_without_rewriting_numeric_records() {

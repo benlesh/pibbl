@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice100 (bounded finite row cross auto margins), recorded below.
+Latest delivery is slice101 (finite cross-auto direction coverage), recorded below.
+Slice100 is `26613e70` (bounded finite row cross auto margins).
 Slice99 is `57a74243` (wrapped per-line main auto margins).
 Slice98 is `aced729e` (finite nowrap main auto directions).
 Slice97 is `a47dd931` (finite physical main-axis auto margins).
@@ -50,9 +51,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; the single next delivery is101, cross-axis direction coverage. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; the single next delivery is102, auto-margin shorthand. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles249 records:180matches/69classified differences; click A/B/C targets.
+cycles285 records:192matches/93classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2498,13 +2499,48 @@ Fixed33 stays5complete/11experimental/8partial/8missing/1excluded, all7gates ope
 No baseline rewrite, Node24 aggregate or whole-program completion claim.
 Consolidate100–102 after102; final whole-codebase review stays at full program end.
 
-## [NEXT] Cross-axis auto-margin direction coverage (slice 101)
+## Delivered finite cross-auto direction coverage (slice 101)
 
-Extend the existing finite explicit-child-cross-size contract to columns and
-cross reversal with receiver-aware logical edges. Establish independent physical
-geometry and negative-space rules before removing admission guards. Preserve
-source order, focus/hits, sizing reuse and ownership; classify native differences
-honestly. Shorthand and intrinsic cross sizing remain separate fixed-ledger work.
+The finite explicit-child-cross-size contract now includes columns and cross
+reversal. Physical flags normalize through effective cross reversal; logical
+column edges retain receiver-direction precedence. Existing native reverse
+conversion handles placement without another flag or layout path. Automatic
+child cross size and aspect sizing still reject. ABI v5 rejects complete v4
+kernels that lacked reverse-auto admission; imports stay inert.
+
+A focused public mounted36-case matrix failed under100admission, then passed
+exact layout boxes, A/B/C hits and per-controller cleanup. All36 independent
+expected boxes also match Chromium CSS before runtime support was added.
+Main row/column/reverse, wrap/wrap-reverse and LTR/RTL cases include physical
+before/after/both auto. Twenty-four single-edge cases explicitly classify the
+pinned Yoga cross-auto precedence difference; twelve both-auto cases match.
+Additional public signal reversal and row→RTL-column checks preserve keyed
+focus, old/new target correctness, nodes and reversal-only sizing reuse.
+Logical column start/end/both and oversized120-in80 nowrap LTR0/RTL−40 pass.
+Wrapped line overflow uses existing line placement; no receiver-direction bit
+is introduced. Scoped actual changed-code review found no material issue.
+
+Native13tests pass, binary68649bytes SHA256
+`029fd944e878b879a235461dcfac17219948569198795428caff12c4c388bfe9`.
+Source5192/built5193 all36cases pass boxes/live keys/hits, cleanup0/errors[];
+built469inputs. Fresh installed82auto+24direction cases, strict Bundler/NodeNext
+and per-controller cleanup pass230inputs; tarball SHA256
+`b5e174539d45e47451dafd64113c7114849a9164a691879acd48e74458734e3d`.
+Full slice+loader Chromium376pass/8skip(384), ordinary89pass/295skip(384).
+Types/lint/docs109RED/JSDoc/catalog/native provenance pass. Source URL
+http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration:
+Next section15times selects cross-auto directions. Corpus285=192matches+93classified.
+Fixed33 stays5complete/11experimental/8partial/8missing/1excluded, all7gates open.
+No baseline rewrite, Node24 aggregate or whole-program completion claim.
+Consolidate100–102 after102; final whole-codebase review stays at full program end.
+
+## [NEXT] Auto-margin shorthand and precedence (slice 102)
+
+Widen the existing uniform margin value to FlexMargin and resolve each specific
+physical/logical edge before sizing. Reuse current main/cross auto slot paths;
+prove shorthand centering, explicit-zero overrides and receiver logical precedence
+with a focused public signal example and exact native fixtures. Automatic/intrinsic
+cross sizing and broader min/max interactions remain visible fixed-ledger gaps.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

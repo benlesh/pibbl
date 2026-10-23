@@ -1198,9 +1198,321 @@
           "flex.row-column-nowrap-wrap",
           "direction.rtl-and-logical-edges"
         ]
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
       }
     ],
-    "limit": "249 records:180 native matches and69 explicitly classified differences, including16 CSS line-local main auto and8 CSS cross-auto precedence differences. Finite direction/box/distribution/percentage/intrinsic-provider/auto-margin evidence remains bounded; this does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "285 records:192 native matches and93 explicitly classified differences, including16 CSS line-local main auto and32 CSS cross-auto precedence differences. Finite direction/box/distribution/percentage/intrinsic-provider/auto-margin evidence remains bounded; this does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -1682,9 +1994,9 @@
       "id": "flex.auto-margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental finite nowrap/wrap/wrap-reverse main-axis auto margins in row/column, forward/reverse and LTR/RTL; physical left/right/top/bottom plus row logical start/end; sizing precedes positive absorption and nonpositive space preserves alignment; physical top/bottom cross auto in finite nowrap/wrapped rows with explicit numeric child height, excluding wrap-reverse/aspect sizing",
+      "current": "experimental finite main/cross-axis auto margins in rows/columns, all main directions, nowrap/wrap/wrap-reverse and LTR/RTL; physical and logical edges; explicit finite numeric cross size and no aspect sizing for cross auto; sizing precedes positive absorption and cross auto overrides alignment",
       "status": "partial",
-      "unresolvedPolicy": "Finite main directions and wrapped per-line absorption, plus bounded finite row cross auto, are supported. Cross reversal/columns, shorthand, intrinsic and broader opposing/minmax auto combinations remain outstanding.",
+      "unresolvedPolicy": "Finite main/cross directions and per-line wrapped absorption are supported. Shorthand, automatic/intrinsic cross sizing and broader opposing/minmax auto combinations remain outstanding.",
       "evidence": {
         "positive": [
           "left/right/both slots divide positive free space after flexible sizing and before justification",
@@ -1693,12 +2005,13 @@
           "public FlexMargin and editor declarations expose all six edge values; runtime accepts only main-axis auto and shorthand auto remains a type error",
           "slice98: four main directions \u00d7 LTR/RTL physical auto, logical row start/end and exact source-order geometry; axis/direction signals preserve keyed focus",
           "slice99: each wrapped line counts its own auto slots; a line without auto slots retains justification; 16 CSS-line-local differences explicitly classified against pinned Yoga",
-          "slice100: per-line top/bottom/both cross-auto override alignment; finite explicit-height rows, reverse main/RTL, nowrap and wrap; zero/negative space overflows at start and numeric opposite margin is retained"
+          "slice100: per-line top/bottom/both cross-auto override alignment; finite explicit-height rows, reverse main/RTL, nowrap and wrap; zero/negative space overflows at start and numeric opposite margin is retained",
+          "slice101: 36 additional physical cross-auto directions; effective cross reversal maps flags through the existing native conversion; logical column inline start/end and LTR/RTL oversized-item overflow remain coherent"
         ],
         "negative": [
           "normal JavaScript rejects auto margin admission",
-          "cross-reverse, columns/logical-inline, automatic child cross height and shorthand auto shapes rejected explicitly",
-          "old v1/v2/v3 and incomplete v4 modules rejected before publication; root/sync imports remain inert",
+          "automatic child cross size, aspect sizing and shorthand auto shapes rejected explicitly",
+          "old v1/v2/v3/v4 modules rejected before publication; root/sync imports remain inert",
           "native flag cardinality and NaN rejected without rewriting numeric margin inputs"
         ],
         "interaction": [
@@ -1707,7 +2020,8 @@
           "public mounted resize preserves stamps; paint-only preserves solves and node identity",
           "slice98: seventeen exact native/source/built/installed auto cases; public row\u2192column\u2192RTL signal movement preserves focus/stamps/nodes, old target misses and new target hits",
           "slice99: source/built 17 wrapped cases plus installed 34-case auto family; line merge preserves keyed focus and moves targets; paint reuse and exact disposal",
-          "slice100: source/built 12 cross-auto cases, 8 CSS cross-auto precedence differences plus4 native matches; installed46auto cases; cross-only flag changes preserve sizing/main placement/node identity, focus/hits and disposal"
+          "slice100: source/built 12 cross-auto cases, 8 CSS cross-auto precedence differences plus4 native matches; installed46auto cases; cross-only flag changes preserve sizing/main placement/node identity, focus/hits and disposal",
+          "slice101: all36 expected boxes independently match Chromium CSS; public mounted matrix plus source/built replay and installed82auto cases; wrap reversal and row-to-RTL-column signals preserve keyed focus and moved targets"
         ],
         "yogaCases": [
           "auto-margin-left",
@@ -1755,10 +2069,46 @@
           "auto-cross-row-reverse-both-ltr",
           "auto-cross-row-reverse-top-rtl",
           "auto-cross-row-reverse-bottom-rtl",
-          "auto-cross-row-reverse-both-rtl"
+          "auto-cross-row-reverse-both-rtl",
+          "auto-cross-direction-row-wrap-reverse-before-ltr",
+          "auto-cross-direction-row-wrap-reverse-after-ltr",
+          "auto-cross-direction-row-wrap-reverse-both-ltr",
+          "auto-cross-direction-row-wrap-reverse-before-rtl",
+          "auto-cross-direction-row-wrap-reverse-after-rtl",
+          "auto-cross-direction-row-wrap-reverse-both-rtl",
+          "auto-cross-direction-row-reverse-wrap-reverse-before-ltr",
+          "auto-cross-direction-row-reverse-wrap-reverse-after-ltr",
+          "auto-cross-direction-row-reverse-wrap-reverse-both-ltr",
+          "auto-cross-direction-row-reverse-wrap-reverse-before-rtl",
+          "auto-cross-direction-row-reverse-wrap-reverse-after-rtl",
+          "auto-cross-direction-row-reverse-wrap-reverse-both-rtl",
+          "auto-cross-direction-column-wrap-before-ltr",
+          "auto-cross-direction-column-wrap-after-ltr",
+          "auto-cross-direction-column-wrap-both-ltr",
+          "auto-cross-direction-column-wrap-before-rtl",
+          "auto-cross-direction-column-wrap-after-rtl",
+          "auto-cross-direction-column-wrap-both-rtl",
+          "auto-cross-direction-column-wrap-reverse-before-ltr",
+          "auto-cross-direction-column-wrap-reverse-after-ltr",
+          "auto-cross-direction-column-wrap-reverse-both-ltr",
+          "auto-cross-direction-column-wrap-reverse-before-rtl",
+          "auto-cross-direction-column-wrap-reverse-after-rtl",
+          "auto-cross-direction-column-wrap-reverse-both-rtl",
+          "auto-cross-direction-column-reverse-wrap-before-ltr",
+          "auto-cross-direction-column-reverse-wrap-after-ltr",
+          "auto-cross-direction-column-reverse-wrap-both-ltr",
+          "auto-cross-direction-column-reverse-wrap-before-rtl",
+          "auto-cross-direction-column-reverse-wrap-after-rtl",
+          "auto-cross-direction-column-reverse-wrap-both-rtl",
+          "auto-cross-direction-column-reverse-wrap-reverse-before-ltr",
+          "auto-cross-direction-column-reverse-wrap-reverse-after-ltr",
+          "auto-cross-direction-column-reverse-wrap-reverse-both-ltr",
+          "auto-cross-direction-column-reverse-wrap-reverse-before-rtl",
+          "auto-cross-direction-column-reverse-wrap-reverse-after-rtl",
+          "auto-cross-direction-column-reverse-wrap-reverse-both-rtl"
         ],
         "missing": [
-          "cross-reversed/column cross-axis and shorthand auto margins",
+          "shorthand and automatic/intrinsic cross-axis auto margins",
           "broader min/max and opposing margin interactions"
         ]
       },

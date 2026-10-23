@@ -29,7 +29,7 @@ describe('layout entry import inertness', () => {
 
 });
 
-it.each([0, 1, 2, 3, 4, 5, 6, 7, 8])('rejects older or incomplete layout ABI exports before publishing compiled code (generation=%s)', async version => {
+it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])('rejects older or incomplete layout ABI exports before publishing compiled code (generation=%s)', async version => {
   vi.resetModules();
   const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
   const legacyExports: WebAssembly.ModuleExportDescriptor[] = [
@@ -40,7 +40,7 @@ it.each([0, 1, 2, 3, 4, 5, 6, 7, 8])('rejects older or incomplete layout ABI exp
   if (version >= 3) legacyExports.push({ name: 'resize_grid_cells', kind: 'function' }, { name: 'place_grid_cells', kind: 'function' });
   if (version >= 4) legacyExports.push({ name: 'resize_flow', kind: 'function' }, { name: 'place_flow', kind: 'function' }, { name: 'place_cross', kind: 'function' });
   if (version === 5) legacyExports.push({ name: 'layout_abi_v1', kind: 'function' });
-  if (version >= 6) legacyExports.push({ name: version === 6 ? 'layout_abi_v2' : 'layout_abi_v3', kind: 'function' }, { name: 'resize_main_auto', kind: 'function' }, { name: 'place_main_auto', kind: 'function' });
+  if (version >= 6) legacyExports.push({ name: version === 6 ? 'layout_abi_v2' : version === 9 ? 'layout_abi_v4' : 'layout_abi_v3', kind: 'function' }, { name: 'resize_main_auto', kind: 'function' }, { name: 'place_main_auto', kind: 'function' });
   if (version >= 8) legacyExports.push({ name: 'place_wrap_main_auto', kind: 'function' });
   vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(legacyExports);
   expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');

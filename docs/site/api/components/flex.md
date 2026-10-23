@@ -213,10 +213,10 @@ row/column direction, including reverse/RTL. Physical left/right apply to rows;
 top/bottom apply to columns. Logical start/end support row main edges after
 receiver-direction mapping. Auto edges divide positive free space after sizing
 and before justification; with no positive space they remain zero. Shorthand
-and intrinsic auto margins remain deferred. Finite nowrap/wrapped rows also accept
-physical top/bottom cross-auto edges on children with explicit numeric height,
-excluding wrap-reverse and aspect sizing. These share each item’s line space and
-override cross alignment; columns and automatic child cross size remain deferred. Wrapped placement divides
+and intrinsic auto margins remain deferred. Finite nowrap/wrap/wrap-reverse rows
+and columns also accept physical and logical cross-auto edges on children with
+explicit numeric cross size, excluding aspect sizing. These share each item’s line
+space and override cross alignment; automatic child cross size remains deferred. Wrapped placement divides
 space using only the auto slots on each actual line; a line without auto slots
 keeps its justification. The comparison explicitly labels differences from the
 pinned Yoga implementation.

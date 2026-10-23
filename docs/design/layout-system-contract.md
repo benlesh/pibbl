@@ -764,7 +764,7 @@ physical edges. Source traversal, paint/hit priority, focus order and glyph
 rendering remain unchanged. Existing allocation contexts, receiver signal inputs,
 prepared plans and placement caches carry direction; no separate cascade or
 scheduler is introduced. Plans reject mismatched direction before adoption. The
-WASM cross-placement ABI is identified by the `layout_abi_v4` export marker (including optional main auto-margin placement and cross-auto flag protocols);
+WASM cross-placement ABI is identified by the `layout_abi_v5` export marker (including optional main auto-margin placement and cross-auto flag protocols);
 older modules are rejected before publishing compiled code. Logical margin edges are specified below; logical padding is specified below; numeric logical border edges are specified below.
 
 The combined slice95 direction matrix deliberately preserves two existing rules.
@@ -983,12 +983,13 @@ an independent Chromium CSS fixture confirms the first row at10/60 and second
 row at60 for three40px items in100px with10px gaps.
 
 
-### Bounded experimental row cross-axis auto margins
+### Bounded experimental cross-axis auto margins
 
-Finite nowrap/wrapped rows accept physical `marginTop`/`marginBottom` auto when
-that child has a finite numeric height and no aspect-ratio sizing. Forward/reverse
-main directions and LTR/RTL are supported. Columns, wrap-reverse, automatic child
-cross size, shorthand and intrinsic measurement remain unsupported for cross auto.
+Finite nowrap/wrapped/wrap-reverse rows and columns accept physical and logical
+cross-edge auto margins when that child has a finite numeric cross size and no
+aspect-ratio sizing. Forward/reverse main directions and LTR/RTL are supported.
+Logical inline edges map through receiver direction before cross placement.
+Automatic child cross size, shorthand and intrinsic measurement remain unsupported.
 No new public operation or return contract is introduced.
 
 Each item distributes its own positive line cross free space equally among its
@@ -996,7 +997,7 @@ auto cross edges, before alignment. Top-only auto pushes down, bottom-only up,
 and both center. Auto cross edges suppress item alignment even for zero/negative
 space: before-auto is zero and the opposite used margin absorbs overflow; an
 explicit numeric before margin remains. Source paint/Tab order, border-box
-geometry, hit/focus bounds and numeric margin records are preserved. The v4
+geometry, hit/focus bounds and numeric margin records are preserved. The v5
 numeric alignment record includes two flags in its cache key; a cross-only
 0→auto→both transition needs no sizing or main placement. Paint-only updates
 reuse the resulting placement; owner disposal releases all existing resources.
@@ -1007,3 +1008,18 @@ Eight top/bottom cases therefore retain native boxes alongside independent
 Chromium CSS independently gives A y20/0/10 for top/bottom/both in a40px line,
 with a following line at50. This follows the
 [Flexbox cross-axis rule](https://www.w3.org/TR/css-flexbox-1/#cross-alignment).
+
+
+The slice101 direction extension maps cross-auto flags through effective cross
+reversal before calling the same native allocator. No new record bit or placement
+path is needed. Wrapped lines are at least as large as their items’ outer cross
+sizes; excess container content is handled by existing line placement. Oversized
+nowrap column items anchor to inline start: LTR x0 and RTL x−40 for width120 in80.
+Cross-only reversal preserves sizing and native identities. Receiver logical-edge
+mapping does not redefine the parent’s physical overflow anchor.
+
+All36 additional direction expectations match independent Chromium CSS geometry.
+Twenty-four single-edge cases classify the same pinned-Yoga cross-auto precedence
+difference; twelve opposing-auto cases match native. Full cross family48 therefore
+contains16native matches and32classified differences. Source paint/Tab order,
+keyed focus, moved hit targets and exact disposal remain unchanged.

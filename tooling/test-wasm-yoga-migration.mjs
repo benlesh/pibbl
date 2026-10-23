@@ -12,6 +12,7 @@ const logicalBordersOnly = process.argv.includes('--logical-borders');
 const logicalPaddingOnly = process.argv.includes('--logical-padding');
 const directionMatrixOnly = process.argv.includes('--direction-matrix');
 const autoMarginsOnly = process.argv.includes('--auto-margins');
+const crossAutoDirectionsOnly = process.argv.includes('--cross-auto-directions');
 const crossAutoMarginsOnly = process.argv.includes('--cross-auto-margins');
 const wrappedAutoMarginsOnly = process.argv.includes('--wrapped-auto-margins');
 const crossOnly = process.argv.includes('--wrapped-cross-bounds');
@@ -42,8 +43,9 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (crossAutoMarginsOnly) { for(let section=0;section<14;section++) await click(520,158); }
+  const cases = crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (crossAutoDirectionsOnly) { for(let section=0;section<15;section++) await click(520,158); }
+  else if (crossAutoMarginsOnly) { for(let section=0;section<14;section++) await click(520,158); }
   else if (wrappedAutoMarginsOnly) { for(let section=0;section<13;section++) await click(520,158); }
   else if (autoMarginsOnly) { for(let section=0;section<12;section++) await click(520,158); }
   else if (directionMatrixOnly) { for(let section=0;section<11;section++) await click(520,158); }

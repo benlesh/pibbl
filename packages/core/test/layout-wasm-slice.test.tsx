@@ -3707,9 +3707,9 @@ it.runIf(experimentalLayout)('allocates finite wrapped row cross-axis auto margi
 
 it.runIf(experimentalLayout).each([
   { label: 'automatic row cross height', options: {}, style: { height: 'auto', marginTop: 'auto' } },
-  { label: 'row wrap-reverse cross axis', options: { flexWrap: 'wrap-reverse' as const }, style: { marginTop: 'auto' } },
-  { label: 'column cross axis', options: { flexDirection: 'column' as const }, style: { marginLeft: 'auto' } },
-  { label: 'column logical inline edge', options: { flexDirection: 'column' as const }, style: { marginStart: 'auto' } },
+  { label: 'row aspect cross axis', options: {}, style: { aspectRatio: 2, marginTop: 'auto' } },
+  { label: 'automatic column cross width', options: { flexDirection: 'column' as const }, style: { width: 'auto', marginLeft: 'auto' } },
+  { label: 'automatic logical column cross width', options: { flexDirection: 'column' as const }, style: { width: 'auto', marginStart: 'auto' } },
   { label: 'shorthand', options: {}, style: { margin: 'auto' as never } },
 ])('keeps unsupported auto-margin shapes explicit: $label', ({ options, style }) => {
   expect(() => layoutFlex({ x: 0, y: 0, width: 200, height: 80 }, [createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, ...style } as RectStyle })], options, measurement)).toThrow(/auto.*margin/i);
@@ -3791,4 +3791,76 @@ it.runIf(experimentalLayout)('lets finite row cross auto margins override alignm
     expect(place(height, { marginTop: 'auto', marginBottom: 'auto' }).y).toBe(0);
   }
   expect(place(120, { marginTop: 5, marginBottom: 'auto' }).y).toBe(5);
+});
+
+it.runIf(experimentalLayout)('renders and targets every finite cross-auto direction fixture through the public API', async () => {
+  type Fixture = { name: string; width: number; height: number; gap: number; flexDirection: FlexStyle['flexDirection']; flexWrap: FlexStyle['flexWrap']; layoutDirection: FlexStyle['layoutDirection']; containerStyle: FlexStyle; boxes: readonly { x: number; y: number; width: number; height: number }[]; pibblBoxes?: readonly { x: number; y: number; width: number; height: number }[]; itemStyles: readonly RectStyle[] };
+  const fixtures = yogaReference.cases.filter(fixture => 'autoCrossDirectionFixture' in fixture) as unknown as readonly Fixture[];
+  expect(fixtures).toHaveLength(36);
+  const baseline = snapshotWasmLayoutDiagnostics();
+  for (const fixture of fixtures) {
+    const boxes = new Map<number, { x: number; y: number; width: number; height: number }>();
+    const hits: number[] = [];
+    function Probe({ index, style: _style }: { index: number; style: RectStyle }) {
+      const box = useLayoutBox(); const transform = useCanvasContext().getTransform();
+      boxes.set(index, { x: transform.e, y: transform.f, width: box.width, height: box.height });
+      return <Rectangle onClick={() => hits.push(index)} style={{ width: box.width, height: box.height, fill: '#19375b' }} />;
+    }
+    const canvas = document.createElement('canvas'); canvas.width = fixture.width; canvas.height = fixture.height; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: fixture.width, height: fixture.height, gap: fixture.gap, flexDirection: fixture.flexDirection, flexWrap: fixture.flexWrap, layoutDirection: fixture.layoutDirection, ...fixture.containerStyle }}>{fixture.itemStyles.map((style, index) => <Probe key={index} index={index} style={style} />)}</Flex>);
+    controllers.push(controller); await nextFrame();
+    const expected = fixture.pibblBoxes ?? fixture.boxes;
+    expect(expected.map((_, index) => boxes.get(index)), fixture.name).toEqual(expected);
+    for (const box of expected) clickCanvas(canvas, box.x + 1, box.y + 1);
+    expect(hits, fixture.name).toEqual([0, 1, 2]);
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect(disposed.activeNodes).toBe(baseline.activeNodes);
+    expect(disposed.activeArenas).toBe(baseline.activeArenas);
+    expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+  }
+});
+
+it.runIf(experimentalLayout)('keeps cross-auto keyed focus while wrap reversal and RTL column signals move targets', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const axis = signal<'row' | 'column'>('row'); const flipped = signal(false); const direction = signal<'ltr' | 'rtl'>('ltr');
+  const boxes = new Map<string, { x: number; y: number; stamp: number }>(); const hits: string[] = [], focused: string[] = []; let serial = 0;
+  function Panel({ name, style: _style }: { name: string; style: RectStyle }) {
+    const stamp = useConst(() => ++serial); const box = useLayoutBox(); const transform = useCanvasContext().getTransform();
+    boxes.set(name, { x: transform.e, y: transform.f, stamp });
+    return <Rectangle keyboardFocusable onFocus={() => focused.push(name)} onClick={() => hits.push(name)} style={{ width: box.width, height: box.height, fill: '#19375b' }} />;
+  }
+  function Scene() {
+    const column = axis.get() === 'column';
+    return <FocusManagement><Flex style={{ width: 100, height: 100, gap: 10, flexDirection: axis.get(), flexWrap: flipped.get() ? 'wrap-reverse' : 'wrap', layoutDirection: direction.get(), alignItems: 'center', alignContent: 'flex-start' }}>
+      <Panel key="A" name="A" style={column ? { width: 20, height: 40, minHeight: 0, flexShrink: 0, marginLeft: 'auto' } : { width: 40, height: 20, minWidth: 0, flexShrink: 0, marginTop: 'auto' }} />
+      <Panel key="B" name="B" style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0 }} />
+      <Panel key="C" name="C" style={{ width: column ? 20 : 40, height: column ? 40 : 20, minWidth: 0, minHeight: 0, flexShrink: 0 }} />
+    </Flex></FocusManagement>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  expect(boxes.get('A')).toEqual({ x: 0, y: 20, stamp: 1 });
+  canvas.focus({ preventScroll: true }); canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['A', 'B']); const initial = snapshotWasmLayoutDiagnostics();
+  flipped.set(true); await nextFrame(); expect(boxes.get('A')).toEqual({ x: 0, y: 80, stamp: 1 }); expect(focused).toEqual(['A', 'B']);
+  expect(snapshotWasmLayoutDiagnostics().solves).toBe(initial.solves);
+  clickCanvas(canvas, 5, 25); expect(hits).toEqual([]); clickCanvas(canvas, 5, 95); expect(hits).toEqual(['A']);
+  const beforeColumn = focused.slice(); axis.set('column'); direction.set('rtl'); await nextFrame();
+  expect(boxes.get('A')).toEqual({ x: 20, y: 0, stamp: 1 }); expect(focused).toEqual(beforeColumn);
+  clickCanvas(canvas, 5, 95); expect(hits).toEqual(['A']); clickCanvas(canvas, 25, 5); expect(hits).toEqual(['A', 'A']);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+it.runIf(experimentalLayout)('maps finite column logical cross auto and overflow to inline direction', () => {
+  const item = (width: number, style: FlexItemStyle) => createElement(Rectangle, { style: { width, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, ...style } });
+  for (const layoutDirection of ['ltr', 'rtl'] as const) {
+    const place = (width: number, style: FlexItemStyle) => layoutFlex({ x: 0, y: 0, width: 80, height: 100 }, [item(width, style)], { flexDirection: 'column', layoutDirection, alignItems: 'center' }, measurement)[0];
+    expect(place(20, { marginStart: 'auto' }).x).toBe(layoutDirection === 'ltr' ? 60 : 0);
+    expect(place(20, { marginEnd: 'auto' }).x).toBe(layoutDirection === 'ltr' ? 0 : 60);
+    expect(place(20, { marginStart: 'auto', marginEnd: 'auto' }).x).toBe(30);
+    expect(place(120, { marginStart: 'auto', marginEnd: 'auto' }).x).toBe(layoutDirection === 'ltr' ? 0 : -40);
+  }
 });

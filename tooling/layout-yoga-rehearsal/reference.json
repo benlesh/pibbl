@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "7ee6c052c03cdaa0794b683bdb636cf39c5849808de62e956518234ca3569e9c",
+  "probeSha256": "9585c4633cdb133f3a8992a264ec2b085e65efe1fdcaa7138f0e6622de1fa7e7",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -14693,6 +14693,2814 @@
         {
           "width": 40,
           "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-wrap-reverse-before-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 0,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 0,
+          "y": 80,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginTop": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-wrap-reverse-after-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 0,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 0,
+          "y": 60,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginBottom": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-wrap-reverse-both-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 0,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginTop": "auto",
+          "marginBottom": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-wrap-reverse-before-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 60,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 10,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 60,
+          "y": 80,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 10,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginTop": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-wrap-reverse-after-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 60,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 10,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 60,
+          "y": 60,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 10,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginBottom": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-wrap-reverse-both-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 60,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 10,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginTop": "auto",
+          "marginBottom": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-reverse-wrap-reverse-before-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 60,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 10,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 60,
+          "y": 80,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 10,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginTop": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-reverse-wrap-reverse-after-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 60,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 10,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 60,
+          "y": 60,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 10,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginBottom": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-reverse-wrap-reverse-both-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 60,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 10,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginTop": "auto",
+          "marginBottom": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-reverse-wrap-reverse-before-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 0,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 0,
+          "y": 80,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginTop": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-reverse-wrap-reverse-after-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 0,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 0,
+          "y": 60,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginBottom": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-row-reverse-wrap-reverse-both-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "row-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 0,
+          "y": 70,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginTop": "auto",
+          "marginBottom": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-before-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 20,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-after-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-both-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto",
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-before-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 80,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-after-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 60,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-both-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto",
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-reverse-before-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 80,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-reverse-after-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 60,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-reverse-both-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto",
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-reverse-before-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 20,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-reverse-after-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-wrap-reverse-both-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 50,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 0,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto",
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-before-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 20,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-after-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 0,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-both-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto",
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-before-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 80,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-after-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 60,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-both-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto",
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-reverse-before-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 80,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-reverse-after-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 60,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-reverse-both-ltr",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 70,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 60,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 30,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto",
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-reverse-before-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 20,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-reverse-after-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "classification": "css-cross-auto-precedence",
+      "comparisonLabel": "CSS cross auto margins override alignment; Yoga 3.2.1 centers this wrapped item. Classified difference, not parity.",
+      "pibblBoxes": [
+        {
+          "x": 0,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "auto-cross-direction-column-reverse-wrap-reverse-both-rtl",
+      "width": 100,
+      "height": 100,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "wrap-reverse",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "center",
+        "alignContent": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "autoCrossDirectionFixture": true,
+      "boxes": [
+        {
+          "x": 10,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 10,
+          "width": 40,
+          "height": 40
+        },
+        {
+          "x": 50,
+          "y": 60,
+          "width": 20,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginLeft": "auto",
+          "marginRight": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 20,
+          "height": 40,
           "minWidth": 0,
           "minHeight": 0,
           "flexGrow": 0,
