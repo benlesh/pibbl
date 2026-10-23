@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice75 (direction-independent start/end alignment in finite LTR Flex).
+Latest delivery is slice75 `bcf4f02e` (direction-independent start/end alignment in finite LTR Flex).
 Slice74 is `e6175c94` (finite allocation evidence and initial-freeze correction).
 Slice73 is `27b18dde` (finite numeric-gap capability evidence complete).
 Slice72 is `dc4b7d42` (finite Flex outer-box aspect ratios).
@@ -1310,6 +1310,27 @@ scoped read-only review found no material issues. Logs /tmp/pibbl-slice75-{sourc
 built,packed,editor,types,lint,normal,red,green}.txt. Native kernel65364bytes
 unchanged. Remaining distribution gaps: pinned negative-free-space matrix,
 one-item lines and automatic cross sizes. No capability/gate completion claim.
+
+### Consolidation 25 completed for delivery slices 73–75
+
+Separate commits:73 `27b18dde`,74 `e6175c94`,75 `bcf4f02e`. Numeric-gap and finite
+numerical allocation capability evidence is complete; logical LTR alignment now
+works under reversed axes. Fresh combined focused evidence passes197 tests with
+1skip across8 files:153public/layout tests plus44allocator/loader tests. Logs
+/tmp/pibbl-consolidation25-focused.txt and /tmp/pibbl-consolidation25-allocator.txt.
+The final example-label-only correction was verified by source/built browser
+replays and final type/lint checks. These reuse the bounded74 native10-test,
+25-record oracle and installed receipts plus75 installed/reversed-alignment
+receipt; no broader unchanged suite was rerun for consolidation alone. Source and
+built keyed-wrap replay both pass all final assertions; built469 private inputs.
+Packed75 passes230 installed dist inputs, Bundler/NodeNext and actual geometry.
+Scoped75 read-only review reports no material findings. No baseline changes.
+
+Fixed33 capabilities:2complete,11experimental,8partial,11missing,1excluded. All
+seven release gates remain open; distribution remains partial until its negative
+free-space, one-item-line and auto-cross evidence is complete. Engine opt-in;
+Node26.9.0/pnpm11.21.0/Chromium, not a Node24 aggregate trust or performance claim.
+Exactly one next finite exit is selected below.
 
 ## [NEXT] Bounded distribution conformance evidence (slice 76)
 
