@@ -73,17 +73,74 @@ void controller;
       globalThis.__PIBBL_LOADING_PROOF__.syncMounted = true;
       controller.dispose();
     ` }, bundle: true, format: "esm", platform: "browser", write: false, logLevel: "silent" });
+  const loadingBundle = await build({
+    absWorkingDir: consumer,
+    stdin: { resolveDir: consumer, loader: "ts", contents: `
+      import { createElement, Flex, Layer, Rectangle, pibbl } from "@pibbl/core";
+      const proof = globalThis.__PIBBL_LOADING_PROOF__;
+      const canvas = document.querySelector("canvas") as HTMLCanvasElement;
+      let renders = 0;
+      function Root() {
+        renders++;
+        proof.renders = renders;
+        return createElement(Flex, { style: { width: 40, height: 40, alignItems: "flex-start" }, children:
+          createElement(Layer, { style: { width: 24, height: 24, minWidth: 0, flexShrink: 0 }, children:
+            createElement(Rectangle, { onClick: () => proof.hits = (proof.hits ?? 0) + 1, style: { width: 24, height: 24, fill: "#19375b" } })
+          })
+        });
+      }
+      const waitForRetry = () => new Promise(resolve => { proof.retry = resolve; });
+      const activate = async controller => {
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        proof.mounted = true;
+        proof.visible = canvas.getContext("2d").getImageData(5, 5, 1, 1).data[3] === 255;
+        proof.dispose = () => { controller.dispose(); proof.disposed = true; };
+      };
+      if (proof.mode === "cancel") {
+        const aborter = new AbortController();
+        proof.abort = () => aborter.abort();
+        try { await pibbl(canvas, createElement(Root, {}), { signal: aborter.signal }); }
+        catch (error) { proof.cancelled = (error as { name?: string })?.name === "AbortError"; }
+        proof.rendersBeforeRetry = renders;
+        proof.retryReady = true;
+        await waitForRetry();
+        await activate(await pibbl(canvas, createElement(Root, {})));
+      } else if (proof.mode === "failure") {
+        try { await pibbl(canvas, createElement(Root, {})); }
+        catch (error) { proof.failed = true; proof.failure = String(error); }
+        proof.rendersBeforeRetry = renders;
+        proof.retryReady = true;
+        await waitForRetry();
+        await activate(await pibbl(canvas, createElement(Root, {})));
+      }
+    ` }, bundle: true, format: "esm", platform: "browser", write: false, logLevel: "silent" });
   const wasm = await readFile(join(installed, "dist/lib/layout/wasm/layout.wasm"));
   const deploymentBase = "/nested/pibbl";
-  const server = createServer((request, response) => {
+  let holdNextAsset = false;
+  let failNextAsset = false;
+  let releaseHeldAsset;
+  let resolveHeldAsset;
+  const heldAsset = new Promise(resolve => { resolveHeldAsset = resolve; });
+  const server = createServer(async (request, response) => {
     if (!request.url?.startsWith(deploymentBase + "/")) { response.statusCode = 404; response.end(); return; }
     const route = request.url.slice(deploymentBase.length);
-    if (route === "/layout.wasm") { response.setHeader("Content-Type", "application/wasm"); response.end(wasm); return; }
+    if (route === "/layout.wasm") {
+      response.setHeader("Cache-Control", "no-store");
+      if (holdNextAsset) {
+        holdNextAsset = false;
+        resolveHeldAsset();
+        await new Promise(resolve => { releaseHeldAsset = resolve; });
+      }
+      if (failNextAsset) { failNextAsset = false; response.statusCode = 503; response.end("temporarily unavailable"); return; }
+      response.setHeader("Content-Type", "application/wasm"); response.end(wasm); return;
+    }
     if (route === "/async.js") { response.setHeader("Content-Type", "text/javascript"); response.end(asyncBundle.outputFiles[0].text); return; }
     if (route === "/sync.js") { response.setHeader("Content-Type", "text/javascript"); response.end(syncBundle.outputFiles[0].text); return; }
-    const script = route === "/sync" ? "/sync.js" : "/async.js";
+    if (route === "/loading.js") { response.setHeader("Content-Type", "text/javascript"); response.end(loadingBundle.outputFiles[0].text); return; }
+    const mode = route === "/cancel" ? "cancel" : route === "/failure" ? "failure" : undefined;
+    const script = mode ? "/loading.js" : route === "/sync" ? "/sync.js" : "/async.js";
     response.setHeader("Content-Type", "text/html");
-    response.end(`<!doctype html><canvas width="40" height="40"></canvas><script>globalThis.__PIBBL_LOADING_PROOF__={fetches:0};const fetch0=fetch;globalThis.fetch=(...args)=>{globalThis.__PIBBL_LOADING_PROOF__.fetches++;return fetch0(...args)}</script><script type="module" src="${deploymentBase}${script}"></script>`);
+    response.end(`<!doctype html><canvas width="40" height="40"></canvas><script>globalThis.__PIBBL_LOADING_PROOF__={fetches:0,mode:${JSON.stringify(mode)}};const fetch0=fetch;globalThis.fetch=(...args)=>{globalThis.__PIBBL_LOADING_PROOF__.fetches++;return fetch0(...args)}</script><script type="module" src="${deploymentBase}${script}"></script>`);
   });
   await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
   const browser = await chromium.launch({ headless: true });
@@ -96,11 +153,47 @@ void controller;
     await page.goto(`${base}/sync`);
     await page.waitForFunction(() => globalThis.__PIBBL_LOADING_PROOF__.syncMounted === true);
     assert.equal((await page.evaluate(() => globalThis.__PIBBL_LOADING_PROOF__.fetches)), 0, "Sync mount must succeed offline without fetching.");
+
+    const verifyRetriedRoot = async (candidate) => {
+      await candidate.waitForFunction(() => globalThis.__PIBBL_LOADING_PROOF__.mounted === true);
+      assert.deepEqual(await candidate.evaluate(() => ({ renders: globalThis.__PIBBL_LOADING_PROOF__.renders, visible: globalThis.__PIBBL_LOADING_PROOF__.visible })), { renders: 1, visible: true });
+      await candidate.locator("canvas").click({ position: { x: 8, y: 8 } });
+      assert.equal(await candidate.evaluate(() => globalThis.__PIBBL_LOADING_PROOF__.hits), 1, "Retried real Flex/Layer root must receive a visible Canvas click.");
+      await candidate.evaluate(() => globalThis.__PIBBL_LOADING_PROOF__.dispose());
+      await candidate.locator("canvas").click({ position: { x: 8, y: 8 } });
+      assert.deepEqual(await candidate.evaluate(() => ({ hits: globalThis.__PIBBL_LOADING_PROOF__.hits, disposed: globalThis.__PIBBL_LOADING_PROOF__.disposed })), { hits: 1, disposed: true }, "Disposed retried root must leave no live target.");
+    };
+
+    holdNextAsset = true;
+    const cancelled = await browser.newPage();
+    const errors = [];
+    cancelled.on("pageerror",error=>errors.push(error.message));
+    await cancelled.goto(`${base}/cancel`, { waitUntil: "commit" });
+    await heldAsset;
+    await cancelled.evaluate(() => globalThis.__PIBBL_LOADING_PROOF__.abort());
+    await cancelled.waitForFunction(() => globalThis.__PIBBL_LOADING_PROOF__.retryReady === true);
+    assert.deepEqual(await cancelled.evaluate(() => ({ cancelled: globalThis.__PIBBL_LOADING_PROOF__.cancelled, renders: globalThis.__PIBBL_LOADING_PROOF__.rendersBeforeRetry })), { cancelled: true, renders: 0 }, "Aborted held external asset must not evaluate a real root.");
+    releaseHeldAsset();
+    await cancelled.evaluate(() => globalThis.__PIBBL_LOADING_PROOF__.retry());
+    await verifyRetriedRoot(cancelled);
+    await cancelled.close();
+
+    failNextAsset = true;
+    const failed = await browser.newPage();
+    failed.on("pageerror",error=>errors.push(error.message));
+    await failed.goto(`${base}/failure`, { waitUntil: "commit" });
+    await failed.waitForFunction(() => globalThis.__PIBBL_LOADING_PROOF__.retryReady === true);
+    assert.deepEqual(await failed.evaluate(() => ({ failed: globalThis.__PIBBL_LOADING_PROOF__.failed, renders: globalThis.__PIBBL_LOADING_PROOF__.rendersBeforeRetry, fetches: globalThis.__PIBBL_LOADING_PROOF__.fetches })), { failed: true, renders: 0, fetches: 1 }, "A 503 external asset must reject before evaluating a real root.");
+    await failed.evaluate(() => globalThis.__PIBBL_LOADING_PROOF__.retry());
+    await verifyRetriedRoot(failed);
+    assert.equal(await failed.evaluate(() => globalThis.__PIBBL_LOADING_PROOF__.fetches), 2, "A fresh public call must retry after the first 503.");
+    await failed.close();
+    assert.deepEqual(errors, [], "Retried roots must render without browser errors.");
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));
   }
-  process.stdout.write("Packed loading consumer: offline tarball, Bundler/NodeNext, nested-base external asset, and async-only bundle isolation pass\n");
+  process.stdout.write("Packed loading consumer: offline tarball, Bundler/NodeNext, nested-base external asset, real-root cancellation/503 retry/visible click/dispose, and async-only bundle isolation pass\n");
 } finally {
   await rm(consumer, { recursive: true, force: true });
 }

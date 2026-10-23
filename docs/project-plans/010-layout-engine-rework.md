@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice110 (unrounded logical geometry policy and evidence).
+Latest delivery is slice111 (real-root loading cancellation/failure cleanup).
+Slice110 is `642941bc` (unrounded logical geometry policy and evidence).
 Slice109 is `f99a7cdd` (source-order Canvas composition evidence).
 Slice108 is `35eef93b` (wrapped-row measured Text cross-auto sizing).
 Consolidation36 is `ac070c0c` for106–108.
@@ -62,7 +63,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next delivery is111, real-root loading cancellation/failure cleanup. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next checkpoint is consolidation37 for109–111. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles308 records:214matches/94classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -2868,14 +2869,45 @@ Source: http://127.0.0.1:5192/#/testing/canvas-surface — Show fractional then 
 fractional. Comparison: http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration —
 Next section21 times for point-scale-zero fractional allocations.
 
-## [NEXT] Real-root loading cancellation/failure cleanup (slice 111)
+## Delivered real-root loading cancellation/failure cleanup (slice 111)
 
-Exercise actual Flex/Layer roots through held shared preparation, cancellation,
-supersession, failed load and retry. Assert no premature callback/mount, exact
-native ownership and visible retry interaction through supported public imports.
-Use fresh isolated installed pages for cold-load failures, where a warm Studio
-cannot force the condition. Consolidate109–111 after111; final whole-codebase
-review stays at full program end.
+Evidence-only: no core runtime, public API, native ABI or binary changes. Three
+actual Flex→Layer→Flex→Rectangle roots share one held load: two are superseded and
+one caller aborts, while an independent prewarm remains live. Before admission,
+component/hooks/context/native ownership stay absent and caller listeners detach.
+The same cold test walks503, invalid fingerprint and forced compile failure before
+one valid retry. Exactly one leaf/hook lifetime mounts, click works, cleanup runs
+once and late input stays inert. Nodes/arenas/root instances/measurement caches
+return to their exact baseline in the experimental lane. Normal runtime passes the
+same observable loading sequence without a native-ownership claim.
+
+Fresh focused18tests/11files pass in both experimental and ordinary modes, including
+existing sync winner/stale completion, pre-abort, canvas arbitration and disposed
+controller coverage. Isolated installed normal-core pages under `/nested/pibbl`
+hold an external asset and abort a real Flex/Layer root, or fail its first load503.
+Both assert zero premature component calls, retry to one visible/clickable root,
+and leave inert targets on disposal. Failure retry fetches twice; async/sync asset
+and payload isolation plus strict Bundler/NodeNext remain checked. Browser errors
+are asserted empty. A first fixture lacked normal Flex's required explicit
+minimum; adding minWidth0/flexShrink0 corrected the fixture, not readiness timing.
+One scheduled frame precedes the pixel observation; no sleep or readiness contract
+change was introduced. No fabricated production RED or baseline rewrite.
+
+Existing render/preflight failure and removal/reuse evidence complements this
+cold-loading matrix. Scoped audit supports the stated deterministic layout cleanup
+contract, not a general performance or GC claim. `integration.deterministic-cleanup`
+is complete: fixed33 now8complete/11experimental/6partial/7missing/1excluded;
+all7release gates remain open. Native308records/v5/68649bytes unchanged. Normal core
+built fresh through generated-asset checks, declaration emission and build-core;
+Node26.9.0/Chromium, no Node24 aggregate trust claim.
+
+## [NEXT] Consolidation 37 for109–111
+
+Consolidate source-order composition, unrounded geometry and real-root loading
+ownership before further capability expansion. Run the established focused matrix
+plus Canvas surface and loading suites in experimental and ordinary modes; record
+fresh totals and failures honestly. The final whole-codebase review remains at
+full program end. The next capability slice is selected only after this gate.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

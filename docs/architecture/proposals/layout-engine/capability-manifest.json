@@ -2819,19 +2819,35 @@
       "id": "integration.deterministic-cleanup",
       "target": "preserve",
       "group": "reactivity-and-publication",
-      "current": "explicit resource ownership",
-      "status": "partial",
+      "current": "Explicit layout ownership releases nodes, arenas, root instances and measurement caches on removal, disposal, supported render/preflight failures and external-loading cancellation/failure/retry",
+      "status": "complete",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/test/layout-loading/real-root-lifecycle.test.tsx",
+        "packages/core/test/layout-loading/cancellation.test.ts",
+        "packages/core/test/layout-loading/sync-race.test.ts",
+        "packages/core/test/layout-loading/updates.test.ts",
+        "packages/core/test/layout-loading/retry.test.ts",
+        "tooling/packed-layout-loading-consumer.mjs",
         "tooling/test-wasm-wrapped-collections.mjs",
         "tooling/test-wasm-nested-intrinsic.mjs"
       ],
       "evidence": {
-        "positive": ["zero layout arenas/nodes after disposal"],
-        "negative": [],
-        "interaction": ["remove/restore/dispose"],
+        "positive": [
+          "Exact native node/arena/root-instance/measurement baselines after real nested Flex/Layer retry disposal",
+          "Source/private-built/installed remove-restore-dispose evidence"
+        ],
+        "negative": [
+          "Three pending real roots remain unadmitted through supersession and caller abort while shared preparation stays live",
+          "503, integrity and compile failures create no component callbacks, Canvas context or native ownership; explicit retry succeeds",
+          "Known sibling sizing failure releases native ownership before explicit remount; stale async completions and disposed controllers cannot revive ownership"
+        ],
+        "interaction": [
+          "Retried real roots paint and accept clicks; disposal makes subsequent input inert",
+          "Installed normal-core cold pages prove held-load cancellation and first-503 retry under a nested deployment base without source fallback"
+        ],
         "yogaCases": [],
-        "missing": ["full failure/cancellation stress"]
+        "missing": []
       }
     },
     {
