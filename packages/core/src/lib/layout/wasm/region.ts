@@ -123,6 +123,7 @@ export interface NumericFlexItem {
 export interface NumericFlexCrossItem {
   preferredCross: number; paddingCross: number; minCross: number; maxCross: number;
   marginCrossBefore?: number; marginCrossAfter?: number;
+  autoCrossBefore?: boolean; autoCrossAfter?: boolean;
   crossAuto: boolean; alignSelf: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center';
 }
 type CrossAlignment = Exclude<NumericFlexCrossItem['alignSelf'], 'auto'>;
@@ -421,7 +422,7 @@ export class LayoutRegion {
     if (!this.layoutOwner?.has(this.handle, this.generation)) throw new Error('Experimental Flex cross placement requires a solved region.');
     const kernel = this.layoutOwner.kernel;
     const records = items.map(item => [item.preferredCross, item.paddingCross, item.minCross, item.maxCross,
-      item.crossAuto ? 1 : 0, alignmentCodes[item.alignSelf === 'auto' ? alignment : item.alignSelf], 0, 0, item.marginCrossBefore ?? 0, item.marginCrossAfter ?? 0]);
+      item.crossAuto ? 1 : 0, alignmentCodes[item.alignSelf === 'auto' ? alignment : item.alignSelf] + (item.autoCrossBefore ? 4 : 0) + (item.autoCrossAfter ? 8 : 0), 0, 0, item.marginCrossBefore ?? 0, item.marginCrossAfter ?? 0]);
     const code = wrap ? ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly', 'stretch'].indexOf(wrap.alignContent) : -1;
     const modeKey = wrap ? `${this.allocationRevision}:${wrap.gap}:${code}:${reverse ? 1 : 0}` : `nowrap:${reverse ? 1 : 0}`;
     const changed = modeKey !== this.crossModeKey || size !== this.crossSize || records.length !== this.crossRecords.length ||

@@ -764,7 +764,7 @@ physical edges. Source traversal, paint/hit priority, focus order and glyph
 rendering remain unchanged. Existing allocation contexts, receiver signal inputs,
 prepared plans and placement caches carry direction; no separate cascade or
 scheduler is introduced. Plans reject mismatched direction before adoption. The
-WASM cross-placement ABI is identified by the `layout_abi_v3` export marker (including optional nowrap/wrapped auto-margin placement protocols);
+WASM cross-placement ABI is identified by the `layout_abi_v4` export marker (including optional main auto-margin placement and cross-auto flag protocols);
 older modules are rejected before publishing compiled code. Logical margin edges are specified below; logical padding is specified below; numeric logical border edges are specified below.
 
 The combined slice95 direction matrix deliberately preserves two existing rules.
@@ -948,7 +948,7 @@ auto margins in row/column, forward/reverse and LTR/RTL. Left/right are row main
 edges; top/bottom are column main edges. Inline start/end map through the receiving
 direction (including a child Flex's explicit override) before main/cross
 admission. Logical edges override physical edges/shorthand; numeric zero can
-suppress a physical auto edge. Cross-axis, shorthand and intrinsic auto
+suppress a physical auto edge. Cross-axis support is bounded below; shorthand and intrinsic auto
 margins remain unsupported. The ordinary build retains its experimental-margin
 diagnostic. Numeric/percentage margin behavior is unchanged.
 
@@ -981,3 +981,29 @@ Native boxes remain recorded alongside independent Pibbl expectations. This
 follows [Flexbox main-axis alignment](https://www.w3.org/TR/css-flexbox-1/#main-alignment);
 an independent Chromium CSS fixture confirms the first row at10/60 and second
 row at60 for three40px items in100px with10px gaps.
+
+
+### Bounded experimental row cross-axis auto margins
+
+Finite nowrap/wrapped rows accept physical `marginTop`/`marginBottom` auto when
+that child has a finite numeric height and no aspect-ratio sizing. Forward/reverse
+main directions and LTR/RTL are supported. Columns, wrap-reverse, automatic child
+cross size, shorthand and intrinsic measurement remain unsupported for cross auto.
+No new public operation or return contract is introduced.
+
+Each item distributes its own positive line cross free space equally among its
+auto cross edges, before alignment. Top-only auto pushes down, bottom-only up,
+and both center. Auto cross edges suppress item alignment even for zero/negative
+space: before-auto is zero and the opposite used margin absorbs overflow; an
+explicit numeric before margin remains. Source paint/Tab order, border-box
+geometry, hit/focus bounds and numeric margin records are preserved. The v4
+numeric alignment record includes two flags in its cache key; a cross-only
+0→auto→both transition needs no sizing or main placement. Paint-only updates
+reuse the resulting placement; owner disposal releases all existing resources.
+
+Pinned Yoga3.2.1 centers the wrapped asymmetric-height fixture for each edge.
+Eight top/bottom cases therefore retain native boxes alongside independent
+`css-cross-auto-precedence` expectations; four both-auto cases match native.
+Chromium CSS independently gives A y20/0/10 for top/bottom/both in a40px line,
+with a following line at50. This follows the
+[Flexbox cross-axis rule](https://www.w3.org/TR/css-flexbox-1/#cross-alignment).

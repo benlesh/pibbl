@@ -3638,8 +3638,76 @@ it.runIf(experimentalLayout)('keeps keyed focus and pointer targets stable while
   expect(disposed.activeArenas).toBe(baseline.activeArenas);
 });
 
+it.runIf(experimentalLayout)('allocates finite wrapped row cross-axis auto margins without replacing keyed targets', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const top = signal<import('@pibbl/core').FlexMargin>(0);
+  const bottom = signal<import('@pibbl/core').FlexMargin>(0);
+  const ink = signal('#2f6b97');
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+  const focused: string[] = [], hits: string[] = [];
+  let serial = 0;
+  function Card({ name, style: _style }: { name: string; style: BoxStyle & FlexItemStyle }) {
+    const stamp = useConst(() => ++serial);
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return <Rectangle keyboardFocusable onFocus={() => focused.push(name)} onClick={() => hits.push(name)} style={{ width: box.width, height: box.height, fill: name === 'C' ? ink.get() : '#19375b', cursor: 'pointer' }} />;
+  }
+  function Scene() {
+    return <FocusManagement><Flex style={{ width: 100, height: 100, flexWrap: 'wrap', gap: 10, alignItems: 'center', alignContent: 'flex-start' }}>
+      <Card key="A" name="A" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, marginTop: top.get(), marginBottom: bottom.get() }} />
+      <Card key="B" name="B" style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0 }} />
+      <Card key="C" name="C" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0 }} />
+    </Flex></FocusManagement>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  expect(boxes.get('A')).toEqual({ x: 0, y: 10, width: 40, height: 20, stamp: 1 });
+  expect(boxes.get('B')).toEqual({ x: 50, y: 0, width: 40, height: 40, stamp: 2 });
+  expect(boxes.get('C')).toEqual({ x: 0, y: 50, width: 40, height: 20, stamp: 3 });
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['A', 'B']);
+  clickCanvas(canvas, 5, 15); await nextFrame(); expect(hits).toEqual(['A']);
+  const initial = snapshotWasmLayoutDiagnostics();
+  const beforeAutoFocus = focused.slice();
+  top.set('auto'); await nextFrame();
+  expect(boxes.get('A')).toEqual({ x: 0, y: 20, width: 40, height: 20, stamp: 1 });
+  expect(boxes.get('B')).toEqual({ x: 50, y: 0, width: 40, height: 40, stamp: 2 });
+  expect(boxes.get('C')).toEqual({ x: 0, y: 50, width: 40, height: 20, stamp: 3 });
+  expect(focused).toEqual(beforeAutoFocus);
+  const topAuto = snapshotWasmLayoutDiagnostics();
+  expect(topAuto.solves).toBe(initial.solves);
+  expect(topAuto.mainPlacements).toBe(initial.mainPlacements);
+  expect(topAuto.crossPlacements).toBeGreaterThan(initial.crossPlacements);
+  expect(topAuto.nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, 5, 15); await nextFrame(); expect(hits).toEqual(['A']);
+  clickCanvas(canvas, 5, 25); await nextFrame(); expect(hits).toEqual(['A', 'A']);
+  bottom.set('auto'); await nextFrame();
+  expect(boxes.get('A')).toEqual({ x: 0, y: 10, width: 40, height: 20, stamp: 1 });
+  const bothAuto = snapshotWasmLayoutDiagnostics();
+  expect(bothAuto.solves).toBe(topAuto.solves);
+  expect(bothAuto.mainPlacements).toBe(topAuto.mainPlacements);
+  expect(bothAuto.crossPlacements).toBeGreaterThan(topAuto.crossPlacements);
+  expect(bothAuto.nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, 5, 35); await nextFrame(); expect(hits).toEqual(['A', 'A']);
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  ink.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(beforePaint.solves);
+  expect(painted.mainPlacements).toBe(beforePaint.mainPlacements);
+  expect(painted.crossPlacements).toBe(beforePaint.crossPlacements);
+  expect(painted.nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
 it.runIf(experimentalLayout).each([
-  { label: 'row cross axis', options: {}, style: { marginTop: 'auto' } },
+  { label: 'automatic row cross height', options: {}, style: { height: 'auto', marginTop: 'auto' } },
+  { label: 'row wrap-reverse cross axis', options: { flexWrap: 'wrap-reverse' as const }, style: { marginTop: 'auto' } },
   { label: 'column cross axis', options: { flexDirection: 'column' as const }, style: { marginLeft: 'auto' } },
   { label: 'column logical inline edge', options: { flexDirection: 'column' as const }, style: { marginStart: 'auto' } },
   { label: 'shorthand', options: {}, style: { margin: 'auto' as never } },
@@ -3707,4 +3775,20 @@ it.runIf(experimentalLayout)('keeps wrapped lines without auto slots on ordinary
  expect(layoutFlex({x:0,y:0,width:100,height:120},[item(true),item(),item()],{flexWrap:'wrap',gap:10,alignItems:'flex-start',alignContent:'flex-start',justifyContent:'center'},measurement)).toEqual([
   {x:10,y:0,width:40,height:20},{x:60,y:0,width:40,height:20},{x:30,y:30,width:40,height:20},
  ]);
+});
+
+
+it.runIf(experimentalLayout)('lets finite row cross auto margins override alignment in positive and overflowing space', () => {
+  const item = (height: number, margins: FlexItemStyle) => createElement(Rectangle, { style: { width: 40, height, minWidth: 0, minHeight: 0, flexShrink: 0, alignSelf: 'flex-end', ...margins } });
+  const place = (height: number, margins: FlexItemStyle) => layoutFlex({ x: 0, y: 0, width: 100, height: 80 }, [item(height, margins)], { alignItems: 'center' }, measurement)[0];
+  expect(place(20, { marginTop: 'auto' })).toEqual({ x: 0, y: 60, width: 40, height: 20 });
+  expect(place(20, { marginBottom: 'auto' }).y).toBe(0);
+  expect(place(20, { marginTop: 'auto', marginBottom: 'auto' }).y).toBe(30);
+  expect(place(20, { marginTop: 5, marginBottom: 'auto' }).y).toBe(5);
+  for (const height of [80, 120]) {
+    expect(place(height, { marginTop: 'auto' }).y).toBe(0);
+    expect(place(height, { marginBottom: 'auto' }).y).toBe(0);
+    expect(place(height, { marginTop: 'auto', marginBottom: 'auto' }).y).toBe(0);
+  }
+  expect(place(120, { marginTop: 5, marginBottom: 'auto' }).y).toBe(5);
 });

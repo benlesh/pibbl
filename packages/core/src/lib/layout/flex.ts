@@ -143,6 +143,8 @@ interface FlexItem {
   autoMainAfter: boolean;
   marginCrossBefore: number;
   marginCrossAfter: number;
+  autoCrossBefore: boolean;
+  autoCrossAfter: boolean;
   preferredCross: number;
   paddingCross: number;
   minMain: number;
@@ -718,9 +720,12 @@ function resolveFlexPlacements(
     const marginLeftValue = logicalLeft !== undefined ? logicalLeft : normalized.marginLeft === undefined ? allMargin : normalized.marginLeft;
     const autoTop = marginTopValue === 'auto', autoRight = marginRightValue === 'auto';
     const autoBottom = marginBottomValue === 'auto', autoLeft = marginLeftValue === 'auto';
-    if (row ? autoTop || autoBottom : autoLeft || autoRight) {
-      throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins are not supported');
+    if ((row ? autoTop || autoBottom : autoLeft || autoRight) &&
+        (!row || wrapReverse || typeof normalized.height !== 'number' || !Number.isFinite(normalized.height) || normalized.height < 0 || aspectRatio !== undefined)) {
+      throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child height in a row without wrap-reverse');
     }
+    const autoCrossBefore = row && autoTop;
+    const autoCrossAfter = row && autoBottom;
     const autoMainBefore = row ? reverse ? autoRight : autoLeft : reverse ? autoBottom : autoTop;
     const autoMainAfter = row ? reverse ? autoLeft : autoRight : reverse ? autoTop : autoBottom;
     if (autoMainBefore || autoMainAfter) hasAutoMainMargins = true;
@@ -973,7 +978,7 @@ function resolveFlexPlacements(
       baseMain,
       targetMain: baseMain,
       paddingMain,
-      marginMainBefore, marginMainAfter, autoMainBefore, autoMainAfter, marginCrossBefore, marginCrossAfter,
+      marginMainBefore, marginMainAfter, autoMainBefore, autoMainAfter, marginCrossBefore, marginCrossAfter, autoCrossBefore, autoCrossAfter,
       preferredCross: clamp(preferredCross, minCross, maxCross) + paddingCross,
       paddingCross,
       minMain,

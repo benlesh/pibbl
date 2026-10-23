@@ -84,7 +84,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v3() -> u32 { 3 }
+pub extern "C" fn layout_abi_v4() -> u32 { 4 }
 #[no_mangle]
 pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
@@ -95,18 +95,27 @@ fn align_cross(records: &mut [f64], size: f64, reverse: bool) -> u32 {
         if n[..6].iter().enumerate().any(|(i,v)| v.is_nan() || *v < 0.0 || (i != 3 && !v.is_finite()))
             || !n[8].is_finite() || !n[9].is_finite()
             || n[2] > n[3] || (n[4] != 0.0 && n[4] != 1.0)
-            || n[5].fract() != 0.0 || n[5] > 3.0 { return 1; }
-        // Alignment is a private numeric policy enum: stretch, start, end, center.
+            || n[5].fract() != 0.0 || n[5] > 15.0 { return 1; }
+        // Low two bits: stretch/start/end/center; next two: auto before/after.
+        let policy = n[5] as u32;
+        let alignment = policy & 3;
+        let auto_before = policy & 4 != 0;
+        let auto_after = policy & 8 != 0;
+        let has_auto = auto_before || auto_after;
+        if has_auto && reverse { return 1; }
         let margins = n[8] + n[9];
         if !margins.is_finite() { return 1; }
-        let outer = if n[4] == 1.0 && n[5] == 0.0 {
+        let outer = if n[4] == 1.0 && alignment == 0 && !has_auto {
             (size - margins - n[1]).max(0.0).clamp(n[2], n[3]) + n[1]
         } else { n[0] };
-        let offset = match n[5] as u32 {
-            2 => size - outer - margins,
-            3 => (size - outer - margins) / 2.0,
+        let free = size - outer - margins;
+        let offset = if has_auto {
+            if auto_before && free > 0.0 { free / (auto_before as u32 + auto_after as u32) as f64 } else { 0.0 }
+        } else { match alignment {
+            2 => free,
+            3 => free / 2.0,
             _ => 0.0,
-        };
+        }};
         if !outer.is_finite() || !offset.is_finite() { return 1; }
         n[6] = outer;
         n[7] = if reverse { size - offset - n[8] - outer } else { offset + n[8] };
@@ -627,6 +636,17 @@ mod tests {
         dispose(); dispose();
         assert_eq!(arena_create(),0);
         assert_eq!(arena_dispose(b,gb),1);
+    }
+
+    #[test] fn cross_auto_slots_override_alignment_without_rewriting_numeric_margins() {
+        let mut record = [20.,0.,0.,f64::INFINITY,0.,7.,0.,0.,0.,0.];
+        assert_eq!(align_cross(&mut record,40.,false),0);
+        assert_eq!((record[6],record[7],record[8],record[9]),(20.,20.,0.,0.));
+        record[5]=11.; assert_eq!(align_cross(&mut record,40.,false),0); assert_eq!(record[7],0.);
+        record[5]=15.; assert_eq!(align_cross(&mut record,40.,false),0); assert_eq!(record[7],10.);
+        assert_eq!(align_cross(&mut record,10.,false),0); assert_eq!(record[7],0.);
+        record[5]=16.; assert_eq!(align_cross(&mut record,40.,false),1);
+        record[5]=7.; assert_eq!(align_cross(&mut record,40.,true),1);
     }
 
     #[test] fn wrapped_auto_margins_share_free_space_per_line_without_rewriting_numeric_records() {

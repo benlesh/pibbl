@@ -1094,9 +1094,113 @@
           "flex.row-column-nowrap-wrap",
           "direction.rtl-and-logical-edges"
         ]
+      },
+      {
+        "id": "auto-cross-row-top-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-bottom-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-row-top-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-bottom-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-row-reverse-top-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-reverse-bottom-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-reverse-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-row-reverse-top-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-reverse-bottom-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-reverse-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
       }
     ],
-    "limit": "237 records:176 native matches and61 explicitly classified differences, including16 CSS line-local wrapped auto-margin differences. Finite direction/box/distribution/percentage/intrinsic-provider and main auto-margin evidence remains bounded; this does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "249 records:180 native matches and69 explicitly classified differences, including16 CSS line-local main auto and8 CSS cross-auto precedence differences. Finite direction/box/distribution/percentage/intrinsic-provider/auto-margin evidence remains bounded; this does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -1578,9 +1682,9 @@
       "id": "flex.auto-margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental finite nowrap/wrap/wrap-reverse main-axis auto margins in row/column, forward/reverse and LTR/RTL; physical left/right/top/bottom plus row logical start/end; sizing precedes positive absorption and nonpositive space preserves alignment",
+      "current": "experimental finite nowrap/wrap/wrap-reverse main-axis auto margins in row/column, forward/reverse and LTR/RTL; physical left/right/top/bottom plus row logical start/end; sizing precedes positive absorption and nonpositive space preserves alignment; physical top/bottom cross auto in finite nowrap/wrapped rows with explicit numeric child height, excluding wrap-reverse/aspect sizing",
       "status": "partial",
-      "unresolvedPolicy": "Finite main directions, receiver-aware row logical edges and per-line wrapped absorption are supported. Cross-axis/shorthand, intrinsic and broader opposing/minmax auto combinations remain outstanding.",
+      "unresolvedPolicy": "Finite main directions and wrapped per-line absorption, plus bounded finite row cross auto, are supported. Cross reversal/columns, shorthand, intrinsic and broader opposing/minmax auto combinations remain outstanding.",
       "evidence": {
         "positive": [
           "left/right/both slots divide positive free space after flexible sizing and before justification",
@@ -1588,12 +1692,13 @@
           "numeric-to-auto-to-numeric toggles update main placement only without re-solving or recreating nodes",
           "public FlexMargin and editor declarations expose all six edge values; runtime accepts only main-axis auto and shorthand auto remains a type error",
           "slice98: four main directions \u00d7 LTR/RTL physical auto, logical row start/end and exact source-order geometry; axis/direction signals preserve keyed focus",
-          "slice99: each wrapped line counts its own auto slots; a line without auto slots retains justification; 16 CSS-line-local differences explicitly classified against pinned Yoga"
+          "slice99: each wrapped line counts its own auto slots; a line without auto slots retains justification; 16 CSS-line-local differences explicitly classified against pinned Yoga",
+          "slice100: per-line top/bottom/both cross-auto override alignment; finite explicit-height rows, reverse main/RTL, nowrap and wrap; zero/negative space overflows at start and numeric opposite margin is retained"
         ],
         "negative": [
           "normal JavaScript rejects auto margin admission",
-          "cross-axis, column logical-inline and shorthand auto shapes rejected explicitly",
-          "old v1/v2 and incomplete v3 modules rejected before publication; root/sync imports remain inert",
+          "cross-reverse, columns/logical-inline, automatic child cross height and shorthand auto shapes rejected explicitly",
+          "old v1/v2/v3 and incomplete v4 modules rejected before publication; root/sync imports remain inert",
           "native flag cardinality and NaN rejected without rewriting numeric margin inputs"
         ],
         "interaction": [
@@ -1601,7 +1706,8 @@
           "fresh installed seven-case public geometry/targets, per-controller node/arena/cache cleanup and strict Bundler/NodeNext type consumers",
           "public mounted resize preserves stamps; paint-only preserves solves and node identity",
           "slice98: seventeen exact native/source/built/installed auto cases; public row\u2192column\u2192RTL signal movement preserves focus/stamps/nodes, old target misses and new target hits",
-          "slice99: source/built 17 wrapped cases plus installed 34-case auto family; line merge preserves keyed focus and moves targets; paint reuse and exact disposal"
+          "slice99: source/built 17 wrapped cases plus installed 34-case auto family; line merge preserves keyed focus and moves targets; paint reuse and exact disposal",
+          "slice100: source/built 12 cross-auto cases, 8 CSS cross-auto precedence differences plus4 native matches; installed46auto cases; cross-only flag changes preserve sizing/main placement/node identity, focus/hits and disposal"
         ],
         "yogaCases": [
           "auto-margin-left",
@@ -1637,10 +1743,22 @@
           "auto-wrap-column-reverse-wrap-rtl",
           "auto-wrap-column-reverse-wrap-reverse-ltr",
           "auto-wrap-column-reverse-wrap-reverse-rtl",
-          "auto-wrap-row-line-without-auto-center"
+          "auto-wrap-row-line-without-auto-center",
+          "auto-cross-row-top-ltr",
+          "auto-cross-row-bottom-ltr",
+          "auto-cross-row-both-ltr",
+          "auto-cross-row-top-rtl",
+          "auto-cross-row-bottom-rtl",
+          "auto-cross-row-both-rtl",
+          "auto-cross-row-reverse-top-ltr",
+          "auto-cross-row-reverse-bottom-ltr",
+          "auto-cross-row-reverse-both-ltr",
+          "auto-cross-row-reverse-top-rtl",
+          "auto-cross-row-reverse-bottom-rtl",
+          "auto-cross-row-reverse-both-rtl"
         ],
         "missing": [
-          "cross-axis and shorthand auto margins",
+          "cross-reversed/column cross-axis and shorthand auto margins",
           "broader min/max and opposing margin interactions"
         ]
       },
