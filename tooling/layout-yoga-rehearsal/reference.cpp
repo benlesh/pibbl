@@ -1156,6 +1156,63 @@ static void autoShorthandMarginCases() {
   }
 }
 
+static void autoOpposingMarginCases() {
+  struct MainCase { const char* name; float width; int kind; };
+  const MainCase mainCases[] = {
+    {"auto-opposing-main-grow-consumes", 200, 0},
+    {"auto-opposing-main-grow-max", 200, 1},
+    {"auto-opposing-main-grow-max-resized", 260, 1},
+    {"auto-opposing-main-shrink-min", 100, 2},
+    {"auto-opposing-main-numeric-after", 200, 3},
+    {"auto-opposing-main-negative-center", 60, 4},
+  };
+  for (const auto& fixture : mainCases) {
+    const bool grow = fixture.kind < 2;
+    const bool capped = fixture.kind == 1;
+    const bool shrink = fixture.kind == 2;
+    const bool floor = fixture.kind == 2;
+    const bool numericAfter = fixture.kind == 3;
+    const bool negative = fixture.kind == 4;
+    const int aBasis = grow || shrink ? 80 : 40;
+    const int bBasis = shrink ? 80 : 40;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(root, fixture.width); YGNodeStyleSetHeight(root, 100); YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow); YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetJustifyContent(root, negative ? YGJustifyCenter : YGJustifyFlexStart);
+    auto a = YGNodeNewWithConfig(config), b = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(a, aBasis); YGNodeStyleSetHeight(a, 20); YGNodeStyleSetFlexBasis(a, aBasis); YGNodeStyleSetFlexGrow(a, grow ? 1 : 0); YGNodeStyleSetFlexShrink(a, shrink ? 1 : 0); setMinZero(a);
+    if (capped) YGNodeStyleSetMaxWidth(a, 100); if (floor) YGNodeStyleSetMinWidth(a, 70);
+    YGNodeStyleSetMarginAuto(a, YGEdgeLeft); YGNodeStyleSetMarginAuto(a, YGEdgeRight); if (numericAfter) YGNodeStyleSetMargin(a, YGEdgeRight, 10);
+    YGNodeStyleSetWidth(b, bBasis); YGNodeStyleSetHeight(b, 20); YGNodeStyleSetFlexBasis(b, bBasis); YGNodeStyleSetFlexGrow(b, 0); YGNodeStyleSetFlexShrink(b, shrink ? 1 : 0); setMinZero(b);
+    YGNodeInsertChild(root, a, 0); YGNodeInsertChild(root, b, 1); YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+    std::cout << ",{\"name\":\"" << fixture.name << "\",\"width\":" << fixture.width << ",\"height\":100,\"gap\":0,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"containerStyle\":{\"alignItems\":\"flex-start\",\"justifyContent\":\"" << (negative ? "center" : "flex-start") << "\"},\"autoMarginFixture\":true,\"autoOpposingMarginFixture\":true,\"boxes\":[";
+    printBox(a); std::cout << ','; printBox(b); std::cout << ']';
+    if (negative) std::cout << ",\"classification\":\"css-nonpositive-auto-alignment\",\"comparisonLabel\":\"CSS keeps center alignment when auto slots receive zero under negative main free space; Yoga 3.2.1 starts at the physical edge. Classified difference, not parity.\",\"pibblBoxes\":[{\"x\":-10,\"y\":0,\"width\":40,\"height\":20},{\"x\":30,\"y\":0,\"width\":40,\"height\":20}]";
+    std::cout << ",\"itemStyles\":[{\"width\":" << aBasis << ",\"height\":20,\"flexBasis\":" << aBasis << ",\"flexGrow\":" << (grow ? 1 : 0) << ",\"flexShrink\":" << (shrink ? 1 : 0) << ",\"minWidth\":" << (floor ? 70 : 0) << ",\"minHeight\":0";
+    if (capped) std::cout << ",\"maxWidth\":100";
+    std::cout << ",\"marginLeft\":\"auto\",\"marginRight\":" << (numericAfter ? "10" : "\"auto\"") << "},{\"width\":" << bBasis << ",\"height\":20,\"flexBasis\":" << bBasis << ",\"flexGrow\":0,\"flexShrink\":" << (shrink ? 1 : 0) << ",\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+  for (int bounded = 0; bounded < 2; ++bounded) {
+    const bool minimum = bounded == 0;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config); YGNodeStyleSetWidth(root, 200); YGNodeStyleSetHeight(root, 100); YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow); YGNodeStyleSetAlignItems(root, YGAlignCenter); YGNodeStyleSetJustifyContent(root, YGJustifyFlexStart);
+    auto a = YGNodeNewWithConfig(config), b = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(a, 40); YGNodeStyleSetHeight(a, minimum ? 20 : 80); YGNodeStyleSetFlexGrow(a, 0); YGNodeStyleSetFlexShrink(a, 0); setMinZero(a);
+    if (minimum) YGNodeStyleSetMinHeight(a, 40); else YGNodeStyleSetMaxHeight(a, 30);
+    YGNodeStyleSetMarginAuto(a, YGEdgeTop); YGNodeStyleSetMarginAuto(a, YGEdgeBottom);
+    YGNodeStyleSetWidth(b, 40); YGNodeStyleSetHeight(b, 20); YGNodeStyleSetFlexGrow(b, 0); YGNodeStyleSetFlexShrink(b, 0); setMinZero(b);
+    YGNodeInsertChild(root, a, 0); YGNodeInsertChild(root, b, 1); YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+    std::cout << ",{\"name\":\"auto-opposing-cross-" << (minimum ? "min" : "max") << "\",\"width\":200,\"height\":100,\"gap\":0,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"containerStyle\":{\"alignItems\":\"center\",\"justifyContent\":\"flex-start\"},\"autoMarginFixture\":true,\"autoOpposingMarginFixture\":true,\"boxes\":[";
+    printBox(a); std::cout << ','; printBox(b); std::cout << "],\"itemStyles\":[{\"width\":40,\"height\":" << (minimum ? 20 : 80) << ",\"minWidth\":0,\"minHeight\":" << (minimum ? 40 : 0) << ",\"flexGrow\":0,\"flexShrink\":0";
+    if (!minimum) std::cout << ",\"maxHeight\":30";
+    std::cout << ",\"marginTop\":\"auto\",\"marginBottom\":\"auto\"},{\"width\":40,\"height\":20,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1290,5 +1347,6 @@ int main() {
   autoCrossMarginCases();
   autoCrossDirectionCases();
   autoShorthandMarginCases();
+  autoOpposingMarginCases();
   std::cout << "]\n";
 }

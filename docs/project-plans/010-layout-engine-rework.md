@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice102 `dc0565a6` (auto shorthand and edge precedence), recorded below.
+Latest delivery is slice103 (opposing auto-margin bounds evidence), recorded below.
+Slice102 is `dc0565a6` (auto shorthand and edge precedence).
 Slice101 is `e2418916` (finite cross-auto direction coverage).
 Slice100 is `26613e70` (bounded finite row cross auto margins).
 Slice99 is `57a74243` (wrapped per-line main auto margins).
@@ -52,9 +53,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next delivery is103, opposing auto-margin bounds evidence. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next delivery is104, intrinsic Text cross-auto sizing. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles293 records:200matches/93classified differences; click A/B/C targets.
+cycles301 records:207matches/94classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2584,13 +2585,40 @@ Fixed33 stays5complete/11experimental/8partial/8missing/1excluded, all7gates ope
 Next103 hardens the existing opposing/minmax auto gap; automatic/intrinsic cross
 sizing remains explicitly unfinished. Final whole-codebase review stays at end.
 
-## [NEXT] Opposing auto-margin bounds evidence (slice 103)
+## Delivered opposing auto-margin bounds evidence (slice 103)
 
-After consolidation34, harden finite auto-margin interactions with opposing
-slots, main growth/shrink, min/max and cross constraints through supported public
-scenarios and explicit native classifications. Keep automatic/intrinsic cross
-sizing visibly unsupported until its own real vertical slice; do not mark the
-whole auto-margin capability complete from shorthand or a bounded matrix alone.
+This is conformance hardening of existing runtime behavior, not a new operation
+or production change. Eight pinned cases cover growth consuming free space,
+max-width freeze before opposing auto sharing and resize, minimum-width shrink
+freeze, numeric opposite margin, negative free space, and cross min/max before
+opposing cross sharing. A capped100px item starts30→60 in200→260 beside40px.
+Public mounted fixtures assert exact geometry, visible hit points and per-owner
+cleanup;1focused test passes all8cases. Independent Chromium CSS matches all8.
+
+Seven match native. With two40px items in60px, pinned Yoga starts0/40 while the
+existing CSS/Pibbl rule sets auto slots0 then centers at−10/30. Raw native boxes
+remain recorded with `css-nonpositive-auto-alignment` and separate expectations;
+this is not a parity claim. Source5192/built5193 all8 cases pass boxes/live keys/
+hits, cleanup0/errors[]; built469inputs. Installed98auto+24direction cases pass
+230inputs/Bundler/NodeNext/per-controller cleanup; overflow hits choose visible
+points instead of negative coordinates outside the Canvas. Fresh tarball SHA256
+`453ca3110eb20251b64ecaffbf4fcc5548c894ce6da04422f87c5c7027358184`
+is unchanged from102 because package code is unchanged. Types/lint/docs109RED/
+JSDoc/catalog/301-case provenance pass. Reuse native13/v5/68649byte evidence from101
+and passing consolidation34; no unchanged runtime re-review or broad rerun.
+Source http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration:
+Next section17times selects bounds. Corpus301=207matches+94classified.
+Fixed33 remains5complete/11experimental/8partial/8missing/1excluded, all7gates open.
+Auto-margin stays partial: automatic/intrinsic cross sizing is not implemented.
+Consolidate103–105 after105; final whole-codebase review stays at program end.
+
+## [NEXT] Intrinsic Text cross-auto sizing (slice 104)
+
+Start with direct wrapped Text in a finite nowrap row, declared width and automatic
+height. Its cross auto margin must consume space after final-width text measurement
+and suppress stretch, with text/width changes moving layout/paint/hit/focus bounds
+without replacing keyed identity. Keep unsupported custom/column/intrinsic shapes
+explicit until their own supported contracts and public evidence exist.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

@@ -3920,3 +3920,27 @@ it.runIf(experimentalLayout)('allocates auto shorthand before specific physical 
   expect(disposed.activeArenas).toBe(baseline.activeArenas);
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
+
+it.runIf(experimentalLayout)('renders opposing auto-margin growth and bounds fixtures through the public API', async () => {
+  type Fixture = { name: string; width: number; height: number; containerStyle: FlexStyle; boxes: readonly { x: number; y: number; width: number; height: number }[]; pibblBoxes?: readonly { x: number; y: number; width: number; height: number }[]; itemStyles: readonly RectStyle[] };
+  const fixtures = yogaReference.cases.filter(fixture => 'autoOpposingMarginFixture' in fixture) as unknown as readonly Fixture[];
+  expect(fixtures).toHaveLength(8);
+  const baseline = snapshotWasmLayoutDiagnostics();
+  for (const fixture of fixtures) {
+    const boxes = new Map<number, { x: number; y: number; width: number; height: number }>(); const hits: number[] = [];
+    function Probe({ index, style: _style }: { index: number; style: RectStyle }) {
+      const box = useLayoutBox(); const transform = useCanvasContext().getTransform();
+      boxes.set(index, { x: transform.e, y: transform.f, width: box.width, height: box.height });
+      return <Rectangle onClick={() => hits.push(index)} style={{ width: box.width, height: box.height, fill: '#19375b' }} />;
+    }
+    const canvas = document.createElement('canvas'); canvas.width = fixture.width; canvas.height = fixture.height; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: fixture.width, height: fixture.height, ...fixture.containerStyle }}>{fixture.itemStyles.map((style, index) => <Probe key={index} index={index} style={style} />)}</Flex>);
+    controllers.push(controller); await nextFrame();
+    const expected = fixture.pibblBoxes ?? fixture.boxes;
+    expect(expected.map((_, index) => boxes.get(index)), fixture.name).toEqual(expected);
+    for (const box of expected) clickCanvas(canvas, Math.max(0, box.x) + 1, Math.max(0, box.y) + 1);
+    expect(hits, fixture.name).toEqual([0, 1]);
+    controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+    expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+  }
+});

@@ -1035,3 +1035,15 @@ finite numeric child cross size without aspect sizing. Normal builds and pure
 intrinsic auto-margin measurement retain their existing diagnostics. Source,
 built and installed shorthand fixtures cover all/left-zero/top-zero/start-zero in
 LTR/RTL. Mounted overrides preserve keyed focus, geometry/hits and paint reuse.
+
+
+Bounded opposing auto-margin evidence also covers flexible growth consuming free
+space, max-width freezing before remainder absorption, min-width shrink freezing,
+a numeric opposite edge, and cross-axis min/max before auto distribution. A capped
+100px item with two main auto edges starts at30 in200px and60 in260px beside a
+fixed40px sibling. Numeric bounds resolve before slot distribution; this evidence
+does not change runtime behavior. With two40px items in60px, auto slots become0
+and existing center alignment places them at−10/30. Pinned Yoga instead starts
+at0/40; `css-nonpositive-auto-alignment` explicitly labels the preserved CSS rule.
+Independent Chromium CSS verifies all eight expected boxes. Automatic/intrinsic
+cross sizing remains unsupported; the auto-margin capability is still partial.
