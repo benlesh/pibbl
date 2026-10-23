@@ -813,10 +813,10 @@ function resolveFlexPlacements(
     const position = normalized.position;
     if (position !== undefined) {
       assertSupportedRelativeFlexPosition(child, normalized, options, container);
-      const left = numericRelativeInset(normalized.left, 'left', child, container);
-      const right = numericRelativeInset(normalized.right, 'right', child, container);
-      const top = numericRelativeInset(normalized.top, 'top', child, container);
-      const bottom = numericRelativeInset(normalized.bottom, 'bottom', child, container);
+      const left = resolveFlexInset(normalized.left, 'left', child, container);
+      const right = resolveFlexInset(normalized.right, 'right', child, container);
+      const top = resolveFlexInset(normalized.top, 'top', child, container);
+      const bottom = resolveFlexInset(normalized.bottom, 'bottom', child, container);
       if (position === 'relative') {
         if (options.layoutDirection === 'rtl') relativeX = right === undefined ? left ?? 0 : -right;
         else relativeX = left === undefined ? right === undefined ? 0 : -right : left;
@@ -1305,10 +1305,10 @@ function resolveAbsoluteFlexPlacement(
   region?: LayoutRegion,
   measurementToken?: object,
 ): FlexPlacement {
-  const left = resolveAbsoluteInset(style.left, 'left', child, paddingBox);
-  const right = resolveAbsoluteInset(style.right, 'right', child, paddingBox);
-  const top = resolveAbsoluteInset(style.top, 'top', child, paddingBox);
-  const bottom = resolveAbsoluteInset(style.bottom, 'bottom', child, paddingBox);
+  const left = resolveFlexInset(style.left, 'left', child, paddingBox);
+  const right = resolveFlexInset(style.right, 'right', child, paddingBox);
+  const top = resolveFlexInset(style.top, 'top', child, paddingBox);
+  const bottom = resolveFlexInset(style.bottom, 'bottom', child, paddingBox);
   const automaticWidth = style.width === undefined || style.width === 'auto';
   const automaticHeight = style.height === undefined || style.height === 'auto';
   let measuredWidth: number | undefined;
@@ -1953,7 +1953,7 @@ function validateAbsoluteBound(
   }
 }
 
-function resolveAbsoluteInset(
+function resolveFlexInset(
   value: unknown,
   property: 'left' | 'right' | 'top' | 'bottom',
   child: PibblElement<any>,
@@ -1965,7 +1965,7 @@ function resolveAbsoluteInset(
     return resolveLength(value as Percentage, property === 'left' || property === 'right' ? container.width : container.height,
       property, childContext(child, container));
   }
-  throw childDiagnostic(child, property, value, container, 'currently requires a finite numeric absolute inset or a signed decimal percentage');
+  throw childDiagnostic(child, property, value, container, 'currently requires a finite numeric inset or a signed decimal percentage');
 }
 
 function assertSupportedRelativeFlexPosition(
@@ -1995,19 +1995,6 @@ function isFixedNowrapFlexContainingChild(style: Readonly<FlexStyle & FlexItemSt
     typeof style.height === 'number' && Number.isFinite(style.height) && style.height >= 0 &&
     (style.flexGrow ?? 0) === 0 && (style.flexShrink ?? 1) === 0 &&
     (style.flexBasis === undefined || style.flexBasis === 'auto');
-}
-
-function numericRelativeInset(
-  value: unknown,
-  property: 'left' | 'right' | 'top' | 'bottom',
-  child: PibblElement<any>,
-  container: Readonly<LayoutBox>,
-): number | undefined {
-  if (value === undefined) return;
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    throw childDiagnostic(child, property, value, container, 'currently requires a finite numeric relative inset');
-  }
-  return value;
 }
 
 function rejectUnsupportedItemFields(

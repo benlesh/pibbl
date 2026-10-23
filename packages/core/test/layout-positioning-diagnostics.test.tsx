@@ -77,6 +77,14 @@ describe('explicit direct-Flex position modes', () => {
 });
 
 
+describe('physical percentage placement validation', () => {
+  it.runIf(experimentalLayout).each(['static', 'relative'] as const)('validates %s inset values even when they do not move a static box', position => {
+    for (const inset of [{ left: 'auto' as never }, { right: Infinity }, { top: '10%%' as never }, { bottom: ('1' + '0'.repeat(309) + '%') as never }]) {
+      expect(mount(<Flex style={{ width: 200, height: 100 }}><Rectangle style={{ width: 30, height: 20, minWidth: 0, minHeight: 0, position, ...inset }} /></Flex>)).toThrow();
+    }
+  });
+});
+
 describe('bounded direct-Flex absolute admission', () => {
   const fixed = { position: 'absolute' as const, width: 30, height: 20, left: 12, top: 8 };
   it.each([
@@ -99,7 +107,7 @@ describe('bounded direct-Flex absolute admission', () => {
     ['malformed horizontal percentage', { ...fixed, left: '10%%' as never }],
     ['both-auto aspect', { ...fixed, width: 'auto' as const, height: 'auto' as const, aspectRatio: 2 }],
   ])('keeps unsupported wrapped absolute %s diagnosed', (_name, style) => {
-    expect(mount(<Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={style} /></Flex>)).toThrow(_name.includes('horizontal anchor') ? 'currently requires a finite numeric absolute inset' : _name.includes('percentage') ? 'unsupported length value' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+    expect(mount(<Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={style} /></Flex>)).toThrow(_name.includes('horizontal anchor') ? 'currently requires a finite numeric inset' : _name.includes('percentage') ? 'unsupported length value' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
   it.runIf(!experimentalLayout)('rejects column absolute participation in the normal runtime', () => {
     expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={fixed} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');

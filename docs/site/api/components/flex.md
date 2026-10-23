@@ -79,7 +79,7 @@ const relativeFlex = (
 
 The first rectangle still reserves its RTL slot, then shifts 18 units left and
 8 units down; the second remains in its original slot. This is experimental
-layout only. Relative insets stay numeric; wrapped positioned layout owners,
+layout only. Relative percentages use parent content width/height; wrapped positioned layout owners,
 other layout parents and normal JavaScript Flex remain unsupported.
 
 Experimental direct children can also use `position: "absolute"` with numeric
@@ -381,8 +381,8 @@ grow/shrink and omitted or automatic basis. Both owners must remain nowrap.
 Physical absolute insets accept numbers or signed decimal percentages: left/right
 use the selected padding-box width, top/bottom its height. Negative values and
 values above100% may overflow. Resolution follows containing-box inheritance and
-precedes paired sizing, bounds and physical precedence. Relative insets remain
-numeric-only; automatic and malformed insets reject.
+precedes paired sizing, bounds and physical precedence. Relative percentages use
+the parent content box instead. Automatic, malformed and nonfinite insets reject.
 
 A finite Flex in any wrapping mode accepts fixed numeric and opposing-inset automatic absolute boxes in `row`,
 `row-reverse`, `column` and `column-reverse`, including RTL. Physical insets keep

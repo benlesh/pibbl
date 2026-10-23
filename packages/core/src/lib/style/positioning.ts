@@ -190,13 +190,13 @@ export interface PositioningStyle extends SystemStyle {
    * Omission retains the legacy local Flex boundary and left/top behavior.
    */
   position?: 'static' | 'relative' | 'absolute';
-  /** Left edge coordinate or inset. Explicit absolute Flex insets accept finite numbers or percentages of the containing padding-box axis; relative insets require finite numbers. See {@link Length}. */
+  /** Left edge coordinate or inset. Explicit absolute Flex insets accept finite numbers or percentages of the containing padding-box axis; relative percentages use the parent content-box axis. See {@link Length}. */
   left?: Exclude<Length, 'auto'>;
-  /** Right edge inset. Absolute Flex accepts finite numbers or percentages of the containing padding-box width; relative requires a finite number. See {@link Length}. */
+  /** Right edge inset. Absolute Flex accepts finite numbers or percentages of the containing padding-box width; relative percentages use the parent content-box width. See {@link Length}. */
   right?: Exclude<Length, 'auto'>;
-  /** Top edge coordinate or inset. Explicit absolute Flex insets accept finite numbers or percentages of the containing padding-box axis; relative insets require finite numbers. See {@link Length}. */
+  /** Top edge coordinate or inset. Explicit absolute Flex insets accept finite numbers or percentages of the containing padding-box axis; relative percentages use the parent content-box axis. See {@link Length}. */
   top?: Exclude<Length, 'auto'>;
-  /** Bottom edge inset. Absolute Flex accepts finite numbers or percentages of the containing padding-box height; relative requires a finite number. See {@link Length}. */
+  /** Bottom edge inset. Absolute Flex accepts finite numbers or percentages of the containing padding-box height; relative percentages use the parent content-box height. See {@link Length}. */
   bottom?: Exclude<Length, 'auto'>;
 }
 

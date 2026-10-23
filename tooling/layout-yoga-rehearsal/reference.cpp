@@ -2833,6 +2833,52 @@ static void absolutePercentageInsetCases() {
   absolutePercentageInsetRecord(YGFlexDirectionRow, YGWrapWrap, YGDirectionLTR, 2, true);
 }
 
+static const char* relativePercentageDirectionName(YGFlexDirection value) { return value == YGFlexDirectionRow ? "row" : value == YGFlexDirectionRowReverse ? "row-reverse" : value == YGFlexDirectionColumn ? "column" : "column-reverse"; }
+static const char* relativePercentageWrapName(YGWrap value) { return value == YGWrapWrapReverse ? "wrap-reverse" : "wrap"; }
+static void relativePercentageInsetRecord(YGFlexDirection direction, YGWrap wrap, YGDirection writing, int profile, bool resized) {
+  const float width = resized ? 264 : 204, height = resized ? 154 : 104;
+  auto config = YGConfigNew(); YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config); YGNodeStyleSetPositionType(root, YGPositionTypeRelative); YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox); YGNodeStyleSetWidth(root, width); YGNodeStyleSetHeight(root, height); YGNodeStyleSetFlexDirection(root, direction); YGNodeStyleSetFlexWrap(root, wrap); YGNodeStyleSetGap(root, YGGutterAll, 10); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetAlignContent(root, YGAlignFlexStart); YGNodeStyleSetPadding(root, YGEdgeLeft, 10); YGNodeStyleSetPadding(root, YGEdgeRight, 30); YGNodeStyleSetPadding(root, YGEdgeTop, 20); YGNodeStyleSetPadding(root, YGEdgeBottom, 20); YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+  auto a = YGNodeNewWithConfig(config), b = YGNodeNewWithConfig(config), c = YGNodeNewWithConfig(config);
+  for (auto child : {a,b,c}) { YGNodeStyleSetWidth(child, 60); YGNodeStyleSetHeight(child, 20); YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 0); setMinZero(child); }
+  if (profile == 0) { YGNodeStyleSetPositionType(b, YGPositionTypeStatic); YGNodeStyleSetPositionPercent(b,YGEdgeLeft,10); YGNodeStyleSetPositionPercent(b,YGEdgeRight,15); YGNodeStyleSetPositionPercent(b,YGEdgeTop,20); YGNodeStyleSetPositionPercent(b,YGEdgeBottom,10); }
+  else { YGNodeStyleSetPositionType(b, YGPositionTypeRelative); if (profile == 1) { YGNodeStyleSetPositionPercent(b,YGEdgeLeft,10); YGNodeStyleSetPositionPercent(b,YGEdgeRight,15); YGNodeStyleSetPositionPercent(b,YGEdgeTop,20); YGNodeStyleSetPositionPercent(b,YGEdgeBottom,10); } else { YGNodeStyleSetPositionPercent(b,YGEdgeRight,15); YGNodeStyleSetPositionPercent(b,YGEdgeBottom,10); } }
+  YGNodeInsertChild(root,a,0); YGNodeInsertChild(root,b,1); YGNodeInsertChild(root,c,2); YGNodeCalculateLayout(root,YGUndefined,YGUndefined,writing);
+  const bool row = direction == YGFlexDirectionRow || direction == YGFlexDirectionRowReverse;
+  const bool mainReverse = row ? ((direction == YGFlexDirectionRowReverse) != (writing == YGDirectionRTL)) : direction == YGFlexDirectionColumnReverse;
+  const bool crossReverse = wrap == YGWrapWrapReverse;
+  const float contentX = 12, contentY = 22, contentWidth = width - 44, contentHeight = height - 44;
+  const bool wraps = row ? contentWidth < 200 : contentHeight < 80;
+  float xs[3], ys[3];
+  for (int index=0; index<3; ++index) {
+    const int line = wraps ? index / 2 : 0, within = wraps ? index % 2 : index;
+    if (row) {
+      const float mainOrigin = mainReverse ? contentX + contentWidth - 60 : contentX;
+      xs[index] = mainOrigin + (mainReverse ? -70 * within : 70 * within);
+      const float crossOrigin = crossReverse ? contentY + contentHeight - 20 : contentY;
+      ys[index] = crossOrigin + (crossReverse ? -30 * line : 30 * line);
+    } else {
+      const float mainOrigin = mainReverse ? contentY + contentHeight - 20 : contentY;
+      ys[index] = mainOrigin + (mainReverse ? -30 * within : 30 * within);
+      const bool ltr = writing != YGDirectionRTL;
+      const bool crossPhysicalReverse = crossReverse != !ltr;
+      const float crossOrigin = crossPhysicalReverse ? contentX + contentWidth - 60 : contentX;
+      xs[index] = crossOrigin + (crossPhysicalReverse ? -70 * line : 70 * line);
+    }
+  }
+  if (profile == 1) { xs[1] += writing == YGDirectionRTL ? -contentWidth * .15f : contentWidth * .10f; ys[1] += contentHeight * .20f; }
+  else if (profile == 2) { xs[1] -= contentWidth * .15f; ys[1] -= contentHeight * .10f; }
+  const char* profileName = profile == 0 ? "static" : profile == 1 ? "relative-leading" : "relative-trailing";
+  std::cout << ",{\"name\":\"position-relative-percent-" << relativePercentageDirectionName(direction) << '-' << relativePercentageWrapName(wrap) << '-' << (writing == YGDirectionRTL ? "rtl" : "ltr") << '-' << profileName << (resized ? "-resized" : "") << "\",\"width\":" << width << ",\"height\":" << height << ",\"gap\":10,\"flexDirection\":\"" << relativePercentageDirectionName(direction) << "\",\"flexWrap\":\"" << relativePercentageWrapName(wrap) << "\",\"layoutDirection\":\"" << (writing == YGDirectionRTL ? "rtl" : "ltr") << "\",\"containerStyle\":{\"position\":\"relative\",\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\",\"alignContent\":\"flex-start\"},\"relativePercentageInsetFixture\":true,\"boxes\":["; printBox(a); std::cout << ','; printBox(b); std::cout << ','; printBox(c); std::cout << ']';
+  const bool differs = YGNodeLayoutGetLeft(a) != xs[0] || YGNodeLayoutGetTop(a) != ys[0] || YGNodeLayoutGetLeft(b) != xs[1] || YGNodeLayoutGetTop(b) != ys[1] || YGNodeLayoutGetLeft(c) != xs[2] || YGNodeLayoutGetTop(c) != ys[2];
+  if (differs) std::cout << ",\"classification\":\"pibbl-physical-relative-percent\",\"comparisonLabel\":\"Pibbl keeps static percentage insets inert and translates relative leaves from physical content-box flow slots; pinned Yoga differs for this direction/wrap profile.\",\"pibblBoxes\":[{\"x\":" << xs[0] << ",\"y\":" << ys[0] << ",\"width\":60,\"height\":20},{\"x\":" << xs[1] << ",\"y\":" << ys[1] << ",\"width\":60,\"height\":20},{\"x\":" << xs[2] << ",\"y\":" << ys[2] << ",\"width\":60,\"height\":20}]";
+  std::cout << ",\"itemStyles\":[{\"width\":60,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":60,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"position\":\"" << (profile == 0 ? "static" : "relative") << "\",";
+  if (profile == 0 || profile == 1) std::cout << "\"left\":\"10%\",\"right\":\"15%\",\"top\":\"20%\",\"bottom\":\"10%\""; else std::cout << "\"right\":\"15%\",\"bottom\":\"10%\"";
+  std::cout << "},{\"width\":60,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
+static void relativePercentageInsetCases() { const YGFlexDirection directions[] = {YGFlexDirectionRow,YGFlexDirectionRowReverse,YGFlexDirectionColumn,YGFlexDirectionColumnReverse}; const YGWrap wraps[] = {YGWrapWrap,YGWrapWrapReverse}; for (auto direction:directions) for (auto wrap:wraps) for (int rtl=0;rtl<2;++rtl) for (int profile=0;profile<3;++profile) relativePercentageInsetRecord(direction,wrap,rtl?YGDirectionRTL:YGDirectionLTR,profile,false); relativePercentageInsetRecord(YGFlexDirectionRow,YGWrapWrap,YGDirectionLTR,1,true); relativePercentageInsetRecord(YGFlexDirectionColumnReverse,YGWrapWrapReverse,YGDirectionRTL,2,true); }
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -3002,5 +3048,6 @@ int main() {
   relativeWrappedDirectionCases();
   absoluteWrappedAlignmentCases();
   absolutePercentageInsetCases();
+  relativePercentageInsetCases();
   std::cout << "]\n";
 }

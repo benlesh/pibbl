@@ -55,7 +55,10 @@ does not introduce a containing-block or out-of-flow system:
 - `position: "relative"` first reserves that same slot, then translates its
   final paint, hit, and focus geometry once. Its local `useLayoutBox()`
   allocation and sibling allocation do not change.
-- `left`, `right`, `top`, and `bottom` are finite numeric insets on this path.
+- `left`, `right`, `top`, and `bottom` accept finite numbers or signed decimal
+  percentages on this path. Horizontal relative percentages use parent content
+  width; vertical percentages use parent content height. Static insets validate
+  but do not affect placement. Finite negative and above100% offsets may overflow.
   In LTR, `left` takes precedence over `right`; in RTL, `right` takes
   precedence over `left`; `top` takes precedence over `bottom`. The losing
   opposite inset is ignored. A sole right or bottom inset shifts negatively.
@@ -73,7 +76,7 @@ does not introduce a containing-block or out-of-flow system:
 
 `Absolute` keeps its existing independent `left`/`top` contract. This slice
 does not add absolute positioning, right/bottom anchoring, containing blocks,
-percent relative insets, wrapped layout owners, Flow/Grid/Overlay participation, or normal
+logical insets, wrapped layout owners, Flow/Grid/Overlay participation, or normal
 JavaScript Flex support.
 
 ### Experimental direct-Flex absolute participation
@@ -92,7 +95,8 @@ Keep authored percentages intact across exact component forwarding; consume thei
 placement once. Negative and greater-than-100% values may overflow; nonfinite
 resolved arithmetic, malformed percentages and automatic insets reject. Existing
 physical precedence, paired-auto derivation, aspect, bounds and natural measurement
-then use those scalar insets. Relative physical insets remain finite numeric only.
+then use those scalar insets. Relative physical percentages instead use the
+parent content box, as described above.
 
 All four main directions, LTR/RTL and nowrap/wrap/wrap-reverse reuse the same
 fixed/bounded, opposing-inset, aspect, paired-provider and admitted Text sizing

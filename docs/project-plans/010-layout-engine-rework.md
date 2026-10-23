@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice143 (physical percentage absolute insets; this commit).
+Latest delivery is slice144 (physical percentage static/relative insets; this commit).
+Slice143 is `f644de8c` (physical percentage absolute insets).
 Slice142 is `357167b2` (wrapped absolute omitted-axis alignment).
 Slice141 is `187bec28` (static/relative primitive leaves across wrapped Flex).
 Consolidation47 is `4afb3c84` for139–141.
@@ -105,7 +106,7 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:659 records:515 geometry matches,136 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
+Current corpus:709 records:518 geometry matches,183 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
@@ -4162,13 +4163,54 @@ Corpus659 is515matches/136preserved-semantic/8font-source; nine query difference
 remain separate. No full659 replay, font parity, speed, Node24 trust, fixed33
 capability-status or seven-release-gate completion claim.
 
-## [NEXT] Physical percentage static/relative insets (144)
+## Slice144 delivered: content-box percentage static/relative insets
 
-Use the finite parent content axes for percentages, preserving static-ignore and
-physical relative signs across reversal. Pin actual native cross/main behavior
-against ordinary flow rather than inferring static behavior from source alone.
-Retain existing known-layout/containing admission, forwarding and cleanup rules;
-no new public field or cache protocol. Consolidate142–144 after separate delivery.
+Finite direct-Flex static/relative insets accept signed decimal percentages:
+horizontal edges use immediate parent content width and vertical edges its height.
+Static validates then ignores insets; relative translates final geometry once
+without changing its flow slot or siblings. Existing LTR/RTL physical precedence,
+main/wrap reversal sign preservation, finite overflow, forwarding and admitted
+known-owner boundaries remain. Absolute percentages still use the selected
+padding box; sharing the scalar resolver does not share their reference box.
+This is a new percentage-reference policy, not a claim of legacy percent parity.
+
+The repaired test artifact produced a genuine RED on numeric-only relative inset
+validation before runtime edits. Focused4files passed77/2skip79, normal44/35skip79,
+Latest1/413skip414. Public proof covers all directions/wrapping, omitted/static
+flow equality, relative leading/trailing deltas, negative/>100%, resize, stable
+siblings/keys, focus/hits, malformed/auto/nonfinite rejection and exact teardown.
+Signal-owned fixed direct Flex owners additionally prove content-relative owner
+movement and descendant absolute padding/inherited containing references.
+Independent Chromium151.0.7922.34 CSS geometry verifies content160x60 deltas
++16/+12 LTR, -24/+12 RTL and +20/+20 after resize. Receipt:
+`/tmp/pibbl-slice144-css-basis.json`. Pinned single-child Yoga also substantiates
+that scalar reference; wrapped Yoga static/cross/reverse placement differs and
+is retained raw rather than adopted as Pibbl flow policy.
+
+Source and built each passed50 comparisons (3exact/47classified),227inputs,
+source-order exposed targets/overlap, paint reuse, zero errors and cleanup000.
+Final screenshot inspected. Native expected Pibbl slots are derived independently
+from physical content geometry; classification preserves Yoga boxes. Fresh packed
+consumer passed245inputs, strict Bundler/NodeNext, content-axis/static/relative
+geometry, resize, input/identity/paint/cleanup and104 auto-margin cases. Tarball
+SHA256 `d1d90b45d9ca83a2a5cdca3438538d0577d230dd2a36380a8c9f40b586e3ee7c`.
+The packed omitted baseline was corrected to omit insets along with position.
+Types, changed lint, docs109 mutation probes/JSDoc and public5/full709 boundary
+passed; scoped review found no material issue. Logs
+`/tmp/pibbl-slice144-{public-red,focused-final,normal,latest,source,built,packed,types-final,lint,docs,boundary}.txt`.
+Corpus709 is518matches/183preserved-semantic/8font-source; nine query differences
+remain separate. No full709 replay, kernel/ABI/cache change, font parity, speed,
+Node24 trust, fixed33 status or release-gate completion claim.
+
+## [NEXT] Finite percentage absolute dimensions and bounds (145)
+
+Resolve percentage width/height and min/max against the selected padding box
+before existing aspect/provider calculations and bounds validation. Preserve
+original style forwarding, owner resize/input revisions, natural query/cache
+contracts and Pibbl contradictory-bound rejection. Pin a focused public RED and
+explicit type/browser/package evidence for the coherent existing sizing family;
+no child decorations, logical insets, both-auto custom provider or ABI expansion.
+Consolidate142–144 separately before further production edits.
 
 ### Finite positioning exit matrix after134
 

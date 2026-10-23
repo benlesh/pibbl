@@ -101,10 +101,11 @@ parent; it does not create a CSS cascade.
 In experimental layout, a primitive leaf in a finite LTR or RTL
 `Flex` of any main direction and wrapping mode may choose `position: "static"` or `"relative"`. Static retains its
 ordinary Flex slot and ignores insets. Relative retains that slot, then applies
-finite numeric `left`/`right`/`top`/`bottom` once to final geometry. LTR
+`left`/`right`/`top`/`bottom` once to final geometry. Numbers stay physical;
+percentages use parent content width for left/right and height for top/bottom. LTR
 prefers left over right, RTL prefers right over left, and top takes precedence over bottom.
 Omitting `position` preserves the existing Flex placement rules. This bounded
-feature keeps relative insets numeric and does not add wrapped containing owners
+feature resolves relative percentages against parent content width/height and does not add wrapped containing owners
 or other layout-family support.
 
 Experimental direct Flex children in any main direction and wrapping mode may also select `position: "absolute"`
@@ -355,8 +356,8 @@ grow/shrink and omitted or automatic basis. Both owners must remain nowrap.
 Physical absolute insets accept numbers or signed decimal percentages: left/right
 use the selected padding-box width, top/bottom its height. Negative values and
 values above100% may overflow. Resolution follows containing-box inheritance and
-precedes paired sizing, bounds and physical precedence. Relative insets remain
-numeric-only; automatic and malformed insets reject.
+precedes paired sizing, bounds and physical precedence. Relative percentages use
+the parent content box instead. Automatic, malformed and nonfinite insets reject.
 
 A finite Flex in any wrapping mode accepts fixed numeric and opposing-inset automatic absolute boxes in `row`,
 `row-reverse`, `column` and `column-reverse`, including RTL. Physical insets keep

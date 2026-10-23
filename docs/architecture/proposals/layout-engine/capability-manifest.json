@@ -2571,7 +2571,7 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "experimental finite nowrap/wrap/wrap-reverse static/relative primitive placement and fixed/opposing-inset/aspect-derived absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets; paired-provider natural sizing and bounded generic Text automatic height and unwrapped natural ink dimensions, including both-auto, across nowrap directions with explicit native query provenance; direct declarative nowrap static containing chains across main directions with fixed numeric neutral-flex owners; omitted-position legacy retained; all existing absolute sizing profiles supported across wrap/wrap-reverse directions; physical anchored axes use the padding box, including signed horizontal-width/vertical-height percentages, and omitted axes use whole-content main/cross alignment, including wrap-reverse cross reversal",
+      "current": "experimental finite nowrap/wrap/wrap-reverse static/relative primitive placement and fixed/opposing-inset/aspect-derived absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets with signed horizontal-width/vertical-height percentages from immediate parent content axes; paired-provider natural sizing and bounded generic Text automatic height and unwrapped natural ink dimensions, including both-auto, across nowrap directions with explicit native query provenance; direct declarative nowrap static containing chains across main directions with fixed numeric neutral-flex owners; omitted-position legacy retained; all existing absolute sizing profiles supported across wrap/wrap-reverse directions; physical anchored axes use the padding box, including signed horizontal-width/vertical-height percentages, and omitted axes use whole-content main/cross alignment, including wrap-reverse cross reversal",
       "status": "experimental",
       "unresolvedPolicy": "Intrinsic absolute sizing, explicit containing-block overrides, opaque/transformed ancestry and wider layout admission remain open.",
       "evidence": {
@@ -2599,7 +2599,8 @@
           "slice140: physically anchored fixed/bounded/paired/aspect/provider/Text absolute profiles across all main directions, LTR/RTL and wrap/wrap-reverse; 34 native/source/built geometry cases, public wrapped direction/profile tests, keyed identity/paint reuse/cleanup and installed absoluteAnchoredWrap receipts",
           "slice141: static/relative primitive leaves across all main/writing directions and wrapping modes; static equals ordinary flow and relative preserves physical final-world offsets; 32 native/source/built comparison records explicitly classify 16 static cross-inset and 12 relative reversal differences; wrapped known layout owners remain rejected",
           "slice142: wrapped absolute omitted-axis alignment across all main/writing directions and existing admitted sizing profiles; whole-content alignment per omitted axis, wrap-reverse cross reflection, physical inset precedence and non-flow source order; 64 native/source/built fixed profiles plus focused sizing-family evidence",
-          "slice143: physical percentage absolute insets resolve locally against selected padding-box width/height before existing sizing and precedence; authored values survive exact forwarding and static containing inheritance; 38 native/source/built cases, focused signal/resize/bounds/overflow evidence, strict four-edge types and installed consumer proof"
+          "slice143: physical percentage absolute insets resolve locally against selected padding-box width/height before existing sizing and precedence; authored values survive exact forwarding and static containing inheritance; 38 native/source/built cases, focused signal/resize/bounds/overflow evidence, strict four-edge types and installed consumer proof",
+          "slice144: static percentage insets validate and remain inert; relative percentages resolve from immediate parent content width/height before one final physical translation across directions/wraps; ordinary sibling slots, signals, fixed direct containing owners, source input, resize/overflow, paint reuse and cleanup; 50 pinned native comparisons label 47 divergences and 3 matches"
         ],
         "negative": [
           "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
@@ -2750,7 +2751,7 @@
         ],
         "missing": [
           "general absolute intrinsic dimensions (built-in text/images, both-auto and nested owners)",
-          "broader positioned known layout owners, logical insets and relative percentage policy",
+          "broader positioned known layout owners and logical inset policy",
           "general containing-block ownership"
         ]
       }
