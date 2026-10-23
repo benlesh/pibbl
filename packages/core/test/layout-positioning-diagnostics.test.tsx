@@ -96,10 +96,10 @@ describe('bounded direct-Flex absolute admission', () => {
   it.runIf(experimentalLayout).each([
     ['unpaired automatic width', { ...fixed, width: 'auto' as const }],
     ['nonfinite horizontal anchor', { ...fixed, left: Infinity }],
-    ['percentage horizontal anchor', { ...fixed, left: '10%' as const }],
+    ['malformed horizontal percentage', { ...fixed, left: '10%%' as never }],
     ['both-auto aspect', { ...fixed, width: 'auto' as const, height: 'auto' as const, aspectRatio: 2 }],
   ])('keeps unsupported wrapped absolute %s diagnosed', (_name, style) => {
-    expect(mount(<Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={style} /></Flex>)).toThrow(_name.includes('horizontal anchor') ? 'currently requires a finite numeric absolute inset' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+    expect(mount(<Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={style} /></Flex>)).toThrow(_name.includes('horizontal anchor') ? 'currently requires a finite numeric absolute inset' : _name.includes('percentage') ? 'unsupported length value' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
   it.runIf(!experimentalLayout)('rejects column absolute participation in the normal runtime', () => {
     expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={fixed} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
@@ -150,7 +150,7 @@ describe('bounded direct-Flex absolute admission', () => {
     ['automatic height without opposing insets', { ...fixed, height: 'auto' as const }],
     ['derived overflow before zero clamping', { ...fixed, width: 'auto' as const, left: 1e308, right: 1e308 }],
     ['percentage width', { ...fixed, width: '50%' as const }],
-    ['percentage inset', { ...fixed, left: '10%' as const }],
+    ['automatic inset', { ...fixed, left: 'auto' as never }],
     ['nonfinite inset', { ...fixed, left: Infinity }],
     ['percentage minimum', { ...fixed, minWidth: '10%' as const }],
     ['negative minimum', { ...fixed, minHeight: -1 }],

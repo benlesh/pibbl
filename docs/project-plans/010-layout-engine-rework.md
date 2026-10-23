@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice142 (wrapped absolute omitted-axis alignment; this commit).
+Latest delivery is slice143 (physical percentage absolute insets; this commit).
+Slice142 is `357167b2` (wrapped absolute omitted-axis alignment).
 Slice141 is `187bec28` (static/relative primitive leaves across wrapped Flex).
 Consolidation47 is `4afb3c84` for139–141.
 Slice140 is `a2308b97` (physically anchored absolute profiles across wrapped Flex).
@@ -104,7 +105,7 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:621 records:487 geometry matches,126 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
+Current corpus:659 records:515 geometry matches,136 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
@@ -4123,12 +4124,51 @@ Corpus621 is487matches/126preserved-semantic/8font-source; nine query difference
 remain separate. No full621-case replay, kernel/ABI change, font parity, speed,
 Node24 aggregate trust or release-gate completion is claimed. Fixed33 unchanged.
 
-## [NEXT] Physical percentage absolute insets (143)
+## Slice143 delivered: physical percentage absolute insets
 
-Use the existing Length surface; pin per-axis percentage reference boxes, inset
-precedence, negative/overflow arithmetic, derived sizing and containing inheritance
-before implementation. Preserve relative offsets and all unrelated sizing/owner
-boundaries. Consolidate142–144 after the third separately committed slice.
+Physical absolute insets accept signed decimal percentages using the existing
+Length surface; right/bottom types now match left/top. Resolve horizontal edges
+against selected padding-box width and vertical edges against its height after
+containing inheritance. Preserve authored percentages across exact forwarding;
+scalar resolution precedes existing paired-auto/aspect/bounds/anchoring. Finite
+negative/>100% offsets may overflow; malformed, automatic and nonfinite results
+reject. Relative offsets remain numeric. No cache, kernel or ABI change.
+
+Public RED captured numeric-only inset rejection before production. Focused4files
+passed75/2skip77; normal44/33skip77; Latest1/413skip414. Public evidence covers
+all directions/wraps, precedence after bounds, resize, aspect, overflow, signal
+forwarding and static/relative containing references with exact cleanup. Types and
+lint pass. The public consumer's two old number-only negative assertions migrated
+to positive absolute percentages plus negative automatic inset assertions. Fresh
+packed verification passes245inputs, strict Bundler/NodeNext with explicit typed
+four-edge percentages, mounted geometry/input/identity/paint/cleanup and104auto
+margin cases. Tarball SHA256
+`ee575a3fd4552e5d37afee0f96a7df1be621fb701d66e92313601508783657b6`.
+Docs109 mutation probes and JSDoc pass. Public API descriptions had stale nowrap,
+containing-owner and Text boundaries from earlier slices; these were migrated
+alongside the type change, preserving unrelated sizing deferrals.
+
+Native38records preserve authored percentage strings.28whole-fixture geometry
+matches and10preserved-content-box-reflection comparisons are classified. Absolute
+B is native-exact in all38; asymmetric L10/R30 column wrap-reverse flow reflection
+is native−20px in both writings. Initial comparison data incorrectly used +20RTL
+from an unrelated logical-inset fixture; actual browser geometry corrected it.
+Final source and built replays each passed all38 (28matches/10classified),
+227source/dist inputs, exact cleanup and zero errors. The built screenshot was
+inspected. The replay driver also excluded this absolute family from its unrelated
+final ordinary-flow gap probe after all case-specific assertions had passed.
+Logs `/tmp/pibbl-slice143-{public-red,focused-final,normal,latest,source,built,packed,types-final,lint,docs,boundary}.txt`.
+Corpus659 is515matches/136preserved-semantic/8font-source; nine query differences
+remain separate. No full659 replay, font parity, speed, Node24 trust, fixed33
+capability-status or seven-release-gate completion claim.
+
+## [NEXT] Physical percentage static/relative insets (144)
+
+Use the finite parent content axes for percentages, preserving static-ignore and
+physical relative signs across reversal. Pin actual native cross/main behavior
+against ordinary flow rather than inferring static behavior from source alone.
+Retain existing known-layout/containing admission, forwarding and cleanup rules;
+no new public field or cache protocol. Consolidate142–144 after separate delivery.
 
 ### Finite positioning exit matrix after134
 

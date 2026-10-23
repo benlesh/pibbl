@@ -85,6 +85,15 @@ its width, height and flex factors do not consume a sibling slot or an extra gap
 It remains at its authored position in paint order, pointer targeting and focus
 navigation. Its ordinary keyed identity and receiver-owned inputs remain active.
 
+Absolute physical insets accept finite numbers and signed decimal percentages.
+Resolve horizontal percentages against the selected containing padding-box width,
+and vertical percentages against its height, after containing-box inheritance.
+Keep authored percentages intact across exact component forwarding; consume their
+placement once. Negative and greater-than-100% values may overflow; nonfinite
+resolved arithmetic, malformed percentages and automatic insets reject. Existing
+physical precedence, paired-auto derivation, aspect, bounds and natural measurement
+then use those scalar insets. Relative physical insets remain finite numeric only.
+
 All four main directions, LTR/RTL and nowrap/wrap/wrap-reverse reuse the same
 fixed/bounded, opposing-inset, aspect, paired-provider and admitted Text sizing
 profiles described below. Each anchored axis uses physical padding-box insets.
@@ -140,7 +149,7 @@ end retain offsets when the child exceeds the content dimension. Physical insets
 and their precedence do not change with main direction. An inset on one axis does
 not change the other axis's content alignment. `alignSelf` is not admitted.
 
-General intrinsic sizing outside the bounded profiles below, percentage insets, nested
+General intrinsic sizing outside the bounded profiles below, logical insets, nested
 general containing-block selection, Flow/Grid/Layer participation, and migration of
 the existing `Absolute` convenience component remain outside this admission. The first admission excludes
 direct layout-component children, child box decoration, margins, nonnumeric

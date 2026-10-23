@@ -190,14 +190,14 @@ export interface PositioningStyle extends SystemStyle {
    * Omission retains the legacy local Flex boundary and left/top behavior.
    */
   position?: 'static' | 'relative' | 'absolute';
-  /** Left edge coordinate or inset. Explicit Flex modes currently accept finite numeric insets only. See {@link Length}. */
+  /** Left edge coordinate or inset. Explicit absolute Flex insets accept finite numbers or percentages of the containing padding-box axis; relative insets require finite numbers. See {@link Length}. */
   left?: Exclude<Length, 'auto'>;
-  /** Right edge inset for an explicit direct-Flex placement mode; must be finite numeric. */
-  right?: number;
-  /** Top edge coordinate or inset. Explicit Flex modes currently accept finite numeric insets only. See {@link Length}. */
+  /** Right edge inset. Absolute Flex accepts finite numbers or percentages of the containing padding-box width; relative requires a finite number. See {@link Length}. */
+  right?: Exclude<Length, 'auto'>;
+  /** Top edge coordinate or inset. Explicit absolute Flex insets accept finite numbers or percentages of the containing padding-box axis; relative insets require finite numbers. See {@link Length}. */
   top?: Exclude<Length, 'auto'>;
-  /** Bottom edge inset for an explicit direct-Flex placement mode; must be finite numeric. */
-  bottom?: number;
+  /** Bottom edge inset. Absolute Flex accepts finite numbers or percentages of the containing padding-box height; relative requires a finite number. See {@link Length}. */
+  bottom?: Exclude<Length, 'auto'>;
 }
 
 export interface ResolvedPosition {

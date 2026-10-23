@@ -32,8 +32,8 @@ const basicFlex = (
 Explore the [Flex live example](#/examples/layout/flex).
 
 Experimental layout also provides a bounded direct-child placement adjustment
-for a finite nowrap Flex allocation in any main direction. Expanded non-row
-placement supports direct or exactly-forwarded primitive leaves. `position: "static"` keeps the normal
+for a finite Flex allocation in any main direction and wrapping mode.
+Placement supports direct or exactly-forwarded primitive leaves. `position: "static"` keeps the normal
 slot and ignores insets. `position: "relative"` keeps the normal slot, then
 offsets its final geometry without moving siblings. In LTR, `left` wins over
 `right`; in RTL, `right` wins over `left`; `top` wins over `bottom`.
@@ -79,11 +79,11 @@ const relativeFlex = (
 
 The first rectangle still reserves its RTL slot, then shifts 18 units left and
 8 units down; the second remains in its original slot. This is experimental
-layout only. It does not add containing blocks,
-percent insets, wrapping, other layout parents, or normal JavaScript Flex.
+layout only. Relative insets stay numeric; wrapped positioned layout owners,
+other layout parents and normal JavaScript Flex remain unsupported.
 
 Experimental direct children can also use `position: "absolute"` with numeric
-width/height and optional numeric physical insets. Such a child leaves Flex
+width/height and optional numeric or percentage physical insets. Such a child leaves Flex
 allocation while keeping its authored paint, target and focus order:
 
 ```tsx
@@ -123,11 +123,10 @@ Pibbl's existing validation rather than Yoga's minimum-wins conflict behavior.
 `aspectRatio` requires exactly one automatic axis and one declared numeric axis;
 both-automatic and both-explicit ratio cases remain unsupported. Without a ratio,
 both automatic axes may use their own opposing inset pairs. This is finite
-placement arithmetic, not intrinsic measurement. An automatic
-or omitted axis without both insets or admitted aspect derivation, percentage
-insets, nonnumeric or automatic
-bounds, direct layout children, child box decoration, margins and general nested
-containing-block selection remain unsupported.
+placement arithmetic; admitted natural measurement profiles are described below.
+Automatic axes require the bounded paired, aspect or natural sizing contract.
+Nonnumeric or automatic bounds, direct layout children, child box decoration,
+margins and general nested containing-block selection remain unsupported.
 
 The experimental `layout-wasm` Studio build additionally supports finite numeric
 physical margins in finite rows and columns, with nowrap or wrap. `margin` sets all four edges;
@@ -363,7 +362,7 @@ RTL/wrap-reverse, provider/layout-owner and column variants remain deferred.
 
 ### Experimental nested containing boxes
 
-Within a direct declarative finite row-nowrap Flex chain, explicit
+Within a direct declarative finite nowrap Flex chain, explicit
 `position: "static"` passes absolute insets to the nearest containing Flex.
 `position: "relative"` establishes a local box. An omitted position retains
 Pibbl's existing local boundary. For an inner box at20,10 and an absolute child
@@ -374,26 +373,34 @@ override. See the layout contract for the bounded admission.
 
 Relative offsets keep their physical final-world sign under main reversal.
 The private Yoga comparison labels the four reversed-relative differences;
-Pibbl preserves its existing physical-offset contract. Nested static containing
-chains remain limited to row/nowrap parent and child Flex boxes.
+Pibbl preserves its existing physical-offset contract. Non-row containing chains require fixed numeric direct Flex owners with zero
+grow/shrink and omitted or automatic basis. Both owners must remain nowrap.
 
 ### Experimental absolute main directions
 
-A finite nowrap Flex accepts fixed numeric and opposing-inset automatic absolute boxes in `row`,
+Physical absolute insets accept numbers or signed decimal percentages: left/right
+use the selected padding-box width, top/bottom its height. Negative values and
+values above100% may overflow. Resolution follows containing-box inheritance and
+precedes paired sizing, bounds and physical precedence. Relative insets remain
+numeric-only; automatic and malformed insets reject.
+
+A finite Flex in any wrapping mode accepts fixed numeric and opposing-inset automatic absolute boxes in `row`,
 `row-reverse`, `column` and `column-reverse`, including RTL. Physical insets keep
 the same padding-box reference. Without an inset, `justifyContent` controls the
-main axis and `alignItems` the cross axis, including reversal and horizontal RTL.
+main axis and `alignItems` the cross axis, using the whole content box rather
+than an individual flow line. Wrap-reverse reverses omitted cross alignment,
+combined with column RTL exactly once.
 A fixed box keeps its size under stretch. Authored paint, click and focus order
 remain unchanged. Numeric bounds apply to fixed and derived axes before inset
 anchoring in every direction. Exactly-one-auto aspect derivation also applies in every direction, with paired
 insets taking precedence and numeric bounds applied afterward. Natural measured
 dimensions require paired pure providers and preserve their existing exact/unbounded
-query in every finite nowrap direction. Other automatic axes need their opposing
+query in every admitted finite main direction and wrapping mode. Other automatic axes need their opposing
 physical inset pair or the admitted aspect path.
 
 ### Experimental measured absolute size
 
-In any finite nowrap main direction, a direct custom primitive with paired pure
+In any admitted finite main direction and wrapping mode, a direct custom primitive with paired pure
 `measureIntrinsic` and `measure` providers can use `position: "absolute", width: "auto", height: 20` with, for
 example, `right: 18, top: 8`. Without an opposing horizontal inset pair or aspect
 ratio, `measure` receives `[0, Infinity]` width availability and exact20px height.
@@ -411,5 +418,9 @@ The symmetric `width: 80, height: "auto"` path queries exact80px width and
 at40px width; `bottom: 10` anchors the resulting height to the owning padding box.
 Both paths query the declared fixed dimension before its own bounds, then clamp
 used dimensions. They require exactly one automatic dimension. This does not add
-builtin Text/image intrinsic sizing, both-auto natural sizing, opaque component
-measurement, margins, decoration or responsive-query support.
+general image/custom-font intrinsic sizing, both-auto custom-provider sizing,
+opaque component measurement, margins, decoration or responsive-query support.
+Direct generic visible Text additionally supports automatic height at declared
+width, unwrapped natural width at declared height, or unwrapped both-auto ink
+dimensions without opposing pairs or aspect. Canvas ink metrics supply dimensions;
+final content alignment or physical insets place them after independent bounds.

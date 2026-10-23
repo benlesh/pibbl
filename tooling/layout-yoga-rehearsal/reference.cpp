@@ -2787,6 +2787,52 @@ static void absoluteAnchoredWrapCases() {
   absoluteAnchoredWrapRecord(YGFlexDirectionColumnReverse, YGWrapWrapReverse, YGDirectionRTL, true, true);
 }
 
+static const char* percentageInsetDirectionName(YGFlexDirection value) { return value == YGFlexDirectionRow ? "row" : value == YGFlexDirectionRowReverse ? "row-reverse" : value == YGFlexDirectionColumn ? "column" : "column-reverse"; }
+static const char* percentageInsetWrapName(YGWrap value) { return value == YGWrapWrapReverse ? "wrap-reverse" : "wrap"; }
+static void absolutePercentageInsetRecord(YGFlexDirection direction, YGWrap wrap, YGDirection writing, int profile, bool resized) {
+  const float width = resized ? 264 : 204, height = resized ? 154 : 104;
+  auto config = YGConfigNew(); YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config); YGNodeStyleSetPositionType(root, YGPositionTypeRelative); YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox); YGNodeStyleSetWidth(root, width); YGNodeStyleSetHeight(root, height); YGNodeStyleSetFlexDirection(root, direction); YGNodeStyleSetFlexWrap(root, wrap); YGNodeStyleSetGap(root, YGGutterAll, 10); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetAlignContent(root, YGAlignFlexStart); YGNodeStyleSetPadding(root, YGEdgeLeft, 10); YGNodeStyleSetPadding(root, YGEdgeRight, 30); YGNodeStyleSetPadding(root, YGEdgeTop, 20); YGNodeStyleSetPadding(root, YGEdgeBottom, 20); YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+  auto a = YGNodeNewWithConfig(config), absolute = YGNodeNewWithConfig(config), c = YGNodeNewWithConfig(config);
+  for (auto flow : {a, c}) { YGNodeStyleSetWidth(flow, 50); YGNodeStyleSetHeight(flow, 20); YGNodeStyleSetFlexGrow(flow, 0); YGNodeStyleSetFlexShrink(flow, 0); setMinZero(flow); }
+  YGNodeStyleSetPositionType(absolute, YGPositionTypeAbsolute); YGNodeStyleSetFlexGrow(absolute, 0); YGNodeStyleSetFlexShrink(absolute, 0); setMinZero(absolute);
+  const char* profileName = profile == 0 ? "left-top" : profile == 1 ? "right-bottom" : profile == 2 ? "paired-auto" : profile == 3 ? "aspect" : "overflow";
+  if (profile == 0) { YGNodeStyleSetWidth(absolute, 50); YGNodeStyleSetHeight(absolute, 20); YGNodeStyleSetPositionPercent(absolute, YGEdgeLeft, 10); YGNodeStyleSetPositionPercent(absolute, YGEdgeTop, 20); }
+  else if (profile == 1) { YGNodeStyleSetWidth(absolute, 50); YGNodeStyleSetHeight(absolute, 20); YGNodeStyleSetPositionPercent(absolute, YGEdgeRight, 10); YGNodeStyleSetPositionPercent(absolute, YGEdgeBottom, 20); }
+  else if (profile == 2) { YGNodeStyleSetWidthAuto(absolute); YGNodeStyleSetHeightAuto(absolute); YGNodeStyleSetPositionPercent(absolute, YGEdgeLeft, 10); YGNodeStyleSetPositionPercent(absolute, YGEdgeRight, 15); YGNodeStyleSetPositionPercent(absolute, YGEdgeTop, 10); YGNodeStyleSetPositionPercent(absolute, YGEdgeBottom, 20); }
+  else if (profile == 3) { YGNodeStyleSetWidth(absolute, 80); YGNodeStyleSetHeightAuto(absolute); YGNodeStyleSetAspectRatio(absolute, 2); YGNodeStyleSetPositionPercent(absolute, YGEdgeLeft, 10); YGNodeStyleSetPositionPercent(absolute, YGEdgeTop, 20); }
+  else { YGNodeStyleSetWidth(absolute, 50); YGNodeStyleSetHeight(absolute, 20); YGNodeStyleSetPositionPercent(absolute, YGEdgeLeft, -10); YGNodeStyleSetPositionPercent(absolute, YGEdgeTop, 120); }
+  YGNodeInsertChild(root, a, 0); YGNodeInsertChild(root, absolute, 1); YGNodeInsertChild(root, c, 2); YGNodeCalculateLayout(root, YGUndefined, YGUndefined, writing);
+  const bool preservedReflection = (direction == YGFlexDirectionColumn || direction == YGFlexDirectionColumnReverse) && wrap == YGWrapWrapReverse;
+  const double reflectionDelta = -20; // Physical L10/R30 content-box reflection, independent of writing direction.
+  std::cout << ",{\"name\":\"position-absolute-percent-" << percentageInsetDirectionName(direction) << '-' << percentageInsetWrapName(wrap) << '-' << (writing == YGDirectionRTL ? "rtl" : "ltr") << '-' << profileName << (resized ? "-resized" : "") << "\",\"width\":" << width << ",\"height\":" << height << ",\"gap\":10,\"flexDirection\":\"" << percentageInsetDirectionName(direction) << "\",\"flexWrap\":\"" << percentageInsetWrapName(wrap) << "\",\"layoutDirection\":\"" << (writing == YGDirectionRTL ? "rtl" : "ltr") << "\",\"containerStyle\":{\"position\":\"relative\",\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\",\"alignContent\":\"flex-start\"},\"absolutePercentageInsetFixture\":true,\"boxes\":["; printBox(a); std::cout << ','; printBox(absolute); std::cout << ','; printBox(c); std::cout << ']';
+  if (preservedReflection) {
+    std::cout << ",\"classification\":\"preserved-content-box-reflection\",\"comparisonLabel\":\"Preserved Pibbl content-box wrap reflection moves flow leaves; physical percentage absolute insets still match Yoga.\",\"pibblBoxes\":[{\"x\":" << YGNodeLayoutGetLeft(a) + reflectionDelta << ",\"y\":" << YGNodeLayoutGetTop(a) << ",\"width\":" << YGNodeLayoutGetWidth(a) << ",\"height\":" << YGNodeLayoutGetHeight(a) << "},";
+    printBox(absolute);
+    std::cout << ",{\"x\":" << YGNodeLayoutGetLeft(c) + reflectionDelta << ",\"y\":" << YGNodeLayoutGetTop(c) << ",\"width\":" << YGNodeLayoutGetWidth(c) << ",\"height\":" << YGNodeLayoutGetHeight(c) << "}]";
+  }
+  std::cout << ",\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"position\":\"absolute\",";
+  if (profile == 0) std::cout << "\"width\":50,\"height\":20,\"left\":\"10%\",\"top\":\"20%\"";
+  else if (profile == 1) std::cout << "\"width\":50,\"height\":20,\"right\":\"10%\",\"bottom\":\"20%\"";
+  else if (profile == 2) std::cout << "\"width\":\"auto\",\"height\":\"auto\",\"left\":\"10%\",\"right\":\"15%\",\"top\":\"10%\",\"bottom\":\"20%\"";
+  else if (profile == 3) std::cout << "\"width\":80,\"height\":\"auto\",\"aspectRatio\":2,\"left\":\"10%\",\"top\":\"20%\"";
+  else std::cout << "\"width\":50,\"height\":20,\"left\":\"-10%\",\"top\":\"120%\"";
+  std::cout << ",\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
+static void absolutePercentageInsetCases() {
+  const YGFlexDirection directions[] = {YGFlexDirectionRow, YGFlexDirectionRowReverse, YGFlexDirectionColumn, YGFlexDirectionColumnReverse}; const YGWrap wraps[] = {YGWrapWrap, YGWrapWrapReverse};
+  // The 32 anchor records prove every direction/wrap/writing combination. The
+  // remaining six records prove existing sizing composition and resize behavior.
+  for (const auto direction : directions) for (const auto wrap : wraps) for (int rtl = 0; rtl < 2; ++rtl) for (int profile = 0; profile < 2; ++profile) absolutePercentageInsetRecord(direction, wrap, rtl ? YGDirectionRTL : YGDirectionLTR, profile, false);
+  absolutePercentageInsetRecord(YGFlexDirectionRow, YGWrapWrap, YGDirectionLTR, 2, false);
+  absolutePercentageInsetRecord(YGFlexDirectionColumnReverse, YGWrapWrapReverse, YGDirectionRTL, 3, false);
+  absolutePercentageInsetRecord(YGFlexDirectionRowReverse, YGWrapWrapReverse, YGDirectionRTL, 4, false);
+  absolutePercentageInsetRecord(YGFlexDirectionRow, YGWrapWrap, YGDirectionLTR, 0, true);
+  absolutePercentageInsetRecord(YGFlexDirectionColumnReverse, YGWrapWrapReverse, YGDirectionRTL, 1, true);
+  absolutePercentageInsetRecord(YGFlexDirectionRow, YGWrapWrap, YGDirectionLTR, 2, true);
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -2955,5 +3001,6 @@ int main() {
   absoluteAnchoredWrapCases();
   relativeWrappedDirectionCases();
   absoluteWrappedAlignmentCases();
+  absolutePercentageInsetCases();
   std::cout << "]\n";
 }

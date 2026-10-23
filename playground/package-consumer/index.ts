@@ -1054,16 +1054,20 @@ createElement(HorizontalLine, { y: 12 });
 createElement(HorizontalLine, { style: { stroke: 'black' } });
 // right is a numeric positioning inset, independent of horizontal-line endpoints.
 createElement(HorizontalLine, { style: { y: 12, right: 40, position: "relative" } });
-// @ts-expect-error new right inset requires a number
-createElement(HorizontalLine, { style: { y: 12, right: "10%", position: "relative" } });
+// Percentage right is available to explicit absolute Flex placement.
+createElement(HorizontalLine, { style: { y: 12, right: "10%", position: "absolute" } });
+// @ts-expect-error automatic right inset is unsupported
+createElement(HorizontalLine, { style: { y: 12, right: "auto", position: "absolute" } });
 // @ts-expect-error vertical-line geometry is style-only
 createElement(VerticalLine, { x: 12 });
 // @ts-expect-error vertical line requires style.x
 createElement(VerticalLine, { style: { stroke: 'black' } });
 // bottom is a numeric positioning inset, independent of vertical-line endpoints.
 createElement(VerticalLine, { style: { x: 12, bottom: 40, position: "relative" } });
-// @ts-expect-error new bottom inset requires a number
-createElement(VerticalLine, { style: { x: 12, bottom: "10%", position: "relative" } });
+// Percentage bottom is available to explicit absolute Flex placement.
+createElement(VerticalLine, { style: { x: 12, bottom: "10%", position: "absolute" } });
+// @ts-expect-error automatic bottom inset is unsupported
+createElement(VerticalLine, { style: { x: 12, bottom: "auto", position: "absolute" } });
 // @ts-expect-error text content is supplied through children, not a program prop
 createElement(Text, { text: 'legacy' });
 // @ts-expect-error text is not a style property

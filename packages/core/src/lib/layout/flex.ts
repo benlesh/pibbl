@@ -1305,10 +1305,10 @@ function resolveAbsoluteFlexPlacement(
   region?: LayoutRegion,
   measurementToken?: object,
 ): FlexPlacement {
-  const left = numericAbsoluteInset(style.left, 'left', child, paddingBox);
-  const right = numericAbsoluteInset(style.right, 'right', child, paddingBox);
-  const top = numericAbsoluteInset(style.top, 'top', child, paddingBox);
-  const bottom = numericAbsoluteInset(style.bottom, 'bottom', child, paddingBox);
+  const left = resolveAbsoluteInset(style.left, 'left', child, paddingBox);
+  const right = resolveAbsoluteInset(style.right, 'right', child, paddingBox);
+  const top = resolveAbsoluteInset(style.top, 'top', child, paddingBox);
+  const bottom = resolveAbsoluteInset(style.bottom, 'bottom', child, paddingBox);
   const automaticWidth = style.width === undefined || style.width === 'auto';
   const automaticHeight = style.height === undefined || style.height === 'auto';
   let measuredWidth: number | undefined;
@@ -1953,17 +1953,19 @@ function validateAbsoluteBound(
   }
 }
 
-function numericAbsoluteInset(
+function resolveAbsoluteInset(
   value: unknown,
   property: 'left' | 'right' | 'top' | 'bottom',
   child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): number | undefined {
   if (value === undefined) return;
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    throw childDiagnostic(child, property, value, container, 'currently requires a finite numeric absolute inset');
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (isPercentage(value)) {
+    return resolveLength(value as Percentage, property === 'left' || property === 'right' ? container.width : container.height,
+      property, childContext(child, container));
   }
-  return value;
+  throw childDiagnostic(child, property, value, container, 'currently requires a finite numeric absolute inset or a signed decimal percentage');
 }
 
 function assertSupportedRelativeFlexPosition(

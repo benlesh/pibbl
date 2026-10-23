@@ -98,24 +98,24 @@ root ratio sizing remain outside this contract.
 `FlexItemStyle` is the direct-child participation style consumed by a `Flex`
 parent; it does not create a CSS cascade.
 
-In experimental layout, a primitive leaf in a finite LTR or RTL nowrap
-`Flex` of any main direction may choose `position: "static"` or `"relative"`. Static retains its
+In experimental layout, a primitive leaf in a finite LTR or RTL
+`Flex` of any main direction and wrapping mode may choose `position: "static"` or `"relative"`. Static retains its
 ordinary Flex slot and ignores insets. Relative retains that slot, then applies
 finite numeric `left`/`right`/`top`/`bottom` once to final geometry. LTR
 prefers left over right, RTL prefers right over left, and top takes precedence over bottom.
 Omitting `position` preserves the existing Flex placement rules. This bounded
-feature does not provide containing blocks,
-percent-inset resolution, wrapping, or other layout-family support.
+feature keeps relative insets numeric and does not add wrapped containing owners
+or other layout-family support.
 
-Experimental direct nowrap Flex children in any main direction may also select `position: "absolute"`
+Experimental direct Flex children in any main direction and wrapping mode may also select `position: "absolute"`
 with finite numeric width/height or automatic/omitted axes paired with both
-finite numeric physical insets on each automatic axis. With a positive finite
+finite physical insets on each automatic axis. With a positive finite
 `aspectRatio`, exactly one automatic axis may instead derive from the declared
 finite numeric opposite axis. Both-automatic and both-explicit ratio cases remain
 outside this admission. This excludes the child from Flex line allocation while preserving authored
 paint/target/focus order. Insets reference the parent's inner border edge; padding
 does not shift an explicit inset. LTR prefers left, RTL prefers right, and top
-prefers bottom. An axis with no inset uses parent content-box alignment via
+takes precedence over bottom. An axis with no inset uses parent content-box alignment via
 `justifyContent` or `alignItems`; stretch leaves fixed height at cross-start.
 For a paired automatic axis, the remaining padding-box extent after both
 insets becomes the used dimension and a negative remainder clamps to zero. That
@@ -336,7 +336,7 @@ RTL/wrap-reverse, provider/layout-owner and column variants remain deferred.
 
 ### Experimental nested containing boxes
 
-Within a direct declarative finite row-nowrap Flex chain, explicit
+Within a direct declarative finite nowrap Flex chain, explicit
 `position: "static"` passes absolute insets to the nearest containing Flex.
 `position: "relative"` establishes a local box. An omitted position retains
 Pibbl's existing local boundary. For an inner box at20,10 and an absolute child
@@ -347,25 +347,34 @@ override. See the layout contract for the bounded admission.
 
 Relative translation remains physical under main reversal. Yoga's four reversed
 relative cases are recorded as deliberate differences with separate Pibbl boxes.
-This does not widen the row/nowrap nested static containing-block boundary.
+Non-row containing chains require fixed numeric direct Flex owners with zero
+grow/shrink and omitted or automatic basis. Both owners must remain nowrap.
 
 ### Experimental absolute main directions
 
-A finite nowrap Flex accepts fixed numeric and opposing-inset automatic absolute boxes in `row`,
+Physical absolute insets accept numbers or signed decimal percentages: left/right
+use the selected padding-box width, top/bottom its height. Negative values and
+values above100% may overflow. Resolution follows containing-box inheritance and
+precedes paired sizing, bounds and physical precedence. Relative insets remain
+numeric-only; automatic and malformed insets reject.
+
+A finite Flex in any wrapping mode accepts fixed numeric and opposing-inset automatic absolute boxes in `row`,
 `row-reverse`, `column` and `column-reverse`, including RTL. Physical insets keep
 the same padding-box reference. Without an inset, `justifyContent` controls the
-main axis and `alignItems` the cross axis, including reversal and horizontal RTL.
+main axis and `alignItems` the cross axis, using the whole content box rather
+than an individual flow line. Wrap-reverse reverses omitted cross alignment,
+combined with column RTL exactly once.
 A fixed box keeps its size under stretch. Authored paint, click and focus order
 remain unchanged. Numeric bounds apply to fixed and derived axes before inset
 anchoring in every direction. Exactly-one-auto aspect derivation also applies in every direction, with paired
 insets taking precedence and numeric bounds applied afterward. Natural measured
 dimensions require paired pure providers and preserve their existing exact/unbounded
-query in every finite nowrap direction. Other automatic axes need their opposing
+query in every admitted finite main direction and wrapping mode. Other automatic axes need their opposing
 physical inset pair or the admitted aspect path.
 
 ### Experimental measured absolute size
 
-In any finite nowrap main direction, a direct custom primitive with paired pure
+In any admitted finite main direction and wrapping mode, a direct custom primitive with paired pure
 `measureIntrinsic` and `measure` providers can use `position: "absolute", width: "auto", height: 20` with, for
 example, `right: 18, top: 8`. Without an opposing horizontal inset pair or aspect
 ratio, `measure` receives `[0, Infinity]` width availability and exact20px height.
@@ -383,5 +392,9 @@ The symmetric `width: 80, height: "auto"` path queries exact80px width and
 at40px width; `bottom: 10` anchors the resulting height to the owning padding box.
 Both paths query the declared fixed dimension before its own bounds, then clamp
 used dimensions. They require exactly one automatic dimension. This does not add
-builtin Text/image intrinsic sizing, both-auto natural sizing, opaque component
-measurement, margins, decoration or responsive-query support.
+general image/custom-font intrinsic sizing, both-auto custom-provider sizing,
+opaque component measurement, margins, decoration or responsive-query support.
+Direct generic visible Text additionally supports automatic height at declared
+width, unwrapped natural width at declared height, or unwrapped both-auto ink
+dimensions without opposing pairs or aspect. Canvas ink metrics supply dimensions;
+final content alignment or physical insets place them after independent bounds.
