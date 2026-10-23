@@ -306,6 +306,11 @@ world reversal does not alter the containing content size.
 With the same decorated owner, a definite nested height60 capped at maxHeight25%
 receives25→40. Its100%-height leaves receive that final allocation once; the
 40-high sibling keeps C at y74. This definite path performs no pure measurement.
+The rotated decorated column-reverse case uses border-box width144→204/height244,
+paddingL20/R20/T10/B30 and border2. A definite width60 capped at maxWidth25%
+receives25→40 from content cross100→160; its100%-width leaves consume that width
+once, while C stays at74,132. Width-only updates reuse main solves/lines and
+this definite path also performs no pure measurement.
 Finite nested Flex allocations resolve percentages from the final inner content
 box, after outer line allocation. Pinned row/column × nowrap/wrap resize cases
 include inner40% dimensions/bases and10% gaps: allocated main81→51 gives child

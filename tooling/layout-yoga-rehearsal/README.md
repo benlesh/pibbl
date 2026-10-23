@@ -490,3 +490,12 @@ at132,74 while point136,52 becomes an A1 target. `--nested-decorated-cross-max`
 checks source/private-built geometry, keys, input, native reuse and zero pure
 measurements. The isolated installed consumer repeats it. Corpus314=220matches/
 94classified; auto104/direction24 remain unchanged. Broader min/max scope is open.
+
+### Definite nested column cross maximum (slice 115)
+
+The column-reverse decorated cap uses width144→204/height244 and content cross
+100→160. A declared width60/maxWidth25% gives its100%-width leaves25→40; C stays
+74,132, while52,136 becomes an A1 target. `--nested-decorated-column-cross-max`
+checks both records; add `--latest-proof` to use the new direct comparison control.
+Next case and Next section retain their behavior. Corpus316=222matches/94classified;
+auto104/direction24 and the native binary remain unchanged.

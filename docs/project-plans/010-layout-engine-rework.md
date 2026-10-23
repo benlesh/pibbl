@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice114 `4070b037` (definite nested percentage cross maxima).
+Latest delivery is slice115 (definite nested column percentage cross maxima and one-click proof navigation).
+Slice114 is `4070b037` (definite nested percentage cross maxima).
 Consolidation38 passes below for112–114.
 Slice113 is `b78d69ec` (decorated reversed nested cross minima).
 Slice112 is `3453bbe3` (nested wrapped percentage cross minima).
@@ -68,9 +69,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; consolidation37 for109–111 passes below; consolidation38 for112–114 passes below; the single next delivery is115, definite nested column percentage cross maxima. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; consolidation37 for109–111 passes below; consolidation38 for112–114 passes below; the single next delivery is116, definite nested column percentage cross minima. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles314 records:220matches/94classified differences; click A/B/C targets.
+cycles316 records:222matches/94classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -3029,16 +3030,41 @@ host seam is concrete; do not silently reduce coverage, duplicate hand-maintaine
 rendering, or add a public runtime API. This assessment is complete; readability
 cleanup remains tracked work before feature completion.
 
-## [NEXT] Definite nested column percentage cross maxima (slice 115)
+## Delivered definite nested column percentage cross maxima (slice 115)
 
-Rotate the finite decorated definite-max case to column-reverse/wrap: border-box
-width144→204 and height244, paddingL20/R20/T10/B30 and border2 give content cross
-100→160/main200. A has declared width60/height80 with maxWidth25%; inner column
-leaves width100%/height40 should expose the constrained cross allocation. Pin the
-actual Yoga geometry first, then verify public world boxes, newly admitted target
-extent, stable keys/native reuse, measurement cost and exact cleanup. No new API
-or indefinite intrinsic policy is implied. Final whole-codebase review remains
-at full program end, after all required implementation and release gates.
+Two pinned scale0 cases rotate the decorated definite cap to column-reverse/wrap.
+Border-box width144→204/height244 with paddingL20/R20/T10/B30 and border2 gives
+content cross100→160/main200. A declared width60/maxWidth25% and its100%-width
+leaves receive25→40. World leaves remain at22,132/172; C stays74,132. Point52,136
+misses initially and targets A1 after expansion. Actual built-in A is used.
+
+Fresh focused2pass/408skip410 includes the geometry case and a one-click public
+navigation contract. The new Latest proof button failed its observable test before
+implementation, then passed; it opens the last pair's initial record, Next case
+reaches resized, and existing Next section remains usable. Source/private-built
+2matches,469builtinputs, no errors/cleanup0; installed245distinput strict types,
+world geometry, target expansion, stable keys/main solves/lines, zero paint
+measurement and cleanup pass. Latest-proof screenshot was inspected. No core
+runtime/API/ABI/binary change, invented production RED or baseline rewrite.
+
+Native316=222matches+94classified, auto104/direction24 unchanged. Matching
+v5/68649byte kernel and tarball
+`6ccf53d136422d04d974fa7a34a4356f91298d4f77c6387c85f6b6b632417b4b` unchanged.
+Types/lint/docs/catalog/discovery pass; scoped review found no material gap.
+`flex.min-max` remains partial; fixed33/all7open gate statuses unchanged.
+Node26.9.0/Chromium, no Node24 aggregate trust claim. Hands-on ports5192/5193,
+`#/examples/layout/wasm-yoga-migration`: Latest proof then Next case. Legacy section
+25 navigation also remains available.
+
+## [NEXT] Definite nested column percentage cross minima (slice 116)
+
+Use the same finite decorated column-reverse owner with declared nested width20
+and minWidth60%, plus100%-width inner leaves. Pin actual60→96 content allocation,
+C's next-column movement, target transfer, keyed/native reuse and cleanup. This
+finishes the bounded both-axis nested min/max matrix before addressing indefinite
+owner/measurement policy. Consolidate115–117 after the third delivery; do not drop
+exhaustive source/built corpus coverage for the tracked readability cleanup.
+Final whole-codebase review remains at full program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

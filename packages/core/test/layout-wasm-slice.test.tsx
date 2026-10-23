@@ -869,7 +869,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
   // This walk advances Next case through the contiguous original families. Later
   // sections (including rounding) have dedicated semantic tests and browser drivers.
-  const cases=yogaReference.cases.filter(fixture=>!('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
+  const cases=yogaReference.cases.filter(fixture=>!('nestedDecoratedColumnCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
@@ -4618,6 +4618,46 @@ it.runIf(experimentalLayout)('preserves a decorated row-reverse nested percentag
 });
 
 
+it.runIf(experimentalLayout)('preserves a decorated column-reverse nested percentage cross maximum and exposes its definite constrained leaf', async () => {
+  const fixtures = yogaReference.cases.filter((fixture) => 'nestedDecoratedColumnCrossMaxFixture' in fixture);
+  expect(fixtures.map((fixture) => fixture.name)).toEqual(['nested-cross-max-decorated-column-reverse', 'nested-cross-max-decorated-column-reverse-resized']);
+  const [initialFixture, resizedFixture] = fixtures;
+  const width = signal(144), fill = signal('#426b61');
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const leafBoxes = new Map<string, { x: number; y: number; width: number; height: number }>();
+  const stamps = new Map<string, number>();
+  let nextStamp = 1, mounts = 0, leafHits = 0;
+  function Leaf({ name, style: _style }: { name: string; style: Record<string, unknown> }) {
+    const stamp = useConst(() => { mounts++; return nextStamp++; });
+    const box = useLayoutBox(); stamps.set(name, stamp);
+    const transform = useCanvasContext().getTransform(); leafBoxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height });
+    return createElement(Rectangle, { onClick: () => leafHits++, style: { width: box.width, height: box.height, fill, cursor: 'pointer' } });
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 260; canvas.height = 280; document.body.append(canvas);
+  const root = createElement(Flex, { style: { width, height: 244, boxSizing: 'border-box', padding: { left: 20, right: 20, top: 10, bottom: 30 }, borderWidth: 2, flexDirection: 'column-reverse', flexWrap: 'wrap', gap: 12, alignItems: 'stretch', alignContent: 'flex-start' }, children: [
+    createElement(Flex, { key: 'A', style: { width: 60, height: 80, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, maxWidth: '25%', flexDirection: 'column', alignItems: 'stretch' }, children: ['A1','A2'].map(name => createElement(Leaf, { key: name, name, style: { width: '100%', height: 40, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 } })) }),
+    createElement(Rectangle, { key: 'B', style: { width: 40, height: 80, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: '#6e3e79' } }),
+    createElement(Rectangle, { key: 'C', style: { width: 20, height: 80, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill } }),
+  ] });
+  const controller = pibbl(canvas, root); controllers.push(controller); await nextFrame();
+  expect(initialFixture.boxes).toEqual([{ x: 22, y: 132, width: 25, height: 80 }, { x: 22, y: 40, width: 40, height: 80 }, { x: 74, y: 132, width: 20, height: 80 }]);
+  expect(initialFixture.nestedDecoratedColumnMaxBoxes).toEqual([{ x: 22, y: 132, width: 25, height: 40 }, { x: 22, y: 172, width: 25, height: 40 }]);
+  expect(leafBoxes).toEqual(new Map([['A1', { x: 22, y: 132, width: 25, height: 40 }], ['A2', { x: 22, y: 172, width: 25, height: 40 }]]));
+  clickCanvas(canvas, 52, 136); expect(leafHits).toBe(0);
+  const initial = snapshotWasmLayoutDiagnostics(), initialStamps = new Map(stamps);
+  width.set(204); await nextFrame();
+  expect(resizedFixture.boxes).toEqual([{ x: 22, y: 132, width: 40, height: 80 }, { x: 22, y: 40, width: 40, height: 80 }, { x: 74, y: 132, width: 20, height: 80 }]);
+  expect(resizedFixture.nestedDecoratedColumnMaxBoxes).toEqual([{ x: 22, y: 132, width: 40, height: 40 }, { x: 22, y: 172, width: 40, height: 40 }]);
+  expect(leafBoxes).toEqual(new Map([['A1', { x: 22, y: 132, width: 40, height: 40 }], ['A2', { x: 22, y: 172, width: 40, height: 40 }]]));
+  expect(stamps).toEqual(initialStamps); expect(mounts).toBe(2);
+  clickCanvas(canvas, 52, 136); expect(leafHits).toBe(1);
+  const resized = snapshotWasmLayoutDiagnostics(); expect(resized.solves).toBe(initial.solves); expect(resized.lineFormations).toBe(initial.lineFormations); expect(resized.crossPlacements).toBeGreaterThan(initial.crossPlacements); expect(resized.nodeCreates).toBe(initial.nodeCreates); expect(resized.measuredLeaves).toBe(initial.measuredLeaves);
+  fill.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics(); expect(painted.solves).toBe(resized.solves); expect(painted.lineFormations).toBe(resized.lineFormations); expect(painted.measuredLeaves).toBe(resized.measuredLeaves); expect(painted.nodeCreates).toBe(resized.nodeCreates); expect(mounts).toBe(2);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+});
+
+
 it.runIf(experimentalLayout)('accepts explicit automatic Text width with cross-auto placement', () => {
   const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 'auto', wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto' } });
   const sibling = createElement(Rectangle, { style: { width: 40, height: 40, minWidth: 0, flexShrink: 0 } });
@@ -4679,4 +4719,20 @@ it.runIf(experimentalLayout)('resolves nested wrapped percentage cross minimums 
   fill.set('#a63758'); await nextFrame();
   const painted = snapshotWasmLayoutDiagnostics(); expect(painted.solves).toBe(resized.solves); expect(painted.lineFormations).toBe(resized.lineFormations); expect(painted.measuredLeaves).toBe(resized.measuredLeaves + 1); expect(painted.nodeCreates).toBe(resized.nodeCreates); expect(mounts).toBe(2);
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+});
+
+it.runIf(experimentalLayout)('jumps directly to the latest public proof and preserves case and section navigation', async () => {
+  const { WasmYogaMigrationExample } = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
+  const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 540; document.body.append(canvas);
+  const controller = createExampleMount(WasmYogaMigrationExample)(canvas); controllers.push(controller); await nextFrame();
+  const last = yogaReference.cases.at(-1)!;
+  const firstName = last.name.replace(/-resized$/, '');
+  clickCanvas(canvas, 650, 158); await nextFrame();
+  await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(firstName);
+  if (last.name !== firstName) {
+    clickCanvas(canvas, 60, 158); await nextFrame();
+    await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(last.name);
+  }
+  clickCanvas(canvas, 520, 158); await nextFrame();
+  await expect.poll(() => canvas.nextElementSibling?.textContent).toContain('· grow ·');
 });
