@@ -99,7 +99,7 @@ function Poster({ initialMessage }: PosterProps): PibblNode {
 }
 
 const canvas = document.querySelector<HTMLCanvasElement>("#poster")!;
-const controller = pibbl(canvas, <Poster initialMessage="Hello" />);
+const controller = await pibbl(canvas, <Poster initialMessage="Hello" />);
 
 // Release listeners, frames, hooks, layers, and the mount when the page leaves.
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

@@ -21,10 +21,12 @@ allocations before rendering. Reverse ordering, advanced intrinsic sizing,
 scrolling are outside the normal supported subset.
 
 ```tsx
-<Flex style={{ width: 300, height: 80, flexDirection: "row", gap: 12 }}>
-  <Rectangle style={{ width: 80, height: 60, fill: "#2563eb" }} />
-  <Rectangle style={{ width: 80, height: 60, fill: "#f59e0b" }} />
-</Flex>
+const basicFlex = (
+  <Flex style={{ width: 300, height: 80, flexDirection: "row", gap: 12 }}>
+    <Rectangle style={{ width: 80, height: 60, fill: "#2563eb" }} />
+    <Rectangle style={{ width: 80, height: 60, fill: "#f59e0b" }} />
+  </Flex>
+);
 ```
 
 Explore the [Flex live example](#/examples/layout/flex).
@@ -37,10 +39,12 @@ paint and hit bounds. Normal JavaScript Flex and other layout families currently
 margins remain unsupported.
 
 ```tsx
-<Flex style={{ width: 100, height: 30 }}>
-  <Rectangle style={{ width: 80, height: 20, margin: 5, fill: "#2563eb" }} />
-  <Rectangle style={{ width: 80, height: 20, margin: 5, fill: "#f59e0b" }} />
-</Flex>
+const marginFlex = (
+  <Flex style={{ width: 100, height: 30 }}>
+    <Rectangle style={{ width: 80, height: 20, margin: 5, fill: "#2563eb" }} />
+    <Rectangle style={{ width: 80, height: 20, margin: 5, fill: "#f59e0b" }} />
+  </Flex>
+);
 ```
 
 In that experimental build each painted box is 40 units wide, with a 5-unit
@@ -70,3 +74,45 @@ including reversed axes and lines. Explicit `center` still centers overflow;
 former centered overflow for around/evenly in both JavaScript and experimental
 WASM layout. The [comparison example](#/examples/layout/wasm-yoga-migration)
 labels native Yoga's differing reversed-overflow results.
+
+Finite Flex items also accept a positive finite `aspectRatio` (outer width / height).
+Supply a definite main dimension or `flexBasis`. Each wrapped line solves its main
+allocations first, then derives cross sizes; cross bounds may break the ratio.
+Intrinsic main inference remains unsupported.
+
+```tsx
+const wrappedRatioFlex = (
+  <Flex
+    style={{
+      width: 200,
+      height: 200,
+      flexWrap: "wrap",
+      columnGap: 12,
+      rowGap: 10,
+      alignItems: "flex-start",
+      alignContent: "flex-start",
+    }}
+  >
+    {["A", "B", "C"].map((key) => (
+      <Rectangle
+        key={key}
+        style={{
+          width: 80,
+          height: "auto",
+          flexBasis: 80,
+          flexGrow: 1,
+          flexShrink: 0,
+          minWidth: 0,
+          aspectRatio: 2,
+          fill: "#2563eb",
+        }}
+      />
+    ))}
+  </Flex>
+);
+```
+
+In the experimental build, the first line has two94×47 boxes and the second has
+one200×100 box. In the [comparison example](#/examples/layout/wasm-yoga-migration),
+click Next section twice, then Next case + resize to inspect owner resizing and
+row/column reversed wrapping with the same public style.

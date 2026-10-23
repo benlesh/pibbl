@@ -147,7 +147,7 @@ if (writing)
     examplePath,
     example.replace(
       pattern,
-      `// BEGIN YOGA REFERENCE\n  const fixtureCases = ${JSON.stringify(record.cases, null, 2)} as const;\n  // END YOGA REFERENCE`,
+      `// BEGIN YOGA REFERENCE\n  const fixtureCases = ${"[\n" + record.cases.map(value => "    " + JSON.stringify(value)).join(",\n") + "\n  ]"} as const;\n  // END YOGA REFERENCE`,
     ),
   );
 else if (JSON.stringify(JSON.parse(match[1])) !== JSON.stringify(record.cases))

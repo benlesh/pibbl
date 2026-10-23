@@ -1,5 +1,7 @@
 # Experimental WASM Flex/Text — 2026-10-21
 
+> **Historical status: Experimental feedback evidence recorded on 2026-10-21.**
+
 First feedback delivery, not feature completion. [Plan 010](../../project-plans/010-layout-engine-rework.md)
 contains exactly one next slice. Unrelated working-tree changes were preserved.
 

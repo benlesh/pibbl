@@ -11,10 +11,6 @@ relatedTypes: [PibblComponent, PibblNodeInput]
 
 # defineLayoutComponent
 
-```ts
-import { defineLayoutComponent } from "@pibbl/core";
-```
-
 `defineLayoutComponent(describe)` defines reusable pure structure that a layout
 parent can inspect before allocating it. It returns a [PibblComponent](#/api/types/elements-components#pibblcomponent) for JSX
 or `createElement`. Its result is [PibblNodeInput](#/api/types/elements-components#pibblnodeinput):

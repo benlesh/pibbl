@@ -106,6 +106,9 @@ const publicGuidePaths = [
   "docs/site/learn/guides/manipulation.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/functions/define-layout-component.md",
+  "docs/site/api/functions/pibbl-sync.md",
+  "docs/site/api/functions/prepare-layout-engine.md",
   "docs/site/api/functions/record-frames.md",
   "docs/site/api/types/frame-recording.md",
   "docs/site/api/components/sprite.md",
@@ -372,6 +375,13 @@ const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
+  "docs/project-plans/010-layout-engine-rework.md",
+  "docs/architecture/proposals/layout-engine/design.md",
+  "docs/architecture/proposals/layout-engine/migration-and-evidence.md",
+  "docs/architecture/proposals/layout-engine/reactivity.md",
+  "docs/architecture/proposals/layout-engine/yoga-research.md",
+  "docs/project-plans/layout-engine-rework-proposal.md",
+  "tooling/layout-yoga-rehearsal/README.md",
   "docs/alpha-publishing.md",
   "docs/testing/field-notes/visibility-transition-integration.md",
   ...trackedRepositoryFiles([
@@ -1187,7 +1197,6 @@ function assertNonJsxEvidence(source) {
   let hasConditionalList = false;
   let hasDirectionalPolicy = false;
   let hasLifecycle = false;
-  let hasMount = false;
   let textUsesZeroState = false;
   let textUsesDynamicState = false;
 
@@ -1195,7 +1204,6 @@ function assertNonJsxEvidence(source) {
     if (node.type === "JSXElement" || node.type === "JSXFragment")
       hasJsx = true;
     if (callName(node) === "useReaction") hasLifecycle = true;
-    if (callName(node) === "pibbl") hasMount = true;
     if (
       node.type === "CallExpression" &&
       memberName(node.callee) === "map" &&
@@ -1256,7 +1264,7 @@ function assertNonJsxEvidence(source) {
     "Complete non-JSX evidence lacks directional KeyboardNavigation",
   );
   assert.ok(hasLifecycle, "Complete non-JSX evidence lacks hook lifecycle");
-  assert.ok(hasMount, "Complete non-JSX evidence lacks root mounting");
+  // Studio owns mounting; assertMountedNonJsxEvidence checks the public host path.
 }
 
 function assertMountedNonJsxEvidence(source) {
@@ -2191,9 +2199,9 @@ const contractPrecisionRequirements = new Map([
   [
     "docs/design/layout-system-contract.md",
     [
-      "`justifyContent`             | `flex-start` (default), `flex-end`, `center`, `space-between`, `space-around`, `space-evenly`",
-      "`alignItems`                 | `stretch` (default), `flex-start`, `flex-end`, `center`",
-      "`alignContent`               | `stretch` (default), `flex-start`, `flex-end`, `center`, `space-between`, `space-around`, `space-evenly`",
+      "`justifyContent`             | `flex-start` (default), `flex-end`, `start`, `end`, `center`, `space-between`, `space-around`, `space-evenly`",
+      "`alignItems`                 | `stretch` (default), `flex-start`, `flex-end`, `start`, `end`, `center`",
+      "`alignContent`               | `stretch` (default), `flex-start`, `flex-end`, `start`, `end`, `center`, `space-between`, `space-around`, `space-evenly`",
       "finite nonnegative numbers; axis values override `gap`; default `0`",
       "`flexBasis: auto`, `flexGrow: 0`, `flexShrink: 1`, `alignSelf: auto`",
       "finite nonnegative numeric `gap`, `rowGap`, `columnGap`; no percentages",
@@ -4162,7 +4170,7 @@ export async function verifyMutationProbes() {
     ["lifecycle", nonJsx.replace("useSignal(", "missingSignal(")],
     [
       "mount",
-      nonJsx.replace("return pibbl(canvas,", "return missingMount(canvas,"),
+      nonJsx.replace("return await pibbl(canvas,", "return await missingMount(canvas,"),
     ],
     [
       "disposal",

@@ -76,7 +76,7 @@ wrapper is needed. Parent layouts or Groups own placement and reserve space for
 both the text and plot. For example:
 
 ```tsx
-import { Group, Text } from "@pibbl/core";
+import { Group as CaptionGroup, Text } from "@pibbl/core";
 export function AxisTitleExample2() {
   return (
     <>
@@ -91,7 +91,7 @@ export function AxisTitleExample2() {
       >
         Population change
       </Text>
-      <Group style={{ translateX: 20, translateY: 80 }}>
+      <CaptionGroup style={{ translateX: 20, translateY: 80 }}>
         <Text
           style={{
             width: 280,
@@ -105,7 +105,7 @@ export function AxisTitleExample2() {
         >
           Source: US Census Bureau, Vintage 2023. July 2022–July 2023; people.
         </Text>
-      </Group>
+      </CaptionGroup>
     </>
   );
 }

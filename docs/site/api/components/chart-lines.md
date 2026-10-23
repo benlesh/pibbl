@@ -102,10 +102,10 @@ span length, and invalid opacity throw `RangeError`.
 Minimal runnable band demo:
 
 ```tsx
-import { LinearScale, ReferenceBand } from "@pibbl/core/viz";
+import { LinearScale as BandScale, ReferenceBand } from "@pibbl/core/viz";
 export function ReferenceBandExample() {
   return (
-    <LinearScale id="y" domain={[-10, 10]} range={[180, 20]}>
+    <BandScale id="y" domain={[-10, 10]} range={[180, 20]}>
       <ReferenceBand
         scale="y"
         direction="horizontal"
@@ -113,7 +113,7 @@ export function ReferenceBandExample() {
         values={[-10, 0]}
         style={{ fill: "#b65a35", opacity: 0.1 }}
       />
-    </LinearScale>
+    </BandScale>
   );
 }
 ```

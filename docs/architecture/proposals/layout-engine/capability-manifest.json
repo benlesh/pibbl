@@ -58,92 +58,475 @@
           "flex.min-max"
         ]
       },
-      { "id": "column-grow", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.numeric-gap"], "classification": "exact explicit finite inputs; column/shrink1/minHeight0" },
-      { "id": "column-cap", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.min-max"], "classification": "exact explicit finite inputs; first maxHeight30" },
-      { "id": "column-shrink", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.min-max"], "classification": "exact explicit finite inputs; first minHeight60, second minHeight0" },
-      { "id": "row-reverse-cap", "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"], "classification": "exact finite LTR main-axis reversal; first maxWidth80" },
-      { "id": "column-reverse-cap", "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"], "classification": "exact finite LTR main-axis reversal; first maxHeight30" },
-      { "id": "row-wrap", "covers": ["flex.row-column-nowrap-wrap", "flex.numeric-gap"], "classification": "exact finite three-item source-formed lines; numeric basis/minimum/gap" },
-      { "id": "row-wrap-reverse", "covers": ["flex.reverse-and-wrap-reverse", "flex.row-column-nowrap-wrap"], "classification": "exact finite reversed cross placement; source A/B/C order unchanged" },
-      { "id": "border-box-floor-bounds", "covers": ["box.box-sizing", "flex.min-max"], "classification": "exact explicit padding floor and finite outer bounds" },
-      { "id": "border-box-percentage", "covers": ["box.box-sizing", "flex.grow-shrink-basis"], "classification": "exact definite percentage basis and cross size before inset conversion" },
-      { "id": "border-box-asymmetric-row", "covers": ["box.box-sizing", "box.padding-and-layout-border"], "classification": "exact physical numeric insets; row basis54" },
-      { "id": "border-box-asymmetric-column", "covers": ["box.box-sizing", "box.padding-and-layout-border"], "classification": "exact physical numeric insets; column basis62" },
-      {"id": "zero-fractional-grow", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
-      {"id": "fractional-shrink", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
-      {"id": "grow-freeze-release", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
-      {"id": "shrink-freeze-release", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
-      {"id": "large-finite-differential", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
-      {"id": "subunit-zero-grow", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
-      {"id": "subunit-shrink-policy", "covers": ["flex.grow-shrink-basis"], "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"},
-      {"id": "initial-freeze-grow-policy", "covers": ["flex.grow-shrink-basis"], "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"},
-      {"id": "initial-freeze-shrink-policy", "covers": ["flex.grow-shrink-basis"], "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"},
-      {"id": "distribution-negative-row-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-row-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-row-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-row-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-row-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-row-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-row-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-row-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-row-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-row-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-row-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-row-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-row-stretch", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-row-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-row-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-row-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-row-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-row-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-row-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-row-stretch", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-auto-row", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-column-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-column-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-column-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-column-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-column-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-column-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-column-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-column-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-column-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-column-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-column-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-column-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-cross-negative-column-stretch", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-column-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-column-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-column-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-column-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-column-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-column-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-single-column-stretch", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-auto-column", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
-      {"id": "distribution-negative-row-reverse-space-around", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
-      {"id": "distribution-negative-row-reverse-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
-      {"id": "distribution-cross-negative-row-reverse-space-around", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
-      {"id": "distribution-cross-negative-row-reverse-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
-      {"id": "distribution-negative-column-reverse-space-around", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
-      {"id": "distribution-negative-column-reverse-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
-      {"id": "distribution-cross-negative-column-reverse-space-around", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
-      {"id": "distribution-cross-negative-column-reverse-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
-      {"id": "percent-cap-row", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
-      {"id": "percent-cap-row-resized", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
-      {"id": "percent-floor-row", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
-      {"id": "percent-floor-row-resized", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
-      {"id": "percent-cap-column", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
-      {"id": "percent-cap-column-resized", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
-      {"id": "percent-floor-column", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
-      {"id": "percent-floor-column-resized", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
-      {"id": "aspect-wrap-row", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
-      {"id": "aspect-wrap-row-resized", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
-      {"id": "aspect-wrap-row-reverse", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
-      {"id": "aspect-wrap-row-reverse-resized", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
-      {"id": "aspect-wrap-column", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
-      {"id": "aspect-wrap-column-resized", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
-      {"id": "aspect-wrap-column-reverse", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
-      {"id": "aspect-wrap-column-reverse-resized", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]}
+      {
+        "id": "column-grow",
+        "covers": [
+          "flex.row-column-nowrap-wrap",
+          "flex.grow-shrink-basis",
+          "flex.numeric-gap"
+        ],
+        "classification": "exact explicit finite inputs; column/shrink1/minHeight0"
+      },
+      {
+        "id": "column-cap",
+        "covers": [
+          "flex.row-column-nowrap-wrap",
+          "flex.grow-shrink-basis",
+          "flex.min-max"
+        ],
+        "classification": "exact explicit finite inputs; first maxHeight30"
+      },
+      {
+        "id": "column-shrink",
+        "covers": [
+          "flex.row-column-nowrap-wrap",
+          "flex.grow-shrink-basis",
+          "flex.min-max"
+        ],
+        "classification": "exact explicit finite inputs; first minHeight60, second minHeight0"
+      },
+      {
+        "id": "row-reverse-cap",
+        "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"],
+        "classification": "exact finite LTR main-axis reversal; first maxWidth80"
+      },
+      {
+        "id": "column-reverse-cap",
+        "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"],
+        "classification": "exact finite LTR main-axis reversal; first maxHeight30"
+      },
+      {
+        "id": "row-wrap",
+        "covers": ["flex.row-column-nowrap-wrap", "flex.numeric-gap"],
+        "classification": "exact finite three-item source-formed lines; numeric basis/minimum/gap"
+      },
+      {
+        "id": "row-wrap-reverse",
+        "covers": [
+          "flex.reverse-and-wrap-reverse",
+          "flex.row-column-nowrap-wrap"
+        ],
+        "classification": "exact finite reversed cross placement; source A/B/C order unchanged"
+      },
+      {
+        "id": "border-box-floor-bounds",
+        "covers": ["box.box-sizing", "flex.min-max"],
+        "classification": "exact explicit padding floor and finite outer bounds"
+      },
+      {
+        "id": "border-box-percentage",
+        "covers": ["box.box-sizing", "flex.grow-shrink-basis"],
+        "classification": "exact definite percentage basis and cross size before inset conversion"
+      },
+      {
+        "id": "border-box-asymmetric-row",
+        "covers": ["box.box-sizing", "box.padding-and-layout-border"],
+        "classification": "exact physical numeric insets; row basis54"
+      },
+      {
+        "id": "border-box-asymmetric-column",
+        "covers": ["box.box-sizing", "box.padding-and-layout-border"],
+        "classification": "exact physical numeric insets; column basis62"
+      },
+      {
+        "id": "zero-fractional-grow",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "fractional-shrink",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "grow-freeze-release",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "shrink-freeze-release",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "large-finite-differential",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "subunit-zero-grow",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "subunit-shrink-policy",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"
+      },
+      {
+        "id": "initial-freeze-grow-policy",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"
+      },
+      {
+        "id": "initial-freeze-shrink-policy",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"
+      },
+      {
+        "id": "distribution-negative-row-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-stretch",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-stretch",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-auto-row",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-stretch",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-stretch",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-auto-column",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-reverse-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-negative-row-reverse-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-cross-negative-row-reverse-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-cross-negative-row-reverse-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-negative-column-reverse-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-negative-column-reverse-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-cross-negative-column-reverse-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-cross-negative-column-reverse-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "percent-cap-row",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-cap-row-resized",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-floor-row",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-floor-row-resized",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-cap-column",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-cap-column-resized",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-floor-column",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-floor-column-resized",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "aspect-wrap-row",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-row-resized",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-row-reverse",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-row-reverse-resized",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-column",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-column-resized",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-column-reverse",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-column-reverse-resized",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      }
     ],
     "limit": "Ninety-one records:80 native matches and11 explicitly classified CSS allocation/safe-overflow differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds and wrapped aspect ratios. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
@@ -205,8 +588,17 @@
         "positive": ["public Flex/Text scenarios"],
         "negative": ["intrinsic wrapped containers rejected"],
         "interaction": ["wrapped target geometry"],
-        "yogaCases": ["column-grow", "column-cap", "column-shrink", "row-wrap", "row-wrap-reverse"],
-        "missing": ["nested percentages", "broader release-pinned wrapping matrix"]
+        "yogaCases": [
+          "column-grow",
+          "column-cap",
+          "column-shrink",
+          "row-wrap",
+          "row-wrap-reverse"
+        ],
+        "missing": [
+          "nested percentages",
+          "broader release-pinned wrapping matrix"
+        ]
       }
     },
     {
@@ -237,7 +629,11 @@
           "cross-line flip preserves keys/mounts and allocation/measurement/main work",
           "negative reversed cross overlap retains source paint/hit priority"
         ],
-        "yogaCases": ["row-reverse-cap", "column-reverse-cap", "row-wrap-reverse"],
+        "yogaCases": [
+          "row-reverse-cap",
+          "column-reverse-cap",
+          "row-wrap-reverse"
+        ],
         "missing": [
           "RTL interaction",
           "broader reverse/wrap-reverse and combined-axis matrix"
@@ -264,11 +660,45 @@
         "tooling/test-css-partial-flex.mjs"
       ],
       "evidence": {
-        "positive": ["grow/cap/shrink and column allocation", "fractional and zero bases", "finite1e30/2e30 differential", "release grow/shrink freezing", "initially frozen sizes participate in partial free space", "bounded supported Text auto basis"],
-        "negative": ["nonfinite intermediate allocation rejection", "unequal1e308/1 f64 robustness is not a Yoga input-parity claim"],
-        "interaction": ["signal resize/cap/floor target geometry", "source/built25-case comparison with classification labels", "installed initially-frozen allocation pixels and lifecycle"],
-        "yogaCases": ["grow", "cap", "shrink", "column-grow", "column-cap", "column-shrink", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"],
-        "classifiedDivergences": ["subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"],
+        "positive": [
+          "grow/cap/shrink and column allocation",
+          "fractional and zero bases",
+          "finite1e30/2e30 differential",
+          "release grow/shrink freezing",
+          "initially frozen sizes participate in partial free space",
+          "bounded supported Text auto basis"
+        ],
+        "negative": [
+          "nonfinite intermediate allocation rejection",
+          "unequal1e308/1 f64 robustness is not a Yoga input-parity claim"
+        ],
+        "interaction": [
+          "signal resize/cap/floor target geometry",
+          "source/built25-case comparison with classification labels",
+          "installed initially-frozen allocation pixels and lifecycle"
+        ],
+        "yogaCases": [
+          "grow",
+          "cap",
+          "shrink",
+          "column-grow",
+          "column-cap",
+          "column-shrink",
+          "zero-fractional-grow",
+          "fractional-shrink",
+          "grow-freeze-release",
+          "shrink-freeze-release",
+          "large-finite-differential",
+          "subunit-zero-grow",
+          "subunit-shrink-policy",
+          "initial-freeze-grow-policy",
+          "initial-freeze-shrink-policy"
+        ],
+        "classifiedDivergences": [
+          "subunit-shrink-policy",
+          "initial-freeze-grow-policy",
+          "initial-freeze-shrink-policy"
+        ],
         "missing": []
       }
     },
@@ -550,10 +980,32 @@
         "docs/project-plans/010-layout-engine-rework.md"
       ],
       "evidence": {
-        "positive": ["default zero and physical override precedence", "empty/single/two-item count-minus-one main gaps", "two growing items45/45 at0/55", "wrapped row/column line edge counts and stretch placement", "nine pinned-toolchain native tests"],
-        "negative": ["negative/nonfinite/percentage gap,rowGap,columnGap rejected even with empty children", "four public main/cross gap regions miss targets"],
-        "interaction": ["numeric gap signal moves hit geometry without remount", "one-empty-one numeric ownership transitions", "source/built wrapped keyed targets and exact cleanup", "paint-only solver reuse"],
-        "yogaCases": ["grow", "cap", "shrink", "column-grow", "column-cap", "column-shrink", "row-wrap"],
+        "positive": [
+          "default zero and physical override precedence",
+          "empty/single/two-item count-minus-one main gaps",
+          "two growing items45/45 at0/55",
+          "wrapped row/column line edge counts and stretch placement",
+          "nine pinned-toolchain native tests"
+        ],
+        "negative": [
+          "negative/nonfinite/percentage gap,rowGap,columnGap rejected even with empty children",
+          "four public main/cross gap regions miss targets"
+        ],
+        "interaction": [
+          "numeric gap signal moves hit geometry without remount",
+          "one-empty-one numeric ownership transitions",
+          "source/built wrapped keyed targets and exact cleanup",
+          "paint-only solver reuse"
+        ],
+        "yogaCases": [
+          "grow",
+          "cap",
+          "shrink",
+          "column-grow",
+          "column-cap",
+          "column-shrink",
+          "row-wrap"
+        ],
         "missing": []
       }
     },
@@ -584,8 +1036,14 @@
         "docs/architecture/proposals/layout-engine/design.md#boxes-and-units"
       ],
       "evidence": {
-        "positive": ["numeric padding", "asymmetric row/column border plus padding content-box and border-box geometry"],
-        "negative": ["paint stroke is not a layout border", "negative/nonfinite borders and inset overflow rejected"],
+        "positive": [
+          "numeric padding",
+          "asymmetric row/column border plus padding content-box and border-box geometry"
+        ],
+        "negative": [
+          "paint stroke is not a layout border",
+          "negative/nonfinite borders and inset overflow rejected"
+        ],
         "interaction": [],
         "yogaCases": [],
         "missing": [
@@ -603,9 +1061,23 @@
       "status": "experimental",
       "unresolvedPolicy": "Opt-in policy selected with pinned Yoga padding floor; broad intrinsic/aspect/border interactions remain outside this slice.",
       "evidence": {
-        "positive": ["row/column basis and min/max converted once", "percentage lengths resolve before padding", "padding floor may overflow a smaller outer maximum/parent", "Grid stretch and Flow measured content avoid double conversion", "normal and WASM paths preserve content-box defaults"],
-        "negative": ["opposing outer min/max rejected before conversion", "invalid public policy literals rejected by packed types"],
-        "interaction": ["mode/basis signals move same-frame target geometry without remount", "paint-only allocation reuse", "source/built226 and installed229 input cleanup", "explicit editor/Bundler/NodeNext/Node helper policy use"],
+        "positive": [
+          "row/column basis and min/max converted once",
+          "percentage lengths resolve before padding",
+          "padding floor may overflow a smaller outer maximum/parent",
+          "Grid stretch and Flow measured content avoid double conversion",
+          "normal and WASM paths preserve content-box defaults"
+        ],
+        "negative": [
+          "opposing outer min/max rejected before conversion",
+          "invalid public policy literals rejected by packed types"
+        ],
+        "interaction": [
+          "mode/basis signals move same-frame target geometry without remount",
+          "paint-only allocation reuse",
+          "source/built226 and installed229 input cleanup",
+          "explicit editor/Bundler/NodeNext/Node helper policy use"
+        ],
         "yogaCases": [],
         "missing": [
           "complete percentage/intrinsic and aspect interactions",
@@ -628,11 +1100,38 @@
         "tooling/packed-layout-consumer.mjs"
       ],
       "evidence": {
-        "positive": ["row/column final-main shrink derivation", "explicit cross and default stretch overridden", "combined outer insets and independent cross bounds", "numeric definite basis", "row/column wrap and wrap-reverse with owner resize"],
-        "negative": ["nonpositive/nonfinite ratios rejected", "intrinsic-main ratio items diagnosed, including wrapped containers", "derived overflow rejected"],
-        "interaction": ["ratio/basis/border signals update targets without remount", "source/built Studio card", "installed package ratio pixel geometry and exact cleanup"],
-        "yogaCases": ["aspect-wrap-row", "aspect-wrap-row-resized", "aspect-wrap-row-reverse", "aspect-wrap-row-reverse-resized", "aspect-wrap-column", "aspect-wrap-column-resized", "aspect-wrap-column-reverse", "aspect-wrap-column-reverse-resized"],
-        "missing": ["intrinsic both-auto and cross-to-main inference", "other parent families and root sizing", "general image/intrinsic and coupled-axis bounds"]
+        "positive": [
+          "row/column final-main shrink derivation",
+          "explicit cross and default stretch overridden",
+          "combined outer insets and independent cross bounds",
+          "numeric definite basis",
+          "row/column wrap and wrap-reverse with owner resize"
+        ],
+        "negative": [
+          "nonpositive/nonfinite ratios rejected",
+          "intrinsic-main ratio items diagnosed, including wrapped containers",
+          "derived overflow rejected"
+        ],
+        "interaction": [
+          "ratio/basis/border signals update targets without remount",
+          "source/built Studio card",
+          "installed package ratio pixel geometry and exact cleanup"
+        ],
+        "yogaCases": [
+          "aspect-wrap-row",
+          "aspect-wrap-row-resized",
+          "aspect-wrap-row-reverse",
+          "aspect-wrap-row-reverse-resized",
+          "aspect-wrap-column",
+          "aspect-wrap-column-resized",
+          "aspect-wrap-column-reverse",
+          "aspect-wrap-column-reverse-resized"
+        ],
+        "missing": [
+          "intrinsic both-auto and cross-to-main inference",
+          "other parent families and root sizing",
+          "general image/intrinsic and coupled-axis bounds"
+        ]
       }
     },
     {
@@ -864,7 +1363,14 @@
         "positive": ["unrounded three-case receipt"],
         "negative": [],
         "interaction": [],
-        "yogaCases": ["grow", "cap", "shrink", "column-grow", "column-cap", "column-shrink"],
+        "yogaCases": [
+          "grow",
+          "cap",
+          "shrink",
+          "column-grow",
+          "column-cap",
+          "column-shrink"
+        ],
         "missing": [
           "DPR",
           "negative/fractional/large positions",
@@ -1028,7 +1534,9 @@
         "packages/core/test/layout-wasm-slice.test.tsx"
       ],
       "evidence": {
-        "positive": ["25-case Yoga3.2.1 rehearsal with22matches/3classified differences"],
+        "positive": [
+          "25-case Yoga3.2.1 rehearsal with22matches/3classified differences"
+        ],
         "negative": ["no profile or public selector"],
         "interaction": ["migration example resize"],
         "yogaCases": [

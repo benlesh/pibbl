@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice78 (finite wrapped aspect-ratio participation).
+Latest delivery is slice78 `a96ee4a2` (finite wrapped aspect-ratio participation).
 Slice77 is `239df577` (definite percentage bounds and worktree catalog isolation).
 Slice76 is `c787d7d9` (safe overflow and finite distribution evidence).
 Slice75 is `bcf4f02e` (direction-independent start/end alignment).
@@ -28,7 +28,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The next milestone is consolidation26 for slices76–78. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is complete; the single next slice is79, percentage cross constraints at an explicitly settled column width. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles91 records:80matches/11classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -1445,14 +1445,46 @@ Types/lint/provenance pass. Kernel65383bytes unchanged. Node26.9.0; no Node24
 aggregate-trust claim. Independent scoped review found no production issue and
 its requested wrapped intrinsic negative is included. No baseline rewritten.
 
-## [NEXT] Consolidation 26 — slices 76–78
+### Consolidation 26 completed for delivery slices 76–78
 
-Commit78 separately, then compact embedded comparison records without changing
-canonical oracle data; classify the nine known Markdown files in the documentation
-gate; run proportional combined verification. Fixed33 remains3complete,
-11experimental,7partial,11missing,1excluded and all seven gates open. Select the
-next authorized finite capability after consolidation; broader intrinsic owner,
-RTL, Grid, migration and release exits remain outstanding.
+Separate commits76 `c787d7d9`,77 `239df577`,78 `a96ee4a2`. Fresh combined
+experimental Chromium:188passed in8layout files; ordinary JavaScript67passed,
+121experimental skips. Logs `/tmp/pibbl-consolidation26-{focused,normal}.txt`.
+Slice76 source/built75case replay,77percentage8case replay and78wrapped-ratio8case
+replay retain their actual exit0 receipts. Latest packed78 fresh installed consumer
+passes230dist inputs, editor/Bundler/NodeNext and exact cleanup; no repeated old
+manual corpus loop. Native kernel65383bytes unchanged. No visual baselines rewritten.
+
+Embedded91case records are now one case per line (public example426lines before
+caption clarification), canonical pretty reference.json unchanged. Provenance and
+full semantic comparison pass. Types/lint/JSDoc/changed Markdown formatting pass.
+Documentation checks now pass, including109REDmutation probes and109compiled API
+programs. Fixed classification for six operational proposal/rehearsal records,
+three public API pages, the active execution plan, and a dated field-note banner.
+Verifier recognizes logical start/end guarantees and Studio-owned example mounting;
+separate mounted evidence remains required. Async mounting rejection probe targets
+the actual awaited call. README awaits mount; Flex snippets have distinct variables;
+self-contained title/line snippets use distinct import bindings. Fence compilation
+rules remain unchanged. Logs `/tmp/pibbl-consolidation26-{docs,final-types,final-lint,final-format,provenance,jsdoc}.txt`.
+Untracked dependency symlinks were preserved and excluded from staging. Environment
+Node26.9.0/pnpm11.21.0deps/Chromium; no Node24aggregate trust or performance claim.
+
+Fixed33 remains3complete,11experimental,7partial,11missing,1excluded; all seven
+release gates open. This checkpoint does not close broad intrinsic ownership,
+RTL/logical-edge policy, Grid, migration or release evidence.
+
+## [NEXT] Settled-column percentage cross constraints (slice 79)
+
+Allow child width/minWidth/maxWidth percentages during bounded experimental
+intrinsic measurement only for known Text/Flow/Grid/nowrap-column children of an
+explicit numeric-width auto-height column. Resolve once against the owner's settled
+content width, preserving box conversion, final measurement/paint agreement,
+reactive owner changes, targets, identity and cleanup. Add a failing public test
+before implementation and expose the behavior in the existing nested-intrinsic
+example. Percentage main sizing, percentage-dependent or indefinite owners,
+wrapped intrinsic Flex and generic components remain unsupported. No new public
+signature or native ABI. This is a finite prerequisite for the min/max and nested
+intrinsic gates, not a solution to cyclic percentage sizing or full Yoga parity.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
