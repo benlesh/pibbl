@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest evidence delivery is slice150 (decorated reverse main percentage bounds).
+Latest evidence delivery is slice150 `f592b00c` (decorated reverse main percentage bounds).
+Consolidation50 records the combined148–150 verification below.
 Latest runtime delivery is slice149 `bc74da58` (bounded column provider automatic minimum).
 Slice148 is `91b36dca` (reverse composition capability evidence).
 Slice147 is `f6e45350` (logical absolute insets).
@@ -4457,13 +4458,43 @@ no status or release gate was promoted. Native totals are522 unclassified record
 183 preserved semantic differences and8 font-source records; no713-case public
 runtime replay or aggregate trust result is claimed.
 
-## [NEXT] Consolidation50 for148–150
+## Consolidation50 completed for148–150
 
-Run the existing proportional layout/ownership/browser set together in experimental
-and normal modes, reconcile docs and package receipts once, and commit the
-consolidation separately. Preserve the fixed33 capabilities (9 complete,
-11 experimental,6 partial,6 missing,1 excluded), all7 open release gates, and
-bounded admission/caching rules. Then select the next actual remaining gate exit.
+Separate delivery commits148 `91b36dca`,149 `bc74da58`,150 `f592b00c`.
+Fresh macOS/Node24.15/Playwright Chromium combined proportional set:
+experimental43 files,684 passed/11 skipped (695),82.59s; normal43 files,
+241 passed/454 skipped (695),4.74s. Logs:
+`/tmp/pibbl-consolidation50-focused.txt` and
+`/tmp/pibbl-consolidation50-normal.txt`.
+
+The first combined run exposed two harness-integration omissions from150. The
+legacy contiguous original-family walk now excludes the separately verified
+appended family, rather than incorrectly advancing one case across skipped
+sections. Latest-proof navigation expects the first record of the appended
+family. The corrected combined run passed; production runtime was unchanged.
+The dedicated150 public/source/built/packed receipts remain independent evidence
+for its new records. This is not a713-case public-runtime claim.
+
+Documentation checks passed109 RED probes,110 compiler-checked API programs and
+315 parsed snippets. Public JSDoc passed6557 resolved links/3458 members; Studio
+metadata/rendering/API/manifest checks passed. Typecheck and changed-code lint
+passed. Current installed proof has245 dist inputs, strict Bundler/NodeNext and
+runtime receipts for148–150, SHA256
+`ff1748ef54ed7c0f8f41cd8aae028524be03a20038fb82b92830052168da2c7a`.
+No aggregate Node24 trust or release-gate closure is claimed.
+
+The fixed33 capabilities remain9 complete,11 experimental,6 partial,6 missing
+and1 excluded, with all7 release gates open. Accepted broad intrinsic, placement,
+transactional publication, Grid, migration and release exits remain explicit.
+
+## [NEXT] Symmetric decorated reverse main bounds (151)
+
+Complete the finite role matrix with row-reverse percentage shrink floor and
+column-reverse percentage grow cap, each outer144→184. Independent pinned native
+probe verified row A70→98/B18→30 and column A25→35/B63→93 at decorated content
+origin12,22. Add exact native/public/source/built/installed receipts and retain
+indefinite-owner/explicit-measure policy as a separate unresolved exit. No solver
+change is justified without a failing public contract, and no new API is planned.
 
 ### Finite positioning exit matrix after134
 
