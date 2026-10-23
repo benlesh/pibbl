@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice84 (allocated-nowrap percentage physical margins).
+Latest delivery is slice84 `86030541` (allocated-nowrap percentage physical margins).
 Slice83 is `43f8c34d` (fixed-width direct Text in wrapped columns).
 Slice82 is `3dc71e11` (wrapped stretched cross sizing and percentage bounds).
 Slice81 is `732ef064` (finite allocated-child percentage padding).
@@ -1715,6 +1715,36 @@ native/public evidence. No wrapped percentage admission or parity claim here.
 
 Fixed33 remains3complete,12experimental,7partial,10missing,1excluded; all seven gates
 open. Kernel65383bytes unchanged, Node26.9.0; no aggregate trust claim.
+
+### Consolidation 28 completed for delivery slices 82–84
+
+Separate82 `3dc71e11`,83 `43f8c34d`,84 `86030541`. Fresh ten-file experimental
+check:318pass/4skip with five stale percentage-gap rejection assertions in the
+ordinary Flex test file. Those assertions predated slice80 percentage admission;
+corrected them to validate the experimental/ordinary build contract, retaining
+malformed/negative/nonfinite rejection. Focused rerun of that complete40-test file:
+39pass/1normal-onlyskip. No production code change in this consolidation. Ordinary
+same-ten-file run:148pass/179experimental skips. Logs
+`/tmp/pibbl-consolidation28-{focused,flex-fixed,normal}.txt`. The full public119case
+comparison was included in the passing nine files. Source/built82–84 and final84
+installed consumer receipts above remain current; no unchanged broad manual replay
+or native kernel rebuild.
+
+Discovery, catalog and deterministic Studio documentation/search/API manifests pass.
+Documentation109REDprobes/JSDoc/types/lint, formatted changed Markdown/JSON and
+canonical119-case native provenance pass. Dependency symlinks preserved and never
+staged; no visual baseline rewrite. Node26.9.0/pnpm11.21.0deps/Chromium, no Node24
+aggregate trust or wall-clock speed claim. Fixed33 counts and all seven open gates
+remain unchanged.
+
+Finite route to a whole entry: the next eight-case nested-percentage allocation
+slice supplies the last material owner gap in flex.row-column-nowrap-wrap. Its
+explicit matrix below operationalizes the existing preserve entry rather than
+adding new product scope. A complete status requires native outer/inner geometry,
+public source/built/installed target movement, reuse/identity and cleanup, plus
+retained negative intrinsic-owner evidence. Other flex-core entries remain open
+where they genuinely require RTL/logical direction, broader minima/providers or
+indefinite sizing policy; no whole flex-core gate claim follows from one entry.
 
 ## [NEXT] Finite nested percentage wrapping exit evidence (slice 85)
 
