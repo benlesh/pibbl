@@ -92,10 +92,22 @@ describe('bounded direct-Flex absolute admission', () => {
   it.runIf(!experimentalLayout)('rejects column absolute participation in the normal runtime', () => {
     expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={fixed} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
-  it.runIf(experimentalLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('keeps automatic axes and numeric bounds outside expanded %s absolute placement', flexDirection => {
-    for (const style of [{ ...fixed, width: 'auto' as const, right: 18 }, { ...fixed, minWidth: 0 }, { ...fixed, aspectRatio: 2 }]) {
+  it.runIf(experimentalLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('keeps unpaired automatic axes and aspect derivation outside expanded %s absolute placement', flexDirection => {
+    for (const style of [{ ...fixed, width: 'auto' as const }, { ...fixed, width: 'auto' as const, aspectRatio: 2 }]) {
       expect(mount(<Flex style={{ width: 200, height: 100, flexDirection }}><Rectangle style={style} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
     }
+  });
+  it.runIf(experimentalLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('rejects paired natural providers in %s before measurement', flexDirection => {
+    let calls = 0;
+    const Leaf = definePrimitive<{}, BoxStyle & FlexItemStyle, BoxStyle & FlexItemStyle, SystemStyle & { width: number; height: number }>(() => null, {
+      resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+      measureIntrinsic: () => { calls++; return { status: 'measured', minContent: { width: 20, height: 20 }, maxContent: { width: 60, height: 20 } }; },
+      measure: () => { calls++; return { status: 'measured', size: { width: 60, height: 20 } }; },
+    });
+    for (const style of [{ width: 'auto' as const, height: 20 }, { width: 80, height: 'auto' as const }]) {
+      expect(mount(<Flex style={{ width: 200, height: 100, flexDirection }}><Leaf style={{ ...style, position: 'absolute', left: 12, top: 8 }} /></Flex>)).toThrow('absolute aspect derivation and natural measurement currently require a row');
+    }
+    expect(calls).toBe(0);
   });
   it('rejects an opaque static Flex handoff when no declarative containing-block metadata exists', () => {
     function OpaqueStatic({ style }: { readonly style: FlexStyle & FlexItemStyle }) {

@@ -2571,7 +2571,7 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "experimental finite nowrap Flex static/relative primitive placement across all four main directions and LTR/RTL with preserved physical offsets; fixed numeric absolute boxes in all four nowrap main directions and LTR/RTL; row-only fixed/opposing-inset/aspect-derived absolute dimensions, numeric bounds, axis-wise fixed alignment and declarative static containing chains; omitted-position legacy retained; direct paired-provider absolute natural width at a definite height or natural height at a definite width uses one exact and one unbounded axis before numeric bounds",
+      "current": "experimental finite nowrap static/relative primitive placement and fixed/opposing-inset absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets; row-only absolute aspect derivation, paired-provider natural sizing and direct declarative static containing chains; omitted-position legacy retained",
       "status": "experimental",
       "unresolvedPolicy": "Intrinsic absolute sizing, explicit containing-block overrides, opaque/transformed ancestry and wider layout admission remain open.",
       "evidence": {
@@ -2587,7 +2587,8 @@
           "slice128: pure custom natural-width query, bounds after measurement, stable paint reuse, conservative resize remeasure, keyed remove/restore and failed-identity rollback; installed absoluteMeasuredWidth receipt",
           "slice129: pure custom natural-height query at declared width before bounds, wrapping width changes, stable paint reuse, measurement signals and keyed removal/restore; installed absoluteMeasuredHeight receipt",
           "slice130: fixed absolute main/cross alignment across all four nowrap directions and RTL, physical insets unchanged, source focus/hit order, stable keyed identity, paint reuse and cleanup; installed absoluteMainDirections receipt",
-          "slice131: static/relative leaves across all four nowrap directions and LTR/RTL; physical final offsets, source focus/hits, stable identity, paint reuse and cleanup; row-only known-layout/containing boundary; installed relativeMainDirections receipt"
+          "slice131: static/relative leaves across all four nowrap directions and LTR/RTL; physical final offsets, source focus/hits, stable identity, paint reuse and cleanup; row-only known-layout/containing boundary; installed relativeMainDirections receipt",
+          "slice132: opposing-inset automatic and fixed numeric absolute bounds across all four nowrap main directions and LTR/RTL; resize, physical anchoring, unchanged flow slots, occlusion/source-order hits, paint reuse and cleanup; installed absoluteMainBounds receipt"
         ],
         "negative": [
           "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
@@ -2674,11 +2675,35 @@
           "position-relative-main-column-reverse-static-ltr",
           "position-relative-main-column-reverse-static-rtl",
           "position-relative-main-column-reverse-relative-ltr",
-          "position-relative-main-column-reverse-relative-rtl"
+          "position-relative-main-column-reverse-relative-rtl",
+          "position-absolute-main-bounds-auto-row-ltr-initial",
+          "position-absolute-main-bounds-auto-row-ltr-resized",
+          "position-absolute-main-bounds-auto-row-rtl-initial",
+          "position-absolute-main-bounds-auto-row-rtl-resized",
+          "position-absolute-main-bounds-auto-row-reverse-ltr-initial",
+          "position-absolute-main-bounds-auto-row-reverse-ltr-resized",
+          "position-absolute-main-bounds-auto-row-reverse-rtl-initial",
+          "position-absolute-main-bounds-auto-row-reverse-rtl-resized",
+          "position-absolute-main-bounds-auto-column-ltr-initial",
+          "position-absolute-main-bounds-auto-column-ltr-resized",
+          "position-absolute-main-bounds-auto-column-rtl-initial",
+          "position-absolute-main-bounds-auto-column-rtl-resized",
+          "position-absolute-main-bounds-auto-column-reverse-ltr-initial",
+          "position-absolute-main-bounds-auto-column-reverse-ltr-resized",
+          "position-absolute-main-bounds-auto-column-reverse-rtl-initial",
+          "position-absolute-main-bounds-auto-column-reverse-rtl-resized",
+          "position-absolute-main-bounds-fixed-row-ltr-fixed",
+          "position-absolute-main-bounds-fixed-row-rtl-fixed",
+          "position-absolute-main-bounds-fixed-row-reverse-ltr-fixed",
+          "position-absolute-main-bounds-fixed-row-reverse-rtl-fixed",
+          "position-absolute-main-bounds-fixed-column-ltr-fixed",
+          "position-absolute-main-bounds-fixed-column-rtl-fixed",
+          "position-absolute-main-bounds-fixed-column-reverse-ltr-fixed",
+          "position-absolute-main-bounds-fixed-column-reverse-rtl-fixed"
         ],
         "missing": [
           "general absolute intrinsic dimensions (built-in text/images, both-auto and nested owners)",
-          "non-row positioned known layout owners and wrapping positioning; non-row automatic/aspect/bounded/measured absolute sizing",
+          "non-row positioned known layout owners and wrapping positioning; non-row aspect-derived/natural-measured absolute sizing",
           "general containing-block ownership"
         ]
       }

@@ -162,11 +162,11 @@ export interface PositioningStyle extends SystemStyle {
    * leaves; physical offsets retain their sign through main reversal. Nested static
    * containing chains stay row-only. Absolute stays out of sibling allocation, using
    * the padding box for explicit insets and content alignment for omitted axes.
-   * Fixed numeric absolute boxes also support all reversed/column nowrap main
-   * directions and RTL, with main/cross alignment on inset-free axes. Bounds and
-   * automatic/aspect/measured dimensions remain row-only.
-   * On the documented finite row direct-child path, automatic absolute axes resolve
-   * from opposing numeric physical insets. With a positive finite aspectRatio,
+   * Fixed numeric and opposing-inset automatic absolute boxes support all nowrap
+   * main directions and RTL, with numeric bounds applied before anchoring.
+   * Aspect derivation and natural measured dimensions remain row-only.
+   * On the documented finite direct-child path, automatic absolute axes resolve
+   * from opposing numeric physical insets. In a row, with a positive finite aspectRatio,
    * exactly one automatic axis can instead derive from its declared finite numeric opposite axis.
    * Opposing insets win. Finite numeric min/max bounds clamp used axes
    * independently after derivation; a clamp does not recouple aspectRatio, and a

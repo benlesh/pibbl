@@ -1894,9 +1894,8 @@ function assertSupportedAbsoluteFlexPosition(
   }
   const automaticWidth = style.width === undefined || style.width === 'auto';
   const automaticHeight = style.height === undefined || style.height === 'auto';
-  if (options.flexDirection !== 'row' && (automaticWidth || automaticHeight || style.aspectRatio !== undefined ||
-      style.minWidth !== undefined || style.maxWidth !== undefined || style.minHeight !== undefined || style.maxHeight !== undefined)) {
-    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: non-row absolute placement currently requires fixed finite dimensions without aspect ratio or size bounds');
+  if (options.flexDirection !== 'row' && (style.aspectRatio !== undefined || naturalWidth || naturalHeight)) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute aspect derivation and natural measurement currently require a row Flex allocation');
   }
   if ((!automaticWidth && (typeof style.width !== 'number' || !Number.isFinite(style.width) || style.width < 0)) ||
       (!automaticHeight && (typeof style.height !== 'number' || !Number.isFinite(style.height) || style.height < 0))) {

@@ -2351,6 +2351,88 @@ static void relativeMainDirectionCases() {
   }
 }
 
+static void absoluteMainBoundsCases() {
+  struct Case { YGFlexDirection direction; bool rtl; bool automatic; bool resized; const char* name; };
+  const Case cases[] = {
+    {YGFlexDirectionRow, false, true, false, "row-ltr-initial"}, {YGFlexDirectionRow, false, true, true, "row-ltr-resized"},
+    {YGFlexDirectionRow, true, true, false, "row-rtl-initial"}, {YGFlexDirectionRow, true, true, true, "row-rtl-resized"},
+    {YGFlexDirectionRowReverse, false, true, false, "row-reverse-ltr-initial"}, {YGFlexDirectionRowReverse, false, true, true, "row-reverse-ltr-resized"},
+    {YGFlexDirectionRowReverse, true, true, false, "row-reverse-rtl-initial"}, {YGFlexDirectionRowReverse, true, true, true, "row-reverse-rtl-resized"},
+    {YGFlexDirectionColumn, false, true, false, "column-ltr-initial"}, {YGFlexDirectionColumn, false, true, true, "column-ltr-resized"},
+    {YGFlexDirectionColumn, true, true, false, "column-rtl-initial"}, {YGFlexDirectionColumn, true, true, true, "column-rtl-resized"},
+    {YGFlexDirectionColumnReverse, false, true, false, "column-reverse-ltr-initial"}, {YGFlexDirectionColumnReverse, false, true, true, "column-reverse-ltr-resized"},
+    {YGFlexDirectionColumnReverse, true, true, false, "column-reverse-rtl-initial"}, {YGFlexDirectionColumnReverse, true, true, true, "column-reverse-rtl-resized"},
+    {YGFlexDirectionRow, false, false, false, "row-ltr-fixed"}, {YGFlexDirectionRow, true, false, false, "row-rtl-fixed"},
+    {YGFlexDirectionRowReverse, false, false, false, "row-reverse-ltr-fixed"}, {YGFlexDirectionRowReverse, true, false, false, "row-reverse-rtl-fixed"},
+    {YGFlexDirectionColumn, false, false, false, "column-ltr-fixed"}, {YGFlexDirectionColumn, true, false, false, "column-rtl-fixed"},
+    {YGFlexDirectionColumnReverse, false, false, false, "column-reverse-ltr-fixed"}, {YGFlexDirectionColumnReverse, true, false, false, "column-reverse-rtl-fixed"},
+  };
+  for (const auto& current : cases) {
+    const float rootWidth = current.resized ? 244 : 204;
+    const float rootHeight = current.resized ? 144 : 104;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false);
+    YGConfigSetPointScaleFactor(config, 0);
+    YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetPositionType(root, YGPositionTypeRelative);
+    YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, rootWidth);
+    YGNodeStyleSetHeight(root, rootHeight);
+    YGNodeStyleSetFlexDirection(root, current.direction);
+    YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+    YGNodeStyleSetGap(root, YGGutterAll, 10);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10);
+    YGNodeStyleSetPadding(root, YGEdgeRight, 30);
+    YGNodeStyleSetPadding(root, YGEdgeTop, 20);
+    YGNodeStyleSetPadding(root, YGEdgeBottom, 20);
+    YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    for (int item = 0; item < 3; ++item) {
+      auto child = YGNodeNewWithConfig(config);
+      if (item == 1) {
+        YGNodeStyleSetPositionType(child, YGPositionTypeAbsolute);
+        YGNodeStyleSetPosition(child, YGEdgeLeft, 12);
+        YGNodeStyleSetPosition(child, YGEdgeRight, 18);
+        YGNodeStyleSetPosition(child, YGEdgeTop, 8);
+        YGNodeStyleSetPosition(child, YGEdgeBottom, 10);
+        if (current.automatic) {
+          YGNodeStyleSetWidthAuto(child);
+          YGNodeStyleSetHeightAuto(child);
+          YGNodeStyleSetMinWidth(child, 180);
+          YGNodeStyleSetMinHeight(child, 90);
+        } else {
+          YGNodeStyleSetWidth(child, 30);
+          YGNodeStyleSetHeight(child, 20);
+          YGNodeStyleSetMinWidth(child, 60);
+          YGNodeStyleSetMaxHeight(child, 10);
+        }
+      } else {
+        YGNodeStyleSetWidth(child, 50);
+        YGNodeStyleSetHeight(child, 20);
+        YGNodeStyleSetFlexGrow(child, 0);
+        YGNodeStyleSetFlexShrink(child, 0);
+        YGNodeStyleSetMinWidth(child, 0);
+        YGNodeStyleSetMinHeight(child, 0);
+      }
+      YGNodeInsertChild(root, child, item);
+    }
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, current.rtl ? YGDirectionRTL : YGDirectionLTR);
+    std::cout << ",{\"name\":\"position-absolute-main-bounds-" << (current.automatic ? "auto-" : "fixed-") << current.name
+              << "\",\"width\":" << rootWidth << ",\"height\":" << rootHeight << ",\"gap\":10,\"flexDirection\":\""
+              << (current.direction == YGFlexDirectionRow ? "row" : current.direction == YGFlexDirectionRowReverse ? "row-reverse" : current.direction == YGFlexDirectionColumn ? "column" : "column-reverse")
+              << "\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (current.rtl ? "rtl" : "ltr")
+              << "\",\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\"},\"absoluteMainBoundsFixture\":true,\"boxes\":[";
+    for (int item = 0; item < 3; ++item) { if (item) std::cout << ','; printBox(YGNodeGetChild(root, item)); }
+    std::cout << "],\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"position\":\"absolute\",\"left\":12,\"right\":18,\"top\":8,\"bottom\":10";
+    if (current.automatic) std::cout << ",\"width\":\"auto\",\"height\":\"auto\",\"minWidth\":180,\"minHeight\":90";
+    else std::cout << ",\"width\":30,\"height\":20,\"minWidth\":60,\"maxHeight\":10";
+    std::cout << "},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root);
+    YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -2508,5 +2590,6 @@ int main() {
   absoluteMeasuredHeightCases();
   absoluteMainDirectionCases();
   relativeMainDirectionCases();
+  absoluteMainBoundsCases();
   std::cout << "]\n";
 }

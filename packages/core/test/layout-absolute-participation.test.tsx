@@ -1033,3 +1033,68 @@ it.runIf(experimentalLayout)('keeps finite absolute Flex placement physical whil
     baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
   ]);
 });
+
+it.runIf(experimentalLayout)('settles opposing-inset automatic and fixed numeric bounds through all finite nowrap Flex directions', async () => {
+  type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
+  type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const ownerWidth = signal(204), ownerHeight = signal(104);
+  const direction = signal<Direction>('row');
+  const layoutDirection = signal<'ltr' | 'rtl'>('ltr');
+  const mode = signal<'auto' | 'fixed'>('auto');
+  const ink = signal('#a63758');
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+  const hits: string[] = [];
+  let nextStamp = 1;
+
+  function Probe({ name, style: _style }: { readonly name: 'A' | 'absolute' | 'B'; readonly style: PlacementStyle }) {
+    const box = useLayoutBox(), transform = useCanvasContext().getTransform(), stamp = useConst(() => nextStamp++);
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return <Rectangle onClick={() => hits.push(name)} style={{ width: box.width, height: box.height, cursor: 'pointer', fill: name === 'absolute' ? ink : '#19375b' }} />;
+  }
+  function Scene() {
+    const ordinary: PlacementStyle = { width: 50, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 };
+    const absolute: PlacementStyle = mode.get() === 'auto'
+      ? { position: 'absolute', left: 12, right: 18, top: 8, bottom: 10, width: 'auto', height: 'auto', minWidth: 180, minHeight: 90, flexGrow: 0, flexShrink: 0 }
+      : { position: 'absolute', left: 12, right: 18, top: 8, bottom: 10, width: 30, height: 20, minWidth: 60, maxHeight: 10, flexGrow: 0, flexShrink: 0 };
+    return <Flex style={{ width: ownerWidth.get(), height: ownerHeight.get(), boxSizing: 'border-box', padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2,
+      flexDirection: direction.get(), flexWrap: 'nowrap', layoutDirection: layoutDirection.get(), alignItems: 'flex-start', gap: 10 }}>
+      <Probe key="A" name="A" style={ordinary} /><Probe key="absolute" name="absolute" style={absolute} /><Probe key="B" name="B" style={ordinary} />
+    </Flex>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 244; canvas.height = 144; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  const flow = (flexDirection: Direction, writing: 'ltr' | 'rtl', resized: boolean) => {
+    const xStart = writing === 'rtl' ? (resized ? 162 : 122) : 12;
+    const yStart = 22;
+    if (flexDirection === 'row') return [{ x: xStart, y: yStart }, { x: writing === 'rtl' ? xStart - 60 : xStart + 60, y: yStart }];
+    if (flexDirection === 'row-reverse') return [{ x: writing === 'rtl' ? 12 : (resized ? 162 : 122), y: yStart }, { x: writing === 'rtl' ? 72 : (resized ? 102 : 62), y: yStart }];
+    if (flexDirection === 'column') return [{ x: xStart, y: 22 }, { x: xStart, y: 52 }];
+    return [{ x: xStart, y: resized ? 102 : 62 }, { x: xStart, y: resized ? 72 : 32 }];
+  };
+  const box = (name: string) => boxes.get(name)!;
+  for (const flexDirection of ['row', 'row-reverse', 'column', 'column-reverse'] as const) for (const writing of ['ltr', 'rtl'] as const) {
+    ownerWidth.set(204); ownerHeight.set(104); direction.set(flexDirection); layoutDirection.set(writing); mode.set('auto'); await nextFrame();
+    const initial = flow(flexDirection, writing, false);
+    expect(box('A')).toMatchObject({ ...initial[0], width: 50, height: 20, stamp: 1 });
+    expect(box('B')).toMatchObject({ ...initial[1], width: 50, height: 20, stamp: 3 });
+    expect(box('absolute')).toMatchObject({ x: writing === 'rtl' ? 4 : 14, y: 10, width: 180, height: 90, stamp: 2 });
+    ownerWidth.set(244); ownerHeight.set(144); await nextFrame();
+    const resized = flow(flexDirection, writing, true);
+    expect(box('A')).toMatchObject({ ...resized[0], width: 50, height: 20, stamp: 1 });
+    expect(box('B')).toMatchObject({ ...resized[1], width: 50, height: 20, stamp: 3 });
+    expect(box('absolute')).toMatchObject({ x: 14, y: 10, width: 210, height: 122, stamp: 2 });
+  }
+  for (const flexDirection of ['row', 'row-reverse', 'column', 'column-reverse'] as const) for (const writing of ['ltr', 'rtl'] as const) {
+    mode.set('fixed'); ownerWidth.set(204); ownerHeight.set(104); direction.set(flexDirection); layoutDirection.set(writing); await nextFrame();
+    const initial = flow(flexDirection, writing, false);
+    expect(box('A')).toMatchObject({ ...initial[0], width: 50, height: 20, stamp: 1 });
+    expect(box('B')).toMatchObject({ ...initial[1], width: 50, height: 20, stamp: 3 });
+    expect(box('absolute')).toMatchObject({ x: writing === 'rtl' ? 124 : 14, y: 10, width: 60, height: 10, stamp: 2 });
+    clickCanvas(canvas, box('absolute').x + 4, 14); expect(hits.at(-1)).toBe('absolute');
+  }
+  const beforePaint = snapshotWasmLayoutDiagnostics(); ink.set('#426b61'); await nextFrame();
+  expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforePaint.solves); expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(beforePaint.nodeCreates);
+  controller.dispose();
+  expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes); expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas); expect(snapshotWasmLayoutDiagnostics().cachedMeasurements).toBe(baseline.cachedMeasurements);
+});

@@ -349,15 +349,17 @@ Relative translation remains physical under main reversal. Yoga's four reversed
 relative cases are recorded as deliberate differences with separate Pibbl boxes.
 This does not widen the row/nowrap nested static containing-block boundary.
 
-### Experimental fixed absolute main directions
+### Experimental absolute main directions
 
-A finite nowrap Flex accepts fixed numeric absolute boxes in `row`,
+A finite nowrap Flex accepts fixed numeric and opposing-inset automatic absolute boxes in `row`,
 `row-reverse`, `column` and `column-reverse`, including RTL. Physical insets keep
 the same padding-box reference. Without an inset, `justifyContent` controls the
 main axis and `alignItems` the cross axis, including reversal and horizontal RTL.
 A fixed box keeps its size under stretch. Authored paint, click and focus order
-remain unchanged. Size bounds, automatic/aspect/measured dimensions in directions
-other than `row` remain unsupported.
+remain unchanged. Numeric bounds apply to fixed and derived axes before inset
+anchoring in every direction. Aspect derivation and natural measured dimensions
+remain row-only. An automatic axis in another direction requires its opposing
+physical inset pair; it does not invoke a measurement provider.
 
 ### Experimental measured absolute size
 
