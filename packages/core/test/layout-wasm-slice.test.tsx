@@ -757,6 +757,14 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   for (const [index, fixture] of yogaReference.cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
+    if (fixture.nestedBoxes) {
+      await expect.poll(()=>canvas.nextElementSibling?.textContent).toContain(fixture.name);
+      const nested=JSON.parse(canvas.nextElementSibling!.textContent!.split('nested state: ')[1]);
+      for(let boxIndex=0;boxIndex<4;boxIndex++) expect(nested.boxes[String.fromCharCode(65+boxIndex)]).toEqual(fixture.boxes[boxIndex]);
+      expect(nested.boxes.A1).toEqual(fixture.nestedBoxes[0]);expect(nested.boxes.A2).toEqual(fixture.nestedBoxes[1]);
+      const leaf=fixture.nestedBoxes[0];clickCanvas(canvas,394+leaf.x,242+leaf.y);await expect.poll(()=>canvas.nextElementSibling?.textContent).toContain('selected: A1');
+      continue;
+    }
     if (fixture.name.startsWith('rectangle-')) {
       const padded = fixture.name === 'rectangle-percent-content-box';
       const children = [0, 1].map(index => createElement(Rectangle, { style: {
@@ -2760,3 +2768,26 @@ it.skipIf(experimentalLayout)('keeps percentage physical margins rejected in nor
   const child=createElement(Rectangle,{style:{width:20,height:20,marginLeft:'10%'}});
   expect(()=>layoutFlex({x:0,y:0,width:100,height:100},[child],{},measurement)).toThrow(/margin/);
 });
+
+it.runIf(experimentalLayout)('drives nested percentage owners through the public comparison before and after allocation',async()=>{
+  const module=await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
+  const canvas=document.createElement('canvas');canvas.width=760;canvas.height=540;document.body.append(canvas);
+  const baseline=snapshotWasmLayoutDiagnostics();const controller=createExampleMount(module.WasmYogaMigrationExample)(canvas);controllers.push(controller);await nextFrame();
+  for(let i=0;i<7;i++){clickCanvas(canvas,520,158);await nextFrame();}
+  await expect.poll(()=>canvas.nextElementSibling?.textContent).toContain('nested-percent-gap-row-nowrap');
+  const state=()=>JSON.parse(canvas.nextElementSibling!.textContent!.split('nested state: ')[1]);
+  const initial=state();expect(initial.boxes.A).toEqual({x:0,y:0,width:81,height:60});expect(initial.boxes.A1).toEqual({x:0,y:0,width:32.4,height:60});expect(initial.boxes.A2).toEqual({x:40.5,y:0,width:32.4,height:60});
+  clickCanvas(canvas,675,242);await nextFrame();await expect.poll(()=>state().hits).toBe(1);
+  clickCanvas(canvas,60,158);await nextFrame();await expect.poll(()=>canvas.nextElementSibling?.textContent).toContain('nested-percent-gap-row-nowrap-resized');const resized=state();expect(resized.boxes.A).toEqual({x:0,y:0,width:51,height:60});expect(resized.boxes.A1).toEqual({x:0,y:0,width:20.4,height:60});expect(resized.boxes.A2).toEqual({x:25.5,y:0,width:20.4,height:60});expect(resized.stamps).toEqual(initial.stamps);
+  clickCanvas(canvas,675,242);await nextFrame();expect(state().hits).toBe(1);clickCanvas(canvas,583,242);await nextFrame();await expect.poll(()=>state().hits).toBe(2);
+  const before=snapshotWasmLayoutDiagnostics();clickCanvas(canvas,300,158);await nextFrame();const painted=snapshotWasmLayoutDiagnostics();expect(painted.solves).toBe(before.solves);expect(painted.lineFormations).toBe(before.lineFormations);expect(painted.measuredLeaves).toBe(before.measuredLeaves);expect(painted.nodeCreates).toBe(before.nodeCreates);
+  controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+});
+for(const maxOnly of [false,true]){
+  it.runIf(experimentalLayout)(`rejects nested percentage feedback under ${maxOnly?'max-only':'intrinsic'} owners`,()=>{
+    const leaf=createElement(Rectangle,{style:{width:'40%',height:20,flexBasis:'40%',minWidth:0,minHeight:0,flexShrink:0}});
+    const nested=createElement(Flex,{style:{width:'auto',height:60,minWidth:0,minHeight:0,flexShrink:0,gap:'10%'},children:[leaf,leaf]});
+    const root=createElement(Flex,{style:{width:'auto',maxWidth:maxOnly?360:undefined},children:nested});
+    expect(measureElement(root,{minWidth:0,maxWidth:360,minHeight:0,maxHeight:240},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('definite child basis')});
+  });
+}

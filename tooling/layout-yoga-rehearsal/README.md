@@ -410,3 +410,19 @@ installed consumer checks cover actual targets and exact cleanup. Wrapped
 percentage margins and intrinsic percentage feedback remain unsupported; existing
 numeric wrapped margins are unchanged. The native numeric/percentage cross-margin
 quirk is recorded in Plan010 and is not silently adopted as a Pibbl policy.
+
+## Finite nested percentage owners (slice 85)
+
+Eight `nested-percent-gap-*` records use one fixed nested Flex tree: three inner
+owners and a following keyed item. Row/column × nowrap/wrap × owner resize pins
+outer boxes and A's two inner boxes in root coordinates. Inner40% basis/dimensions
+and10% gaps use final allocated inner sizes, not outer dimensions. `nestedBoxes`
+marks only this fixed tree; it is not a recursive fixture language or public API.
+The seventh Next section jump selects the cases. The dedicated source/built
+replay verifies served worktree catalog and760×540surface, every semantic box,
+moved leaf/footer targets, stable stamps/nodes, paint-only reuse and zero cleanup.
+Fresh packed fixtures repeat all eight through installed public entries.
+
+The finite LTR row/column nowrap/wrap preserve entry is evidence-complete for its
+stated finite contract. RTL, reversal, automatic minima, intrinsic percentage
+feedback, standalone migration and release trust retain their own explicit gates.

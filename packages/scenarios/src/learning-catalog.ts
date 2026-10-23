@@ -4237,7 +4237,7 @@ const drafts = [
     ],
     prompts: {
       gesture:
-        "Next case + resize cycles recorded fixtures; Next section jumps to percentage bounds, wrapped ratios, percentage gaps, padding, cross bounds and nowrap physical margins. Click Pibbl boxes to compare moved targets. Paint only reuses numeric work.",
+        "Next case + resize cycles recorded fixtures; Next section jumps to percentage bounds, wrapped ratios, percentage gaps, padding, cross bounds, nowrap physical margins and nested percentage owners. Click Pibbl boxes to compare moved targets. Paint only reuses numeric work.",
       code: "The Yoga reference is pinned to 3.2.1/042f5013152e. The after side uses public Flex fields and explicit minimums, not a compatibility selector.",
     },
     apiNotes: [

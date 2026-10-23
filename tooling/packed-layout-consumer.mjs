@@ -16,6 +16,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { build } from "esbuild";
+const nestedPercentFixtures = JSON.parse(await readFile(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8')).cases.filter(value => value.nestedBoxes);
 const root = fileURLToPath(new URL("../", import.meta.url));
 const consumer = await realpath(
   await mkdtemp(join(tmpdir(), "pibbl-packed-layout-")),
@@ -177,6 +178,22 @@ const marginCanvas=document.createElement('canvas');marginCanvas.width=400;margi
 const marginOwner=signal(300),marginInk=signal('red');let marginHits=0;
 const marginController=pibblSync(marginCanvas,createElement(Flex,{style:{width:marginOwner,height:200,boxSizing:'border-box',padding:{left:10,right:30,top:20,bottom:40},alignItems:'flex-start'},children:[createElement(Rectangle,{style:{width:60,height:30,minWidth:0,minHeight:0,flexShrink:0,marginLeft:'10%',marginRight:'15%',marginTop:'5%',marginBottom:'20%',fill:marginInk}}),createElement(Rectangle,{style:{width:136,height:81,minWidth:0,minHeight:0,flexShrink:0,fill:'blue'},onClick:()=>marginHits++})]}));
 try{const clickMargin=(x:number)=>{const rect=marginCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])marginCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+21,bubbles:true,button:0}));};const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));await frame();const context=marginCanvas.getContext('2d')!;if(context.getImageData(136,21,1,1).data[2]!==255)throw Error('installed percentage margin initial');clickMargin(136);const before=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();marginInk.set('green');await frame();if((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().solves!==before.solves)throw Error('installed percentage margin paint solve');marginOwner.set(360);await frame();if(context.getImageData(136,21,1,1).data[3]!==0||context.getImageData(151,21,1,1).data[2]!==255)throw Error('installed percentage margin resized');clickMargin(136);clickMargin(151);if(marginHits!==2)throw Error('installed percentage margin target');receipt.percentageMargins=true;}finally{marginController.dispose();marginCanvas.remove();}
+const nestedPercentCases = ${JSON.stringify(nestedPercentFixtures)};
+for(let pair=0;pair<nestedPercentCases.length;pair+=2){
+ const first=nestedPercentCases[pair],column=first.flexDirection==='column',wrapped=first.flexWrap==='wrap';
+ const nestedCanvas=document.createElement('canvas');nestedCanvas.width=400;nestedCanvas.height=400;nestedCanvas.style.cssText='width:400px;height:400px';document.body.append(nestedCanvas);
+ const nestedWidth=signal(first.width),nestedHeight=signal(first.height),nestedInk=signal('green');let nestedHits=0;
+ const nestedLeaf=(second:boolean)=>createElement(Rectangle,{key:second?'second':'first',style:{width:column?'100%':'40%',height:column?'40%':'100%',flexBasis:'40%',flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,fill:second?'red':nestedInk}});
+ const nestedController=pibblSync(nestedCanvas,createElement(Flex,{style:{width:nestedWidth,height:nestedHeight,flexDirection:first.flexDirection,flexWrap:first.flexWrap,gap:12,alignItems:'stretch',alignContent:'flex-start'},children:[...Array.from({length:3},(_,index)=>createElement(Flex,{key:index,style:{width:column?60:80,height:column?80:60,flexBasis:80,flexGrow:1,flexShrink:1,minWidth:0,minHeight:0,flexDirection:first.flexDirection,gap:'10%',alignItems:'stretch'},children:[nestedLeaf(false),nestedLeaf(true)]})),createElement(Rectangle,{key:'footer',style:{width:column?36:80,height:column?80:36,flexBasis:80,flexGrow:1,flexShrink:1,minWidth:0,minHeight:0,fill:'blue'},onClick:()=>nestedHits++})]}));
+ try{const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));const clickNested=(x:number,y:number)=>{const rect=nestedCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])nestedCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+y,bubbles:true,button:0}));};const context=nestedCanvas.getContext('2d')!;let before:any;
+  for(let variant=0;variant<2;variant++){const fixture=nestedPercentCases[pair+variant];if(variant){nestedWidth.set(fixture.width);nestedHeight.set(fixture.height);}await frame();
+   if(variant){if((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==before.nodeCreates)throw Error('installed nested percent identity');const old=first.boxes[3];const point=wrapped?(column?{x:old.x+2,y:220}:{x:220,y:old.y+2}):{x:old.x+2,y:old.y+2};const hits=nestedHits;clickNested(point.x,point.y);if(nestedHits!==hits)throw Error('installed nested percent former footer');}
+   const leaf=fixture.nestedBoxes[1],footer=fixture.boxes[3];if(context.getImageData(Math.ceil(leaf.x+2),Math.ceil(leaf.y+2),1,1).data[0]!==255)throw Error('installed nested percent leaf '+fixture.name);if(context.getImageData(footer.x+2,footer.y+2,1,1).data[2]!==255)throw Error('installed nested percent footer '+fixture.name);clickNested(footer.x+2,footer.y+2);if(nestedHits!==variant+1)throw Error('installed nested percent current footer');
+   const painted=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();nestedInk.set(variant?'green':'yellow');await frame();before=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();for(const key of ['solves','lineFormations','measuredLeaves','nodeCreates'])if(painted[key]!==before[key])throw Error('installed nested percent paint reuse '+key);
+  }
+ }finally{nestedController.dispose();nestedCanvas.remove();}
+}
+receipt.nestedPercentageWrapping=true;
 const controller = pibblSync(document.querySelector('canvas')!, createElement(WasmFlexNestedIntrinsicExample, {}));
 addEventListener('pagehide', () => controller.dispose(), {once:true});`,
   );

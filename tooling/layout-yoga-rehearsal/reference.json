@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "459049d66d9ce7a3431ea11622c53809f715b3016628eb85dcc203fb3c3b3ca9",
+  "probeSha256": "cd72dcdb495ec37175f43571302d01afa6a0b88e661fe6378ab3eef9cd3515c0",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -13,11 +13,11 @@
     "alignItems": "explicit containerStyle when present; otherwise flex-start",
     "alignContent": "explicit containerStyle when present; otherwise flex-start",
     "flexWrap": "explicit nowrap/wrap/wrap-reverse per case",
-    "gap": "explicit per case; 0 or 12",
-    "shrink": "explicit itemStyles when present; otherwise 1 except floor/border cases use 0",
+    "gap": "explicit numeric or allocated-axis percentage per case; nested owners use10%",
+    "shrink": "explicit itemStyles when present; nested outer items1 and inner leaves0; otherwise1 except floor/border cases0",
     "comparison": "native boxes match except explicitly classified partial-factor/freeze and CSS safe-overflow reverse cases; pibblBoxes are expected Pibbl contract geometry",
-    "padding": "10 in content-box/initial border-box cases; asymmetric physical 3/5/7/11 in border cases; otherwise 0",
-    "boxSizing": "content-box in rectangle-percent-content-box; explicit border-box in border-box cases; otherwise Yoga default",
+    "padding": "explicit numeric/percentage item or container padding per case; asymmetric physical3/5/7/11 in border cases; otherwise0",
+    "boxSizing": "explicit item/container boxSizing per case; rectangle-percent-content-box uses content-box; otherwise Yoga default",
     "border": "physical left2/right4/top6/bottom8 in asymmetric border cases; otherwise 0"
   },
   "cases": [
@@ -5502,6 +5502,726 @@
           "flexBasis": 81,
           "flexGrow": 0,
           "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-percent-gap-row-nowrap",
+      "width": 360,
+      "height": 240,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "alignItems": "stretch",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 81,
+          "height": 60
+        },
+        {
+          "x": 93,
+          "y": 0,
+          "width": 81,
+          "height": 60
+        },
+        {
+          "x": 186,
+          "y": 0,
+          "width": 81,
+          "height": 60
+        },
+        {
+          "x": 279,
+          "y": 0,
+          "width": 81,
+          "height": 36
+        }
+      ],
+      "nestedBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 32.4,
+          "height": 60
+        },
+        {
+          "x": 40.5,
+          "y": 0,
+          "width": 32.4,
+          "height": 60
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 36,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-percent-gap-row-nowrap-resized",
+      "width": 240,
+      "height": 240,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "alignItems": "stretch",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 51,
+          "height": 60
+        },
+        {
+          "x": 63,
+          "y": 0,
+          "width": 51,
+          "height": 60
+        },
+        {
+          "x": 126,
+          "y": 0,
+          "width": 51,
+          "height": 60
+        },
+        {
+          "x": 189,
+          "y": 0,
+          "width": 51,
+          "height": 36
+        }
+      ],
+      "nestedBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 20.4,
+          "height": 60
+        },
+        {
+          "x": 25.5,
+          "y": 0,
+          "width": 20.4,
+          "height": 60
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 36,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-percent-gap-row-wrap",
+      "width": 300,
+      "height": 240,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "wrap",
+      "containerStyle": {
+        "alignItems": "stretch",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 92,
+          "height": 60
+        },
+        {
+          "x": 104,
+          "y": 0,
+          "width": 92,
+          "height": 60
+        },
+        {
+          "x": 208,
+          "y": 0,
+          "width": 92,
+          "height": 60
+        },
+        {
+          "x": 0,
+          "y": 72,
+          "width": 300,
+          "height": 36
+        }
+      ],
+      "nestedBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 36.8,
+          "height": 60
+        },
+        {
+          "x": 46,
+          "y": 0,
+          "width": 36.8,
+          "height": 60
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 36,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-percent-gap-row-wrap-resized",
+      "width": 180,
+      "height": 240,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "wrap",
+      "containerStyle": {
+        "alignItems": "stretch",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 84,
+          "height": 60
+        },
+        {
+          "x": 96,
+          "y": 0,
+          "width": 84,
+          "height": 60
+        },
+        {
+          "x": 0,
+          "y": 72,
+          "width": 84,
+          "height": 60
+        },
+        {
+          "x": 96,
+          "y": 72,
+          "width": 84,
+          "height": 36
+        }
+      ],
+      "nestedBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 33.6,
+          "height": 60
+        },
+        {
+          "x": 42,
+          "y": 0,
+          "width": 33.6,
+          "height": 60
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 60,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 36,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-percent-gap-column-nowrap",
+      "width": 240,
+      "height": 360,
+      "gap": 12,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "alignItems": "stretch",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 60,
+          "height": 81
+        },
+        {
+          "x": 0,
+          "y": 93,
+          "width": 60,
+          "height": 81
+        },
+        {
+          "x": 0,
+          "y": 186,
+          "width": 60,
+          "height": 81
+        },
+        {
+          "x": 0,
+          "y": 279,
+          "width": 36,
+          "height": 81
+        }
+      ],
+      "nestedBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 60,
+          "height": 32.4
+        },
+        {
+          "x": 0,
+          "y": 40.5,
+          "width": 60,
+          "height": 32.4
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 36,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-percent-gap-column-nowrap-resized",
+      "width": 240,
+      "height": 240,
+      "gap": 12,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "alignItems": "stretch",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 60,
+          "height": 51
+        },
+        {
+          "x": 0,
+          "y": 63,
+          "width": 60,
+          "height": 51
+        },
+        {
+          "x": 0,
+          "y": 126,
+          "width": 60,
+          "height": 51
+        },
+        {
+          "x": 0,
+          "y": 189,
+          "width": 36,
+          "height": 51
+        }
+      ],
+      "nestedBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 60,
+          "height": 20.4
+        },
+        {
+          "x": 0,
+          "y": 25.5,
+          "width": 60,
+          "height": 20.4
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 36,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-percent-gap-column-wrap",
+      "width": 240,
+      "height": 300,
+      "gap": 12,
+      "flexDirection": "column",
+      "flexWrap": "wrap",
+      "containerStyle": {
+        "alignItems": "stretch",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 60,
+          "height": 92
+        },
+        {
+          "x": 0,
+          "y": 104,
+          "width": 60,
+          "height": 92
+        },
+        {
+          "x": 0,
+          "y": 208,
+          "width": 60,
+          "height": 92
+        },
+        {
+          "x": 72,
+          "y": 0,
+          "width": 36,
+          "height": 300
+        }
+      ],
+      "nestedBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 60,
+          "height": 36.8
+        },
+        {
+          "x": 0,
+          "y": 46,
+          "width": 60,
+          "height": 36.8
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 36,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-percent-gap-column-wrap-resized",
+      "width": 240,
+      "height": 180,
+      "gap": 12,
+      "flexDirection": "column",
+      "flexWrap": "wrap",
+      "containerStyle": {
+        "alignItems": "stretch",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 60,
+          "height": 84
+        },
+        {
+          "x": 0,
+          "y": 96,
+          "width": 60,
+          "height": 84
+        },
+        {
+          "x": 72,
+          "y": 0,
+          "width": 60,
+          "height": 84
+        },
+        {
+          "x": 72,
+          "y": 96,
+          "width": 36,
+          "height": 84
+        }
+      ],
+      "nestedBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 60,
+          "height": 33.6
+        },
+        {
+          "x": 0,
+          "y": 42,
+          "width": 60,
+          "height": 33.6
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 60,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 36,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 1,
+          "flexShrink": 1,
           "minWidth": 0,
           "minHeight": 0
         }

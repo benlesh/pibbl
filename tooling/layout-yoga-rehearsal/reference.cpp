@@ -363,6 +363,79 @@ static void percentageMarginCases() {
   }
 }
 
+static void setMainCross(YGNodeRef node, bool column, float main, float cross) {
+  if (column) { YGNodeStyleSetHeight(node, main); YGNodeStyleSetWidth(node, cross); }
+  else { YGNodeStyleSetWidth(node, main); YGNodeStyleSetHeight(node, cross); }
+}
+static void setMinZero(YGNodeRef node) { YGNodeStyleSetMinWidth(node, 0); YGNodeStyleSetMinHeight(node, 0); }
+static void printBox(YGNodeRef node, float ox=0, float oy=0) {
+  std::cout << "{\"x\":" << ox + YGNodeLayoutGetLeft(node) << ",\"y\":" << oy + YGNodeLayoutGetTop(node)
+            << ",\"width\":" << YGNodeLayoutGetWidth(node) << ",\"height\":" << YGNodeLayoutGetHeight(node) << '}';
+}
+static void nestedPercentageGapCases() {
+  for (int axis = 0; axis < 2; ++axis) {
+    const bool column = axis == 1;
+    for (int wrapIndex = 0; wrapIndex < 2; ++wrapIndex) {
+      const bool wrap = wrapIndex == 1;
+      for (int resize = 0; resize < 2; ++resize) {
+        const bool resized = resize == 1;
+        const float main = wrap ? (resized ? 180 : 300) : (resized ? 240 : 360);
+        const float cross = 240;
+        auto config = YGConfigNew();
+        YGConfigSetUseWebDefaults(config, false);
+        YGConfigSetPointScaleFactor(config, 0);
+        YGConfigSetErrata(config, YGErrataNone);
+        auto root = YGNodeNewWithConfig(config);
+        setMainCross(root, column, main, cross);
+        YGNodeStyleSetFlexDirection(root, column ? YGFlexDirectionColumn : YGFlexDirectionRow);
+        YGNodeStyleSetFlexWrap(root, wrap ? YGWrapWrap : YGWrapNoWrap);
+        YGNodeStyleSetGap(root, YGGutterAll, 12);
+        YGNodeStyleSetAlignItems(root, YGAlignStretch);
+        YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+        for (int index = 0; index < 4; ++index) {
+          auto child = YGNodeNewWithConfig(config);
+          YGNodeStyleSetFlexBasis(child, 80); YGNodeStyleSetFlexGrow(child, 1); YGNodeStyleSetFlexShrink(child, 1); setMinZero(child);
+          if (index < 3) {
+            // Inner Flex card: pre-allocation main80/cross60, itself grows in the outer owner.
+            YGNodeStyleSetFlexDirection(child, column ? YGFlexDirectionColumn : YGFlexDirectionRow);
+            setMainCross(child, column, 80, 60);
+            YGNodeStyleSetGapPercent(child, YGGutterAll, 10);
+            for (int leafIndex = 0; leafIndex < 2; ++leafIndex) {
+              auto leaf = YGNodeNewWithConfig(config);
+              if (column) {
+                YGNodeStyleSetFlexBasisPercent(leaf, 40); YGNodeStyleSetHeightPercent(leaf, 40); YGNodeStyleSetWidthPercent(leaf, 100);
+              } else {
+                YGNodeStyleSetFlexBasisPercent(leaf, 40); YGNodeStyleSetWidthPercent(leaf, 40); YGNodeStyleSetHeightPercent(leaf, 100);
+              }
+              YGNodeStyleSetFlexGrow(leaf, 0); YGNodeStyleSetFlexShrink(leaf, 0); setMinZero(leaf);
+              YGNodeInsertChild(child, leaf, leafIndex);
+            }
+          } else {
+            setMainCross(child, column, 80, 36);
+          }
+          YGNodeInsertChild(root, child, index);
+        }
+        YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+        std::cout << ",{\"name\":\"nested-percent-gap-" << (column ? "column" : "row") << '-' << (wrap ? "wrap" : "nowrap") << (resized ? "-resized" : "")
+                  << "\",\"width\":" << (column ? cross : main) << ",\"height\":" << (column ? main : cross)
+                  << ",\"gap\":12,\"flexDirection\":\"" << (column ? "column" : "row") << "\",\"flexWrap\":\"" << (wrap ? "wrap" : "nowrap")
+                  << "\",\"containerStyle\":{\"alignItems\":\"stretch\",\"alignContent\":\"flex-start\"},\"boxes\":[";
+        for (int index = 0; index < 4; ++index) { if (index) std::cout << ','; printBox(YGNodeGetChild(root,index)); }
+        auto a = YGNodeGetChild(root,0);
+        std::cout << "],\"nestedBoxes\":[";
+        for (int leafIndex = 0; leafIndex < 2; ++leafIndex) { if (leafIndex) std::cout << ','; printBox(YGNodeGetChild(a,leafIndex),YGNodeLayoutGetLeft(a),YGNodeLayoutGetTop(a)); }
+        std::cout << "],\"itemStyles\":[";
+        for (int index = 0; index < 4; ++index) {
+          if (index) std::cout << ',';
+          if (index < 3) std::cout << "{\"width\":" << (column ? 60 : 80) << ",\"height\":" << (column ? 80 : 60) << ",\"flexBasis\":80,\"flexGrow\":1,\"flexShrink\":1,\"minWidth\":0,\"minHeight\":0}";
+          else std::cout << "{\"width\":" << (column ? 36 : 80) << ",\"height\":" << (column ? 80 : 36) << ",\"flexBasis\":80,\"flexGrow\":1,\"flexShrink\":1,\"minWidth\":0,\"minHeight\":0}";
+        }
+        std::cout << "]}";
+        YGNodeFreeRecursive(root); YGConfigFree(config);
+      }
+    }
+  }
+}
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -481,5 +554,6 @@ int main() {
   percentagePaddingCases();
   wrappedCrossPercentageCases();
   percentageMarginCases();
+  nestedPercentageGapCases();
   std::cout << "]\n";
 }

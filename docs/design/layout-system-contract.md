@@ -287,6 +287,16 @@ owner-relative cross bounds. Cross minimum60% at owner cross100→160 expands th
 line60→96 and moves the next line72→108 with gap12; maximum25% caps the item25→40
 while a40-unit sibling keeps the next line at52. Source-order paint/hit targets
 move with those boxes; cross-only updates reuse main solving/line formation.
+Finite nested Flex allocations resolve percentages from the final inner content
+box, after outer line allocation. Pinned row/column × nowrap/wrap resize cases
+include inner40% dimensions/bases and10% gaps: allocated main81→51 gives child
+main32.4→20.4 and main gap8.1→5.1. The following keyed outer item moves with line
+reformation; inner/outer geometry, source hit order, identities, paint-only reuse
+and exact cleanup have public source/built/installed evidence. This completes the
+finite LTR preserve capability's stated evidence matrix, not the flex-core release
+gate or a general intrinsic-percentage policy. Max-only constraints do not create
+a definite owner. Intrinsic percentage feedback remains unsupported.
+
 Auto main height/basis has one bounded wrapped-column exception: direct Text
 with explicit finite numeric width, wrap true, a generic px font, visible fit and
 overflow, explicit minHeight0, zero grow/shrink, no responsive query and no

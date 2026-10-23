@@ -622,9 +622,57 @@
       {
         "id": "cross-percent-column-max-resized",
         "covers": ["flex.min-max", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "margin-percent-row-nowrap",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-row-nowrap-resized",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-column-nowrap",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-column-nowrap-resized",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "nested-percent-gap-row-nowrap",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-row-nowrap-resized",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-row-wrap",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-row-wrap-resized",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-column-nowrap",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-column-nowrap-resized",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-column-wrap",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-column-wrap-resized",
+        "covers": ["flex.row-column-nowrap-wrap"]
       }
     ],
-    "limit": "115 records:104 native matches and11 explicitly classified CSS allocation/safe-overflow differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios and allocated-owner percentage gaps, padding and wrapped cross bounds. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
+    "limit": "127 records:116 native matches and11 explicitly classified CSS allocation/safe-overflow differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios, allocated-owner percentage gaps/padding/cross bounds, nowrap physical margins and finite nested percentage owners. This does not establish general intrinsic, percentage or CSS parity."
   },
   "gateGroups": [
     {
@@ -674,31 +722,50 @@
       "id": "flex.row-column-nowrap-wrap",
       "target": "preserve",
       "group": "flex-core",
-      "current": "public subset; experimental WASM covers finite row and column wrapping including bounded fixed-width direct Text auto-height",
-      "status": "experimental",
+      "current": "finite LTR row/column nowrap/wrap preserve contract complete, including bounded fixed-width Text and nested percentages resolved from actual final allocations; experimental engine only",
+      "status": "complete",
       "evidenceRefs": [
         "docs/design/layout-system-contract.md#flex",
-        "packages/core/test/layout-wasm-slice.test.tsx"
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-nested-percent-wrap.mjs",
+        "tooling/packed-layout-consumer.mjs"
       ],
       "evidence": {
         "positive": [
           "public Flex/Text scenarios",
-          "fixed-width direct Text auto-height forms wrapped columns before following card placement"
+          "fixed-width direct Text auto-height forms wrapped columns before following card placement",
+          "eight pinned nested percentage owners use final allocated main size before leaf40% basis and10% gap",
+          "finite row/column \u00d7 nowrap/wrap resize matrix"
         ],
-        "negative": ["intrinsic wrapped containers rejected"],
-        "interaction": ["wrapped target geometry"],
+        "negative": [
+          "intrinsic wrapped containers rejected",
+          "intrinsic/max-only nested owners reject before percentage feedback",
+          "experimental loading and normal JavaScript boundaries retained"
+        ],
+        "interaction": [
+          "wrapped target geometry",
+          "source/built all eight nested cases: semantic outer/inner boxes, former leaf/footer misses, current hits, stable stamps/nodes, paint-only reuse and exact cleanup",
+          "fresh packed installed public nested fixtures cover all eight native cases"
+        ],
         "yogaCases": [
           "column-grow",
           "column-cap",
           "column-shrink",
           "row-wrap",
-          "row-wrap-reverse"
+          "row-wrap-reverse",
+          "nested-percent-gap-row-nowrap",
+          "nested-percent-gap-row-nowrap-resized",
+          "nested-percent-gap-row-wrap",
+          "nested-percent-gap-row-wrap-resized",
+          "nested-percent-gap-column-nowrap",
+          "nested-percent-gap-column-nowrap-resized",
+          "nested-percent-gap-column-wrap",
+          "nested-percent-gap-column-wrap-resized"
         ],
-        "missing": [
-          "nested percentages",
-          "broader release-pinned wrapping matrix"
-        ]
-      }
+        "missing": []
+      },
+      "supportedContract": "Finite LTR direct or explicitly allocated nested Flex; row/column \u00d7 nowrap/wrap; numeric/percentage direct dimensions, basis and gaps; finite bounds; source-order paint/hits, owner resize, identity, paint-only reuse and exact teardown. Intrinsic percentage feedback and indefinite owners remain unsupported; reverse/RTL/automatic minima retain their separate fixed-ledger entries."
     },
     {
       "id": "flex.reverse-and-wrap-reverse",
