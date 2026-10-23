@@ -1,6 +1,7 @@
-import { Absolute, Flex, Flow, Grid, Overlay, Rectangle, signal, type PibblNode, type PibblController, type RectStyle } from "@pibbl/core";
+import { Absolute, Flex, Flow, Grid, Overlay, Rectangle, signal, type FlexItemStyle, type FlexStyle, type PibblNode, type PibblController, type RectStyle } from "@pibbl/core";
 import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it } from 'vitest';
+import { experimentalLayout } from '../src/lib/layout/wasm/region';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
 
 let controller: PibblController | undefined;
@@ -86,6 +87,18 @@ describe('bounded direct-Flex absolute admission', () => {
     ['layout child', <Flex style={{ width: 200, height: 100 }}><Flex style={fixed}>{null}</Flex></Flex>],
   ] as const)('rejects absolute participation in %s outside the bounded contract', (_name, node) => {
     expect(mount(node)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+  it('rejects an opaque static Flex handoff when no declarative containing-block metadata exists', () => {
+    function OpaqueStatic({ style }: { readonly style: FlexStyle & FlexItemStyle }) {
+      return <Flex style={style}><Rectangle style={fixed} /></Flex>;
+    }
+    expect(mount(<Flex style={{ width: 200, height: 100 }}>
+      <OpaqueStatic style={{
+        position: 'static', width: 80, height: 60,
+        minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+        flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start',
+      }} />
+    </Flex>)).toThrow(experimentalLayout ? 'static containing-block inheritance requires a direct declarative Flex chain' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
   it.each([
     ['automatic width without opposing insets', { ...fixed, width: undefined }],

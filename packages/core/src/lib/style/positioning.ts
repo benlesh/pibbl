@@ -162,7 +162,9 @@ export interface PositioningStyle extends SystemStyle {
    * the padding box for explicit insets and content alignment for omitted axes.
    * On the documented finite direct-child path, an automatic absolute width or
    * height requires opposing numeric physical insets and resolves to their
-   * remaining padding-box extent. Omission retains legacy local left/top behavior.
+   * remaining padding-box extent. In direct declarative Flex chains, static Flex
+   * passes the containing box outward while relative Flex owns a local box.
+   * Omission retains the legacy local Flex boundary and left/top behavior.
    */
   position?: 'static' | 'relative' | 'absolute';
   /** Left edge coordinate or inset. Explicit Flex modes currently accept finite numeric insets only. See {@link Length}. */

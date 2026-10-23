@@ -96,12 +96,37 @@ child exceeds the content dimension. An explicit inset on one axis does not
 change the other axis's content alignment. `alignSelf` is not admitted.
 
 This admission does not add intrinsic sizing, percentage insets, nested
-containing-block selection, Flow/Grid/Layer participation, or a migration of
+general containing-block selection, Flow/Grid/Layer participation, or a migration of
 the existing `Absolute` convenience component. The first admission excludes
 direct layout-component children, child box decoration, margins, nonzero
 bounds, nonzero flex factors, and responsive style queries. Automatic or
 omitted axes without both physical insets reject explicitly, as do unsupported
 contexts and inset values.
+
+### Experimental declarative Flex containing blocks
+
+A direct nested `Flex` with explicit `position: "static"` passes the nearest
+containing Flex's padding box to its absolute descendants. A direct nested Flex
+with `position: "relative"` establishes its own containing box. Omitted position
+keeps the existing Pibbl local Flex boundary; it does not adopt Yoga's static
+default. The top-level Flex is the fallback owner. This admission is limited to
+direct declarative Flex chains and the documented finite row-nowrap positioning
+subset; it adds no public containing-block override.
+
+The ancestor box is translated into each static Flex's local content coordinates
+using settled placement and padding/border insets. Absolute children retain their
+authored traversal order and can paint and target outside an intermediate box
+when overflow is visible. An intermediate box still occupies its ordinary flow
+slot; switching static/relative ownership does not reparent child identity.
+Private context is attached to placed descriptors, not authored styles or props,
+and preparation and rendering consume the same generation. Allocation reuse is
+conservatively disabled for inherited containing boxes.
+
+Opaque component forwarding cannot infer a missing static containing context and
+rejects when it is needed. This does not infer containing boxes from Group,
+Clip, Layer, transforms, painted descendants, Flow, Grid or boxless nodes. Their
+wider migration policies remain open. It does not lower the dedicated Absolute
+component into the new model or permit absolute layout-container children.
 
 `PibblRenderLayerStyle` accepts the shared box and layout-item fields. Each
 omitted layer dimension uses its current finite logical allocation; an explicit

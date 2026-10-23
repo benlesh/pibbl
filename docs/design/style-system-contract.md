@@ -199,8 +199,12 @@ scientific notation, malformed strings, and non-finite results reject.
   opposing finite physical insets on that axis; their remaining padding-box
   extent becomes the finite used size and clamps at zero. This does not measure
   the child. Percentages, unpaired automatic axes, child decoration/margins/
-  bounds, direct layout children and nested containing blocks are outside this
+  bounds, direct layout children and general nested containing blocks are outside this
   admission; see the layout contract for exact limits.
+  Direct declarative nested Flex boxes additionally pass the containing box through
+  explicit static ancestors; relative and omitted-position Flex boxes establish
+  local boundaries. Omitted position retains Pibbl legacy behavior. Opaque and
+  transformed ancestry does not acquire an inferred containing box.
 - Experimental `paddingStart` and `paddingEnd` override their direction-mapped
   physical padding edge, including zero and independent of declaration order.
   Values are nonnegative; percentages require actual allocated Flex ownership and

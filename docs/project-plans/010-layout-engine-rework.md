@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice124 (opposing-inset derived absolute dimensions; this commit).
+Latest delivery is slice125 (declarative static Flex containing-block ownership; this commit).
+Slice124 is `77452150` (opposing-inset derived absolute dimensions).
 Slice123 is `51bc20ad` (fixed absolute children with axis-wise alignment).
 Consolidation41 for121–123 passes below.
 Slice122 is `057873a3` (bounded direct-Flex absolute participation).
@@ -3442,13 +3443,47 @@ EnvironmentNode26.9.0/macOSChromium; no Node24 aggregate trust claim. Kernel
 remains68649bytes with unchanged v5 SHA. Counts remain8complete/12experimental/
 6partial/6missing/1excluded; all7release gates remain open.
 
-## [NEXT] Absolute containing-block ownership (slice125)
+## Slice125 delivered: declarative static Flex containing-block ownership
 
-Resolve the next material positioning gap through a focused public contract and
-failing test: nested static ownership and the containing block for absolute
-children. Preserve source-order composition, one-time forwarding and teardown.
-Present any difficult-to-reverse public choice before implementation. Do not
-expand unrelated layout families or claim general intrinsic sizing.
+Explicit static direct nested Flex boxes inherit the nearest containing Flex's
+padding box; relative boxes establish their own. Omitted position retains Pibbl
+legacy local ownership. Root Flex is fallback. No public override or transformed,
+opaque, boxless, Group/Clip/Layer, Flow/Grid ownership is inferred. Placement
+metadata translates the ancestor box through settled child offsets and content
+insets; source-order paint/hits/focus and keyed lifetimes are preserved. Inherited
+contexts conservatively bypass allocation cache reads and writes.
+
+Pinned native probe establishes static ABS world12,8 vs relative32,18 for an
+inner80×60 box at20,10. Public RED fails at32,18 for static; initialGREEN1pass.
+Hardening adds multi-static ancestry/relative reset, decorated ancestor paired-auto
+resize and unavailable opaque context rejection. Existing cyclic-description test
+caught clone identity loss during preflight; preserving original description source
+restores the same cycle detector without another map or traversal. Latest targeted
+3files6pass/441skip447, including cycle and direct latest navigation. Initial scoped
+matrix46pass; final5file experimental49pass and normal31pass/18skip49.
+The first normal diagnostic assertion required a mode-specific expectation; its
+initial missing import was corrected before these fresh final reruns.
+Native corpus351records/257matches/94classified with4static/relative LTR/RTL cases.
+Omitted legacy ownership is tested separately and is not falsely labeled Yoga parity.
+Source/built4match,227core/dist inputs, errors[]/cleanup[0,0,0]. Screenshot inspected.
+Fresh package build245dist inputs, Bundler/NodeNext; first installed run exposed
+an older percentage replay selecting all nestedBoxes. Narrowing it to its named
+percentage family preserves that proof and admits the new containing fixture shape.
+Rerun passes absoluteContainingBlock, prior placement proofs and104auto-margin cases.
+Tarball SHA256 `2388358d87e733c1bcc4815002ccbbec27a0205154a16dbde233a4f95b0c310a`.
+Documentation109RED probes and public JSDoc pass; scoped core review is clean.
+Logs `/tmp/pibbl-slice125-{public-red,public-green,hardening,preflight-rerun,final-targeted,source-final,built,packed-rerun}.txt`.
+No kernel/ABI change, baseline rewrite, capability promotion or Node24 trust claim.
+Counts remain8complete/12experimental/6partial/6missing/1excluded; all7gates open.
+
+## [NEXT] Numeric absolute size bounds (slice126)
+
+Admit existing finite numeric min/max width/height on direct absolute children,
+clamping fixed and paired-inset-derived dimensions before inset precedence.
+Preserve Pibbl's explicit rejection of contradictory bounds (Yoga minimum-wins
+behavior remains a classified difference). Public RED first, native evidence,
+source/built/installed proof and separate commit; then consolidation42 for124–126.
+Intrinsic measurement, percentage bounds, margins and child decoration stay open.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

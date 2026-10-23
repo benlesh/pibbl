@@ -118,7 +118,7 @@ For a paired automatic axis, the remaining padding-box extent after both
 insets becomes the used dimension and a negative remainder clamps to zero; this
 does not invoke intrinsic measurement. Direct layout children, child box
 decoration, margins, nonzero sizing bounds and flex factors remain unsupported,
-along with unpaired automatic sizing and nested containing blocks.
+along with unpaired automatic sizing and general nested containing blocks.
 
 ## FlexMargin
 
@@ -324,3 +324,14 @@ container, with automatic basis and zero grow/shrink. Keep visible/default
 fit/overflow and omit query/aspect sizing. Its auto margin absorbs space in its
 actual line after final-width measurement. Automatic-width wrapped Text, reverse/
 RTL/wrap-reverse, provider/layout-owner and column variants remain deferred.
+
+### Experimental nested containing boxes
+
+Within a direct declarative finite row-nowrap Flex chain, explicit
+`position: "static"` passes absolute insets to the nearest containing Flex.
+`position: "relative"` establishes a local box. An omitted position retains
+Pibbl's existing local boundary. For an inner box at20,10 and an absolute child
+with left12/top8, static yields world12,8; relative yields32,18. The inner flow
+slot is unchanged. This does not infer containing boxes through opaque
+components, Group, Clip, Layer, transforms, Flow or Grid, and adds no public
+override. See the layout contract for the bounded admission.

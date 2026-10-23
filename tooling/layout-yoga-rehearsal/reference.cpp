@@ -1863,6 +1863,75 @@ static void absoluteDerivedSizeCases() {
   }
 }
 
+static void nestedContainingBlockCases() {
+  // Explicit static and relative only: Pibbl omitted-position legacy behavior is
+  // classified separately and intentionally has no Yoga parity record here.
+  for (int variant = 0; variant < 4; ++variant) {
+    const bool relative = variant >= 2;
+    const bool rtl = (variant & 1) != 0;
+    const float width = 204;
+    const float height = 104;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false);
+    YGConfigSetPointScaleFactor(config, 0);
+    YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetPositionType(root, YGPositionTypeRelative);
+    YGNodeStyleSetWidth(root, width);
+    YGNodeStyleSetHeight(root, height);
+    YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
+    YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+    YGNodeStyleSetGap(root, YGGutterAll, 10);
+    auto inner = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(inner, 80);
+    YGNodeStyleSetHeight(inner, 60);
+    YGNodeStyleSetFlexGrow(inner, 0);
+    YGNodeStyleSetFlexShrink(inner, 0);
+    YGNodeStyleSetMinWidth(inner, 0);
+    YGNodeStyleSetMinHeight(inner, 0);
+    YGNodeStyleSetMargin(inner, YGEdgeLeft, 20);
+    YGNodeStyleSetMargin(inner, YGEdgeTop, 10);
+    YGNodeStyleSetPositionType(inner, relative ? YGPositionTypeRelative : YGPositionTypeStatic);
+    auto absolute = YGNodeNewWithConfig(config);
+    YGNodeStyleSetPositionType(absolute, YGPositionTypeAbsolute);
+    YGNodeStyleSetWidth(absolute, 30);
+    YGNodeStyleSetHeight(absolute, 20);
+    YGNodeStyleSetFlexGrow(absolute, 0);
+    YGNodeStyleSetFlexShrink(absolute, 0);
+    YGNodeStyleSetMinWidth(absolute, 0);
+    YGNodeStyleSetMinHeight(absolute, 0);
+    YGNodeStyleSetPosition(absolute, YGEdgeLeft, 12);
+    YGNodeStyleSetPosition(absolute, YGEdgeTop, 8);
+    YGNodeInsertChild(inner, absolute, 0);
+    auto b = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(b, 40);
+    YGNodeStyleSetHeight(b, 20);
+    YGNodeStyleSetFlexGrow(b, 0);
+    YGNodeStyleSetFlexShrink(b, 0);
+    YGNodeStyleSetMinWidth(b, 0);
+    YGNodeStyleSetMinHeight(b, 0);
+    YGNodeInsertChild(root, inner, 0);
+    YGNodeInsertChild(root, b, 1);
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, rtl ? YGDirectionRTL : YGDirectionLTR);
+    const char* kind = relative ? "relative" : "static";
+    std::cout << ",{\"name\":\"position-containing-" << kind << '-' << (rtl ? "rtl" : "ltr")
+              << "\",\"width\":" << width << ",\"height\":" << height << ",\"gap\":10,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr")
+              << "\",\"containerStyle\":{\"position\":\"relative\",\"alignItems\":\"flex-start\"},\"nestedContainingBlockFixture\":true";
+    std::cout << ",\"boxes\":[";
+    printBox(inner); std::cout << ','; printBox(b);
+    std::cout << "],\"nestedBoxes\":[";
+    printBox(absolute, YGNodeLayoutGetLeft(inner), YGNodeLayoutGetTop(inner));
+    std::cout << "],\"nestedOwnerStyle\":{\"width\":80,\"height\":60,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"marginLeft\":20,\"marginTop\":10";
+    std::cout << ",\"position\":\"" << kind << "\"";
+    std::cout << "},\"nestedItemStyles\":[{\"width\":30,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"position\":\"absolute\",\"left\":12,\"top\":8}],\"itemStyles\":[{\"width\":80,\"height\":60,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"marginLeft\":20,\"marginTop\":10";
+    std::cout << ",\"position\":\"" << kind << "\"";
+    std::cout << "},{\"width\":40,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root);
+    YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -2013,5 +2082,6 @@ int main() {
   absoluteParticipationCases();
   absoluteAlignmentCases();
   absoluteDerivedSizeCases();
+  nestedContainingBlockCases();
   std::cout << "]\n";
 }

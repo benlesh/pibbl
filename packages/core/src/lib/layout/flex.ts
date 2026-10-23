@@ -15,7 +15,7 @@ const unsupportedProperties = ['order'] as const;
 import { ResponsiveStylePreparation, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
-import { getChildPrimitiveReceiverToken, getPrimitiveReceiverToken, getPrimitiveDefinition } from '../element/metadata.js';
+import { getChildPrimitiveReceiverToken, getPrimitiveReceiverToken, getPrimitiveDefinition, getElementMetadata, setElementMetadata } from '../element/metadata.js';
 import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
@@ -122,6 +122,7 @@ export interface FlexMeasurementInput {
 
 // Parent input is private metadata, not a recursively validated resolved value.
 const FLEX_ABSOLUTE_BOX_STYLE = Symbol('pibbl.flex-absolute-box-style');
+const FLEX_INHERITED_CONTAINING_BOX = Symbol('pibbl.flex-inherited-containing-box');
 
 interface ResolvedFlexStyle extends SystemStyle {
   layoutDirection: 'ltr' | 'rtl';
@@ -136,6 +137,7 @@ interface ResolvedFlexStyle extends SystemStyle {
   columnGap: number;
   /** Original container input retained for lazy absolute padding-box derivation. */
   [FLEX_ABSOLUTE_BOX_STYLE]: Readonly<FlexStyle>;
+  [FLEX_INHERITED_CONTAINING_BOX]?: Readonly<LayoutBox>;
 }
 
 interface FlexItem {
@@ -203,11 +205,11 @@ function renderFlex(
   const prepared = experimentalLayout ? claimPreparedFlexPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
   const region = experimentalLayout ? mountedLayoutRegion() : undefined;
   const plan = prepared ?? prepareFlexAllocation(props, style, localContent, service, region);
-  if (experimentalLayout && !prepared) prepareFlexDescendants(plan);
+  if (experimentalLayout && !prepared) prepareFlexDescendants(plan, style);
   const { children, placements, revision } = plan;
   if (!plan.cached) {
     const transaction = GLOBAL_STATE.renderTransaction;
-    if (region && transaction && frozenFlexInputs(props.children)) {
+    if (region && transaction && !style[FLEX_INHERITED_CONTAINING_BOX] && frozenFlexInputs(props.children)) {
       const input = props.children;
       const owner = GLOBAL_STATE.componentRefs!;
       const snapshot: CachedFlexPlacement[] = [];
@@ -252,7 +254,7 @@ function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexSty
   const revision = allocationInputRevision();
   // Decide before materializing or inspecting children; normal paint traversal
   // still visits them and resolves their current receiver-owned paint inputs.
-  const cached = region?.allocationCache?.read(props.children, revision, localContent, style);
+  const cached = style[FLEX_INHERITED_CONTAINING_BOX] ? undefined : region?.allocationCache?.read(props.children, revision, localContent, style);
   const children = prepareLayoutChildren(props.children, 'Flex');
   let placements: FlexPlacement[];
   if (cached) {
@@ -305,6 +307,7 @@ export const Flex = definePrimitive<
     return {
       box,
       [FLEX_ABSOLUTE_BOX_STYLE]: style,
+      [FLEX_INHERITED_CONTAINING_BOX]: experimentalLayout ? getElementMetadata(GLOBAL_STATE.componentRefs!.element)?.absoluteContainingBlock : undefined,
       overflow: style.overflow ?? 'visible',
       ...normalizeFlexOptions(style, box.contentBox),
     };
@@ -343,17 +346,19 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
     const resolved = {
       box: { contentBox: content },
       [FLEX_ABSOLUTE_BOX_STYLE]: style as Readonly<FlexStyle>,
+      [FLEX_INHERITED_CONTAINING_BOX]: getElementMetadata(element)?.absoluteContainingBlock,
       overflow: (style as Readonly<FlexStyle>).overflow ?? 'visible',
       ...normalizeFlexOptions(style as Readonly<FlexStyle>, content),
     } as Readonly<ResolvedFlexStyle>;
     const plan = prepareFlexAllocation(element.props as FlexProps, resolved, content, flexMeasurementService(ctx), region);
-    prepareFlexDescendants(plan, slot);
+    prepareFlexDescendants(plan, resolved, slot);
     stagePreparedLayoutPlan(slot, { ...plan, region });
   } finally { GLOBAL_STATE.primitiveReceiverToken = previous; releaseLayout(); }
 });
 
 /** Known descendants prepare only after this boundary's own allocation settles. */
-function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 'placements'>, parentSlot?: PreparedLayoutSlot): void {
+function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 'placements' | 'content'>, style: Readonly<ResolvedFlexStyle>, parentSlot?: PreparedLayoutSlot): void {
+  let containingBox: Readonly<LayoutBox> | undefined;
   let flexOccurrence = 0;
   let descriptionOccurrences: Map<Function, number> | undefined;
     for (let index = 0; index < plan.children.length; index++) {
@@ -372,7 +377,22 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
       const prepared = peekPreNormalizedStyle(placement.element);
       if (!prepared) throw new Error('Known layout preparation requires settled receiver inputs.');
       const receiver = getPrimitiveReceiverToken(placement.element);
-      const nested = preflightKnownLayout(child, prepared.style, { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight }, receiver, occurrence, parentSlot);
+      let preparationChild = child;
+      // Declarative static Flex boxes pass the nearest owner's padding box through
+      // existing placement metadata. Nothing is attached to authored props/styles.
+      if (child.type === Flex && (prepared.style as FlexStyle).position === 'static') {
+        containingBox ??= resolveFlexContainingBox(style, plan.content);
+        const insets = normalizeBoxInsets(prepared.style as FlexStyle, childContext(child, plan.content));
+        const x = finiteRelativePlacement(containingBox.x - placement.box.x - insets.left, 'left', child, plan.content);
+        const y = finiteRelativePlacement(containingBox.y - placement.box.y - insets.top, 'top', child, plan.content);
+        setElementMetadata(placement.element, {
+          ...getElementMetadata(placement.element),
+          layoutDescriptionSource: getElementMetadata(child)?.layoutDescriptionSource ?? child,
+          absoluteContainingBlock: Object.freeze({ x, y, width: containingBox.width, height: containingBox.height }),
+        });
+        preparationChild = placement.element;
+      }
+      const nested = preflightKnownLayout(preparationChild, prepared.style, { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight }, receiver, occurrence, parentSlot);
       attachPreparedLayoutSlot(placement.element, nested);
     }
 }
@@ -710,7 +730,7 @@ function resolveFlexPlacements(
   const placementsBySource: Array<FlexPlacement | undefined> = new Array(children.length);
   let hasAspectRatio = false;
   let hasAutoMainMargins = false;
-  let absolutePaddingBox: LayoutBox | undefined;
+  let absolutePaddingBox: Readonly<LayoutBox> | undefined;
 
   const occurrences = new Map<object, number>();
   for (let sourceIndex = 0; sourceIndex < children.length; sourceIndex++) {
@@ -740,10 +760,7 @@ function resolveFlexPlacements(
     if (normalized.position === 'absolute') {
       assertSupportedAbsoluteFlexPosition(child, normalized, options, container, preparedStyleQuery(prepared));
       placementsBySource[sourceIndex] = resolveAbsoluteFlexPlacement(
-        absolutePaddingBox ??= resolveFlexAbsolutePaddingBox(
-          (style as Readonly<Partial<ResolvedFlexStyle>>)[FLEX_ABSOLUTE_BOX_STYLE] ?? style,
-          container,
-        ),
+        absolutePaddingBox ??= resolveFlexContainingBox(style, container),
         child,
         normalized,
         receiverToken,
@@ -1208,6 +1225,17 @@ function resolveFlexPlacements(
     if (!placementsBySource[sourceIndex]) throw new Error('Flex placement did not resolve one direct child.');
   }
   return placementsBySource as FlexPlacement[];
+}
+
+function resolveFlexContainingBox(style: Readonly<FlexStyle> | Readonly<ResolvedFlexStyle>, content: Readonly<LayoutBox>): Readonly<LayoutBox> {
+  const resolved = style as Readonly<Partial<ResolvedFlexStyle>>;
+  const inherited = resolved[FLEX_INHERITED_CONTAINING_BOX];
+  if (inherited) return inherited;
+  const specified = resolved[FLEX_ABSOLUTE_BOX_STYLE] ?? style as Readonly<FlexStyle>;
+  if (specified.position === 'static') {
+    throw new Error('PIBBL_LAYOUT_UNSUPPORTED_POSITION: static containing-block inheritance requires a direct declarative Flex chain; opaque or transformed ancestry is not supported.');
+  }
+  return resolveFlexAbsolutePaddingBox(specified, content);
 }
 
 function resolveFlexAbsolutePaddingBox(
