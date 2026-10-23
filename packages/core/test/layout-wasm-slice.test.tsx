@@ -1,5 +1,7 @@
 import { WasmFlexIntrinsicWrapExample } from '../../scenarios/src/learning/layout/wasm-flex-intrinsic-wrap.example';
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
+import type { WasmYogaMigrationExample } from '../../scenarios/src/learning/layout/wasm-yoga-migration.example';
+type YogaMigrationFixture = NonNullable<NonNullable<Parameters<typeof WasmYogaMigrationExample>[0]>['fixtures']>[number];
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, FocusManagement, useCanvasContext, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, type BoxStyle, type FlexItemStyle, defineLayoutComponent, definePrimitive } from '@pibbl/core';
 import { opacity } from '@pibbl/core/filters';
@@ -12,6 +14,7 @@ import { layoutFlex } from '../src/lib/layout/flex';
 import { createExampleMount } from "../../scenarios/src/example-host";
 
 const mountWasmFlexText = createExampleMount(mountWasmFlexTextComponent);
+const fullYogaMigrationFixtures = yogaReference.cases as readonly YogaMigrationFixture[];
 
 
 const service = { measureText: (value: string) => ({ width: value.length * 10 } as TextMetrics) };
@@ -865,7 +868,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
     labels.push({ text, x: ctx.getTransform().e+x, y: ctx.getTransform().f+y });
     draw.call(this,text,x,y,maxWidth);
   });
-  const controller = mount(canvas); controllers.push(controller); await nextFrame();
+  const controller = mount(canvas, { fixtures: fullYogaMigrationFixtures }); controllers.push(controller); await nextFrame();
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
   // This walk advances Next case through the contiguous original families. Later
   // sections (including rounding) have dedicated semantic tests and browser drivers.
@@ -2938,7 +2941,7 @@ it.skipIf(experimentalLayout)('keeps percentage physical margins rejected in nor
 it.runIf(experimentalLayout)('drives nested percentage owners through the public comparison before and after allocation',async()=>{
   const module=await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
   const canvas=document.createElement('canvas');canvas.width=760;canvas.height=540;document.body.append(canvas);
-  const baseline=snapshotWasmLayoutDiagnostics();const controller=createExampleMount(module.WasmYogaMigrationExample)(canvas);controllers.push(controller);await nextFrame();
+  const baseline=snapshotWasmLayoutDiagnostics();const controller=createExampleMount(module.WasmYogaMigrationExample)(canvas,{fixtures:fullYogaMigrationFixtures});controllers.push(controller);await nextFrame();
   for(let i=0;i<7;i++){clickCanvas(canvas,520,158);await nextFrame();}
   await expect.poll(()=>canvas.nextElementSibling?.textContent).toContain('nested-percent-gap-row-nowrap');
   const state=()=>JSON.parse(canvas.nextElementSibling!.textContent!.split('nested state: ')[1]);
@@ -4902,7 +4905,7 @@ it.runIf(experimentalLayout)('resolves nested wrapped percentage cross minimums 
 it.runIf(experimentalLayout)('jumps directly to the latest public proof and preserves case and section navigation', async () => {
   const { WasmYogaMigrationExample } = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 540; document.body.append(canvas);
-  const controller = createExampleMount(WasmYogaMigrationExample)(canvas); controllers.push(controller); await nextFrame();
+  const controller = createExampleMount(WasmYogaMigrationExample)(canvas, { fixtures: fullYogaMigrationFixtures }); controllers.push(controller); await nextFrame();
   const last = yogaReference.cases.at(-1)!;
   const firstName = last.name.replace(/-resized$/, '');
   clickCanvas(canvas, 650, 158); await nextFrame();

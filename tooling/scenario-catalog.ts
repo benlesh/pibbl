@@ -1,3 +1,4 @@
+import { verifyYogaPublicFixtures } from './test-layout-yoga-public-fixtures.mjs';
 import {
   getLearningExampleRoute,
   getScenarioRoute,
@@ -260,6 +261,7 @@ async function validateSources(): Promise<void> {
 }
 
 await validateSources();
+verifyYogaPublicFixtures();
 const generatedIndex = await format(renderIndex(), { parser: "markdown" });
 if (process.argv.includes("--write")) {
   await writeFile(indexPath, generatedIndex, "utf8");

@@ -6,6 +6,10 @@ import { chromium } from 'playwright';
 const reference = JSON.parse(readFileSync(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8'));
 const base = process.argv[2] ?? 'http://127.0.0.1:5192';
 const built = process.argv.includes('--built');
+const publicConcise = process.argv.includes('--public');
+const publicFixtureNames = new Set(['grow', 'cap', 'shrink', 'custom-column-measure', 'custom-column-measure-resized']);
+const nestedCrossMatrixOnly = process.argv.includes('--nested-cross-matrix');
+const nestedPercentagesOnly = process.argv.includes('--nested-percentages');
 const marginOnly = process.argv.includes('--percentage-margins');
 const intrinsicOnly = process.argv.includes('--intrinsic-wrap');
 const logicalBordersOnly = process.argv.includes('--logical-borders');
@@ -33,20 +37,37 @@ const nestedDecoratedColumnCrossMaxOnly = process.argv.includes('--nested-decora
 const nestedDecoratedColumnCrossMinOnly = process.argv.includes('--nested-decorated-column-cross-min');
 const customColumnMeasureOnly = process.argv.includes('--custom-column-measure');
 const latestProof = process.argv.includes('--latest-proof');
+const focusedReplay = nestedCrossMatrixOnly || nestedPercentagesOnly || marginOnly || intrinsicOnly || logicalBordersOnly || logicalPaddingOnly || directionMatrixOnly || autoMarginsOnly || autoOpposingOnly || autoShorthandOnly || ownerCrossAutoOnly || customCrossAutoOnly || textCrossAutoOnly || crossAutoDirectionsOnly || crossAutoMarginsOnly || wrappedAutoMarginsOnly || crossOnly || paddingOnly || gapOnly || aspectOnly || percentageOnly || roundingOnly || nestedCrossMinOnly || nestedDecoratedCrossMinOnly || nestedDecoratedCrossMaxOnly || nestedDecoratedColumnCrossMaxOnly || nestedDecoratedColumnCrossMinOnly;
+if (publicConcise && focusedReplay) throw new Error('--public replays only the concise default corpus; focused family replay belongs to the private full lab');
+const route = publicConcise ? '#/examples/layout/wasm-yoga-migration' : '#/testing/layout-yoga-migration';
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
   page.setDefaultTimeout(10000);
   const errors = [];
   const catalogUrls = [];
+  const privateCorpusRequests = [];
+  page.on('request', request => { if (decodeURIComponent(request.url()).includes('pibbl-layout-yoga-rehearsal')) privateCorpusRequests.push(request.url()); });
   page.on('response', response => { if (response.url().includes('/learning-catalog.ts')) catalogUrls.push(response.url()); });
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto(`${base}/#/examples/layout/wasm-yoga-migration`);
-  await page.locator('iframe[srcdoc]').waitFor({ state: 'attached' });
-  await page.locator('iframe[srcdoc]').scrollIntoViewIfNeeded();
-  const frame = page.frameLocator('iframe[srcdoc]');
+  await page.goto(`${base}/${route}`);
+  assert.equal(new URL(page.url()).hash, route, 'replay route must not fall back');
+  const frameSelector = publicConcise ? 'iframe[srcdoc]' : 'iframe[title="Yoga layout rehearsal"]';
+  await page.locator(frameSelector).waitFor({ state: 'attached' });
+  await page.locator(frameSelector).scrollIntoViewIfNeeded();
+  const frame = page.frameLocator(frameSelector);
   await frame.locator('pre').waitFor();
   const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
+  assert.ok(sandbox, 'replay must execute in its own iframe realm');
+  assert.ok((await frame.locator('pre').innerText()).includes(`fixture count: ${publicConcise ? 5 : reference.cases.length}`), 'renderer must receive the selected corpus');
+  const privateProof = publicConcise ? undefined : await sandbox.evaluate(() => globalThis.__PIBBL_YOGA_REHEARSAL_PROOF__);
+  if (!publicConcise) {
+    assert.ok(privateProof, 'private full replay must expose its proof marker');
+    assert.deepEqual(privateProof.fixtureSource, { version: reference.version, commit: reference.commit, licenseSha256: reference.licenseSha256, probeSha256: reference.probeSha256 }, 'private full replay must retain recorded Yoga provenance');
+    assert.deepEqual(privateProof.caseNames, reference.cases.map(value => value.name), 'private full replay must retain every fixture in source order');
+    assert.ok(privateProof.caseNames.length >= 320, 'private full replay must retain the accepted corpus floor');
+    assert.ok(Array.isArray(privateProof.coreInputs) && privateProof.coreInputs.length > 0, 'private full replay must report actual core inputs');
+  }
   await sandbox.evaluate(() => {
     const marker = '__PIBBL_TEXT_CROSS_AUTO_DRAWS__';
     const originalMarker = '__PIBBL_TEXT_CROSS_AUTO_FILL_TEXT__';
@@ -73,9 +94,14 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = customColumnMeasureOnly ? reference.cases.filter(fixture => fixture.customColumnMeasureFixture) : nestedDecoratedColumnCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedColumnCrossMinFixture) : nestedDecoratedColumnCrossMaxOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedColumnCrossMaxFixture) : nestedDecoratedCrossMaxOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedCrossMaxFixture) : nestedDecoratedCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedDecoratedCrossMinFixture) : nestedCrossMinOnly ? reference.cases.filter(fixture => fixture.nestedCrossMinFixture) : roundingOnly ? reference.cases.filter(fixture => fixture.roundingFixture) : ownerCrossAutoOnly ? reference.cases.filter(fixture => fixture.ownerCrossAutoFixture) : customCrossAutoOnly ? reference.cases.filter(fixture => fixture.customCrossAutoFixture) : textCrossAutoOnly ? reference.cases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? reference.cases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? reference.cases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (customColumnMeasureOnly) {
-    if (latestProof) await click(650, 158);
+  const availableCases = publicConcise ? reference.cases.filter(fixture => publicFixtureNames.has(fixture.name)) : reference.cases;
+  const cases = nestedCrossMatrixOnly ? availableCases.filter(fixture => fixture.nestedCrossMinFixture || fixture.nestedDecoratedCrossMinFixture || fixture.nestedDecoratedCrossMaxFixture || fixture.nestedDecoratedColumnCrossMaxFixture || fixture.nestedDecoratedColumnCrossMinFixture) : nestedPercentagesOnly ? availableCases.filter(fixture => fixture.name.startsWith('nested-percent-gap-')) : customColumnMeasureOnly ? availableCases.filter(fixture => fixture.customColumnMeasureFixture) : nestedDecoratedColumnCrossMinOnly ? availableCases.filter(fixture => fixture.nestedDecoratedColumnCrossMinFixture) : nestedDecoratedColumnCrossMaxOnly ? availableCases.filter(fixture => fixture.nestedDecoratedColumnCrossMaxFixture) : nestedDecoratedCrossMaxOnly ? availableCases.filter(fixture => fixture.nestedDecoratedCrossMaxFixture) : nestedDecoratedCrossMinOnly ? availableCases.filter(fixture => fixture.nestedDecoratedCrossMinFixture) : nestedCrossMinOnly ? availableCases.filter(fixture => fixture.nestedCrossMinFixture) : roundingOnly ? availableCases.filter(fixture => fixture.roundingFixture) : ownerCrossAutoOnly ? availableCases.filter(fixture => fixture.ownerCrossAutoFixture) : customCrossAutoOnly ? availableCases.filter(fixture => fixture.customCrossAutoFixture) : textCrossAutoOnly ? availableCases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? availableCases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? availableCases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? availableCases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? availableCases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? availableCases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? availableCases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? availableCases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? availableCases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? availableCases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? availableCases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? availableCases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? availableCases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? availableCases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? availableCases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? availableCases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? availableCases.filter(fixture => fixture.name.startsWith('percent-')) : availableCases;
+  assert.ok(cases.length > 0, 'requested replay must have fixtures');
+  if (publicConcise) assert.equal(availableCases.length, 5, 'public corpus must stay concise');
+  if (nestedCrossMatrixOnly) { for (let section = 0; section < 22; section++) await click(520, 158); }
+  else if (nestedPercentagesOnly) { for (let section = 0; section < 7; section++) await click(520, 158); }
+  else if (customColumnMeasureOnly) {
+    if (publicConcise || latestProof) await click(650, 158);
     else for(let section=0;section<27;section++) await click(520,158);
   }
   else if (nestedDecoratedColumnCrossMinOnly) {
@@ -206,7 +232,8 @@ try {
       assert.deepEqual([state.boxes.A1, state.boxes.A2], nestedBoxes, `${fixture.name}: fixed nested leaves`);
       assert.deepEqual([state.boxes.B, state.boxes.C], expected.slice(1), `${fixture.name}: following sibling boxes`);
       const layout = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
-      if (previousNestedCross) {
+      if (fixture.name.endsWith('-resized')) {
+        assert.equal(previousNestedCross?.name, fixture.name.replace(/-resized$/, ''), 'resize must compare only its matching initial fixture');
         assert.equal(state.stamps.A1, previousNestedCross.stamps.A1, `${fixture.name}: A1 key remains stable`);
         assert.equal(state.stamps.A2, previousNestedCross.stamps.A2, `${fixture.name}: A2 key remains stable`);
         assert.equal(state.stamps.B, previousNestedCross.stamps.B, `${fixture.name}: B key remains stable`);
@@ -257,7 +284,7 @@ try {
       assert.equal(afterPaint.lineFormations, beforePaint.lineFormations, `${fixture.name}: paint reuse preserves lines`);
       assert.equal(afterPaint.nodeCreates, beforePaint.nodeCreates, `${fixture.name}: paint reuse preserves nodes`);
       assert.equal(afterPaint.measuredLeaves, beforePaint.measuredLeaves + (maximum || columnMinimum ? 0 : 1), `${fixture.name}: ${maximum || columnMinimum ? 'definite cross bound avoids measurement' : 'row owner remeasures once for paint'}`);
-      previousNestedCross = { stamps: state.stamps, layout, following };
+      previousNestedCross = { name: fixture.name, stamps: state.stamps, layout, following };
       previousDirectionStamps = state.stamps;
       previousLiveNames = ['A1', 'A2', 'B', 'C'];
       continue;
@@ -377,18 +404,29 @@ try {
     const reset = JSON.parse((await frame.locator('pre').innerText()).split('custom column state: ')[1]);
     assert.equal(reset.jobs, 8, 'more-jobs control restores pinned reference content');
     assert.deepEqual([reset.boxes.A, reset.boxes.B], cases.at(-1).boxes, 'reset restores the pinned resized geometry');
+    await click(666, 66);
+    await click(publicConcise ? 60 : 520, 158);
+    await click(650, 158);
+    const revisited = JSON.parse((await frame.locator('pre').innerText()).split('custom column state: ')[1]);
+    assert.equal(revisited.jobs, 8, 'navigation restores the pinned content instead of leaking mutation into another fixture');
+    assert.deepEqual([revisited.boxes.A, revisited.boxes.B], cases[0].boxes);
+    await click(60, 158);
   }
-  assert.ok(catalogUrls.length > 0, 'Studio replay must observe its actual catalog source');
   let catalogSurface;
-  for (const url of catalogUrls) {
-    const expectedPath = resolve(dirname(fileURLToPath(import.meta.url)), '../packages/scenarios/src/learning-catalog.ts').replaceAll('\\', '/');
-    assert.ok(decodeURIComponent(new URL(url).pathname).endsWith(expectedPath), 'Studio catalog must belong to this checkout');
-    const response = await page.request.get(url);
-    assert.ok(response.ok(), 'Served catalog must be readable');
-    const match = (await response.text()).match(/slug:\s*["']wasm-yoga-migration["'][\s\S]*?canvas:\s*\{\s*width:\s*(\d+),\s*height:\s*(\d+)\s*\}/);
-    assert.ok(match, 'Served catalog must declare the comparison surface');
-    catalogSurface = {width:Number(match[1]),height:Number(match[2])};
-    assert.deepEqual(catalogSurface, {width:760,height:540}, 'Served surface metadata must match the public example');
+  if (publicConcise) {
+    assert.deepEqual(privateCorpusRequests, [], 'public lesson must not load the private exhaustive bundle');
+    assert.ok(catalogUrls.length > 0, 'public concise replay must observe its actual catalog source');
+    for (const url of catalogUrls) {
+      const expectedPath = resolve(dirname(fileURLToPath(import.meta.url)), '../packages/scenarios/src/learning-catalog.ts').replaceAll('\\', '/');
+      assert.ok(decodeURIComponent(new URL(url).pathname).endsWith(expectedPath), 'Studio catalog must belong to this checkout');
+      const response = await page.request.get(url);
+      assert.ok(response.ok(), 'Served catalog must be readable');
+      const match = (await response.text()).match(/slug:\s*["']wasm-yoga-migration["'][\s\S]*?canvas:\s*\{\s*width:\s*(\d+),\s*height:\s*(\d+)\s*\}/);
+      assert.ok(match, 'Served catalog must declare the comparison surface');
+      catalogSurface = {width:Number(match[1]),height:Number(match[2])};
+      assert.deepEqual(catalogSurface, {width:760,height:540}, 'Served surface metadata must match the public example');
+    }
+    assert.ok((await frame.locator('pre').innerText()).includes('fixture count: 5'), 'public lesson must not embed the exhaustive corpus');
   }
   // Source-formed lines and reversed placement retain identities; gaps miss.
   const last = cases.at(-1);
@@ -400,10 +438,13 @@ try {
   assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(64+lastBoxes.length)}`));
   }
   if (process.argv.includes('--screenshot')) await frame.locator('canvas').screenshot({ path: '/tmp/pibbl-yoga-comparison.png' });
-  const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
+  const proof = publicConcise ? await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__) : privateProof;
   if (built) {
     assert.equal(proof?.mode, 'layout-wasm-built');
     assert.ok(proof.coreInputs.length && proof.coreInputs.every(value => value.includes('packages/core/.layout-wasm-package/dist/')));
+  } else if (!publicConcise) {
+    assert.equal(proof.mode, 'source');
+    assert.ok(proof.coreInputs.every(value => value.includes('packages/core/src/')));
   }
   const disposed = await sandbox.evaluate(() => {
     dispatchEvent(new PageTransitionEvent('pagehide'));
@@ -411,5 +452,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements], [0, 0, 0]);
   assert.deepEqual(errors, []);
-  console.warn(JSON.stringify({ base, commit: reference.commit, cases: cases.map(value => value.name), builtInputs: proof?.coreInputs.length ?? null, catalogUrls, catalogSurface, customColumnContentMutation: customColumnMeasureOnly, matched: cases.filter(value => !value.pibblBoxes).length, classified: cases.filter(value => value.pibblBoxes).map(value => value.name), cleanup: [0, 0, 0], errors }));
+  console.warn(JSON.stringify({ base, route, publicConcise, commit: reference.commit, cases: cases.map(value => value.name), coreInputs: proof?.coreInputs.length ?? null, builtInputs: built ? proof?.coreInputs.length ?? null : null, catalogUrls, catalogSurface, privateCorpusRequests: privateCorpusRequests.length, customColumnContentMutation: customColumnMeasureOnly, matched: cases.filter(value => !value.pibblBoxes).length, classified: cases.filter(value => value.pibblBoxes).map(value => value.name), cleanup: [0, 0, 0], errors }));
 } finally { await browser.close(); }

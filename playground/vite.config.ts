@@ -1,4 +1,5 @@
 import { layoutPreflightSource } from '../tooling/layout-preflight-source';
+import { layoutYogaRehearsalSource } from '../tooling/layout-yoga-rehearsal-source';
 
 import { targetingIdentityPlugin } from '../tooling/agent-verification/identity-plugin.mjs';
 import { textAssets } from "../tooling/text-assets.ts";
@@ -58,6 +59,7 @@ export default defineConfig(({ mode }) => {
       textAssets(),
       layoutAssets(),
       layoutPreflightSource(mode),
+      layoutYogaRehearsalSource(mode),
       ...(mode === "built" ? [assertBuiltCore()] : []),
       pibblRuntimeSource(mode),
       pibblStudioDocs({ repositoryRoot: resolve(import.meta.dirname, "..") }),

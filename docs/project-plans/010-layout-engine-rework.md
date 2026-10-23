@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice118 (measurement-only reactive column content evidence).
+Latest delivery is slice119 (concise public corpus and exhaustive private rehearsal).
+Slice118 is `19bd8853` (measurement-only reactive column content evidence).
 Slice117 is `dd7f292f` (finite column custom-provider exact-width measurement).
 Consolidation39 passes for115–117 below.
 Slice116 is `42e182cb` (definite nested column percentage cross minima).
@@ -3155,16 +3156,87 @@ change:320cases/226matches/94classified,68649byte kernel. No status promotion;
 fixed33capabilities/all7gates remain open. Node26.9.0/macOS Chromium; no Node24
 aggregate trust claim. Consolidation40 is due after118–120.
 
-## [NEXT] Concise public comparison with exhaustive private fixture (slice119)
+## Slice119 delivered: public lesson and private exhaustive rehearsal
 
-Make the learning source readable without dropping the full generated corpus or
-headless interaction coverage. Reuse one public rendering body with concise
-self-contained default fixtures; an existing private fixture host supplies the
-full corpus through typed component props. Keep the public example copyable with
-public package imports only. Retarget source/built exhaustive replay to the
-private proving surface and keep public controls independently runnable. Resolve
-the exact typed host seam before edits; no new runtime API or duplicate renderer.
-The full program and final whole-codebase review remain outstanding.
+The public comparison source shrinks268287→43693bytes by keeping five pinned
+cases (grow/cap/shrink and the measured custom-column pair). The same exported
+renderer accepts typed fixture props from a lazy private iframe host containing
+all320records. No public runtime API, duplicate renderer, removed fixture or
+classification change. The shared renderer remains substantial; this fixes the
+embedded corpus/readability problem, not every presentation concern.
+
+Actual focused RED: the private route had no rehearsal iframe. A second RED
+exposed local More jobs mutation leaking across navigation (12 retained instead
+of8); all case/section/latest navigation now restores the pinned input. Public
+editor typing uses checked fixture fields; public source imports public core only.
+The private bundle is dynamically imported only in its testing route. Existing
+full browser family selectors now target that route; `--public` independently
+runs the five-case catalog lesson. All existing public tests receive the full
+recording through the same props. A standalone source-data check compares every default field against
+the pinned record, preventing silent copy drift after generator changes.
+
+Fresh focused3passed/410skipped413 (full fixture walks and navigation), plus
+a standalone check that all five public defaults agree with the full recording.
+TypeScript passes. Public source5matches; public source/built custom pair plus
+content mutation/navigation reset pass, built469inputs, no errors/cleanup0.
+Private source/built route proofs show320ordered cases, actual renderer count320,
+exact provenance and227coreinputs in their respective source/dist lanes. Private
+column interaction replay also passes. These private synchronous public-entry
+hosts are distinct from the asynchronous public editor preview and installed
+package lane. No Node24 trust or full program completion claim.
+
+Hands-on source public `http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration`;
+private `http://127.0.0.1:5192/#/testing/layout-yoga-migration`. Built equivalents
+use5193. Focused readiness is available before proportional final verification.
+Scoped boundary review found no remaining material issue after lazy import and
+fresh reference-read corrections; only changed code was reviewed.
+The first full source/built walk caught decorative footer Text blocking target D
+in the tall nested-column case132; expected geometry already matched. Both notes
+now use pointerEvents none. Focused nested percentage replay passes all8cases,
+including the previously blocked target, with227source inputs/errors[]/cleanup0.
+The added --nested-percentages selector preserves this exact regression proof.
+Earlier interrupted/failed full walks are retained as diagnostic receipts, not
+reported as passes. The final full walk uses the corrected source.
+
+
+The next full walk passed312cases, then exposed a driver-only cross-family state
+assumption: the initial maximum fixture was incorrectly compared as a resize of
+the prior minimum fixture. Pair state now stores its name and is compared only
+for the matching -resized fixture. Fresh `--nested-cross-matrix` source/built runs
+pass all10cases, and final custom-provider source/built runs pass both tail cases
+including content mutation and navigation reset. An explicit union check confirms
+all320unique records were exercised in each lane:312sequential prefix +10repaired
+matrix +2tail (four duplicates). This is **segmented evidence**, not an
+uninterrupted full320pass. Receipts:
+`/tmp/pibbl-slice119-full-{source,built}-complete.txt`,
+`/tmp/pibbl-slice119-cross-matrix-{source,built}.txt`,
+`/tmp/pibbl-slice119-tail-{source,built}.txt`, and
+`/tmp/pibbl-slice119-segmented-coverage.txt`.
+
+Public final source/built receipts independently require zero private corpus
+requests, geometry/content/navigation and exact cleanup; built469inputs.
+Private focused proofs use227source/dist inputs. Installed245inputs and strict
+Bundler/NodeNext pass with unchanged tarball
+`ec98002ca94fb39b3e74edb100c2d446b11d9114c5b7041d7d2fa4cbcda05985`.
+Docs109RED probes, catalog/discovery, public JSDoc, TypeScript and changed-code
+lint pass. The public-default coherence check is wired into scenarios:check.
+No runtime/ABI/kernel change or status promotion:33capabilities remain8complete,
+11experimental,6partial,7missing,1excluded; all7group gates open. Node26.9.0/macOS
+Chromium, no Node24 aggregate trust claim. Full program review stays at the end.
+
+## [NEXT] Explicit finite Flex static and relative positioning (slice120)
+
+Add explicit static/relative plus four physical numeric insets on direct finite
+experimental row-nowrap Flex children in LTR/RTL. Omitted position retains legacy
+behavior; static reserves its slot and ignores insets; relative shifts final
+paint/hit/focus geometry while siblings keep their slots. Top beats bottom; left
+wins LTR and right wins RTL. Other positioning contexts remain unsupported for
+this first admission; Absolute and containing-block ownership do not change.
+The isolated public test has reproduced the current ignored-position diagnostic
+for explicit static. Keep conservative unknown-component invalidation rather than
+inventing a retained placement cache; receiver-owned paint still reuses layout.
+Present the exact public fields/JSDoc and deliver source/built/packed proof.
+Consolidation40 follows118–120. The whole accepted program remains open.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

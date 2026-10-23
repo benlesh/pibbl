@@ -4229,7 +4229,7 @@ const drafts = [
     section: "layout",
     order: 138,
     summary:
-      "Compare pinned Yoga 3.2.1 boxes with live Flex allocation, bounds, wrapped aspect ratios, percentage gaps and padding.",
+      "Compare a concise pinned Yoga 3.2.1 subset with live Flex allocation, sizing bounds, and a measured custom leaf.",
     api: ["Flex", "Rectangle", "signal", "useLayoutBox"],
     objectives: [
       "Make row, shrink, minimum and gap policies explicit when translating a finite Yoga layout.",
@@ -4237,11 +4237,11 @@ const drafts = [
     ],
     prompts: {
       gesture:
-        "Next case + resize cycles recorded fixtures; Next section jumps to percentage bounds, wrapped ratios, percentage gaps, padding, cross bounds, nowrap physical margins and nested percentage owners. Click Pibbl boxes to compare moved targets. Paint only reuses numeric work.",
+        "Cycle the three finite Flex cases and the measured custom-leaf resize pair. Click Pibbl boxes to compare moved targets; More jobs changes only the local Pibbl provider. Paint only reuses numeric work.",
       code: "The Yoga reference is pinned to 3.2.1/042f5013152e. The after side uses public Flex fields and explicit minimums, not a compatibility selector.",
     },
     apiNotes: [
-      "Finite row/column, reverse/wrap, box bounds, distribution, ratios and percentage gaps; classified differences are labeled. Recorded Yoga is not a live runtime; rounding is disabled.",
+      "The public lesson keeps five recorded cases so the source stays copyable. A private test laboratory replays the generated full corpus and records classified differences. Recorded Yoga is not a live runtime; rounding is disabled.",
       "No parity or production migration claim. Broader geometry, box-model conversion, fonts and WASM packaging remain unfinished.",
     ],
     canvas: { width: 760, height: 540 },

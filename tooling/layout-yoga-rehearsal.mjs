@@ -16,10 +16,6 @@ const folder = join(root, "layout-yoga-rehearsal");
 const recordPath = join(folder, "reference.json");
 const sourceIndex = process.argv.indexOf("--source");
 const source = sourceIndex < 0 ? undefined : process.argv[sourceIndex + 1];
-const examplePath = join(
-  root,
-  "../packages/scenarios/src/learning/layout/wasm-yoga-migration.example.tsx",
-);
 if (sourceIndex >= 0 && (!source || source.startsWith("--")))
   throw new Error("--source requires a Yoga Git checkout path");
 const writing = process.argv.includes("--write");
@@ -137,21 +133,6 @@ if (
       .digest("hex")
 )
   throw new Error("Stale reference provenance");
-const example = readFileSync(examplePath, "utf8");
-const pattern =
-  /\/\/ BEGIN YOGA REFERENCE[\s\S]*?const fixtureCases = ([\s\S]*?) as const;[\s\S]*?\/\/ END YOGA REFERENCE/;
-const match = example.match(pattern);
-if (!match) throw new Error("Missing reference block in public example");
-if (writing)
-  writeFileSync(
-    examplePath,
-    example.replace(
-      pattern,
-      `// BEGIN YOGA REFERENCE\n  const fixtureCases = ${"[\n" + record.cases.map(value => "    " + JSON.stringify(value)).join(",\n") + "\n  ]"} as const;\n  // END YOGA REFERENCE`,
-    ),
-  );
-else if (JSON.stringify(JSON.parse(match[1])) !== JSON.stringify(record.cases))
-  throw new Error("Public reference differs from recorded Yoga geometry");
 process.stdout.write(
   `${source ? "Reproduced" : "Checked recorded"} Yoga ${record.version} ${commit}: ${record.cases.map((value) => value.name + ":" + value.boxes.map((box) => `${box.width}×${box.height}@${box.x},${box.y}`).join("/")).join(", ")}\n`,
 );

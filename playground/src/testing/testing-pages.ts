@@ -62,6 +62,10 @@ export function createTestingPages(options: TestingPagesOptions): TestingPages {
       preflight.href = '#/testing/layout-preflight'; preflight.className = 'testing-card';
       preflight.textContent = 'Known sibling layout preflight · fault and recovery';
       grid.append(preflight);
+      const yogaRehearsal = document.createElement('a');
+      yogaRehearsal.href = '#/testing/layout-yoga-migration'; yogaRehearsal.className = 'testing-card';
+      yogaRehearsal.textContent = 'Yoga layout rehearsal · exhaustive private corpus';
+      grid.append(yogaRehearsal);
       article.append(header, grid);
       options.container.replaceChildren(article);
       options.finishRoute("Automated test labs");
@@ -76,6 +80,16 @@ export function createTestingPages(options: TestingPagesOptions): TestingPages {
         frame.srcdoc = html; options.container.replaceChildren(frame);
         await options.lifecycle.setSurface(version, { dispose() { frame.contentWindow?.dispatchEvent(new PageTransitionEvent('pagehide')); frame.remove(); } });
         options.finishRoute('Known sibling layout preflight');
+        return;
+      }
+      if (slug === 'layout-yoga-migration') {
+        const { default: yogaRehearsalHtml } = await import('virtual:pibbl-layout-yoga-rehearsal');
+        if (!options.lifecycle.isCurrent(version)) return;
+        const frame = document.createElement('iframe');
+        frame.title = 'Yoga layout rehearsal'; frame.style.cssText = 'width:100%;height:720px;border:0';
+        frame.srcdoc = yogaRehearsalHtml; options.container.replaceChildren(frame);
+        await options.lifecycle.setSurface(version, { dispose() { frame.contentWindow?.dispatchEvent(new PageTransitionEvent('pagehide')); frame.remove(); } });
+        options.finishRoute('Yoga layout rehearsal');
         return;
       }
       const selected = getScenarioBySlug(slug) ?? smokeScenarioEntry;

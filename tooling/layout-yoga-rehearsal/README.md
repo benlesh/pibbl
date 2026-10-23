@@ -2,7 +2,13 @@
 
 This is a numeric migration rehearsal, not Yoga parity, a compatibility profile,
 performance evidence, or a production WASM migration. Run Studio in `layout-wasm`
-mode and open http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration.
+mode. The concise public lesson is
+http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration (five cases).
+The exhaustive private rehearsal is
+http://127.0.0.1:5192/#/testing/layout-yoga-migration (all recorded cases).
+Both use one rendering body; only the private host imports the full JSON corpus.
+The generator updates/checks the private recording. A public test verifies that
+the five lesson fixtures still match their corresponding recorded fields.
 
 The left side draws recorded Yoga geometry. The right side uses ordinary public
 Pibbl `Flex`, direct `Rectangle` and `useLayoutBox`. **Next case + resize** cycles the recorded matching fixtures and explicitly labeled CSS divergences:
@@ -513,3 +519,16 @@ LTR nowrap column measures the8-job custom callback at exact width40→60, yield
 height40→30 and moving its20px follower y40→30. Both use explicit minHeight0,
 automatic basis and zero grow/shrink. This is numeric callback geometry, not font
 parity or a general intrinsic graph. Corpus:320cases,226matches/94classified.
+
+Slice119 separates recorded data from the shared copyable renderer. The private
+virtual iframe loads lazily and records exact fixture source/license/probe hashes,
+ordered names and actual source or private-built core inputs. Existing
+`test-wasm-yoga-migration.mjs` defaults to this full private route and preserves
+all family selectors; `--public` selects the five-case lesson. Public checks also
+require that no private corpus bundle was requested. The public custom-column
+pair supports `--public --custom-column-measure --latest-proof`; navigation resets
+local content mutations to the recorded eight-job input.
+
+The combined `--nested-cross-matrix` selector exercises all five cross-min/max
+resize pairs consecutively, checking pair-name isolation. Decorative bottom
+notes opt out of hit testing so tall fixture targets remain reachable.
