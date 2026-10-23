@@ -758,12 +758,16 @@ function resolveFlexPlacements(
     assertSupportedChildPosition('Flex', child, normalized, true);
     rejectUnsupportedItemFields(child, normalized, container);
     if (normalized.position === 'absolute') {
+      const definition = getPrimitiveDefinition(child.type);
+      const hasPairedMeasurement = !!definition?.measureIntrinsic && !!definition.measure;
       const naturalWidth = (normalized.width === undefined || normalized.width === 'auto') &&
         typeof normalized.height === 'number' && Number.isFinite(normalized.height) &&
-        normalized.aspectRatio === undefined && (normalized.left === undefined || normalized.right === undefined) &&
-        !!getPrimitiveDefinition(child.type)?.measureIntrinsic && !!getPrimitiveDefinition(child.type)?.measure;
-      assertSupportedAbsoluteFlexPosition(child, normalized, options, container, preparedStyleQuery(prepared), naturalWidth);
-      const measurementToken = naturalWidth ? region?.absoluteMeasurementIdentity(child.type,
+        normalized.aspectRatio === undefined && (normalized.left === undefined || normalized.right === undefined) && hasPairedMeasurement;
+      const naturalHeight = (normalized.height === undefined || normalized.height === 'auto') &&
+        typeof normalized.width === 'number' && Number.isFinite(normalized.width) &&
+        normalized.aspectRatio === undefined && (normalized.top === undefined || normalized.bottom === undefined) && hasPairedMeasurement;
+      assertSupportedAbsoluteFlexPosition(child, normalized, options, container, preparedStyleQuery(prepared), naturalWidth, naturalHeight);
+      const measurementToken = naturalWidth || naturalHeight ? region?.absoluteMeasurementIdentity(child.type,
         child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`) : undefined;
       if (measurementToken) (absoluteMeasurementTokens ??= new Set()).add(measurementToken);
       placementsBySource[sourceIndex] = resolveAbsoluteFlexPlacement(
@@ -774,7 +778,7 @@ function resolveFlexPlacements(
         preparedStyleQuery(prepared),
         container,
         options,
-        naturalWidth ? measurement : undefined,
+        naturalWidth || naturalHeight ? measurement : undefined,
         region,
         measurementToken,
       );
@@ -1289,26 +1293,31 @@ function resolveAbsoluteFlexPlacement(
   const automaticWidth = style.width === undefined || style.width === 'auto';
   const automaticHeight = style.height === undefined || style.height === 'auto';
   let measuredWidth: number | undefined;
+  let measuredHeight: number | undefined;
   if (measurement) {
+    const measurementAxis = automaticWidth ? 'width' : 'height';
     const measuredChild = clonePibblElement(child);
     setPreNormalizedStyle(measuredChild, style, child, receiverToken, query);
-    const height = style.height as number;
-    const result = measureConstrainedIntrinsicElement(measuredChild, {
-      minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: height, maxHeight: height,
+    const fixedAxis = measurementAxis === 'width' ? style.height as number : style.width as number;
+    const result = measureConstrainedIntrinsicElement(measuredChild, measurementAxis === 'width' ? {
+      minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: fixedAxis, maxHeight: fixedAxis,
+    } : {
+      minWidth: fixedAxis, maxWidth: fixedAxis, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
     }, measurement.service, region && measurementToken ? {
       cache: region, token: measurementToken,
-      key: `absolute-width:${allocationInputRevision()}:${height}`,
+      key: `absolute-size:${measurementAxis}:${allocationInputRevision()}:${fixedAxis}`,
       recordMeasurement: recordWasmMeasurement,
     } : undefined);
     if (result.status !== 'measured') {
-      throw childDiagnostic(child, 'width', 'auto', paddingBox, `absolute natural width requires supported pure measurement: ${result.reason}`);
+      throw childDiagnostic(child, measurementAxis, 'auto', paddingBox, `absolute natural ${measurementAxis} requires supported pure measurement: ${result.reason}`);
     }
-    measuredWidth = result.size.width;
+    if (measurementAxis === 'width') measuredWidth = result.size.width;
+    else measuredHeight = result.size.height;
   }
   const settledStyle = automaticWidth || automaticHeight ? {
     ...style,
     width: automaticWidth ? measuredWidth ?? resolveAbsoluteAutoSize(left, right, paddingBox.width, 'width', child, paddingBox, style.aspectRatio === undefined ? undefined : (style.height as number) * style.aspectRatio) : style.width,
-    height: automaticHeight ? resolveAbsoluteAutoSize(top, bottom, paddingBox.height, 'height', child, paddingBox, style.aspectRatio === undefined ? undefined : (style.width as number) / style.aspectRatio) : style.height,
+    height: automaticHeight ? measuredHeight ?? resolveAbsoluteAutoSize(top, bottom, paddingBox.height, 'height', child, paddingBox, style.aspectRatio === undefined ? undefined : (style.width as number) / style.aspectRatio) : style.height,
   } : style;
   if (automaticWidth || automaticHeight) markDerivedAbsoluteAxes(settledStyle, automaticWidth, automaticHeight);
   const resolved = resolveDirectChildBox(paddingBox, child, 'absolute', settledStyle);
@@ -1846,6 +1855,7 @@ function assertSupportedAbsoluteFlexPosition(
   container: Readonly<LayoutBox>,
   query: PreparedQuery | undefined,
   naturalWidth = false,
+  naturalHeight = false,
 ): void {
   if (isKnownLayoutType(child.type) || isLayoutComponent(child.type)) {
     throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute layout children and nested containing blocks are not supported in this slice');
@@ -1863,7 +1873,7 @@ function assertSupportedAbsoluteFlexPosition(
     throw childDiagnostic(child, 'aspectRatio', style.aspectRatio, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute aspectRatio currently requires exactly one automatic axis and one finite numeric axis');
   }
   if (style.aspectRatio === undefined && ((!naturalWidth && automaticWidth && (style.left === undefined || style.right === undefined)) ||
-      (automaticHeight && (style.top === undefined || style.bottom === undefined)))) {
+      (!naturalHeight && automaticHeight && (style.top === undefined || style.bottom === undefined)))) {
     throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: automatic absolute size requires both physical insets on its axis');
   }
   if (style.alignSelf !== undefined) {

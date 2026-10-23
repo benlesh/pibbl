@@ -811,3 +811,118 @@ it.runIf(experimentalLayout)('owns a natural-width measurement cache without cre
   controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();
   expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
 });
+
+
+it.runIf(experimentalLayout)('measures one automatic absolute height at exact finite width through a paired primitive provider', async () => {
+  type AbsoluteProviderStyle = BoxStyle & FlexItemStyle & {
+    readonly width?: number; readonly height?: number | 'auto';
+    readonly minWidth?: number; readonly minHeight?: number;
+    readonly flexGrow?: number; readonly flexShrink?: number;
+  };
+  type Resolved = SystemStyle & { readonly width: number; readonly height: number };
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const width = signal(80), jobs = signal(8), paint = signal('#426b61'), mounted = signal(true);
+  const constraints: Array<readonly [number, number, number, number]> = [];
+  const hits: string[] = [];
+  let calls = 0;
+  const Leaf = definePrimitive<{ readonly jobs: typeof jobs }, AbsoluteProviderStyle, AbsoluteProviderStyle, Resolved>((_props, _style) => {
+    const box = useLayoutBox();
+    return <Rectangle onClick={() => hits.push('absolute')} style={{ width: box.width, height: box.height, fill: '#a63758', cursor: 'pointer' }} />;
+  }, {
+    preserveSignalProps: ['jobs'],
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: 'measured' as const, minContent: { width: 0, height: 20 }, maxContent: { width: 160, height: 20 } }),
+    measure: ({ props, constraints: input }) => {
+      calls++;
+      constraints.push([input.minWidth, input.maxWidth, input.minHeight, input.maxHeight]);
+      const columns = Math.max(1, Math.floor(input.maxWidth / 20));
+      return { status: 'measured' as const, size: { width: input.maxWidth, height: Math.ceil(props.jobs.get() / columns) * 10 } };
+    },
+  });
+  function Scene() {
+    const leaf = useConst(() => <Leaf key="absolute" jobs={jobs} style={{ position: 'absolute', left: 12, bottom: 10, width, height: 'auto', minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 }} />);
+    const sibling = useConst(() => <Rectangle key="flow" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: paint }} />);
+    return <Flex style={{
+      width: 204, height: 104, boxSizing: 'border-box',
+      padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2,
+      flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start',
+    }}>{mounted.get() ? [leaf, sibling] : [sibling]}</Flex>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 204; canvas.height = 104; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller);
+  await nextFrame();
+  const initial = snapshotWasmLayoutDiagnostics();
+  expect(constraints).toEqual([[80, 80, 0, Infinity]]);
+  clickCanvas(canvas, 20, 75);
+  expect(hits).toEqual(['absolute']);
+
+  width.set(40);
+  await nextFrame();
+  expect(constraints).toEqual([[80, 80, 0, Infinity], [40, 40, 0, Infinity]]);
+  clickCanvas(canvas, 20, 55); // The second line expands upward from the explicit bottom inset.
+  expect(hits).toEqual(['absolute', 'absolute']);
+  const narrower = snapshotWasmLayoutDiagnostics();
+  expect(narrower.measuredLeaves).toBe(initial.measuredLeaves + 1);
+  expect(narrower.nodeCreates).toBe(initial.nodeCreates);
+
+  paint.set('#6e3e79');
+  await nextFrame();
+  expect(calls).toBe(2);
+  jobs.set(12);
+  await nextFrame();
+  expect(constraints).toEqual([[80, 80, 0, Infinity], [40, 40, 0, Infinity], [40, 40, 0, Infinity]]);
+  const measuredJobs = snapshotWasmLayoutDiagnostics();
+  expect(measuredJobs.measuredLeaves).toBe(initial.measuredLeaves + 2);
+
+  mounted.set(false);
+  await nextFrame();
+  const removed = snapshotWasmLayoutDiagnostics();
+  expect(removed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+  jobs.set(16);
+  await nextFrame();
+  expect(calls).toBe(3);
+  mounted.set(true);
+  await nextFrame();
+  expect(calls).toBe(4);
+
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+  ]);
+});
+
+
+it.runIf(experimentalLayout)('queries an automatic absolute height at declared width before minimum and maximum width clamps', async () => {
+  type ProviderStyle = BoxStyle & FlexItemStyle;
+  type Resolved = SystemStyle & { readonly width: number; readonly height: number };
+  const constraints: Array<readonly [number, number, number, number]> = [];
+  let box: Readonly<{ width: number; height: number }> | undefined;
+  const Leaf = definePrimitive<{}, ProviderStyle, ProviderStyle, Resolved>(() => {
+    const allocation = useLayoutBox();
+    box = { width: allocation.width, height: allocation.height };
+    return <Rectangle style={{ width: allocation.width, height: allocation.height, fill: '#a63758' }} />;
+  }, {
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: 'measured' as const, minContent: { width: 0, height: 0 }, maxContent: { width: 160, height: 80 } }),
+    measure: ({ constraints: input }) => {
+      constraints.push([input.minWidth, input.maxWidth, input.minHeight, input.maxHeight]);
+      return { status: 'measured' as const, size: { width: input.maxWidth, height: input.maxWidth / 2 } };
+    },
+  });
+  async function assertBounds(bounds: Pick<ProviderStyle, 'minWidth' | 'maxWidth'>, expectedWidth: number): Promise<void> {
+    const canvas = document.createElement('canvas'); canvas.width = 204; canvas.height = 104; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: 204, height: 104, boxSizing: 'border-box',
+      padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2,
+      flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start' }}>
+      <Leaf style={{ position: 'absolute', left: 12, top: 8, width: 80, height: 'auto', minWidth: bounds.minWidth, maxWidth: bounds.maxWidth, flexGrow: 0, flexShrink: 0 }} />
+    </Flex>);
+    controllers.push(controller);
+    await nextFrame();
+    expect(constraints.splice(0)).toEqual([[80, 80, 0, Infinity]]);
+    expect(box).toEqual({ width: expectedWidth, height: 40 });
+    controller.dispose();
+  }
+  await assertBounds({ minWidth: 100 }, 100);
+  await assertBounds({ maxWidth: 60 }, 60);
+});

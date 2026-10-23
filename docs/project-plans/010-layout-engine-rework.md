@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice128 (bounded measured absolute natural width; this commit).
+Latest delivery is slice129 (bounded measured absolute natural height; this commit).
+Slice128 is `2539ff32` (bounded measured absolute natural width).
 Slice127 is `dfc5843c` (bounded absolute aspect-ratio derivation).
 Consolidation42 is `99dfdf49` for124–126; passing receipts below.
 Slice126 is `0bda56ec` (numeric absolute size bounds).
@@ -86,11 +87,13 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; consolidation37 for109–111 passes below; consolidation38 for112–114 passes below; the single next delivery is117, exact-width custom primitive measurement in finite columns. Source5192/built5193, `#/testing/layout-preflight`:
-Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles318 records:224matches/94classified differences; click A/B/C targets.
-Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
-Native Grid tracks/spans and Flow wrap controls remain available.
+unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
+Current corpus:373 records,279 native matches and94 classified differences.
+The concise public lesson retains5 cases; the complete corpus is private testing
+input. Current runnable source/built comparison:
+`http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
+Click Latest for the natural-height family; Next case advances its six records.
+The public lesson is `#/examples/layout/wasm-yoga-migration`.
 
 The loading/named-component integration is ready for source feedback on branch
 `codex/layout-integration-20261022`. It combines the saved loading checkpoint with
@@ -3595,14 +3598,40 @@ Logs `/tmp/pibbl-slice128-{public-red,cache-diagnostic,public-green-stable,publi
 Kernel68649bytes/SHA unchanged; Node26.9.0/macOSChromium, no Node24 trust claim.
 Counts8complete/12experimental/6partial/6missing/1excluded, all7gates open.
 
-## [NEXT] Bounded measured absolute natural height (slice129)
+## Slice129 delivered: bounded measured absolute natural height
 
-Reuse the paired-provider path for a definite numeric width and automatic height.
-Pinned native evidence confirms exact width and unbounded height, with bounds
-applied after measurement; top/bottom anchoring follows the resulting height.
-Public RED ready for 8jobs wrapping at widths80→40 (heights20→40), measurement
-signals, stable paint reuse and removal/restore. No speculative cache broadening.
-After separate129commit, consolidate127–129 as checkpoint43.
+Paired pure providers now support the symmetric exact-declared-width/unbounded-height
+query. The automatic dimension alone uses the returned size; numeric bounds clamp
+both used axes afterward. Public tests establish width80→40 wrapping height20→40,
+bottom anchoring, measurement-owned jobs, paint reuse, keyed removal/detached
+signal/restore, and declared width80 queried before minWidth100/maxWidth60 clamps.
+No both-auto, built-in Text/image, opaque-owner or wider positioning admission.
+
+The existing absolute measurement cache uses `absolute-size:<axis>:<revision>:<fixed>`;
+axis separation prevents collisions while the same region sweep/rollback/disposal
+owns both profiles. No new persistent map, ABI or native absolute line nodes.
+Scoped review found no material issue; cache conservatism remains unchanged.
+
+Public RED failed at the missing admission, then focused positioning3files61pass;
+with the bound-order test, absolute18pass and normal3files39pass/23skip62. Latest
+navigation and cold-identity rollback2pass/412skip414. Six pinned native callback
+fixtures bring373records=279matches+94classified. Source/built6pass,227source/dist
+inputs, errors[] and cleanup[0,0,0]; screenshot inspected. The prior width family
+source6 also passes. Fresh isolated installed consumer245dist inputs passes strict
+Bundler/NodeNext, explicit absoluteMeasuredHeight lifecycle receipt, prior placement
+receipts and104auto-margin fixtures. Tarball SHA256
+`e34241a1953188d3b27af05c79dbd63dfff705b37d0627b2d183684defd54add`.
+Types, changed-code lint, docs109RED probes and public JSDoc pass.
+Logs `/tmp/pibbl-slice129-{public-red,public-green,focused,bounds,normal,latest-rollback,source,built,width-source,packed-final,types-final,lint-final,docs}.txt`.
+Kernel68649bytes/SHA unchanged; Node26.9.0/macOSChromium, no Node24 trust claim.
+Fixed33:8complete/12experimental/6partial/6missing/1excluded; all7gates open.
+
+## [NEXT] Consolidate slices127–129 (checkpoint43)
+
+Run the combined experimental and normal positioning/measurement/loading suite,
+retain segmented source/built/packed evidence, reconcile the finite positioning
+exit matrix, and select the next material implementation gap. Do not promote
+capabilities merely because another bounded fixture family passed.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

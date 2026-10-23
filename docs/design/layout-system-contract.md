@@ -117,31 +117,36 @@ or automatic bounds, nonzero flex factors, and responsive style queries. Automat
 omitted axes without both physical insets or admitted aspect derivation reject explicitly, as do unsupported
 contexts and inset values.
 
-### Experimental measured absolute width
+### Experimental measured absolute size
 
 A direct custom primitive with existing paired pure `measureIntrinsic` and
-`measure` providers may use an automatic or omitted absolute width with a finite
-numeric height. Opposing horizontal insets and admitted aspect derivation retain
-their existing precedence. Otherwise the parent calls `measure` with horizontal
-constraints `[0, Infinity]` and exact declared height `[height, height]`, matching
-Yoga's undefined-width/exact-height callback envelope. It uses the finite natural
-width and then applies numeric bounds and normal inset/alignment placement. It
-does not use parent content width as an invented measurement constraint. The
-paired intrinsic callback marks the admitted provider capability; the natural
-width query itself uses `measure`, without an extra intrinsic callback.
+`measure` providers may use exactly one automatic or omitted absolute dimension
+with an explicit finite numeric opposite dimension. Opposing insets on the
+automatic axis and admitted aspect derivation retain their existing precedence.
+Otherwise the parent calls `measure` with one of these callback envelopes:
+
+- Automatic width: horizontal `[0, Infinity]`, vertical `[height, height]`.
+- Automatic height: horizontal `[width, width]`, vertical `[0, Infinity]`.
+
+The exact axis uses its declared value before its own numeric min/max clamp.
+These match Yoga's undefined/exact callback constraints. The returned natural
+size supplies the automatic axis; numeric bounds then clamp the used dimensions
+before normal inset/alignment placement. Parent content availability does not
+invent a measurement constraint. The paired intrinsic callback marks the admitted
+provider capability; this query uses `measure`, without an extra intrinsic callback.
 
 The child remains outside the native Flex line and keeps normal source paint,
 focus and target order. Measurement uses the existing pure receiver transaction:
 provider signal reads are measurement-owned, hooks/paint/writes remain forbidden,
 unsupported results and exceptions publish no successful snapshot, and returned
 sizes must be finite and nonnegative. No box is inferred from an ordinary function
-component. Automatic height without an inset pair or aspect, both-auto natural
+component. Both-auto natural
 sizing, built-in Text/font or image intrinsic sizing, responsive queries, margins
 and child decoration remain outside this admission.
 
 Stable scalar/signal inputs can reuse successful snapshots under the existing
 conservative allocation revision. A parent layout change may requery the same
-unbounded-width envelope; unrelated sibling paint can reuse a stable descriptor's
+measurement envelope; unrelated sibling paint can reuse a stable descriptor's
 snapshot. Recreated props and mutable nested inputs retain conservative behavior.
 The existing region maps own a separate absolute measurement identity namespace;
 these tokens never acquire native line membership. A failed render rolls back

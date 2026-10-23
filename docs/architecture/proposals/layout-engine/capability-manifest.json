@@ -2571,7 +2571,7 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "experimental finite row-nowrap Flex static/relative and absolute placement in LTR/RTL, fixed/opposing-inset/aspect-derived absolute dimensions, numeric bounds, axis-wise fixed alignment and declarative static containing chains; omitted-position legacy retained; direct paired-provider absolute natural width at a definite height uses an unbounded-width query",
+      "current": "experimental finite row-nowrap Flex static/relative and absolute placement in LTR/RTL, fixed/opposing-inset/aspect-derived absolute dimensions, numeric bounds, axis-wise fixed alignment and declarative static containing chains; omitted-position legacy retained; direct paired-provider absolute natural width at a definite height or natural height at a definite width uses one exact and one unbounded axis before numeric bounds",
       "status": "experimental",
       "unresolvedPolicy": "Intrinsic absolute sizing, explicit containing-block overrides, opaque/transformed ancestry and wider layout admission remain open.",
       "evidence": {
@@ -2584,7 +2584,8 @@
           "slice125: direct static chains, relative reset, legacy omitted ownership, decorated ancestor resize; installed absoluteContainingBlock receipt",
           "slice126: fixed/derived numeric absolute bounds, resize, RTL precedence and rejection of invalid/contradictory bounds; installed absoluteBounds receipt",
           "slice127: exactly-one-auto absolute aspect derivation before bounds, opposing inset precedence and no measurement; installed absoluteAspect receipt",
-          "slice128: pure custom natural-width query, bounds after measurement, stable paint reuse, conservative resize remeasure, keyed remove/restore and failed-identity rollback; installed absoluteMeasuredWidth receipt"
+          "slice128: pure custom natural-width query, bounds after measurement, stable paint reuse, conservative resize remeasure, keyed remove/restore and failed-identity rollback; installed absoluteMeasuredWidth receipt",
+          "slice129: pure custom natural-height query at declared width before bounds, wrapping width changes, stable paint reuse, measurement signals and keyed removal/restore; installed absoluteMeasuredHeight receipt"
         ],
         "negative": [
           "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
@@ -2639,7 +2640,13 @@
           "position-absolute-measured-right",
           "position-absolute-measured-right-resized",
           "position-absolute-measured-right-max50",
-          "position-absolute-measured-right-min80"
+          "position-absolute-measured-right-min80",
+          "position-absolute-measured-height-top",
+          "position-absolute-measured-height-bottom",
+          "position-absolute-measured-height-top-resized",
+          "position-absolute-measured-height-bottom-resized",
+          "position-absolute-measured-height-top-min30",
+          "position-absolute-measured-height-bottom-max10"
         ],
         "missing": [
           "general absolute intrinsic dimensions (built-in text/images, both-auto and nested owners)",
@@ -2738,7 +2745,13 @@
           "position-absolute-measured-right",
           "position-absolute-measured-right-resized",
           "position-absolute-measured-right-max50",
-          "position-absolute-measured-right-min80"
+          "position-absolute-measured-right-min80",
+          "position-absolute-measured-height-top",
+          "position-absolute-measured-height-bottom",
+          "position-absolute-measured-height-top-resized",
+          "position-absolute-measured-height-bottom-resized",
+          "position-absolute-measured-height-top-min30",
+          "position-absolute-measured-height-bottom-max10"
         ],
         "missing": [
           "broader exact/at-most/unbounded constraint matrix beyond finite row/column admissions",

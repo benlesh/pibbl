@@ -308,7 +308,7 @@ export class LayoutRegion {
     if (entries.has(entry.key)) { entries.delete(entry.key); counters.cachedMeasurements--; }
     else if (entries.size >= 3) { entries.delete(entries.keys().next().value!); counters.cachedMeasurements--; }
     entries.set(entry.key, entry); counters.cachedMeasurements++;
-    if (entry.key.startsWith('finite:absolute-width:')) this.hasAbsoluteMeasurements = true;
+    if (entry.key.startsWith('finite:absolute-size:')) this.hasAbsoluteMeasurements = true;
   }
   /** Reuses the region-owned cache without lending native line membership to absolute leaves. */
   pruneAbsoluteMeasurements(live: ReadonlySet<object> | undefined): void {
@@ -318,7 +318,7 @@ export class LayoutRegion {
     let retained = false;
     for (const [token, entries] of this.intrinsicMeasurements) {
       for (const key of entries.keys()) {
-        if (!key.startsWith('finite:absolute-width:')) continue;
+        if (!key.startsWith('finite:absolute-size:')) continue;
         if (live?.has(token)) retained = true;
         else { entries.delete(key); counters.cachedMeasurements--; }
       }

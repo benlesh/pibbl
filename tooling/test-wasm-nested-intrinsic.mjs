@@ -133,6 +133,7 @@ try {
       assert.equal(receipt.absoluteDerivedSize, true, 'Installed opposing insets must derive a finite auto absolute size, preserve forwarding, source order, identity and cleanup');
       assert.equal(receipt.absoluteAspect, true, 'Installed absolute aspect sizing preserves declared-axis bounds and opposing-inset precedence without measurement');
       assert.equal(receipt.absoluteMeasuredWidth, true, 'Installed paired providers must measure an unbounded automatic absolute width at exact declared height, remeasure conservatively on owner resize and provider input, detach on keyed removal, and clean up');
+      assert.equal(receipt.absoluteMeasuredHeight, true, 'Installed paired providers must measure an unbounded automatic absolute height at declared exact width and release their owned snapshots');
       assert.equal(receipt.absoluteBounds, true, 'Installed absolute numeric bounds must clamp fixed and opposing-inset automatic axes before LTR/RTL placement, source-order targeting, identity and cleanup');
       assert.equal(receipt.absoluteParticipation, true, 'Installed absolute child must leave flow and preserve source-order interaction');
       assert.equal(receipt.decoratedRelativeStatic, true, 'Installed decorated positioning must resolve padding/border before relative offsets');

@@ -167,7 +167,9 @@ export interface PositioningStyle extends SystemStyle {
    * independently after derivation; a clamp does not recouple aspectRatio, and a
    * numeric minimum above its maximum rejects. A direct custom primitive with
    * paired pure measurement providers may instead measure natural automatic
-   * width at a declared numeric height with unbounded horizontal availability.
+   * width at a declared numeric height, or natural height at a declared numeric
+   * width. The automatic axis is unbounded; the exact axis uses its declared
+   * value before numeric bounds clamp the used dimensions.
    * In direct declarative Flex chains,
    * static Flex passes the containing box outward while relative Flex owns a local box.
    * Omission retains the legacy local Flex boundary and left/top behavior.

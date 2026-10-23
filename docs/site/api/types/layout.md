@@ -345,7 +345,7 @@ slot is unchanged. This does not infer containing boxes through opaque
 components, Group, Clip, Layer, transforms, Flow or Grid, and adds no public
 override. See the layout contract for the bounded admission.
 
-### Experimental measured absolute width
+### Experimental measured absolute size
 
 A direct custom primitive with paired pure `measureIntrinsic` and `measure`
 providers can use `position: "absolute", width: "auto", height: 20` with, for
@@ -354,6 +354,12 @@ ratio, `measure` receives `[0, Infinity]` width availability and exact20px heigh
 A natural60px width is clamped by numeric bounds and positioned from the owning
 padding box. Resizing the owner moves a right-anchored child while preserving the
 measurement envelope; conservative invalidation can requery it. Measurement
-signals update width and targets through the existing scheduler. This does not
-add builtin Text/image intrinsic sizing, automatic natural height, opaque
-component measurement, margins, decoration or responsive-query support.
+signals update width and targets through the existing scheduler.
+
+The symmetric `width: 80, height: "auto"` path queries exact80px width and
+`[0, Infinity]` height. A wrapping provider can return20px at80px width and40px
+at40px width; `bottom: 10` anchors the resulting height to the owning padding box.
+Both paths query the declared fixed dimension before its own bounds, then clamp
+used dimensions. They require exactly one automatic dimension. This does not add
+builtin Text/image intrinsic sizing, both-auto natural sizing, opaque component
+measurement, margins, decoration or responsive-query support.
