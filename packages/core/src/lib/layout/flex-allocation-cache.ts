@@ -114,6 +114,7 @@ function frozenStyle(value: unknown, visiting: Set<object>): boolean {
     if (!frozenMetricValue(field.value, visiting)) return false;
     // Cached placements carry used sizes, not canonical owner-relative padding.
     // Keep percentage padding on the normal receiver-owned allocation path.
+    if (key === 'paddingStart' || key === 'paddingEnd') return false;
     if (key === 'padding' && hasPercentagePadding(isSignal(field.value) ? field.value.get() : field.value)) return false;
   }
   return true;

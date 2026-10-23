@@ -106,6 +106,7 @@ try {
       assert.equal(receipt.safeOverflow, true, 'Installed package must use safe overflow start');
       assert.equal(receipt.wrapReversePercentageMargins, true, 'Installed wrap-reverse percentages preserve numeric geometry, moved targets and identity');
       assert.equal(receipt.wrappedPercentageMargins, true, 'Installed wrapped percentage margins preserve physical offsets and moved targets');
+      assert.equal(receipt.logicalPadding, true, 'Installed logical padding must preserve owner width, receiver direction, pixels, targets and identity');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');
       assert.equal(receipt.nestedPercentageWrapping, true, 'Installed nested percentages must use final row/column nowrap/wrap owners across all eight native cases');

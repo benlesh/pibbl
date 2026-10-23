@@ -162,7 +162,7 @@ redraws when it changes. Explicit `"ltr"` overrides inherited RTL. A signal can
 supply the direction. RTL mirrors row main placement and column cross placement,
 including reversed axes and lines. Physical margins stay physical; logical
 `start`/`end` follow direction, while `flex-start`/`flex-end` follow the flex axis.
-It does not reorder source paint, hits, focus traversal, or text glyphs. Logical padding/border edge properties and RTL outside experimental Flex remain unsupported. Try
+It does not reorder source paint, hits, focus traversal, or text glyphs. Logical border edges and RTL outside experimental Flex remain unsupported. Try
 **LTR ⇄** in [keyed wrapped collections](#/examples/layout/wasm-flex-keyed-wrap).
 
 Experimental Flex items also accept `marginStart` and `marginEnd` as signed
@@ -173,3 +173,11 @@ explicit zero, independently of declaration order. Percentages use the containin
 Flex content width. For example, `style={{ margin: 8, marginStart: "10%" }}`
 replaces only the start edge. Toggle **Logical start margin** in the keyed
 collection example, then toggle LTR/RTL. Auto margins remain unsupported.
+
+Experimental `paddingStart` and `paddingEnd` override their physical `padding`
+edge using the same direction rules, including zero. Padding is nonnegative;
+percentages use the containing Flex content width, before border-box conversion.
+The receiving child carries canonical numeric padding into nested layout.
+[Logical padding](#/examples/layout/wasm-logical-padding) shows a fixed160×80
+border-box child while owner resize changes its15% inset and moves content targets.
+Logical border edges and unallocated percentage padding remain unsupported.

@@ -167,7 +167,15 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
     {"name":"logical-margin-start-zero-ltr-logical-last","width":200,"height":80,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"ltr","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":0,"y":5,"width":40,"height":20}],"itemStyles":[{"width":40,"height":20,"flexShrink":0,"minWidth":0,"minHeight":0,"margin":5,"marginLeft":8,"marginRight":20,"marginStart":0}]},
     {"name":"logical-margin-start-zero-ltr-logical-first","width":200,"height":80,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"ltr","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":0,"y":5,"width":40,"height":20}],"itemStyles":[{"width":40,"height":20,"flexShrink":0,"minWidth":0,"minHeight":0,"margin":5,"marginLeft":8,"marginRight":20,"marginStart":0}]},
     {"name":"logical-margin-start-zero-rtl-logical-last","width":200,"height":80,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":148,"y":5,"width":52,"height":20}],"itemStyles":[{"width":40,"height":20,"flexShrink":0,"minWidth":0,"minHeight":0,"margin":5,"marginLeft":8,"marginRight":20,"marginStart":0}],"classification":"preserved-physical-logical-conflict","comparisonLabel":"Pibbl preserves declared 40px width under RTL logical/physical margin conflict; Yoga reports a different outer width.","pibblBoxes":[{"x":160,"y":5,"width":40,"height":20}]},
-    {"name":"logical-margin-start-zero-rtl-logical-first","width":200,"height":80,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":148,"y":5,"width":52,"height":20}],"itemStyles":[{"width":40,"height":20,"flexShrink":0,"minWidth":0,"minHeight":0,"margin":5,"marginLeft":8,"marginRight":20,"marginStart":0}],"classification":"preserved-physical-logical-conflict","comparisonLabel":"Pibbl preserves declared 40px width under RTL logical/physical margin conflict; Yoga reports a different outer width.","pibblBoxes":[{"x":160,"y":5,"width":40,"height":20}]}
+    {"name":"logical-margin-start-zero-rtl-logical-first","width":200,"height":80,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":148,"y":5,"width":52,"height":20}],"itemStyles":[{"width":40,"height":20,"flexShrink":0,"minWidth":0,"minHeight":0,"margin":5,"marginLeft":8,"marginRight":20,"marginStart":0}],"classification":"preserved-physical-logical-conflict","comparisonLabel":"Pibbl preserves declared 40px width under RTL logical/physical margin conflict; Yoga reports a different outer width.","pibblBoxes":[{"x":160,"y":5,"width":40,"height":20}]},
+    {"name":"logical-padding-end-percent-ltr-logical-last","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"ltr","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":0,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":8,"y":5,"width":62,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"padding":{"left":8,"right":20,"top":5,"bottom":5},"paddingEnd":"15%"}]},
+    {"name":"logical-padding-end-percent-ltr-logical-first","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"ltr","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":0,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":8,"y":5,"width":62,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"padding":{"left":8,"right":20,"top":5,"bottom":5},"paddingEnd":"15%"}]},
+    {"name":"logical-padding-end-percent-rtl-logical-last","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":100,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":130,"y":5,"width":50,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"padding":{"left":8,"right":20,"top":5,"bottom":5},"paddingEnd":"15%"}]},
+    {"name":"logical-padding-end-percent-rtl-logical-first","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":100,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":130,"y":5,"width":50,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"padding":{"left":8,"right":20,"top":5,"bottom":5},"paddingEnd":"15%"}]},
+    {"name":"logical-padding-start-zero-ltr-logical-last","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"ltr","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":0,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":0,"y":5,"width":80,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"padding":{"left":8,"right":20,"top":5,"bottom":5},"paddingStart":0}]},
+    {"name":"logical-padding-start-zero-ltr-logical-first","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"ltr","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":0,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":0,"y":5,"width":80,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"padding":{"left":8,"right":20,"top":5,"bottom":5},"paddingStart":0}]},
+    {"name":"logical-padding-start-zero-rtl-logical-last","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":100,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":108,"y":5,"width":92,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"padding":{"left":8,"right":20,"top":5,"bottom":5},"paddingStart":0}]},
+    {"name":"logical-padding-start-zero-rtl-logical-first","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":100,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":108,"y":5,"width":92,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"padding":{"left":8,"right":20,"top":5,"bottom":5},"paddingStart":0}]}
   ] as const;
   // END YOGA REFERENCE
   const index = signal(0);
@@ -197,6 +205,11 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
       <NestedLeaf key="first" name={`${name}1`} style={{width:column?'100%':'40%',height:column?'40%':'100%',flexBasis:'40%',flexGrow:0,flexShrink:0,minWidth:0,minHeight:0}} />
       <NestedLeaf key="second" name={`${name}2`} style={{width:column?'100%':'40%',height:column?'40%':'100%',flexBasis:'40%',flexGrow:0,flexShrink:0,minWidth:0,minHeight:0}} />
     </Flex>;
+  }
+  function LogicalPaddingLeaf({style:_style}:{style:BoxStyle & FlexItemStyle}) {
+    const box=recordBox("A1");
+    actual.set("A1", `${box.width} × ${box.height}`);
+    return <Rectangle style={{width:box.width,height:box.height,fill:"#426b61",cursor:"pointer"}} onClick={()=>{hits++;selected.set("A1");}} />;
   }
   function Panel({
     name,
@@ -305,6 +318,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             >{column ? `${box.width} × ${box.height} px` : `${box.width} px`}</Text>}
           </>
         ))}
+        {"contentBoxes" in fixture && fixture.contentBoxes.map((box, i) => <Rectangle key={`content-${i}`} pointerEvents="none" style={{left:28+box.x,top:240+box.y,width:box.width,height:box.height,fill:"#426b61"}} />)}
         <Flex
           style={{
             left: 392,
@@ -324,7 +338,8 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             rowGap: "containerStyle" in fixture && "rowGap" in fixture.containerStyle ? fixture.containerStyle.rowGap : undefined,
           }}
         >
-          {"nestedBoxes" in fixture ? fixture.itemStyles.map((style,itemIndex) => itemIndex<3
+          {"contentBoxes" in fixture ? <Flex style={{width:fixture.itemStyles[0].width,height:fixture.itemStyles[0].height,boxSizing:fixture.itemStyles[0].boxSizing,minWidth:0,minHeight:0,flexShrink:0,padding:fixture.itemStyles[0].padding,paddingStart:"paddingStart" in fixture.itemStyles[0]?fixture.itemStyles[0].paddingStart:undefined,paddingEnd:"paddingEnd" in fixture.itemStyles[0]?fixture.itemStyles[0].paddingEnd:undefined}}><LogicalPaddingLeaf style={{width:"100%",height:"100%",flexShrink:0,minWidth:0,minHeight:0}} /></Flex>
+            : "nestedBoxes" in fixture ? fixture.itemStyles.map((style,itemIndex) => itemIndex<3
             ? <NestedCard key={itemIndex} name={String.fromCharCode(65+itemIndex)} column={column} style={style} />
             : <Panel key={itemIndex} name="D" column={column} wrapped={wrapped} style={style} />)
             : itemStyles ? itemStyles.map((style, index) => <Panel key={index} name={String.fromCharCode(65+index)} column={column} wrapped={wrapped} style={style} />) : rectangles ? <>
@@ -387,7 +402,9 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             font: "12px monospace",
             fill: "#19375b",
           }}
-        >{"nestedBoxes" in fixture
+        >{"contentBoxes" in fixture
+          ? `${fixture.layoutDirection} row · logical inline padding overrides physical edges · inner leaf records the final content origin`
+          : "nestedBoxes" in fixture
           ? `${fixture.flexDirection} ${fixture.flexWrap} · inner children40% + gap10% use final allocated card · keyed D follows outer reflow`
           : fixture.name.startsWith("margin-percent-")
           ? `${fixture.flexDirection} ${fixture.flexWrap} · margins use content width · ${"comparisonLabel" in fixture ? "Pibbl keeps physical cross margins; Yoga differs" : "L10% R15% T5% B20%"} · outer ${fixture.width} × ${fixture.height}px`
@@ -477,7 +494,8 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         const nested = fixtureCases.findIndex(fixture => fixture.name === "nested-percent-gap-row-nowrap");
         const margins = fixtureCases.findIndex(fixture => fixture.name === "margin-percent-row-nowrap");
         const crossBounds = fixtureCases.findIndex(fixture => fixture.name === "cross-percent-row-min");
-        return value < bounds ? bounds : value < aspect ? aspect : value < gaps ? gaps : value < padding ? padding : value < crossBounds ? crossBounds : value < margins ? margins : value < nested ? nested : 0;
+        const logicalPadding = fixtureCases.findIndex(fixture => fixture.name === "logical-padding-end-percent-ltr-logical-last");
+        return value < bounds ? bounds : value < aspect ? aspect : value < gaps ? gaps : value < padding ? padding : value < crossBounds ? crossBounds : value < margins ? margins : value < nested ? nested : value < logicalPadding ? logicalPadding : 0;
       })} />
       <Text pointerEvents="none" style={{left:496,top:150,font:"14px sans-serif",fill:"#ffffff"}}>Next section</Text>
       <Workspace />
@@ -513,7 +531,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             .map(([key, value]) => `${key}: ${value}`)
             .join(" · ")
         : "Normal JS build"
-    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}${"nestedBoxes" in fixture ? "\nnested state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ""}`;
+    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${"contentBoxes" in fixture ? `content ${actual.get("A1")} px` : fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}${"contentBoxes" in fixture ? "\ncontent state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "nestedBoxes" in fixture ? "\nnested state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ""}`;
   };
   refresh();
   const timer = window.setInterval(refresh, 200);

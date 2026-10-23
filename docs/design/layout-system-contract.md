@@ -128,7 +128,7 @@ Root/unallocated and other-parent raw percentage padding remains rejected. Pure
 `measureElement` returns unsupported before measuring a raw percentage-padded
 node; constraints/maxima do not supply an allocated owner. A child already
 canonicalized by actual Flex allocation can follow existing numeric measurement.
-Ordinary JavaScript Flex, percentage borders and logical edges remain unsupported.
+Ordinary JavaScript Flex and percentage borders remain unsupported; experimental logical padding is specified below.
 Negative/malformed/nonfinite percentage values are diagnosed. Frozen direct
 percentage-padding inputs conservatively bypass the allocation snapshot cache,
 whose fallback rebinds raw inputs; numeric inputs remain eligible. Percentage
@@ -765,8 +765,7 @@ rendering remain unchanged. Existing allocation contexts, receiver signal inputs
 prepared plans and placement caches carry direction; no separate cascade or
 scheduler is introduced. Plans reject mismatched direction before adoption. The
 WASM cross-placement ABI is identified by the `layout_abi_v1` export marker;
-older modules are rejected before publishing compiled code. Logical margin edges are specified below; logical padding and border edges remain
-a subsequent capability.
+older modules are rejected before publishing compiled code. Logical margin edges are specified below; logical padding is specified below; logical border edges remain a subsequent capability.
 
 ## Experimental logical Flex margins
 
@@ -793,3 +792,42 @@ percentages. Four RTL cases combining logical and physical edges report widths
 box and its existing physical margin algorithm. The public reference classifies
 those cases as `preserved-physical-logical-conflict` with both expected geometries
 and an explicit label. This is a recorded difference, not full Yoga parity.
+
+## Experimental logical padding
+
+`BoxStyle.paddingStart?: number | Percentage` and `paddingEnd?: number | Percentage`
+map inline start/end through the receiver’s direction. A direct child Flex’s
+explicit direction overrides inheritance. A specified logical edge overrides the
+corresponding physical edge in `padding`, including explicit zero, independently
+of declaration order. Padding is finite and nonnegative. Physical-only box
+behavior is unchanged. Numeric logical padding uses ordinary box layout rules
+in the experimental build; normal box layout rejects it.
+
+Percentages require an actual finite allocated Flex owner and use its content
+width, including column allocation. Allocation resolves only winning edges, then
+clears consumed start/end fields and carries numeric physical padding through
+box conversion and nested preparation. Receivers do not resolve it again against
+their own width. Intrinsic measurement admits winning numeric edges and rejects
+active percentages; a shadowed physical percentage does not require a basis.
+This admission receives the resolved inherited direction even while measurement
+is isolated from the mounted render context. Explicit child direction remains
+stronger than that inherited value.
+
+Raw logical padding keeps frozen-input allocation caching ineligible until the
+receiver’s canonical input is available. Paint-only rendering still reuses native
+allocation and placements. No additional scheduler, retained layout graph or
+style cascade is introduced. Numeric checks and edge selection use direct
+scalar operations without temporary shorthand edge objects.
+
+Padding on a standalone drawing primitive is parent-layout participation, as
+with its physical padding. Layer retains its separate raster sizing rule: its
+own physical or logical padding does not inset its child raster or change its
+explicit bitmap dimensions. Parent allocation remains distinct from that rule.
+Logical borders, unallocated percentage padding and broader intrinsic feedback
+remain subsequent work.
+
+Eight pinned Yoga records compare a 100×60 border-box child and its complete
+content region under LTR/RTL, both setter orders, start0 and end15%. They preserve
+the outer size and match the content geometry exactly. `contentBoxes` is a narrow
+reference fixture for that one content rectangle, separate from the existing
+two-leaf nested wrapping fixture.

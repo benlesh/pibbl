@@ -741,7 +741,7 @@ it.runIf(experimentalLayout)('carries final allocation through an ordinary panel
   expect(panels).toBe(initialPanels+1);
 });
 
-it.runIf(experimentalLayout)('rehearses pinned Yoga matches and classified geometry through the public Pibbl example', async () => {
+it.runIf(experimentalLayout).each([false,true])('rehearses pinned Yoga matches and classified geometry through the public Pibbl example logicalPadding=%s', async logicalPadding => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
 const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -754,9 +754,21 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
     draw.call(this,text,x,y,maxWidth);
   });
   const controller = mount(canvas); controllers.push(controller); await nextFrame();
-  for (const [index, fixture] of yogaReference.cases.entries()) {
+  if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
+  const cases=yogaReference.cases.filter(fixture=>('contentBoxes' in fixture)===logicalPadding);
+  for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
+    if (fixture.contentBoxes) {
+      if(!fixture.itemStyles)throw new Error('Logical padding reference requires item styles.');
+      await expect.poll(()=>canvas.nextElementSibling?.textContent).toContain(fixture.name);
+      const content=JSON.parse(canvas.nextElementSibling!.textContent!.split('content state: ')[1]);
+      const child=createElement(Flex,{style:fixture.itemStyles[0] as FlexStyle,children:[]});
+      expect(layoutFlex({x:0,y:0,width:fixture.width,height:fixture.height},[child],{layoutDirection:fixture.layoutDirection as 'ltr'|'rtl',alignItems:'flex-start'},measurement)).toEqual(expected);
+      expect(content.boxes.A1).toEqual(fixture.contentBoxes[0]);
+      const leaf=fixture.contentBoxes[0];clickCanvas(canvas,394+leaf.x,242+leaf.y);await expect.poll(()=>canvas.nextElementSibling?.textContent).toContain('selected: A1');
+      continue;
+    }
     if (fixture.nestedBoxes) {
       await expect.poll(()=>canvas.nextElementSibling?.textContent).toContain(fixture.name);
       const nested=JSON.parse(canvas.nextElementSibling!.textContent!.split('nested state: ')[1]);
@@ -2281,7 +2293,7 @@ it(`reserves asymmetric layout borders independently from paint in ${axis}`, asy
 
 it('keeps Layer raster sizing independent from layout border and padding insets', async () => {
   const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 80; document.body.append(canvas);
-  const controller = pibbl(canvas, createElement(Layer, { style: { width: 80, height: 40, boxSizing: 'border-box', padding: 10, borderWidth: 5 }, children:
+  const controller = pibbl(canvas, createElement(Layer, { style: { width: 80, height: 40, boxSizing: 'border-box', padding: 10, paddingStart:12, paddingEnd:'15%', borderWidth: 5 }, children:
     createElement(Rectangle, { style: { width: 120, height: 80, fill: 'red' } }) })); controllers.push(controller); await nextFrame();
   expect([...canvas.getContext('2d')!.getImageData(1,1,1,1).data]).toEqual([255,0,0,255]);
   expect([...canvas.getContext('2d')!.getImageData(79,39,1,1).data]).toEqual([255,0,0,255]);
@@ -2919,4 +2931,44 @@ it.runIf(experimentalLayout)('uses child RTL logical margins within an LTR Flex 
 });
 it.skipIf(experimentalLayout)('rejects logical margins in normal JavaScript Flex',()=>{
  for(const edge of [{marginStart:0},{marginEnd:'-10%' as const}]){const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,...edge}});expect(()=>layoutFlex({x:0,y:0,width:200,height:60},[child],{},measurement)).toThrow(/margin/);}
+});
+
+for(const axis of ['row','column'] as const)for(const rtl of [false,true])for(const start of [0,'10%'] as const){
+ it.runIf(experimentalLayout)(`resolves logical padding ${axis} precedence rtl=${rtl} start=${start}`,()=>{
+  const extra=start===0?0:20;const width=rtl?48+extra:60+extra;
+  const first={width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,padding:{left:8,right:20,top:5,bottom:5},paddingStart:start};
+  const reordered={paddingStart:start,padding:{bottom:5,top:5,right:20,left:8},width:40,height:20,minWidth:0,minHeight:0,flexShrink:0};
+  for(const style of [first,reordered])expect(layoutFlex({x:0,y:0,width:200,height:100},[createElement(Rectangle,{style})],{flexDirection:axis,layoutDirection:rtl?'rtl':'ltr',alignItems:'flex-start'},measurement)).toEqual([{x:rtl?200-width:0,y:0,width,height:30}]);
+ });
+}
+it.runIf(experimentalLayout)('keeps logical percentage padding canonical through nested direction resize and moved hits',async()=>{
+ const baseline=snapshotWasmLayoutDiagnostics(),start=signal<number|'10%'>(0),width=signal(200),direction=signal<'ltr'|'rtl'>('rtl'),fill=signal('red');let hits=0;
+ const innerStyle={width:100,height:60,boxSizing:'border-box' as const,minWidth:0,minHeight:0,flexShrink:0,padding:{left:8,right:20,top:5,bottom:5},paddingStart:start};
+ const root=createElement(Flex,{style:{width,height:100,layoutDirection:direction},children:createElement(Flex,{style:innerStyle,children:createElement(Rectangle,{style:{width:20,height:20,minWidth:0,minHeight:0,flexShrink:0,fill},onClick:()=>hits++})})});
+ const canvas=document.createElement('canvas');canvas.width=320;canvas.height=120;document.body.append(canvas);const controller=pibbl(canvas,root);controllers.push(controller);await nextFrame();clickCanvas(canvas,195,10);expect(hits).toBe(1);const before=snapshotWasmLayoutDiagnostics();
+ start.set('10%');await nextFrame();clickCanvas(canvas,195,10);expect(hits).toBe(1);clickCanvas(canvas,165,10);expect(hits).toBe(2);width.set(300);await nextFrame();clickCanvas(canvas,165,10);expect(hits).toBe(2);clickCanvas(canvas,255,10);expect(hits).toBe(3);direction.set('ltr');await nextFrame();clickCanvas(canvas,255,10);expect(hits).toBe(3);clickCanvas(canvas,35,10);expect(hits).toBe(4);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
+ const painted=snapshotWasmLayoutDiagnostics();fill.set('blue');await nextFrame();expect(snapshotWasmLayoutDiagnostics().solves).toBe(painted.solves);controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+});
+
+it.runIf(experimentalLayout)('measures a numeric logical padding winner over a physical percentage',()=>{
+ const root=createElement(Flex,{style:{height:30},children:createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,padding:{left:'10%'},paddingStart:0}})});
+ expect(measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:60},service)).toEqual({status:'measured',size:{width:40,height:30}});
+});
+it.runIf(experimentalLayout)('uses explicit nested LTR direction when canonicalizing logical percentage padding',async()=>{
+ let hits=0;const canvas=document.createElement('canvas');canvas.width=200;canvas.height=100;document.body.append(canvas);
+ const controller=pibbl(canvas,createElement(Flex,{style:{width:200,height:100,layoutDirection:'rtl'},children:createElement(Flex,{style:{width:100,height:60,boxSizing:'border-box',layoutDirection:'ltr',minWidth:0,minHeight:0,flexShrink:0,padding:{left:8,right:20,top:5,bottom:5},paddingStart:'15%'},children:createElement(Rectangle,{style:{width:10,height:10,minWidth:0,minHeight:0,flexShrink:0,fill:'red'},onClick:()=>hits++})})}));controllers.push(controller);await nextFrame();clickCanvas(canvas,113,8);expect(hits).toBe(0);clickCanvas(canvas,133,8);expect(hits).toBe(1);
+});
+for(const property of ['paddingStart','paddingEnd'] as const)for(const value of [-1,'-5%',NaN,Infinity,'auto','bad%']){
+ it.runIf(experimentalLayout)(`rejects invalid logical padding ${property}=${value}`,()=>{const style={width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,[property]:value};const child=createElement(Rectangle,{style:style as RectStyle});expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/padding/);});
+}
+for(const Root of [Flex,Flow,Grid,Text])it(`keeps unallocated logical percentage padding unsupported for ${Root.name}`,()=>{
+ const element=createElement(Root as typeof Flex,{style:{width:100,height:80,paddingStart:'15%',...(Root===Grid?{gridTemplateColumns:[100],gridTemplateRows:[80]}:{})},children:Root===Text?'text':[]});expect(measureElement(element,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:180},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage padding')});
+});
+it.skipIf(experimentalLayout)('rejects logical padding in ordinary box layout',()=>{
+ for(const edge of [{paddingStart:0},{paddingEnd:10}]){const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,...edge}});expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/logical padding/);}
+});
+
+for(const active of [false,true])it.runIf(experimentalLayout)(`admits winning logical padding under isolated RTL measurement active=${active}`,()=>{
+ const root=createElement(Flex,{style:{height:30,layoutDirection:'rtl'},children:createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,padding:active?{left:'10%'}:{right:'10%'},paddingStart:0}})});
+ const result=measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:60},service);if(active)expect(result).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage padding')});else expect(result).toEqual({status:'measured',size:{width:40,height:30}});
 });

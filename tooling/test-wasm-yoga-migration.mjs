@@ -7,6 +7,7 @@ const reference = JSON.parse(readFileSync(new URL('./layout-yoga-rehearsal/refer
 const base = process.argv[2] ?? 'http://127.0.0.1:5192';
 const built = process.argv.includes('--built');
 const marginOnly = process.argv.includes('--percentage-margins');
+const logicalPaddingOnly = process.argv.includes('--logical-padding');
 const crossOnly = process.argv.includes('--wrapped-cross-bounds');
 const paddingOnly = process.argv.includes('--percentage-padding');
 const gapOnly = process.argv.includes('--percentage-gaps');
@@ -35,19 +36,21 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (percentageOnly || aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly) {
+  const cases = logicalPaddingOnly ? reference.cases.filter(fixture => 'contentBoxes' in fixture) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (percentageOnly || aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly) {
     assert.ok((await frame.locator('pre').innerText()).includes('grow'));
     await click(396,244);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: A'));
     await click(552,244);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: B'));
     await click(520,158);
-    if (aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly) await click(520,158);
-    if (gapOnly || paddingOnly || crossOnly || marginOnly) await click(520,158);
-    if (paddingOnly || crossOnly || marginOnly) await click(520,158);
-    if (crossOnly || marginOnly) await click(520,158);
-    if (marginOnly) await click(520,158);
+    if (aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly) await click(520,158);
+    if (gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly) await click(520,158);
+    if (paddingOnly || crossOnly || marginOnly || logicalPaddingOnly) await click(520,158);
+    if (crossOnly || marginOnly || logicalPaddingOnly) await click(520,158);
+    if (marginOnly || logicalPaddingOnly) await click(520,158);
+    if (logicalPaddingOnly) await click(520,158);
+    if (logicalPaddingOnly) await click(520,158);
   }
   let previousOwner;
   for (const [index, fixture] of cases.entries()) {
@@ -56,6 +59,12 @@ try {
     assert.ok((await frame.locator('pre').innerText()).includes(fixture.name));
     if (fixture.classification) assert.ok((await frame.locator('pre').innerText()).includes(fixture.comparisonLabel), 'Classified difference must be explicitly labeled');
     const expected = fixture.pibblBoxes ?? fixture.boxes;
+    if ('contentBoxes' in fixture) {
+      const leaf=fixture.contentBoxes[0];
+      await click(392+leaf.x+2,240+leaf.y+2);
+      assert.ok((await frame.locator('pre').innerText()).includes('selected: A1'), `${fixture.name}: logical padding leaf`);
+      continue;
+    }
     if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-') || fixture.name.startsWith('gap-percent-') || fixture.name.startsWith('padding-percent-') || fixture.name.startsWith('cross-percent-') || fixture.name.startsWith('margin-percent-')) && fixture.name.endsWith('-resized')) {
       assert.equal(previousOwner.name, fixture.name.replace('-resized',''));
       const resized = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());

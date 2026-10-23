@@ -1,5 +1,5 @@
 import type { BoxStyle } from '../style/types.js';
-import { hasPercentagePadding } from './box-insets.js';
+import { hasPercentageBoxPadding } from './box-insets.js';
 import { contentBoxStyle } from './box-sizing.js';
 import { isLayoutComponent, placedLayoutComponentRoot } from './define-layout-component.js';
 import { getStyleMeasurementMode, withStyleMeasurement, rejectResponsiveMeasurement, UnsupportedResponsiveMeasurement } from '../style/responsive.js';
@@ -130,7 +130,7 @@ function measureElementInternal(
       definition.normalizeStyle ?
           definition.normalizeStyle(specifiedStyle) :
           specifiedStyle;
-    if (hasPercentagePadding((normalized as Readonly<BoxStyle>).padding)) return { status: 'unsupported', reason: 'percentage padding requires an actual finite Flex owner allocation' };
+    if (hasPercentageBoxPadding(normalized as Readonly<BoxStyle>)) return { status: 'unsupported', reason: 'percentage padding requires an actual finite Flex owner allocation' };
     if ('boxSizing' in normalized && normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized as Readonly<BoxStyle>, { width: constraints.maxWidth, height: constraints.maxHeight, context: { component, algorithm: 'measurement', constraints } });
     const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
     GLOBAL_STATE.primitiveReceiverToken =

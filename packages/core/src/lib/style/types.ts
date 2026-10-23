@@ -98,6 +98,10 @@ export interface BoxStyle extends SystemStyle {
   maxHeight?: Exclude<Length, 'auto'>;
   /** Padding inside layout borders. Experimental allocated Flex percentages use owner content width for every edge. See {@link EdgeValues}, {@link Percentage}. */
   padding?: EdgeValues<number | Percentage>;
+  /** Nonnegative inline-start padding overriding its physical padding edge. Experimental percentages require an allocated Flex owner and use its content width. See {@link BoxStyle}. */
+  paddingStart?: number | Percentage;
+  /** Nonnegative inline-end padding overriding its physical padding edge. See {@link BoxStyle}. */
+  paddingEnd?: number | Percentage;
   /** Layout-only physical border insets, in logical pixels. Defaults to zero; does not paint a stroke. See {@link EdgeValues}. */
   borderWidth?: EdgeValues;
   /** Selects `"visible"`, `"clip"` for overflow. See {@link BoxStyle}. */

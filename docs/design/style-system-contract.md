@@ -182,6 +182,11 @@ scientific notation, malformed strings, and non-finite results reject.
   override. Automatic margins and participation in other layout families remain
   unsupported. Parent placement uses `left`/`top`; drawing-local geometry
   uses `x`/`y` (`x1`/`x2` or `y1`/`y2` for line helpers).
+- Experimental `paddingStart` and `paddingEnd` override their direction-mapped
+  physical padding edge, including zero and independent of declaration order.
+  Values are nonnegative; percentages require actual allocated Flex ownership and
+  use owner content width before box conversion. Layer’s own raster sizing stays
+  independent from physical/logical padding. See the layout contract.
 - Primitive rectangle/image geometry retains signed Canvas semantics outside
   nonnegative layout allocation.
 - `"auto"` is accepted only on documented measurement paths. Local offsets,

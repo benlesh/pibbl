@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice89 (logical Flex margins; this commit).
+Latest delivery is slice90 (logical padding; this commit).
+Slice89 is `f8f7e76d` (logical Flex margins).
 Slice88 is `14386781` (inherited Flex layoutDirection).
 Previous delivery is slice87 `aac241f6` (wrap-reverse percentage physical margins).
 Slice86 is `cd55cff0` (wrapped percentage physical margins).
@@ -39,9 +40,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; the single next slice is90, logical padding edge precedence. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; the single next slice is91, logical layout borders after consolidation30 for88–90. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles151 records:128matches/23classified differences; click A/B/C targets.
+cycles159 records:136matches/23classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1980,18 +1981,81 @@ feedback. Fixed33 remains4complete/11experimental/8partial/9missing/1excluded;
 all7release gates are open. Auto margins, logical padding/borders and the other
 whole-program exits remain outstanding.
 
-## [NEXT] Logical padding edge precedence (slice 90)
+## Slice 90 delivered — canonical logical padding
 
-Resolve the smallest additive `paddingStart`/`paddingEnd` public contract before
-production code. Pin numeric/percentage, zero, specific-over-shorthand and
-logical-over-physical precedence in both directions against native Yoga, including
-receiver direction and canonical allocation ownership. Deliver a focused visible
-nested Flex toggle first with failing public geometry/hit evidence. Preserve
-physical-only padding, other layout-family contracts, pure measurement and
-canonical receiver snapshots; do not add a generalized cascade. Synchronize
-runtime/types/editor/source/built/packed evidence and exact cleanup. Reuse the
-existing helpers/reviewer. Commit90 separately, then consolidate88–90 as30.
-Fixed33/seven gates stay unchanged; final whole-codebase review is at full end.
+Adds `BoxStyle.paddingStart?: number | Percentage` and `paddingEnd?: number | Percentage`.
+Logical edges override mapped physical padding and shorthand, including zero,
+independent of declaration order. Values are finite/nonnegative. Direction is
+inherited or comes from a child Flex’s explicit direction. Allocated percentages
+use actual containing Flex content width before box conversion. Consumed logical
+fields are cleared so nested receivers retain numeric physical canonical padding
+rather than resolving again against their own width. Numeric edge selection uses
+direct scalar checks without temporary uniform edge objects. Raw logical padding
+stays outside frozen-input allocation caching; native paint-only work is reused.
+
+Four initial geometry/target REDs and one coincident physical-value control ran
+before implementation. Intrinsic winning-edge RED and mirrored isolated RTL
+measurement REDs exposed additional admission gaps; fixes inspect only active
+edges using resolved owner direction. Explicit nested child LTR and invalid/
+unallocated/normal-build checks pass. Layer keeps its previous own-raster rule,
+ignoring physical/logical padding for its explicit dimensions and child origin.
+No generalized cascade, second scheduler or retained layout graph is introduced.
+Scoped review confirmed the measurement finding fixed; no broad final review.
+
+Fresh macOS/Node26.9.0/pnpm11.21.0 dependencies/Chromium evidence:
+
+- Full experimental public suite:285pass/5skip (290total) before adding four
+  column-axis variants. Final focused row/column/RTL suite:16pass/278skip
+  (294total). Final changed content-corpus branch:1pass/293skip. Normal focused
+  box rejection/unallocated percentages/Layer boundary:6pass/284skip (290total).
+- The older151-reference replay and the new8-case content replay have separate
+  bounded tests; no timeout increase. The new fixtures use a direct nested Flex
+  with one complete content rectangle. An inspected draft opaque wrapper would
+  have forwarded raw props.style rather than canonical receiver metadata, so it
+  was corrected before integration/testing. `contentBoxes` never replaces the
+  existing two-leaf `nestedBoxes` contract.
+- Eight pinned Yoga3.2.1 cases match100×60 border boxes and complete content
+  geometry in LTR/RTL with both setter orders, start0 and end15%. Corpus159 =
+  136native matches +23explicit preserved differences. Receipt/embed checks pass.
+- Public source/built logical-padding example passes: initial contentx28,
+  paddingx64, owner resizex82, RTLx314, explicit zerox368; stamp1 throughout,
+  moved hits, unchanged paint-only work, cleanup0/0/0 and errors[]. Built proof
+  469inputs. Both source/built native8-case browser replays pass with actual
+  worktree catalog URLs and760×540 comparison surface.
+- The built server’s old import.meta.glob inventory omitted the new example.
+  Its exact worktree process31033 was verified and restarted once; the final
+  standalone built replay passed. This was source-inventory startup, not layout
+  geometry or WASM. No duplicate server or primary-checkout edit occurred.
+- Fresh offline installed tarball SHA256
+  `ba0fb16ec088abcc94ca8f9806a9517726fe8142434e3d514ffa9fc1ccd42bd5`,
+  230installed-dist inputs, Bundler/NodeNext pass. Owner resize, explicit receiver
+  direction, pixels/targets, stable native nodes and paint reuse pass.
+- Typecheck, changed-code lint, docs109RED mutations/JSDoc, discovery/catalog and
+  kernel/native provenance pass. Studio requires inline built-in styles; the
+  comparison was corrected and its changed8-case branch replayed. Catalog now
+  167lessons/12tutorial snapshots/33testlabs. Kernel unchanged:65432bytes,
+  hash4469ea8647e72fbf9efa075f8df7174c2ce86a7090c06fd0037787ecde138d14.
+
+Hands-on: http://127.0.0.1:5192/#/examples/layout/wasm-logical-padding;
+click padding, resize, direction, moved content, then paint only. This is a slice
+ready for feedback, not full feature completion. Fixed33 remains
+4complete/11experimental/8partial/9missing/1excluded; all7release gates stayopen.
+Logical borders and broader intrinsic/owner-graph interactions remain outstanding.
+
+## [NEXT] Logical layout border edges (slice 91)
+
+First finish consolidation30 for separately committed88–90. Then resolve the
+small additive logical numeric border API alongside existing `borderWidth`
+physical shorthand. Pin start/end versus physical edges, zero, setter orders,
+receiver direction, content-box/border-box floors and full content geometry.
+Keep border widths finite/nonnegative numeric; do not admit percentages or paint
+aliases. Define exact public names/signatures before production. Deliver focused
+public RED→runnable source feedback before broader hardening; synchronize editor,
+packed declarations, source/built/installed geometry, hits and exact teardown.
+Preserve Layer raster sizing and the cheap physical-only path. Reuse helpers and
+scoped reviewer. Reconcile remaining direction/box entries honestly, then advance
+the next material intrinsic/owner-graph gate prerequisite. Fixed33/seven gates
+remain; whole-codebase review occurs at full program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

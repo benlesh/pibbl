@@ -1292,9 +1292,9 @@
       "id": "box.padding-and-layout-border",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "numeric padding, allocated experimental Flex percentage padding and explicit physical numeric layout borderWidth; painted stroke remains separate",
+      "current": "numeric padding, allocated experimental Flex percentage padding, receiver-aware logical paddingStart/paddingEnd, and physical numeric layout borderWidth; painted stroke remains separate",
       "status": "partial",
-      "unresolvedPolicy": "Allocated physical percentage padding selected: all edges use containing Flex content width before box conversion. Logical padding and broader intrinsic interactions remain unresolved.",
+      "unresolvedPolicy": "Logical padding precedence and owner-width percentages are implemented. Logical border edges and broader intrinsic feedback/percentage ownership remain outstanding.",
       "evidenceRefs": [
         "docs/design/layout-system-contract.md#flex",
         "docs/architecture/proposals/layout-engine/design.md#boxes-and-units"
@@ -1304,7 +1304,10 @@
           "numeric padding",
           "asymmetric row/column border plus padding content-box and border-box geometry",
           "all physical percentage padding uses actual owner content width including vertical edges",
-          "content-box/border-box basis conversion before solving"
+          "content-box/border-box basis conversion before solving",
+          "slice90: logical start/end override physical padding in both directions, including zero and setter order",
+          "canonical allocated logical percentages retain owner width across resize and explicit receiver direction",
+          "isolated RTL intrinsic measurement accepts numeric winners and rejects active percentages"
         ],
         "negative": [
           "paint stroke is not a layout border",
@@ -1315,7 +1318,10 @@
         "interaction": [
           "owner resize moves inner paint/hit geometry without remount",
           "numeric-to-percentage frozen input transition",
-          "source/built and installed packed public evidence with exact disposal"
+          "source/built and installed packed public evidence with exact disposal",
+          "source/built logical padding example: fixed border box, moving stable content targets and paint reuse",
+          "fresh installed owner resize, receiver override, pixels/targets, identity and exact teardown",
+          "Layer own logical padding preserves existing raster dimensions and origin"
         ],
         "yogaCases": [
           "padding-percent-row-content-box",
@@ -1325,10 +1331,11 @@
           "padding-percent-column-content-box",
           "padding-percent-column-content-box-resized",
           "padding-percent-column-border-box-basis",
-          "padding-percent-column-border-box-basis-resized"
+          "padding-percent-column-border-box-basis-resized",
+          "logical-padding-{start-zero,end-percent}-{ltr,rtl}-{logical-first,logical-last}: outer plus complete content region"
         ],
         "missing": [
-          "logical padding",
+          "logical layout border edges",
           "percentage padding outside actual Flex ownership and broader content measurement"
         ]
       }
@@ -1418,13 +1425,14 @@
       "id": "direction.rtl-and-logical-edges",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental inherited Flex LTR/RTL direction with receiver-aware logical marginStart/marginEnd precedence; logical padding/borders remain absent",
+      "current": "experimental inherited Flex LTR/RTL direction with receiver-aware logical marginStart/marginEnd and paddingStart/paddingEnd precedence; logical borders remain absent",
       "status": "partial",
-      "unresolvedPolicy": "Logical margin precedence and percentage reference are implemented. Logical padding/border edges and broader direction evidence remain outstanding.",
+      "unresolvedPolicy": "Logical margin/padding precedence, zero and owner-width percentage reference are implemented. Logical border edges and broader direction matrix remain outstanding.",
       "evidence": {
         "positive": [
           "slice88: inherited direction and explicit LTR override; row/column/reverse placement",
-          "slice89: logical margin edge precedence, signed percentages, explicit zero and child Flex direction override"
+          "slice89: logical margin edge precedence, signed percentages, explicit zero and child Flex direction override",
+          "slice90: logical padding zero/end-percentage precedence and exact native content geometry in both directions"
         ],
         "negative": [
           "normal JavaScript RTL rejected; invalid direction rejected; stale ABI rejected"
@@ -1437,7 +1445,7 @@
           "layout-direction-{row,row-reverse,column,column-reverse}-{ltr,rtl}"
         ],
         "missing": [
-          "logical padding/border edges and precedence",
+          "logical layout border edges and precedence",
           "broader wrapped/min/max direction matrix"
         ]
       }

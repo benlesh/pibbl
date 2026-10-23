@@ -589,6 +589,46 @@ static void logicalMarginCases() {
   }
 }
 
+
+static void logicalPaddingCases() {
+  // Logical inline padding overrides shorthand and the direction-mapped physical edge.
+  // The percentage resolves against the definite 200px parent width, including vertical layout.
+  for (int start = 0; start < 2; ++start) for (int rtl = 0; rtl < 2; ++rtl) for (int logicalFirst = 0; logicalFirst < 2; ++logicalFirst) {
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(root, 200); YGNodeStyleSetHeight(root, 100); YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetJustifyContent(root, YGJustifyFlexStart);
+    auto child = YGNodeNewWithConfig(config);
+    YGNodeStyleSetBoxSizing(child, YGBoxSizingBorderBox); YGNodeStyleSetWidth(child, 100); YGNodeStyleSetHeight(child, 60);
+    YGNodeStyleSetFlexShrink(child, 0); YGNodeStyleSetMinWidth(child, 0); YGNodeStyleSetMinHeight(child, 0);
+    auto physical = [&]() {
+      YGNodeStyleSetPadding(child, YGEdgeAll, 5);
+      YGNodeStyleSetPadding(child, YGEdgeLeft, 8);
+      YGNodeStyleSetPadding(child, YGEdgeRight, 20);
+    };
+    auto logical = [&]() {
+      if (start) YGNodeStyleSetPadding(child, YGEdgeStart, 0);
+      else YGNodeStyleSetPaddingPercent(child, YGEdgeEnd, 15);
+    };
+    if (logicalFirst) { logical(); physical(); } else { physical(); logical(); }
+    auto leaf = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidthPercent(leaf, 100); YGNodeStyleSetHeightPercent(leaf, 100); YGNodeStyleSetFlexShrink(leaf, 0);
+    YGNodeStyleSetMinWidth(leaf, 0); YGNodeStyleSetMinHeight(leaf, 0);
+    YGNodeInsertChild(child, leaf, 0); YGNodeInsertChild(root, child, 0);
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, rtl ? YGDirectionRTL : YGDirectionLTR);
+    std::cout << ",{\"name\":\"logical-padding-" << (start ? "start-zero" : "end-percent") << '-' << (rtl ? "rtl" : "ltr") << (logicalFirst ? "-logical-first" : "-logical-last")
+              << "\",\"width\":200,\"height\":100,\"gap\":0,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr")
+              << "\",\"containerStyle\":{\"alignItems\":\"flex-start\",\"justifyContent\":\"flex-start\"},\"boxes\":[";
+    printBox(child);
+    std::cout << "],\"contentBoxes\":[{\"x\":" << YGNodeLayoutGetLeft(child) + YGNodeLayoutGetLeft(leaf)
+              << ",\"y\":" << YGNodeLayoutGetTop(child) + YGNodeLayoutGetTop(leaf)
+              << ",\"width\":" << YGNodeLayoutGetWidth(leaf) << ",\"height\":" << YGNodeLayoutGetHeight(leaf)
+              << "}],\"itemStyles\":[{\"boxSizing\":\"border-box\",\"width\":100,\"height\":60,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"padding\":{\"left\":8,\"right\":20,\"top\":5,\"bottom\":5},\"" << (start ? "paddingStart\":0" : "paddingEnd\":\"15%\"") << "}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -712,5 +752,6 @@ int main() {
   nestedPercentageGapCases();
   layoutDirectionCases();
   logicalMarginCases();
+  logicalPaddingCases();
   std::cout << "]\n";
 }

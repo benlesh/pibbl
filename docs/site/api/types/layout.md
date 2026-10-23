@@ -196,7 +196,7 @@ not supported. Layer raster sizing retains its separate width/height policy.
 Flex alignment values include `start` and `end` on `FlexStyle.justifyContent`,
 `alignItems`, `alignContent`, and `FlexItemStyle.alignSelf`. These keep their
 physical LTR edges under experimental main/cross reversal; `flex-start` and
-`flex-end` follow the reversed Flex axes. Experimental `FlexStyle.layoutDirection?: "ltr" | "rtl"` inherits through layout contexts and Layers, defaults to LTR at a root, and permits explicit LTR override. RTL mirrors row main and column cross placement; logical margin edges are specified below; logical padding/border remain unsupported.
+`flex-end` follow the reversed Flex axes. Experimental `FlexStyle.layoutDirection?: "ltr" | "rtl"` inherits through layout contexts and Layers, defaults to LTR at a root, and permits explicit LTR override. RTL mirrors row main and column cross placement; logical margin and padding edges are specified below; logical borders remain unsupported.
 
 `LayoutItemStyle.marginStart` and `.marginEnd`, also included in `FlexItemStyle`,
 are `number | Percentage` in experimental Flex. They map through inherited
@@ -204,3 +204,11 @@ direction, or a child Flex’s explicit direction. Logical edges override physic
 edges and the uniform `margin` shorthand; zero is explicit and property order
 does not matter. Signed percentages use the containing Flex content width.
 Other layout families and normal JavaScript Flex reject these margins.
+
+`BoxStyle.paddingStart` and `.paddingEnd` are nonnegative `number | Percentage`
+values in experimental box layout. They override the mapped physical `padding`
+edge, including zero, independently of property order. Direction is inherited or
+comes from a child Flex’s explicit `layoutDirection`. Percentage reference is the
+containing Flex content width; raw/intrinsic percentages remain unsupported.
+Layer raster sizing keeps its separate padding-independent policy. Explore
+[logical padding](#/examples/layout/wasm-logical-padding).
