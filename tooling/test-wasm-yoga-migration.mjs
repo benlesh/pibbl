@@ -1,14 +1,19 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 const reference = JSON.parse(readFileSync(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8'));
 const base = process.argv[2] ?? 'http://127.0.0.1:5192';
 const built = process.argv.includes('--built');
+const percentageOnly = process.argv.includes('--percentage-bounds');
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
   page.setDefaultTimeout(10000);
   const errors = [];
+  const catalogUrls = [];
+  page.on('response', response => { if (response.url().includes('/learning-catalog.ts')) catalogUrls.push(response.url()); });
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(`${base}/#/examples/layout/wasm-yoga-migration`);
   await page.locator('iframe[srcdoc]').waitFor({ state: 'attached' });
@@ -18,26 +23,61 @@ try {
   const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
   const click = async (x, y) => {
     const bounds = await frame.locator('canvas').boundingBox();
-    const scale = Math.min(bounds.width / 760, bounds.height / 460);
+    const scale = Math.min(bounds.width / 760, bounds.height / 540);
     await frame.locator('canvas').click({ position: {
       x: (bounds.width - 760 * scale) / 2 + x * scale,
-      y: (bounds.height - 460 * scale) / 2 + y * scale,
+      y: (bounds.height - 540 * scale) / 2 + y * scale,
     } });
     await page.waitForTimeout(240);
   };
-  for (const [index, fixture] of reference.cases.entries()) {
-    console.warn(`Replay ${index+1}/${reference.cases.length}: ${fixture.name}`);
+  const cases = percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (percentageOnly) {
+    assert.ok((await frame.locator('pre').innerText()).includes('grow'));
+    await click(396,244);
+    assert.ok((await frame.locator('pre').innerText()).includes('selected: A'));
+    await click(552,244);
+    assert.ok((await frame.locator('pre').innerText()).includes('selected: B'));
+    await click(520,158);
+  }
+  let previousOwner;
+  for (const [index, fixture] of cases.entries()) {
+    console.warn(`Replay ${index+1}/${cases.length}: ${fixture.name}`);
     if (index) await click(60, 158);
     assert.ok((await frame.locator('pre').innerText()).includes(fixture.name));
     if (fixture.classification) assert.ok((await frame.locator('pre').innerText()).includes(fixture.comparisonLabel), 'Classified difference must be explicitly labeled');
     const expected = fixture.pibblBoxes ?? fixture.boxes;
+    if (fixture.name.startsWith('percent-cap-') && fixture.name.endsWith('-resized')) {
+      assert.equal(previousOwner.name, fixture.name.replace('-resized',''));
+      const resized = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
+      assert.ok(resized.solves > previousOwner.layout.solves);
+      assert.equal(resized.nodeCreates, previousOwner.layout.nodeCreates);
+      assert.equal(resized.measuredLeaves, previousOwner.layout.measuredLeaves);
+      const column = fixture.flexDirection === 'column';
+      await click(396,244);
+      assert.ok((await frame.locator('pre').innerText()).includes('selected: A'));
+      await click(column ? 396 : 458, column ? 306 : 244);
+      assert.ok((await frame.locator('pre').innerText()).includes('selected: A'), 'Former target must become a gap after owner resize');
+    }
     for (const [index, box] of expected.entries()) {
       await click(392 + box.x + 4, 240 + box.y + 4);
       assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(65+index)}`), `${fixture.name}: target ${index}; ${(await frame.locator('pre').innerText()).slice(-350)}`);
     }
+    if (fixture.name.startsWith('percent-cap-') && !fixture.name.endsWith('-resized')) previousOwner = {name:fixture.name,layout:await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__())};
+  }
+  assert.ok(catalogUrls.length > 0, 'Studio replay must observe its actual catalog source');
+  let catalogSurface;
+  for (const url of catalogUrls) {
+    const expectedPath = resolve(dirname(fileURLToPath(import.meta.url)), '../packages/scenarios/src/learning-catalog.ts').replaceAll('\\', '/');
+    assert.ok(decodeURIComponent(new URL(url).pathname).endsWith(expectedPath), 'Studio catalog must belong to this checkout');
+    const response = await page.request.get(url);
+    assert.ok(response.ok(), 'Served catalog must be readable');
+    const match = (await response.text()).match(/slug:\s*["']wasm-yoga-migration["'][\s\S]*?canvas:\s*\{\s*width:\s*(\d+),\s*height:\s*(\d+)\s*\}/);
+    assert.ok(match, 'Served catalog must declare the comparison surface');
+    catalogSurface = {width:Number(match[1]),height:Number(match[2])};
+    assert.deepEqual(catalogSurface, {width:760,height:540}, 'Served surface metadata must match the public example');
   }
   // Source-formed lines and reversed placement retain identities; gaps miss.
-  const last = reference.cases.at(-1);
+  const last = cases.at(-1);
   const lastBoxes = last.pibblBoxes ?? last.boxes;
   const column = last.flexDirection.startsWith('column');
   if (last.gap > 0) {
@@ -57,5 +97,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements], [0, 0, 0]);
   assert.deepEqual(errors, []);
-  console.warn(JSON.stringify({ base, commit: reference.commit, cases: reference.cases.map(value => value.name), builtInputs: proof?.coreInputs.length ?? null, matched: reference.cases.filter(value => !value.pibblBoxes).length, classified: reference.cases.filter(value => value.pibblBoxes).map(value => value.name), cleanup: [0, 0, 0], errors }));
+  console.warn(JSON.stringify({ base, commit: reference.commit, cases: cases.map(value => value.name), builtInputs: proof?.coreInputs.length ?? null, catalogUrls, catalogSurface, matched: cases.filter(value => !value.pibblBoxes).length, classified: cases.filter(value => value.pibblBoxes).map(value => value.name), cleanup: [0, 0, 0], errors }));
 } finally { await browser.close(); }

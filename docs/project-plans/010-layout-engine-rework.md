@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice76 (safe overflow correction and finite distribution evidence).
+Latest delivery is slice77 (definite percentage bounds and worktree catalog isolation).
+Slice76 is `c787d7d9` (safe overflow and finite distribution evidence).
 Slice75 is `bcf4f02e` (direction-independent start/end alignment).
 Slice74 is `e6175c94` (finite allocation evidence and initial-freeze correction).
 Slice73 is `27b18dde` (finite numeric-gap capability evidence complete).
@@ -26,9 +27,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is77, definite-owner percentage bound evidence. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is78, finite wrapped aspect-ratio participation. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles75 records:64matches/11classified CSS differences; click A/B/C targets.
+cycles83 records:72matches/11classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1380,17 +1381,57 @@ Node24 aggregate trust, general speed or release claim.
 Fixed33:3complete,11experimental,7partial,11missing,1excluded. All seven group
 release gates remain open. Consolidate76–78 after two further separate deliveries.
 
-## [NEXT] Definite-owner percentage min/max bounds (slice 77)
+## Slice 77 delivered — definite percentage bounds and correct worktree metadata
 
-Pin row/column percentage growth caps and shrink floors, including a resized
-owner pair, public same-frame hit movement and stable identity/native nodes.
-Validate malformed/nonfinite/negative percentages and conflicting resolved bounds.
-Use current public APIs and a focused source/built/installed proof. Preserve the
-current unsupported result for percentage-dependent intrinsic/indefinite owners;
-independent observations show Yoga and Chromium differ there, so finite max
-constraints must not be silently treated as exact owner dimensions. Full owner
-mode/percentage policy remains a separate dependency; this slice advances the
-partial min/max entry without claiming that unresolved matrix is complete.
+Eight pinned native records cover percentage25% growth caps and70% shrink floors,
+row/column, with owner200→240 and100→140 pairs. The corpus now has83 records:
+72matches/11previous classified differences. Focused semantic/unit checks14pass,
+including all83 public geometry records, two signal-driven cap resizes, invalid
+percent inputs, conflicting bounds and explicit unsupported intrinsic percentage
+owners; normal-path11pass/130skip. Node/mount identity and same-frame old-gap/new
+hit evidence pass. The initial missing-fixture test was RED. The first new test
+incorrectly treated useLayoutBox coordinates as world coordinates; it was fixed
+to assert local dimensions and verify world positions through public hit targets.
+No production percentage allocator change was needed. The min/max entry remains
+partial: cross/wrapped percentages and indefinite-owner modes/policy stay open.
+
+The new Percentage bounds button jumps directly to the eight relevant cases.
+The surface is760×540 to show the larger columns without clipping, with caption
+and footer moved below their boxes. Focused source and built replays include the
+previous grow case, all eight new targets, resized old-target gaps, stable native
+nodes and zero ownership/errors. Built469 private inputs. Installed consumer
+passes230 dist inputs, Bundler/NodeNext and actual signal-driven cap/target checks;
+core tarball/kernel unchanged from76. Types/lint/provenance pass. Logs
+/tmp/pibbl-slice77-{final-focused,normal,source-final,source-metadata,
+built-provenance,packed,types,lint,delivery-lint,native,provenance}.txt.
+
+Initial built replay failed the prior grow target before new cases. Diagnosis
+captured the actual served catalog from the primary checkout via a shared
+node_modules symlink, while this worktree's new surface was540 high. Exact private
+Studio scenario aliases now resolve to this worktree; public core/Three/text
+remain on built resolution. The original checkout was not modified. The durable
+driver requires an observed catalog URL, asserts its checkout path, and reads
+actual served760×540 metadata; final built receipt confirms both and runtime
+469 private dist inputs. Initial failure and diagnosis remain
+/tmp/pibbl-slice77-built.txt and /tmp/pibbl-slice77-built-diagnosis.txt. A first
+retry raced the normal Vite restart and received connection refused; server200
+was confirmed before the successful focused replay. Scoped alias review found
+no material source-fallback issue. No broad unchanged75-case browser replay.
+
+Fixed33 counts unchanged:3complete,11experimental,7partial,11missing,1excluded;
+all seven release gates open. Consolidation76–78 will include compact embedded
+case records and the previously recorded documentation-classification debt.
+
+## [NEXT] Finite wrapped aspect-ratio participation (slice 78)
+
+Extend the existing outer aspectRatio contract to finite declared-main/basis
+wrapped Flex items, both axes and wrap-reverse. Keep final per-line main
+allocation as ratio input, cross bounds and outer insets, source paint/hit order,
+identity and teardown. Pin native row/column geometry, define failing public
+cases before removing the current blanket nowrap restriction, and expose coupled
+owner-resize geometry through the existing comparison. Keep intrinsic main/both
+auto and other-parent ratio inference outside this bounded slice. No new public
+signature or native ABI is required. Consolidate76–78 afterward.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

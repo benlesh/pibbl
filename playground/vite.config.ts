@@ -41,6 +41,15 @@ export default defineConfig(({ mode }) => {
     find: new RegExp(`^${find.replaceAll("/", "\\/")}$`, "u"),
     replacement: resolve(import.meta.dirname, path),
   }));
+  // Private Studio metadata must stay in this checkout even when node_modules is shared.
+  // Public runtime entries deliberately retain their built-package resolution.
+  const builtStudioAliases = [
+    ["@pibbl/scenarios", "../packages/scenarios/src/index.ts"],
+    ["@pibbl/scenarios/surface", "../packages/scenarios/src/surface.ts"],
+  ].map(([find, path]) => ({
+    find: new RegExp(`^${find.replaceAll("/", "\\/")}$`, "u"),
+    replacement: resolve(import.meta.dirname, path),
+  }));
   return {
     // Source and private-built lanes run concurrently; their optimizer graphs differ.
     cacheDir: mode === "layout-wasm-built" ? "node_modules/.vite-layout-wasm-built" : undefined,
@@ -54,7 +63,7 @@ export default defineConfig(({ mode }) => {
       pibblStudioDocs({ repositoryRoot: resolve(import.meta.dirname, "..") }),
     ],
     resolve: {
-      alias: mode === "built" || mode === "layout-wasm-built" ? [] : sourceAliases,
+      alias: mode === "built" || mode === "layout-wasm-built" ? builtStudioAliases : sourceAliases,
       tsconfigPaths: mode !== "built" && mode !== "layout-wasm-built",
     },
     define: {

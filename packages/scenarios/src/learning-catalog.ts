@@ -4244,7 +4244,7 @@ const drafts = [
       "Five finite nowrap cases, including one explicit content-box padding conversion; borders are zero and rounding is disabled. Recorded reference is not a live Yoga runtime.",
       "No parity or production migration claim. Broader geometry, box-model conversion, fonts and WASM packaging remain unfinished.",
     ],
-    canvas: { width: 760, height: 460 },
+    canvas: { width: 760, height: 540 },
     related: ["wasm-flex-constraints", "wasm-flex-panel", "flex"],
 
     exportName: "WasmYogaMigrationExample",

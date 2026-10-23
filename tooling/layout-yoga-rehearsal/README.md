@@ -384,3 +384,17 @@ Real measured Text evidence additionally uses the public column example through
 installed-package Text/following-sibling geometry and hit checks. The browser
 probe converts backing pixels using the known root background, allowing narrow
 raster rounding tolerance; logical text height is measured, not hard-coded.
+
+## Definite-owner percentage bounds (slice 77)
+
+Eight further records bring the corpus to83 cases (72matches/11classified
+prior differences).25% cap growth in a200→240 main owner gives50/138→60/168
+with gap12.70% floor shrink in100→140 gives70/18→98/30. Column cases use
+identical main-axis values. The public owner-resize checks preserve mounts/nodes
+and move the former target into the new gap. Run
+`node tooling/test-wasm-yoga-migration.mjs <Studio URL> --percentage-bounds`
+(add `--built` for built mode); it also checks the prior grow case, actual catalog
+checkout path,760×540 served metadata and exact disposal. Percentage-dependent
+intrinsic owners remain explicitly unsupported; a max constraint is not silently
+promoted to an exact owner. Indefinite native/CSS observations are not parity
+fixtures for this bounded contract.

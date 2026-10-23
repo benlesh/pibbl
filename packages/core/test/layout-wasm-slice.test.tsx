@@ -744,7 +744,7 @@ it.runIf(experimentalLayout)('rehearses pinned Yoga matches and classified geome
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
 const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   const baseline = snapshotWasmLayoutDiagnostics();
-  const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460;
+  const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 540;
   document.body.append(canvas);
   const ctx = canvas.getContext('2d')!, draw = ctx.fillText;
   const labels: { text: string; x: number; y: number }[] = [];
@@ -2405,5 +2405,63 @@ for (const axis of ['row', 'column'] as const) for (const policy of ['space-arou
     expect(layoutFlex({x:0,y:0,width:column?30:100,height:column?100:30}, children, { flexDirection: axis, flexWrap:'wrap-reverse', alignContent:policy, alignItems:'flex-start', gap:12 }, measurement)).toEqual(column
       ? [{x:32,y:0,width:20,height:80},{x:0,y:0,width:20,height:80}]
       : [{x:0,y:32,width:80,height:20},{x:0,y:0,width:80,height:20}]);
+  });
+}
+
+it('records pinned definite-owner percentage bounds', () => {
+  for (const axis of ['row', 'column']) for (const operation of ['cap', 'floor']) {
+    expect(yogaReference.cases.map(fixture => fixture.name)).toContain(`percent-${operation}-${axis}`);
+    expect(yogaReference.cases.map(fixture => fixture.name)).toContain(`percent-${operation}-${axis}-resized`);
+  }
+});
+for (const axis of ['row', 'column'] as const) {
+  it.runIf(experimentalLayout)(`recomputes percentage caps from a resized ${axis} owner without remounting`, async () => {
+    const column = axis === 'column';
+    const main = signal(200);
+    let mounts = 0, hits = 0;
+    const boxes = new Map<number, {width:number;height:number}>();
+    function Card({index,style:_style}: {index:number;style:Record<string,unknown>}) {
+      useConst(() => ++mounts);
+      const box = useLayoutBox(); boxes.set(index, {width:box.width,height:box.height});
+      return createElement(Rectangle, {onClick:()=>{if(index===1)hits++;},style:{width:box.width,height:box.height,fill:index===0?'red':'blue'}});
+    }
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const canvas = document.createElement('canvas');canvas.width=column?60:240;canvas.height=column?240:60;document.body.append(canvas);
+    const children = [0,1].map(index => createElement(Card,{key:index,index,style:{width:column?10:40,height:column?40:10,flexBasis:40,flexGrow:1,flexShrink:0,minWidth:0,minHeight:0,...(index===0?(column?{maxHeight:'25%' as const}:{maxWidth:'25%' as const}):{})}}));
+    const controller = pibbl(canvas,createElement(Flex,{style:{flexDirection:axis,width:column?40:main,height:column?main:40,gap:12,alignItems:'flex-start'},children}));controllers.push(controller);await nextFrame();
+    const initial = snapshotWasmLayoutDiagnostics();
+    expect(boxes.get(0)).toEqual(column?{width:10,height:50}:{width:50,height:10});
+    expect(boxes.get(1)).toEqual(column?{width:10,height:138}:{width:138,height:10});
+    clickCanvas(canvas,column?5:65,column?65:5);expect(hits).toBe(1);
+    main.set(240);await nextFrame();
+    expect(boxes.get(0)).toEqual(column?{width:10,height:60}:{width:60,height:10});
+    expect(boxes.get(1)).toEqual(column?{width:10,height:168}:{width:168,height:10});
+    clickCanvas(canvas,column?5:65,column?65:5);expect(hits).toBe(1);
+    clickCanvas(canvas,column?5:75,column?75:5);expect(hits).toBe(2);
+    const resized = snapshotWasmLayoutDiagnostics();expect(resized.solves).toBeGreaterThan(initial.solves);expect(resized.nodeCreates).toBe(initial.nodeCreates);expect(mounts).toBe(2);
+    controller.dispose();expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
+  });
+}
+
+for (const axis of ['row', 'column'] as const) {
+  const minimum = axis === 'row' ? 'minWidth' : 'minHeight';
+  const maximum = axis === 'row' ? 'maxWidth' : 'maxHeight';
+  for (const value of ['-10%', 'Infinity%', 'NaN%']) {
+    it(`rejects invalid ${axis} percentage bound ${value}`, () => {
+      const child = createElement(Rectangle, {style:{width:80,height:80,flexBasis:80,flexShrink:0,minWidth:0,minHeight:0,[minimum]:value} as RectStyle});
+      expect(() => layoutFlex({x:0,y:0,width:100,height:100},[child],{flexDirection:axis},measurement)).toThrow(new RegExp(minimum));
+    });
+  }
+  it(`rejects conflicting resolved ${axis} percentage bounds`, () => {
+    const child = createElement(Rectangle, {style:{width:80,height:80,flexBasis:80,flexShrink:0,minWidth:0,minHeight:0,[minimum]:'75%',[maximum]:'25%'} as RectStyle});
+    expect(() => layoutFlex({x:0,y:0,width:100,height:100},[child],{flexDirection:axis},measurement)).toThrow(/minimum/);
+  });
+  it(`keeps percentage-dependent intrinsic ${axis} owners explicitly unsupported`, () => {
+    const child = createElement(Rectangle, {style:{width:40,height:40,flexBasis:40,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,[maximum]:'25%'} as RectStyle});
+    const owner = createElement(Flex,{style:axis==='row'?{height:100,maxWidth:200}:{width:100,maxHeight:200},children:child});
+    const before = snapshotWasmLayoutDiagnostics();
+    expect(measureElement(owner,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:200},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage child sizes or bounds')});
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
+    expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(before.activeArenas);
   });
 }

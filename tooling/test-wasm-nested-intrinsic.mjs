@@ -89,6 +89,7 @@ try {
       assert.equal(receipt.aspectRatio, true, 'Installed package must honor final-main outer aspect geometry');
       assert.equal(receipt.frozenPartial, true, 'Installed package must use initially frozen sizes for partial factors');
       assert.equal(receipt.safeOverflow, true, 'Installed package must use safe overflow start');
+      assert.equal(receipt.percentageBounds, true, 'Installed percentage caps must recompute against the resized owner and move targets');
       assert.equal(receipt.textCrossHits, 1, 'Measured auto-cross target must agree with installed placement');
       assert.ok(receipt.modules > 0 && receipt.instances > 0, 'Installed package must execute embedded WASM');
       assert.match(proof.sha256, /^[a-f0-9]{64}$/);

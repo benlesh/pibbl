@@ -77,9 +77,67 @@
       {"id": "subunit-zero-grow", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
       {"id": "subunit-shrink-policy", "covers": ["flex.grow-shrink-basis"], "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"},
       {"id": "initial-freeze-grow-policy", "covers": ["flex.grow-shrink-basis"], "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"},
-      {"id": "initial-freeze-shrink-policy", "covers": ["flex.grow-shrink-basis"], "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"}
+      {"id": "initial-freeze-shrink-policy", "covers": ["flex.grow-shrink-basis"], "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"},
+      {"id": "distribution-negative-row-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-row-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-row-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-row-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-row-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-row-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-row-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-row-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-row-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-row-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-row-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-row-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-row-stretch", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-row-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-row-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-row-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-row-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-row-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-row-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-row-stretch", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-auto-row", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-column-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-column-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-column-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-column-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-column-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-column-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-column-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-column-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-column-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-column-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-column-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-column-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-cross-negative-column-stretch", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-column-flex-start", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-column-flex-end", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-column-center", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-column-space-between", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-column-space-around", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-column-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-single-column-stretch", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-auto-column", "covers": ["flex.main-cross-distribution"], "classification": "exact finite declared inputs"},
+      {"id": "distribution-negative-row-reverse-space-around", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
+      {"id": "distribution-negative-row-reverse-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
+      {"id": "distribution-cross-negative-row-reverse-space-around", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
+      {"id": "distribution-cross-negative-row-reverse-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
+      {"id": "distribution-negative-column-reverse-space-around", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
+      {"id": "distribution-negative-column-reverse-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
+      {"id": "distribution-cross-negative-column-reverse-space-around", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
+      {"id": "distribution-cross-negative-column-reverse-space-evenly", "covers": ["flex.main-cross-distribution"], "classification": "css-safe-overflow-reverse"},
+      {"id": "percent-cap-row", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
+      {"id": "percent-cap-row-resized", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
+      {"id": "percent-floor-row", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
+      {"id": "percent-floor-row-resized", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
+      {"id": "percent-cap-column", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
+      {"id": "percent-cap-column-resized", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
+      {"id": "percent-floor-column", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
+      {"id": "percent-floor-column-resized", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"}
     ],
-    "limit": "Twenty-five records:22 native geometry matches and3 explicitly classified CSS partial-factor differences; row/column/reverse/wrap, box conversion and finite allocation evidence. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
+    "limit": "Eighty-three records:72 native matches and11 explicitly classified CSS allocation/safe-overflow differences; finite row/column/reverse/wrap, box conversion, distribution and definite percentage bounds. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
   "gateGroups": [
     {
@@ -297,18 +355,51 @@
       "id": "flex.min-max",
       "target": "parity",
       "group": "flex-core",
-      "current": "numeric and some percentage bounds",
+      "current": "numeric bounds and definite-owner percentage main-axis caps/floors in row/column, including reactive owner resize; intrinsic percentage owners remain explicitly unsupported",
       "status": "partial",
       "evidenceRefs": [
         "packages/core/src/lib/layout/flex.test.ts",
-        "tooling/layout-yoga-rehearsal/reference.json"
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs"
       ],
       "evidence": {
-        "positive": ["cap", "shrink"],
-        "negative": ["opposing limits rejection"],
-        "interaction": [],
-        "yogaCases": ["cap", "shrink", "column-cap", "column-shrink"],
-        "missing": ["full percentage rules", "definite/indefinite owner matrix"]
+        "positive": [
+          "cap",
+          "shrink",
+          "definite percentage grow caps and shrink floors in both axes",
+          "200\u2192240 cap owner and100\u2192140 floor owner pairs"
+        ],
+        "negative": [
+          "opposing limits rejection",
+          "negative/nonfinite/malformed percentages rejected",
+          "resolved opposing percent bounds rejected",
+          "percentage-dependent intrinsic measurement remains unsupported without resource allocation"
+        ],
+        "interaction": [
+          "owner resize recomputes percent limits and moves hit targets in the same frame",
+          "two mounted identities and native nodes preserved",
+          "source/built focused eight-case plus prior-case checks; installed signal-driven cap/hit check"
+        ],
+        "yogaCases": [
+          "cap",
+          "shrink",
+          "column-cap",
+          "column-shrink",
+          "percent-cap-row",
+          "percent-cap-row-resized",
+          "percent-floor-row",
+          "percent-floor-row-resized",
+          "percent-cap-column",
+          "percent-cap-column-resized",
+          "percent-floor-column",
+          "percent-floor-column-resized"
+        ],
+        "missing": [
+          "cross-axis and wrapped percentage-bound matrix",
+          "indefinite owner policy and explicit measure modes"
+        ]
       }
     },
     {

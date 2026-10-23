@@ -2990,6 +2990,346 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         "height": 80
       }
     ]
+  },
+  {
+    "name": "percent-cap-row",
+    "width": 200,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 50,
+        "height": 20
+      },
+      {
+        "x": 62,
+        "y": 0,
+        "width": 138,
+        "height": 20
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 40,
+        "height": 20,
+        "flexBasis": 40,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "maxWidth": "25%"
+      },
+      {
+        "width": 40,
+        "height": 20,
+        "flexBasis": 40,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0
+      }
+    ]
+  },
+  {
+    "name": "percent-cap-row-resized",
+    "width": 240,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 60,
+        "height": 20
+      },
+      {
+        "x": 72,
+        "y": 0,
+        "width": 168,
+        "height": 20
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 40,
+        "height": 20,
+        "flexBasis": 40,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "maxWidth": "25%"
+      },
+      {
+        "width": 40,
+        "height": 20,
+        "flexBasis": 40,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0
+      }
+    ]
+  },
+  {
+    "name": "percent-floor-row",
+    "width": 100,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 70,
+        "height": 20
+      },
+      {
+        "x": 82,
+        "y": 0,
+        "width": 18,
+        "height": 20
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 80,
+        "height": 20,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 1,
+        "minWidth": "70%",
+        "minHeight": 0
+      },
+      {
+        "width": 80,
+        "height": 20,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 1,
+        "minWidth": 0,
+        "minHeight": 0
+      }
+    ]
+  },
+  {
+    "name": "percent-floor-row-resized",
+    "width": 140,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 98,
+        "height": 20
+      },
+      {
+        "x": 110,
+        "y": 0,
+        "width": 30,
+        "height": 20
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 80,
+        "height": 20,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 1,
+        "minWidth": "70%",
+        "minHeight": 0
+      },
+      {
+        "width": 80,
+        "height": 20,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 1,
+        "minWidth": 0,
+        "minHeight": 0
+      }
+    ]
+  },
+  {
+    "name": "percent-cap-column",
+    "width": 100,
+    "height": 200,
+    "gap": 12,
+    "flexDirection": "column",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 20,
+        "height": 50
+      },
+      {
+        "x": 0,
+        "y": 62,
+        "width": 20,
+        "height": 138
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 20,
+        "height": 40,
+        "flexBasis": 40,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "maxHeight": "25%"
+      },
+      {
+        "width": 20,
+        "height": 40,
+        "flexBasis": 40,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0
+      }
+    ]
+  },
+  {
+    "name": "percent-cap-column-resized",
+    "width": 100,
+    "height": 240,
+    "gap": 12,
+    "flexDirection": "column",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 20,
+        "height": 60
+      },
+      {
+        "x": 0,
+        "y": 72,
+        "width": 20,
+        "height": 168
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 20,
+        "height": 40,
+        "flexBasis": 40,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "maxHeight": "25%"
+      },
+      {
+        "width": 20,
+        "height": 40,
+        "flexBasis": 40,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0
+      }
+    ]
+  },
+  {
+    "name": "percent-floor-column",
+    "width": 100,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "column",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 20,
+        "height": 70
+      },
+      {
+        "x": 0,
+        "y": 82,
+        "width": 20,
+        "height": 18
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 20,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 1,
+        "minWidth": 0,
+        "minHeight": "70%"
+      },
+      {
+        "width": 20,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 1,
+        "minWidth": 0,
+        "minHeight": 0
+      }
+    ]
+  },
+  {
+    "name": "percent-floor-column-resized",
+    "width": 100,
+    "height": 140,
+    "gap": 12,
+    "flexDirection": "column",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 20,
+        "height": 98
+      },
+      {
+        "x": 0,
+        "y": 110,
+        "width": 20,
+        "height": 30
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 20,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 1,
+        "minWidth": 0,
+        "minHeight": "70%"
+      },
+      {
+        "width": 20,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 1,
+        "minWidth": 0,
+        "minHeight": 0
+      }
+    ]
   }
 ] as const;
   // END YOGA REFERENCE
@@ -3169,7 +3509,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         <Text
           style={{
             left: 28,
-            top: 410,
+            top: 492,
             font: "12px monospace",
             fill: "#19375b",
           }}
@@ -3179,7 +3519,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
   }
   node = (
     <>
-      <Rectangle style={{ width: 760, height: 460, fill: "#f3f0e8" }} />
+      <Rectangle style={{ width: 760, height: 540, fill: "#f3f0e8" }} />
       <Text
         style={{
           left: 28,
@@ -3243,11 +3583,13 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
       >
         Paint only
       </Text>
+      <Rectangle style={{left:484,top:142,width:248,height:36,fill:"#426b61",cursor:"pointer"}} onClick={() => index.set(fixtureCases.findIndex(fixture => fixture.name === "percent-cap-row"))} />
+      <Text pointerEvents="none" style={{left:496,top:150,font:"14px sans-serif",fill:"#ffffff"}}>Percentage bounds</Text>
       <Workspace />
       <Text
         style={{
           left: 28,
-          top: 440,
+          top: 520,
           width: 700,
           wrap: true,
           font: "11px sans-serif",
