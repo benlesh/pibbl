@@ -104,6 +104,7 @@ try {
       assert.equal(receipt.wrappedAspectRatio, true, 'Installed package must move wrapped ratio paint and targets after resize');
       assert.equal(receipt.frozenPartial, true, 'Installed package must use initially frozen sizes for partial factors');
       assert.equal(receipt.safeOverflow, true, 'Installed package must use safe overflow start');
+      assert.equal(receipt.measuredColumnWrapText, true, 'Installed fixed-width Text must form wrapped columns before following paint and targets');
       assert.equal(receipt.wrappedCrossBounds, true, 'Installed wrapped columns must stretch automatic cross sizes and move the following line');
       assert.equal(receipt.percentagePadding, true, 'Installed percentage padding must move actual inner paint and targets');
       assert.equal(receipt.percentageGaps, true, 'Installed percentage gaps must use resized content axes and move targets');

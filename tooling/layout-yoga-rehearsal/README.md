@@ -28,11 +28,11 @@ other cases are80px. Root height100px, LTR/start, border0 and rounding0 are fixe
 Three numeric column cases use parent100×100px, child cross width80px, gap12px
 and shrink1:
 
-| Case | Basis | Grow | A height bound | A/B heights | A/B y |
-| --- | ---: | ---: | --- | --- | --- |
-| column-grow | 20px | 1 | min0 | 44/44px | 0/56px |
-| column-cap | 20px | 1 | max30px, min0 | 30/58px | 0/42px |
-| column-shrink | 80px | 0 | min60px; B min0 | 60/28px | 0/72px |
+| Case          | Basis | Grow | A height bound  | A/B heights | A/B y  |
+| ------------- | ----: | ---: | --------------- | ----------- | ------ |
+| column-grow   |  20px |    1 | min0            | 44/44px     | 0/56px |
+| column-cap    |  20px |    1 | max30px, min0   | 30/58px     | 0/42px |
+| column-shrink |  80px |    0 | min60px; B min0 | 60/28px     | 0/72px |
 
 Classification: exact geometry under explicit native inputs. Pibbl preserves its
 row default; these cases explicitly select column, shrink1 and main-axis minima.
@@ -228,8 +228,10 @@ Canvas remains usable inside Studio's sandbox.
 
 A declared-size column variant is available at
 `/#/examples/layout/wasm-flex-column-wrap`. Shrinking height moves C into a second
-column; widths remain192px. It rejects automatic measured column item heights or
-widths and does not establish intrinsic wrap support or additional Yoga parity.
+column; widths remain192px. The Measured Text switch also demonstrates bounded fixed-width generic Text
+auto-height before line formation. Other automatic measured heights and
+non-stretch automatic widths remain unsupported; this adds no intrinsic wrapped
+container support or Yoga font parity.
 
 ## Keyed wrapped collection and combined evidence (slice 21)
 
@@ -325,14 +327,14 @@ CSS differences. New records carry explicit `itemStyles`, used unchanged by the
 public fixture and semantic tests. All use finite row geometry and explicit minima;
 automatic-minimum/provider behavior is a separate capability.
 
-| Case | Parent/gap | Inputs | A/B widths |
-| --- | --- | --- | --- |
-| zero-fractional-grow |112/12|basis0; grow0.5/1.5|25/75|
-| fractional-shrink |112/12|basis80; shrink0.5/1.5|65/35|
-| grow-freeze-release |312/12|basis100; grow1; A max110|110/190|
-| shrink-freeze-release |112/12|basis80; shrink1/3; A min70|70/30|
-| large-finite-differential |312/12|basis0; grow1e30/2e30|100/200|
-| subunit-zero-grow |112/12|basis0; grow0.25 each|25/25, unused50|
+| Case                      | Parent/gap | Inputs                      | A/B widths      |
+| ------------------------- | ---------- | --------------------------- | --------------- |
+| zero-fractional-grow      | 112/12     | basis0; grow0.5/1.5         | 25/75           |
+| fractional-shrink         | 112/12     | basis80; shrink0.5/1.5      | 65/35           |
+| grow-freeze-release       | 312/12     | basis100; grow1; A max110   | 110/190         |
+| shrink-freeze-release     | 112/12     | basis80; shrink1/3; A min70 | 70/30           |
+| large-finite-differential | 312/12     | basis0; grow1e30/2e30       | 100/200         |
+| subunit-zero-grow         | 112/12     | basis0; grow0.25 each       | 25/25, unused50 |
 
 Factors1e30/2e30 remain finite in Yoga's f32 input domain. Separate Pibbl JS/Rust
 1e308:1 robustness assertions are f64 extension evidence, not a Yoga differential.
@@ -342,11 +344,11 @@ first freezes constrained items, then computes initial free space using their
 frozen target sizes. A factor total below one can consume only part of that free
 space. Pibbl preserves this contract, which differs from pinned Yoga:
 
-| Classified case | Native Yoga A/B | Expected Pibbl A/B |
-| --- | --- | --- |
-| subunit-shrink-policy |50/50|65/65|
-| initial-freeze-grow-policy |10/43.3333|10/37.5|
-| initial-freeze-shrink-policy |90/10|90/62.5|
+| Classified case              | Native Yoga A/B | Expected Pibbl A/B |
+| ---------------------------- | --------------- | ------------------ |
+| subunit-shrink-policy        | 50/50           | 65/65              |
+| initial-freeze-grow-policy   | 10/43.3333      | 10/37.5            |
+| initial-freeze-shrink-policy | 90/10           | 90/62.5            |
 
 `boxes` always contains native probe output. `pibblBoxes` separately records the
 classified Pibbl expectation, and `comparisonLabel` explicitly names the difference

@@ -2699,3 +2699,32 @@ it.runIf(experimentalLayout)('rejects opposing wrapped automatic column percenta
   const child=createElement(Rectangle,{style:{width:'auto',height:80,flexBasis:80,minHeight:0,minWidth:'75%',maxWidth:'25%'}});
   expect(()=>layoutFlex({x:0,y:0,width:100,height:200},[child],{flexDirection:'column',flexWrap:'wrap',alignItems:'stretch'},measurement)).toThrow(/minimum/);
 });
+
+for(const wrap of ['wrap','wrap-reverse'] as const){
+  it.runIf(experimentalLayout)(`measures fixed-width direct Text before column ${wrap} line formation`,()=>{
+    const text=(value:string)=>createElement(Text,{children:value,style:{width:50,wrap:true,font:'10px monospace',lineHeight:10,minHeight:0,flexGrow:0,flexShrink:0}});
+    const card=createElement(Rectangle,{style:{width:40,height:30,flexBasis:30,flexShrink:0,minHeight:0}});
+    const options={flexDirection:'column',flexWrap:wrap,gap:10,alignContent:'flex-start',alignItems:'flex-start'} as const;
+    const box={x:0,y:0,width:180,height:60};
+    expect(layoutFlex(box,[text('aaaa'),card],options,measurement)).toEqual([{x:wrap==='wrap'?0:130,y:0,width:50,height:10},{x:wrap==='wrap'?0:140,y:20,width:40,height:30}]);
+    expect(layoutFlex(box,[text('aaaa aaaa aaaa'),card],options,measurement)).toEqual([{x:wrap==='wrap'?0:130,y:0,width:50,height:30},{x:wrap==='wrap'?60:80,y:0,width:40,height:30}]);
+  });
+}
+
+it.runIf(experimentalLayout)('caches wrapped column direct Text measurement while content moves a stable following target',async()=>{
+  const baseline=snapshotWasmLayoutDiagnostics(),text=signal('aaaa'),fill=signal('black'),height=signal(60);let hits=0,mounts=0;
+  function Card(_props:{style:Record<string,unknown>}){useConst(()=>{mounts++;});const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:'blue'},onClick:()=>hits++});}
+  const root=createElement(Flex,{style:{width:180,height,flexDirection:'column',flexWrap:'wrap',gap:10,alignItems:'flex-start',alignContent:'flex-start'},children:[createElement(Text,{key:'text',pointerEvents:'none',children:text,style:{width:50,wrap:true,font:'10px monospace',lineHeight:10,minHeight:0,flexGrow:0,flexShrink:0,fill}}),createElement(Card,{key:'card',style:{width:40,height:30,flexBasis:30,minHeight:0,flexShrink:0}})]});
+  const canvas=document.createElement('canvas');canvas.width=200;canvas.height=100;document.body.append(canvas);const controller=pibbl(canvas,root);controllers.push(controller);await nextFrame();clickCanvas(canvas,5,25);expect(hits).toBe(1);const initial=snapshotWasmLayoutDiagnostics();
+  text.set('aaaa aaaa aaaa');await nextFrame();clickCanvas(canvas,5,25);expect(hits).toBe(1);clickCanvas(canvas,65,5);expect(hits).toBe(2);const long=snapshotWasmLayoutDiagnostics();expect(long.measuredLeaves).toBe(initial.measuredLeaves+1);expect(long.nodeCreates).toBe(initial.nodeCreates);expect(mounts).toBe(1);
+  fill.set('red');await nextFrame();const painted=snapshotWasmLayoutDiagnostics();expect(painted.measuredLeaves).toBe(long.measuredLeaves);expect(painted.solves).toBe(long.solves);expect(painted.lineFormations).toBe(long.lineFormations);
+  height.set(80);await nextFrame();expect(snapshotWasmLayoutDiagnostics().measuredLeaves).toBe(painted.measuredLeaves);clickCanvas(canvas,5,45);expect(hits).toBe(3);expect(mounts).toBe(1);
+  controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+});
+
+for (const [name, override] of Object.entries({automaticWidth:{width:'auto'},percentageWidth:{width:'50%'},crossMinimum:{minWidth:10},crossMaximum:{maxWidth:80},grow:{flexGrow:1},shrink:{flexShrink:1},customFont:{font:'10px CustomFont'},clip:{fit:'clip'},unwrapped:{wrap:false},mainMaximum:{maxHeight:50}})) {
+  it.runIf(experimentalLayout)(`rejects unsupported wrapped-column Text ${name}`,()=>{
+    const child=createElement(Text,{children:'aaaa aaaa',style:{width:50,wrap:true,font:'10px monospace',lineHeight:10,minHeight:0,flexGrow:0,flexShrink:0,...override} as never});
+    expect(()=>layoutFlex({x:0,y:0,width:180,height:60},[child],{flexDirection:'column',flexWrap:'wrap',alignItems:'flex-start'},measurement)).toThrow();
+  });
+}

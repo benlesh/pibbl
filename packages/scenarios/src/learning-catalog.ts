@@ -4308,12 +4308,12 @@ const drafts = [
   },
   {
     slug: "wasm-flex-column-wrap",
-    title: "Experimental declared column-wrap layout",
+    title: "Experimental column-wrap layout",
     shortTitle: "WASM column wrap",
     section: "layout",
     order: 142,
     summary:
-      "Shrink a finite column's height to move keyed cards into a second column using the existing WASM line kernel.",
+      "Resize finite columns and change fixed-width measured Text to move stable keyed cards between columns.",
     api: ["Flex", "Text", "signal", "useLayoutBox"],
     objectives: [
       "Reuse WASM line formation and placement across row and column axes.",
@@ -4321,11 +4321,11 @@ const drafts = [
     ],
     prompts: {
       gesture:
-        "Resize height to move C right and make it taller. Click its old and new positions; Text/paint changes should reuse numeric work.",
-      code: "Each card declares flexBasis84, minHeight0 and width192. No ordinary component is invoked speculatively for measurement.",
+        "Resize height to move C right. Enable Measured Text, then Change Text to move cards; Paint only reuses layout and height resize reuses Text measurement.",
+      code: "Cards declare flexBasis84 and width192. The optional direct Text declares width192, wrap true, minHeight0 and zero grow/shrink; its measured height forms lines before placement.",
     },
     apiNotes: [
-      "Experimental finite columns require declared height or flexBasis and declared width; automatic measured item sizes reject explicitly.",
+      "Experimental finite columns accept declared sizes or bounded direct generic Text at fixed numeric width. Other providers and automatic measured widths remain unsupported.",
       "No intrinsic wrapped-container sizing, reverse/RTL, baseline or Yoga parity claim.",
     ],
     canvas: { width: 760, height: 460 },

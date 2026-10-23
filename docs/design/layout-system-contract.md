@@ -287,8 +287,12 @@ owner-relative cross bounds. Cross minimum60% at owner cross100→160 expands th
 line60→96 and moves the next line72→108 with gap12; maximum25% caps the item25→40
 while a40-unit sibling keeps the next line at52. Source-order paint/hit targets
 move with those boxes; cross-only updates reuse main solving/line formation.
-Auto main height/basis and non-stretch automatic cross measurement remain
-unsupported in wrapped columns. Direct Text in rows is remeasured
+Auto main height/basis has one bounded wrapped-column exception: direct Text
+with explicit finite numeric width, wrap true, a generic px font, visible fit and
+overflow, explicit minHeight0, zero grow/shrink, no responsive query and no
+positive cross minimum or cross/main maximum. It is measured at that fixed content
+width before line formation. Other measured main bases and non-stretch automatic
+cross measurement remain unsupported in wrapped columns. Direct Text in rows is remeasured
 at its final per-line content width before line cross sizes settle. Main-axis
 minimums remain explicit except for two bounded native policies. A direct empty
 Rectangle with no authored children property, no responsive query and finite
@@ -469,8 +473,9 @@ known-Text query, not speculative measurement of arbitrary providers.
 Automatic-minimum queries currently remeasure their word runs on allocation misses;
 the measuredLeaves counter includes each such leaf request, not each Canvas word
 measurement call. No automatic-minimum cache or performance improvement is claimed.
-Wrapped columns reject automatic measured main bases and automatic cross widths
-before measurement; intrinsic wrapped containers remain unsupported;
+Wrapped columns admit only the bounded fixed-width direct Text automatic main
+measurement described above; other automatic measured main bases and non-stretch
+automatic cross widths reject before measurement. Intrinsic wrapped containers remain unsupported;
 normal builds retain the existing solver. This is not a released replacement,
 Yoga parity, or a standalone layout API. See [Plan 010](../project-plans/010-layout-engine-rework.md)
 for limitations and evidence. The lineFormations inspector is a cumulative private

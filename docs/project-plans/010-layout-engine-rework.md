@@ -1642,19 +1642,47 @@ Flex core still needs nested percentage/broader wrapping coverage, RTL and combi
 reversal coverage, broader bound/indefinite owner policy, and automatic minima
 outside current Text/empty Rectangle policy. No denominator narrowing.
 
-## [NEXT] Bounded direct Text main measurement in wrapped columns (slice 83)
+## Slice 83 delivered — bounded direct Text main measurement in wrapped columns
 
-Admit only direct Text whose explicit numeric content width makes wrapped height
-determinate before native line formation: wrap true, generic px font, visible fit,
-auto basis/height, explicit minHeight0, grow0/shrink0, no responsive or percentage
-cross width/bounds. Add failing public measurement and mounted ownership tests
-before changing the existing measured-main column-wrap restriction. Reuse the
-existing host Text measurement/cache and pass numeric height to native wrapping;
-no callback ABI, font parity claim or second measurement system. Expose short/long
-Text changes and following keyed card movement in the existing column-wrap example,
-with source/built/installed target, paint-only reuse and cleanup evidence. Keep
-other providers, unknown components, indefinite widths and intrinsic owners
-unsupported. Broaden only after this bounded path is observable and verified.
+Direct generic Text with finite numeric width, wrap true, visible fit/overflow,
+automatic main size, explicit minHeight0 and zero grow/shrink is measured before
+column line formation. No responsive query, positive cross minimum, cross/main
+maximum, aspect ratio or unknown provider is admitted. Final fixed content width
+and an unlimited main measurement constraint reuse the existing host measurement
+cache when only owner height changes. No public signature or native ABI change.
+
+Focused TDD: two public measurement failures before production, then wrap and
+wrap-reverse geometry pass. Mounted content changes move a stable keyed following
+target; paint-only work reuses measurement/solve/line formation; owner height
+changes reuse Text measurement; disposal restores exact ownership. Ten unsupported
+shape cases remain rejected. Fresh layout-wasm-slice:222pass/2normal-onlyskip,
+`/tmp/pibbl-slice83-full.txt`. Source and built Studio replay checks short/long
+Text, moved targets, stable A/B/C stamps, paint-only reuse, owner resize and exact
+zero cleanup: `/tmp/pibbl-slice83-source-fixed.txt` and
+`/tmp/pibbl-slice83-built.txt` (469private built inputs). Initial source receipt
+preserves a failed expectation caused by assuming newline breaks in the existing
+space-delimited Text wrapper; the example now uses ordinary space-delimited words.
+No Text line-breaking behavior was changed.
+
+Fresh packed install passes Bundler/NodeNext and actual public Text paint/hit/cache
+proof,230installed dist inputs, tarSHA
+`22f4b96abb806ce049ca6d99c386ba57173b53dd98f75109b3a4dfc7911695d9`:
+`/tmp/pibbl-slice83-packed.txt`. Types/lint/JSDoc and109documentation REDprobes pass.
+Focused read-only review reports no material findings. Kernel65383bytes unchanged;
+Node26.9.0, no Node24 aggregate trust claim or Yoga font parity claim.
+
+Fixed33 remains3complete,12experimental,7partial,10missing,1excluded; all seven gates
+open. This adds a measured wrapping prerequisite, not a whole capability exit.
+
+## [NEXT] Finite allocated-owner percentage physical margins (slice 84)
+
+Pin native Yoga geometry first, then add a failing public allocation test before
+resolving physical margin percentages against finite allocated Flex content width
+(including vertical edges). Reuse existing margin placement and receiver ownership.
+Expose one row/column wrap and resize path with moved paint/hit targets, cache and
+cleanup evidence. Keep intrinsic/unallocated owners, auto/logical margins and normal
+JavaScript admission separate. At consolidation82–84 record the shortest finite
+sequence to close a whole fixed-ledger capability, not only fixture-count growth.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

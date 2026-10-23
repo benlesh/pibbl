@@ -16,6 +16,12 @@ function createWasmFlexColumnWrapExampleContent(canvas: HTMLCanvasElement) {
   let node: PibblNode;
   const height = signal(288);
   const selected = signal("none");
+  const measuredText = signal(false);
+  const shortMeasured = "Measured line";
+  const longMeasured = "Measurement Measurement Measurement Measurement Measurement Measurement Measurement Measurement Measurement Measurement Measurement Measurement Measurement Measurement Measurement Measurement";
+  const measuredContent = signal(shortMeasured);
+  const stamps = new Map<string, number>();
+  let nextStamp = 1, hits = 0;
   const firstText = "This Text wraps inside the declared card width.";
   const secondText = "Changed Text keeps the same declared card width.";
   const content = signal(firstText);
@@ -32,6 +38,8 @@ function createWasmFlexColumnWrapExampleContent(canvas: HTMLCanvasElement) {
     name: string;
     style: BoxStyle & FlexItemStyle;
   }) {
+    const stamp = useConst(() => nextStamp++);
+    stamps.set(name, stamp);
     const box = useLayoutBox();
     const transform = rootTransform
       .inverse()
@@ -53,7 +61,7 @@ function createWasmFlexColumnWrapExampleContent(canvas: HTMLCanvasElement) {
             fill: selected.get() === name ? "#e1dbca" : "#d6e3db",
             cursor: "pointer",
           }}
-          onClick={() => selected.set(name)}
+          onClick={() => { hits++; selected.set(name); }}
         />
         <Text
           pointerEvents="none"
@@ -129,11 +137,12 @@ function createWasmFlexColumnWrapExampleContent(canvas: HTMLCanvasElement) {
           alignItems: "flex-start",
         }}
       >
+        {measuredText.get() && <Text key="measured-text" pointerEvents="none" style={{width:192,wrap:true,font:"13px monospace",lineHeight:18,minHeight:0,flexGrow:0,flexShrink:0,fill:ink}}>{measuredContent}</Text>}
         {["A", "B", "C"].map((name) => (
           <Card
             key={name}
             name={name}
-            style={{ flexBasis: 84, flexGrow: 1, minHeight: 0, width: 192 }}
+            style={{ flexBasis: 84, flexGrow: measuredText.get() ? 0 : 1, minHeight: 0, width: 192 }}
           />
         ))}
       </Flex>
@@ -166,11 +175,10 @@ function createWasmFlexColumnWrapExampleContent(canvas: HTMLCanvasElement) {
       <Button
         x={224}
         label="Change Text"
-        onClick={() =>
-          content.update((value) =>
-            value === firstText ? secondText : firstText,
-          )
-        }
+        onClick={() => {
+          if (measuredText.get()) measuredContent.update(value => value === shortMeasured ? longMeasured : shortMeasured);
+          else content.update(value => value === firstText ? secondText : firstText);
+        }}
       />
       <Button
         x={420}
@@ -179,6 +187,8 @@ function createWasmFlexColumnWrapExampleContent(canvas: HTMLCanvasElement) {
           ink.update((value) => (value === "#19375b" ? "#a63758" : "#19375b"))
         }
       />
+      <Rectangle style={{left:616,top:100,width:116,height:36,fill:"#426b61",cursor:"pointer"}} onClick={() => { const next = !measuredText.get(); measuredText.set(next); height.set(next ? 184 : 288); measuredContent.set(shortMeasured); }} />
+      <Text pointerEvents="none" style={{left:624,top:110,font:"12px sans-serif",fill:"white"}}>Measured Text</Text>
       <Workspace />
     </>
   );
@@ -196,10 +206,14 @@ function createWasmFlexColumnWrapExampleContent(canvas: HTMLCanvasElement) {
       lane: read ? "experimental WASM" : "normal JavaScript",
       height: height.get(),
       selected: selected.get(),
+      measuredText: measuredText.get(),
+      measuredContent: measuredContent.get(),
+      stamps: Object.fromEntries(stamps),
+      hits,
       boxes: Object.fromEntries(boxes),
       layout: read?.() ?? {},
       limits:
-        "Column wrap requires declared height/flexBasis and width. No intrinsic item or wrapped-container sizing, reverse/RTL or Yoga parity claim.",
+        "Column wrap supports declared cards and bounded direct Text at fixed numeric width. Other intrinsic providers, automatic widths and wrapped-container sizing remain unsupported. No RTL or Yoga font parity claim.",
     });
   };
   refresh();

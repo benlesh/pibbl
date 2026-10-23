@@ -674,14 +674,17 @@
       "id": "flex.row-column-nowrap-wrap",
       "target": "preserve",
       "group": "flex-core",
-      "current": "public subset; experimental WASM covers finite row and column wrapping",
+      "current": "public subset; experimental WASM covers finite row and column wrapping including bounded fixed-width direct Text auto-height",
       "status": "experimental",
       "evidenceRefs": [
         "docs/design/layout-system-contract.md#flex",
         "packages/core/test/layout-wasm-slice.test.tsx"
       ],
       "evidence": {
-        "positive": ["public Flex/Text scenarios"],
+        "positive": [
+          "public Flex/Text scenarios",
+          "fixed-width direct Text auto-height forms wrapped columns before following card placement"
+        ],
         "negative": ["intrinsic wrapped containers rejected"],
         "interaction": ["wrapped target geometry"],
         "yogaCases": [

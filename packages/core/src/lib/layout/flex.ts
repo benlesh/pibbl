@@ -651,9 +651,10 @@ function resolveFlexPlacements(
     if (child.key === undefined) occurrences.set(child.type, occurrence + 1);
     const layoutToken = region?.identity(child.type, child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`);
     const prepared = prepareDirectChildStyle(child, receiverToken, container, true);
-    let normalized = preparedStyleValue(prepared) as Readonly<
+    const declared = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    let normalized = declared;
     if (experimentalLayout) normalized = resolveAllocatedPadding(normalized, { width: container.width, context: childContext(child, container) });
     if (normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized, { width: container.width, height: container.height, mainAxis: row ? 'width' : 'height', context: childContext(child, container) });
     const aspectRatio = normalized.aspectRatio;
@@ -721,9 +722,19 @@ function resolveFlexPlacements(
       (specifiedMain === undefined || specifiedMain === 'auto');
     if (aspectRatio !== undefined && needsMeasuredMain) throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'requires a definite main dimension or flexBasis; intrinsic aspect sizing is unsupported');
     const crossAuto = specifiedCross === undefined || specifiedCross === 'auto';
+    const measuredColumnWrapText = experimentalLayout && !row && options.flexWrap !== 'nowrap' &&
+      needsMeasuredMain && child.type === Text && aspectRatio === undefined &&
+      typeof declared.width === 'number' && typeof normalized.width === 'number' &&
+      Number.isFinite(normalized.width) && normalized.width >= 0 && declared.minHeight === 0 &&
+      grow === 0 && shrink === 0 && normalized.wrap === true &&
+      (normalized.fit === undefined || normalized.fit === 'visible') &&
+      (normalized.overflow === undefined || normalized.overflow === 'visible') &&
+      (normalized.minWidth === undefined || normalized.minWidth === 0) &&
+      normalized.maxWidth === undefined && normalized.maxHeight === undefined &&
+      !preparedStyleQuery(prepared) && genericTextFont(normalized);
     const alignment = normalizeItemAlignment(normalized.alignSelf, child, container, wrapReverse);
     if (experimentalLayout && !row && options.flexWrap !== 'nowrap' &&
-      (needsMeasuredMain || aspectRatio === undefined && crossAuto && effectiveAlignment(alignment, options.alignItems) !== 'stretch')) {
+      (needsMeasuredMain && !measuredColumnWrapText || aspectRatio === undefined && crossAuto && effectiveAlignment(alignment, options.alignItems) !== 'stretch')) {
       throw childDiagnostic(child, needsMeasuredMain ? mainProperty : crossProperty, 'auto', container,
         'Experimental WASM column wrap requires a declared height or flexBasis and a declared width or stretched automatic width; intrinsic item sizes are unsupported.');
     }
@@ -735,10 +746,10 @@ function resolveFlexPlacements(
       needsMeasuredMain && crossAuto && effectiveAlignment(alignment, options.alignItems) === 'stretch';
     if (!deferredIntrinsicColumn && (needsMeasuredMain || aspectRatio === undefined && (needsMeasuredCross || crossAuto))) {
       const constraints = {
-        minWidth: 0,
-        maxWidth: container.width,
+        minWidth: measuredColumnWrapText ? normalized.width as number : 0,
+        maxWidth: measuredColumnWrapText ? normalized.width as number : container.width,
         minHeight: 0,
-        maxHeight: container.height,
+        maxHeight: measuredColumnWrapText ? Number.POSITIVE_INFINITY : container.height,
       };
       const measurementChild = clonePibblElement(child);
       setPreNormalizedStyle(
