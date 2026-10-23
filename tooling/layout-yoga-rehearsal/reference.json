@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "9e7341979c19588fb37ecf3062fafafe392e0a76880d4f4d8c6425b343dfc6ff",
+  "probeSha256": "fbf4b7a523ccada01117bc04aba946aeb487c43a132446a395952d74e646781b",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -50697,6 +50697,228 @@
           "height": 20,
           "flexGrow": 0,
           "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "decorated-main-cap-row-reverse",
+      "width": 144,
+      "height": 84,
+      "gap": 12,
+      "flexDirection": "row-reverse",
+      "flexWrap": "nowrap",
+      "decoratedReverseMainPercentFixture": true,
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 87,
+          "y": 22,
+          "width": 25,
+          "height": 10
+        },
+        {
+          "x": 12,
+          "y": 22,
+          "width": 63,
+          "height": 10
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 10,
+          "flexBasis": 40,
+          "flexGrow": 1,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "maxWidth": "25%"
+        },
+        {
+          "width": 40,
+          "height": 10,
+          "flexBasis": 40,
+          "flexGrow": 1,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "decorated-main-cap-row-reverse-resized",
+      "width": 184,
+      "height": 84,
+      "gap": 12,
+      "flexDirection": "row-reverse",
+      "flexWrap": "nowrap",
+      "decoratedReverseMainPercentFixture": true,
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 117,
+          "y": 22,
+          "width": 35,
+          "height": 10
+        },
+        {
+          "x": 12,
+          "y": 22,
+          "width": 93,
+          "height": 10
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 10,
+          "flexBasis": 40,
+          "flexGrow": 1,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "maxWidth": "25%"
+        },
+        {
+          "width": 40,
+          "height": 10,
+          "flexBasis": 40,
+          "flexGrow": 1,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "decorated-main-floor-column-reverse",
+      "width": 84,
+      "height": 144,
+      "gap": 12,
+      "flexDirection": "column-reverse",
+      "flexWrap": "nowrap",
+      "decoratedReverseMainPercentFixture": true,
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 12,
+          "y": 52,
+          "width": 10,
+          "height": 70
+        },
+        {
+          "x": 12,
+          "y": 22,
+          "width": 10,
+          "height": 18
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 10,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": "70%"
+        },
+        {
+          "width": 10,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "decorated-main-floor-column-reverse-resized",
+      "width": 84,
+      "height": 184,
+      "gap": 12,
+      "flexDirection": "column-reverse",
+      "flexWrap": "nowrap",
+      "decoratedReverseMainPercentFixture": true,
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 12,
+          "y": 64,
+          "width": 10,
+          "height": 98
+        },
+        {
+          "x": 12,
+          "y": 22,
+          "width": 10,
+          "height": 30
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 10,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 1,
+          "minWidth": 0,
+          "minHeight": "70%"
+        },
+        {
+          "width": 10,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 1,
           "minWidth": 0,
           "minHeight": 0
         }

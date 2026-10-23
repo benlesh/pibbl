@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest runtime delivery is slice149 (bounded column provider automatic minimum).
+Latest evidence delivery is slice150 (decorated reverse main percentage bounds).
+Latest runtime delivery is slice149 `bc74da58` (bounded column provider automatic minimum).
 Slice148 is `91b36dca` (reverse composition capability evidence).
 Slice147 is `f6e45350` (logical absolute insets).
 Consolidation49 is `67428b3b` for145–147.
@@ -4426,14 +4427,43 @@ the boundary test passed (1 passed/417 skipped), covering explicit-zero no-query
 unpaired and percentage pre-query rejection, and numeric clamps. No native
 parity, capability promotion, group release or aggregate trust claim.
 
-## [NEXT] Main-axis bound release evidence (150)
+## Slice150 delivered: decorated reverse main-axis percentage bounds
 
-Audit the accepted `flex.min-max` reverse/decorated main-axis percentage cap/floor
-gap against existing native fixtures and public source/built/installed receipts.
-Add only genuinely missing finite geometry, resized target and lifecycle evidence;
-retain explicit indefinite-owner policy and measure-mode requirements. The fixed
-33-entry denominator remains9 complete,11 experimental,6 partial,6 missing and1
-excluded. All7 release gates remain open; capability counts are not slice counts.
+Four appended pinned Yoga records cover two resized decorated border-box pairs:
+row-reverse grow maxWidth25% and column-reverse shrink minHeight70%. Outer
+144→184 resolves content main100→140, origin12,22. Row A width25→35 and B63→93;
+column A height70→98 and B18→30. Initial column bases160 plus gap12 exceed the
+available main size, so the floor test actually exercises negative free space.
+The exploratory244→284 setup was discarded because Yoga did not enter shrink.
+No production solver or API changed; these are new evidence for existing behavior.
+
+Fresh pinned Yoga3.2.1 (`042f5013152eb81c1552dec945b88f7b95ca350f`), point scale0,
+no web defaults/errata: native write and independent regeneration reproduced713
+records. The four new records match public mounted geometry exactly; the public
+Node24.15/Chromium tests2 passed (418 skipped). Source/built Node26.9/Chromium
+private lab replay passed4 native matches,227 inputs, eight A/B targets, prior-gap
+points transferring to B on resize, stable keys/nodes, paint solve reuse and
+cleanup `[0,0,0]`. Latest proof selects the appended family; older sections retain
+source order. Hands-on: `http://127.0.0.1:5192/#/testing/layout-yoga-migration`;
+built: `http://127.0.0.1:5193/#/testing/layout-yoga-migration`.
+
+The Node24 installed proof passed Bundler/NodeNext/runtime,245 dist inputs,
+`reverseDecoratedMainBounds=true`, tarball SHA256
+`ff1748ef54ed7c0f8f41cd8aae028524be03a20038fb82b92830052168da2c7a`.
+Public five-case corpus remains separate and agrees with the full713-record
+source. Typecheck and changed-code lint passed. The capability ledger retains
+other main-axis role combinations and indefinite-owner/measure-mode policy gaps;
+no status or release gate was promoted. Native totals are522 unclassified records,
+183 preserved semantic differences and8 font-source records; no713-case public
+runtime replay or aggregate trust result is claimed.
+
+## [NEXT] Consolidation50 for148–150
+
+Run the existing proportional layout/ownership/browser set together in experimental
+and normal modes, reconcile docs and package receipts once, and commit the
+consolidation separately. Preserve the fixed33 capabilities (9 complete,
+11 experimental,6 partial,6 missing,1 excluded), all7 open release gates, and
+bounded admission/caching rules. Then select the next actual remaining gate exit.
 
 ### Finite positioning exit matrix after134
 

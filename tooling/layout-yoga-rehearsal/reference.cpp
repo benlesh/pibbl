@@ -76,6 +76,54 @@ static void percentageBoundsCases() {
     std::cout<<"]}";YGNodeFreeRecursive(root);YGConfigFree(config);
   }
 }
+static void decoratedReverseMainPercentageCases() {
+  for (int family = 0; family < 2; ++family) for (int resized = 0; resized < 2; ++resized) {
+    const bool column = family == 1;
+    const int width = column ? 84 : (resized ? 184 : 144);
+    const int height = column ? (resized ? 184 : 144) : 84;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, width); YGNodeStyleSetHeight(root, height);
+    YGNodeStyleSetFlexDirection(root, column ? YGFlexDirectionColumnReverse : YGFlexDirectionRowReverse);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+    YGNodeStyleSetGap(root, YGGutterAll, 12);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10); YGNodeStyleSetPadding(root, YGEdgeRight, 30);
+    YGNodeStyleSetPadding(root, YGEdgeTop, 20); YGNodeStyleSetPadding(root, YGEdgeBottom, 20);
+    YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    for (int index = 0; index < 2; ++index) {
+      auto child = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(child, column ? 10 : 40); YGNodeStyleSetHeight(child, column ? 80 : 10);
+      YGNodeStyleSetFlexBasis(child, column ? 80 : 40);
+      YGNodeStyleSetFlexGrow(child, column ? 0 : 1); YGNodeStyleSetFlexShrink(child, column ? 1 : 0);
+      YGNodeStyleSetMinWidth(child, 0); YGNodeStyleSetMinHeight(child, 0);
+      if (index == 0) {
+        if (column) YGNodeStyleSetMinHeightPercent(child, 70);
+        else YGNodeStyleSetMaxWidthPercent(child, 25);
+      }
+      YGNodeInsertChild(root, child, index);
+    }
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+    std::cout << ",{\"name\":\"decorated-main-" << (column ? "floor-column-reverse" : "cap-row-reverse") << (resized ? "-resized" : "")
+              << "\",\"width\":" << width << ",\"height\":" << height << ",\"gap\":12,\"flexDirection\":\"" << (column ? "column-reverse" : "row-reverse")
+              << "\",\"flexWrap\":\"nowrap\",\"decoratedReverseMainPercentFixture\":true,\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\",\"alignContent\":\"flex-start\"},\"boxes\":[";
+    for (int index = 0; index < 2; ++index) { auto child = YGNodeGetChild(root, index); if (index) std::cout << ','; std::cout << "{\"x\":" << YGNodeLayoutGetLeft(child) << ",\"y\":" << YGNodeLayoutGetTop(child) << ",\"width\":" << YGNodeLayoutGetWidth(child) << ",\"height\":" << YGNodeLayoutGetHeight(child) << "}"; }
+    std::cout << "],\"itemStyles\":[";
+    for (int index = 0; index < 2; ++index) {
+      if (index) std::cout << ',';
+      std::cout << "{\"width\":" << (column ? 10 : 40) << ",\"height\":" << (column ? 80 : 10)
+                << ",\"flexBasis\":" << (column ? 80 : 40) << ",\"flexGrow\":" << (column ? 0 : 1)
+                << ",\"flexShrink\":" << (column ? 1 : 0) << ",\"minWidth\":0,\"minHeight\":";
+      if (column && index == 0) std::cout << "\"70%\""; else std::cout << 0;
+      if (!column && index == 0) std::cout << ",\"maxWidth\":\"25%\"";
+      std::cout << '}';
+    }
+    std::cout << "]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+}
+
 static void wrappedAspectCases() {
   for(int axis=0;axis<2;axis++)for(int reverse=0;reverse<2;reverse++)for(int resized=0;resized<2;resized++) {
     const bool column=axis==1;const int main=resized?172:200;
@@ -3049,5 +3097,6 @@ int main() {
   absoluteWrappedAlignmentCases();
   absolutePercentageInsetCases();
   relativePercentageInsetCases();
+  decoratedReverseMainPercentageCases();
   std::cout << "]\n";
 }

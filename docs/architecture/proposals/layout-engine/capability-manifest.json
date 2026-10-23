@@ -1607,9 +1607,29 @@
       {
         "id": "owner-cross-auto-top-stretch-narrow",
         "covers": ["flex.auto-margin", "flex.min-max"]
+      },
+      {
+        "id": "decorated-main-cap-row-reverse",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-cap-row-reverse-resized",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-floor-column-reverse",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-floor-column-reverse-resized",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis percentage bound with explicit numeric basis/minimum policy"
       }
     ],
-    "limit": "367 records:273 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "713 pinned native records:522 without a divergence classification,183 preserved semantic differences and8 native-font-source records. Fresh public runtime verification is limited to named replay receipts; this is not a713-case runtime replay or general intrinsic, percentage, auto-margin, font or CSS parity claim."
   },
   "gateGroups": [
     {
@@ -1915,7 +1935,8 @@
           "Decorated border-box244\u00d7144\u2192204 with padding/border leaves content200\u00d7100\u2192160; reversed nested minHeight60% gives60\u219296 and world C y94\u2192130",
           "Definite decorated reverse nested height60 capped by maxHeight25% gives25\u219240; 100% leaf heights consume that allocation once",
           "Decorated column-reverse definite width60/maxWidth25% and 100%-width children resolve25\u219240 from content cross100\u2192160",
-          "Decorated column-reverse definite width20/minWidth60% gives nested width60\u219296 and C x94\u2192130 from content cross100\u2192160"
+          "Decorated column-reverse definite width20/minWidth60% gives nested width60\u219296 and C x94\u2192130 from content cross100\u2192160",
+          "Decorated row-reverse maxWidth25% under content width100→140 freezes A at25→35 while column-reverse minHeight70% under content height100→140 floors A70→98 with negative free space"
         ],
         "negative": [
           "opposing limits rejection",
@@ -1931,7 +1952,8 @@
           "Decorated reverse nested world leaves remain132/172,22; following target moves, keys/native solves/lines reuse, one pure measurement remains on paint",
           "Expanded leaf extent admits a formerly empty point, preserves keys/main solves/lines/nodes, and performs zero pure measurements",
           "Column leaf expansion admits formerly empty52,136; width-only updates preserve keys/main solves/lines, and paint uses zero pure measures",
-          "Point100,136 transfers from C to expanded A1 while new C remains targetable; keys/main solves/lines reuse, zero paint measurement"
+          "Point100,136 transfers from C to expanded A1 while new C remains targetable; keys/main solves/lines reuse, zero paint measurement",
+          "Source/built four-case replay and installed public mounts verify exact native world boxes, formerly empty point transfers to B, stable keys/nodes, paint solve reuse and exact teardown"
         ],
         "yogaCases": [
           "cap",
@@ -1963,10 +1985,14 @@
           "nested-cross-max-decorated-column-reverse",
           "nested-cross-max-decorated-column-reverse-resized",
           "nested-cross-min-decorated-column-reverse",
-          "nested-cross-min-decorated-column-reverse-resized"
+          "nested-cross-min-decorated-column-reverse-resized",
+          "decorated-main-cap-row-reverse",
+          "decorated-main-cap-row-reverse-resized",
+          "decorated-main-floor-column-reverse",
+          "decorated-main-floor-column-reverse-resized"
         ],
         "missing": [
-          "reverse/decorated main-axis percentage floors/caps beyond the bounded nested cross-bound matrix",
+          "remaining reverse/decorated main-axis role combinations beyond the bounded row cap and column floor pairs",
           "indefinite owner policy and explicit measure modes"
         ]
       }

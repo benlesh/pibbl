@@ -169,6 +169,7 @@ try {
       assert.equal(receipt.percentagePadding, true, 'Installed percentage padding must move actual inner paint and targets');
       assert.equal(receipt.percentageGaps, true, 'Installed percentage gaps must use resized content axes and move targets');
       assert.equal(receipt.percentageBounds, true, 'Installed percentage caps must recompute against the resized owner and move targets');
+      assert.equal(receipt.reverseDecoratedMainBounds, true, 'Installed decorated reverse main-axis percentage caps and floors must resize, retain target geometry, preserve keyed identity, reuse paint, and dispose exactly');
       assert.equal(receipt.textCrossHits, 1, 'Measured auto-cross target must agree with installed placement');
       assert.ok(receipt.modules > 0 && receipt.instances > 0, 'Installed package must execute embedded WASM');
       assert.match(proof.sha256, /^[a-f0-9]{64}$/);

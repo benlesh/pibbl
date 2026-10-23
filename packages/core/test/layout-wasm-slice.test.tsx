@@ -2955,6 +2955,91 @@ for (const axis of ['row', 'column'] as const) {
   });
 }
 
+it.runIf(experimentalLayout).each([
+  {
+    label: 'row-reverse percentage grow cap',
+    fixtureNames: ['decorated-main-cap-row-reverse', 'decorated-main-cap-row-reverse-resized'],
+    axis: 'row-reverse' as const,
+    initialMain: 144,
+    resizedMain: 184,
+    initial: [{ x: 87, y: 22, width: 25, height: 10 }, { x: 12, y: 22, width: 63, height: 10 }],
+    resized: [{ x: 117, y: 22, width: 35, height: 10 }, { x: 12, y: 22, width: 93, height: 10 }],
+    firstStyle: { width: 40, height: 10, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, maxWidth: '25%' as const },
+    secondStyle: { width: 40, height: 10, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0 },
+    oldPoint: { x: 90, y: 27 },
+    newPoint: { x: 120, y: 27 },
+  },
+  {
+    label: 'column-reverse percentage shrink floor',
+    fixtureNames: ['decorated-main-floor-column-reverse', 'decorated-main-floor-column-reverse-resized'],
+    axis: 'column-reverse' as const,
+    initialMain: 144,
+    resizedMain: 184,
+    initial: [{ x: 12, y: 52, width: 10, height: 70 }, { x: 12, y: 22, width: 10, height: 18 }],
+    resized: [{ x: 12, y: 64, width: 10, height: 98 }, { x: 12, y: 22, width: 10, height: 30 }],
+    firstStyle: { width: 10, height: 80, flexBasis: 80, flexGrow: 0, flexShrink: 1, minWidth: 0, minHeight: '70%' as const },
+    secondStyle: { width: 10, height: 80, flexBasis: 80, flexGrow: 0, flexShrink: 1, minWidth: 0, minHeight: 0 },
+    oldPoint: { x: 17, y: 55 },
+    newPoint: { x: 17, y: 70 },
+  },
+])('preserves decorated reverse main-axis percentage bounds through owner resize: $label', async ({ fixtureNames, axis, initialMain, resizedMain, initial: expectedInitial, resized: expectedResized, firstStyle, secondStyle, oldPoint, newPoint }) => {
+  const fixtures = yogaReference.cases.filter((fixture) => 'decoratedReverseMainPercentFixture' in fixture);
+  expect(fixtures.map((fixture) => fixture.name)).toEqual(expect.arrayContaining(fixtureNames));
+  expect(fixtures.find(fixture => fixture.name === fixtureNames[0])?.boxes).toEqual(expectedInitial);
+  expect(fixtures.find(fixture => fixture.name === fixtureNames[1])?.boxes).toEqual(expectedResized);
+  const main = signal(initialMain), fill = signal('#426b61');
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number }>();
+  const stamps = new Map<string, number>();
+  let mounts = 0, nextStamp = 1, hits = 0;
+  function Card({ name, style: _style, interactive }: { name: string; style: BoxStyle & FlexItemStyle; interactive?: boolean }) {
+    const stamp = useConst(() => { mounts++; return nextStamp++; });
+    const box = useLayoutBox(), transform = useCanvasContext().getTransform();
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height });
+    stamps.set(name, stamp);
+    return createElement(Rectangle, {
+      onClick: interactive ? () => { hits++; } : undefined,
+      style: { width: box.width, height: box.height, fill },
+    });
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 220; document.body.append(canvas);
+  const column = axis === 'column-reverse';
+  const root = createElement(Flex, {
+    style: {
+      width: column ? 84 : main,
+      height: column ? main : 84,
+      boxSizing: 'border-box',
+      padding: { left: 10, right: 30, top: 20, bottom: 20 },
+      borderWidth: 2,
+      flexDirection: axis,
+      gap: 12,
+      alignItems: 'flex-start',
+      alignContent: 'flex-start',
+    },
+    children: [
+      createElement(Card, { key: 'A', name: 'A', interactive: true, style: firstStyle }),
+      createElement(Card, { key: 'B', name: 'B', style: secondStyle }),
+    ],
+  });
+  const controller = pibbl(canvas, root); controllers.push(controller); await nextFrame();
+  expect([boxes.get('A'), boxes.get('B')]).toEqual(expectedInitial);
+  clickCanvas(canvas, oldPoint.x, oldPoint.y); expect(hits).toBe(1);
+  const mounted = snapshotWasmLayoutDiagnostics(), mountedStamps = new Map(stamps);
+  main.set(resizedMain); await nextFrame();
+  expect([boxes.get('A'), boxes.get('B')]).toEqual(expectedResized);
+  expect(stamps).toEqual(mountedStamps); expect(mounts).toBe(2);
+  clickCanvas(canvas, oldPoint.x, oldPoint.y); expect(hits).toBe(1);
+  clickCanvas(canvas, newPoint.x, newPoint.y); expect(hits).toBe(2);
+  const resized = snapshotWasmLayoutDiagnostics();
+  expect(resized.solves).toBeGreaterThan(mounted.solves); expect(resized.nodeCreates).toBe(mounted.nodeCreates);
+  fill.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(resized.solves); expect(painted.nodeCreates).toBe(resized.nodeCreates); expect(mounts).toBe(2);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+});
+
 for (const axis of ['row', 'column'] as const) {
   const minimum = axis === 'row' ? 'minWidth' : 'minHeight';
   const maximum = axis === 'row' ? 'maxWidth' : 'maxHeight';
