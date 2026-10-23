@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice90 (logical padding; this commit).
+Latest delivery is slice90 `c997f41e` (logical padding).
 Slice89 is `f8f7e76d` (logical Flex margins).
 Slice88 is `14386781` (inherited Flex layoutDirection).
 Previous delivery is slice87 `aac241f6` (wrap-reverse percentage physical margins).
@@ -40,7 +40,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; the single next slice is91, logical layout borders after consolidation30 for88–90. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; the single next slice is91, logical layout borders. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles159 records:136matches/23classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -2042,9 +2042,37 @@ ready for feedback, not full feature completion. Fixed33 remains
 4complete/11experimental/8partial/9missing/1excluded; all7release gates stayopen.
 Logical borders and broader intrinsic/owner-graph interactions remain outstanding.
 
+### Consolidation 30 completed for separately committed slices 88–90
+
+Separate88 `14386781`,89 `f8f7e76d`,90 `c997f41e`. Fresh Node26.9.0/installed
+pnpm11.21.0 dependencies/Chromium run across the same10files: layout-WASM slice,
+Text auto-basis/minimum, measurement purity, structural card, paint reuse, Flex,
+measure, box, resolve-length. Experimental385pass/6skip (391total), all10files
+pass,72.13s. Ordinary155pass/236skip (391),8filespass/2skip,3.29s. Actual process
+exits0. Logs `/tmp/pibbl-consolidation30-focused.txt` and `-normal.txt`.
+No production fix was required. Reuse90’s fresh source/built/installed, kernel,
+159-record native, types/lint/docs109RED/JSDoc/discovery/catalog evidence; no
+unjustified repeat packaging or overlapping final review. Fixed manifest count
+is33:4complete/11experimental/8partial/9missing/1excluded, all7gatesopen. No
+Node24 aggregate trust, controlled wall-clock performance or feature-complete claim.
+
+Concrete remaining direction/box exit matrix, without changing the denominator:
+
+| Existing entry                                   | Required evidence still outstanding after90                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| direction.rtl-and-logical-edges                  | Numeric logical border vocabulary and precedence; bounded row/column × forward/reverse/wrap/wrap-reverse direction and min/max cases, inherited/explicit receiver direction, stable source paint/hit/focus order and teardown. Known mixed margin dimension differences stay attributed and labeled, never called full parity. |
+| box.padding-and-layout-border                    | Logical borders combined with padding/content-box/border-box floors, zero and invalid values; direct/nested allocation ownership, explicit receiver overrides and unchanged Layer raster sizing. Broader intrinsic/percentage-owner feedback remains distinct pending work.                                                    |
+| measurement.custom-leaf / flex.automatic-minimum | Settle existing intrinsic-provider query, invalidation, failure and baseline contracts before broadening automatic minima; do not imply a new measurement system by extending one Text exception at a time.                                                                                                                    |
+
+91 supplies the missing border vocabulary and focused vertical proof. It does
+not automatically close those entries or replace the remaining owner graph,
+atomic geometry/interaction/HTML commit, standalone migration, Grid, corpus and
+performance exits. After91, choose the intrinsic-provider contract prerequisite
+as the next substantial gate step. Final whole-codebase review remains at full end.
+
 ## [NEXT] Logical layout border edges (slice 91)
 
-First finish consolidation30 for separately committed88–90. Then resolve the
+Consolidation30 passed for separately committed88–90. Resolve the
 small additive logical numeric border API alongside existing `borderWidth`
 physical shorthand. Pin start/end versus physical edges, zero, setter orders,
 receiver direction, content-box/border-box floors and full content geometry.
