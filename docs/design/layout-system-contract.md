@@ -939,14 +939,18 @@ signals, or an explicit layout invalidation; hidden mutable closure state is not
 a reactive input. Unrelated sibling paint reuses finite measurements. The public
 example proves width100→60 changes height20→40 together with paint and hit bounds.
 
-## Experimental physical main-axis auto margins
+## Experimental main-axis auto margins
 
-`FlexMargin = number | Percentage | "auto"` is exported for the shared physical
-`marginLeft` and `marginRight` fields. The initial auto consumer is a finite LTR
-row-nowrap experimental Flex. Numeric/percentage and logical-edge precedence are
-unchanged; other auto edges, shorthand, reverse/RTL/wrap and intrinsic measurement
-remain unsupported. The ordinary JavaScript build keeps its experimental-margin
-diagnostic.
+`FlexMargin = number | Percentage | "auto"` is exported for physical and logical
+edge fields: `marginLeft`, `marginRight`, `marginTop`, `marginBottom`,
+`marginStart` and `marginEnd`. Finite nowrap experimental Flex supports main-axis
+auto margins in row/column, forward/reverse and LTR/RTL. Left/right are row main
+edges; top/bottom are column main edges. Inline start/end map through the receiving
+direction (including a child Flex's explicit override) before main/cross
+admission. Logical edges override physical edges/shorthand; numeric zero can
+suppress a physical auto edge. Cross-axis, shorthand, wrapped and intrinsic auto
+margins remain unsupported. The ordinary build retains its experimental-margin
+diagnostic. Numeric/percentage margin behavior is unchanged.
 
 Auto edges contribute zero while flexible lengths resolve. After sizing, each
 auto slot receives an equal share of remaining positive main space and consumes
@@ -954,12 +958,16 @@ it before justification. Nonpositive free space gives auto edges zero and keeps
 existing alignment/overflow behavior. In200px, two40px items with the first item's
 left auto margin start120/160; right auto starts0/160; both auto start60/160.
 At260px these become180/220,0/220 and90/220. Flex growth consumes space first.
-The shifted border box remains the layout/focus/hit box; auto-only space is inert.
+Reversed/RTL main placement maps the same physical flags to before/after; columns
+apply the same rule vertically. The shifted border box remains the layout,
+focus and hit box; auto-only space is inert. Source paint/Tab order is unchanged.
 
 Rust owns a lazy arena scratch vector of auto flags. Allocation records and
 numeric margins are not rewritten, and placement never runs a second sizing
 solve. A separate flag revision invalidates the main-placement cache; toggling
-numeric0→auto→0 preserves solves, cross placement and native identities. Unused
+the fixed-size numeric0→auto→0 fixture preserves solves, cross placement and
+native identities. Unused
 auto scratch stays unallocated. Root/region disposal releases flags with their
 owner. Module validation rejects older v1 kernels before publication without
-instantiating a version probe; public entries remain import-time inert.
+instantiating a version probe; public entries remain import-time inert. Slice98
+uses the unchangedv2 kernel introduced in97.

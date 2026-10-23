@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice97 (finite physical main-axis auto margins), recorded below.
+Latest delivery is slice98 (finite nowrap main auto directions), recorded below.
+Slice97 is `a47dd931` (finite physical main-axis auto margins).
 Slice96 is `3548157d`; consolidation32 is `2cd27a12`.
 Slice95 is `69b187a6` (combined direction evidence).
 Slice94 is `196e8275` (final-width custom measurement).
@@ -47,9 +48,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slice97 is delivered below; the single next delivery is98, other finite nowrap main-axis auto directions. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–98 are delivered below; the single next delivery is99, wrapped per-line main-axis auto margins. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles210 records:165matches/45classified differences; click A/B/C targets.
+cycles220 records:175matches/45classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2373,16 +2374,50 @@ Scoped review of the changed native flag storage, region cache/ownership, v2 ABI
 and TypeScript precedence/admission found no material issue.
 Group97–99 consolidates only after99.
 
-## [NEXT] Finite nowrap main-axis auto directions (slice 98)
+## Delivered finite nowrap main auto directions (slice 98)
 
-Extend the existing auto-margin capability to finite row/column forward/reverse
-and LTR/RTL main-axis edges, including logical edges where they map to the main
-axis. Keep sizing before absorption, nonpositive alignment, receiver precedence,
-identity and teardown. Present the exact additive shared margin vocabulary,
-prove a focused failing public case, then add pinned native/public geometry and
-source/built/installed moved-target evidence. Wrapping and cross-axis auto margins
-remain separate unfinished exits; do not widen into them silently. No duplicate
-writer/reviewer or denominator changes.
+Existing `FlexMargin` widens physical top/bottom and logical start/end fields.
+Finite nowrap rows/columns support all four main directions and LTR/RTL; inline
+logical auto edges participate only when they map to the main axis. Cross-axis,
+shorthand and wrapped auto margins still reject explicitly. Receiver precedence,
+numeric/percentage geometry, sizing-before-absorption and nonpositive alignment
+remain unchanged. No new kernel/ABI or return contract.
+
+Three focused public tests first failed under97admission, then passed: eight
+physical direction cases, four logical row cases and a mounted row→column→RTL
+signal transition. Eight focused assertions/tests including revised negative
+shapes pass; focus is captured before geometry changes, pointer-induced focus
+changes are legitimate, keyed stamps/nodes persist, old points miss and new
+points hit. Ten pinned Yoga cases extend the contiguous auto family to17; every
+new native box matches public semantic geometry.
+
+Source5192/built5193 all17 auto cases match native geometry, stable keys and A/B
+hits, cleanup0/errors[]; built469inputs. Fresh installed17-case proof, all24
+prior direction cases, column/logical type consumers plus rejected shorthand,
+Bundler/NodeNext and per-controller cleanup pass with230inputs. Tarball SHA256
+`7e4da8c16b3501fd51cb778347244ca9b69314f6f8cb074343d816b20b6906a7`.
+Fresh full slice Chromium358pass/8skip(366), normal78pass/288skip(366).
+Types, changed-code lint, docs109RED, JSDoc, catalog and pinned provenance pass.
+Kernel67644bytes/v2/SHA and11Rust tests are reused unchanged from97, not claimed
+as a new native-unit run. Native corpus220=175matches+45classified.
+
+Fixed33 remains5complete/11experimental/8partial/8missing/1excluded; auto-margin
+stays partial and all seven release gates remain open. No aggregate Node24 or
+wall-clock performance claim. No baseline rewrite, extra writer or overlapping
+review. Group97–99 consolidates only after99; whole-codebase review stays at end.
+
+## [NEXT] Wrapped per-line main-axis auto margins (slice 99)
+
+Use each actual source-formed line's own auto slots after that line's sizing;
+keep numeric allocation records unchanged. Add a private wrapped-auto placement
+entry and reject old modules before publication. Prove first-line vs second-line
+free-space shares, a line with no auto slots retaining justification, owner
+resize/line merge with moved keyed focus/targets, reverse/RTL and wrap-reverse.
+Compare pinned native results honestly: Yoga3.2.1 counts an overflowing candidate's
+auto margins before breaking the line, so per-line Pibbl geometry needs a separate
+explicit classification and isolated evidence. Do not call those cases parity.
+Cross-axis/shorthand auto margins remain unfinished. Then consolidate97–99 before
+the next fixed-program gap. No duplicate writer/reviewer or denominator change.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

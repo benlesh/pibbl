@@ -125,7 +125,7 @@ export interface ResolvedBoxStyle {
   contentBox: LayoutBox;
 }
 
-/** Physical Flex margin value. Auto consumes remaining positive main space in experimental finite LTR row-nowrap Flex. See {@link FlexItemStyle}. */
+/** Flex edge margin value. Auto consumes remaining positive main space in experimental finite nowrap Flex. See {@link FlexItemStyle}. */
 export type FlexMargin = number | Percentage | 'auto';
 
 /**
@@ -142,17 +142,17 @@ export interface LayoutItemStyle extends PositioningStyle {
   /** Uniform physical margin in logical Canvas units or a percentage of allocated Flex content width. Finite negatives are allowed; specific edges override this value. Consumed by experimental Flex only. See {@link LayoutItemStyle}. */
   margin?: number | Percentage;
   /** Physical top margin overriding margin. See {@link LayoutItemStyle}. */
-  marginTop?: number | Percentage;
+  marginTop?: FlexMargin;
   /** Physical right margin overriding margin. See {@link LayoutItemStyle}. */
   marginRight?: FlexMargin;
   /** Physical bottom margin overriding margin. See {@link LayoutItemStyle}. */
-  marginBottom?: number | Percentage;
+  marginBottom?: FlexMargin;
   /** Physical left margin overriding margin. See {@link LayoutItemStyle}. */
   marginLeft?: FlexMargin;
   /** Inline-start margin overriding the corresponding physical edge and margin shorthand in experimental Flex. Signed percentages use allocated content width. See {@link LayoutItemStyle}. */
-  marginStart?: number | Percentage;
+  marginStart?: FlexMargin;
   /** Inline-end margin overriding the corresponding physical edge and margin shorthand in experimental Flex. See {@link LayoutItemStyle}. */
-  marginEnd?: number | Percentage;
+  marginEnd?: FlexMargin;
   /** This child's cross-axis or block-axis alignment override. See {@link LayoutItemStyle}. */
   alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
   /** This child's inline-axis alignment override. See {@link LayoutItemStyle}. */

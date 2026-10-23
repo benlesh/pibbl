@@ -902,6 +902,46 @@
       {
         "id": "auto-margin-left-justify-end",
         "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-main-row-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-row-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-row-reverse-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-row-reverse-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-column-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-column-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-column-reverse-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-column-reverse-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-logical-start-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-logical-end-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
       }
     ],
     "limit": "135 records:116 native matches and19 explicitly classified CSS allocation/safe-overflow/physical-margin differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios, allocated-owner percentage gaps/padding/cross bounds, nowrap/wrap/wrap-reverse physical margins and finite nested percentage owners. This does not establish general intrinsic, percentage or CSS parity."
@@ -1386,26 +1426,28 @@
       "id": "flex.auto-margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental finite LTR row-nowrap physical marginLeft/marginRight auto slots; zero during sizing, positive free space divided after sizing before justification; nonpositive free space keeps existing alignment",
+      "current": "experimental finite nowrap main-axis auto margins in row/column, forward/reverse and LTR/RTL; physical left/right/top/bottom plus row logical start/end; sizing precedes positive absorption and nonpositive space preserves alignment",
       "status": "partial",
-      "unresolvedPolicy": "The initial finite physical row-main contract is implemented; other main directions/RTL, logical/shorthand and cross-axis auto margins, wrapping and broader min/max combinations remain outstanding.",
+      "unresolvedPolicy": "All finite nowrap main directions and receiver-aware row logical edges are supported. Wrapped per-line, cross-axis/shorthand and broader opposing/minmax auto combinations remain outstanding.",
       "evidence": {
         "positive": [
           "left/right/both slots divide positive free space after flexible sizing and before justification",
           "growth consumes space before auto slots; nonpositive free space preserves center alignment",
           "numeric-to-auto-to-numeric toggles update main placement only without re-solving or recreating nodes",
-          "public FlexMargin type and editor declaration expose physical left/right auto; cross-edge auto remains a type error"
+          "public FlexMargin and editor declarations expose all six edge values; runtime accepts only main-axis auto and shorthand auto remains a type error",
+          "slice98: four main directions \u00d7 LTR/RTL physical auto, logical row start/end and exact source-order geometry; axis/direction signals preserve keyed focus"
         ],
         "negative": [
           "normal JavaScript rejects auto margin admission",
-          "column/reverse/RTL/wrapped auto shapes rejected explicitly",
+          "wrapped, cross-axis, column logical-inline and shorthand auto shapes rejected explicitly",
           "old v1 modules rejected before publication; root/sync imports remain inert",
           "native flag cardinality and NaN rejected without rewriting numeric margin inputs"
         ],
         "interaction": [
           "source/built seven-case semantic boxes, stable keyed stamps, moved A/B targets and zero disposal ownership",
           "fresh installed seven-case public geometry/targets, per-controller node/arena/cache cleanup and strict Bundler/NodeNext type consumers",
-          "public mounted resize preserves stamps; paint-only preserves solves and node identity"
+          "public mounted resize preserves stamps; paint-only preserves solves and node identity",
+          "slice98: seventeen exact native/source/built/installed auto cases; public row\u2192column\u2192RTL signal movement preserves focus/stamps/nodes, old target misses and new target hits"
         ],
         "yogaCases": [
           "auto-margin-left",
@@ -1414,12 +1456,21 @@
           "auto-margin-right-resized",
           "auto-margin-both",
           "auto-margin-both-resized",
-          "auto-margin-left-justify-end"
+          "auto-margin-left-justify-end",
+          "auto-main-row-ltr",
+          "auto-main-row-rtl",
+          "auto-main-row-reverse-ltr",
+          "auto-main-row-reverse-rtl",
+          "auto-main-column-ltr",
+          "auto-main-column-rtl",
+          "auto-main-column-reverse-ltr",
+          "auto-main-column-reverse-rtl",
+          "auto-logical-start-rtl",
+          "auto-logical-end-rtl"
         ],
         "missing": [
-          "other main directions and RTL",
           "wrapped per-line absorption",
-          "cross-axis and logical/shorthand auto margins",
+          "cross-axis and shorthand auto margins",
           "broader min/max and opposing margin interactions"
         ]
       },
@@ -1429,7 +1480,7 @@
         "tooling/layout-yoga-rehearsal/reference.json",
         "tooling/test-wasm-yoga-migration.mjs",
         "tooling/packed-layout-consumer.mjs",
-        "docs/design/layout-system-contract.md#experimental-physical-main-axis-auto-margins"
+        "docs/design/layout-system-contract.md#experimental-main-axis-auto-margins"
       ]
     },
     {

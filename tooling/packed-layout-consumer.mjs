@@ -95,9 +95,11 @@ try {
 import { createElement, Rectangle, Flex, definePrimitive, type FlexItemStyle, type FlexMargin, type BoxStyle, type IntrinsicAxisConstraints, type IntrinsicConstraints, type IntrinsicMeasureInput, type IntrinsicSizesResult, type SystemStyle } from '@pibbl/core';
 const autoMargin: FlexMargin = 'auto';
 export const autoItem = createElement(Rectangle, { style: { width: 40, height: 20, marginLeft: autoMargin, marginRight: 'auto' } });
-// @ts-expect-error Cross-axis auto margins are outside the current supported type surface.
-const autoCross: FlexItemStyle = { marginTop: 'auto' };
-void autoCross;
+// @ts-expect-error Auto shorthand remains outside the supported type surface.
+const autoShorthand: FlexItemStyle = { margin: 'auto' };
+void autoShorthand;
+export const autoColumn = createElement(Rectangle, { style: { width:20,height:40,marginTop:'auto',marginBottom:'auto' } });
+export const autoInline = createElement(Rectangle, { style: { width:40,height:20,marginStart:'auto',marginEnd:'auto' } });
 const box: BoxStyle = { boxSizing: 'border-box', width: '50%', height: 30, padding: {left: '10%', top: '5%', right: 4, bottom: 0}, paddingStart: 0, paddingEnd: '15%', borderWidth: { left: 2, right: 4 }, borderStartWidth: 0, borderEndWidth: 30 };
 export const sized = createElement(Rectangle, { style: { ...box, width: 100, height: 30 } });
 type IntrinsicStyle = SystemStyle & { height?: number; flexShrink?: number; minWidth?: number };
@@ -274,7 +276,7 @@ for(const fixture of directionMatrixCases){
 }
 receipt.directionMatrix=true;
 const autoMarginCases = ${JSON.stringify(autoMarginFixtures)};
-if(autoMarginCases.length!==7)throw Error('installed auto-margin corpus');
+if(autoMarginCases.length!==17)throw Error('installed auto-margin corpus');
 for(const fixture of autoMarginCases){
  const autoCanvas=document.createElement('canvas');autoCanvas.width=fixture.width;autoCanvas.height=fixture.height;autoCanvas.style.cssText='width:'+fixture.width+'px;height:'+fixture.height+'px';document.body.append(autoCanvas);
  const autoBaseline=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();let autoRootTransform=new DOMMatrix();const autoHits:string[]=[];const autoBoxes=new Map<string,{x:number;y:number;width:number;height:number}>();

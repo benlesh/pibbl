@@ -707,23 +707,32 @@ function resolveFlexPlacements(
     assertSupportedChildPosition('Flex', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
     const allMargin = allocatedMargin(normalized.margin, 'margin', child, container);
-    const marginTop = allocatedMargin(normalized.marginTop === undefined ? allMargin : normalized.marginTop, 'marginTop', child, container);
     const marginDirection = layoutChild.type === Flex ? normalized.layoutDirection ?? options.layoutDirection : options.layoutDirection;
     const logicalLeft = marginDirection === 'rtl' ? normalized.marginEnd : normalized.marginStart;
     const logicalRight = marginDirection === 'rtl' ? normalized.marginStart : normalized.marginEnd;
+    const marginLeftProperty = logicalLeft !== undefined ? marginDirection === 'rtl' ? 'marginEnd' : 'marginStart' : 'marginLeft';
+    const marginRightProperty = logicalRight !== undefined ? marginDirection === 'rtl' ? 'marginStart' : 'marginEnd' : 'marginRight';
+    const marginTopValue = normalized.marginTop === undefined ? allMargin : normalized.marginTop;
+    const marginBottomValue = normalized.marginBottom === undefined ? allMargin : normalized.marginBottom;
     const marginRightValue = logicalRight !== undefined ? logicalRight : normalized.marginRight === undefined ? allMargin : normalized.marginRight;
     const marginLeftValue = logicalLeft !== undefined ? logicalLeft : normalized.marginLeft === undefined ? allMargin : normalized.marginLeft;
-    const autoMainBefore = marginLeftValue === 'auto';
-    const autoMainAfter = marginRightValue === 'auto';
+    const autoTop = marginTopValue === 'auto', autoRight = marginRightValue === 'auto';
+    const autoBottom = marginBottomValue === 'auto', autoLeft = marginLeftValue === 'auto';
+    if (row ? autoTop || autoBottom : autoLeft || autoRight) {
+      throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins are not supported');
+    }
+    const autoMainBefore = row ? reverse ? autoRight : autoLeft : reverse ? autoBottom : autoTop;
+    const autoMainAfter = row ? reverse ? autoLeft : autoRight : reverse ? autoTop : autoBottom;
     if (autoMainBefore || autoMainAfter) {
-      if (!experimentalLayout || options.flexDirection !== 'row' || options.flexWrap !== 'nowrap' || options.layoutDirection !== 'ltr' || (logicalLeft as unknown) === 'auto' || (logicalRight as unknown) === 'auto') {
-        throw childDiagnostic(child, autoMainBefore ? 'marginLeft' : 'marginRight', 'auto', container, 'auto margins require a finite LTR row-nowrap Flex physical main edge');
+      if (options.flexWrap !== 'nowrap') {
+        throw childDiagnostic(child, row ? autoLeft ? marginLeftProperty : marginRightProperty : autoTop ? 'marginTop' : 'marginBottom', 'auto', container, 'auto main margins require a finite nowrap Flex allocation');
       }
       hasAutoMainMargins = true;
     }
-    const marginRight = allocatedMargin(autoMainAfter ? 0 : marginRightValue, logicalRight !== undefined ? marginDirection === 'rtl' ? 'marginStart' : 'marginEnd' : 'marginRight', child, container);
-    const marginBottom = allocatedMargin(normalized.marginBottom === undefined ? allMargin : normalized.marginBottom, 'marginBottom', child, container);
-    const marginLeft = allocatedMargin(autoMainBefore ? 0 : marginLeftValue, logicalLeft !== undefined ? marginDirection === 'rtl' ? 'marginEnd' : 'marginStart' : 'marginLeft', child, container);
+    const marginTop = allocatedMargin(autoTop ? 0 : marginTopValue, 'marginTop', child, container);
+    const marginRight = allocatedMargin(autoRight ? 0 : marginRightValue, marginRightProperty, child, container);
+    const marginBottom = allocatedMargin(autoBottom ? 0 : marginBottomValue, 'marginBottom', child, container);
+    const marginLeft = allocatedMargin(autoLeft ? 0 : marginLeftValue, marginLeftProperty, child, container);
     const marginMainBefore = row ? reverse ? marginRight : marginLeft : reverse ? marginBottom : marginTop;
     const marginMainAfter = row ? reverse ? marginLeft : marginRight : reverse ? marginTop : marginBottom;
     const marginCrossBefore = row ? wrapReverse ? marginBottom : marginTop : wrapReverse ? marginRight : marginLeft;

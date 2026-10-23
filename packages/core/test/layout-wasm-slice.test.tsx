@@ -3557,10 +3557,95 @@ it.runIf(experimentalLayout)('invalidates only main placement when a numeric edg
   expect(disposed.activeNodes).toBe(baseline.activeNodes);expect(disposed.activeArenas).toBe(baseline.activeArenas);expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
+it.runIf(experimentalLayout)('allocates physical auto main margins across finite nowrap axes, reversals and directions', () => {
+  const child = (style: BoxStyle & FlexItemStyle = {}) => createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, ...style } });
+  const cases = [
+    { direction: 'row', layoutDirection: 'ltr', style: { marginLeft: 'auto' }, expected: [{ x: 120, y: 0 }, { x: 160, y: 0 }] },
+    { direction: 'row', layoutDirection: 'rtl', style: { marginLeft: 'auto' }, expected: [{ x: 160, y: 0 }, { x: 0, y: 0 }] },
+    { direction: 'row-reverse', layoutDirection: 'ltr', style: { marginLeft: 'auto' }, expected: [{ x: 160, y: 0 }, { x: 0, y: 0 }] },
+    { direction: 'row-reverse', layoutDirection: 'rtl', style: { marginLeft: 'auto' }, expected: [{ x: 120, y: 0 }, { x: 160, y: 0 }] },
+    { direction: 'column', layoutDirection: 'ltr', style: { marginTop: 'auto' }, expected: [{ x: 0, y: 120 }, { x: 0, y: 160 }] },
+    { direction: 'column', layoutDirection: 'rtl', style: { marginTop: 'auto' }, expected: [{ x: 60, y: 120 }, { x: 60, y: 160 }] },
+    { direction: 'column-reverse', layoutDirection: 'ltr', style: { marginTop: 'auto' }, expected: [{ x: 0, y: 160 }, { x: 0, y: 0 }] },
+    { direction: 'column-reverse', layoutDirection: 'rtl', style: { marginTop: 'auto' }, expected: [{ x: 60, y: 160 }, { x: 60, y: 0 }] },
+  ] as const;
+  for (const testCase of cases) {
+    const column = testCase.direction.startsWith('column');
+    const dimensions = column ? {width:20,height:40} : {width:40,height:20};
+    const boxes = layoutFlex({ x: 0, y: 0, width: column ? 80 : 200, height: column ? 200 : 80 }, [child({...dimensions,...testCase.style}), child(dimensions)], { flexDirection: testCase.direction, layoutDirection: testCase.layoutDirection, alignItems: 'flex-start' }, measurement);
+    expect(boxes.map(({ x, y }) => ({ x, y })), `${testCase.direction}/${testCase.layoutDirection}`).toEqual(testCase.expected);
+  }
+});
+
+it.runIf(experimentalLayout)('maps logical inline auto margins across finite row directions', () => {
+  const child = (style: BoxStyle & FlexItemStyle = {}) => createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, flexShrink: 0, ...style } });
+  const cases = [
+    { layoutDirection: 'ltr', style: { marginStart: 'auto' }, expected: [120, 160] },
+    { layoutDirection: 'rtl', style: { marginStart: 'auto' }, expected: [40, 0] },
+    { layoutDirection: 'ltr', style: { marginEnd: 'auto' }, expected: [0, 160] },
+    { layoutDirection: 'rtl', style: { marginEnd: 'auto' }, expected: [160, 0] },
+  ] as const;
+  for (const testCase of cases) {
+    const boxes = layoutFlex({ x: 0, y: 0, width: 200, height: 20 }, [child(testCase.style), child()], { layoutDirection: testCase.layoutDirection }, measurement);
+    expect(boxes.map(box => box.x), `${testCase.layoutDirection}/${Object.keys(testCase.style)[0]}`).toEqual(testCase.expected);
+  }
+});
+
+it.runIf(experimentalLayout)('keeps keyed focus and pointer targets stable while auto-margin axis and direction signals move them', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const axis = signal<'row' | 'column'>('row');
+  const direction = signal<'ltr' | 'rtl'>('ltr');
+  const focused: string[] = [], hits: string[] = [];
+  const boxes = new Map<string, { x: number; y: number; stamp: number }>();
+  let serial = 0;
+  function Card({ name, style: _style }: { name: string; style: BoxStyle & FlexItemStyle }) {
+    const stamp = useConst(() => ++serial);
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    boxes.set(name, { x: transform.e, y: transform.f, stamp });
+    return <Rectangle keyboardFocusable onFocus={() => focused.push(name)} onClick={() => hits.push(name)} style={{ width: box.width, height: box.height, fill: name === 'A' ? '#19375b' : '#a63758' }} />;
+  }
+  function Scene() {
+    const row = axis.get() === 'row';
+    return <FocusManagement><Flex style={{ width: 200, height: 200, flexDirection: row ? 'row' : 'column', layoutDirection: direction.get(), alignItems: 'flex-start' }}>
+      <Card key="A" name="A" style={row ? { width: 40, height: 20, minWidth: 0, flexShrink: 0, marginLeft: 'auto' } : { width: 20, height: 40, minHeight: 0, flexShrink: 0, marginTop: 'auto' }} />
+      <Card key="B" name="B" style={{ width: row ? 40 : 20, height: row ? 20 : 40, minWidth: 0, minHeight: 0, flexShrink: 0 }} />
+    </Flex></FocusManagement>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 200; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  const initial = snapshotWasmLayoutDiagnostics();
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['A', 'B']);
+  axis.set('column'); await nextFrame();
+  expect(boxes.get('A')).toEqual({ x: 0, y: 120, stamp: 1 });
+  expect(boxes.get('B')).toEqual({ x: 0, y: 160, stamp: 2 });
+  expect(focused).toEqual(['A', 'B']);
+  clickCanvas(canvas, 130, 10); await nextFrame(); expect(hits).toEqual([]);
+  clickCanvas(canvas, 10, 130); await nextFrame(); expect(hits).toEqual(['A']);
+  const beforeDirection=focused.slice();
+  direction.set('rtl'); axis.set('row'); await nextFrame();
+  expect(boxes.get('A')).toEqual({ x: 160, y: 0, stamp: 1 });
+  expect(boxes.get('B')).toEqual({ x: 0, y: 0, stamp: 2 });
+  expect(focused).toEqual(beforeDirection);
+  clickCanvas(canvas, 10, 130); await nextFrame(); expect(hits).toEqual(['A']);
+  clickCanvas(canvas, 10, 10); await nextFrame(); expect(hits).toEqual(['A', 'B']);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+});
+
 it.runIf(experimentalLayout).each([
-  {flexDirection:'column' as const}, {flexDirection:'row-reverse' as const}, {flexWrap:'wrap' as const}, {layoutDirection:'rtl' as const},
-])('rejects auto main margins outside the finite LTR row-nowrap boundary %j', options => {
-  expect(()=>layoutFlex({x:0,y:0,width:200,height:80},[createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,marginLeft:'auto'}})],options,measurement)).toThrow(/finite LTR row-nowrap/);
+  { label: 'wrapped main axis', options: { flexWrap: 'wrap' as const }, style: { marginLeft: 'auto' } },
+  { label: 'row cross axis', options: {}, style: { marginTop: 'auto' } },
+  { label: 'column cross axis', options: { flexDirection: 'column' as const }, style: { marginLeft: 'auto' } },
+  { label: 'column logical inline edge', options: { flexDirection: 'column' as const }, style: { marginStart: 'auto' } },
+  { label: 'shorthand', options: {}, style: { margin: 'auto' as never } },
+])('keeps unsupported auto-margin shapes explicit: $label', ({ options, style }) => {
+  expect(() => layoutFlex({ x: 0, y: 0, width: 200, height: 80 }, [createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, ...style } as RectStyle })], options, measurement)).toThrow(/auto.*margin/i);
 });
 
 it.runIf(!experimentalLayout)('keeps ordinary JavaScript auto-margin admission explicit', () => {

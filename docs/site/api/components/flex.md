@@ -207,7 +207,10 @@ Finite measurement receives that width as both horizontal constraint bounds;
 layout and pointer targets use the resulting height in the same publication.
 Declared heights and intrinsic-only leaves keep their existing behavior.
 
-Experimental finite LTR row-nowrap items may use
-[`FlexMargin`](#/api/types/layout#flexmargin) on `marginLeft`/`marginRight`.
-Auto edges divide positive free space after sizing and before justification;
-with no positive space they remain zero. Other auto-margin shapes are deferred.
+Experimental finite nowrap items may use
+[`FlexMargin`](#/api/types/layout#flexmargin) on main-axis edges in any supported
+row/column direction, including reverse/RTL. Physical left/right apply to rows;
+top/bottom apply to columns. Logical start/end support row main edges after
+receiver-direction mapping. Auto edges divide positive free space after sizing
+and before justification; with no positive space they remain zero. Cross-axis,
+shorthand and wrapped auto margins remain deferred.
