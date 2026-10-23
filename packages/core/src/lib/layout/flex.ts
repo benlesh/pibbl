@@ -408,14 +408,24 @@ function measureFlex(
   input: MeasureInput<FlexProps, FlexStyle>,
 ): MeasureResult {
   const children = prepareLayoutChildren(input.props.children, 'Flex');
-  const widthDefinite = input.style.width !== undefined &&
-    input.style.width !== 'auto';
+  // Exact caller availability is a definite content width. A finite maximum
+  // alone remains an availability limit, never a percentage containing size.
+  const automaticWidth = input.style.width === undefined || input.style.width === 'auto';
+  const exactRowWidth = experimentalLayout && automaticWidth &&
+    (input.style.flexDirection ?? 'row') === 'row' &&
+    (input.style.flexWrap ?? 'nowrap') === 'nowrap' &&
+    (input.style.layoutDirection ?? getLayoutDirection()) === 'ltr' &&
+    input.constraints.minWidth === input.constraints.maxWidth &&
+    Number.isFinite(input.constraints.maxWidth) && input.constraints.maxWidth >= 0 ?
+    input.constraints.maxWidth : undefined;
+  const measuredWidth = exactRowWidth ?? input.style.width;
+  const widthDefinite = measuredWidth !== undefined && measuredWidth !== 'auto';
   const heightDefinite = input.style.height !== undefined &&
     input.style.height !== 'auto';
   if (widthDefinite && heightDefinite) {
     return { status: 'measured', size: {
       width: resolveMeasuredContainerLength(
-        input.style.width!,
+        measuredWidth!,
         input.constraints.maxWidth,
         'width',
         input.constraints,
@@ -442,7 +452,7 @@ function measureFlex(
   };
   const options = normalizeFlexOptions(input.style, diagnosticBox);
   if (wrappedIntrinsic && !(experimentalLayout && options.flexDirection === 'row' && options.flexWrap === 'wrap' && options.layoutDirection === 'ltr' && typeof input.style.width === 'number' && !heightDefinite)) return unsupportedIntrinsic('wrapped intrinsic height requires a finite numeric row width, LTR wrap and automatic height');
-  const wrapWidth = wrappedIntrinsic ? resolveMeasuredContainerLength(input.style.width!, input.constraints.maxWidth, 'width', input.constraints) : 0;
+  const wrapWidth = wrappedIntrinsic ? resolveMeasuredContainerLength(measuredWidth!, input.constraints.maxWidth, 'width', input.constraints) : 0;
   const mainGap = row ? options.columnGap : options.rowGap;
   let lineMain = 0, lineCross = 0, lineItems = 0, wrappedHeight = 0;
   let intrinsicMain = 0;
@@ -470,7 +480,7 @@ function measureFlex(
       (child.type === Text || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap');
     if (settledColumnChild && (isPercentage(style.width) || isPercentage(style.minWidth) || isPercentage(style.maxWidth))) {
       if (isPercentage(style.height) || isPercentage(style.flexBasis) || isPercentage(style.minHeight) || isPercentage(style.maxHeight)) return unsupportedIntrinsic('does not support percentage child main sizes or bounds');
-      const reference = resolveMeasuredContainerLength(input.style.width!, input.constraints.maxWidth, 'width', input.constraints);
+      const reference = resolveMeasuredContainerLength(measuredWidth!, input.constraints.maxWidth, 'width', input.constraints);
       const context = childContext(child, diagnosticBox);
       // Resolve only against an explicit owner, before converting outer box inputs.
       // Keep numeric hot paths allocation-free and leave indefinite owners unsupported.
@@ -479,6 +489,19 @@ function measureFlex(
         minWidth: isPercentage(style.minWidth) ? resolveLength(style.minWidth!, reference, 'minWidth', context) : style.minWidth,
         maxWidth: isPercentage(style.maxWidth) ? resolveLength(style.maxWidth!, reference, 'maxWidth', context) : style.maxWidth,
       };
+    }
+    if (experimentalLayout && automaticWidth && options.flexDirection === 'row' &&
+      options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' &&
+      (isPercentage(style.minWidth) || isPercentage(style.maxWidth))) {
+      if (exactRowWidth === undefined) return unsupportedIntrinsic('requires an exact finite row width to resolve percentage main bounds');
+      const context = childContext(child, diagnosticBox);
+      style = { ...style,
+        minWidth: isPercentage(style.minWidth) ? resolveLength(style.minWidth!, exactRowWidth, 'minWidth', context) : style.minWidth,
+        maxWidth: isPercentage(style.maxWidth) ? resolveLength(style.maxWidth!, exactRowWidth, 'maxWidth', context) : style.maxWidth,
+      };
+      if (typeof style.minWidth === 'number' && typeof style.maxWidth === 'number' && style.minWidth > style.maxWidth) {
+        throw childDiagnostic(child, 'minWidth', style.minWidth, diagnosticBox, 'minimum must not exceed maximum');
+      }
     }
     if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: diagnosticBox.width, height: diagnosticBox.height, mainAxis: row ? 'width' : 'height', context: childContext(child, diagnosticBox) });
     rejectUnsupportedItemFields(child, style, diagnosticBox);
@@ -549,7 +572,7 @@ function measureFlex(
       if (automaticWidth && effectiveAlignment(normalizeItemAlignment(style.alignSelf, child, diagnosticBox), options.alignItems) !== 'stretch') {
         return unsupportedIntrinsic('requires stretch or a definite child width in an auto-height column');
       }
-      const availableWidth = resolveMeasuredContainerLength(input.style.width!, input.constraints.maxWidth, 'width', input.constraints);
+      const availableWidth = resolveMeasuredContainerLength(measuredWidth!, input.constraints.maxWidth, 'width', input.constraints);
       const minWidth = intrinsicOptionalNumber(style.minWidth, 0, 'minWidth');
       const maxWidth = intrinsicOptionalNumber(style.maxWidth, Number.POSITIVE_INFINITY, 'maxWidth');
       if (minWidth > maxWidth) throw childDiagnostic(child, 'minWidth', minWidth, diagnosticBox, 'minimum must not exceed maximum');
@@ -617,7 +640,7 @@ function measureFlex(
   intrinsicMain = Math.max(0, intrinsicMain + Math.max(0, count - 1) * mainGap);
   return { status: 'measured', size: {
     width: widthDefinite ? resolveMeasuredContainerLength(
-      input.style.width!,
+      measuredWidth!,
       input.constraints.maxWidth,
       'width',
       input.constraints,

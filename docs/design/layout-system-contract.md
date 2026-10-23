@@ -1201,6 +1201,34 @@ bounds, aspect ratio, responsive queries, unpaired or opaque providers retain
 existing diagnostics outside their separately documented admissions. Percentage
 padding retains the existing unsupported finite-measurement diagnostic.
 
+### Experimental exact-width row measurement
+
+The existing `measureElement` operation and nested `MeasureInput.measureElement`
+accept a definite row width from equal finite, nonnegative `minWidth` and
+`maxWidth` constraints, including zero. This bounded experimental admission is
+for an omitted/automatic-width LTR `row`, `nowrap` Flex. Its numeric declared-main,
+declared-cross children can use percentage `minWidth` and `maxWidth`, resolved
+once against that exact width before box conversion and contribution clamping.
+The result retains the caller's exact width and the measured natural cross size.
+Resolved contradictory bounds diagnose before provider evaluation. Fixed declared
+child geometry does not invoke a child measurement callback.
+
+A maximum-only limit or unbounded availability never supplies a percentage basis.
+When percentage main bounds need it, those calls return an unsupported result
+requiring an exact finite row width. Existing diagnostics remain for percentage
+main dimensions/basis, percentage gaps/padding/margins, grow, wrapping/reversal/RTL,
+automatic child cross size and cyclic/indefinite owners outside documented paths.
+No new public signature, measurement vocabulary, resource owner, cache or fixed
+point is introduced. Intrinsic-pair heights retain their width-specific meaning.
+
+The public intrinsic-provider lesson composes the existing finite column provider
+with a measured row. The column delivers exact width80→40; the nested row omits
+its own width and measures against that exact constraint. Its first40px item is
+capped at25%, so render allocation becomes20→10 beside a fixed20px target. The
+same supported Flex composition renders the measured result. Measurement-only
+callbacks remain pure and owned by the existing layout region; sibling paint
+reuses the constrained result and teardown releases its dependencies.
+
 ### Experimental finite wrapped-row intrinsic height
 
 A Flex with a finite numeric content width, `flexDirection: "row"`, LTR

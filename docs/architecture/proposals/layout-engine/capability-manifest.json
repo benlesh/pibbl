@@ -1942,7 +1942,10 @@
         "tooling/layout-yoga-rehearsal/reference.json",
         "packages/core/test/layout-wasm-slice.test.tsx",
         "tooling/test-wasm-yoga-migration.mjs",
-        "tooling/packed-layout-consumer.mjs"
+        "tooling/packed-layout-consumer.mjs",
+        "packages/core/test/layout-exact-row-measurement.test.tsx",
+        "packages/scenarios/src/learning/layout/wasm-flex-intrinsic-primitive.example.tsx",
+        "tooling/test-wasm-intrinsic-primitive.mjs"
       ],
       "evidence": {
         "positive": [
@@ -1957,13 +1960,15 @@
           "Decorated column-reverse definite width60/maxWidth25% and 100%-width children resolve25\u219240 from content cross100\u2192160",
           "Decorated column-reverse definite width20/minWidth60% gives nested width60\u219296 and C x94\u2192130 from content cross100\u2192160",
           "Decorated row-reverse maxWidth25% under content width100→140 freezes A at25→35 while column-reverse minHeight70% under content height100→140 floors A70→98 with negative free space",
-          "Symmetric decorated row-reverse minWidth70% floors A70→98 and column-reverse maxHeight25% caps A25→35 across content main100→140; both complementary sibling extents match pinned native output"
+          "Symmetric decorated row-reverse minWidth70% floors A70→98 and column-reverse maxHeight25% caps A25→35 across content main100→140; both complementary sibling extents match pinned native output",
+          "Omitted-width LTR nowrap row measurement resolves direct percentage main bounds from finite equal min/max width constraints, including exact zero, and preserves natural cross size"
         ],
         "negative": [
           "opposing limits rejection",
           "negative/nonfinite/malformed percentages rejected",
           "resolved opposing percent bounds rejected",
-          "percentage-dependent intrinsic measurement remains unsupported without resource allocation"
+          "percentage-dependent intrinsic measurement remains unsupported without resource allocation",
+          "Maximum-only and unbounded row availability cannot supply a percentage main-bound basis; conflicting resolved bounds diagnose before provider evaluation"
         ],
         "interaction": [
           "owner resize recomputes percent limits and moves hit targets in the same frame",
@@ -1974,7 +1979,8 @@
           "Expanded leaf extent admits a formerly empty point, preserves keys/main solves/lines/nodes, and performs zero pure measurements",
           "Column leaf expansion admits formerly empty52,136; width-only updates preserve keys/main solves/lines, and paint uses zero pure measures",
           "Point100,136 transfers from C to expanded A1 while new C remains targetable; keys/main solves/lines reuse, zero paint measurement",
-          "Source/built four-case replay and installed public mounts verify exact native world boxes, formerly empty point transfers to B, stable keys/nodes, paint solve reuse and exact teardown"
+          "Source/built four-case replay and installed public mounts verify exact native world boxes, formerly empty point transfers to B, stable keys/nodes, paint solve reuse and exact teardown",
+          "Paired provider composes nested exact-width measurement with rendered row: owner80→40 caps A20→10, moves B hit target, preserves keys and paint reuse, and disposes measurement ownership"
         ],
         "yogaCases": [
           "cap",
@@ -2016,7 +2022,9 @@
           "decorated-main-cap-column-reverse",
           "decorated-main-cap-column-reverse-resized"
         ],
-        "missing": ["indefinite owner policy and explicit measure modes"]
+        "missing": [
+          "column exact-availability main-bound measurement and remaining indefinite-owner policy beyond the bounded exact row admission"
+        ]
       }
     },
     {

@@ -20,10 +20,11 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest evidence delivery is slice151 (symmetric decorated reverse main bounds).
+Latest runtime delivery is slice152 (exact caller-width row measurement).
+Slice151 is `58dc7783` (symmetric decorated reverse main bounds).
 Slice150 is `f592b00c` (decorated reverse main percentage bounds).
 Consolidation50 is `a88ea6c4` for148–150.
-Latest runtime delivery is slice149 `bc74da58` (bounded column provider automatic minimum).
+Slice149 is `bc74da58` (bounded column provider automatic minimum).
 Slice148 is `91b36dca` (reverse composition capability evidence).
 Slice147 is `f6e45350` (logical absolute insets).
 Consolidation49 is `67428b3b` for145–147.
@@ -4519,14 +4520,53 @@ mutation probes. `flex.min-max` stays partial only for the separate indefinite-o
 and explicit-measure-mode policy. Fixed ledger9/11/6/6/1 and all7 release gates
 remain unchanged; no aggregate trust claim.
 
-## [NEXT] Indefinite-owner min/max contract (152)
+## Slice152 delivered: exact caller-width row measurement
 
-Audit the accepted indefinite-owner/explicit-measure-mode exit against existing
-public constraints, paired providers and percentage-cycle rules. State the
-smallest observable behavior and any material policy choice before implementation;
-reuse existing APIs where sufficient. Do not interpret width-paired intrinsic
-heights as axis-independent minima or silently solve cyclic percentages by fixed
-points/zero substitution. The broader intrinsic keyword capability stays separate.
+The existing public `measureElement(element, Constraints, service)` and nested
+measurement callback now recognize a finite equal minWidth/maxWidth as a definite
+content width for omitted/automatic-width LTR nowrap rows. Direct numeric-main,
+declared-cross contributions may resolve percentage minWidth/maxWidth against it;
+maximum-only and unbounded availability remain unsupported when those bounds need
+a basis. Zero is exact; conflicting resolved bounds diagnose before callbacks.
+No new signature, intrinsic-height interpretation, cache or fixed point was added.
+Other intrinsic restrictions remain unchanged, including grow and percentage
+main sizes/basis, gaps/padding/margins outside their separate admissions.
+
+The public `layout-exact-row-measurement.test.tsx` imports supported package APIs
+and failed before production edits on the old percentage-bounds rejection. The
+completed exact/at-most/unbounded/contradictory/zero proof and existing Flex unit
+suite passed under Node24.15/Chromium:41 passed/1 skipped across2 files (42).
+Normal mode40 passed/2 skipped (42). Pure definite child geometry never invokes
+its measure callback. No Node26 result is substituted for these focused tests.
+
+The existing intrinsic-provider lesson now composes an exact-width finite column
+provider with an omitted-width measured row. Owner80→40 caps A20→10 alongside a
+fixed20px B; semantic geometry/stamps precede transformed pixel and moved-target
+assertions. The geometry inspector and private component definitions belong to
+one example mount. Source:
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-intrinsic-primitive`;
+built5193 same route. No new controls or public lesson were added.
+
+Fresh Node26.9/Chromium source/built drivers passed exact-row plus prior column
+minimum/final-width checks,469 built inputs, cleanup `[0,0,0]`, no errors. The
+Node24 installed tarball passed strict Bundler/NodeNext/runtime,245 dist inputs,
+`exactRowMeasurementBounds=true`, SHA256
+`64f4f8c68b7b6f4c2af412a451dba4e4c5cab1d2c5f0eec4180af55f334fb8e2`.
+Typecheck, changed-code lint,170-lesson catalog and documentation checks passed
+(109 RED probes). Scoped review was clean and supplied the exact-zero boundary.
+The native717-record corpus is unchanged; no new native parity or aggregate trust
+claim. Fixed ledger9/11/6/6/1 and all7 release gates remain unchanged.
+
+## [NEXT] Exact caller-height column measurement (153)
+
+Complete the symmetric acyclic constraint admission through the same public API:
+a finite equal minHeight/maxHeight supplies the definite main reference for an
+omitted/automatic-height LTR nowrap column with numeric-main, declared-cross
+contributions and percentage minHeight/maxHeight. Test exact, zero, maximum-only,
+unbounded and conflicting bounds before production changes; demonstrate one
+public composition and installed receipt. Do not reinterpret width-paired
+intrinsic heights or silently define cyclic percentage behavior. Consolidation51
+follows151–153, retaining broader indefinite-owner policy as an explicit exit.
 
 ### Finite positioning exit matrix after134
 

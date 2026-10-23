@@ -5,6 +5,7 @@ const base=process.argv[2]??'http://127.0.0.1:5192';
 const built=process.argv.includes('--built');
 const finalWidth=process.argv.includes('--final-width');
 const columnMinimum=process.argv.includes('--column-minimum');
+const exactRowMeasurement=process.argv.includes('--exact-row-measurement');
 const browser=await chromium.launch({headless:true});
 try {
   const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];
@@ -12,6 +13,7 @@ try {
   await page.goto(`${base}/#/examples/layout/wasm-flex-intrinsic-primitive`);
   const host=page.locator('iframe[srcdoc]');await host.waitFor({state:'attached'});await host.scrollIntoViewIfNeeded();
   const frame=page.frameLocator('iframe[srcdoc]');await frame.locator('pre').waitFor();
+  const sandbox=page.frames().find(value=>value.url()==='about:srcdoc');
   const text=async()=>frame.locator('pre').innerText();
   const value=async(label)=>{
     const match=(await text()).match(new RegExp(`${label}: (\\d+)`));
@@ -19,13 +21,41 @@ try {
     return Number(match[1]);
   };
   const state=async()=>({
-    stamp:await value('stamp'),hits:await value('follower hits'),columnHits:await value('column follower hits'),providerCalls:await value('provider calls'),columnCalls:await value('column measure calls'),measuredLeaves:await value('measuredLeaves'),
+    stamp:await value('stamp'),hits:await value('follower hits'),columnHits:await value('column follower hits'),exactRowHits:await value('exact row hits'),exactRowCalls:await value('exact row measure calls'),providerCalls:await value('provider calls'),columnCalls:await value('column measure calls'),measuredLeaves:await value('measuredLeaves'),
   });
   const click=async(x,y)=>{
     const bounds=await frame.locator('canvas').boundingBox(),scale=Math.min(bounds.width/760,bounds.height/360);
     await frame.locator('canvas').click({position:{x:(bounds.width-760*scale)/2+x*scale,y:(bounds.height-360*scale)/2+y*scale}});
     await page.waitForTimeout(240);
   };
+  const exactGeometry=async()=>JSON.parse((await text()).split('exact row state: ')[1]);
+  const pixel=async(x,y)=>{const {basis}=await exactGeometry();return sandbox.evaluate(({x,y,basis})=>{
+    const px=Math.floor(basis.a*(x-72)+basis.c*(y-288)+basis.e),py=Math.floor(basis.b*(x-72)+basis.d*(y-288)+basis.f);
+    return Array.from(document.querySelector('canvas').getContext('2d').getImageData(px,py,1,1).data);
+  },{x,y,basis});};
+  if(exactRowMeasurement){
+    await frame.locator('pre').filter({hasText:/exact row measure calls: [1-9]/}).waitFor();
+    const exactInitial=await state();
+    assert.ok(exactInitial.exactRowCalls>0,'exact finite owner must measure the percentage-capped row');
+    const initialGeometry=await exactGeometry();
+    assert.deepEqual(initialGeometry.boxes.A,{x:0,y:0,width:20,height:20,stamp:initialGeometry.boxes.A.stamp});
+    assert.deepEqual(initialGeometry.boxes.B,{x:20,y:0,width:20,height:20,stamp:initialGeometry.boxes.B.stamp});
+    // owner80: the cap is20px and the fixed sibling occupies x92..112.
+    assert.deepEqual(await pixel(80,298),[110,62,121,255]);assert.deepEqual(await pixel(108,298),[66,107,97,255]);
+    await click(108,298);assert.equal((await state()).exactRowHits,1);
+    await click(284,114);const exactNarrow=await state();
+    assert.ok(exactNarrow.exactRowCalls>exactInitial.exactRowCalls,'owner resize must remeasure the exact percentage row');
+    const narrowGeometry=await exactGeometry();
+    assert.deepEqual(narrowGeometry.boxes.A,{x:0,y:0,width:10,height:20,stamp:initialGeometry.boxes.A.stamp});
+    assert.deepEqual(narrowGeometry.boxes.B,{x:10,y:0,width:20,height:20,stamp:initialGeometry.boxes.B.stamp});
+    // owner40: the cap is10px and the same fixed sibling transfers to x82..102.
+    assert.deepEqual(await pixel(80,298),[110,62,121,255]);assert.deepEqual(await pixel(90,298),[66,107,97,255]);
+    await click(108,298);assert.equal((await state()).exactRowHits,1);await click(90,298);assert.equal((await state()).exactRowHits,2);
+    const exactPaint=await state();await click(636,114);const exactPainted=await state();
+    assert.equal(exactPainted.exactRowCalls,exactPaint.exactRowCalls,'sibling paint must reuse the exact percentage-row measurement');
+    assert.equal(exactPainted.measuredLeaves,exactPaint.measuredLeaves);
+    await click(636,114);await click(284,114);
+  }
   if(columnMinimum){
     const columnInitial=await state();assert.equal(columnInitial.stamp,1);assert.ok(columnInitial.columnCalls>0,'initial exact-width column must query the paired provider');
     // min40 protects the 40px natural height, so the follower starts at y290.
@@ -66,9 +96,9 @@ try {
     await click(636,268);assert.equal(await value('adaptive finite calls'),calls);assert.equal(await value('measuredLeaves'),measures);
     await click(460,268);await click(410,194);assert.equal(await value('adaptive hits'),1);
   }
-  const sandbox=page.frames().find(value=>value.url()==='about:srcdoc');const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
+  const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
   const disposed=await sandbox.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();});
   assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements],[0,0,0]);assert.deepEqual(errors,[]);
-  console.warn(JSON.stringify({base,finalWidth,columnMinimum,initial,minimum70,protectedOverflow,escaped,painted,builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
+  console.warn(JSON.stringify({base,finalWidth,columnMinimum,exactRowMeasurement,initial,minimum70,protectedOverflow,escaped,painted,builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
 } finally { await browser.close(); }
