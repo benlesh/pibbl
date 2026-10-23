@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice141 (static/relative primitive leaves across wrapped Flex; this commit).
+Latest delivery is slice141 `187bec28` (static/relative primitive leaves across wrapped Flex).
+Consolidation47 is this commit for139–141.
 Slice140 is `a2308b97` (physically anchored absolute profiles across wrapped Flex).
 Slice139 is `f79b258f` (unwrapped Text natural height and both-auto ink dimensions).
 Slice138 is `b84f5322` (unwrapped Text natural absolute width).
@@ -4085,12 +4086,21 @@ Corpus557 is423matches/126preserved-semantic/8font-source; nine query difference
 remain separate. This does not claim a full557-case replay, font parity, speed,
 Node24 trust or completion of the fixed33 capability denominator/seven release gates.
 
+## Consolidation47 completed for slices139–141
+
+Separate139 `f79b258f`,140 `a2308b97`,141 `187bec28`. Fresh Node26.9.0,
+macOS arm64 and Playwright Chromium:36 files passed651/11skip662 experimental
+in80.20s; normal234/428skip662 in4.23s. Expected negative diagnostic logs do not
+represent runtime failures. Final docs109 mutation probes and public JSDoc passed.
+Logs `/tmp/pibbl-consolidation47-{focused,normal,docs}.txt`. No kernel, fixed33
+capability status, release-gate or Node24 aggregate trust change is claimed.
+
 ## [NEXT] Wrapped absolute omitted-axis alignment (142)
 
 Investigate native wrapped absolute static-position/alignment behavior and existing
 Pibbl main/cross alignment before relaxing the per-axis anchor guard. Pin mixed
 anchored/unanchored axes and direction/wrap policy with a public RED; retain all
-existing size/provider/Text/containing restrictions. Consolidate139–141 separately.
+existing size/provider/Text/containing restrictions. Consolidation47 is complete.
 
 ### Finite positioning exit matrix after134
 
