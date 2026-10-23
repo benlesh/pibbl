@@ -797,7 +797,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
         maxWidth: !column && capped && index === 0 ? 80 : undefined,
         maxHeight: column && capped && index === 0 ? 30 : undefined,
       } }); });
-      const gapContent = fixture.name.startsWith('gap-percent-') ? {x:10,y:20,width:fixture.width-40,height:fixture.height-60} : {x:0,y:0,width:fixture.width,height:fixture.height};
+      const gapContent = (fixture.name.startsWith('gap-percent-') || fixture.name.startsWith('margin-percent-')) ? {x:10,y:20,width:fixture.width-40,height:fixture.height-60} : {x:0,y:0,width:fixture.width,height:fixture.height};
       expect(layoutFlex(gapContent, children, { flexDirection: fixture.flexDirection as 'row' | 'column' | 'row-reverse' | 'column-reverse', flexWrap: fixture.flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse', alignContent: 'flex-start', alignItems: 'flex-start', gap: fixture.gap, ...(fixture.containerStyle as FlexStyle | undefined) }, measurement)).toEqual(expected);
       for (const [index,box] of expected.entries()) {
         clickCanvas(canvas,394+box.x,242+box.y); await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${String.fromCharCode(65+index)}`);
@@ -1200,9 +1200,9 @@ it.runIf(experimentalLayout)('places numeric cross margins and rejects unsupport
   const child = () => createElement(Rectangle, { style: { width: 'auto', height: 40, minHeight: 0, margin: 5, marginLeft: 3 } });
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [child(), child()], { flexDirection: 'column' }, measurement))
     .toEqual([{ x: 3, y: 5, width: 92, height: 40 }, { x: 3, y: 55, width: 92, height: 40 }]);
-  for (const margin of [NaN, Infinity, '10%', 'auto', null]) {
+  for (const margin of [NaN, Infinity, 'bad%', 'auto', null]) {
     const invalid = createElement(Rectangle, { style: { width: 20, height: 20, minWidth: 0, margin } as any });
-    expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 30 }, [invalid], {}, measurement)).toThrow(/margin.*finite number/);
+    expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 30 }, [invalid], {}, measurement)).toThrow(/margin/);
   }
 });
 
@@ -2728,3 +2728,35 @@ for (const [name, override] of Object.entries({automaticWidth:{width:'auto'},per
     expect(()=>layoutFlex({x:0,y:0,width:180,height:60},[child],{flexDirection:'column',flexWrap:'wrap',alignItems:'flex-start'},measurement)).toThrow();
   });
 }
+
+for(const direction of ['row','column'] as const){
+  it.runIf(experimentalLayout)(`resolves allocated ${direction} physical percentage margins against content width`,()=>{
+    const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,margin:'5%',marginLeft:'10%',marginBottom:-2} as any});
+    expect(layoutFlex({x:0,y:0,width:200,height:100},[child],{flexDirection:direction,alignItems:'flex-start'},measurement)).toEqual([{x:20,y:10,width:40,height:20}]);
+    expect(layoutFlex({x:0,y:0,width:300,height:100},[child],{flexDirection:direction,alignItems:'flex-start'},measurement)).toEqual([{x:30,y:15,width:40,height:20}]);
+  });
+}
+
+it.runIf(experimentalLayout)('moves allocated percentage margin paint and hit targets after owner width changes',async()=>{
+  const baseline=snapshotWasmLayoutDiagnostics(),width=signal(300),fill=signal('red');let hits=0;
+  const canvas=document.createElement('canvas');canvas.width=400;canvas.height=260;document.body.append(canvas);
+  const root=createElement(Flex,{style:{width,height:200,boxSizing:'border-box',padding:{left:10,right:30,top:20,bottom:40},alignItems:'flex-start'},children:[createElement(Rectangle,{style:{width:60,height:30,minWidth:0,minHeight:0,flexShrink:0,marginLeft:'10%',marginRight:'15%',marginTop:'5%',marginBottom:'20%',fill}}),createElement(Rectangle,{style:{width:136,height:81,minWidth:0,minHeight:0,flexShrink:0,fill:'blue'},onClick:()=>hits++})]});
+  const controller=pibbl(canvas,root);controllers.push(controller);await nextFrame();clickCanvas(canvas,136,21);expect(hits).toBe(1);const before=snapshotWasmLayoutDiagnostics();fill.set('green');await nextFrame();const painted=snapshotWasmLayoutDiagnostics();expect(painted.solves).toBe(before.solves);expect(painted.lineFormations).toBe(before.lineFormations);expect(painted.measuredLeaves).toBe(before.measuredLeaves);
+  width.set(360);await nextFrame();clickCanvas(canvas,136,21);expect(hits).toBe(1);clickCanvas(canvas,151,21);expect(hits).toBe(2);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
+  controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+});
+it.runIf(experimentalLayout)('rejects percentage margins without allocated nowrap ownership',()=>{
+  const child=createElement(Rectangle,{style:{width:20,height:20,minWidth:0,margin:'10%'}});
+  expect(()=>layoutFlex({x:0,y:0,width:100,height:100},[child],{flexWrap:'wrap'},measurement)).toThrow(/nowrap/);
+  const root=createElement(Flex,{style:{width:100},children:child});
+  expect(measureElement(root,{minWidth:0,maxWidth:100,minHeight:0,maxHeight:100},service)).toMatchObject({status:'unsupported'});
+});
+it.runIf(experimentalLayout)('resolves large finite percentage margin without intermediate multiplication overflow',()=>{
+  const child=createElement(Rectangle,{style:{width:1,height:1,minWidth:0,minHeight:0,flexShrink:0,marginLeft:'100%'}});
+  expect(layoutFlex({x:0,y:0,width:1e308,height:10},[child],{alignItems:'flex-start'},measurement)).toEqual([{x:1e308,y:0,width:1,height:1}]);
+});
+
+it.skipIf(experimentalLayout)('keeps percentage physical margins rejected in normal JavaScript Flex',()=>{
+  const child=createElement(Rectangle,{style:{width:20,height:20,marginLeft:'10%'}});
+  expect(()=>layoutFlex({x:0,y:0,width:100,height:100},[child],{},measurement)).toThrow(/margin/);
+});

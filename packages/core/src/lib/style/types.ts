@@ -128,16 +128,16 @@ export interface ResolvedBoxStyle {
 export interface LayoutItemStyle extends PositioningStyle {
   /** Positive finite outer width/height ratio consumed by finite Flex, including wrapped lines. Final per-line main size derives cross size before cross bounds; intrinsic main sizing is unsupported. See {@link FlexItemStyle}. */
   aspectRatio?: number;
-  /** Uniform physical margin in logical Canvas units; finite negative values are allowed. Specific edges override this value. Consumed by experimental Flex only. See {@link LayoutItemStyle}. */
-  margin?: number;
+  /** Uniform physical margin in logical Canvas units or a percentage of allocated Flex content width. Finite negatives are allowed; specific edges override this value. Consumed by experimental Flex only. See {@link LayoutItemStyle}. */
+  margin?: number | Percentage;
   /** Physical top margin overriding margin. See {@link LayoutItemStyle}. */
-  marginTop?: number;
+  marginTop?: number | Percentage;
   /** Physical right margin overriding margin. See {@link LayoutItemStyle}. */
-  marginRight?: number;
+  marginRight?: number | Percentage;
   /** Physical bottom margin overriding margin. See {@link LayoutItemStyle}. */
-  marginBottom?: number;
+  marginBottom?: number | Percentage;
   /** Physical left margin overriding margin. See {@link LayoutItemStyle}. */
-  marginLeft?: number;
+  marginLeft?: number | Percentage;
   /** This child's cross-axis or block-axis alignment override. See {@link LayoutItemStyle}. */
   alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
   /** This child's inline-axis alignment override. See {@link LayoutItemStyle}. */

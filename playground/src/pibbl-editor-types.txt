@@ -461,7 +461,7 @@ export interface MeshTransformOptions {
     left?: Exclude<Length, 'auto'>; top?: Exclude<Length, 'auto'>;
     alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
     justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
-    margin?: number; marginTop?: number; marginRight?: number; marginBottom?: number; marginLeft?: number;
+    margin?: number | Percentage; marginTop?: number | Percentage; marginRight?: number | Percentage; marginBottom?: number | Percentage; marginLeft?: number | Percentage;
     flexBasis?: Length; flexGrow?: number; flexShrink?: number;
     gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
   }

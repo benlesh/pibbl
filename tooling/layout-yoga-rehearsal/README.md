@@ -400,3 +400,13 @@ checkout path,760×540 served metadata and exact disposal. Percentage-dependent
 intrinsic owners remain explicitly unsupported; a max constraint is not silently
 promoted to an exact owner. Indefinite native/CSS observations are not parity
 fixtures for this bounded contract.
+
+## Allocated nowrap percentage margins (slice 84)
+
+Four `margin-percent-*` records pin row/column nowrap geometry and owner resize.
+All physical edges, including vertical margins, use allocated content width.
+The comparison surface's sixth Next section jump selects them. Source/built and
+installed consumer checks cover actual targets and exact cleanup. Wrapped
+percentage margins and intrinsic percentage feedback remain unsupported; existing
+numeric wrapped margins are unchanged. The native numeric/percentage cross-margin
+quirk is recorded in Plan010 and is not silently adopted as a Pibbl policy.

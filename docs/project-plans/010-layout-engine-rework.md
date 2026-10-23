@@ -2,7 +2,9 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice82 (wrapped stretched cross sizing and percentage bounds).
+Latest delivery is slice84 (allocated-nowrap percentage physical margins).
+Slice83 is `43f8c34d` (fixed-width direct Text in wrapped columns).
+Slice82 is `3dc71e11` (wrapped stretched cross sizing and percentage bounds).
 Slice81 is `732ef064` (finite allocated-child percentage padding).
 Slice80 is `fe6d6bc1` (finite allocated-owner percentage gaps).
 Slice79 is `dbffc7c1` (settled-column percentage cross constraints).
@@ -32,9 +34,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; the single next slice is83, bounded direct Text measured main sizes in wrapped columns. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; the single next slice is85, finite nested percentage wrapping. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles115 records:104matches/11classified CSS differences; click A/B/C targets.
+cycles119 records:108matches/11classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1674,15 +1676,64 @@ Node26.9.0, no Node24 aggregate trust claim or Yoga font parity claim.
 Fixed33 remains3complete,12experimental,7partial,10missing,1excluded; all seven gates
 open. This adds a measured wrapping prerequisite, not a whole capability exit.
 
-## [NEXT] Finite allocated-owner percentage physical margins (slice 84)
+## Slice 84 delivered — finite allocated-nowrap percentage physical margins
 
-Pin native Yoga geometry first, then add a failing public allocation test before
-resolving physical margin percentages against finite allocated Flex content width
-(including vertical edges). Reuse existing margin placement and receiver ownership.
-Expose one row/column wrap and resize path with moved paint/hit targets, cache and
-cleanup evidence. Keep intrinsic/unallocated owners, auto/logical margins and normal
-JavaScript admission separate. At consolidation82–84 record the shortest finite
-sequence to close a whole fixed-ledger capability, not only fixture-count growth.
+Existing physical margin fields accept numeric values or percentage strings.
+All four edges resolve against actual finite Flex content width; specific edges
+override shorthand and finite negative values remain supported. Shared resolveLength
+preserves decimal percentage grammar and division-before-multiplication arithmetic.
+A focused regression failed for owner1e308/margin100% before replacing an unsafe
+intermediate multiplication. Intrinsic measurement returns unsupported; wrapped
+percentage margins and other layout families retain explicit rejection. No native
+ABI change; normal JavaScript Flex remains unchanged.
+
+TDD two row/column percentage cases fail before production, then pass. Mounted
+asymmetric padding300→360 owner uses260→320content width and moves the following
+blue target135→150 without new nodes; paint-only work reuses layout. Native pinned
+Yoga3.2.1 adds four nowrap row/column resize fixtures. Combined corpus119records:
+108matches/11preserved classified differences. Source and built four-case receipts
+pass with zero ownership: `/tmp/pibbl-slice84-{source-fixed,built}.txt`,469private built
+inputs. Fresh packed230installed inputs/Bundler/NodeNext and actual margin paint,
+resize/hit/cache proof pass, tarSHA
+`e2cb0f59da7ab62151bde3e6842221972c64330621317514b377fae7c047524f`:
+`/tmp/pibbl-slice84-packed.txt`.
+
+Fresh full layout file:226pass/2skip plus one failed oracle harness assertion;
+the harness passed outer instead of content coordinates into the direct allocator.
+After correcting that harness, the complete119-record public comparison passes
+separately: `/tmp/pibbl-slice84-{full,comparison-fixed}.txt`. Twelve focused margin
+checks pass, including finite arithmetic; types/lint/JSDoc pass. Initial Studio
+receipt preserves rejected malformed fixture metadata; emitter corrected to flat
+physical margin fields and explicit nowrap before successful browser replay.
+
+Wrapped cross-margin mismatch stays outside84: at outer300×200,paddingL10/R30/T20/B40,
+Yoga column-wrap A with L10%=26 startsx10, notx36; next line B startsx135. Numeric
+L26/R39/T13/B52 gives the same geometry. The intended Pibbl behavior should preserve
+its existing numeric physical-margin offset/paint contract rather than silently
+copy this Yoga quirk; a later wrapped percentage slice needs explicit classified
+native/public evidence. No wrapped percentage admission or parity claim here.
+
+Fixed33 remains3complete,12experimental,7partial,10missing,1excluded; all seven gates
+open. Kernel65383bytes unchanged, Node26.9.0; no aggregate trust claim.
+
+## [NEXT] Finite nested percentage wrapping exit evidence (slice 85)
+
+Close the material nested-owner gap for flex.row-column-nowrap-wrap with one fixed
+public tree: finite outer Flex with three keyed inner Flex owners and a following
+keyed target. Row/column × nowrap/wrap × owner resize gives eight native records.
+Each inner owner has direct40% basis/dimensions and10% gap resolved from its actual
+final allocated content box. Pin identical nested Yoga geometry, assert outer and
+inner semantic boxes, moved leaf/footer targets, stable identities, paint-only
+reuse and exact source/built/installed cleanup. Intrinsic/max-only owners reject.
+No recursive fixture framework or public API change.
+
+The finite exit matrix for this preserve entry is LTR finite direct/known-nested
+Flex, row/column × nowrap/wrap, numeric/percentage direct dimensions/bases/gaps,
+finite bounds, source order, resize/hits and teardown. Reverse/wrap-reverse, RTL,
+automatic minima and intrinsic percentage feedback remain explicitly represented
+by their own entries/policies; they are not silently removed from the fixed33.
+Consolidation82–84 will reconcile this finite matrix and evidence before any status
+transition. Whole release gates remain open until all their entries pass.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

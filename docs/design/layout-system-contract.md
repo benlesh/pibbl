@@ -340,7 +340,13 @@ clamp the final signed accumulation at zero, without clamping individual margins
 Margin receiver inputs are layout roles. Finite row/column wrapping includes
 margins in line formation and line cross extents, including negative overlap.
 Other layout families reject these fields; normal JavaScript Flex retains its diagnostic.
-Percentage, auto and logical margins are not yet supported.
+Finite allocated nowrap Flex rows and columns also accept percentage physical
+margins. All four edges resolve against the actual parent content width, including
+top/bottom; e.g. outer300 with L10/R30 padding gives content260, so L10%=26 and
+T5%=13. Owner resize reruns placement without remounting; paint-only changes reuse
+layout. Intrinsic measurement, wrapped percentage margins, auto and logical
+margins remain unsupported. Percentage syntax and finite arithmetic use the shared
+length resolver. Numeric wrapped-margin behavior remains unchanged.
 
 The shared private WASM records are ten f64 slots: nonnegative sizing/padding
 inputs and bounds retain their validation; signed leading/trailing margins occupy

@@ -420,6 +420,7 @@ function measureFlex(
     if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: diagnosticBox.width, height: diagnosticBox.height, mainAxis: row ? 'width' : 'height', context: childContext(child, diagnosticBox) });
     rejectUnsupportedItemFields(child, style, diagnosticBox);
     if (style.aspectRatio !== undefined) return unsupportedIntrinsic('does not support aspectRatio during intrinsic measurement');
+    if (isPercentage(style.margin) || isPercentage(style.marginTop) || isPercentage(style.marginRight) || isPercentage(style.marginBottom) || isPercentage(style.marginLeft)) return unsupportedIntrinsic('does not support percentage margins without an actual finite nowrap Flex allocation');
     const allMargin = numericMargin(style.margin, 'margin', child, diagnosticBox);
     const marginTop = numericMargin(style.marginTop === undefined ? allMargin : style.marginTop, 'marginTop', child, diagnosticBox);
     const marginRight = numericMargin(style.marginRight === undefined ? allMargin : style.marginRight, 'marginRight', child, diagnosticBox);
@@ -667,11 +668,12 @@ function resolveFlexPlacements(
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
     assertSupportedChildPosition('Flex', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
-    const allMargin = numericMargin(normalized.margin, 'margin', child, container);
-    const marginTop = numericMargin(normalized.marginTop === undefined ? allMargin : normalized.marginTop, 'marginTop', child, container);
-    const marginRight = numericMargin(normalized.marginRight === undefined ? allMargin : normalized.marginRight, 'marginRight', child, container);
-    const marginBottom = numericMargin(normalized.marginBottom === undefined ? allMargin : normalized.marginBottom, 'marginBottom', child, container);
-    const marginLeft = numericMargin(normalized.marginLeft === undefined ? allMargin : normalized.marginLeft, 'marginLeft', child, container);
+    if (options.flexWrap !== 'nowrap' && (isPercentage(normalized.margin) || isPercentage(normalized.marginTop) || isPercentage(normalized.marginRight) || isPercentage(normalized.marginBottom) || isPercentage(normalized.marginLeft))) throw childDiagnostic(child, 'margin', 'percentage', container, 'percentage margins currently require a finite nowrap Flex allocation; wrapped placement policy remains unsupported');
+    const allMargin = allocatedMargin(normalized.margin, 'margin', child, container);
+    const marginTop = allocatedMargin(normalized.marginTop === undefined ? allMargin : normalized.marginTop, 'marginTop', child, container);
+    const marginRight = allocatedMargin(normalized.marginRight === undefined ? allMargin : normalized.marginRight, 'marginRight', child, container);
+    const marginBottom = allocatedMargin(normalized.marginBottom === undefined ? allMargin : normalized.marginBottom, 'marginBottom', child, container);
+    const marginLeft = allocatedMargin(normalized.marginLeft === undefined ? allMargin : normalized.marginLeft, 'marginLeft', child, container);
     const marginMainBefore = row ? reverse ? marginRight : marginLeft : reverse ? marginBottom : marginTop;
     const marginMainAfter = row ? reverse ? marginLeft : marginRight : reverse ? marginTop : marginBottom;
     const marginCrossBefore = row ? wrapReverse ? marginBottom : marginTop : wrapReverse ? marginRight : marginLeft;
@@ -1501,6 +1503,12 @@ function rejectUnsupportedItemFields(
 function hasPhysicalMargin(style: Readonly<Record<string, unknown>>): boolean {
   return style.margin !== undefined || style.marginTop !== undefined || style.marginRight !== undefined ||
     style.marginBottom !== undefined || style.marginLeft !== undefined;
+}
+function allocatedMargin(value: unknown, property: string, child: PibblElement<any>, container: Readonly<LayoutBox>): number {
+  if (experimentalLayout && isPercentage(value)) {
+    return resolveLength(value as Percentage, container.width, property, childContext(child, container))!;
+  }
+  return numericMargin(value, property, child, container);
 }
 function numericMargin(value: unknown, property: string, child: PibblElement<any>, container: Readonly<LayoutBox>): number {
   if (value === undefined) return 0;
