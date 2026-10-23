@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice144 (physical percentage static/relative insets; this commit).
+Latest delivery is slice144 `ced23362` (physical percentage static/relative insets).
+Consolidation48 is this commit for142–144.
 Slice143 is `f644de8c` (physical percentage absolute insets).
 Slice142 is `357167b2` (wrapped absolute omitted-axis alignment).
 Slice141 is `187bec28` (static/relative primitive leaves across wrapped Flex).
@@ -4202,6 +4203,17 @@ Corpus709 is518matches/183preserved-semantic/8font-source; nine query difference
 remain separate. No full709 replay, kernel/ABI/cache change, font parity, speed,
 Node24 trust, fixed33 status or release-gate completion claim.
 
+## Consolidation48 completed for slices142–144
+
+Separate142 `357167b2`,143 `f644de8c`,144 `ced23362`. Fresh Node26.9.0,
+macOS arm64 and Playwright Chromium:41 files passed658/11skip669 experimental
+in79.95s; normal234/435skip669 in4.41s. Expected negative diagnostic output is
+not a runtime failure. Final docs109 mutation probes/JSDoc passed with slice144;
+logs `/tmp/pibbl-consolidation48-{focused,normal}.txt` and
+`/tmp/pibbl-slice144-docs.txt`. Fixed33 statuses/seven open release gates and
+Node24 aggregate trust remain unchanged. Public composition usability work is
+independent of this completed correctness checkpoint.
+
 ## [NEXT] Finite percentage absolute dimensions and bounds (145)
 
 Resolve percentage width/height and min/max against the selected padding box
@@ -4210,7 +4222,7 @@ original style forwarding, owner resize/input revisions, natural query/cache
 contracts and Pibbl contradictory-bound rejection. Pin a focused public RED and
 explicit type/browser/package evidence for the coherent existing sizing family;
 no child decorations, logical insets, both-auto custom provider or ABI expansion.
-Consolidate142–144 separately before further production edits.
+Consolidation48 is complete; preserve separate commits for145 onward.
 
 ### Finite positioning exit matrix after134
 
