@@ -1298,6 +1298,39 @@ static void ownerCrossAutoCases() {
   }
 }
 
+
+static void roundingCases() {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false);
+  YGConfigSetPointScaleFactor(config, 0);
+  YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config);
+  YGNodeStyleSetWidth(root, 101.25f);
+  YGNodeStyleSetHeight(root, 61.5f);
+  YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
+  YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+  YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+  YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+  YGNodeStyleSetGap(root, YGGutterAll, 2.5f);
+  const float heights[] = {10.375f, 12.625f};
+  for (int index = 0; index < 2; ++index) {
+    auto child = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(child, 20.125f);
+    YGNodeStyleSetHeight(child, heights[index]);
+    YGNodeStyleSetFlexBasis(child, 20.125f);
+    YGNodeStyleSetFlexGrow(child, 1);
+    YGNodeStyleSetFlexShrink(child, 0);
+    setMinZero(child);
+    YGNodeInsertChild(root, child, index);
+  }
+  YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+  std::cout << ",{\"name\":\"rounding-scale-zero-row\",\"width\":101.25,\"height\":61.5,\"gap\":2.5,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"roundingFixture\":true,\"containerStyle\":{\"alignItems\":\"flex-start\",\"alignContent\":\"flex-start\"},\"boxes\":[";
+  printBox(YGNodeGetChild(root, 0)); std::cout << ','; printBox(YGNodeGetChild(root, 1));
+  std::cout << "],\"itemStyles\":[{\"width\":20.125,\"height\":10.375,\"flexBasis\":20.125,\"flexGrow\":1,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":20.125,\"height\":12.625,\"flexBasis\":20.125,\"flexGrow\":1,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+  YGNodeFreeRecursive(root);
+  YGConfigFree(config);
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1436,5 +1469,6 @@ int main() {
   textCrossAutoCases();
   customCrossAutoCases();
   ownerCrossAutoCases();
+  roundingCases();
   std::cout << "]\n";
 }

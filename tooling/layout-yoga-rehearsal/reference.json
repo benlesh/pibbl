@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "3989b1eb756d4c5e32614f347aa32869a83ec40a911ec18a752e05efdb23482b",
+  "probeSha256": "43f1dad21c5f28211f08d99717cf5f5d8618994a57e61ae7f35de3de19de3c1c",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -18752,6 +18752,53 @@
           "minHeight": 0,
           "flexGrow": 0,
           "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "rounding-scale-zero-row",
+      "width": 101.25,
+      "height": 61.5,
+      "gap": 2.5,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "roundingFixture": true,
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 49.375,
+          "height": 10.375
+        },
+        {
+          "x": 51.875,
+          "y": 0,
+          "width": 49.375,
+          "height": 12.625
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20.125,
+          "height": 10.375,
+          "flexBasis": 20.125,
+          "flexGrow": 1,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 20.125,
+          "height": 12.625,
+          "flexBasis": 20.125,
+          "flexGrow": 1,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
         }
       ]
     }

@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice109 (source-order Canvas composition evidence).
+Latest delivery is slice110 (unrounded logical geometry policy and evidence).
+Slice109 is `f99a7cdd` (source-order Canvas composition evidence).
 Slice108 is `35eef93b` (wrapped-row measured Text cross-auto sizing).
 Consolidation36 is `ac070c0c` for106–108.
 Slice107 is `7b599250` (automatic-width Text cross-auto sizing).
@@ -61,9 +62,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next delivery is105, measured custom primitive cross-auto sizing. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next delivery is111, real-root loading cancellation/failure cleanup. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles307 records:213matches/94classified differences; click A/B/C targets.
+cycles308 records:214matches/94classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2830,17 +2831,50 @@ Node26.9.0; no Node24 aggregate trust or controlled performance claim.
 Source: http://127.0.0.1:5192/#/examples/layout/wasm-flex-keyed-wrap — Composition
 order, Flip axes, LTR/RTL and B target. The original checkout remains untouched.
 
-## [NEXT] Unrounded logical geometry policy and evidence (slice 110)
+## Delivered unrounded logical geometry policy and evidence (slice 110)
 
-Apply the already-selected unrounded logical geometry policy from the approved
-layout design, with Yoga point scale0 as the oracle. Canvas backing-size rounding
-and density transforms remain raster concerns, without a public point-scale API
-or positive Yoga pixel-grid parity claim. Prove fractional density, negative/
-fractional/large nested edges, public logical boxes and pointer/focus inversion
-across Group/Layer boundaries; avoid antialiased pixel equality. Close the fixed
-rounding entry only for that stated policy after source/built/installed/native
-scale0 evidence. Deterministic real-root loading cancellation/failure cleanup is
-the next inspected ownership gap. Consolidate109–111 after111; final whole-codebase
+The approved design's unrounded logical policy is now explicit in the layout and
+Canvas contracts. This is evidence and scenario work, with no production core,
+API, native ABI or binary change. Exact native Yoga3.2.1 point scale0 fractions
+produce A49.375×10.375 at0,0 and B49.375×12.625 at51.875,0. The corpus is now
+308=214matches+94classified; auto104/direction24 families are unchanged.
+Positive Yoga point-scale snapping parity is deliberately outside this policy.
+
+Fresh public Flex test1pass/404skipped405; Canvas surface3pass in experimental
+and ordinary modes. Fractional fixed viewport101.5×47.25 remains stable across
+CSS201.25×100.5→240.75×120.25 and backing302×151→361×180 at ratio1.5. The source
+lab preserves identity and reports fractional pointer coordinates. Density1/1.5/2
+proof passes large cancelling/negative Group origins and retained Layer edges:
+0.125-wide target receives logical1.1875 coordinates and logical focus. The16×
+display projection accommodates Chromium's integer native MouseEvent client
+coordinates; no antialiased pixel equality or baseline rewrite is used.
+
+Source/private-built rounding comparison passes exact boxes and A/B targets,
+469builtinputs, disposal ownership0 and no page errors. Installed245distinput
+consumer passes scale0 geometry plus density/pointer/logical-focus and exact
+cleanup, strict Bundler/NodeNext; unchanged tarball SHA
+`6ccf53d136422d04d974fa7a34a4356f91298d4f77c6387c85f6b6b632417b4b`.
+Private scenario test imports its local index because shared node_modules resolves
+that private package to the original checkout; application runtime imports remain
+public. An exact source marker changed by formatting was restored and replayed.
+The lab's added action had a failing public scenario test before implementation;
+existing core behavior required no manufactured RED. Scoped evidence review
+strengthened logical focus and supports completion of this stated policy.
+
+Fixed33 now7complete/11experimental/7partial/7missing/1excluded; all7gates remain
+open. v5/68649byte kernel unchanged. Node26.9.0, pnpm11.21 dependencies, Chromium;
+no Node24 aggregate trust or controlled performance claim.
+Source: http://127.0.0.1:5192/#/testing/canvas-surface — Show fractional then Resize
+fractional. Comparison: http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration —
+Next section21 times for point-scale-zero fractional allocations.
+
+## [NEXT] Real-root loading cancellation/failure cleanup (slice 111)
+
+Exercise actual Flex/Layer roots through held shared preparation, cancellation,
+supersession, failed load and retry. Assert no premature callback/mount, exact
+native ownership and visible retry interaction through supported public imports.
+Use fresh isolated installed pages for cold-load failures, where a warm Studio
+cannot force the condition. Consolidate109–111 after111; final whole-codebase
 review stays at full program end.
 
 ### Consolidation 24 completed for delivery slices 70–72

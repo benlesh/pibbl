@@ -2728,30 +2728,36 @@
       "id": "rounding-and-point-scale",
       "target": "parity",
       "group": "migration-and-conformance",
-      "current": "logical coordinates differ; current Yoga cases use point scale 0",
-      "status": "missing",
-      "unresolvedPolicy": "Select and document snapping policy while preserving unrounded geometry evidence.",
+      "current": "Yoga 3.2.1 point-scale-zero parity with unrounded logical allocations and nested origins; Canvas backing dimensions round independently of logical layout, pointer routing and focus",
+      "status": "complete",
+      "unresolvedPolicy": "None for the selected unrounded logical geometry policy. Positive Yoga point-scale pixel-grid snapping and a public snapping API are outside this contract.",
       "evidenceRefs": [
+        "docs/design/layout-system-contract.md",
+        "docs/design/canvas-surface-contract.md",
         "tooling/layout-yoga-rehearsal/reference.json",
-        "tooling/layout-yoga-rehearsal/README.md"
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/test/canvas-surface.test.ts",
+        "packages/scenarios/src/canvas-surface.example.tsx",
+        "packages/scenarios/src/learning/layout/wasm-yoga-migration.example.tsx",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "tooling/test-wasm-nested-intrinsic.mjs"
       ],
       "evidence": {
-        "positive": ["unrounded three-case receipt"],
-        "negative": [],
-        "interaction": [],
-        "yogaCases": [
-          "grow",
-          "cap",
-          "shrink",
-          "column-grow",
-          "column-cap",
-          "column-shrink"
+        "positive": [
+          "Exact scale-zero fractional Flex allocation in pinned native Yoga, public source/private-built Studio and installed tarball",
+          "Fractional fixed logical viewport survives CSS resizing with stable mounted identity"
         ],
-        "missing": [
-          "DPR",
-          "negative/fractional/large positions",
-          "nested edges"
-        ]
+        "negative": [
+          "No positive Yoga point-scale snapping parity is claimed; no public snapping API",
+          "Large cancelling and negative nested origins do not independently round a 0.125-wide logical target"
+        ],
+        "interaction": [
+          "Densities 1/1.5/2 round only backing dimensions; retained Layer fractional pointer coordinates and logical target focus persist",
+          "Source and installed scale-zero A/B targets follow exact fractional boxes"
+        ],
+        "yogaCases": ["rounding-scale-zero-row"],
+        "missing": []
       }
     },
     {

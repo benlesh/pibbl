@@ -2306,6 +2306,44 @@ it('records pinned native Yoga reverse-axis cap fixtures', () => {
   expect(yogaReference.cases.map(fixture => fixture.name)).toEqual(expect.arrayContaining(['row-reverse-cap','column-reverse-cap']));
 });
 
+
+it.runIf(experimentalLayout)('retains Yoga scale-zero fractional allocations through public Flex measurement', async () => {
+  const fixtures = yogaReference.cases.filter(fixture => 'roundingFixture' in fixture);
+  expect(fixtures).toHaveLength(1);
+  const fixture = fixtures[0]!;
+  expect(fixture).toMatchObject({
+    name: 'rounding-scale-zero-row',
+    width: 101.25,
+    height: 61.5,
+    gap: 2.5,
+    boxes: [
+      { x: 0, y: 0, width: 49.375, height: 10.375 },
+      { x: 51.875, y: 0, width: 49.375, height: 12.625 },
+    ],
+  });
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number }>();
+  function Card({ id, style: _style }: { id: string; style: Record<string, unknown> }) {
+    const box = useLayoutBox();
+    const matrix = useCanvasContext().getTransform();
+    boxes.set(id, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+    return createElement(Rectangle, { style: { width: box.width, height: box.height, fill: id === 'A' ? 'red' : 'blue' } });
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = 120;
+  canvas.height = 80;
+  document.body.append(canvas);
+  const controller = pibbl(canvas, createElement(Flex, {
+    style: { width: 101.25, height: 61.5, gap: 2.5, alignItems: 'flex-start', alignContent: 'flex-start' },
+    children: [
+      createElement(Card, { id: 'A', style: { width: 20.125, height: 10.375, flexBasis: 20.125, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0 } }),
+      createElement(Card, { id: 'B', style: { width: 20.125, height: 12.625, flexBasis: 20.125, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0 } }),
+    ],
+  }));
+  controllers.push(controller);
+  await nextFrame();
+  expect([...boxes.values()]).toEqual(fixture.boxes);
+});
+
 it('records pinned native Yoga row wrap and cross-reversal fixtures', () => {
   expect(yogaReference.cases.map(fixture => fixture.name)).toEqual(expect.arrayContaining(['row-wrap','row-wrap-reverse']));
 });

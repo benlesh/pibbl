@@ -101,7 +101,9 @@ backingHeight = max(1, round(displayHeight * pixelRatio))
 
 Pibbl derives the effective backing density from those rounded dimensions and
 installs one root transform before rendering. Component-local transforms then
-compose after that root transform. The bitmap is cleared in backing space
+compose after that root transform. Fractional logical boxes and nested origins
+remain unrounded at every density; only the backing dimensions above are rounded.
+Pointer inversion uses the same composed transform, including retained Layers. The bitmap is cleared in backing space
 before the root transform is installed.
 
 CSS borders and padding are excluded when measuring display space. If changing

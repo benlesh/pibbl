@@ -117,6 +117,8 @@ try {
       assert.equal(receipt.automaticTextCrossWidth, true, 'Installed package must settle automatic-width Text before automatic cross-margin placement');
       assert.equal(receipt.wrappedTextCrossAuto, true, 'Installed package must settle wrapped Text before cross-auto placement in its final line');
       assert.equal(receipt.sourceOrderCanvas, true, 'Installed package must preserve source paint order through reverse Flex, Group, Layer and filter composition');
+      assert.equal(receipt.roundingScaleZero, true, 'Installed package must preserve the pinned Yoga scale-zero fractional Flex geometry and targets');
+      assert.equal(receipt.roundingDensity, true, 'Installed package must round backing dimensions without rounding fractional logical Layer geometry, pointer routing, or focus');
       console.warn('Packed auto margins: 104 fixture cases passed');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');

@@ -20,6 +20,7 @@ const nestedPercentFixtures = JSON.parse(await readFile(new URL('./layout-yoga-r
 const intrinsicWrappedHeightFixtures = JSON.parse(await readFile(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8')).cases.filter(value => value.intrinsicFixture === true);
 const directionMatrixFixtures = JSON.parse(await readFile(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8')).cases.filter(value => value.directionMatrixFixture === true);
 const autoMarginFixtures = JSON.parse(await readFile(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8')).cases.filter(value => value.autoMarginFixture === true);
+const roundingFixtures = JSON.parse(await readFile(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8')).cases.filter(value => value.roundingFixture === true);
 const ownerCrossAutoFixtures = autoMarginFixtures.filter(value => value.ownerCrossAutoFixture === true);
 const directAutoMarginFixtures = autoMarginFixtures.filter(value => value.ownerCrossAutoFixture !== true);
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -326,6 +327,28 @@ for(const fixture of ownerCrossAutoCases){
 }
 receipt.ownerCrossAuto=true;
 receipt.autoMargins=true;
+const roundingCases = ${JSON.stringify(roundingFixtures)};
+if(roundingCases.length!==1)throw Error('installed rounding corpus');
+for(const fixture of roundingCases){
+ const roundingCanvas=document.createElement('canvas');roundingCanvas.width=120;roundingCanvas.height=80;roundingCanvas.style.cssText='width:120px;height:80px';document.body.append(roundingCanvas);
+ const roundingBaseline=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();let roundingRootTransform=new DOMMatrix();const roundingBoxes=new Map<string,{x:number;y:number;width:number;height:number}>();const roundingHits:string[]=[];
+ const RoundingPanel=({name,style}:any)=>{const box=useLayoutBox(),transform=roundingRootTransform.inverse().multiply(useCanvasContext().getTransform());roundingBoxes.set(name,{x:transform.e,y:transform.f,width:box.width,height:box.height});return createElement(Rectangle,{onClick:()=>roundingHits.push(name),style:{width:box.width,height:box.height,minWidth:0,minHeight:0,flexShrink:0,fill:name==='A'?'#19375b':'#426b61'}});};
+ const RoundingRoot=()=>{roundingRootTransform=useCanvasContext().getTransform();return createElement(Flex,{style:{width:fixture.width,height:fixture.height,gap:fixture.gap,flexDirection:fixture.flexDirection,flexWrap:fixture.flexWrap,alignItems:fixture.containerStyle.alignItems,alignContent:fixture.containerStyle.alignContent},children:fixture.itemStyles.map((style:any,index:number)=>createElement(RoundingPanel,{key:String.fromCharCode(65+index),name:String.fromCharCode(65+index),style}))});};
+ const roundingController=pibblSync(roundingCanvas,createElement(RoundingRoot,{}));
+ try{const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));const click=(x:number,y:number)=>{const rect=roundingCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])roundingCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+y,bubbles:true,button:0}));};await frame();const actual=['A','B'].map(name=>roundingBoxes.get(name));if(JSON.stringify(actual)!==JSON.stringify(fixture.boxes))throw Error('installed scale-zero fractional geometry '+JSON.stringify({actual,expected:fixture.boxes}));for(const box of fixture.boxes)click(box.x+1,box.y+1);if(JSON.stringify(roundingHits)!==JSON.stringify(['A','B']))throw Error('installed scale-zero fractional targets '+roundingHits);}finally{roundingController.dispose();roundingCanvas.remove();const disposed=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();if(disposed.activeNodes!==roundingBaseline.activeNodes||disposed.activeArenas!==roundingBaseline.activeArenas||disposed.cachedMeasurements!==roundingBaseline.cachedMeasurements)throw Error('installed scale-zero rounding cleanup');}
+}
+receipt.roundingScaleZero=true;
+const densitySamples:{pixelRatio:number;backingWidth:number;backingHeight:number;hits:readonly[number,number][]}[]=[];
+for(const pixelRatio of [1,1.5,2]){
+ const densityCanvas=document.createElement('canvas');densityCanvas.width=101;densityCanvas.height=61;densityCanvas.style.cssText='display:block;width:101px;height:61px';document.body.append(densityCanvas);
+ const densityBaseline=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();const densityHits:[number,number][]=[],densityFocus:string[]=[];
+ const densityTarget=createElement(Rectangle,{keyboardFocusable:true,onFocus:()=>densityFocus.push('target'),onClick:event=>densityHits.push([event.x,event.y]),style:{width:.125,height:.125,fill:'#2563eb'}});
+ const densityScene=createElement(FocusManagement,{children:createElement(Group,{style:{translateX:1000000.25,translateY:1000000.25},children:createElement(Group,{style:{translateX:-1000000,translateY:-1000000},children:createElement(Group,{style:{translateX:-.5,translateY:-.5},children:createElement(Layer,{style:{left:1.375,top:1.375,width:.375,height:.375},children:densityTarget})})})})});
+ const densityController=pibblSync(densityCanvas,densityScene,{viewport:{width:6.3125,height:3.8125},fit:'fill',pixelRatio});
+ try{const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));await frame();const rect=densityCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])densityCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+19,clientY:rect.top+19,bubbles:true,button:0}));if(document.activeElement!==densityCanvas||JSON.stringify(densityFocus)!==JSON.stringify(['target'])||densityHits.length!==1||Math.abs(densityHits[0][0]-1.1875)>1e-6||Math.abs(densityHits[0][1]-1.1875)>1e-6)throw Error('installed fractional density Layer pointer or focus '+JSON.stringify({pixelRatio,hits:densityHits,focus:densityFocus}));densitySamples.push({pixelRatio,backingWidth:densityCanvas.width,backingHeight:densityCanvas.height,hits:densityHits});}finally{densityController.dispose();densityCanvas.remove();const disposed=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();if(disposed.activeNodes!==densityBaseline.activeNodes||disposed.activeArenas!==densityBaseline.activeArenas||disposed.cachedMeasurements!==densityBaseline.cachedMeasurements)throw Error('installed fractional density cleanup');}
+}
+if(JSON.stringify(densitySamples.map(({pixelRatio,backingWidth,backingHeight})=>({pixelRatio,backingWidth,backingHeight})))!==JSON.stringify([{pixelRatio:1,backingWidth:101,backingHeight:61},{pixelRatio:1.5,backingWidth:152,backingHeight:92},{pixelRatio:2,backingWidth:202,backingHeight:122}]))throw Error('installed fractional density backing dimensions '+JSON.stringify(densitySamples));
+receipt.roundingDensity=true;
 const controller = pibblSync(document.querySelector('canvas')!, createElement(WasmFlexNestedIntrinsicExample, {}));
 addEventListener('pagehide', () => controller.dispose(), {once:true});`,
   );

@@ -449,3 +449,15 @@ records: four nowrap matches and eight wrapped/reversed classifications. Actual
 source/built/installed pixels and targets, owner resize, paint reuse, identity and
 cleanup are checked. Intrinsic/indefinite owners and logical/auto margins remain
 explicit gaps; there is no new margin API or native ABI.
+
+### Unrounded logical geometry (slice 110)
+
+The `rounding-scale-zero-row` record retains exact binary fractions at the pinned
+Yoga point scale zero: widths49.375, second origin51.875 and heights10.375/12.625.
+The corpus is308 records (214matches/94classified); this record is separate from
+the104auto-margin and24direction records. `--rounding` in
+`tooling/test-wasm-yoga-migration.mjs` checks public source/private-built boxes and
+targets. The installed consumer also checks densities1/1.5/2 and fractional
+Group/Layer pointer/focus geometry. The selected policy preserves unrounded
+logical coordinates; only Canvas backing dimensions round. This does not claim
+positive Yoga point-scale pixel-grid snapping parity.
