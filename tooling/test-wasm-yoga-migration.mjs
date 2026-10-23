@@ -7,6 +7,7 @@ const built = process.argv.includes('--built');
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+  page.setDefaultTimeout(10000);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(`${base}/#/examples/layout/wasm-yoga-migration`);
@@ -25,6 +26,7 @@ try {
     await page.waitForTimeout(240);
   };
   for (const [index, fixture] of reference.cases.entries()) {
+    console.warn(`Replay ${index+1}/${reference.cases.length}: ${fixture.name}`);
     if (index) await click(60, 158);
     assert.ok((await frame.locator('pre').innerText()).includes(fixture.name));
     if (fixture.classification) assert.ok((await frame.locator('pre').innerText()).includes(fixture.comparisonLabel), 'Classified difference must be explicitly labeled');

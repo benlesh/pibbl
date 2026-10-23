@@ -63,3 +63,10 @@ right/bottom respectively, including reversed axes and cross lines. In contrast,
 `"flex-start"` and `"flex-end"` follow the selected Flex direction. Forward axes
 accept these values in both builds. The keyed collection example's Cross edge
 control demonstrates the distinction while cross lines are reversed.
+
+When content overflows, `space-around` and `space-evenly` use physical LTR start,
+including reversed axes and lines. Explicit `center` still centers overflow;
+`space-between` falls back to direction-relative `flex-start`. This corrects the
+former centered overflow for around/evenly in both JavaScript and experimental
+WASM layout. The [comparison example](#/examples/layout/wasm-yoga-migration)
+labels native Yoga's differing reversed-overflow results.

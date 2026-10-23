@@ -358,3 +358,29 @@ Migration correction in slice74: constrained subunit growth changes B35→37.5,
 and constrained subunit shrink changes B65→62.5, because initially frozen sizes
 now participate in initial free space. Both JavaScript and Rust are corrected.
 The unconstrained partial-shrink65/65 policy remains unchanged.
+
+## Finite distribution evidence (slice 76)
+
+The corpus now has75 cases:64 native matches and11 explicitly classified
+Pibbl/CSS differences. Fifty distribution records cover both row and column:
+negative main free space for six policies, negative wrapped cross space and one
+item for seven policies, two bounded automatic cross-size cases, and eight
+reversed safe-overflow cases. Every record retains native geometry unchanged.
+The eight reversed records also include independent expected CSS/Pibbl geometry.
+
+Independent browser commands are `node tooling/test-css-flex-distribution.mjs`
+and `node tooling/test-css-flex-distribution-reverse.mjs`. With main100px,
+gap12px and two nonshrinking80px items, around/evenly start at0/92px forward
+and92/0px under main reversal. With cross30px and two20px lines, positions are
+0/32px forward and32/0px under wrap-reverse. Yoga3.2.1 instead returns
+20/-72px reversed main and10/-22px reversed cross; these eight differences
+are labeled `css-safe-overflow-reverse`. Explicit center remains centered and
+space-between remains direction-relative. This corrects the previous Pibbl
+centered around/evenly overflow without changing authoring signatures or the ABI.
+
+Empty native children are only an oracle for declared/empty automatic sizes.
+Real measured Text evidence additionally uses the public column example through
+`node tooling/test-wasm-column-text-cross.mjs <Studio URL> [--built]`, plus
+installed-package Text/following-sibling geometry and hit checks. The browser
+probe converts backing pixels using the known root background, allowing narrow
+raster rounding tolerance; logical text height is measured, not hard-coded.

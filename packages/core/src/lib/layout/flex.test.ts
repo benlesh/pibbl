@@ -310,8 +310,8 @@ describe('CSS-compatible flex geometry', () => {
     ['flex-end', -60],
     ['center', -30],
     ['space-between', 0],
-    ['space-around', -30],
-    ['space-evenly', -30],
+    ['space-around', 0],
+    ['space-evenly', 0],
   ] as const)('preserves negative free-space fallback for %s', (
     justifyContent,
     firstX,

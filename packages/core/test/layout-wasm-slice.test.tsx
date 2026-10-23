@@ -1,6 +1,6 @@
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createElement, Absolute, Overlay, Flex, Grid, Flow, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, defineLayoutComponent } from '@pibbl/core';
+import { createElement, Absolute, Overlay, Flex, Grid, Flow, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, defineLayoutComponent } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
@@ -772,7 +772,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
     } else {
       const column = fixture.flexDirection.startsWith('column');
       for (const [boxIndex,box] of expected.entries()) {
-        expect(labels.some(label => label.text === (box.width < 50 ? String.fromCharCode(65+boxIndex) : fixture.flexWrap !== 'nowrap' ? `${String.fromCharCode(65+boxIndex)} ${box.width}×${box.height}` : column ? `${box.width} × ${box.height} px` : `${box.width} px`) && label.x === 392+box.x+(column || fixture.flexWrap !== 'nowrap' || box.width < 50 ? 4 : 12) && label.y === 240+box.y+(box.width < 50 || fixture.flexWrap !== 'nowrap' ? 4 : column ? 16 : 38))).toBe(true);
+        expect(labels.some(label => label.text === (fixture.flexWrap !== 'nowrap' ? `${String.fromCharCode(65+boxIndex)} ${box.width}×${box.height}` : box.width < 50 ? String.fromCharCode(65+boxIndex) : column ? `${box.width} × ${box.height} px` : `${box.width} px`) && label.x === 392+box.x+(column || fixture.flexWrap !== 'nowrap' || box.width < 50 ? 4 : 12) && label.y === 240+box.y+(box.width < 50 || fixture.flexWrap !== 'nowrap' ? 4 : column ? 16 : 38)), `${fixture.name}: box ${boxIndex}`).toBe(true);
       }
     }
     const column = fixture.flexDirection.startsWith('column');
@@ -784,7 +784,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
       const wrapped = fixture.flexWrap !== 'nowrap';
       const capped = fixture.name.endsWith('cap');
       const children = expected.map((_box,index) => {
-        if (fixture.itemStyles) return createElement(Rectangle, { style: fixture.itemStyles[index] });
+        if (fixture.itemStyles) return createElement(Rectangle, { style: fixture.itemStyles[index] as RectStyle });
         if (asymmetricBorder) return createElement(Rectangle, { style: { boxSizing: 'border-box', width: column ? 54 : 'auto', height: column ? 'auto' : 62, flexBasis: column ? 62 : 54, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, padding: { left: 3, right: 5, top: 7, bottom: 11 }, borderWidth: { left: 2, right: 4, top: 6, bottom: 8 } } });
         if (boxed) return createElement(Rectangle, { style: { boxSizing: 'border-box', width: 80, height: floor ? 60 : '60%', padding: 10, flexBasis: floor ? index === 0 ? 8 : 80 : '70%', flexGrow: 0, flexShrink: floor ? 0 : 1, minWidth: floor ? index === 0 ? 0 : 100 : index === 0 ? 110 : 0, maxWidth: floor ? index === 0 ? 8 : 110 : index === 0 ? '60%' : undefined } });
         return createElement(Rectangle, { style: {
@@ -796,7 +796,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
         maxWidth: !column && capped && index === 0 ? 80 : undefined,
         maxHeight: column && capped && index === 0 ? 30 : undefined,
       } }); });
-      expect(layoutFlex({ x: 0, y: 0, width: fixture.width, height: fixture.height }, children, { flexDirection: fixture.flexDirection as 'row' | 'column' | 'row-reverse' | 'column-reverse', flexWrap: fixture.flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse', alignContent: 'flex-start', alignItems: 'flex-start', gap: fixture.gap }, measurement)).toEqual(expected);
+      expect(layoutFlex({ x: 0, y: 0, width: fixture.width, height: fixture.height }, children, { flexDirection: fixture.flexDirection as 'row' | 'column' | 'row-reverse' | 'column-reverse', flexWrap: fixture.flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse', alignContent: 'flex-start', alignItems: 'flex-start', gap: fixture.gap, ...(fixture.containerStyle as FlexStyle | undefined) }, measurement)).toEqual(expected);
       for (const [index,box] of expected.entries()) {
         clickCanvas(canvas,394+box.x,242+box.y); await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${String.fromCharCode(65+index)}`);
       }
@@ -814,7 +814,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   controller.dispose();
   expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
-});
+}, 60000);
 
 it.runIf(experimentalLayout)('forms finite row wrap lines in WASM and remeasures Text at each final width', () => {
   const children = () => Array.from({ length: 3 }, (_, key) => createElement(Text, { key,
@@ -2374,5 +2374,36 @@ for (const axis of ['row', 'column'] as const) {
     }, measurement)).toEqual([axis === 'row'
       ? { x: 80, y: 0, width: 20, height: 10 }
       : { x: 0, y: 90, width: 20, height: 10 }]);
+  });
+}
+
+it('records pinned distribution boundaries for both axes', () => {
+  const names = yogaReference.cases.map(fixture => fixture.name);
+  for (const axis of ['row', 'column']) {
+    for (const policy of ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly']) {
+      expect(names).toContain(`distribution-negative-${axis}-${policy}`);
+    }
+    for (const policy of ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly', 'stretch']) {
+      expect(names).toContain(`distribution-single-${axis}-${policy}`);
+      expect(names).toContain(`distribution-cross-negative-${axis}-${policy}`);
+    }
+    for (const policy of ['space-around', 'space-evenly']) {
+      expect(names).toContain(`distribution-negative-${axis}-reverse-${policy}`);
+      expect(names).toContain(`distribution-cross-negative-${axis}-reverse-${policy}`);
+    }
+    expect(names).toContain(`distribution-auto-${axis}`);
+  }
+});
+
+for (const axis of ['row', 'column'] as const) for (const policy of ['space-around', 'space-evenly'] as const) {
+  it.runIf(experimentalLayout)(`uses physical overflow start for reversed ${axis} ${policy}`, () => {
+    const column = axis === 'column';
+    const children = [0, 1].map(() => createElement(Rectangle, { style: { width: column ? 20 : 80, height: column ? 80 : 20, minWidth: 0, minHeight: 0, flexShrink: 0 } }));
+    expect(layoutFlex({x:0,y:0,width:100,height:100}, children, { flexDirection: column ? 'column-reverse' : 'row-reverse', justifyContent: policy, alignItems: 'flex-start', gap:12 }, measurement)).toEqual(column
+      ? [{x:0,y:92,width:20,height:80},{x:0,y:0,width:20,height:80}]
+      : [{x:92,y:0,width:80,height:20},{x:0,y:0,width:80,height:20}]);
+    expect(layoutFlex({x:0,y:0,width:column?30:100,height:column?100:30}, children, { flexDirection: axis, flexWrap:'wrap-reverse', alignContent:policy, alignItems:'flex-start', gap:12 }, measurement)).toEqual(column
+      ? [{x:32,y:0,width:20,height:80},{x:0,y:0,width:20,height:80}]
+      : [{x:0,y:32,width:80,height:20},{x:0,y:0,width:80,height:20}]);
   });
 }

@@ -210,26 +210,87 @@
       "id": "flex.main-cross-distribution",
       "target": "parity",
       "group": "flex-core",
-      "current": "accepted subset",
-      "status": "partial",
+      "current": "finite LTR main/cross distribution complete; safe physical-start overflow follows Chromium with eight classified reverse differences from Yoga3.2.1; RTL remains separate",
+      "status": "complete",
       "evidenceRefs": [
         "packages/core/src/lib/layout/flex.test.ts",
-        "packages/core/test/layout-wasm-slice.test.tsx"
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-css-flex-distribution.mjs",
+        "tooling/test-css-flex-distribution-reverse.mjs",
+        "tooling/test-wasm-column-text-cross.mjs",
+        "tooling/packed-layout-consumer.mjs"
       ],
       "evidence": {
         "positive": [
-          "main/cross placement scenarios",
-          "LTR start/end remain physical under reversed main axes and wrap-reverse; source/built and packed public evidence",
-          "negative-free-space fallback subset"
+          "all main/cross distribution policies on row and column",
+          "one-item wrapped lines for seven alignContent policies",
+          "bounded automatic cross sizes and real measured Text",
+          "LTR logical start/end remain physical under reversal"
         ],
-        "negative": [],
-        "interaction": ["placement target movement"],
-        "yogaCases": [],
-        "missing": [
-          "pinned Yoga matrix for negative free space",
-          "one-item lines",
-          "auto cross sizes"
-        ]
+        "negative": [
+          "invalid alignment diagnostics",
+          "safe overflow fallback on main and wrapped cross axes",
+          "explicit center and direction-relative space-between remain unchanged"
+        ],
+        "interaction": [
+          "source/built75-case comparison hit targets and zero ownership",
+          "measured Text footer x28 to158 with stable y, solves, measurements and nodes",
+          "installed overflow pixels and measured Text following-sibling hit target"
+        ],
+        "yogaCases": [
+          "distribution-negative-row-flex-start",
+          "distribution-negative-row-flex-end",
+          "distribution-negative-row-center",
+          "distribution-negative-row-space-between",
+          "distribution-negative-row-space-around",
+          "distribution-negative-row-space-evenly",
+          "distribution-cross-negative-row-flex-start",
+          "distribution-cross-negative-row-flex-end",
+          "distribution-cross-negative-row-center",
+          "distribution-cross-negative-row-space-between",
+          "distribution-cross-negative-row-space-around",
+          "distribution-cross-negative-row-space-evenly",
+          "distribution-cross-negative-row-stretch",
+          "distribution-single-row-flex-start",
+          "distribution-single-row-flex-end",
+          "distribution-single-row-center",
+          "distribution-single-row-space-between",
+          "distribution-single-row-space-around",
+          "distribution-single-row-space-evenly",
+          "distribution-single-row-stretch",
+          "distribution-auto-row",
+          "distribution-negative-column-flex-start",
+          "distribution-negative-column-flex-end",
+          "distribution-negative-column-center",
+          "distribution-negative-column-space-between",
+          "distribution-negative-column-space-around",
+          "distribution-negative-column-space-evenly",
+          "distribution-cross-negative-column-flex-start",
+          "distribution-cross-negative-column-flex-end",
+          "distribution-cross-negative-column-center",
+          "distribution-cross-negative-column-space-between",
+          "distribution-cross-negative-column-space-around",
+          "distribution-cross-negative-column-space-evenly",
+          "distribution-cross-negative-column-stretch",
+          "distribution-single-column-flex-start",
+          "distribution-single-column-flex-end",
+          "distribution-single-column-center",
+          "distribution-single-column-space-between",
+          "distribution-single-column-space-around",
+          "distribution-single-column-space-evenly",
+          "distribution-single-column-stretch",
+          "distribution-auto-column",
+          "distribution-negative-row-reverse-space-around",
+          "distribution-negative-row-reverse-space-evenly",
+          "distribution-cross-negative-row-reverse-space-around",
+          "distribution-cross-negative-row-reverse-space-evenly",
+          "distribution-negative-column-reverse-space-around",
+          "distribution-negative-column-reverse-space-evenly",
+          "distribution-cross-negative-column-reverse-space-around",
+          "distribution-cross-negative-column-reverse-space-evenly"
+        ],
+        "missing": []
       }
     },
     {

@@ -240,7 +240,7 @@ fn align_main(nodes: &mut [f64], main: f64, gap: f64, alignment: u32, reverse: u
     if count == 0 { return 0; }
     let occupied = nodes.chunks_exact(STRIDE).fold(count.saturating_sub(1) as f64 * gap, |sum,n| sum+n[6]+n[3]+n[8]+n[9]);
     let free = main - occupied;
-    let (start, between) = distribution(free, count, alignment);
+    let (start, between) = distribution(free, count, alignment, reverse == 1);
     let mut cursor = start;
     for n in nodes.chunks_exact_mut(STRIDE) {
         if !cursor.is_finite() { return 1; }
@@ -252,13 +252,13 @@ fn align_main(nodes: &mut [f64], main: f64, gap: f64, alignment: u32, reverse: u
     0
 }
 
-fn distribution(free: f64, count: usize, alignment: u32) -> (f64, f64) {
+fn distribution(free: f64, count: usize, alignment: u32, reverse: bool) -> (f64, f64) {
     if count == 0 { return (0.0, 0.0); }
     match alignment {
         1 => (free, 0.0),
         2 => (free / 2.0, 0.0),
         3 if free >= 0.0 && count > 1 => (0.0, free / (count-1) as f64),
-        4 | 5 if free < 0.0 => (free / 2.0, 0.0),
+        4 | 5 if free < 0.0 => (if reverse { free } else { 0.0 }, 0.0),
         4 => { let space = free / count as f64; (space/2.0, space) },
         5 => { let space = free / (count+1) as f64; (space, space) },
         _ => (0.0, 0.0),
@@ -333,7 +333,7 @@ pub extern "C" fn place_wrap_cross(handle: u32, generation: u32, size: f64, gap:
             let extra = free / sizes.len() as f64;
             for cross in &mut sizes { *cross += extra; }
         }
-        let (mut cursor, between) = distribution(free, lines.len(), alignment);
+        let (mut cursor, between) = distribution(free, lines.len(), alignment, reverse == 1);
         for (&(start, end), cross) in lines.iter().zip(sizes) {
             if !cursor.is_finite() { return 1; }
             let slice = &mut records[start*STRIDE..end*STRIDE];
@@ -496,9 +496,15 @@ mod tests {
         assert_eq!(align_main(&mut nodes, 100., 10., 3, 0), 0);
         assert_eq!((nodes[7], nodes[17]), (0., 78.));
         assert_eq!(align_main(&mut nodes, 30., 10., 4, 0), 0);
-        assert_eq!((nodes[7], nodes[17]), (-12., 20.));
+        assert_eq!((nodes[7], nodes[17]), (0., 32.));
         assert_eq!(align_main(&mut nodes, 30., 10., 3, 0), 0);
         assert_eq!((nodes[7], nodes[17]), (0., 32.));
+        for alignment in [4, 5] {
+            assert_eq!(align_main(&mut nodes, 30., 10., alignment, 1), 0);
+            assert_eq!((nodes[7], nodes[17]), (32., 0.));
+        }
+        assert_eq!(align_main(&mut nodes, 30., 10., 2, 1), 0);
+        assert_eq!((nodes[7], nodes[17]), (20., -12.));
     }
     #[test] fn huge_factors_terminate() {
         let mut nodes = [80.,0.,f64::INFINITY,0.,0.,1e308,0.,0.,0.,0.,80.,0.,f64::INFINITY,0.,0.,1e308,0.,0.,0.,0.];

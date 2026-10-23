@@ -8,6 +8,55 @@ static NumericStyle numericStyle(int i, int j) {
   const double shrink = i == 17 ? (j == 0 ? .5 : 1.5) : i == 19 ? (j == 0 ? 1 : 3) : i == 22 || i == 24 ? .25 : 0;
   return {basis, grow, shrink, j == 0 ? (i == 24 ? 90. : i == 19 ? 70. : 0.) : 0., j == 0 ? (i == 23 ? 10. : i == 18 ? 110. : 1000000.) : 1000000.};
 }
+static void distributionCases() {
+  const char* mainNames[] = {"flex-start","flex-end","center","space-between","space-around","space-evenly"};
+  const YGJustify mainValues[] = {YGJustifyFlexStart,YGJustifyFlexEnd,YGJustifyCenter,YGJustifySpaceBetween,YGJustifySpaceAround,YGJustifySpaceEvenly};
+  const char* crossNames[] = {"flex-start","flex-end","center","space-between","space-around","space-evenly","stretch"};
+  const YGAlign crossValues[] = {YGAlignFlexStart,YGAlignFlexEnd,YGAlignCenter,YGAlignSpaceBetween,YGAlignSpaceAround,YGAlignSpaceEvenly,YGAlignStretch};
+  for (int axis=0;axis<4;axis++) for (int family=0;family<4;family++) {
+    const bool reverse=axis>=2;
+    if(reverse && family>=2)continue;
+    const int policies=family==0?6:family==3?1:7;
+    for(int policy=0;policy<policies;policy++) {
+      if(reverse && policy!=4 && policy!=5)continue;
+      const bool column=axis%2==1, negative=family==0, crossNegative=family==1, single=family==2, automatic=family==3;
+      const int mainSize=100, crossSize=crossNegative?30:100, count=single?1:2;
+      auto config=YGConfigNew(); YGConfigSetUseWebDefaults(config,false); YGConfigSetPointScaleFactor(config,0); YGConfigSetErrata(config,YGErrataNone);
+      auto root=YGNodeNewWithConfig(config); YGNodeStyleSetWidth(root,column?crossSize:mainSize); YGNodeStyleSetHeight(root,column?mainSize:crossSize);
+      YGNodeStyleSetFlexDirection(root,column?(reverse&&!crossNegative?YGFlexDirectionColumnReverse:YGFlexDirectionColumn):(reverse&&!crossNegative?YGFlexDirectionRowReverse:YGFlexDirectionRow));
+      YGNodeStyleSetFlexWrap(root,crossNegative||single?(reverse?YGWrapWrapReverse:YGWrapWrap):YGWrapNoWrap);
+      YGNodeStyleSetJustifyContent(root,negative?mainValues[policy]:YGJustifyFlexStart);
+      YGNodeStyleSetAlignContent(root,crossNegative||single?crossValues[policy]:YGAlignFlexStart);
+      YGNodeStyleSetAlignItems(root,automatic?YGAlignStretch:YGAlignFlexStart);
+      YGNodeStyleSetGap(root,YGGutterAll,single||automatic?0:12);
+      for(int j=0;j<count;j++) {
+        auto child=YGNodeNewWithConfig(config); YGNodeStyleSetFlexBasis(child,negative||crossNegative?80:20); YGNodeStyleSetFlexShrink(child,0);
+        YGNodeStyleSetMinWidth(child,0);YGNodeStyleSetMinHeight(child,0);
+        if(column) { YGNodeStyleSetHeight(child,negative||crossNegative?80:20); if(!automatic)YGNodeStyleSetWidth(child,20);else if(j==0)YGNodeStyleSetMaxWidth(child,30); }
+        else { YGNodeStyleSetWidth(child,negative||crossNegative?80:20); if(!automatic)YGNodeStyleSetHeight(child,20);else if(j==0)YGNodeStyleSetMaxHeight(child,30); }
+        YGNodeInsertChild(root,child,j);
+      }
+      YGNodeCalculateLayout(root,YGUndefined,YGUndefined,YGDirectionLTR);
+      std::cout<<",{\"name\":\"distribution-"<<(negative?"negative-":crossNegative?"cross-negative-":single?"single-":"auto-")<<(column?"column":"row")<<(reverse?"-reverse":"");
+      if(!automatic)std::cout<<"-"<<(negative?mainNames[policy]:crossNames[policy]);
+      std::cout<<"\",\"width\":"<<(column?crossSize:mainSize)<<",\"height\":"<<(column?mainSize:crossSize)<<",\"gap\":"<<(single||automatic?0:12)<<",\"flexDirection\":\""<<(column?(reverse&&!crossNegative?"column-reverse":"column"):(reverse&&!crossNegative?"row-reverse":"row"))<<"\",\"flexWrap\":\""<<(crossNegative||single?(reverse?"wrap-reverse":"wrap"):"nowrap")<<"\",\"containerStyle\":{\"justifyContent\":\""<<(negative?mainNames[policy]:"flex-start")<<"\",\"alignContent\":\""<<(crossNegative||single?crossNames[policy]:"flex-start")<<"\",\"alignItems\":\""<<(automatic?"stretch":"flex-start")<<"\"},\"boxes\":[";
+      for(int j=0;j<count;j++){auto child=YGNodeGetChild(root,j);if(j)std::cout<<",";std::cout<<"{\"x\":"<<YGNodeLayoutGetLeft(child)<<",\"y\":"<<YGNodeLayoutGetTop(child)<<",\"width\":"<<YGNodeLayoutGetWidth(child)<<",\"height\":"<<YGNodeLayoutGetHeight(child)<<"}";}
+      std::cout<<"],\"itemStyles\":[";
+      for(int j=0;j<count;j++){if(j)std::cout<<",";std::cout<<"{\"width\":";if(column&&automatic)std::cout<<"\"auto\"";else std::cout<<(column?20:negative||crossNegative?80:20);std::cout<<",\"height\":";if(!column&&automatic)std::cout<<"\"auto\"";else std::cout<<(column?negative||crossNegative?80:20:20);std::cout<<",\"flexBasis\":"<<(negative||crossNegative?80:20)<<",\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0";if(automatic&&j==0)std::cout<<(column?",\"maxWidth\":30":",\"maxHeight\":30");std::cout<<"}";}
+      std::cout<<"]";
+      if(reverse) {
+        bool differs=false;
+        for(int j=0;j<count;j++) { auto child=YGNodeGetChild(root,j); const int position=(j==0?(negative?92:32):0); const int x=(column==crossNegative)?position:0, y=(column!=crossNegative)?position:0; differs=differs||YGNodeLayoutGetLeft(child)!=x||YGNodeLayoutGetTop(child)!=y; }
+        if(differs) {
+          std::cout<<",\"classification\":\"css-safe-overflow-reverse\",\"comparisonLabel\":\"CSS overflow: physical start under reversal\",\"pibblBoxes\":[";
+          for(int j=0;j<count;j++){auto child=YGNodeGetChild(root,j);if(j)std::cout<<",";const int position=j==0?(negative?92:32):0;std::cout<<"{\"x\":"<<((column==crossNegative)?position:0)<<",\"y\":"<<((column!=crossNegative)?position:0)<<",\"width\":"<<YGNodeLayoutGetWidth(child)<<",\"height\":"<<YGNodeLayoutGetHeight(child)<<"}";}
+          std::cout<<"]";
+        }
+      }
+      std::cout<<"}";YGNodeFreeRecursive(root);YGConfigFree(config);
+    }
+  }
+}
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -119,5 +168,6 @@ int main() {
     std::cout << "}";
     YGNodeFreeRecursive(root); YGConfigFree(config);
   }
+  distributionCases();
   std::cout << "]\n";
 }

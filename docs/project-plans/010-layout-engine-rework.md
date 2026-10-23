@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice75 `bcf4f02e` (direction-independent start/end alignment in finite LTR Flex).
+Latest delivery is slice76 (safe overflow correction and finite distribution evidence).
+Slice75 is `bcf4f02e` (direction-independent start/end alignment).
 Slice74 is `e6175c94` (finite allocation evidence and initial-freeze correction).
 Slice73 is `27b18dde` (finite numeric-gap capability evidence complete).
 Slice72 is `dc4b7d42` (finite Flex outer-box aspect ratios).
@@ -25,9 +26,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is76, bounded distribution conformance evidence. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is77, definite-owner percentage bound evidence. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles25 records:22matches/3classified CSS differences; click A/B/C targets.
+cycles75 records:64matches/11classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1332,13 +1333,64 @@ free-space, one-item-line and auto-cross evidence is complete. Engine opt-in;
 Node26.9.0/pnpm11.21.0/Chromium, not a Node24 aggregate trust or performance claim.
 Exactly one next finite exit is selected below.
 
-## [NEXT] Bounded distribution conformance evidence (slice 76)
+## Slice 76 delivered — safe overflow and finite distribution evidence
 
-Close the remaining finite main/cross-distribution evidence: independently pinned
-negative-free-space policies, one-item lines and automatic cross sizes. Reuse
-supported public behavior and classify actual oracle differences. Preserve source
-paint/hit order, identity and cleanup. No new alignment API, RTL or broader
-intrinsic sizing scope. Keep the fixed33 capabilities and seven gate denominator.
+Corrected around/evenly negative-space fallback in JavaScript and native WASM.
+It now anchors physical LTR start, including reverse main axes and wrap-reverse;
+explicit center stays centered and space-between remains direction-relative.
+Public signatures and native ABI unchanged. Two original forward fallback tests
+and four reversed public cases were RED before the corresponding production fix.
+Independent DOM/Chromium tools preserve the primary executable evidence.
+
+The pinned native corpus grows25→75:64matches and11classified CSS differences.
+Fifty new records cover six main policies, seven cross/one-item policies,
+automatic cross bounds, and eight reverse cases where Yoga3.2.1 differs from
+Chromium/Pibbl safe fallback. Native geometry is preserved; expected Pibbl boxes
+and explicit labels record those eight differences. No general Yoga parity claim.
+A fresh no-write native reproduction passes. Kernel65383bytes, SHA256
+5ad32dbae04f1a56a168c318dc2258f792b23bf64c64b6d2b4781ef1b23dd7b1;
+Rust1.99 native10tests pass. Final affected browser-unit set167passed/1skip.
+Normal forward fallback5passed/35skip. Type/lint/provenance/JSDoc pass.
+The broader docs mutation check currently fails its repository-wide classification
+gate for nine existing program Markdown files (log /tmp/pibbl-slice76-docs.txt);
+that aggregate documentation debt remains open for consolidation/trust hardening.
+
+Final source and built comparison runs actually completed with exit0, all75
+cases/targets,64matches/11classifications, no errors and zero ownership after
+pagehide; built469 private inputs. Both column Text replays pass: footer logical
+x≈28→158, width420 and measured y stable; crossPlacements1→2 while solves,
+measurements and nodeCreates stay fixed; old target misses/new target hits;
+zero owned resources and no errors. Raster rounding is normalized through the
+root background; text height is measured rather than assumed. Packed installed
+consumer passes230 dist inputs, Bundler/NodeNext, safe-overflow pixels, measured
+Text/following-sibling hit geometry and lifecycle. Tarball SHA256
+f4bc305e118d4cb7319639764d3c23a99977ce646693e8569f132ebb8dad31d7.
+
+Studio initially rejected duplicate alignment properties before making an iframe;
+fixed by choosing fixture/default properties once, without raising a timeout or
+source limit. The original startup failure is retained. Earlier empty-log tool
+calls were not completed browser runs; duplicate task-owned processes were
+stopped, then exactly one instrumented source and one built replay were followed
+to actual exit0. Final logs /tmp/pibbl-slice76-{source,built,column-source,
+column-built,packed,final-all,kernel,css,css-reverse,native-reproduce,types,lint}.txt.
+Scoped solver and reverse-delta review reports no material findings; no unchanged
+re-review. No screenshot baseline changed. Node26.9.0/pnpm11.21.0/Chromium; no
+Node24 aggregate trust, general speed or release claim.
+
+Fixed33:3complete,11experimental,7partial,11missing,1excluded. All seven group
+release gates remain open. Consolidate76–78 after two further separate deliveries.
+
+## [NEXT] Definite-owner percentage min/max bounds (slice 77)
+
+Pin row/column percentage growth caps and shrink floors, including a resized
+owner pair, public same-frame hit movement and stable identity/native nodes.
+Validate malformed/nonfinite/negative percentages and conflicting resolved bounds.
+Use current public APIs and a focused source/built/installed proof. Preserve the
+current unsupported result for percentage-dependent intrinsic/indefinite owners;
+independent observations show Yoga and Chromium differ there, so finite max
+constraints must not be silently treated as exact owner dimensions. Full owner
+mode/percentage policy remains a separate dependency; this slice advances the
+partial min/max entry without claiming that unresolved matrix is complete.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

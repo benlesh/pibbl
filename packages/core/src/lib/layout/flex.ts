@@ -1230,8 +1230,7 @@ function distributeAlignment(
   }
   if (free < 0) {
     if (alignment === 'flex-end') return { start: free, between: 0 };
-    if (alignment === 'center' || alignment === 'space-around' ||
-      alignment === 'space-evenly') {
+    if (alignment === 'center') {
       return { start: free / 2, between: 0 };
     }
     return { start: 0, between: 0 };

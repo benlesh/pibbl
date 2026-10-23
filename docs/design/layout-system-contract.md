@@ -215,12 +215,17 @@ shrink mode, and iterative freeze/redistribution enforces min/max constraints.
 Initial free space is computed after the initial freezing pass, using frozen
 target sizes and unfrozen bases. If unfrozen factor totals are below one, partial
 free-space consumption follows the current CSS contract for grow and shrink.
-Three explicit divergences from pinned Yoga are recorded in the migration corpus,
+Three numerical-allocation divergences from pinned Yoga are recorded in the migration corpus,
 including the initial-freeze correction from35→37.5 and65→62.5. See
 `tooling/layout-yoga-rehearsal/README.md` for inputs, primary algorithm reference
 and independent Chromium evidence. Unconstrained partial-shrink65/65 is preserved.
-Negative remaining space keeps CSS-compatible alignment fallbacks for the
-accepted subset.
+Negative free space makes `space-around` and `space-evenly` fall back to safe
+physical LTR start, including reversed main axes and `wrap-reverse`. Explicit
+`center` remains centered even when content overflows; `space-between` retains
+its direction-relative flex-start fallback. This corrects the former centered
+around/evenly overflow in both JavaScript and WASM. Eight reversed overflow
+records explicitly distinguish this independently tested Chromium behavior from
+Yoga3.2.1's direction-relative fallback; they are not native parity claims.
 
 Reverse directions, `wrap-reverse`, `order`, baseline alignment, auto margins,
 percentage gaps, and advanced intrinsic sizing are rejected. Pure intrinsic
