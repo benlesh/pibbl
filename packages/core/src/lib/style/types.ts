@@ -104,6 +104,10 @@ export interface BoxStyle extends SystemStyle {
   paddingEnd?: number | Percentage;
   /** Layout-only physical border insets, in logical pixels. Defaults to zero; does not paint a stroke. See {@link EdgeValues}. */
   borderWidth?: EdgeValues;
+  /** Experimental nonnegative numeric inline-start layout border overriding its physical borderWidth edge. Does not paint a stroke. See {@link BoxStyle}. */
+  borderStartWidth?: number;
+  /** Experimental nonnegative numeric inline-end layout border overriding its physical borderWidth edge. See {@link BoxStyle}. */
+  borderEndWidth?: number;
   /** Selects `"visible"`, `"clip"` for overflow. See {@link BoxStyle}. */
   overflow?: 'visible' | 'clip';
 }

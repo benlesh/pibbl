@@ -7,6 +7,7 @@ const reference = JSON.parse(readFileSync(new URL('./layout-yoga-rehearsal/refer
 const base = process.argv[2] ?? 'http://127.0.0.1:5192';
 const built = process.argv.includes('--built');
 const marginOnly = process.argv.includes('--percentage-margins');
+const logicalBordersOnly = process.argv.includes('--logical-borders');
 const logicalPaddingOnly = process.argv.includes('--logical-padding');
 const crossOnly = process.argv.includes('--wrapped-cross-bounds');
 const paddingOnly = process.argv.includes('--percentage-padding');
@@ -36,22 +37,23 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = logicalPaddingOnly ? reference.cases.filter(fixture => 'contentBoxes' in fixture) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (percentageOnly || aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly) {
+  const cases = logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (percentageOnly || aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly || logicalBordersOnly) {
     assert.ok((await frame.locator('pre').innerText()).includes('grow'));
     await click(396,244);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: A'));
     await click(552,244);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: B'));
     await click(520,158);
-    if (aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly) await click(520,158);
-    if (gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly) await click(520,158);
-    if (paddingOnly || crossOnly || marginOnly || logicalPaddingOnly) await click(520,158);
-    if (crossOnly || marginOnly || logicalPaddingOnly) await click(520,158);
-    if (marginOnly || logicalPaddingOnly) await click(520,158);
-    if (logicalPaddingOnly) await click(520,158);
-    if (logicalPaddingOnly) await click(520,158);
+    if (aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly || logicalBordersOnly) await click(520,158);
+    if (gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly || logicalBordersOnly) await click(520,158);
+    if (paddingOnly || crossOnly || marginOnly || logicalPaddingOnly || logicalBordersOnly) await click(520,158);
+    if (crossOnly || marginOnly || logicalPaddingOnly || logicalBordersOnly) await click(520,158);
+    if (marginOnly || logicalPaddingOnly || logicalBordersOnly) await click(520,158);
+    if (logicalPaddingOnly || logicalBordersOnly) await click(520,158);
+    if (logicalPaddingOnly || logicalBordersOnly) await click(520,158);
   }
+  if (logicalBordersOnly) await click(520,158);
   let previousOwner;
   for (const [index, fixture] of cases.entries()) {
     console.warn(`Replay ${index+1}/${cases.length}: ${fixture.name}`);

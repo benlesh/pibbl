@@ -212,3 +212,13 @@ comes from a child Flex’s explicit `layoutDirection`. Percentage reference is 
 containing Flex content width; raw/intrinsic percentages remain unsupported.
 Layer raster sizing keeps its separate padding-independent policy. Explore
 [logical padding](#/examples/layout/wasm-logical-padding).
+
+Experimental `BoxStyle.borderStartWidth?: number` and `borderEndWidth?: number`
+map through the receiving box’s direction and override the corresponding physical
+`borderWidth` edge, including zero, independently of declaration order. Values
+must be finite nonnegative numbers; percentages are unsupported. A child Flex’s
+explicit direction overrides inheritance. Allocation canonicalizes logical widths
+before content-box/border-box conversion and inset floors. These widths reserve
+layout space; painted strokes remain independent. Layer’s own raster dimensions
+and child origin retain their existing physical-border behavior. Raw logical
+border inputs remain ineligible for frozen allocation caching.

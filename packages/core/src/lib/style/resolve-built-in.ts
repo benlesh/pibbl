@@ -15,6 +15,8 @@ const LAYOUT_PARTICIPATION_KEYS = new Set([
   'paddingEnd',
   'boxSizing',
   'borderWidth',
+  'borderStartWidth',
+  'borderEndWidth',
   'aspectRatio',
   'margin',
   'marginTop',

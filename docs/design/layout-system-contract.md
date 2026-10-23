@@ -831,3 +831,13 @@ content region under LTR/RTL, both setter orders, start0 and end15%. They preser
 the outer size and match the content geometry exactly. `contentBoxes` is a narrow
 reference fixture for that one content rectangle, separate from the existing
 two-leaf nested wrapping fixture.
+
+Experimental `BoxStyle.borderStartWidth?: number` and `borderEndWidth?: number`
+map through the receiving box’s direction and override the corresponding physical
+`borderWidth` edge, including zero, independently of declaration order. Values
+must be finite nonnegative numbers; percentages are unsupported. A child Flex’s
+explicit direction overrides inheritance. Allocation canonicalizes logical widths
+before content-box/border-box conversion and inset floors. These widths reserve
+layout space; painted strokes remain independent. Layer’s own raster dimensions
+and child origin retain their existing physical-border behavior. Raw logical
+border inputs remain ineligible for frozen allocation caching.

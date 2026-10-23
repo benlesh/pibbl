@@ -9,8 +9,8 @@ import type { Edges } from './types.js';
 /** Internal layout insets; painted stroke is deliberately independent. */
 export function normalizeBoxInsets(style: Readonly<BoxStyle>, context: Readonly<LayoutDiagnosticContext>): Edges {
   const padding = numericPadding(style, context);
-  if (style.borderWidth === undefined) return padding;
-  const border = normalizeEdges(style.borderWidth, 'borderWidth', context);
+  if (style.borderWidth === undefined && style.borderStartWidth === undefined && style.borderEndWidth === undefined) return padding;
+  const border = numericBorder(style, context);
   const top = padding.top + border.top, right = padding.right + border.right;
   const bottom = padding.bottom + border.bottom, left = padding.left + border.left;
   if (!Number.isFinite(top) || !Number.isFinite(right) || !Number.isFinite(bottom) || !Number.isFinite(left)) {
@@ -29,8 +29,12 @@ export function hasPercentagePadding(value: unknown): boolean {
     typeof edges.bottom === 'string' && edges.bottom.endsWith('%') ||
     typeof edges.left === 'string' && edges.left.endsWith('%');
 }
-/** Resolves participating Flex padding once; ordinary numeric styles keep identity. */
-export function resolveAllocatedPadding<S extends BoxStyle>(style: Readonly<S>, options: { width: number; layoutDirection?: 'ltr' | 'rtl'; context: Readonly<LayoutDiagnosticContext> }): Readonly<S> {
+/** Resolves participating Flex insets once; ordinary physical numeric styles keep identity. */
+export function resolveAllocatedInsets<S extends BoxStyle>(style: Readonly<S>, options: { width: number; layoutDirection?: 'ltr' | 'rtl'; context: Readonly<LayoutDiagnosticContext> }): Readonly<S> {
+  if (style.borderStartWidth !== undefined || style.borderEndWidth !== undefined) {
+    const borderWidth = numericBorder(style, options.context, options.layoutDirection);
+    style = { ...style, borderWidth, borderStartWidth: undefined, borderEndWidth: undefined };
+  }
   const value = style.padding;
   if (style.paddingStart !== undefined || style.paddingEnd !== undefined) {
     requireLogicalPadding(style, options.context);
@@ -113,5 +117,27 @@ function numericPadding(style: Readonly<BoxStyle>, context: Readonly<LayoutDiagn
 }
 function numericPaddingEdge(value: unknown, property: string, context: Readonly<LayoutDiagnosticContext>): number {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) throw layoutDiagnostic({ ...context, property, value, reason: 'padding must be finite and nonnegative; percentages require an actual finite Flex allocation' });
+  return value;
+}
+
+function numericBorder(style: Readonly<BoxStyle>, context: Readonly<LayoutDiagnosticContext>, inheritedDirection?: 'ltr' | 'rtl'): Edges {
+  if (style.borderStartWidth === undefined && style.borderEndWidth === undefined) return normalizeEdges(style.borderWidth, 'borderWidth', context);
+  if (!experimentalLayout) throw layoutDiagnostic({ ...context, property: style.borderStartWidth !== undefined ? 'borderStartWidth' : 'borderEndWidth', value: style.borderStartWidth !== undefined ? style.borderStartWidth : style.borderEndWidth, reason: 'logical layout borders require the experimental layout engine' });
+  const direction = receiverDirection(style, inheritedDirection);
+  const logicalLeft = direction === 'rtl' ? style.borderEndWidth : style.borderStartWidth;
+  const logicalRight = direction === 'rtl' ? style.borderStartWidth : style.borderEndWidth;
+  const value = style.borderWidth;
+  if (!(value === undefined || typeof value === 'number' || value !== null && typeof value === 'object' && !Array.isArray(value))) throw layoutDiagnostic({ ...context, property: 'borderWidth', value, reason: 'layout borders require numeric physical edge values' });
+  const edges = value !== null && typeof value === 'object' ? value : undefined;
+  const uniform = typeof value === 'number' ? value : 0;
+  return {
+    top: numericBorderEdge(edges?.top ?? uniform, 'borderWidth.top', context),
+    right: numericBorderEdge(logicalRight !== undefined ? logicalRight : edges?.right ?? uniform, logicalRight !== undefined ? direction === 'rtl' ? 'borderStartWidth' : 'borderEndWidth' : 'borderWidth.right', context),
+    bottom: numericBorderEdge(edges?.bottom ?? uniform, 'borderWidth.bottom', context),
+    left: numericBorderEdge(logicalLeft !== undefined ? logicalLeft : edges?.left ?? uniform, logicalLeft !== undefined ? direction === 'rtl' ? 'borderEndWidth' : 'borderStartWidth' : 'borderWidth.left', context),
+  };
+}
+function numericBorderEdge(value: unknown, property: string, context: Readonly<LayoutDiagnosticContext>): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) throw layoutDiagnostic({ ...context, property, value, reason: 'layout border width must be a finite nonnegative number; percentages are unsupported' });
   return value;
 }

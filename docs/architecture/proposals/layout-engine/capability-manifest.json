@@ -1292,7 +1292,7 @@
       "id": "box.padding-and-layout-border",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "numeric padding, allocated experimental Flex percentage padding, receiver-aware logical paddingStart/paddingEnd, and physical numeric layout borderWidth; painted stroke remains separate",
+      "current": "numeric padding, allocated experimental Flex percentage padding, receiver-aware logical paddingStart/paddingEnd, and receiver-aware numeric borderStartWidth/borderEndWidth over physical layout borderWidth; painted stroke remains separate",
       "status": "partial",
       "unresolvedPolicy": "Logical padding precedence and owner-width percentages are implemented. Logical border edges and broader intrinsic feedback/percentage ownership remain outstanding.",
       "evidenceRefs": [
@@ -1425,7 +1425,7 @@
       "id": "direction.rtl-and-logical-edges",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental inherited Flex LTR/RTL direction with receiver-aware logical marginStart/marginEnd and paddingStart/paddingEnd precedence; logical borders remain absent",
+      "current": "experimental inherited Flex LTR/RTL direction with receiver-aware logical marginStart/marginEnd paddingStart/paddingEnd and numeric borderStartWidth/borderEndWidth precedence; broader direction combinations remain partial",
       "status": "partial",
       "unresolvedPolicy": "Logical margin/padding precedence, zero and owner-width percentage reference are implemented. Logical border edges and broader direction matrix remain outstanding.",
       "evidence": {

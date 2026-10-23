@@ -181,3 +181,13 @@ The receiving child carries canonical numeric padding into nested layout.
 [Logical padding](#/examples/layout/wasm-logical-padding) shows a fixed160×80
 border-box child while owner resize changes its15% inset and moves content targets.
 Logical border edges and unallocated percentage padding remain unsupported.
+
+Experimental `BoxStyle.borderStartWidth?: number` and `borderEndWidth?: number`
+map through the receiving box’s direction and override the corresponding physical
+`borderWidth` edge, including zero, independently of declaration order. Values
+must be finite nonnegative numbers; percentages are unsupported. A child Flex’s
+explicit direction overrides inheritance. Allocation canonicalizes logical widths
+before content-box/border-box conversion and inset floors. These widths reserve
+layout space; painted strokes remain independent. Layer’s own raster dimensions
+and child origin retain their existing physical-border behavior. Raw logical
+border inputs remain ineligible for frozen allocation caching.

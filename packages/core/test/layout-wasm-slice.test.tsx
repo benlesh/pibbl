@@ -2293,7 +2293,7 @@ it(`reserves asymmetric layout borders independently from paint in ${axis}`, asy
 
 it('keeps Layer raster sizing independent from layout border and padding insets', async () => {
   const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 80; document.body.append(canvas);
-  const controller = pibbl(canvas, createElement(Layer, { style: { width: 80, height: 40, boxSizing: 'border-box', padding: 10, paddingStart:12, paddingEnd:'15%', borderWidth: 5 }, children:
+  const controller = pibbl(canvas, createElement(Layer, { style: { width: 80, height: 40, boxSizing: 'border-box', padding: 10, paddingStart:12, paddingEnd:'15%', borderWidth: 5, borderStartWidth:30, borderEndWidth:12 }, children:
     createElement(Rectangle, { style: { width: 120, height: 80, fill: 'red' } }) })); controllers.push(controller); await nextFrame();
   expect([...canvas.getContext('2d')!.getImageData(1,1,1,1).data]).toEqual([255,0,0,255]);
   expect([...canvas.getContext('2d')!.getImageData(79,39,1,1).data]).toEqual([255,0,0,255]);
@@ -2971,4 +2971,32 @@ it.skipIf(experimentalLayout)('rejects logical padding in ordinary box layout',(
 for(const active of [false,true])it.runIf(experimentalLayout)(`admits winning logical padding under isolated RTL measurement active=${active}`,()=>{
  const root=createElement(Flex,{style:{height:30,layoutDirection:'rtl'},children:createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,padding:active?{left:'10%'}:{right:'10%'},paddingStart:0}})});
  const result=measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:60},service);if(active)expect(result).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage padding')});else expect(result).toEqual({status:'measured',size:{width:40,height:30}});
+});
+
+for(const axis of ['row','column'] as const)for(const rtl of [false,true])for(const start of [0,30]){
+ it.runIf(experimentalLayout)(`resolves logical border ${axis} precedence rtl=${rtl} start=${start}`,()=>{
+  const width=rtl?48+start:60+start;
+  const first={width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,borderWidth:{left:8,right:20,top:5,bottom:5},borderStartWidth:start};
+  const reordered={borderStartWidth:start,borderWidth:{bottom:5,top:5,right:20,left:8},width:40,height:20,minWidth:0,minHeight:0,flexShrink:0};
+  for(const style of [first,reordered])expect(layoutFlex({x:0,y:0,width:200,height:100},[createElement(Rectangle,{style})],{flexDirection:axis,layoutDirection:rtl?'rtl':'ltr',alignItems:'flex-start'},measurement)).toEqual([{x:rtl?200-width:0,y:0,width,height:30}]);
+ });
+}
+it.runIf(experimentalLayout)('floors border boxes at combined logical and physical layout borders',()=>{
+ const style={width:100,height:60,boxSizing:'border-box' as const,minWidth:0,minHeight:0,flexShrink:0,borderWidth:10,borderStartWidth:120};
+ expect(layoutFlex({x:0,y:0,width:200,height:100},[createElement(Rectangle,{style})],{},measurement)).toEqual([{x:0,y:0,width:130,height:60}]);
+});
+it.runIf(experimentalLayout)('keeps logical layout borders canonical through nested receiver direction and resize',async()=>{
+ const baseline=snapshotWasmLayoutDiagnostics(),start=signal(0),width=signal(200),childDirection=signal<'ltr'|'rtl'>('rtl'),fill=signal('red');let hits=0;
+ const style={width:100,height:60,boxSizing:'border-box' as const,layoutDirection:childDirection,minWidth:0,minHeight:0,flexShrink:0,borderWidth:{left:8,right:20,top:5,bottom:5},borderStartWidth:start};
+ const root=createElement(Flex,{style:{width,height:100,layoutDirection:'rtl'},children:createElement(Flex,{style,children:createElement(Rectangle,{style:{width:20,height:20,minWidth:0,minHeight:0,flexShrink:0,fill},onClick:()=>hits++})})});
+ const canvas=document.createElement('canvas');canvas.width=320;canvas.height=120;document.body.append(canvas);const controller=pibbl(canvas,root);controllers.push(controller);await nextFrame();clickCanvas(canvas,195,10);expect(hits).toBe(1);const initial=snapshotWasmLayoutDiagnostics();
+ start.set(30);await nextFrame();clickCanvas(canvas,195,10);expect(hits).toBe(1);clickCanvas(canvas,155,10);expect(hits).toBe(2);width.set(300);await nextFrame();clickCanvas(canvas,155,10);expect(hits).toBe(2);clickCanvas(canvas,255,10);expect(hits).toBe(3);childDirection.set('ltr');await nextFrame();clickCanvas(canvas,255,10);expect(hits).toBe(3);clickCanvas(canvas,235,10);expect(hits).toBe(4);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+ const before=snapshotWasmLayoutDiagnostics();fill.set('blue');await nextFrame();expect(snapshotWasmLayoutDiagnostics().solves).toBe(before.solves);controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+});
+
+for(const property of ['borderStartWidth','borderEndWidth'] as const)for(const value of [-1,NaN,Infinity,'10%','auto',null]){
+ it.runIf(experimentalLayout)(`rejects invalid logical border ${property}=${value}`,()=>{const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,[property]:value} as RectStyle});expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/border/);});
+}
+it.skipIf(experimentalLayout)('rejects logical borders in ordinary box layout',()=>{
+ for(const edge of [{borderStartWidth:0},{borderEndWidth:10}]){const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,...edge}});expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/logical layout borders/);}
 });

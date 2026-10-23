@@ -629,6 +629,65 @@ static void logicalPaddingCases() {
   }
 }
 
+
+static void logicalBorderPhysical(YGNodeRef child) {
+  YGNodeStyleSetBorder(child, YGEdgeAll, 5);
+  YGNodeStyleSetBorder(child, YGEdgeLeft, 8);
+  YGNodeStyleSetBorder(child, YGEdgeRight, 20);
+}
+
+static void logicalBorderEdge(YGNodeRef child, bool start) {
+  if (start) YGNodeStyleSetBorder(child, YGEdgeStart, 0);
+  else YGNodeStyleSetBorder(child, YGEdgeEnd, 30);
+}
+
+static void logicalBorderCases() {
+  // Full-content leaves expose resolved logical border insets and both sizing modes.
+  for (int start = 0; start < 2; ++start) for (int rtl = 0; rtl < 2; ++rtl) for (int logicalFirst = 0; logicalFirst < 2; ++logicalFirst) for (int borderBox = 0; borderBox < 2; ++borderBox) {
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(root, 200); YGNodeStyleSetHeight(root, 100); YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetJustifyContent(root, YGJustifyFlexStart);
+    auto child = YGNodeNewWithConfig(config);
+    YGNodeStyleSetBoxSizing(child, borderBox ? YGBoxSizingBorderBox : YGBoxSizingContentBox); YGNodeStyleSetWidth(child, 100); YGNodeStyleSetHeight(child, 60);
+    YGNodeStyleSetFlexShrink(child, 0); YGNodeStyleSetMinWidth(child, 0); YGNodeStyleSetMinHeight(child, 0);
+    if (logicalFirst) { logicalBorderEdge(child, start); logicalBorderPhysical(child); }
+    else { logicalBorderPhysical(child); logicalBorderEdge(child, start); }
+    auto leaf = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidthPercent(leaf, 100); YGNodeStyleSetHeightPercent(leaf, 100); YGNodeStyleSetFlexShrink(leaf, 0);
+    YGNodeStyleSetMinWidth(leaf, 0); YGNodeStyleSetMinHeight(leaf, 0);
+    YGNodeInsertChild(child, leaf, 0); YGNodeInsertChild(root, child, 0);
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, rtl ? YGDirectionRTL : YGDirectionLTR);
+    std::cout << ",{\"name\":\"logical-border-" << (start ? "start-zero" : "end-thirty") << '-' << (rtl ? "rtl" : "ltr") << (logicalFirst ? "-logical-first" : "-logical-last") << '-' << (borderBox ? "border-box" : "content-box")
+              << "\",\"width\":200,\"height\":100,\"gap\":0,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr") << "\",\"containerStyle\":{\"alignItems\":\"flex-start\",\"justifyContent\":\"flex-start\"},\"boxes\":[";
+    printBox(child);
+    std::cout << "],\"contentBoxes\":[{\"x\":" << YGNodeLayoutGetLeft(child) + YGNodeLayoutGetLeft(leaf) << ",\"y\":" << YGNodeLayoutGetTop(child) + YGNodeLayoutGetTop(leaf) << ",\"width\":" << YGNodeLayoutGetWidth(leaf) << ",\"height\":" << YGNodeLayoutGetHeight(leaf) << "}],\"itemStyles\":[{\"boxSizing\":\"" << (borderBox ? "border-box" : "content-box") << "\",\"width\":100,\"height\":60,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"borderWidth\":{\"left\":8,\"right\":20,\"top\":5,\"bottom\":5},\"" << (start ? "borderStartWidth\":0" : "borderEndWidth\":30") << "}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+  // Yoga resolves a logical border against the receiver's own direction, while the RTL parent still places it from the right.
+  for (int start = 0; start < 2; ++start) {
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(root, 200); YGNodeStyleSetHeight(root, 100); YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetJustifyContent(root, YGJustifyFlexStart);
+    auto child = YGNodeNewWithConfig(config);
+    YGNodeStyleSetDirection(child, YGDirectionLTR); YGNodeStyleSetBoxSizing(child, YGBoxSizingBorderBox); YGNodeStyleSetWidth(child, 100); YGNodeStyleSetHeight(child, 60);
+    YGNodeStyleSetFlexShrink(child, 0); YGNodeStyleSetMinWidth(child, 0); YGNodeStyleSetMinHeight(child, 0);
+    logicalBorderPhysical(child); logicalBorderEdge(child, start);
+    auto leaf = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidthPercent(leaf, 100); YGNodeStyleSetHeightPercent(leaf, 100); YGNodeStyleSetFlexShrink(leaf, 0);
+    YGNodeStyleSetMinWidth(leaf, 0); YGNodeStyleSetMinHeight(leaf, 0);
+    YGNodeInsertChild(child, leaf, 0); YGNodeInsertChild(root, child, 0);
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionRTL);
+    std::cout << ",{\"name\":\"logical-border-" << (start ? "start-zero" : "end-thirty") << "-parent-rtl-child-ltr-border-box\",\"width\":200,\"height\":100,\"gap\":0,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"rtl\",\"containerStyle\":{\"alignItems\":\"flex-start\",\"justifyContent\":\"flex-start\"},\"boxes\":[";
+    printBox(child);
+    std::cout << "],\"contentBoxes\":[{\"x\":" << YGNodeLayoutGetLeft(child) + YGNodeLayoutGetLeft(leaf) << ",\"y\":" << YGNodeLayoutGetTop(child) + YGNodeLayoutGetTop(leaf) << ",\"width\":" << YGNodeLayoutGetWidth(leaf) << ",\"height\":" << YGNodeLayoutGetHeight(leaf) << "}],\"itemStyles\":[{\"boxSizing\":\"border-box\",\"width\":100,\"height\":60,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"borderWidth\":{\"left\":8,\"right\":20,\"top\":5,\"bottom\":5},\"layoutDirection\":\"ltr\",\"" << (start ? "borderStartWidth\":0" : "borderEndWidth\":30") << "}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -753,5 +812,6 @@ int main() {
   layoutDirectionCases();
   logicalMarginCases();
   logicalPaddingCases();
+  logicalBorderCases();
   std::cout << "]\n";
 }

@@ -12,7 +12,13 @@ try{
  await click(50,105);const rtl=await read();assert.equal(rtl.box.x,314);assert.equal(rtl.box.stamp,1);await click(87,163);assert.equal((await read()).hits,3);await click(319,163);assert.equal((await read()).hits,4);
  const before=await read();await click(540,105);const painted=await read();for(const key of ['solves','mainPlacements','crossPlacements','measuredLeaves','nodeCreates'])assert.equal(painted.layout[key],before.layout[key],key);
  await click(200,105);const zero=await read();assert.equal(zero.box.x,368);await click(373,163);assert.equal((await read()).hits,5);assert.equal(zero.layout.nodeCreates,initial.layout.nodeCreates);
+ if(process.argv.includes('--logical-borders')){
+  await click(680,105);const zeroBorder=await read();assert.equal(zeroBorder.borderStartWidth,0);assert.equal(zeroBorder.box.x,368);assert.equal(zeroBorder.box.y,163);await click(373,168);assert.equal((await read()).hits,6);
+  await click(680,105);const border=await read();assert.equal(border.borderStartWidth,30);assert.equal(border.box.x,338);assert.equal(border.box.y,163);await click(373,168);assert.equal((await read()).hits,6);await click(343,168);assert.equal((await read()).hits,7);
+  await click(50,105);const ltrBorder=await read();assert.equal(ltrBorder.box.x,58);assert.equal(ltrBorder.box.y,163);assert.equal(ltrBorder.box.stamp,1);await click(343,168);assert.equal((await read()).hits,7);await click(63,168);assert.equal((await read()).hits,8);
+  const before=await read();await click(540,105);const painted=await read();for(const key of ['solves','mainPlacements','crossPlacements','nodeCreates','measuredLeaves'])assert.equal(painted.layout[key],before.layout[key],key);
+ }
  const sandbox=page.frames().find(value=>value.url()==='about:srcdoc'),proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);if(process.argv.includes('--built')){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
  const disposed=await sandbox.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();});assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements],[0,0,0]);assert.deepEqual(errors,[]);
- console.warn(JSON.stringify({base,initial:initial.box,padded:padded.box,resized:resized.box,rtl:rtl.box,zero:zero.box,builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
+ console.warn(JSON.stringify({base,logicalBorders:process.argv.includes('--logical-borders'),initial:initial.box,padded:padded.box,resized:resized.box,rtl:rtl.box,zero:zero.box,builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
 }finally{await browser.close();}

@@ -40,7 +40,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; the single next slice is91, logical layout borders. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slice91 is delivered below; the single next slice is92, the intrinsic-provider contract. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles159 records:136matches/23classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -2070,20 +2070,47 @@ atomic geometry/interaction/HTML commit, standalone migration, Grid, corpus and
 performance exits. After91, choose the intrinsic-provider contract prerequisite
 as the next substantial gate step. Final whole-codebase review remains at full end.
 
-## [NEXT] Logical layout border edges (slice 91)
+## Slice 91 delivered — logical layout borders
 
-Consolidation30 passed for separately committed88–90. Resolve the
-small additive logical numeric border API alongside existing `borderWidth`
-physical shorthand. Pin start/end versus physical edges, zero, setter orders,
-receiver direction, content-box/border-box floors and full content geometry.
-Keep border widths finite/nonnegative numeric; do not admit percentages or paint
-aliases. Define exact public names/signatures before production. Deliver focused
-public RED→runnable source feedback before broader hardening; synchronize editor,
-packed declarations, source/built/installed geometry, hits and exact teardown.
-Preserve Layer raster sizing and the cheap physical-only path. Reuse helpers and
-scoped reviewer. Reconcile remaining direction/box entries honestly, then advance
-the next material intrinsic/owner-graph gate prerequisite. Fixed33/seven gates
-remain; whole-codebase review occurs at full program end.
+Adds experimental numeric `BoxStyle.borderStartWidth` and `borderEndWidth`.
+Receiver direction selects the physical edge; logical values, including zero,
+override physical shorthand independently of setter order. Allocation canonicalizes
+before box conversion and inset floors. Percentages and invalid numeric widths
+are rejected; painted stroke and Layer raster behavior remain independent.
+The cheap physical-only path is unchanged. Editor and installed declarations agree.
+
+Focused public RED:10 failing tests before production. Fresh Chromium experimental
+suite:311passed/6skipped (317); ordinary targeted rejection/Layer suite:2passed,
+315skipped. Source and built controls preserve moved targets, stamp1, paint reuse
+and zero disposal counters.18 native border cases match in both modes, including
+content/border boxes, setter order, RTL and explicit child direction. Corpus now177
+records:154 matches and23 previously classified differences. No baseline rewrite.
+Packed consumer passes Bundler/NodeNext and installed pixels, targets, identity,
+paint reuse and teardown:230 inputs; SHA256
+`6e94a459b053b79ca1b67f5c0456bf360c6f42f0129062cf5ba47b1a2fc390bc`.
+Built Studio uses469 inputs. Types, changed-TypeScript lint, documentation109 RED
+mutation probes, public JSDoc, scenario discovery/catalog, native provenance and
+whitespace pass. Node26.9.0/Chromium; this is not the Node24 aggregate trust gate.
+A catalog HMR interrupted initial built replays; both passed after sources were
+held stable. Scoped reviewer reported no material findings.
+
+Inspect `http://127.0.0.1:5192/#/examples/layout/wasm-logical-padding`, Border edge.
+Direction and box capabilities remain partial: broader combined direction,
+intrinsic and owner-feedback exits are outstanding. Fixed33 capabilities and all
+seven release gates remain open; whole-codebase review stays at full program end.
+
+## [NEXT] Intrinsic provider contract (slice 92)
+
+Implement the accepted distinct `measureIntrinsic` primitive capability returning
+both min-content and max-content sizes, with explicit bounded/unbounded available
+axes. Keep existing `measure` unchanged. Present concrete application code and
+signatures before production. Start with one direct custom leaf in finite row
+nowrap Flex: automatic basis/minimum, explicit zero minimum escape, reactive
+content and paint-only reuse, public source/built/installed evidence and exact
+cleanup. Preserve pure transactional measurement, finite validation, unsupported
+and thrown-error behavior. No synthetic zero-width/unbounded legacy-measure
+fallback. Baselines are a later distinct capability. Reuse helpers and one scoped
+reviewer. Keep one NEXT and commit each slice separately.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
