@@ -102,14 +102,14 @@ In experimental layout, a primitive leaf in a finite LTR or RTL nowrap
 `Flex` of any main direction may choose `position: "static"` or `"relative"`. Static retains its
 ordinary Flex slot and ignores insets. Relative retains that slot, then applies
 finite numeric `left`/`right`/`top`/`bottom` once to final geometry. LTR
-prefers left over right, RTL prefers right over left, and top prefers bottom.
+prefers left over right, RTL prefers right over left, and top takes precedence over bottom.
 Omitting `position` preserves the existing Flex placement rules. This bounded
 feature does not provide containing blocks,
 percent-inset resolution, wrapping, or other layout-family support.
 
-Experimental direct row-nowrap Flex children may also select `position: "absolute"`
+Experimental direct nowrap Flex children in any main direction may also select `position: "absolute"`
 with finite numeric width/height or automatic/omitted axes paired with both
-finite numeric physical insets on each automatic axis. With a positive finite
+finite numeric physical insets on each automatic axis. In a row, with a positive finite
 `aspectRatio`, exactly one automatic axis may instead derive from the declared
 finite numeric opposite axis. Both-automatic and both-explicit ratio cases remain
 outside this admission. This excludes the child from Flex line allocation while preserving authored
@@ -125,9 +125,9 @@ intrinsic measurement. Finite numeric min/max bounds then clamp used axes
 independently before physical-inset precedence places them; bounds do not
 recouple an aspect ratio. A numeric
 minimum above its maximum rejects; percent and automatic bounds remain outside
-this admission. Direct layout children, child box decoration, margins and flex
-factors remain unsupported, along with unpaired automatic sizing without aspect derivation and general
-nested containing blocks.
+this admission. Direct layout children, child box decoration, margins and nonzero flex
+factors remain unsupported, along with general nested containing blocks. Unpaired
+automatic sizing requires the documented row-only aspect or paired-provider path.
 
 ## FlexMargin
 

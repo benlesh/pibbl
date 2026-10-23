@@ -132,8 +132,8 @@ contexts and inset values.
 
 ### Experimental measured absolute size
 
-A direct custom primitive with existing paired pure `measureIntrinsic` and
-`measure` providers may use exactly one automatic or omitted absolute dimension
+In a finite row-nowrap Flex, a direct custom primitive with paired pure
+`measureIntrinsic` and `measure` providers may use exactly one automatic or omitted absolute dimension
 with an explicit finite numeric opposite dimension. Opposing insets on the
 automatic axis and admitted aspect derivation retain their existing precedence.
 Otherwise the parent calls `measure` with one of these callback envelopes:

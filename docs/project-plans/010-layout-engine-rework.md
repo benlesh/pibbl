@@ -2,13 +2,13 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice132 (opposing-inset absolute size/bounds across all main directions; this commit).
+Latest delivery is slice132 `43f17fc1` (opposing-inset absolute size/bounds across all main directions).
 Slice131 is `b0ab5061` (physical static/relative main directions).
 Slice130 is `2bbe4181` (fixed absolute main directions).
 Slice129 is `398dfa54` (bounded measured absolute natural height).
 Slice128 is `2539ff32` (bounded measured absolute natural width).
 Slice127 is `dfc5843c` (bounded absolute aspect-ratio derivation).
-Consolidation43 is `ce7f45a1` for127–129; consolidation42 is `99dfdf49` for124–126.
+Consolidation44 for130–132 passes below; consolidation43 is `ce7f45a1` for127–129; consolidation42 is `99dfdf49` for124–126.
 Slice126 is `0bda56ec` (numeric absolute size bounds).
 Slice125 is `6603731e` (declarative static Flex containing-block ownership).
 Slice124 is `77452150` (opposing-inset derived absolute dimensions).
@@ -3735,12 +3735,32 @@ Logs `/tmp/pibbl-slice132-{public-red,public-green,focused,normal,latest,native,
 Kernel68649bytes/SHA unchanged. Node26.9.0/macOSChromium, no Node24 trust or
 uninterrupted423-case browser claim. Fixed33/all7open gates unchanged.
 
-## [NEXT] Consolidate slices130–132 (checkpoint44)
+## Consolidation44 completed for slices130–132
 
-Run combined experimental and normal layout/measurement/loading/positioning
-checks, retain segmented browser/package evidence, and reconcile the finite exit
-map. Next material implementation candidate is exactly-one-auto aspect sizing
-across nowrap main directions; do not broaden natural providers or ownership.
+Separate130 `2bbe4181`,131 `b0ab5061`,132 `43f17fc1`. Combined experimental
+28files610pass/11normal-onlyskip621 (79.39s); normal22pass-files/6skip-files,
+231pass/390skip621 (4.35s). Logs `/tmp/pibbl-consolidation44-{focused,normal}.txt`.
+Expected negative-provider diagnostics appear; no assertion failures. The same
+combined suite covers positioning/containing boundaries, known owner preparation,
+measurement purity/cache ownership, loading, Canvas and prior layout contracts.
+Source/built13224-case and prior direction-family receipts, installed245-input
+package/104auto-margin receipts, types/lint and scoped reviews are recorded above.
+No uninterrupted423-case browser claim or additional review of unchanged code.
+Docs109RED/JSDoc and public5/full423 boundary pass. Summary API wording is
+reconciled with all-direction paired sizing and row-only natural measurement;
+physical inset precedence and nonzero-factor exclusions are stated precisely.
+
+Fixed33:8complete/12experimental/6partial/6missing/1excluded. All7release gates
+remain open. Direction coverage does not close the general positioning, intrinsic,
+publication, migration, Grid, reproducible performance or release exits. No baseline
+rewrite, performance/parity promotion or Node24 aggregate trust claim.
+
+## [NEXT] Exactly-one-auto absolute aspect sizing across main directions (slice133)
+
+Reuse declared-axis aspect derivation in all finite nowrap main directions and
+LTR/RTL. Paired insets retain precedence, bounds clamp independently afterward,
+and natural providers/containing/wrapping stay excluded. Pinned probe and public
+RED prepared. Commit133 separately; next consolidation follows133–135.
 
 ### Finite positioning exit matrix after132
 
