@@ -2200,11 +2200,14 @@
       "id": "flex.auto-margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental finite native main/cross auto margins across main directions, nowrap/wrap/wrap-reverse and LTR/RTL, physical/logical edges and uniform precedence; declared numeric/percentage and supported aspect cross sizes settle before absorption; final Text row and unwrapped-column measurement preserves existing Canvas font/fitting/overflow policy, with generic-only reusable caching; the separate fixed-height generic wrapped-column natural-advance policy remains bounded; direct/described paired providers and measurable Flex/Flow/fixed-track Grid roots use existing final-main pure measurement before native cross placement; intrinsic auto margins contribute zero in otherwise admitted native owner queries; source targets, keyed identity, receiver/cache ownership and teardown are evidenced",
+      "current": "experimental finite native main/cross auto margins across main directions, nowrap/wrap/wrap-reverse and LTR/RTL, physical/logical edges and uniform precedence; declared numeric/percentage and supported aspect cross sizes settle before absorption; final Text row and unwrapped-column measurement preserves existing Canvas font/fitting/overflow policy, with generic-only reusable caching; the separate fixed-height generic wrapped-column natural-advance policy remains bounded; direct/described paired providers and measurable Flex/Flow/fixed-track Grid roots use existing final-main pure measurement before native cross placement; intrinsic auto margins contribute zero in otherwise admitted native owner queries; source targets, keyed identity, receiver/cache ownership and teardown are evidenced; ordinary measure-only direct/described providers and finite wrapped-column Text profiles retain ordinary finite measurement; fixed LTR baseline leaves admit main and cross automatic margins, excluding cross-auto leaves from shared baseline queries and ascent",
       "status": "partial",
-      "unresolvedPolicy": "The original auto-margin target remains partial. Proven auto-only residuals are ordinary measure-only primitives (no intrinsic callback) in row nowrap/wrap and column nowrap, plus wrapped Text children in a nowrap column with a non-generic font, numeric basis or positive growth outside the narrow natural-width policy. Their numeric0controls render, so these are not independent zero-query failures. Wrapped column PARENTS with automatic natural cross sizing and staged intrinsic owners with nonzero numeric margins still require independent zero-baseline measurement/margin prerequisites. Prepared responsive queries and Absolute/Overlay natural sizes lack existing pure measurement; no fallback or opaque query is authorized.",
+      "unresolvedPolicy": "All recorded auto-only admission classes are now implemented through slices187–189; consolidation63 and the bounded capability exit decision are pending. Existing pure-query or numeric-zero failures remain independent prerequisites: wrapped column natural sizing, staged intrinsic owners with nonzero numeric margins, prepared responsive recursive queries and Absolute/Overlay pure providers. Pibbl keeps its documented CSS line-local cross-auto policy; pinned Yoga baseline cross-auto is an explicitly recorded divergence, not an unconditional parity claim.",
       "evidence": {
         "positive": [
+          "slice189: public and installed before/after/both baseline cross-auto placement excludes the leaf baseline callback/ascent; detached provider signals do not schedule new solves; native27tests, source/built companion targets, stable identities and exact teardown pass; pinned Yoga top-auto18 differs from existing Pibbl full-line60 policy",
+          "slice188: main left/right auto margins resolve before fixed LTR baseline alignment, preserving final provider allocation, targets and identities in public/source/built/installed consumers",
+          "slice187: ordinary measure-only direct/described providers and five wrapped Text policies retain finite cross measurement and live signal ownership without an intrinsic callback; public/source/built/installed ordinary-provider evidence passes",
           "slice186: six public Flow/Grid row-nowrap/wrap and column cases share existing pure measurement; two described paired-provider cases preserve source identity and queries; Absolute/Overlay pure-query and zero/auto prepaint failures remain explicit; source/built/installed geometry, moved targets, resize, reuse and cleanup pass",
           "slice185: eight matched public Text policy cases use existing Canvas font/ellipsis/clip/squish/overflow measurement across row and unwrapped-column final cross paths; active fitting, pure geometry, moved glyph hits, content updates, identity and cleanup pass; non-generic measurements remain uncached and intrinsic/query/aspect policies unchanged",
           "slice184: unwrapped generic row Text uses real Canvas ink height; wrapped-row paired providers and direct/described Flex roots use real settled-width height before native line-local cross-auto placement; zero/auto geometry, split-line resize, moved targets, cache/identity/cleanup pass in public/source/built/installed consumers",
@@ -2228,7 +2231,7 @@
           "growth consumes space before auto slots; nonpositive free space preserves center alignment",
           "numeric-to-auto-to-numeric toggles update main placement only without re-solving or recreating nodes",
           "public FlexMargin and editor declarations expose six edge fields plus uniform margin auto; finite main/cross admission remains contextual",
-          "slice98: four main directions \u00d7 LTR/RTL physical auto, logical row start/end and exact source-order geometry; axis/direction signals preserve keyed focus",
+          "slice98: four main directions × LTR/RTL physical auto, logical row start/end and exact source-order geometry; axis/direction signals preserve keyed focus",
           "slice99: each wrapped line counts its own auto slots; a line without auto slots retains justification; 16 CSS-line-local differences explicitly classified against pinned Yoga",
           "slice100: per-line top/bottom/both cross-auto override alignment; finite explicit-height rows, reverse main/RTL, nowrap and wrap; zero/negative space overflows at start and numeric opposite margin is retained",
           "slice101: 36 additional physical cross-auto directions; effective cross reversal maps flags through the existing native conversion; logical column inline start/end and LTR/RTL oversized-item overflow remain coherent",
@@ -2258,7 +2261,7 @@
           "source/built seven-case semantic boxes, stable keyed stamps, moved A/B targets and zero disposal ownership",
           "fresh installed seven-case public geometry/targets, per-controller node/arena/cache cleanup and strict Bundler/NodeNext type consumers",
           "public mounted resize preserves stamps; paint-only preserves solves and node identity",
-          "slice98: seventeen exact native/source/built/installed auto cases; public row\u2192column\u2192RTL signal movement preserves focus/stamps/nodes, old target misses and new target hits",
+          "slice98: seventeen exact native/source/built/installed auto cases; public row→column→RTL signal movement preserves focus/stamps/nodes, old target misses and new target hits",
           "slice99: source/built 17 wrapped cases plus installed 34-case auto family; line merge preserves keyed focus and moves targets; paint reuse and exact disposal",
           "slice100: source/built 12 cross-auto cases, 8 CSS cross-auto precedence differences plus4 native matches; installed46auto cases; cross-only flag changes preserve sizing/main placement/node identity, focus/hits and disposal",
           "slice101: all36 expected boxes independently match Chromium CSS; public mounted matrix plus source/built replay and installed82auto cases; wrap reversal and row-to-RTL-column signals preserve keyed focus and moved targets",
@@ -2373,9 +2376,8 @@
           "owner-cross-auto-top-stretch-narrow"
         ],
         "missing": [
-          "ordinary measure-only primitives (without measureIntrinsic) still mount at numeric0 then reject auto in row-nowrap/wrap and column-nowrap; the ordinary pure measure capability is the remaining admission class",
-          "wrapped Text CHILDREN in nowrap columns with non-generic font, numeric basis or growth mount at numeric0 then reject auto; automatic natural cross sizing in wrapped column PARENTS is a separate zero-baseline prerequisite",
-          "staged percentage-bound intrinsic owners with nonzero numeric margin contributions remain outside the admitted zero/auto profile"
+          "consolidation63 and original bounded auto-margin exit assessment pending",
+          "independently unsupported pure queries and staged nonzero numeric margin contributions retain numeric-zero diagnostics"
         ]
       },
       "evidenceRefs": [
@@ -2398,7 +2400,12 @@
         "tooling/layout-yoga-rehearsal/reference.json",
         "tooling/test-wasm-yoga-migration.mjs",
         "tooling/packed-layout-consumer.mjs",
-        "docs/design/layout-system-contract.md#experimental-main-axis-auto-margins"
+        "docs/design/layout-system-contract.md#experimental-main-axis-auto-margins",
+        "packages/core/test/layout-ordinary-cross-measurement.test.tsx",
+        "packages/core/test/layout-flex-baseline.test.tsx",
+        "packages/core/test/layout-flex-baseline-auto-cross.test.tsx",
+        "tooling/layout-yoga-rehearsal/baseline-auto-margin-probe.cpp",
+        "tooling/test-wasm-flex-baseline.mjs"
       ]
     },
     {

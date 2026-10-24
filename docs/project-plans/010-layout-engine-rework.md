@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice188: baseline main-axis automatic margins.
+Latest delivery is slice189: baseline cross-auto participant handling.
+Slice188 is `bb30e361`: baseline main-axis automatic margins.
 Slice187 is `abc5df83`: ordinary finite cross measurement.
 Slice186 covers existing measurable-family and described-provider dispatch.
 Slice185 is `1b196156` (existing Text policy in final cross measurement).
@@ -6904,25 +6905,46 @@ Try `http://127.0.0.1:5192/#/examples/layout/wasm-flex-baseline`: toggle Start/A
 at the right to move the companion pair while preserving its common baseline.
 The built equivalent is on5193.
 
-## [NEXT] Slice189: baseline cross-auto participant handling and exit decision
+## Slice189 delivered: baseline cross-auto participant handling
 
-This is the final known auto-only guard in the bounded admission inventory.
-Cover before/after/both cross-auto edges, no-positive-free-space behavior and
-baseline-group exclusion with matched numeric0controls, native reference,
-public geometry, moved targets and teardown. Preserve the current finite LTR
-row-nowrap direct fixed-leaf baseline envelope; do not add wrapped/RTL/nested
-baseline layouts. Pinned Yoga top-auto retains A(0,18)/B(40,0) in the160x80fixture;
-record any difference from Pibbl's already accepted full-line automatic-margin
-policy explicitly rather than claiming unconditional parity.
+Public tests first fail the baseline-only guard; a native test first fails its
+unsupported policy flags. Cross-auto leaves now bypass pure baseline callbacks
+and do not contribute ascent. The same native record flags divide positive full-
+line cross space before/after/both, clamping nonpositive free space to start.
+Fixed direct finite LTR row-nowrap admission remains otherwise unchanged.
 
-The finite exit list is:188main-auto absorption;189cross-auto alignment and
-participant handling; then mandatory187–189consolidation and original automatic-
-margin capability exit decision. Other documented boundaries require unavailable
-pure queries or fail numeric0controls as well: wrapped column natural sizing,
-Absolute/Overlay providers, prepared responsive recursive queries, staged owners
-with nonzero numeric margins. No additional auto-only guard is currently known.
-A failed concrete probe can reopen this inventory; speculative variants do not.
-Fixed33and all7release gates remain unchanged until the exit evidence is assessed.
+Fresh27Rusttests pass; focused4public files pass35/skip1. Tests cover a throwing
+excluded provider, top/bottom/both geometry, all-auto native participants,
+nonpositive space, live zero-to-auto identity/hits and detached provider signal
+reads causing no new solve. Source/built baseline replays pass the reactive
+companion's three cross modes with stable identities and targets, alongside prior
+font/wrap/focus/paint evidence, errors[]/cleanup000and470built inputs. Installed
+246-input strict Bundler/NodeNext proof passes main/cross auto geometry, callback
+exclusion, real painted targets, hook stamps and four-counter teardown;
+SHA256 `4fe82c70ffdb5fef84653598ecc48a1e711b0bb4ef01a74fd15e31320f08d1ab`.
+Typecheck, lint, catalog/Studio, docs109mutation probes and scoped review pass.
+
+Kernel78986bytes SHA256
+`f87f47469046b538d283f4be33bf663be341462d419599ae20dc6f6ce09214e1`,
+ABI10unchanged; generated embedded/external artifacts match. Existing118native
+probe is unchanged; retained dedicated Yoga baseline reference records top-auto
+Aat18while Pibbl's accepted full-line rule places it at60. This deliberate
+native/CSS difference is documented, with no unconditional parity claim.
+
+Try `http://127.0.0.1:5192/#/examples/layout/wasm-flex-baseline`: the Cross control
+cycles top/bottom/both while the companion's other card retains its baseline.
+Built equivalent uses5193. This resolves the final recorded auto-only guard;
+consolidation63 and the original bounded exit decision remain required.
+
+## [NEXT] Consolidation63 and original automatic-margin exit decision
+
+Consolidate187–189 before any next production slice. The first accumulated run
+passed1068/skip12 and failed two obsolete diagnostics; both inputs still require
+an explicit main minimum. Update only those expectations and add a positive
+measure-only minimum0control, then rerun the72-file matrix. Assess the finite
+main/cross baseline exit cells and existing independent pure-query boundaries.
+Do not add speculative profiles or promote a release gate. Fixed33 remains
+10complete/12experimental/5partial/5missing/1excluded pending that assessment.
 
 ## Scope and execution
 

@@ -205,6 +205,7 @@ try {
       assert.equal(receipt.indefiniteBoundValidation, true, 'Installed indefinite percentage bounds must validate before admission without resource allocation');
       assert.equal(receipt.firstBaseline, true, 'Installed baseline providers must use final allocations, native baseline placement, source focus, paint reuse, detached inputs, and exact cleanup');
       assert.equal(receipt.firstBaselineAutoMain, true, 'Installed baseline leaves must distribute positive main-axis automatic margins after baseline alignment while preserving targets, identities, and cleanup');
+      assert.equal(receipt.firstBaselineAutoCross, true, 'Installed baseline leaves must let automatic cross margins replace shared baseline alignment, consume positive cross space, preserve targets and identities, and clean up exactly');
       assert.equal(receipt.textFirstBaseline, true, 'Installed Text must use the public Canvas baseline service for mixed generic fonts, real Canvas alignment, moved glyph targets, paint reuse, and exact cleanup');
       assert.equal(receipt.wrappedTextFirstBaseline, true, 'Installed wrapped Text must align its first visible line from real Canvas baseline metrics, move the last-line target after content and line updates, reuse paint, and clean up');
       assert.equal(receipt.recursiveMeasuredOwner, true, 'Installed known owners must preserve both finite native passes, provider updates, overflow pixels, targets and cleanup');

@@ -156,6 +156,15 @@ try {
   assert.deepEqual(Object.fromEntries([['MA',mainAuto.stamps.MA],['MB',mainAuto.stamps.MB]]),mainStamps);
   await click(550,238);assert.equal((await state()).hits.at(-1),'MA');
   await click(590,220);assert.equal((await state()).hits.at(-1),'MB');
+  for (const [mode, y] of [['top',270],['bottom',210],['both',240]] ) {
+    await click(700,204);
+    const cross=await state();
+    assert.equal(cross.crossMode,mode);
+    assert.ok(Math.abs(cross.boxes.MA.x-540)<1e-9&&Math.abs(cross.boxes.MA.y-y)<1e-9,`${mode} cross placement`);
+    assert.ok(Math.abs(cross.boxes.MB.x-580)<1e-9&&Math.abs(cross.boxes.MB.y-210)<1e-9,`${mode} baseline peer`);
+    assert.deepEqual(Object.fromEntries([['MA',cross.stamps.MA],['MB',cross.stamps.MB]]),mainStamps);
+    await click(550,y+4);assert.equal((await state()).hits.at(-1),'MA');
+  }
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
   const disposed=await sandbox.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();});

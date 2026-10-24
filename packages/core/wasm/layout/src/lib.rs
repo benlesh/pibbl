@@ -116,15 +116,23 @@ fn align_first_baseline(records: &mut [f64], size: f64) -> u32 {
     if !size.is_finite() || size < 0.0 { return 1; }
     let mut max_ascent = 0.0_f64;
     for n in records.chunks_exact(STRIDE) {
-        // Baseline mode is admitted by JS only for fixed, undecorated, no-margin leaves.
+        // Baseline mode admits fixed undecorated leaves; auto cross edges opt out.
         // Slot 8 is signed and intentionally may lie outside the content box.
         if !n[0].is_finite() || n[0] < 0.0 || n[1] != 0.0
             || !n[2].is_finite() || n[2] < 0.0 || n[3].is_nan() || n[2] > n[3]
-            || n[4] != 0.0 || n[5] != 1.0 || !n[8].is_finite() || n[9] != 0.0 { return 1; }
-        max_ascent = max_ascent.max(n[8]);
+            || n[4] != 0.0 || !n[5].is_finite() || n[5].fract() != 0.0
+            || n[5] < 1.0 || n[5] > 13.0 || (n[5] as u32 & 3) != 1
+            || !n[8].is_finite() || n[9] != 0.0 { return 1; }
+        if n[5] == 1.0 { max_ascent = max_ascent.max(n[8]); }
     }
     for n in records.chunks_exact_mut(STRIDE) {
-        let offset = max_ascent - n[8];
+        let policy = n[5] as u32;
+        let auto_before = policy & 4 != 0;
+        let auto_after = policy & 8 != 0;
+        let offset = if auto_before || auto_after {
+            let free = size - n[0];
+            if auto_before && free > 0.0 { free / (auto_before as u32 + auto_after as u32) as f64 } else { 0.0 }
+        } else { max_ascent - n[8] };
         if !offset.is_finite() { return 1; }
         n[6] = n[0];
         n[7] = offset;
@@ -1259,6 +1267,24 @@ mod tests {
         assert_eq!((records[7], records[17]), (4., 2.));
         records[8] = f64::NAN;
         assert_eq!(align_first_baseline(&mut records, 60.), 1);
+    }
+    #[test] fn first_baseline_cross_auto_excludes_participants_and_absorbs_positive_space() {
+        let mut records = [20., 0., 0., f64::INFINITY, 0., 5., 0., 0., 100., 0., 40., 0., 0., f64::INFINITY, 0., 1., 0., 0., 30., 0.];
+        assert_eq!(align_first_baseline(&mut records, 80.), 0);
+        assert_eq!((records[7], records[17]), (60., 0.));
+        records[5] = 9.;
+        assert_eq!(align_first_baseline(&mut records, 80.), 0);
+        assert_eq!((records[7], records[17]), (0., 0.));
+        records[5] = 13.;
+        assert_eq!(align_first_baseline(&mut records, 80.), 0);
+        assert_eq!((records[7], records[17]), (30., 0.));
+        assert_eq!(align_first_baseline(&mut records, 10.), 0);
+        assert_eq!((records[7], records[17]), (0., 0.));
+        records[15] = 5.;
+        assert_eq!(align_first_baseline(&mut records, 80.), 0);
+        assert_eq!((records[7], records[17]), (30., 40.));
+        records[5] = 17.;
+        assert_eq!(align_first_baseline(&mut records, 80.), 1);
     }
     #[test] fn cross_auto_slots_override_alignment_without_rewriting_numeric_margins() {
         let mut record = [20.,0.,0.,f64::INFINITY,0.,7.,0.,0.,0.,0.];

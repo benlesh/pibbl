@@ -1735,6 +1735,9 @@ function resolveFlexPlacements(
   if (options[FLEX_FIRST_BASELINE]) {
     assertSupportedFirstBaselineFlex(options, items, container, region !== undefined);
     for (const item of items) {
+      // Automatic cross margins replace alignment, so this leaf neither supplies
+      // nor consumes a shared baseline. Native placement resolves its free space.
+      if (item.autoCrossBefore || item.autoCrossAfter) { item.firstBaseline = 0; continue; }
       const allocation = { x: 0, y: 0, width: item.targetMain, height: item.preferredCross };
       const definition = getPrimitiveDefinition(item.child.type);
       if (!definition?.measureBaselines) {
@@ -2449,9 +2452,8 @@ function assertSupportedFirstBaselineFlex(
         style.position !== undefined || item.crossAuto || typeof style.flexBasis !== 'number' ||
         typeof style.height !== 'number' || item.paddingMain !== 0 || item.paddingCross !== 0 ||
         item.marginMainBefore !== 0 || item.marginMainAfter !== 0 || item.marginCrossBefore !== 0 || item.marginCrossAfter !== 0 ||
-        item.autoCrossBefore || item.autoCrossAfter ||
         item.aspectRatio !== undefined || item.relativeX !== 0 || item.relativeY !== 0) {
-      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct fixed undecorated primitive leaves with no numeric margins, cross auto margins, position, query, aspect ratio, or alignSelf override');
+      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct fixed undecorated primitive leaves with no numeric margins, position, query, aspect ratio, or alignSelf override');
     }
   }
 }

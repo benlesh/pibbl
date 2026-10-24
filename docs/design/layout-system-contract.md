@@ -2042,7 +2042,17 @@ reverse/RTL, automatic cross size and decorated/numeric-margin/position/query/as
 leaves remain outside this first admission. Main-axis automatic margins are
 resolved by the existing native main allocator before baseline alignment; they
 do not change membership in the baseline-sharing group. Cross-axis automatic
-margins remain a separate unsupported alignment interaction. This adds no public operation selector.
+margins instead exclude that leaf from the baseline-sharing group and its pure
+baseline query. Native placement divides positive line cross space between its
+automatic edges; top/bottom/both use end/start/center and nonpositive free space
+starts at zero. Remaining baseline participants keep the ordinary common-ascent
+calculation; if all leaves opt out, only automatic-margin placement is used.
+
+For a160x80row with A40x20baseline12 and B40x40baseline30, Pibbl top-auto puts
+Aat(0,60), bottom-auto at(0,0), both-auto at(0,30), and Bat(40,0). This follows
+Pibbl's existing full-line automatic-margin policy. Pinned Yoga3.2.1 top-auto keeps
+Aat(0,18), using its baseline line extent instead; this is an explicit native/CSS
+placement divergence, not a font or unconditional geometry parity claim. This adds no public operation selector.
 
 Provider reads use existing measurement-role receiver dependencies. Queries forbid
 hooks, writes and rendering work through the existing isolated pure boundary;
