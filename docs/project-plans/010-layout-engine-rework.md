@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice163 (nested described paired leaf measurement).
+Latest delivery is slice164 (wrapped-leaf aggregate measurement reuse).
+Slice163 is `1ca71af2` (nested described paired leaf measurement).
 Slice162 is `dcae6348` (parent-owned prepared measurement reuse).
 Consolidation54 is `56da579c` for160–162.
 Slice161 is `b95d3412` (native final-width nested row measurement).
@@ -4988,7 +4989,7 @@ unfinished branches from the target.
 
 | Order | Existing gate and entries                                                                                                                                     | Objective exit                                                                                                                                                                                                                                                                                                                         |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | `flex-core`: `flex.min-max`, `flex.automatic-minimum` (nested measurement is a prerequisite in the next gate)                                                 | Complete finite/indefinite owner and percentage-feedback policy, automatic Text/custom/known-container contributions and bounds, with pinned semantic geometry and public recursive measurement/failure evidence. Next implementation should extend the known prepared measurement tree rather than add another direction-only matrix. |
+| 1     | `flex-core`: `flex.min-max`, `flex.automatic-minimum` (uses the foundational measurement subset; does not depend on completion of the measurement gate)       | Complete finite/indefinite owner and percentage-feedback policy, automatic Text/custom/known-container contributions and bounds, with pinned semantic geometry and public recursive measurement/failure evidence. Next implementation should extend the known prepared measurement tree rather than add another direction-only matrix. |
 | 2     | `box-and-direction`: `flex.margin`, `flex.auto-margin`, `flex.percentage-gap`, `box.padding-and-layout-border`, `box.box-sizing`, `box.aspect-ratio`          | Complete sizing/percentage/physical-logical precedence and decoration ordering across the target matrix; classify intentional Yoga differences and prove paint/hit geometry stays coherent.                                                                                                                                            |
 | 3     | `measurement-and-intrinsic`: `measurement.custom-leaf`, `flex.baselines`, `flex.nested-intrinsic-containers`, `overflow-sizing`                               | Deliver the full intrinsic vocabulary/constraint contract, recursive known-family providers, baseline composition and exact ownership. Retain real Canvas font-source classification. Unsupported interim profiles cannot count as complete.                                                                                           |
 | 4     | `placement-and-participation`: `position.relative-static-absolute`, `position.containing-block`, `participation.hidden-and-contents`                          | Complete containing ancestry and hidden/contents participation, sizing, identity, hit/focus/source-order and measurement semantics through the same prepared tree. Bounded direct-Flex chains alone do not close it.                                                                                                                   |
@@ -5150,20 +5151,54 @@ This closes the direct described-leaf composition hole inside the bounded measur
 row, advancing `measurement.custom-leaf` and `flex.nested-intrinsic-containers`.
 Their general recursive/intrinsic exits stay open. No capability/gate promotion.
 
-## [NEXT] Slice164: recursive receiver paths for prepared-row reuse
+## Slice164 ready for feedback: wrapped-leaf aggregate reuse
 
-The next bounded exit is sibling-paint reuse for the163 wrapped leaf without
-losing its content-signal subscription. Extend the existing parent-owned entry
-only with a validated current structural receiver path and scalar/style snapshot;
-no old transaction tokens, second dependency graph or relaxed mutable/query guards.
-Public RED must show extra native aggregate queries after footer paint; GREEN
-must eliminate those queries while a later provider content write still moves
-the footer, wrapper removal detaches inputs, and unknown nested public measurement
-continues to decline reuse. This advances `integration.signal-aware-caching` and
-the same two measurement entries. The shortest subsequent gate action is to use
-that common recursive measurement boundary for remaining known-family intrinsic
-contributions, then finish the gate matrices above rather than declaring bounded
-wrappers equivalent to all recursive trees. Consolidation55 follows163–165.
+The source public RED repeated one native aggregate query on footer paint
+(measurementSolves4 versus3). The existing parent-owned snapshot now admits one
+direct pure wrapper returning one paired primitive. It records wrapper and leaf
+program inputs and semantic identities plus the full normalized provider style;
+`prepareDirectChildStyle` already resolves the described root style, so it does
+not normalize a separate raw root under another basis. The receiver vector uses
+the current prepared leaf root. Existing receipts then replay into that current
+receiver after a cache hit. No old tokens, parallel graph or mutable/query guard
+relaxation is involved.
+
+Public tests split a callback-free sibling (aggregate query reused) from a
+function-bearing sibling (conservative miss retained). Both still update content
+geometry, preserve identity and detach removed inputs. Unknown nested public
+`measureElement` queries decline reuse in both direct and wrapped cases; the
+standalone cycle guard and exact cleanup continue to pass.
+
+Fresh Node24.15/Chromium:61passed/1skipped across4files (62tests); ordinary
+49passed/13skipped. Source/built wrapped-row interaction passes unchanged native
+measurement solve counts on paint followed by content-driven footer movement,
+with470built inputs and teardown0000. Installed246-input Bundler/NodeNext proof
+now checks wrapped paint hit→content update too; SHA256
+`a0d17599df74acf662fce5a9627e2ada9a743a39fbedd95e6e847031a0f8f6e2`.
+Typecheck, changed-code lint and public JSDoc pass. No capability/gate promotion.
+This closes the one-wrapper receiver-path cache hole for the163 shape only.
+
+Hands-on: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-nested-intrinsic`:
+Nested row, Wrap row leaf, Toggle width, Paint only, Raise badge min.
+
+## [NEXT] Slice165: aspect-ratio automatic minimum
+
+Advance the existing `flex.automatic-minimum` aspect-ratio exit using public
+`aspectRatio`, definite cross dimensions, finite basis/shrink and explicit-zero
+minimum escape. First determine the pinned native transferred-size rule and
+Pibbl compatibility policy, then add the public row/column observable RED before
+production. Preserve ownership, target movement and exact teardown; do not expand
+this slice into percentage/intrinsic feedback. Consolidation55 follows163–165.
+
+The remaining Flex ledger has one `flex.min-max` missing row with two clauses:
+indefinite/cyclic owner policy and the explicit measured-owner matrix beyond exact
+row/column availability. It has five `flex.automatic-minimum` categories: general
+Text/font/line-breaking, images, aspect ratio, other overflow/fitting, and pinned
+native divergence. This is not six finite slices. Bounded structural/cache work
+supports particular measurement cases; completing the entire measurement gate is
+not a prerequisite for the Flex gate. Its formal dependency remains Flex→measurement.
+The min/max missing-row policy/matrix remains the shortest following closure task;
+no further wrapper/cache variants are prerequisites for it.
 
 ### Finite positioning exit matrix after134
 

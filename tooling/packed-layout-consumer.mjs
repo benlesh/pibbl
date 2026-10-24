@@ -1260,6 +1260,14 @@ try {
   if (wrappedUpdated?.height !== 60 || wrappedUpdated?.stamp !== 3 || wrappedFooter?.y !== 60 || wrappedFooter?.stamp !== 2)
     throw Error('installed nested described provider signal '+JSON.stringify({wrappedUpdated,wrappedFooter}));
   receipt.nestedStructuralPairedLeaf = true;
+  const wrappedBeforePaint = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+  structuralRowPaint.set('#19375b'); await frame();
+  if ((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().measurementSolves !== wrappedBeforePaint.measurementSolves)
+    throw Error('installed nested described leaf repeated aggregate measurement on sibling paint');
+  structuralRowContentHeight.set(70); await frame();
+  if (structuralRowBoxes.get('leaf')?.height !== 70 || structuralRowBoxes.get('footer')?.y !== 70)
+    throw Error('installed nested described leaf lost provider receipt after paint hit');
+  receipt.nestedStructuralAggregateReuse = true;
 } finally {
   structuralRowController.dispose(); structuralRowCanvas.remove();
   const disposed = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();

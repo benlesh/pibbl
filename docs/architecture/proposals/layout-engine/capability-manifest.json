@@ -2097,7 +2097,8 @@
           "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components",
           "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks",
           "slice162: parent-owned bounded aggregate reuse replays direct-child receiver receipts after sibling paint; content invalidation, live-parent removal and conservative nested-query fallback",
-          "slice163: a direct pure described paired leaf inside a measured known row receives native final widths under its prepared root receiver; signals, keyed geometry, removal and source-cycle cleanup"
+          "slice163: a direct pure described paired leaf inside a measured known row receives native final widths under its prepared root receiver; signals, keyed geometry, removal and source-cycle cleanup",
+          "slice164: one-wrapper aggregate reuse snapshots both input layers and replays current leaf receipts; content updates after paint hits, conservative function/nested-query misses and removal ownership"
         ],
         "negative": [
           "ordinary opaque providers, wrapped intrinsic shapes beyond direct numeric row leaves, indefinite Grid fraction/percentage rows and unresolved feedback remain unsupported",
@@ -2926,7 +2927,8 @@
           "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components",
           "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks",
           "slice162: parent-owned bounded aggregate reuse replays direct-child receiver receipts after sibling paint; content invalidation, live-parent removal and conservative nested-query fallback",
-          "slice163: a direct pure described paired leaf inside a measured known row receives native final widths under its prepared root receiver; signals, keyed geometry, removal and source-cycle cleanup"
+          "slice163: a direct pure described paired leaf inside a measured known row receives native final widths under its prepared root receiver; signals, keyed geometry, removal and source-cycle cleanup",
+          "slice164: one-wrapper aggregate reuse snapshots both input layers and replays current leaf receipts; content updates after paint hits, conservative function/nested-query misses and removal ownership"
         ],
         "negative": [
           "opaque component measurement unsupported",

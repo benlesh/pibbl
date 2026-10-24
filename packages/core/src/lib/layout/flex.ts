@@ -1739,20 +1739,34 @@ function preparedRowMeasurement(
         const receivers: object[] = [];
         for (let index = 0; index < children.length; index++) {
           const leaf = children[index];
-          if (isLayoutComponent(leaf.type)) return;
-          const receiver = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, rootReceiver, index);
-          const prepared = prepareDirectChildStyle(leaf, receiver, undefined, true);
-          if (preparedStyleQuery(prepared)) return;
-          const leafStyle = preparedStyleValue(prepared) as Readonly<
+          const directReceiver = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, rootReceiver, index);
+          const directPrepared = prepareDirectChildStyle(leaf, directReceiver, undefined, true);
+          if (preparedStyleQuery(directPrepared)) return;
+          const directStyle = preparedStyleValue(directPrepared) as Readonly<
             BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
           >;
-          const paired = getPrimitiveDefinition(leaf.type);
-          const emptyRectangle = leaf.type === Rectangle &&
-            !Object.hasOwn(leaf.props, 'children');
+          let measuredLeaf = leaf;
+          let receiver = directReceiver;
+          let wrapped = false;
+          if (isLayoutComponent(leaf.type)) {
+            // One transparent known description is enough for the 164 receipt:
+            // snapshot both layers and replay the paired root's current receiver.
+            // A second description would need a recursive receipt path.
+            measuredLeaf = prepareLayoutComponent(leaf, { receiverToken: directReceiver });
+            if (isLayoutComponent(measuredLeaf.type)) return;
+            const preparedReceiver = getPrimitiveReceiverToken(measuredLeaf);
+            if (!preparedReceiver) return;
+            receiver = preparedReceiver;
+            wrapped = true;
+          }
+          const paired = getPrimitiveDefinition(measuredLeaf.type);
+          const emptyRectangle = !wrapped && measuredLeaf.type === Rectangle &&
+            !Object.hasOwn(measuredLeaf.props, 'children');
           if (!emptyRectangle && !(paired?.measureIntrinsic && paired.measure)) return;
           if (!appendPreparedProgramSnapshot(snapshot, getPrimitiveProgramProps(leaf)) ||
-            !appendPreparedStyleSnapshot(snapshot, leafStyle)) return;
-          snapshot.push(index, leaf.type, leaf.key);
+            !appendPreparedStyleSnapshot(snapshot, directStyle) ||
+            wrapped && !appendPreparedProgramSnapshot(snapshot, getPrimitiveProgramProps(measuredLeaf))) return;
+          snapshot.push(index, leaf.type, leaf.key, wrapped, measuredLeaf.type, measuredLeaf.key);
           receivers.push(receiver);
         }
         return { snapshot, receivers };

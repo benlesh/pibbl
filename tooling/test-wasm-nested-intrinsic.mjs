@@ -202,6 +202,7 @@ try {
       assert.equal(receipt.firstBaseline, true, 'Installed baseline providers must use final allocations, native baseline placement, source focus, paint reuse, detached inputs, and exact cleanup');
       assert.equal(receipt.textFirstBaseline, true, 'Installed Text must use the public Canvas baseline service for mixed generic fonts, real Canvas alignment, moved glyph targets, paint reuse, and exact cleanup');
       assert.equal(receipt.wrappedTextFirstBaseline, true, 'Installed wrapped Text must align its first visible line from real Canvas baseline metrics, move the last-line target after content and line updates, reuse paint, and clean up');
+      assert.equal(receipt.nestedStructuralAggregateReuse, true, 'Installed wrapped leaf must reuse aggregate measurement and retain provider signals');
       assert.equal(receipt.nestedStructuralPairedLeaf, true, 'Installed nested described leaf must retain receiver signals and final-width geometry');
       assert.equal(receipt.structuralAggregatePaintReuse, true, 'Installed prepared rows must reuse aggregate measurement on unrelated paint');
       assert.equal(receipt.structuralFinalWidthProvider, true, 'Installed described Flex rows must use native final widths for paired leaf height, following targets and cleanup');

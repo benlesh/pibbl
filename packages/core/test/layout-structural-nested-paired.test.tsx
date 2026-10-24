@@ -28,12 +28,13 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
   }));
 }
 
-it.runIf(experimentalLayout)(
-  'measures a paired leaf described inside a measured Flex row at its final width',
-  async () => {
+it.runIf(experimentalLayout).each([false, true])(
+  'measures a described paired leaf and preserves conservative function-input caching (interactive sibling: %s)',
+  async (interactiveSibling) => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const owner = signal(80);
     const contentHeight = signal(40);
+    const footerFill = signal('#a63758');
     const shown = signal(true);
     const hits: string[] = [];
     const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
@@ -90,7 +91,7 @@ it.runIf(experimentalLayout)(
     const Card = defineLayoutComponent((props: { readonly style: FlexStyle }) =>
       <Flex style={{ ...props.style, width: owner.get(), flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start' }}>
         <Badge key="badge" contentHeight={contentHeight} style={{ flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' }} />
-        <Rectangle key="follower" onClick={() => hits.push('follower')} style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#426b61', cursor: 'pointer' }} />
+        <Rectangle key="follower" onClick={interactiveSibling ? () => hits.push('follower') : undefined} style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#426b61', cursor: 'pointer' }} />
       </Flex>,
     );
     const Footer = definePrimitive<{}, BadgeStyle, BadgeStyle, ResolvedBadgeStyle>((_props, style) => {
@@ -101,7 +102,7 @@ it.runIf(experimentalLayout)(
       return <Rectangle style={{ width: box.width, height: box.height, fill: style.fill }} />;
     }, { resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }) });
     const card = <Card key="card" style={{ minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 }} />;
-    const footer = <Footer key="footer" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: '#a63758' }} />;
+    const footer = <Footer key="footer" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: footerFill }} />;
     function Scene() {
       return <Flex style={{ width: owner, height: 100, flexDirection: 'column', alignItems: 'flex-start' }}>
         {shown.get() ? card : null}
@@ -115,7 +116,7 @@ it.runIf(experimentalLayout)(
 
     expect(boxes.get('leaf')).toEqual({ x: 0, y: 0, width: 60, height: 20, stamp: 1 });
     expect(boxes.get('footer')).toEqual({ x: 0, y: 20, width: 20, height: 20, stamp: 2 });
-    click(canvas, 65, 10); expect(hits).toEqual(['follower']);
+    click(canvas, 65, 10); expect(hits).toEqual(interactiveSibling ? ['follower'] : []);
     const initialCalls = calls;
 
     owner.set(60); await nextFrame();
@@ -124,10 +125,24 @@ it.runIf(experimentalLayout)(
     expect(aggregateWidths).toContain(60);
     expect(aggregateWidths).toContain(40);
     expect(calls).toBeGreaterThan(initialCalls);
-    click(canvas, 45, 10); expect(hits).toEqual(['follower', 'follower']);
-    click(canvas, 35, 10); expect(hits).toEqual(['follower', 'follower', 'leaf']);
+    click(canvas, 45, 10); expect(hits).toEqual(interactiveSibling ? ['follower', 'follower'] : []);
+    click(canvas, 35, 10); expect(hits).toEqual(interactiveSibling ? ['follower', 'follower', 'leaf'] : ['leaf']);
+
+    // Recursive receipt replay: a paint-only footer update must not repeat
+    // the row's native main query or its final-width paired measurement.
+    const beforePaint = snapshotWasmLayoutDiagnostics();
+    const beforePaintWidths = aggregateWidths.length;
+    footerFill.set('#426b61'); await nextFrame();
+    if (interactiveSibling) {
+      expect(aggregateWidths.length).toBeGreaterThan(beforePaintWidths);
+      expect(snapshotWasmLayoutDiagnostics().measurementSolves).toBeGreaterThan(beforePaint.measurementSolves);
+    } else {
+      expect(aggregateWidths).toHaveLength(beforePaintWidths);
+      expect(snapshotWasmLayoutDiagnostics().measurementSolves).toBe(beforePaint.measurementSolves);
+    }
 
     contentHeight.set(50); await nextFrame();
+    expect(aggregateWidths.length).toBeGreaterThan(beforePaintWidths);
     expect(boxes.get('leaf')).toEqual({ x: 0, y: 0, width: 40, height: 50, stamp: 1 });
     expect(boxes.get('footer')).toEqual({ x: 0, y: 50, width: 20, height: 20, stamp: 2 });
 

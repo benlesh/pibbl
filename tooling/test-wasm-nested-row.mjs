@@ -41,7 +41,7 @@ try {
   assert.equal((await click(33, 218)).badgeTarget, 'follower');
   const beforePaint = await state();
   const cachedPaint = await click(432, 110);
-  if (wrapped) assert.ok(cachedPaint.layout.measurementSolves > beforePaint.layout.measurementSolves);
+  if (wrapped) assert.equal(cachedPaint.layout.measurementSolves, beforePaint.layout.measurementSolves);
   else {
     assert.equal(cachedPaint.badgeCalls, beforePaint.badgeCalls);
     assert.equal(cachedPaint.layout.measurementSolves, beforePaint.layout.measurementSolves);
@@ -57,7 +57,7 @@ try {
   assert.equal((await click(33, 228)).badgeTarget, 'follower');
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
   const painted = await click(432, 110);
-  if (wrapped) assert.ok(painted.layout.measurementSolves > raised.layout.measurementSolves);
+  if (wrapped) assert.equal(painted.layout.measurementSolves, raised.layout.measurementSolves);
   else {
     assert.equal(painted.badgeCalls, raised.badgeCalls);
     assert.equal(painted.layout.measurementSolves, raised.layout.measurementSolves);
@@ -77,5 +77,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances], [0, 0, 0, 0]);
   assert.deepEqual(errors, []);
-  console.warn(`${source ? 'Source' : 'Built'} recursive row: width60→40, height20→60→70, footer168→208→218, distinct moved targets, keyed identity, one root WASM instance, native measurement arenas released, cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs. ${wrapped ? 'Wrapped leaf uses its own receiver and conservatively remeasures aggregate height.' : 'Paint-only updates reuse aggregate measurement; provider signals still invalidate after reuse.'}`);
+  console.warn(`${source ? 'Source' : 'Built'} recursive row: width60→40, height20→60→70, footer168→208→218, distinct moved targets, keyed identity, one root WASM instance, native measurement arenas released, cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs. ${wrapped ? 'Wrapped leaf replays current root receiver receipts and reuses aggregate height.' : 'Paint-only updates reuse aggregate measurement; provider signals still invalidate after reuse.'}`);
 } finally { await browser.close(); }

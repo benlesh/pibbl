@@ -610,9 +610,9 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
-  'does not cache a described paired row when its provider performs an untraced nested public measurement',
-  async () => {
+it.runIf(experimentalLayout).each([false, true])(
+  'does not cache an untraced nested public measurement (wrapped provider: %s)',
+  async (wrappedProvider) => {
     const owner = signal(80);
     const footerFill = signal('#a63758');
     let providerCalls = 0;
@@ -654,9 +654,12 @@ it.runIf(experimentalLayout)(
         return { status: 'measured' as const, size: { width: constraints.maxWidth, height: 20 } };
       },
     });
+    const NestedBadge = defineLayoutComponent((props: { readonly style: Style }) => <Provider style={props.style} />);
     const Card = defineLayoutComponent((props: { readonly style: FlexStyle }) =>
       <Flex style={{ ...props.style, width: owner.get(), flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start' }}>
-        <Provider key="provider" style={{ flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' }} />
+        {wrappedProvider ?
+          <NestedBadge key="provider" style={{ flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' }} /> :
+          <Provider key="provider" style={{ flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' }} />}
         <Rectangle key="fixed" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#426b61' }} />
       </Flex>,
     );

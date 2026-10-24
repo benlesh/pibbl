@@ -1673,7 +1673,9 @@ Experimental finite forward LTR nowrap described rows reuse aggregate paired-lea
 measurement through the existing parent region and semantic layout token. A fresh
 structural description still runs each transaction. Admission snapshots direct
 child identity/order, scalar or nominal-signal program inputs, and full resolved
-styles. Functions, mutable nested records, responsive queries and unknown nested
+styles. One direct pure description returning a paired primitive is admitted by
+snapshotting both wrapper and root program inputs and selecting the current
+prepared root receiver. Functions, mutable nested records, responsive queries and unknown nested
 public measurement paths conservatively remeasure. This does not add a retained
 layout tree or change ordinary component evaluation.
 
@@ -1683,5 +1685,6 @@ old transaction tokens or transfers those reads to the structural wrapper.
 Content changes still invalidate after a sibling-paint hit. Removing the row
 prunes its parent-owned entry and detaches its provider inputs while keyed
 siblings remain mounted. Failure and disposal retain exact existing teardown.
-Stable leaf descriptors also allow their separate direct-provider caches to reuse
+A cache hit through that one-wrapper path still replays the leaf measurement
+reads into current ownership before content changes. Stable leaf descriptors also allow their separate direct-provider caches to reuse
 results; freshly recreated descriptors may still repeat those direct queries.
