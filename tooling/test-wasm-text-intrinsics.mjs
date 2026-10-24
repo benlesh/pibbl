@@ -47,6 +47,12 @@ try {
       return {x:+point.x.toFixed(3),y:+point.y.toFixed(3)};
     });
   }, await autoCrossBasis());
+  const autoCrossPixel = async (x, y) => sandbox.evaluate(({basis,x,y}) => {
+    const context = document.querySelector('canvas').getContext('2d');
+    const matrix = new DOMMatrix([basis.a,basis.b,basis.c,basis.d,basis.e,basis.f]);
+    const point = matrix.transformPoint({x,y});
+    return [...context.getImageData(Math.floor(point.x), Math.floor(point.y), 1, 1).data];
+  }, {basis:await autoCrossBasis(),x,y});
   const autoCrossSiblingBox = async (left, width = 40) => {
     const box = {left,top:260,width,height:40};
     const colors = await sandbox.evaluate(({basis,box}) => {
@@ -71,6 +77,11 @@ try {
   await installAutoCrossDrawProbe();
   await click(500, 76); // Automatic-width cross-auto comparison.
   assert.match(await frame.locator('pre').innerText(), /AUTO CROSS COMPARISON/);
+  assert.match(await frame.locator('pre').innerText(), /intrinsic auto contribution: 120 · final owner: 200/);
+  assert.deepEqual(await autoCrossPixel(105, 416), [243, 240, 232, 255], 'automatic margin remains empty before A');
+  assert.deepEqual(await autoCrossPixel(110, 416), [138, 50, 72, 255], 'A begins after the 80px automatic margin');
+  assert.deepEqual(await autoCrossPixel(150, 416), [66, 107, 97, 255], 'B follows A at the final owner width');
+  if (process.env.PIBBL_LAYOUT_AUTO_MARGIN_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_AUTO_MARGIN_SCREENSHOT });
   const naturalWidth = await sandbox.evaluate(() => {
     const context = document.querySelector('canvas').getContext('2d');
     context.save(); context.font = '10px monospace';
@@ -109,7 +120,7 @@ try {
   await click(250, 110); // Sibling-only paint.
   const autoPainted = await read();
   assert.equal(autoPainted.solves, beforeAutoPaint.solves);
-  assert.equal(autoPainted.measuredLeaves, beforeAutoPaint.measuredLeaves + 1);
+  assert.equal(autoPainted.measuredLeaves, beforeAutoPaint.measuredLeaves + 2);
   assert.equal(autoPainted.nodeCreates, beforeAutoPaint.nodeCreates);
 
   // Restore the ordinary comparison, then exercise the bounded wrapped-row mode.
@@ -153,7 +164,7 @@ try {
   await click(250, 110); // Sibling-only paint remains a placement reuse.
   const wrappedPainted = await read();
   assert.equal(wrappedPainted.solves, beforeWrappedPaint.solves);
-  assert.equal(wrappedPainted.measuredLeaves, beforeWrappedPaint.measuredLeaves);
+  assert.equal(wrappedPainted.measuredLeaves, beforeWrappedPaint.measuredLeaves + 1);
   assert.equal(wrappedPainted.nodeCreates, beforeWrappedPaint.nodeCreates);
 
   await click(500, 76); // Return to the existing controls.

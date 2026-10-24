@@ -20,10 +20,11 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice171 `e4fc8815` (native main contribution versus final content).
+Latest delivery is slice172 (intrinsic physical main auto margins).
+Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is172: intrinsic main auto margins.
+Consolidation56 is `2fd34f0e` for166–168. Next is173: intrinsic cross auto margins.
 The frozen min/max exits are satisfied. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
 intrinsic graphs, automatic minima and other measurement work remain outstanding.
@@ -6036,7 +6037,7 @@ weakening of the frozen min/max exits. Corpus721 and its classifications remain
 unchanged. Fixed33 is10complete/12experimental/5partial/5missing/1excluded;
 all seven group/release gates remain open. Exactly one next slice follows.
 
-## [NEXT] Slice172: intrinsic main auto margins
+## Slice172 delivered: intrinsic main auto margins
 
 Treat main-axis auto margins as zero during supported pure Flex intrinsic
 contribution. Existing native final placement distributes positive free space.
@@ -6044,6 +6045,49 @@ Start with LTR forward nowrap rows/columns, numeric children40+80, own min200
 or max160/unbounded, and start-auto/both-auto edges. Preserve unsupported cross-axis
 and percentage-margin diagnostics. Add public failing evidence before production,
 then expose the behavior through the supported public surface.
+
+Four public regressions failed at numeric-margin admission before production.
+The implementation maps effective auto edges to zero during the supported
+intrinsic sum and leaves normal native placement in charge of final free space.
+Six public tests pass: both axes and start/both slots, max160 under finite200 or
+unbounded availability, retained cross-auto rejection, and live min200 to120 with
+point transfer A to B, stable native nodes and exact disposal. Pure content is120;
+normal own-min200 geometry is200. This distinction is explicit, not a root-size
+parity claim. The native probe emits24 matching contribution/final-geometry records
+from pinned3.2.1; SHA256
+`13fc8202529e1e8474020633cd58630e35938cde04ff61360a6ff07505b97e32`.
+Run `node tooling/layout-yoga-rehearsal.mjs --source <pinned-checkout> --intrinsic-auto-margin-probe`.
+
+The existing public lesson is
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-text`: click Compare auto margins
+and inspect the lower-left strip. Built companion uses5193. Visual inspection
+confirmed a readable label, empty leading margin and A/B strip. The prior automatic
+Text comparison remains intact. Installed strict Bundler/NodeNext/no-alias checks
+pass with246dist inputs; tarball SHA256
+`2848e59a1e4e99aa7f1c88979e73dd2f250e1c5e1e42cf752e116f48eca5e67d`.
+Paint retains native solve/node reuse while each conservative intrinsic owner
+repeats one content query; the test records that exact behavior rather than
+claiming zero measurement. No ABI/kernel change. Focused four-file run143passed/
+1skipped; final six new tests and typecheck pass. Final ordinary focused40passed/6skipped. Source/built470-input checks pass with
+no browser errors and zero cleanup counters. Final types, changed lint,
+docs109mutation probes, public JSDoc and Studio metadata/routes/search pass. All seven gates remain open;
+fixed33counts remain10complete/12experimental/5partial/5missing/1excluded.
+
+Auto-margin remains partial. The two original missing clauses remain visible:
+other automatic/custom/layout cross sizing and broader wrapping/column Text;
+and intrinsic auto owners beyond this direct numeric physical-main foothold.
+The latter still needs cross-axis absorption, effective logical/shorthand edges
+and composition over supported provider/known-container measurements. Independent
+unsupported font/percentage/recursive graphs do not become margin parity evidence
+or circular prerequisites. Consolidation58 will cover172–174 after delivery.
+
+## [NEXT] Slice173: intrinsic cross-axis auto margins
+
+Extend the same zero intrinsic contribution rule to physical cross auto edges
+on the supported fixed numeric direct Rectangle profile. Pin row/column final
+cross-owner absorption and overflow with native geometry, preserve actual
+alignment precedence and source order, and add a public failing regression before
+production. Keep the full auto-margin target and remaining composition cells.
 
 ## Scope and execution
 
