@@ -217,6 +217,7 @@ try {
       assert.equal(receipt.percentageOwnerBound, true, 'Installed own percentage bounds must use the original caller reference for provider limits and staged placement');
       assert.equal(receipt.measuredStagedPercentageOwner, true, 'Installed measured leaves must preserve callback envelopes, provider-only signal geometry, targeting and exact cleanup');
       assert.equal(receipt.stagedPercentageOwner, true, 'Installed staged percentage query and normal placement must agree through resize, targeting, identity and cleanup');
+      assert.equal(receipt.finalMainCrossMeasurement, true, 'Installed final main allocation precedes column cross measurement');
       assert.equal(receipt.sharedTextAutoSizing, true, 'Installed Text main sizing and natural column measurement precede cross auto margins');
       assert.equal(receipt.resolvedCrossAuto, true, 'Installed aspect/percentage cross sizes settle before optional auto placement');
       assert.equal(receipt.emptyAspectMinimum, true, 'Installed empty aspect rows/columns preserve zero content minima and explicit floors');

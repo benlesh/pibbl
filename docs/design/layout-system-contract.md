@@ -1749,8 +1749,9 @@ geometry, so Studio scaling is not mistaken for a layout difference.
 
 A direct `definePrimitive` child with both pure `measureIntrinsic` and `measure`
 providers may use automatic height with a cross-auto margin in a finite
-experimental nowrap row. It requires a declared finite nonnegative numeric width
-and no aspect ratio or prepared query. Existing initial and final allocated-width
+experimental nowrap row. Width and basis follow the existing main-sizing contract;
+automatic width with numeric or automatic basis may participate. No aspect ratio
+or prepared query is admitted. Existing initial and final allocated-width
 measurement determines height before auto absorption and suppresses stretch.
 The primitive must resolve participation styles through `resolveStyle`, returning
 allocated dimensions in its resolved drawing style; automatic margins are not
@@ -1760,8 +1761,8 @@ The eight-job public example uses20px columns and10px rows: width80→40 changes
 height20→40 and top80→60 in a100px row. Both native records use that explicit
 application measurement callback. Stable props/style inputs permit paint-only
 measurement reuse; changed props or inputs retain conservative invalidation.
-Missing either provider, automatic width, wrapped rows, aspect sizing, column
-automatic cross size and pure intrinsic owners remain unsupported. A required
+Missing either provider, wrapped rows, aspect sizing and independently unsupported
+pure intrinsic owners remain unsupported. Column measurement is described below. A required
 final-width measurement failure prevents earlier paint, releases layout ownership
 and permits clean remount.
 
@@ -1866,9 +1867,10 @@ main policy.
 A direct generic unwrapped Text child in an experimental finite nowrap column
 may use automatic width with an automatic side margin in either main or reading
 direction. Height may be numeric or automatic; basis may be numeric or automatic.
-Zero grow/shrink, minHeight0, no maximum height or width bounds, no prepared
-query/aspect, and visible/default fit/overflow remain required. Wrapped containers,
-other provider profiles and fitting modes retain their own admission.
+Existing main factors, basis and bounds remain authoritative. Cross bounds clamp
+the measured natural width. No prepared query/aspect and visible/default
+fit/overflow remain required. Wrapped containers and fitting modes retain their
+own admission.
 
 The existing Text measurement receives unbounded width and exact numeric height
 when declared; automatic height uses bounded natural measurement. The existing
@@ -1883,6 +1885,30 @@ application descriptors reuse pure measurement and native solves on sibling pain
 no cache guard is weakened. The public Flex/Text lesson shows a right-aligned
 column label beside the existing row comparison. Canvas metrics define its
 width; there is no synthetic native font-parity claim or new public API.
+
+### Settled-main provider and Flex cross measurement
+
+In finite nowrap columns, a direct paired primitive or an otherwise measurable
+prepared Flex root may use automatic width and side-auto margins with numeric or
+automatic authored height/basis and supported main factors/bounds. Native main
+allocation settles first. The existing pure provider then receives unbounded
+width and exact final content height; its width is clamped by resolved cross
+bounds before auto absorption. This does not authorize new pure intrinsic graphs.
+
+If automatic main sizing needs a provisional natural query, it uses unbounded
+width; otherwise the cross query waits until the final height is known. The
+final query is required even under stretch alignment. An unsupported result fails
+before paint, releases ownership and permits remount; no zero/stretched fallback
+is published. A height-dependent callback can produce a different width from the
+zero-margin availability query, so only the existing main allocation is promised
+unchanged. Receiver roles, revisions and measurement-cache ownership are shared.
+
+In rows, paired primitives and prepared Flex roots similarly use the real final
+allocated width before automatic height and cross-auto placement. The ordinary
+main-sizing and pure-query restrictions still apply. Flow/Grid do not acquire
+new main profiles from this continuation; their previously supported fixed-height
+column measurement remains separate. No new API, ABI, native solver or scheduler
+is introduced.
 
 ### Wrapped natural-width Text in finite columns
 

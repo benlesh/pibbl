@@ -20,10 +20,11 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice182 (shared real Text measurement before auto-cross placement).
+Latest delivery is slice183 (real settled-main measurement before auto-cross placement).
+Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation60 is `f5083bcb` for178–180; the next slice is183.
+Consolidation60 is `f5083bcb` for178–180; next is consolidation61 for181–183.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -36,7 +37,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is183: remaining finite paired/known measurement admission branches.
+Consolidation56 is `2fd34f0e` for166–168. Next is consolidation61 for181–183.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6613,15 +6614,51 @@ public JSDoc, catalog174/12/33, Studio routes/search and109docs mutation probes
 pass. Fixed33stays10complete/12experimental/5partial/5missing/1excluded; auto margins
 and all7release gates remain open. No aggregate trust/program-exit review claim.
 
-## [NEXT] Slice183: remaining finite measured-cross admission branches
+## Slice183 delivered: settled-main measurement before auto-cross placement
 
-Actual column probes identify zero-render/auto-reject cases for Text main factors
-and cross bounds, paired providers and known Flex with numeric basis/auto authored
-height or final growth. Verify exact final-main allocation and existing pure query
-before a shared final-cross continuation; do not invent arbitrary intrinsic graph
-support or fallback sizes. Row paired/known automatic-width candidates require the
-same matched public evidence. Keep original targets and separate unsupported zero
-queries from auto-only failures. Consolidate181–183 before further production.
+Eleven failing public column cases preceded production changes, plus a matched
+row zero/auto matrix. Generic unwrapped column Text, paired pure providers and
+prepared Flex roots now use existing native main allocation before required
+natural cross measurement. The exact final height query receives unbounded width;
+resolved cross bounds clamp its width before auto absorption. Automatic main
+measurement keeps its natural provisional query; definite main inputs defer cross
+measurement until allocation. No fallback is published on unsupported queries.
+Rows reuse the settled-width pass for paired automatic width/basis and described
+Flex roots. The new main-profile admission is Flex-specific; existing supported
+fixed-height Grid/other profiles are preserved without a new intrinsic graph policy.
+
+Node24.15.0/Chromium five focused files pass78tests in3.01s;23prior column cases
+pass/405skip in2.50s. Public geometry covers provider exact heights40/100 and
+widths20/50, known widths60to100, real Text growth/shrink/min/max, follower main
+allocations, moved targets, identities, pure-cache reuse and four-counter cleanup.
+Unsupported final measurement fails before paint and a clean remount succeeds.
+One obsolete cross-maximum rejection was removed from the negative matrix because
+new positive bound cases establish its supported behavior.
+
+Source/built Studio replay passes the new provider and known four-state sizing
+cycles, follower pixels/hits and natural-content targets, plus prior growing Text,
+reflow and wrapped reverse/RTL checks; cleanup0000, built470inputs. The existing
+Column sizing control now applies to provider and known content. Review narrowed
+new known-root admission to Flex and found no remaining material issue.
+
+The installed strict Bundler/NodeNext/no-alias246-input consumer passes exact
+final-height queries, provider/follower geometry, native identity and cleanup plus
+104prior auto-margin fixtures. Final tarball SHA256
+`9976979b84786446e035307ba1a84efbaced8a11da9ba2847831d6a9c049f023`.
+Pinned Yoga adds6row-provider/known records to97, total103; source SHA256
+`c9190d03b265d02ef463afaba92207d5a26b6eb21c6e8e34cdc711fbe3bce9f5`.
+Synthetic callback provenance is explicit. Kernel/ABI10 remains unchanged.
+Types, changed-code lint,174/12/33catalog, Studio and109docs mutation probes pass.
+Fixed33 remains10complete/12experimental/5partial/5missing/1excluded, all7release
+gates open. This is a bounded measurement continuation, not feature completion.
+
+## [NEXT] Consolidation61: slices181–183
+
+Run the accumulated focused matrix in experimental and ordinary modes, full
+source/built lesson replays, current installed consumer, pinned native probe and
+static consistency checks. Reconcile the stale checkout wording below with the
+actual isolated sole-writer worktree. Do not start another production capability
+before consolidation; retain the original finite capability/release-gate targets.
 
 ## Scope and execution
 

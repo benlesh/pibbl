@@ -45,7 +45,7 @@ try {
   const draws = prefix => sandbox.evaluate(prefix => globalThis.__PIBBL_TEXT_SIZE_DRAWS__.filter(draw => draw.text.startsWith(prefix)),prefix);
   await click(270,160);
   assert.match(await state(),/text grow: true/);
-  assert.ok((await draws('aaaa')).every(draw => Math.abs(draw.y-350)<1e-6));
+  assert.ok((await draws('aaaa')).every(draw => Math.abs(draw.y-350)<1e-6),JSON.stringify(await draws('aaaa')));
   assert.deepEqual(await pixel(134,264),[66,107,97,255]);
   await clearDraws(); await click(90,110);
   const narrow = await draws('aaaa');
@@ -76,6 +76,35 @@ try {
       await click(425,first+3); assert.match(await state(),/selected: column auto sibling/);
     }
   }
+  // Return to column sizing 0 after the Text cycle, then drive the paired
+  // provider and known row root through exactly the same four final-main
+  // states. Each retains its natural cross width while its footer follows the
+  // resolved main target.
+  const exerciseColumnContent = async (content, selection, contentX) => {
+    assert.match(await state(), new RegExp(`column provider: ${content}`));
+    for (let sizing=1;sizing<=4;sizing++) {
+      await click(100,160);
+      assert.match(await state(),new RegExp(`column sizing: ${sizing%4}`));
+      if (sizing===1 || sizing===2) {
+        assert.deepEqual(await pixel(425,324),[66,107,97,255]);
+        await click(425,324); assert.match(await state(),new RegExp(`selected: ${selection} sibling`));
+      }
+      if (sizing===3) {
+        assert.deepEqual(await pixel(425,304),[66,107,97,255]);
+        await click(425,304); assert.match(await state(),new RegExp(`selected: ${selection} sibling`));
+      }
+    }
+    await click(contentX,284); assert.match(await state(),new RegExp(`selected: ${selection} A`));
+  };
+  await click(500,434); // Text -> paired provider 40px.
+  await exerciseColumnContent(40, 'column provider', 564);
+  await click(500,434); // Provider 40 -> provider 80.
+  await click(500,434); // Provider 80 -> known 60px row.
+  await exerciseColumnContent('known60', 'column known', 544);
+  // Restore text so the pre-existing wrapped-Text cycle remains unchanged.
+  for (let index=0;index<3;index++) await click(500,434);
+  assert.match(await state(),/column provider: text/);
+
   await click(270,160);
   for (let index=0;index<5;index++) await click(500,434);
   await click(700,394); await click(700,430);

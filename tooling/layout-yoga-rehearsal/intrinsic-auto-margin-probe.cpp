@@ -382,6 +382,44 @@ void runWrappedReverseRtlText(bool autoTop) {
   YGNodeFreeRecursive(root); YGConfigFree(config);
 }
 
+
+// Slice 183: a synthetic paired provider and a direct known Flex tree in a
+// row/nowrap owner. These record Yoga's final exact-width callback and the
+// physical cross-auto placement separately from Pibbl's public admission.
+struct RowProviderCall { int count = 0; float width = 0; float height = 0; YGMeasureMode widthMode = YGMeasureModeUndefined; YGMeasureMode heightMode = YGMeasureModeUndefined; } rowProviderCall;
+YGSize measureRowProvider(YGNodeConstRef, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+  rowProviderCall = {rowProviderCall.count + 1, width, height, widthMode, heightMode};
+  return {widthMode == YGMeasureModeExactly ? width : 40, 20};
+}
+void runRowProviderAuto(bool numericBasis, bool autoTop) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config), provider = YGNodeNewWithConfig(config), peer = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetWidth(root, 180); YGNodeStyleSetHeight(root, 80);
+  if (numericBasis) YGNodeStyleSetFlexBasis(provider, 80); else YGNodeStyleSetFlexBasisAuto(provider);
+  YGNodeStyleSetFlexGrow(provider, 1); YGNodeStyleSetFlexShrink(provider, 0); YGNodeStyleSetMinWidth(provider, 0); YGNodeStyleSetMinHeight(provider, 0);
+  if (autoTop) YGNodeStyleSetMarginAuto(provider, YGEdgeTop); else YGNodeStyleSetMargin(provider, YGEdgeTop, 0);
+  YGNodeSetMeasureFunc(provider, measureRowProvider);
+  YGNodeStyleSetWidth(peer, 60); YGNodeStyleSetHeight(peer, 40); YGNodeStyleSetFlexBasis(peer, 60); YGNodeStyleSetFlexGrow(peer, 0); YGNodeStyleSetFlexShrink(peer, 0); YGNodeStyleSetMinWidth(peer, 0); YGNodeStyleSetMinHeight(peer, 0);
+  rowProviderCall = {}; YGNodeInsertChild(root, provider, 0); YGNodeInsertChild(root, peer, 1); YGNodeCalculateLayout(root, 180, 80, YGDirectionLTR);
+  std::printf("intrinsic-auto-row-provider profile=%s marginTop=%s model=synthetic-provider root={width:%.17g,height:%.17g} A={left:%.17g,top:%.17g,width:%.17g,height:%.17g} B={left:%.17g,top:%.17g,width:%.17g,height:%.17g} query={count:%d,width:%.17g,widthMode:%s,height:%.17g,heightMode:%s}\n", numericBasis ? "basis80-grow" : "auto-basis-grow", autoTop ? "auto" : "0", YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(provider), YGNodeLayoutGetTop(provider), YGNodeLayoutGetWidth(provider), YGNodeLayoutGetHeight(provider), YGNodeLayoutGetLeft(peer), YGNodeLayoutGetTop(peer), YGNodeLayoutGetWidth(peer), YGNodeLayoutGetHeight(peer), rowProviderCall.count, rowProviderCall.width, measureMode(rowProviderCall.widthMode), rowProviderCall.height, measureMode(rowProviderCall.heightMode));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
+void runRowKnownAuto(bool autoTop) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config), known = YGNodeNewWithConfig(config), first = YGNodeNewWithConfig(config), tail = YGNodeNewWithConfig(config), peer = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetWidth(root, 180); YGNodeStyleSetHeight(root, 80);
+  YGNodeStyleSetFlexDirection(known, YGFlexDirectionRow); YGNodeStyleSetAlignItems(known, YGAlignFlexStart); YGNodeStyleSetFlexBasis(known, 80); YGNodeStyleSetFlexGrow(known, 0); YGNodeStyleSetFlexShrink(known, 0); YGNodeStyleSetMinWidth(known, 0); YGNodeStyleSetMinHeight(known, 0);
+  if (autoTop) YGNodeStyleSetMarginAuto(known, YGEdgeTop); else YGNodeStyleSetMargin(known, YGEdgeTop, 0);
+  YGNodeStyleSetWidth(first, 40); YGNodeStyleSetHeight(first, 20); YGNodeStyleSetFlexBasis(first, 40); YGNodeStyleSetFlexGrow(first, 0); YGNodeStyleSetFlexShrink(first, 0); YGNodeStyleSetMinWidth(first, 0); YGNodeStyleSetMinHeight(first, 0);
+  YGNodeStyleSetWidth(tail, 20); YGNodeStyleSetHeight(tail, 20); YGNodeStyleSetFlexBasis(tail, 20); YGNodeStyleSetFlexGrow(tail, 0); YGNodeStyleSetFlexShrink(tail, 0); YGNodeStyleSetMinWidth(tail, 0); YGNodeStyleSetMinHeight(tail, 0);
+  YGNodeStyleSetWidth(peer, 60); YGNodeStyleSetHeight(peer, 40); YGNodeStyleSetFlexBasis(peer, 60); YGNodeStyleSetFlexGrow(peer, 0); YGNodeStyleSetFlexShrink(peer, 0); YGNodeStyleSetMinWidth(peer, 0); YGNodeStyleSetMinHeight(peer, 0);
+  YGNodeInsertChild(known, first, 0); YGNodeInsertChild(known, tail, 1); YGNodeInsertChild(root, known, 0); YGNodeInsertChild(root, peer, 1); YGNodeCalculateLayout(root, 180, 80, YGDirectionLTR);
+  std::printf("intrinsic-auto-row-known marginTop=%s root={width:%.17g,height:%.17g} known={left:%.17g,top:%.17g,width:%.17g,height:%.17g} first={left:%.17g,top:%.17g,width:%.17g,height:%.17g} tail={left:%.17g,top:%.17g,width:%.17g,height:%.17g} B={left:%.17g,top:%.17g,width:%.17g,height:%.17g}\n", autoTop ? "auto" : "0", YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(known), YGNodeLayoutGetTop(known), YGNodeLayoutGetWidth(known), YGNodeLayoutGetHeight(known), YGNodeLayoutGetLeft(first), YGNodeLayoutGetTop(first), YGNodeLayoutGetWidth(first), YGNodeLayoutGetHeight(first), YGNodeLayoutGetLeft(tail), YGNodeLayoutGetTop(tail), YGNodeLayoutGetWidth(tail), YGNodeLayoutGetHeight(tail), YGNodeLayoutGetLeft(peer), YGNodeLayoutGetTop(peer), YGNodeLayoutGetWidth(peer), YGNodeLayoutGetHeight(peer));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
+
 }
 int main() {
   for (bool column : { false, true }) for (bool bothAuto : { false, true }) {
@@ -405,4 +443,6 @@ int main() {
   for (auto profile : { RowFlexibleProfile::Grow, RowFlexibleProfile::Shrink, RowFlexibleProfile::Min, RowFlexibleProfile::Max }) for (auto autoTop : {false, true}) runRowFlexibleText(profile, autoTop);
   for (auto autoLeft : {false, true}) runColumnBasisAutoHeight(autoLeft);
   for (auto autoTop : {false, true}) runWrappedReverseRtlText(autoTop);
+  for (auto numericBasis : {false, true}) for (auto autoTop : {false, true}) runRowProviderAuto(numericBasis, autoTop);
+  for (auto autoTop : {false, true}) runRowKnownAuto(autoTop);
 }

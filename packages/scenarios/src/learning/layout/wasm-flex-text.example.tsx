@@ -172,7 +172,7 @@ function createWasmFlexTextContent() {
     measureIntrinsic: ({ props }) => ({ status: "measured" as const, minContent: { width: props.natural.get(), height: 20 }, maxContent: { width: props.natural.get(), height: 20 } }),
     measure: ({ props }) => ({ status: "measured" as const, size: { width: props.natural.get(), height: 20 } }),
   });
-  const ColumnKnown = defineLayoutComponent(() => <Flex style={{ width: "auto", height: 20, minWidth: 0, minHeight: 0, flexBasis: "auto", flexGrow: 0, flexShrink: 0, marginLeft: "auto", flexDirection: "row", flexWrap: "nowrap", layoutDirection: "ltr", alignItems: "flex-start" }}>
+  const ColumnKnown = defineLayoutComponent(() => <Flex style={{ width: "auto", height: columnTextHeight, minWidth: 0, minHeight: 0, flexBasis: columnTextBasis, flexGrow: 0, flexShrink: 0, marginLeft: "auto", flexDirection: "row", flexWrap: "nowrap", layoutDirection: "ltr", alignItems: "flex-start" }}>
     <Rectangle key="column-known-A" onClick={() => selected.set("column known A")} style={{ width: columnKnownWidth, height: 20, minWidth: 0, minHeight: 0, flexBasis: "auto", flexGrow: 0, flexShrink: 0, fill: "#8a3248", cursor: "pointer" }} />
     <Rectangle key="column-known-C" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexBasis: 20, flexGrow: 0, flexShrink: 0, fill: "#6e3e79" }} />
   </Flex>);
@@ -192,7 +192,7 @@ function createWasmFlexTextContent() {
     <Rectangle key="column-wrapped-sibling" onClick={() => selected.set("column wrapped sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
   </Flex>;
   const columnProviderPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: columnDirection, layoutDirection: columnReadingDirection, flexWrap: "nowrap", alignItems: "stretch" }}>
-    <ColumnProvider key="column-provider" natural={columnProviderNatural} style={{ width: "auto", height: 20, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: "auto", fill: "#8a3248" }} />
+    <ColumnProvider key="column-provider" natural={columnProviderNatural} style={{ width: "auto", height: columnTextHeight, flexBasis: columnTextBasis, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: "auto", fill: "#8a3248" }} />
     <Rectangle key="column-provider-sibling" onClick={() => selected.set("column provider sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
   </Flex>;
   const columnKnownPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: columnDirection, layoutDirection: columnReadingDirection, flexWrap: "nowrap", alignItems: "stretch" }}>
@@ -212,7 +212,7 @@ function createWasmFlexTextContent() {
     const comparison = autoCrossProof.get();
     return <>
       <Button x={28} y={144} label={comparison ? "Column sizing" : "Change text"} onClick={() => {
-        if (comparison) { columnProviderMode.set("text"); columnSizing.update(value => (value + 1) % 4); }
+        if (comparison) { if (columnProviderMode.get() === "wrappedText") columnProviderMode.set("text"); columnSizing.update(value => (value + 1) % 4); }
         else paragraph.update(value => value === longText ? shortText : value === shortText ? alternateText : longText);
       }} />
       <Button x={200} y={144} label={comparison ? `Grow Text: ${autoTextGrow.get() ? "on" : "off"}` : "Nudge width"} onClick={() => {

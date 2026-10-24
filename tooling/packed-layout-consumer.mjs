@@ -1196,6 +1196,23 @@ try {
     if(pixel(4,Math.ceil(main)+2)!=='[66,107,97,255]'||(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==nodes)throw Error('installed shared Text column main allocation');
     sharedTextController.dispose();draws.length=0;
   }
+  const finalColumnQueries:number[][]=[];
+  const FinalColumnProvider=definePrimitive<{},FlexStyle,FlexStyle,SystemStyle&{width:number;height:number}>((_props,style)=>createElement(Rectangle,{style:{width:style.width,height:style.height,fill:'#8a3248'}}),{
+    resolveStyle:(_style,context)=>({width:context.allocation.width,height:context.allocation.height}),
+    measureIntrinsic:()=>({status:'measured',minContent:{width:40,height:40},maxContent:{width:40,height:40}}),
+    measure:({constraints})=>{finalColumnQueries.push([constraints.minHeight,constraints.maxHeight]);return{status:'measured',size:{width:constraints.maxHeight/2,height:40}};},
+  });
+  for(const flexGrow of [0,1]){
+    finalColumnQueries.length=0;const margin=signal<0|'auto'>(0);sharedTextCanvas.height=140;sharedTextCanvas.style.height='140px';
+    sharedTextController=pibblSync(sharedTextCanvas,createElement(Flex,{style:{width:200,height:120,flexDirection:'column',alignItems:'flex-start'},children:[
+      createElement(FinalColumnProvider,{style:{width:'auto',height:'auto',flexBasis:40,minHeight:0,flexGrow,flexShrink:0,marginLeft:margin}}),
+      createElement(Rectangle,{style:{width:20,height:20,minWidth:0,minHeight:0,flexShrink:0,fill:'#426b61'}}),
+    ]}));await frame();const nodes=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates;
+    margin.set('auto');await frame();const height=flexGrow?100:40;
+    if(!finalColumnQueries.some(query=>query[0]===height&&query[1]===height)||pixel(201-height/2,4)!=='[138,50,72,255]'||pixel(4,height+2)!=='[66,107,97,255]')throw Error('installed final column query and allocation');
+    if((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==nodes)throw Error('installed final column identity');sharedTextController.dispose();
+  }
+  receipt.finalMainCrossMeasurement=true;
   receipt.sharedTextAutoSizing=true;
 } finally {
   sharedTextController?.dispose();sharedTextCanvas.remove();

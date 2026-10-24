@@ -5685,7 +5685,6 @@ it.runIf(experimentalLayout)('rejects unsupported column automatic-margin Text p
   };
   const profiles: readonly [string, TextStyle & FlexItemStyle, { readonly layoutDirection?: 'rtl'; readonly flexWrap?: 'wrap' }][] = [
     ['custom font', { font: '10px CustomFont' }, {}],
-    ['cross maximum', { maxWidth: 80 }, {}],
     ['wrapped container', {}, { flexWrap: 'wrap' }],
   ];
   for (const [name, override, options] of profiles) {

@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, expect, it } from 'vitest';
-import { Flex, Grid, Rectangle, defineLayoutComponent, definePrimitive, measureElement, signal, useConst, type PibblResponsiveStyle, type SystemStyle, type FlexStyle, type RectStyle, type PibblController } from '@pibbl/core';
+import { Flex, Grid, Rectangle, defineLayoutComponent, definePrimitive, measureElement, signal, useConst, useCanvasContext, useLayoutBox, type PibblResponsiveStyle, type SystemStyle, type FlexStyle, type RectStyle, type PibblController } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
@@ -644,4 +644,85 @@ it.runIf(experimentalLayout)('fails a side-auto Grid with fractional intrinsic t
       baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
     ]);
   } finally { window.removeEventListener('error', prevent); }
+});
+
+
+it.runIf(experimentalLayout)('measures settled row main widths before a paired or known automatic cross margin is placed', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const marginTop = signal<0 | 'auto'>(0);
+  const errors: unknown[] = [];
+  const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+  window.addEventListener('error', prevent);
+  try {
+    type ProviderStyle = FlexStyle & { readonly fill?: string };
+    type ResolvedProviderStyle = SystemStyle & { readonly width: number; readonly height: number; readonly fill?: string };
+    const queries: Array<Readonly<{ minWidth: number; maxWidth: number; minHeight: number; maxHeight: number }>> = [];
+    const providerBoxes: Array<Readonly<{ x: number; y: number; width: number; height: number }>> = [];
+    const knownBoxes: Array<Readonly<{ x: number; y: number; width: number; height: number }>> = [];
+    const footerBoxes: Array<Readonly<{ x: number; y: number; width: number; height: number }>> = [];
+
+    const Provider = definePrimitive<{}, ProviderStyle, ProviderStyle, ResolvedProviderStyle>((_props, style) => {
+      const box = useLayoutBox(); const transform = useCanvasContext().getTransform(); providerBoxes.push({ x: transform.e, y: transform.f, width: box.width, height: box.height });
+      return <Rectangle style={{ width: box.width, height: box.height, fill: style.fill }} />;
+    }, {
+      resolveStyle: (style, context) => ({ width: context.allocation.width, height: context.allocation.height, fill: style.fill }),
+      measureIntrinsic: () => ({ status: 'measured' as const, minContent: { width: 40, height: 20 }, maxContent: { width: 40, height: 20 } }),
+      measure: ({ constraints }) => {
+        queries.push({ ...constraints });
+        return { status: 'measured' as const, size: { width: constraints.maxWidth, height: 20 } };
+      },
+    });
+    const Marker = definePrimitive<{ readonly list: typeof knownBoxes | typeof footerBoxes }, FlexStyle, FlexStyle, SystemStyle & { readonly width: number; readonly height: number }>((props, style) => {
+      const box = useLayoutBox(); const transform = useCanvasContext().getTransform(); props.list.push({ x: transform.e, y: transform.f, width: box.width, height: box.height });
+      return <Rectangle style={{ width: style.width, height: style.height, fill: '#426b61' }} />;
+    }, { resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }) });
+    const Known = defineLayoutComponent((props: { readonly style: PibblResponsiveStyle<FlexStyle> }) => <Flex style={props.style}>
+      <Marker key="known-leaf" list={knownBoxes} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+      <Rectangle key="known-tail" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexBasis: 20, flexGrow: 0, flexShrink: 0 }} />
+    </Flex>);
+    const footer = () => <Marker key="footer" list={footerBoxes} style={{ width: 60, height: 40, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0 }} />;
+    const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 100; document.body.append(canvas);
+
+    for (const profile of [
+      { name: 'automatic basis', flexBasis: 'auto' as const },
+      { name: 'numeric basis', flexBasis: 80 as const },
+    ]) {
+      queries.length = 0; providerBoxes.length = 0; footerBoxes.length = 0; marginTop.set(0);
+      const controller = pibbl(canvas, <Flex style={{ width: 180, height: 80, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start' }}>
+        <Provider key="provider" style={{ width: 'auto', height: 'auto', minWidth: 0, minHeight: 0, flexBasis: profile.flexBasis, flexGrow: 1, flexShrink: 0, marginTop, fill: '#8a3248' }} />
+        {footer()}
+      </Flex>);
+      controllers.push(controller); await frame();
+      expect(errors).toEqual([]);
+      expect(providerBoxes.at(-1)).toEqual({ x: 0, y: 0, width: 120, height: 20 });
+      expect(footerBoxes.at(-1)).toEqual({ x: 120, y: 0, width: 60, height: 40 });
+      expect(queries.some(query => query.minWidth === 120 && query.maxWidth === 120)).toBe(true);
+      marginTop.set('auto'); await frame();
+      expect(errors).toEqual([]);
+      expect(providerBoxes.at(-1)).toEqual({ x: 0, y: 60, width: 120, height: 20 });
+      expect(footerBoxes.at(-1)).toEqual({ x: 120, y: 0, width: 60, height: 40 });
+      controller.dispose();
+    }
+
+    knownBoxes.length = 0; footerBoxes.length = 0; marginTop.set(0);
+    const controller = pibbl(canvas, <Flex style={{ width: 180, height: 80, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start' }}>
+      <Known key="known" style={{ width: 'auto', height: 'auto', minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', marginTop }} />
+      {footer()}
+    </Flex>);
+    controllers.push(controller); await frame();
+    expect(errors).toEqual([]);
+    expect(knownBoxes.at(-1)).toEqual({ x: 0, y: 0, width: 40, height: 20 });
+    expect(footerBoxes.at(-1)).toEqual({ x: 80, y: 0, width: 60, height: 40 });
+    marginTop.set('auto'); await frame();
+    expect(errors).toEqual([]);
+    expect(knownBoxes.at(-1)).toEqual({ x: 0, y: 60, width: 40, height: 20 });
+    expect(footerBoxes.at(-1)).toEqual({ x: 80, y: 0, width: 60, height: 40 });
+    controller.dispose();
+  } finally {
+    window.removeEventListener('error', prevent);
+  }
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+  ]);
 });
