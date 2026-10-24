@@ -3,7 +3,7 @@ import { canvasMeasurementService } from './canvas-measurement.js';
 import { Grid } from './grid.js';
 import { Flow } from './flow.js';
 import type { PreparedFlexLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
-import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedIntrinsicMain, takePreparedIntrinsicMain, type PreparedIntrinsicMainStage } from './prepared-root.js';
+import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedIntrinsicMain, peekPreparedIntrinsicMain, takePreparedIntrinsicMain, type PreparedIntrinsicMainStage } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
@@ -322,13 +322,35 @@ export const Flex = definePrimitive<
 
 // A known Absolute sibling boundary resolves these receiver inputs before any
 // sibling's opaque component executes. Geometry still solves in normal traversal.
-if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, content, receiver, slot) => {
+let allocatedIntrinsicMain: { receiver: object; main: number } | undefined;
+if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, content, receiver, slot, parentMainAxis) => {
   const options = normalizeFlexOptions(style as Readonly<FlexStyle>, content);
   const releaseLayout = pushLayoutBox(content, options);
   const previous = GLOBAL_STATE.primitiveReceiverToken;
   GLOBAL_STATE.primitiveReceiverToken = receiver;
   try {
     const children = prepareLayoutChildren(element.props.children, 'Flex');
+    const axis = isRowDirection(options.flexDirection) ? 'row' : 'column';
+    const main = axis === 'row' ? content.width : content.height;
+    const contribution = parentMainAxis === axis ? peekPreparedIntrinsicMain(
+      receiver, children, axis, main, allocationInputRevision(),
+    ) : undefined;
+    if (contribution) {
+      // A main-axis contribution sizes this owner, not its final descendants.
+      // Rebind those descendants through native exact mode at the allocated main.
+      const ctx = GLOBAL_STATE.renderContext;
+      if (!ctx) throw new Error('Known layout preparation requires a Canvas measurement context.');
+      const measuredRoot = clonePibblElement(element);
+      setPreNormalizedStyle(measuredRoot, contribution.style, element, receiver);
+      const previousPhase = allocatedIntrinsicMain;
+      allocatedIntrinsicMain = { receiver, main };
+      try {
+        const result = measureConstrainedIntrinsicElement(measuredRoot, {
+          minWidth: 0, maxWidth: content.width, minHeight: 0, maxHeight: content.height,
+        }, flexMeasurementService(ctx));
+        if (result.status !== 'measured') throw new Error(`Known Flex allocated-owner measurement is unsupported: ${result.reason}`);
+      } finally { allocatedIntrinsicMain = previousPhase; }
+    }
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
       const token = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, receiver, index);
@@ -404,7 +426,7 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
         });
         preparationChild = placement.element;
       }
-      const nested = preflightKnownLayout(preparationChild, prepared.style, { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight }, receiver, occurrence, parentSlot);
+      const nested = preflightKnownLayout(preparationChild, prepared.style, { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight }, receiver, occurrence, parentSlot, isRowDirection(style.flexDirection) ? 'row' : 'column');
       attachPreparedLayoutSlot(placement.element, nested);
     }
 }
@@ -428,6 +450,16 @@ function measureFlex(
   input: MeasureInput<FlexProps, FlexStyle>,
 ): MeasureResult {
   const children = prepareLayoutChildren(input.props.children, 'Flex');
+  const phase = allocatedIntrinsicMain;
+  if (phase && phase.receiver === GLOBAL_STATE.primitiveReceiverToken) {
+    allocatedIntrinsicMain = undefined;
+    try {
+      const diagnosticBox = { x: 0, y: 0, width: input.constraints.maxWidth, height: input.constraints.maxHeight };
+      const result = measureStagedNonexactMain(input, children, normalizeFlexOptions(input.style, diagnosticBox), diagnosticBox, phase.main);
+      if (result) return result;
+      return unsupportedIntrinsic('allocated known-owner continuation no longer matches its measured profile');
+    } finally { allocatedIntrinsicMain = phase; }
+  }
   // Exact caller availability supplies a definite main axis. A finite maximum
   // alone remains an availability limit, never a percentage containing size.
   const automaticWidth = input.style.width === undefined || input.style.width === 'auto';
@@ -635,7 +667,26 @@ function measureFlex(
     const measureCross = !!rowItems && !!provider?.measureIntrinsic && !!provider.measure &&
       (crossValue === undefined || crossValue === 'auto');
     if (rowItems && preparedStyleQuery(prepared)) return unsupportedIntrinsic('does not support responsive child queries during solved row measurement');
-    if (experimentalLayout && !row && widthDefinite && !heightDefinite &&
+    if (experimentalLayout && layoutChild.type === Flex &&
+      (style.flexDirection ?? 'row') === options.flexDirection &&
+      options.flexWrap === 'nowrap' && (style.flexWrap ?? 'nowrap') === 'nowrap' &&
+      options.layoutDirection === 'ltr' && (style.layoutDirection ?? 'ltr') === 'ltr' &&
+      (mainValue === undefined || mainValue === 'auto') &&
+      typeof crossValue === 'number' && Number.isFinite(crossValue) && crossValue >= 0 &&
+      grow === 0 && shrink === 0) {
+      // A declared same-axis owner can contribute its natural main size through
+      // the shared pure context. Its finite cross size makes this descent acyclic.
+      const measuredChild = clonePibblElement(layoutChild);
+      setPreNormalizedStyle(measuredChild, style, layoutChild, layoutReceiverToken, preparedStyleQuery(prepared));
+      const result = input.measureElement(measuredChild, row ? {
+        minWidth: 0, maxWidth: input.constraints.maxWidth, minHeight: crossValue, maxHeight: crossValue,
+      } : {
+        minWidth: crossValue, maxWidth: crossValue, minHeight: 0, maxHeight: input.constraints.maxHeight,
+      });
+      if (result.status !== 'measured') return result;
+      baseMain = row ? result.size.width : result.size.height;
+      baseCross = crossValue;
+    } else if (experimentalLayout && !row && widthDefinite && !heightDefinite &&
       (child.type === Text || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap') &&
       (mainValue === undefined || mainValue === 'auto' || crossValue === undefined || crossValue === 'auto')) {
       // Descend only through known built-in columns at settled content widths.
@@ -774,6 +825,7 @@ function measureStagedNonexactMain(
   children: readonly PibblElement<any>[],
   options: Readonly<ReturnType<typeof normalizeFlexOptions>>,
   diagnosticBox: Readonly<LayoutBox>,
+  allocatedMain?: number,
 ): MeasureResult | undefined {
   if (!experimentalLayout || options.flexWrap !== 'nowrap' || options.layoutDirection !== 'ltr') return;
   if (options.flexDirection !== 'row' && options.flexDirection !== 'column') return;
@@ -795,9 +847,11 @@ function measureStagedNonexactMain(
   if (typeof rootMin === 'number' && typeof rootMax === 'number' && rootMin > rootMax) {
     throw layoutDiagnostic({ component: 'Flex', property: row ? 'minWidth' : 'minHeight', value: rootMin, algorithm: 'measurement', constraints: input.constraints, reason: 'minimum must not exceed maximum' });
   }
-  const mode = typeof rootMax === 'number' ? 'fit-content' as const : 'max-content' as const;
-  const externalOwner = Number.isFinite(available) ? available : undefined;
-  const initialAvailable = mode === 'fit-content' ? rootMax as number : undefined;
+  const externalOwner = allocatedMain ?? (Number.isFinite(available) ? available : undefined);
+  // An authored maximum retains its own initial envelope. Otherwise a finite
+  // caller maximum is fit-content availability, still distinct from exact size.
+  const initialAvailable = allocatedMain ?? (typeof rootMax === 'number' ? rootMax : externalOwner);
+  const mode = allocatedMain !== undefined ? 'exact' as const : initialAvailable === undefined ? 'max-content' as const : 'fit-content' as const;
   let hasPercentageBound = false;
   const items: { base: number; min: { value?: number; unit: 'none' | 'point' | 'percent' }; max: { value?: number; unit: 'none' | 'point' | 'percent' }; measured?: boolean; queryMaximum?: number }[] = [];
   const measuredLeaves: { readonly sourceIndex: number; readonly child: PibblElement<any>; readonly normalized: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>; readonly receiver: object; readonly query: PreparedQuery | undefined }[] = [];
@@ -862,7 +916,7 @@ function measureStagedNonexactMain(
   const resolved = resolveTransientIntrinsicMain(items, intrinsicQuery);
   const receiver = GLOBAL_STATE.primitiveReceiverToken;
   stagePreparedIntrinsicMain(receiver, {
-    elements: children, axis: row ? 'row' : 'column', contentMain: resolved.main,
+    elements: children, axis: row ? 'row' : 'column', style: input.style, contentMain: resolved.main,
     revision: allocationInputRevision(),
     items: resolved.targets.map((target, sourceIndex) => ({
       sourceIndex, target, min: resolved.effectiveMins[sourceIndex], max: resolved.effectiveMaxes[sourceIndex],

@@ -1309,7 +1309,6 @@ native instance/arena. Reorder, removal, signal updates and teardown preserve
 current receiver ownership. This numeric profile does not close the general
 measured-provider or intrinsic-compatibility matrix.
 
-
 The public intrinsic-provider lesson composes the existing finite column provider
 with a measured row. The column delivers exact width80→40; the nested row omits
 its own width and measures against that exact constraint. Its first40px item is
@@ -1357,11 +1356,46 @@ which may differ from the root cross size.
 
 Only successful current-transaction results may stage measured targets/bounds
 for normal allocation. The region places those already-measured targets without
-repeating the intrinsic or finite callback. Measurement-only signal reads retain
+repeating the intrinsic or finite callback within that owner phase. Same-axis
+known-owner descent distinguishes the later allocated phase as described below. Measurement-only signal reads retain
 current receiver ownership; natural-input changes move final paint/hit geometry.
 Callback exceptions, unsupported results, invalid dimensions and cycles publish
 no stage and leave no temporary arena/instance. This bounded provider profile
 adds no public operation or persistent measurement cache.
+
+### Experimental nested known-owner main phases
+
+An automatic-main, fixed numeric-cross LTR nowrap Flex may measure a same-axis
+known Flex child with zero growth/shrink and a fixed numeric cross dimension.
+Pure `defineLayoutComponent` descriptions expose that known root; ordinary
+opaque components do not. With no own maximum, finite caller availability forms
+a fit-content envelope. An authored maximum keeps its own initial envelope,
+even when external availability differs. Neither becomes an exact final size.
+
+A same-axis parent contribution and the child's allocated main are separate
+native phases. A matching transaction-local stage records the original normalized
+root style, receiver, source children, axis, final main and input revision. Known
+preparation at the allocated main remeasures through the existing pure provider
+context with native exact mode, replacing the contribution stage before normal
+placement consumes it. Cross-axis contribution stages retain their original
+handoff. No persistent graph, implicit opaque association or iterative solver is
+created; public exact-size measurement still takes its normal fast path.
+
+For a natural40/cross20 paired leaf with a 200% main minimum, finite outer main
+N produces inner2N and leaf4N. The provider receives main minimum0/maximumN,
+then minimum0/maximum2N, each with exact cross20. Row and column transpose.
+Undefined availability produces outer40/inner40/leaf40 and one unbounded query;
+it does not substitute the final40 as a later percentage reference. Provider-only
+signal changes rerun both finite phases without replacing native nodes. A failure
+in the allocated phase releases transaction-owned resources; an explicit remount
+can recover.
+
+An opaque primitive's recursive `measureElement(card, ...)` returns content size
+only. Its eventual rendered Card is a normally allocated subtree, not the receiver
+that owned a speculative size query. For a direct described max160 Card with
+natural80/cap25% and fixed80 sibling, the prepared leaf is30 at root110. An
+opaque size-only Owner that returns that Card at110 instead gives its normally
+allocated leaf27.5. A discarded secondary query cannot change either result.
 
 ### Experimental finite wrapped-row intrinsic height
 

@@ -27,6 +27,55 @@ void setCross(YGNodeRef node, bool column, float value) { if(column) YGNodeStyle
 void setBasis(YGNodeRef node, bool column, float value) { (void)column; YGNodeStyleSetFlexBasis(node,value); }
 void setMinPct(YGNodeRef node,bool column,float p) { if(column)YGNodeStyleSetMinHeightPercent(node,p);else YGNodeStyleSetMinWidthPercent(node,p); }
 void setMaxPct(YGNodeRef node,bool column,float p) { if(column)YGNodeStyleSetMaxHeightPercent(node,p);else YGNodeStyleSetMaxWidthPercent(node,p); }
+struct NestedCall { float w; YGMeasureMode wm; float h; YGMeasureMode hm; };
+static NestedCall nestedCalls[8];
+static int nestedCallCount;
+YGSize measureNestedLeaf(YGNodeConstRef, float w, YGMeasureMode wm, float h, YGMeasureMode hm) {
+  nestedCalls[nestedCallCount++] = { w, wm, h, hm };
+  return currentColumn ? YGSize{20, 40} : YGSize{40, 20};
+}
+void runNestedKnownPercentOwner(bool column, const char* owner, float availableMain) {
+  currentColumn = column;
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false);
+  YGConfigSetPointScaleFactor(config, 0);
+  YGConfigSetErrata(config, YGErrataNone);
+  auto outer = YGNodeNewWithConfig(config);
+  auto inner = YGNodeNewWithConfig(config);
+  auto leaf = YGNodeNewWithConfig(config);
+  const auto direction = column ? YGFlexDirectionColumn : YGFlexDirectionRow;
+  YGNodeStyleSetFlexDirection(outer, direction);
+  YGNodeStyleSetAlignItems(outer, YGAlignFlexStart);
+  setCross(outer, column, 20);
+  YGNodeStyleSetFlexDirection(inner, direction);
+  YGNodeStyleSetAlignItems(inner, YGAlignFlexStart);
+  YGNodeStyleSetFlexGrow(inner, 0);
+  YGNodeStyleSetFlexShrink(inner, 0);
+  setCross(inner, column, 20);
+  YGNodeStyleSetFlexGrow(leaf, 0);
+  YGNodeStyleSetFlexShrink(leaf, 0);
+  setCross(leaf, column, 20);
+  setMinPct(leaf, column, 200);
+  YGNodeSetMeasureFunc(leaf, measureNestedLeaf);
+  YGNodeInsertChild(inner, leaf, 0);
+  YGNodeInsertChild(outer, inner, 0);
+  nestedCallCount = 0;
+  YGNodeCalculateLayout(outer, column ? YGUndefined : availableMain,
+    column ? availableMain : YGUndefined, YGDirectionLTR);
+  const float outerMain = column ? YGNodeLayoutGetHeight(outer) : YGNodeLayoutGetWidth(outer);
+  const float innerMain = column ? YGNodeLayoutGetHeight(inner) : YGNodeLayoutGetWidth(inner);
+  const float leafMain = column ? YGNodeLayoutGetHeight(leaf) : YGNodeLayoutGetWidth(leaf);
+  std::printf("nested-known-percent-owner axis=%s owner=%s availableMain=%.17g outer=%.17g inner=%.17g leaf=%.17g calls=%d\n",
+    column ? "column" : "row", owner, availableMain, outerMain, innerMain, leafMain, nestedCallCount);
+  for (int index = 0; index < nestedCallCount; index++) {
+    const auto& call = nestedCalls[index];
+    std::printf("  nested-query[%d]={width:%.17g,%s,height:%.17g,%s}\n", index,
+      call.w, mode(call.wm), call.h, mode(call.hm));
+  }
+  YGNodeFreeRecursive(outer);
+  YGConfigFree(config);
+}
+
 void run(bool column, Owner owner, bool floor, bool measured, float supplied = YGUndefined, float naturalMain = 80) {
   currentColumn = column; currentNaturalMain = naturalMain;
   auto config=YGConfigNew(); YGConfigSetUseWebDefaults(config,false); YGConfigSetPointScaleFactor(config,0); YGConfigSetErrata(config,YGErrataNone);
@@ -63,5 +112,9 @@ int main() {
     }
     // Natural-20 floors are distinct from the natural-80 cap/floor matrix above.
     for (auto owner : {RootMax,Unbounded,RootMin,RootMinMax}) run(column,owner,true,true,YGUndefined,20);
+    runNestedKnownPercentOwner(column, "undefined", YGUndefined);
+    runNestedKnownPercentOwner(column, "finite-40", 40);
+    runNestedKnownPercentOwner(column, "finite-100", 100);
+    runNestedKnownPercentOwner(column, "finite-200", 200);
   }
 }

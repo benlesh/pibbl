@@ -1,18 +1,32 @@
-import { definePrimitive, Flex, Rectangle, Text, useCanvasContext, useConst, useLayoutBox, useReaction, useSignal, type FlexStyle, type SystemStyle } from "@pibbl/core";
+import { defineLayoutComponent, definePrimitive, Flex, Rectangle, Text, useCanvasContext, useConst, useLayoutBox, useReaction, useSignal, type FlexStyle, type Signal, type SystemStyle } from "@pibbl/core";
 
-const MeasuredChip = definePrimitive<{ natural: number; hit: () => void; record: (maximum: number) => void }, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>(
+const MeasuredChip = definePrimitive<{ natural: Signal<number>; hit: () => void; record: (maximum: number) => void }, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>(
   props => {
     const box = useLayoutBox();
     return <Rectangle onClick={props.hit} style={{ width: box.width, height: box.height, fill: "#b63d3d", cursor: "pointer" }} />;
   },
   {
     resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
-    measureIntrinsic: ({ props }) => ({ status: "measured", minContent: { width: 0, height: 40 }, maxContent: { width: props.natural, height: 40 } }),
+    preserveSignalProps: ["natural"],
+    measureIntrinsic: ({ props }) => ({ status: "measured", minContent: { width: 0, height: 40 }, maxContent: { width: props.natural.get(), height: 40 } }),
     measure: ({ props, constraints }) => {
       props.record(constraints.maxWidth);
-      return { status: "measured", size: { width: props.natural, height: 40 } };
+      return { status: "measured", size: { width: props.natural.get(), height: 40 } };
     },
   },
+);
+
+const MeasuredPercentageRow = defineLayoutComponent((props: { readonly natural: Signal<number>; readonly hitA: () => void; readonly hitB: () => void; readonly record: (maximum: number) => void; readonly style: FlexStyle }) =>
+  <Flex style={{ width: "auto", height: 40, minWidth: 0, minHeight: 0, maxWidth: 160, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}>
+    <MeasuredChip key="A" natural={props.natural} record={props.record} hit={props.hitA} style={{ width: "auto", height: 40, minWidth: 0, maxWidth: "25%", flexGrow: 0, flexShrink: 0 }} />
+    <Rectangle key="B" onClick={props.hitB} style={{ width: 80, height: 40, flexBasis: 80, minWidth: 0, flexGrow: 0, flexShrink: 0, fill: "#426b61", cursor: "pointer" }} />
+  </Flex>,
+);
+
+const MeasuredOverflowRow = defineLayoutComponent((props: { readonly natural: Signal<number>; readonly record: (maximum: number) => void; readonly hit: () => void }) =>
+  <Flex style={{ width: "auto", height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, flexDirection: "row", alignItems: "flex-start" }}>
+    <MeasuredChip natural={props.natural} record={props.record} hit={props.hit} style={{ width: "auto", height: 20, minWidth: "200%", flexGrow: 0, flexShrink: 0 }} />
+  </Flex>,
 );
 
 /** A measured natural main size participates in two native percentage stages. */
@@ -20,12 +34,12 @@ export function WasmFlexMeasuredPercentageOwnerExample() {
   const read = (globalThis as typeof globalThis & { __PIBBL_LAYOUT_DIAGNOSTICS__?: () => Record<string, number> }).__PIBBL_LAYOUT_DIAGNOSTICS__;
   if (!read) return <Text style={{ left: 28, top: 48, font: "18px sans-serif", fill: "#19375b" }}>Start Studio with --mode layout-wasm to run the measured percentage example.</Text>;
   const canvas = useCanvasContext().canvas as HTMLCanvasElement;
-  const owner = useSignal(200), natural = useSignal(80), hits = useSignal<readonly string[]>([]);
-  const queries = useConst<number[]>(() => []), panel = useConst(() => document.createElement("pre"));
+  const owner = useSignal(200), natural = useSignal(80), nestedNatural = useSignal(40), hits = useSignal<readonly string[]>([]);
+  const queries = useConst<number[]>(() => []), nestedQueries = useConst<number[]>(() => []), panel = useConst(() => document.createElement("pre"));
   useReaction(() => {
     panel.style.cssText = "font:12px monospace;white-space:pre-wrap;max-height:160px;overflow:auto;flex-shrink:0;padding:12px;background:#e7e5df;color:#19375b";
     canvas.insertAdjacentElement("afterend", panel);
-    const refresh = () => { panel.textContent = JSON.stringify({ externalOwner: owner.get(), natural: natural.get(), queries, hits: hits.get(), layout: read(), note: "The provider returns natural width; native sizing constrains it after querying at maximum40. The final cap then uses the line reference." }, null, 2); };
+    const refresh = () => { panel.textContent = JSON.stringify({ externalOwner: owner.get(), natural: natural.get(), queries, nestedQueries, hits: hits.get(), layout: read(), note: "The provider returns natural width; native sizing constrains it after querying at maximum40. The final cap then uses the line reference." }, null, 2); };
     refresh(); const timer = window.setInterval(refresh, 100);
     return () => { window.clearInterval(timer); panel.remove(); };
   }, [canvas, panel]);
@@ -42,12 +56,12 @@ export function WasmFlexMeasuredPercentageOwnerExample() {
     <Text pointerEvents="none" style={{ left: 472, top: 130, font: "14px sans-serif", fill: "white" }}>Clear hits</Text>
     <Rectangle pointerEvents="none" style={{ left: 28, top: 200, width: current, height: 100, fill: "#e7e5df" }} />
     <Flex style={{ left: 28, top: 200, width: current, height: 100, flexDirection: "column", alignItems: "flex-start" }}>
-      <Flex key="row" style={{ width: "auto", height: 40, minWidth: 0, minHeight: 0, maxWidth: 160, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}>
-        <MeasuredChip key="A" natural={natural} record={maximum => { queries.push(maximum); if (queries.length > 16) queries.shift(); }} hit={() => hits.update(values => [...values, "A"])} style={{ width: "auto", height: 40, minWidth: 0, maxWidth: "25%", flexGrow: 0, flexShrink: 0 }} />
-        <Rectangle key="B" onClick={() => hits.update(values => [...values, "B"])} style={{ width: 80, height: 40, flexBasis: 80, minWidth: 0, flexGrow: 0, flexShrink: 0, fill: "#426b61", cursor: "pointer" }} />
-      </Flex>
+      <MeasuredPercentageRow key="row" natural={natural} record={maximum => { queries.push(maximum); if (queries.length > 16) queries.shift(); }} hitA={() => hits.update(values => [...values, "A"])} hitB={() => hits.update(values => [...values, "B"])} style={{ width: "auto", height: 40, minWidth: 0, minHeight: 0, maxWidth: 160, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }} />
     </Flex>
     <Text pointerEvents="none" style={{ left: 28, top: 330, width: 690, wrap: true, font: "16px sans-serif", fill: "#19375b" }}>Expected at natural80: A30 / row110 for external200 or160; A20 / row100 for external80. Natural20 produces A20 / row100. Every finite query has maximum40 before the later cap.</Text>
-    <Text pointerEvents="none" style={{ left: 28, top: 420, width: 690, wrap: true, font: "14px sans-serif", fill: "#475569" }}>The inspector records actual callback maxima, target history and resource counters. Toggle the natural input and click the shared edge to check measurement dependencies.</Text>
+    <Text pointerEvents="none" style={{ left: 28, top: 420, width: 690, wrap: true, font: "14px sans-serif", fill: "#475569" }}>Below: 40 px available → 80 px inner owner → 160 px red leaf. The 200% minimum uses two finite native passes; the inspector records query limits 40, then 80.</Text>
+    <Flex style={{ left: 28, top: 472, width: 40, height: 20, flexDirection: "row", alignItems: "flex-start" }}>
+      <MeasuredOverflowRow key="overflow" natural={nestedNatural} record={maximum => { nestedQueries.push(maximum); if (nestedQueries.length > 16) nestedQueries.shift(); }} hit={() => hits.update(values => [...values, "overflow"])} />
+    </Flex>
   </>;
 }

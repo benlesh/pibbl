@@ -3411,7 +3411,7 @@ for(const maxOnly of [false,true]){
     const leaf=createElement(Rectangle,{style:{width:'40%',height:20,flexBasis:'40%',minWidth:0,minHeight:0,flexShrink:0}});
     const nested=createElement(Flex,{style:{width:'auto',height:60,minWidth:0,minHeight:0,flexShrink:0,gap:'10%'},children:[leaf,leaf]});
     const root=createElement(Flex,{style:{width:'auto',maxWidth:maxOnly?360:undefined},children:nested});
-    expect(measureElement(root,{minWidth:0,maxWidth:360,minHeight:0,maxHeight:240},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('definite child basis')});
+    expect(measureElement(root,{minWidth:0,maxWidth:360,minHeight:0,maxHeight:240},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage gaps')});
   });
 }
 for(const column of [false,true])for(const resized of [false,true]){

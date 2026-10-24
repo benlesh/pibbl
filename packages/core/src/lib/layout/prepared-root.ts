@@ -12,14 +12,14 @@ import type { ResponsiveStylePreparation } from '../style/responsive.js';
 import type { LayoutBox } from './types.js';
 
 type PreparedStyle = Readonly<SystemStyle> | ResponsiveStylePreparation<Readonly<SystemStyle>>;
-type Preflight = (element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver: object, slot: PreparedLayoutSlot) => void;
+type Preflight = (element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver: object, slot: PreparedLayoutSlot, parentMainAxis?: 'row' | 'column') => void;
 const preflights = new WeakMap<Function, Preflight>();
 export function isKnownLayoutType(type: Function): boolean { return preflights.has(type); }
 const snapshots = new WeakMap<PibblRenderTransaction, WeakMap<object, { child: PibblElement<any>; width: number; height: number; prepared: PreparedStyle }>>();
 
 /** Registers only known declarative input preparation, never component evaluation. */
 export function registerKnownLayoutPreflight(type: Function, preflight: Preflight): void { preflights.set(type, preflight); }
-export function preflightKnownLayout(element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver?: object, occurrence = 0, parentSlot?: PreparedLayoutSlot): PreparedLayoutSlot | undefined {
+export function preflightKnownLayout(element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver?: object, occurrence = 0, parentSlot?: PreparedLayoutSlot, parentMainAxis?: 'row' | 'column'): PreparedLayoutSlot | undefined {
   const parent = GLOBAL_STATE.componentRefs, owner = GLOBAL_STATE.currentPibblInstance;
   if (!receiver || !parent || !owner || !GLOBAL_STATE.renderTransaction) return;
   const root = isLayoutComponent(element.type) ? prepareLayoutComponent(element, { receiverToken: receiver }) : element;
@@ -61,7 +61,7 @@ export function preflightKnownLayout(element: PibblElement<any>, style: Readonly
     });
     slot = created; entries.set(key, slot);
   }
-  preflight(root, style, content, rootReceiver, slot);
+  preflight(root, style, content, rootReceiver, slot, parentMainAxis);
   return slot;
   } finally { visiting.delete(source); }
 }
@@ -231,6 +231,7 @@ export interface PreparedIntrinsicMainStage {
   /** The flattened source descriptors measured by this stage. */
   readonly elements: readonly PibblElement<any>[];
   readonly axis: 'row' | 'column';
+  readonly style: Readonly<BoxStyle>;
   readonly contentMain: number;
   readonly revision: number;
   readonly items: readonly Readonly<{ sourceIndex: number; target: number; min: number; max: number; measured?: boolean }>[];
@@ -246,7 +247,7 @@ export function stagePreparedIntrinsicMain(receiver: object | undefined, stage: 
   }
   pending.set(receiver, stage);
 }
-export function takePreparedIntrinsicMain(
+export function peekPreparedIntrinsicMain(
   receiver: object | undefined,
   elements: readonly PibblElement<any>[],
   axis: 'row' | 'column',
@@ -260,6 +261,13 @@ export function takePreparedIntrinsicMain(
   for (let index = 0; index < elements.length; index++) {
     if (stage.elements[index] !== elements[index]) return;
   }
-  intrinsicMainStages.get(transaction!)!.delete(receiver!);
+  return stage;
+}
+export function takePreparedIntrinsicMain(
+  receiver: object | undefined, elements: readonly PibblElement<any>[],
+  axis: 'row' | 'column', contentMain: number, revision: number,
+): PreparedIntrinsicMainStage | undefined {
+  const stage = peekPreparedIntrinsicMain(receiver, elements, axis, contentMain, revision);
+  if (stage) intrinsicMainStages.get(GLOBAL_STATE.renderTransaction!)!.delete(receiver!);
   return stage;
 }

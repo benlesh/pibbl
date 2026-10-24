@@ -20,9 +20,10 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice167 (native measured-leaf query/continuation phases;
-separate commit). Slice166 is `fcc06741`. Next is168: described measured-owner
-composition and the remaining indefinite/cyclic-owner exit policy.
+Latest delivery is slice168 (described measured-owner composition and native
+allocated-owner continuation; separate commit). Slice167 is `91470858`; slice166
+is `fcc06741`. Next is169: finish the indefinite-owner/measured-owner closure
+audit against the complete accepted matrix, preserving all remaining targets.
 Consolidation55 is `98bf8b8d` for163–165.
 Slice165 is `cc334a0a` (empty-Rectangle aspect automatic minimum).
 Slice164 is `ff72e0ab` (wrapped-leaf aggregate measurement reuse).
@@ -5370,7 +5371,7 @@ Runnable: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-measured-percentage
 Toggle natural80/20, cycle external200/160/80 and click the red/green edge.
 Inspector maxima are actual callback records; shown sizes are labeled expected.
 
-## [NEXT] Slice168: described measured-owner composition and owner-policy exit
+## Slice168 delivered: described measured-owner composition and native owner phases
 
 The remaining min/max row needs the described known-owner and paired-provider
 composition branches exercised through these phases with actual final paint,
@@ -5824,6 +5825,47 @@ not completion of the full layout-engine proposal.
 Authorized 2026-10-21. Starting points: [proposal](layout-engine-rework-proposal.md)
 and its four linked research/design documents. This is experimental work, not a
 replacement of current shipped layout contracts or a feature-complete engine.
+
+Delivered2026-10-23. The size-only opaque branch is preserved semantics, not a
+native geometry claim: direct known Card A30/root110 versus opaque Owner's
+normally allocated returned Card A27.5/root110. Two delegated size queries110
+and100 prove discarded-query isolation. A matching structural description
+retains the existing receiver-owned handoff; no new public association API.
+
+The pinned probe found a real nested same-axis defect: at finite mainN,
+outerN/inner2N/leaf4N with constrained provider maximaN then2N; undefined keeps
+40/40/40 with one unbounded query. Public row measurement was unsupported and
+column placement reused the earlier stage, yielding leaf2N and skipping the
+second callback. The fix uses finite fit-content availability when there is no
+own maximum, admits the bounded same-axis known Flex contribution, and performs
+one native exact allocated-owner continuation through the current pure receiver
+context before normal placement. The temporary transaction stage retains the
+original normalized root style; receiver/source children/axis/content/revision
+must match. The original cross-axis166/167 handoff and public exact fast path
+remain intact. This is finite tree descent, not an iterative fixed point.
+
+Fresh focused Node24.15/Chromium:72tests passed across the new composition file
+and166/167 matrices. The seven composition tests also pass provider-only signal
+updates, unchanged native node counts, both allocated-phase failure/remount
+paths and exact teardown. Source/built lesson verifies query pairs40/80,
+red overflow extent160, target outside the40px owner, existing cap interactions
+and disposal0000. Built uses470inputs. Installed package passes246dist inputs,
+Bundler/NodeNext and the same two-phase/update/overflow/target/cleanup receipt;
+tarball SHA256 `bf544913dc76e5130f441a3172e62002b2481958d8a807ac64e887e5e0c1a708`.
+The separate pinned percentage-phase probe source SHA256 is
+`9718359e5874f915a7cdd78cceb7d467aa884ac852d7cb99175dffbb06636c77`.
+Kernel ABI8/75199bytes is unchanged; the721corpus is unchanged. No min/max
+promotion, fixed33 reclassification, release-gate closure or full trust claim.
+
+## [NEXT] Slice169: min/max owner-policy matrix closure audit
+
+Reconcile each clause of166's accepted matrix with actual query, normal layout,
+ownership and failure evidence. The bounded nested same-axis result closes its
+specific known-owner counterexample, not arbitrary recursive intrinsic sizing.
+Retain the opaque size-only distinction; identify unresolved percentage dimension
+or basis references and recursive descriptor cases explicitly. Do not promote
+`flex.min-max` while the indefinite-owner/measured-owner missing row still has
+an unevidenced accepted branch. Consolidation56 for166–168 is separate.
 
 ## Scope and execution
 

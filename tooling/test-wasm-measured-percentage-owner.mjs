@@ -28,6 +28,9 @@ try {
   const red = [182, 61, 61, 255], green = [66, 107, 97, 255];
   const initial = await state();
   assert.equal(initial.externalOwner, 200);
+  assert.ok(initial.nestedQueries.length >= 2 && initial.nestedQueries.length % 2 === 0 && initial.nestedQueries.every((value, index) => value === (index % 2 ? 80 : 40)));
+  assert.deepEqual(await pixel(187, 480), red);
+  assert.deepEqual(await pixel(189, 480), [243, 240, 232, 255]);
   assert.deepEqual(await pixel(57, 210), red); assert.deepEqual(await pixel(59, 210), green);
   assert.deepEqual((await click(57, 210)).hits, ['A']);
   assert.deepEqual((await click(59, 210)).hits, ['A', 'B']);
@@ -42,6 +45,8 @@ try {
   assert.deepEqual(await pixel(47, 210), red); assert.deepEqual(await pixel(49, 210), green);
   assert.deepEqual((await click(120, 210)).hits, ['A', 'B', 'B', 'B']);
   const restored = await click(60, 138); assert.equal(restored.externalOwner, 200);
+  assert.ok(restored.nestedQueries.length >= 2 && restored.nestedQueries.every((value, index) => value === (index % 2 ? 80 : 40)));
+  assert.deepEqual((await click(180, 480)).hits, [...restored.hits, 'overflow']);
   assert.deepEqual(await pixel(57, 210), red);
   assert.equal(restored.layout.nodeCreates, initial.layout.nodeCreates);
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
