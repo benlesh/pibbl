@@ -8004,6 +8004,32 @@ moved targets, identity, paint-only native reuse, empty count0/fallback and clea
 Earlier empty-fixture failure was missing fixed CSS surface sizing, not an
 acceptance receipt. Counts/all7release gates unchanged. Consolidate214–216now.
 
+## [DONE] Consolidation72: slices214–216
+
+Fresh Node24.15.0/pnpm11.21.0/Playwright Chromium accumulated91-file matrix:
+experimental1175pass/12skip out of1187in84.36s; ordinary353pass/834skip out of1187
+in9.95s. Logs `/tmp/pibbl-consolidation72-{wasm,ordinary}.txt`. This preserves the
+completed Text-origin, responsive, settled-box, margin/padding and structural
+regressions while adding relative selected sources, recursive/transparent/empty
+nowrap trees and native wrapped membership. No speculative wall-clock claim.
+
+Fresh Rust1.99native46tests pass. ABI17/84137bytes/SHA
+`3e0ca845cb92a34f3d59dae6f77d583236f677501398a3aeb2770ae946b363e6`;
+previous complete16and missing membership export reject before publication.
+Types, lint, catalog/Studio,109documentation mutation probes and public JSDoc
+52entries/1486declarations/18inherited/3472members/6576links pass. Full source/built
+Text replays pass errors[],cleanup000,built470inputs
+(`/tmp/pibbl-consolidation72-{source,built}.txt`). Slice216's final full baseline
+source/built replays and installed consumers retain all214–216receipts, moved
+click targets, source order and exact ownership. Packed104marginfixtures/246inputs,
+strictBundler/NodeNext/nestedbrowser pass; tarballSHA
+`420f2f8cd952685581a357a5997476f3f081986139bb6177e47f21c04b0f0a09`.
+
+No aggregate trust or program-completion claim. Fixed33 remains12complete/
+12experimental/3partial/5missing/1excluded and all7release gates remain open.
+Baseline still has the explicit finite closure classes listed under217; final
+independent whole-codebase review remains at program exit. Next217.
+
 ## [NEXT] Slice217: static structural owner origin preparation
 
 Resolve the remaining concrete static outer-owner gap without a fake containing
