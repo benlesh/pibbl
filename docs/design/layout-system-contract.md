@@ -2051,14 +2051,14 @@ Negative and out-of-box values are valid; they are not clamped. A missing
 capability uses the content bottom edge. A declared unsupported result, invalid
 result or thrown callback fails preparation instead of silently taking a fallback.
 
-The first consumer is experimental `alignItems: "first-baseline"` in a finite LTR
+The first consumer is experimental `alignItems: "first-baseline"` in a finite LTR or RTL
 nowrap row of direct fixed primitive leaves. Main sizes settle first; providers
 receive the final finite content width and height at local origin0,0. The native
 WASM cross-placement path computes the common ascent starting at zero and each
 offset as common ascent minus that leaf's first baseline. This matches pinned
 Yoga3.2.1 numeric-provider probes, including signed/out-of-box baselines. Last
 baseline placement, custom-font Text metrics, nested containers, outer Flex wrapping,
-reverse/RTL, automatic cross size and decorated/numeric-margin/position/query/aspect
+row-reverse, automatic cross size and decorated/numeric-margin/position/query/aspect
 leaves remain outside this first admission. Main-axis automatic margins are
 resolved by the existing native main allocator before baseline alignment; they
 do not change membership in the baseline-sharing group. Cross-axis automatic
@@ -2073,6 +2073,11 @@ Aat(0,60), bottom-auto at(0,0), both-auto at(0,30), and Bat(40,0). This follows
 Pibbl's existing full-line automatic-margin policy. Pinned Yoga3.2.1 top-auto keeps
 Aat(0,18), using its baseline line extent instead; this is an explicit native/CSS
 placement divergence, not a font or unconditional geometry parity claim. This adds no public operation selector.
+
+RTL uses the existing native main-axis slots while baseline offsets stay physical
+vertical coordinates; it preserves source keyboard order and paint order. A fixed
+120px row puts A40x20/baseline12 at x80,y18and B40x40/baseline30 at x40,y0;
+the paired LTR control places A at x0with the same y offsets.
 
 Provider reads use existing measurement-role receiver dependencies. Queries forbid
 hooks, writes and rendering work through the existing isolated pure boundary;

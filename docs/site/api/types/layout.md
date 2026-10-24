@@ -60,7 +60,7 @@ finite box and the independent `left`/`top` placement vocabulary for children.
 
 `measureBaselines` receives readonly resolved `props`, normalized `style`, the final
 local content `allocation` (`x:0`, `y:0`), and the pure Canvas measurement `service`.
-The first experimental consumer is a direct fixed primitive in a finite LTR
+The first experimental consumer is a direct fixed primitive in a finite LTR or RTL
 nowrap row with `alignItems: "first-baseline"`. Queries run after main allocation.
 
 ## BaselinesResult
@@ -195,7 +195,7 @@ content height, including column Flex. Intrinsic/max-only percentage-gap owners
 remain unsupported.
 
 The experimental `alignItems: "first-baseline"` aligns direct fixed primitive
-leaves in a finite LTR nowrap row after final allocation. See
+leaves in a finite LTR or RTL nowrap row after final allocation. See
 [BaselineMeasureInput](#/api/types/layout#baselinemeasureinput) and the
 [first-baseline example](#/examples/layout/wasm-flex-baseline). Other baseline
 modes remain outside this first subset. Direct nonempty Text with fixed dimensions, generic pixel fonts, visible

@@ -165,9 +165,25 @@ try {
     assert.deepEqual(Object.fromEntries([['MA',cross.stamps.MA],['MB',cross.stamps.MB]]),mainStamps);
     await click(550,y+4);assert.equal((await state()).hits.at(-1),'MA');
   }
+  // RTL reverses only the finite row slots; baseline and physical auto-margin
+  // placement stay local to the companion row.
+  await click(700,240);
+  const rtl=await state();
+  assert.equal(rtl.layoutDirection,'rtl');
+  assert.ok(Math.abs(rtl.boxes.MA.x-580)<1e-9&&Math.abs(rtl.boxes.MA.y-240)<1e-9,'RTL automatic-margin card');
+  assert.ok(Math.abs(rtl.boxes.MB.x-460)<1e-9&&Math.abs(rtl.boxes.MB.y-210)<1e-9,'RTL baseline peer');
+  assert.deepEqual(Object.fromEntries([['MA',rtl.stamps.MA],['MB',rtl.stamps.MB]]),mainStamps);
+  await click(590,244);assert.equal((await state()).hits.at(-1),'MA');
+  await click(470,214);assert.equal((await state()).hits.at(-1),'MB');
+  await click(700,204);
+  const rtlBaseline=await state();assert.equal(rtlBaseline.crossMode,'off');
+  assert.ok(Math.abs(rtlBaseline.boxes.MA.x-580)<1e-9&&Math.abs(rtlBaseline.boxes.MA.y-228)<1e-9,'RTL first-baseline card');
+  assert.ok(Math.abs(rtlBaseline.boxes.MB.x-460)<1e-9&&Math.abs(rtlBaseline.boxes.MB.y-210)<1e-9,'RTL shared baseline peer');
+  await click(590,232);assert.equal((await state()).hits.at(-1),'MA');
+  if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
   const disposed=await sandbox.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();});
-  assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements],[0,0,0]);assert.equal(await frame.locator('pre').count(),0);assert.deepEqual(errors,[]);
+  assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements,disposed.activeWasmInstances],[0,0,0,0]);assert.equal(await frame.locator('pre').count(),0);assert.deepEqual(errors,[]);
   console.warn(JSON.stringify({base,initial:initial.boxes,shifted:shifted.boxes,wider:wider.boxes,text:{initialSmall,initialLarge,changedSmall,changedLarge,twoLineSmall,twoLineLarge,wrappedSmall,wrappedLarge},builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
 } finally { await browser.close(); }

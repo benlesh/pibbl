@@ -2699,14 +2699,15 @@
       "id": "flex.baselines",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR nowrap rows of direct fixed primitive leaves, including nonempty visible unwrapped/wrapped Text at final allocation with generic positive px fonts and top baseline measured through an explicit Canvas service capability; missing-provider content-bottom fallback and explicit failure diagnostics",
+      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR/RTL nowrap rows of direct fixed primitive leaves, including nonempty visible unwrapped/wrapped Text at final allocation with generic positive px fonts and top baseline measured through an explicit Canvas service capability; missing-provider content-bottom fallback and explicit failure diagnostics",
       "status": "experimental",
-      "unresolvedPolicy": "Broader Text fitting/overflow, font loading/shaping, nested baseline propagation, last-baseline alignment, outer Flex wrapping, reverse/RTL and broader leaf admission remain open.",
+      "unresolvedPolicy": "Broader Text fitting/overflow, font loading/shaping, nested baseline propagation, last-baseline alignment, outer Flex wrapping, row-reverse and broader leaf admission remain open.",
       "evidence": {
         "positive": [
           "packages/core/test/layout-flex-baseline.test.tsx",
           "packages/scenarios/src/learning/layout/wasm-flex-baseline.example.tsx",
-          "tooling/packed-layout-consumer.mjs"
+          "tooling/packed-layout-consumer.mjs",
+          "tooling/layout-yoga-rehearsal/baseline-rtl-probe.cpp"
         ],
         "negative": [
           "packages/core/test/layout-flex-baseline.test.tsx",
@@ -2724,7 +2725,7 @@
           "broader Text fitting/overflow baseline policy",
           "nested containers",
           "last-baseline alignment",
-          "wrapping/reverse/RTL"
+          "wrapping/row-reverse"
         ]
       }
     },
