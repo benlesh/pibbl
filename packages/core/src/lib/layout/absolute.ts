@@ -2,7 +2,7 @@ import { allocatedContentBoxStyle } from './box-sizing.js';
 import { experimentalLayout } from './wasm/region.js';
 import { registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, takePreparedChildStyle, type PreparedLayoutPlan } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
-import { ResponsiveStylePreparation, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
+import { ResponsiveStylePreparation, getStyleMeasurementMode, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { EMPTY_STYLE } from '../style/empty-style.js';
 import { materializeContainerChildren } from '../element/children.js';
@@ -186,9 +186,12 @@ function resolveAbsoluteChildPlacement(
   receiverToken?: object,
 ): { box: LayoutBox; element: PibblElement<any> } {
   const prepared = prepareDirectChildStyle(child, receiverToken, container);
-  const style = preparedStyleValue(prepared) as Readonly<
+  let style = preparedStyleValue(prepared) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
+  if (experimentalLayout && GLOBAL_STATE.currentPibblInstance && getStyleMeasurementMode() === undefined && hasPercentageBoxPadding(style)) {
+    style = resolveAllocatedInsets(style, { width: container.width, context: childDiagnosticContext(child, container, 'absolute') });
+  }
   // Absolute retains legacy left/top placement but never accepts Flex's explicit mode.
   assertSupportedChildPosition('Absolute', child, style, false, false);
   const resolved = resolveDirectChildBox(container, child, 'absolute', style);

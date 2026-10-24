@@ -19,10 +19,11 @@ try {
     }, {x,y,basis:(await state()).basis});
     await frame.locator('canvas').click({position}); await page.waitForTimeout(180);
   };
-  const expectBox = (actual, x, y, stamp) => {
+  const expectAllocation = (actual, x, y, width, height, stamp) => {
     assert.ok(Math.abs(actual.x-x)<1e-9&&Math.abs(actual.y-y)<1e-9,JSON.stringify(actual));
-    assert.equal(actual.width,100); assert.equal(actual.height,40); assert.equal(actual.stamp,stamp);
+    assert.equal(actual.width,width); assert.equal(actual.height,height); assert.equal(actual.stamp,stamp);
   };
+  const expectBox = (actual, x, y, stamp) => expectAllocation(actual, x, y, 100, 40, stamp);
   const initial = await state(); assert.equal(initial.allocationWidth, 200); assert.equal(initial.containerWidth, 200); assert.equal(initial.padding, 0); expectBox(initial.box,0,0,1);
   await click(4, 4); assert.equal((await state()).hits, 1);
   await click(36, 118); const numeric = await state(); assert.equal(numeric.padding, 20); expectBox(numeric.box,20,20,1);
@@ -55,6 +56,24 @@ try {
     const beforePaint = latest.layout; await click(164, 118); latest = await state();
     for (const key of ['solves', 'nodeCreates']) { assert.equal(typeof beforePaint[key], 'number', `${family} ${key}`); assert.equal(latest.layout[key], beforePaint[key], `${family} paint ${key}`); }
   }
+  // Direct-child mode carries the padding on a 160 × 80 Flow box, not on the selected outer container.
+  await click(164, 88); latest = await state(); assert.equal(latest.container, 'flow');
+  await click(36, 118); latest = await state(); assert.equal(latest.padding, 0);
+  await click(100, 118); latest = await state(); assert.equal(latest.containerWidth, 200);
+  await click(64, 88); latest = await state(); assert.equal(latest.paddingOwner, 'child');
+  let childStamp = latest.box.stamp; expectAllocation(latest.box, 0, 0, 160, 80, childStamp);
+  await click(36, 118); latest = await state(); assert.equal(latest.padding, 20); expectAllocation(latest.box, 20, 20, 120, 40, childStamp);
+  const childHits = latest.hits; await click(4, 4); latest = await state(); assert.equal(latest.hits, childHits); await click(24, 24); latest = await state(); assert.equal(latest.hits, childHits + 1);
+  await click(36, 118); latest = await state(); assert.equal(latest.padding, '10%'); expectAllocation(latest.box, 20, 20, 120, 40, childStamp);
+  await click(100, 118); latest = await state(); assert.equal(latest.containerWidth, 160); expectAllocation(latest.box, 16, 16, 128, 48, childStamp);
+  await click(164, 88); latest = await state(); assert.equal(latest.container, 'grid');
+  await click(36, 118); latest = await state(); assert.equal(latest.padding, 0);
+  await click(100, 118); latest = await state(); assert.equal(latest.containerWidth, 200);
+  childStamp = latest.box.stamp; expectAllocation(latest.box, 0, 0, 160, 80, childStamp);
+  await click(36, 118); latest = await state(); assert.equal(latest.padding, 20); expectAllocation(latest.box, 20, 20, 120, 40, childStamp);
+  await click(36, 118); latest = await state(); assert.equal(latest.padding, '10%'); expectAllocation(latest.box, 16, 16, 128, 48, childStamp);
+  const childBeforePaint = latest.layout; await click(164, 118); latest = await state();
+  for (const key of ['solves', 'nodeCreates']) assert.equal(latest.layout[key], childBeforePaint[key], `child paint ${key}`);
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__); if (built) { assert.equal(proof?.mode, 'layout-wasm-built'); assert.ok(proof.coreInputs.length && proof.coreInputs.every(value => value.includes('packages/core/.layout-wasm-package/dist/'))); }
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const disposed = await sandbox.evaluate(() => { dispatchEvent(new PageTransitionEvent('pagehide')); return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__(); }); assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances], [0, 0, 0, 0]); assert.deepEqual(errors, []);

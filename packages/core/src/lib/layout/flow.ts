@@ -2,7 +2,7 @@ import { contentBoxStyle } from './box-sizing.js';
 import { canvasMeasurementService } from './canvas-measurement.js';
 import { experimentalLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
 import { prepareKnownLayoutDescendants, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
-import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
+import { getStyleMeasurementMode, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
@@ -227,6 +227,9 @@ function resolveFlowPlacements(
     let normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & LayoutItemStyle
     >;
+    if (experimentalLayout && GLOBAL_STATE.currentPibblInstance && getStyleMeasurementMode() === undefined && hasPercentageBoxPadding(normalized)) {
+      normalized = resolveAllocatedInsets(normalized, { width: container.width, context: { component: child.type.name || 'Anonymous', algorithm: 'flow' } });
+    }
     if (normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized, { width: container.width, height: container.height, context: { component: child.type.name || 'Anonymous', algorithm: 'flow', constraints: { minWidth: 0, maxWidth: container.width, minHeight: 0, maxHeight: container.height } } });
     assertSupportedChildPosition('Flow', child, normalized);
     const needsWidth = normalized.width === undefined || normalized.width === 'auto';

@@ -403,7 +403,14 @@ measurement operation. Upstream
 parent layout/measurement admission remains authoritative: this dispatch path
 does not grant a missing pure query or canonicalize every parent’s children.
 
-Unallocated and other unsupported-parent raw percentage padding remains rejected. Pure
+Actual mounted Flow, Absolute and Overlay child allocation also canonicalizes raw child
+padding against the parent content width before box conversion. Grid uses the final
+cell area width instead: a 160px cell in a 200px Grid resolves 10% to 16px.
+The child border box remains fixed while its structural content and hit targets move.
+Receiver/query metadata remains attached to the same child. A pure fixed-size parent
+may measure its own bounds without inspecting children; this does not allocate them.
+
+Unallocated raw percentage padding remains rejected. Pure
 `measureElement` returns unsupported before measuring a raw percentage-padded
 node; constraints/maxima do not supply an allocated owner. A child already
 canonicalized by actual Flex allocation can follow existing numeric measurement.

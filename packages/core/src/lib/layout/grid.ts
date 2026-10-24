@@ -2,7 +2,7 @@ import { contentBoxStyle } from './box-sizing.js';
 import { canvasMeasurementService } from './canvas-measurement.js';
 import { experimentalLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
 import { prepareKnownLayoutDescendants, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
-import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
+import { getStyleMeasurementMode, preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
@@ -263,6 +263,9 @@ function resolveGridPlacements(
       width: trackSpan(columns, columnStart - 1, columnSpan, options.columnGap),
       height: trackSpan(rows, rowStart - 1, rowSpan, options.rowGap),
     };
+    if (experimentalLayout && GLOBAL_STATE.currentPibblInstance && getStyleMeasurementMode() === undefined && hasPercentageBoxPadding(normalized)) {
+      normalized = resolveAllocatedInsets(normalized, { width: area.width, context: childContext(child, area) });
+    }
     if (normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized, { width: area.width, height: area.height, context: childContext(child, area) });
     const widthAuto =
       normalized.width === undefined || normalized.width === 'auto';

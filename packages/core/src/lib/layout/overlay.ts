@@ -1,7 +1,7 @@
 import { hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
 import { experimentalLayout } from './wasm/region.js';
 import { registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
-import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
+import { getStyleMeasurementMode, preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
@@ -165,9 +165,12 @@ function resolveOverlayChildPlacement(
   receiverToken?: object,
 ): { box: LayoutBox; element: PibblElement<any> } {
   const prepared = prepareDirectChildStyle(child, receiverToken, container);
-  const item = preparedStyleValue(prepared) as Readonly<
+  let item = preparedStyleValue(prepared) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
+  if (experimentalLayout && GLOBAL_STATE.currentPibblInstance && getStyleMeasurementMode() === undefined && hasPercentageBoxPadding(item)) {
+    item = resolveAllocatedInsets(item, { width: container.width, context: { component: child.type.name || 'Anonymous', algorithm: 'overlay' } });
+  }
   assertSupportedChildPosition('Overlay', child, item, false, false);
   const resolved = resolveDirectChildBox(
     container,

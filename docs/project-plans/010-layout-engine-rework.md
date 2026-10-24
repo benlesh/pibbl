@@ -20,7 +20,7 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice192: allocated Absolute/Overlay percentage padding.
+Latest delivery is slice193: actual direct-child percentage padding; slice192 is `57e0de5f`.
 Slice191 is `13f53057`: allocated Grid percentage padding.
 Slice190 is `dd5b47f0`: allocated Flow percentage padding.
 Slice189 is `233311da`: baseline cross-auto participant handling.
@@ -33,7 +33,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 passes; next is193.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; next is194.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -46,7 +46,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is193: actual direct-child percentage insets.
+Consolidation56 is `2fd34f0e` for166–168. Next is194: logical/direct-child dispatch evidence.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now11complete/12experimental/
 4partial/5missing/1excluded. All seven release gates remain open; independent
@@ -7097,17 +7097,39 @@ measurement/owner feedback. The fixed ledger remains11complete/12experimental/
 4partial/5missing/1excluded with all7release gates open. Final independent
 whole-codebase review remains at the full program exit.
 
-## [NEXT] Slice193: allocated direct-child percentage insets
+## [DONE] Slice193: allocated direct-child percentage insets
 
-Establish public numeric controls for actual Flow/Absolute/Overlay parent content
-width200and a160x80border-box child: numeric20and10%give120x40content at20;
-parent160gives16percent insets and128x48content. A Grid160px area in a200px parent
-instead uses16from the start, proving the cell is the owner. Reuse the existing
-resolver only after actual child allocation, before box conversion; preserve
-receiver/query metadata and existing placement. Pure Flow/Grid raw-child queries
-stay unsupported because constraints are not allocation ownership. Absolute and
-Overlay retain missing providers. No Layer normalization or advanced Grid tracks.
-Consolidation193–195follows the next three delivered slices.
+Actual mounted Flow/Absolute/Overlay children resolve raw percentage padding
+against parent content width; Grid waits for its final cell area. All four use
+existing inset resolution before box conversion, retaining receiver/query
+metadata and numeric fast paths. Pure queries do not infer an owner. Fixed-size
+Flow/Grid parents may still measure their own bounds without inspecting children.
+
+The first draft probe incorrectly treated an opaque custom primitive's border
+allocation as padded content. Corrected structural-child controls passed numeric
+padding before all4 percentage cases failed; only then were production seams
+changed. Fresh Node24.15/Chromium RED4, GREEN4, focused25/6files pass. Geometry,
+real targets, keyed identity, paint-only solve reuse and four-counter disposal
+are asserted. Typecheck, changed-code lint, docs109mutation probes,175/12/33catalog
+and Studio checks pass. The edited source index was refreshed after the catalog
+correctly detected drift. Scoped independent runtime/test review is clean.
+
+The same lesson adds own/direct-child controls; source5192and built5193browser
+replays pass errors[]/exact four-counter cleanup, preserving earlier own-style
+proofs. Direct Flow owner200→160changes inset20→16and content120x40→128x48;
+Grid160cell inside200parent uses16. Screenshot inspected; the caption was shortened
+to fit its allotted footer. ABI10kernel unchanged78986bytes. Installed nested
+composition and logical raw-child evidence follow; no aggregate trust or release
+claim. Capability ledger remains11complete/12experimental/4partial/5missing/1excluded.
+
+## [NEXT] Slice194: logical raw-child ownership and described dispatch
+
+Prove the same allocated path for logical zero/percentage conflicts with explicit
+RTL direction and one representative inherited-direction/described layout root.
+Reuse existing supported preparation; no new wrapper introspection or public API.
+After this, supply the installed nested composition receipt and consolidate193–195.
+Unallocated intrinsic percentage feedback stays explicitly unsupported; decide
+padding completion against its bounded admission rule, not hypothetical CSS scope.
 
 ## Scope and execution
 
