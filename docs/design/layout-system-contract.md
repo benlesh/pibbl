@@ -2086,8 +2086,10 @@ forward its first source-order in-flow direct primitive child's baseline. Absolu
 decoration is skipped. The container adds the selected child's physical content-y
 origin to its content-local baseline; a child without a provider uses its content
 bottom. This reads the existing current-transaction prepared native placement plan;
-normal traversal remains its sole claimant. There is no public reference-child
-marker or separate line solver. Static inner owners, selected relative-position children, empty containers, inner columns, wrapping inner
+normal traversal remains its sole claimant. Selected relative offsets move paint,
+hit and focus geometry after baseline allocation; the contribution uses the
+pre-relative physical layout-y origin. There is no public reference-child
+marker or separate line solver. Static inner owners, empty containers, inner columns, wrapping inner
 containers, selected nested layout roots, and Flow/Grid selection remain outside
 this structural profile.
 

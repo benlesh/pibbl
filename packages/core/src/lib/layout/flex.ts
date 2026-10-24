@@ -241,6 +241,7 @@ function renderFlex(
       for (const placement of placements) {
         snapshot.push({
           box: { x: placement.box.x, y: placement.box.y, width: placement.box.width, height: placement.box.height },
+          layoutY: placement.layoutY,
           usedWidth: placement.usedWidth, usedHeight: placement.usedHeight,
         });
       }
@@ -281,6 +282,7 @@ function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexSty
       const prepared = takePreparedChildStyle(child, receiver, localContent);
       placements.push({
         box: allocation.box,
+        layoutY: allocation.layoutY,
         usedWidth: allocation.usedWidth,
         usedHeight: allocation.usedHeight,
         element: prepared ? childWithUsedSize(child, preparedStyleValue(prepared), allocation.usedWidth, allocation.usedHeight, receiver, preparedStyleQuery(prepared)) :
@@ -1843,9 +1845,10 @@ function resolveFlexPlacements(
       const x = row ?
         container.x + mainCursor + item.relativeX :
         container.x + line.crossOffset + crossOffset + item.relativeX;
-      const y = row ?
-        container.y + line.crossOffset + crossOffset + item.relativeY :
-        container.y + mainCursor + item.relativeY;
+      const layoutY = row ?
+        container.y + line.crossOffset + crossOffset :
+        container.y + mainCursor;
+      const y = layoutY + item.relativeY;
       const box = {
         x: finiteRelativePlacement(x, 'left', item.child, container),
         y: finiteRelativePlacement(y, 'top', item.child, container),
@@ -1869,6 +1872,7 @@ function resolveFlexPlacements(
       placementsBySource[item.sourceIndex] = {
         usedWidth: usedStyle.width,
         usedHeight: usedStyle.height,
+        layoutY: finiteRelativePlacement(layoutY, 'top', item.child, container),
         box,
         element,
       };
@@ -2003,6 +2007,7 @@ function resolveAbsoluteFlexPlacement(
     box: { x: finiteRelativePlacement(x, 'left', child, paddingBox), y: finiteRelativePlacement(y, 'top', child, paddingBox), width, height },
     usedWidth,
     usedHeight,
+    layoutY: finiteRelativePlacement(y, 'top', child, paddingBox),
     element: childWithUsedSize(child, settledStyle, usedWidth, usedHeight, receiverToken, query),
   };
 }
@@ -2490,8 +2495,6 @@ function prepareKnownFlexFirstBaseline(
     if (!prepared) throw new Error('Known Flex baseline selection requires settled child inputs.');
     const selectedStyle = prepared.style as Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>;
     if (selectedStyle.position === 'absolute') continue;
-    if (selectedStyle.position === 'relative') throw childDiagnostic(source, 'position', 'relative', content,
-      'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a selected structural baseline child cannot have a relative offset');
     if (isKnownLayoutType(source.type) || isLayoutComponent(source.type) || !getPrimitiveDefinition(placement.element.type)) {
       throw childDiagnostic(source, 'alignItems', 'first-baseline', content,
         'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the first in-flow structural child must be a direct primitive');
@@ -2515,8 +2518,8 @@ function prepareKnownFlexFirstBaseline(
     }
     return {
       slot,
-      first: placement.box.y + insets.top + first,
-      last: placement.box.y + insets.top + last,
+      first: placement.layoutY + insets.top + first,
+      last: placement.layoutY + insets.top + last,
     };
   }
   throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,

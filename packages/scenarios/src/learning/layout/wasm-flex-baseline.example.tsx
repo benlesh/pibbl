@@ -11,7 +11,7 @@ interface CardProps { id: Name; label: string; font: string; first: number | Sig
 interface CardStyle extends SystemStyle {
   width?: number; height?: number | "auto"; aspectRatio?: number; fill?: string;
   flexBasis?: number; flexGrow?: number; flexShrink?: number;
-  position?: "static" | "relative" | "absolute"; left?: number; top?: number;
+  position?: "static" | "relative" | "absolute"; left?: number; top?: number; bottom?: number;
   minWidth?: number; minHeight?: number; marginLeft?: number | "auto"; marginTop?: number | "auto"; marginBottom?: number | "auto"; alignSelf?: FinalBoxSelf;
 }
 type ResolvedCardStyle = CardStyle & { width: number; height: number };
@@ -27,7 +27,7 @@ function createBaselineContent() {
   const crossTop = computed(() => crossMode.get() === "top" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossBottom = computed(() => crossMode.get() === "bottom" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossLabel = computed(() => crossMode.get() === "off" ? "Cross" : crossMode.get());
-  const measuredHeight = signal(20), aspectBox = signal(false), knownFirst = signal(12);
+  const measuredHeight = signal(20), aspectBox = signal(false), knownFirst = signal(12), knownRelative = signal<"off" | "top" | "bottom">("off");
   const finalBoxSelf = signal<FinalBoxSelf>("auto");
   const finalBoxSelfLabel = computed(() => `Self ${finalBoxSelf.get()}`);
   const queryMode = signal<"off" | "narrow" | "wide">("off");
@@ -40,6 +40,8 @@ function createBaselineContent() {
   const measuredHeightLabel = computed(() => `Measured height ${measuredHeight.get()}`);
   const knownLabel = computed(() => `Known leaf ${knownFirst.get()}`);
   const knownNumber = computed(() => String(knownFirst.get()));
+  const knownRelativeLabel = computed(() => `Relative ${knownRelative.get()}`);
+  const knownLeafStyle = computed<CardStyle>(() => ({ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248", position: knownRelative.get() === "off" ? "static" : "relative", top: knownRelative.get() === "top" ? 10 : undefined, bottom: knownRelative.get() === "bottom" ? 10 : undefined }));
   const aspectLabel = computed(() => aspectBox.get() ? "Aspect 2" : "Aspect off");
   const finalBoxStyle = computed<CardStyle>(() => ({
     width:40,height:finalBoxHeight.get(),minWidth:0,minHeight:0,flexGrow:0,flexShrink:0,
@@ -197,13 +199,15 @@ function createBaselineContent() {
       <Flex style={{ left: 460, top: 340, width: 100, height: 40, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
         <Flex key="known" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}>
           <Rectangle key="known-decoration" pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, width: 40, height: 20, fill: "#e7e5df" }} />
-          <BaselineCard key="known-leaf" id="KA" label={knownNumber} font="12px monospace" first={knownFirst} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248" }} />
+          <BaselineCard key="known-leaf" id="KA" label={knownNumber} font="12px monospace" first={knownFirst} style={knownLeafStyle} />
         </Flex>
         <BaselineCard key="known-peer" id="KB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
       </Flex>
       <Rectangle onClick={() => knownFirst.update(value => value === 12 ? 22 : 12)} style={{ left: 576, top: 340, width: 84, height: 28, fill: "#426b61", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 582, top: 348, font: "10px sans-serif", fill: "#ffffff" }}>{knownLabel}</Text>
-      <Text pointerEvents="none" style={{ left: 460, top: 388, font: "11px sans-serif", fill: "#475569" }}>Known leaf ignores its decorative overlay.</Text>
+      <Rectangle onClick={() => knownRelative.update(value => value === "off" ? "top" : value === "top" ? "bottom" : "off")} style={{ left: 576, top: 372, width: 84, height: 24, fill: "#6e3e79", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 581, top: 379, font: "9px sans-serif", fill: "#ffffff" }}>{knownRelativeLabel}</Text>
+      <Text pointerEvents="none" style={{ left: 460, top: 408, font: "11px sans-serif", fill: "#475569" }}>Known leaf ignores its decorative overlay.</Text>
       <Text pointerEvents="none" style={{ left: 460, top: 185, font: "12px sans-serif", fill: "#475569" }}>Cross auto takes over alignment.</Text>
       <Flex style={{ left: 460, top: 210, width: 160, height: 80, flexDirection, flexWrap: "nowrap", layoutDirection, alignItems: "first-baseline" }}>
         <BaselineCard key="MA" id="MA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: mainMargin, marginTop: crossTop, marginBottom: crossBottom, fill: "#426b61" }} />
@@ -248,7 +252,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), describedRoot: true, knownFirst: knownFirst.get(), selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), describedRoot: true, knownFirst: knownFirst.get(), knownRelative: knownRelative.get(), selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {

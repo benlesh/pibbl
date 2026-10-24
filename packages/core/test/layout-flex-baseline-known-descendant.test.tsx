@@ -91,3 +91,53 @@ it.runIf(experimentalLayout)(
     expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances]);
   },
 );
+
+it.runIf(experimentalLayout)(
+  'keeps a known Flex structural baseline at its unshifted source origin while its selected child moves relatively',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const top = signal<number | undefined>(0), bottom = signal<number | undefined>(undefined);
+    const boxes = new Map<string, Box>(), hits: string[] = [], allocations: LayoutBox[] = [];
+    let serial = 0;
+    interface RelativeStyle extends Omit<Style, 'position'> { readonly position?: 'relative'; readonly bottom?: number; }
+    const Leaf = definePrimitive<{ readonly name: 'A' | 'B'; readonly first: number }, RelativeStyle, RelativeStyle, RelativeStyle & { readonly width: number; readonly height: number }>((props, style) => {
+      const box = useLayoutBox(), matrix = useCanvasContext().getTransform(), stamp = useConst(() => ++serial);
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height, stamp });
+      return <Rectangle onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: style.fill, cursor: 'pointer' }} />;
+    }, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: ({ props, allocation }) => {
+        if (props.name === 'A') allocations.push({ ...allocation });
+        return { status: 'measured' as const, first: props.first, last: props.first };
+      },
+    });
+    const a = <Leaf key="A" name="A" first={12} style={{ position: 'relative', left: 0, top, bottom, width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, fill: '#8a3248' }} />;
+    const inner = <Flex key="inner" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start' }}>{a}</Flex>;
+    const b = <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, fill: '#426b61' }} />;
+    const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 80; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: 100, height: 80, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'first-baseline' }}>{inner}{b}</Flex>);
+    controllers.push(controller); await frame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 18, width: 40, height: 20, stamp: 1 });
+    expect(boxes.get('B')).toEqual({ x: 40, y: 0, width: 40, height: 40, stamp: 2 });
+    expect(allocations.at(-1)).toEqual({ x: 0, y: 0, width: 40, height: 20 });
+    const stampA = boxes.get('A')!.stamp, stampB = boxes.get('B')!.stamp, mounted = snapshotWasmLayoutDiagnostics();
+    click(canvas, 4, 24); expect(hits).toEqual(['A']);
+
+    top.set(10); await frame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 28, width: 40, height: 20, stamp: stampA });
+    expect(boxes.get('B')).toEqual({ x: 40, y: 0, width: 40, height: 40, stamp: stampB });
+    click(canvas, 4, 24); click(canvas, 4, 34); expect(hits).toEqual(['A', 'A']);
+
+    top.set(undefined); bottom.set(10); await frame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 8, width: 40, height: 20, stamp: stampA });
+    expect(boxes.get('B')).toEqual({ x: 40, y: 0, width: 40, height: 40, stamp: stampB });
+    expect(allocations.at(-1)).toEqual({ x: 0, y: 0, width: 40, height: 20 });
+    click(canvas, 4, 34); click(canvas, 4, 14); expect(hits).toEqual(['A', 'A', 'A']);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances]);
+    top.set(0); bottom.set(undefined); await frame(); expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(disposed.nodeCreates);
+  },
+);

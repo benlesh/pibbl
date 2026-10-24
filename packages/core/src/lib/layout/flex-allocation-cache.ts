@@ -17,6 +17,8 @@ export interface AllocationSettings {
 }
 export interface CachedFlexPlacement {
   readonly box: Readonly<LayoutBox>;
+  /** Physical outer y before relative paint translation. */
+  readonly layoutY: number;
   readonly usedWidth: number;
   readonly usedHeight: number;
 }

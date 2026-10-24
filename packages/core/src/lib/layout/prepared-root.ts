@@ -74,7 +74,7 @@ export interface PreparedLayoutPlan {
   readonly children: readonly PibblElement<any>[];
   readonly placements: { box: LayoutBox; element: PibblElement<any> }[];
 }
-export interface PreparedFlexLayoutPlan extends PreparedLayoutPlan { readonly region: LayoutRegion; readonly cached: boolean; readonly revision: number; readonly placements: { box: LayoutBox; usedWidth: number; usedHeight: number; element: PibblElement<any> }[]; }
+export interface PreparedFlexLayoutPlan extends PreparedLayoutPlan { readonly region: LayoutRegion; readonly cached: boolean; readonly revision: number; readonly placements: { box: LayoutBox; layoutY: number; usedWidth: number; usedHeight: number; element: PibblElement<any> }[]; }
 export class PreparedLayoutSlot {
   region: LayoutRegion | undefined;
   private boundaryOwner: PibblComponentRefs<any> | undefined;

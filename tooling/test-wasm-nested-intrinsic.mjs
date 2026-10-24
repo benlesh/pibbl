@@ -226,6 +226,7 @@ try {
       assert.equal(receipt.mixedSelfBaselineMembership, true, 'Installed mixed alignment must exclude baseline queries, stretch through native line allocation, preserve identity and moved targets, and clean up');
       assert.equal(receipt.describedRootBaseline, true, 'Installed described baseline roots must forward final allocations and receiver-owned inputs while retaining targets, identity, opt-out behavior, and cleanup');
       assert.equal(receipt.knownFlexDescendantBaseline, true, 'Installed known Flex roots must forward their first in-flow baseline leaf while skipping absolute decorations and retaining moved targets and identity');
+      assert.equal(receipt.relativeKnownFlexBaseline, true, 'Installed selected known Flex leaves must preserve the structural baseline while relative physical offsets move only their final targets');
       assert.equal(receipt.currentParentQueryBranch, true, 'Installed direct responsive baseline leaves must select the current parent-width branch, preserve identity, update selected inputs, and clean up');
 
       assert.equal(receipt.wrappedTextFirstBaseline, true, 'Installed wrapped Text must align its first visible line from real Canvas baseline metrics, move the last-line target after content and line updates, reuse paint, and clean up');

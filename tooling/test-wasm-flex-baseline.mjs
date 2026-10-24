@@ -431,6 +431,12 @@ try {
   await click(620,354);const knownMoved=await state();
   assert.equal(knownMoved.knownFirst,22);assertSelfBox(knownMoved.boxes.KA,{x:460,y:348,width:40,height:20});assert.deepEqual(knownMoved.boxes.KB,selfAuto.boxes.KB);assert.equal(knownMoved.stamps.KA,knownStamp);
   await click(464,374);assert.equal((await state()).hits.length,knownHits+1);await click(464,354);assert.equal((await state()).hits.at(-1),'KA');
+  await click(620,384);const knownTop=await state();
+  assert.equal(knownTop.knownRelative,'top');assertSelfBox(knownTop.boxes.KA,{x:460,y:358,width:40,height:20});assert.deepEqual(knownTop.boxes.KB,selfAuto.boxes.KB);assert.equal(knownTop.stamps.KA,knownStamp);
+  const knownRelativeHits=knownTop.hits.length;await click(464,352);assert.equal((await state()).hits.length,knownRelativeHits);await click(464,372);assert.equal((await state()).hits.at(-1),'KA');
+  await click(620,384);const knownBottom=await state();
+  assert.equal(knownBottom.knownRelative,'bottom');assertSelfBox(knownBottom.boxes.KA,{x:460,y:338,width:40,height:20});assert.deepEqual(knownBottom.boxes.KB,selfAuto.boxes.KB);assert.equal(knownBottom.stamps.KA,knownStamp);
+  await click(620,384);const knownStatic=await state();assert.equal(knownStatic.knownRelative,'off');assertSelfBox(knownStatic.boxes.KA,{x:460,y:348,width:40,height:20});
 
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);

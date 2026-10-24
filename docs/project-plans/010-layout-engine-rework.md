@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice213: known nowrap row descendant baseline selection.
+Latest delivery is slice214: relative selected structural baseline children.
+Slice213 is `b823b569`; consolidation71 is `7a4aa4bf`.
 Slice212 is `beec926f`; slice211 is `7fdb88f8`; consolidation70 is `4439928d`.
 The older numbered checkpoint notes below are historical; the single NEXT heading
 selects current work. Slice200 delivered wrapped line distribution and resolved gaps.
@@ -7884,7 +7885,7 @@ trust or feature-completion claim: fixed33 remains12complete/12experimental/
 3partial/5missing/1excluded; all7release gates remain open. Independent final
 whole-codebase review remains due at program exit. Next214.
 
-## [NEXT] Slice214: relative selected structural baseline children
+## [DONE] Slice214: relative selected structural baseline children
 
 Preserve the existing pre-relative physical layout-y origin as one scalar in the
 prepared placement. Selected child relative offsets move paint/hit/focus only;
@@ -7892,6 +7893,35 @@ container contribution remains anchored to layout. Prove top10 and bottom-only10
 with fixed provider allocation, peer, identity and exact cleanup. Reuse existing
 relative resolution; no extra per-item box allocation or public API. Complete the
 211–213consolidation record before changing production.
+
+Public RED reproduces the selected-relative admission failure before production.
+One scalar layoutY now travels with the existing direct/prepared/cached placement;
+structural selection reads it before relative paint translation. No second box
+allocation or retained receiver graph. Public first12/peer30 startsA18, top10 paints
+A28, bottom-only10 paintsA8; peer/40×20provider allocation remain fixed, moved hits
+and keyed identity persist, and all four ownership counters return exactly.
+
+Fresh experimental6focusedfiles36pass/1normal-onlyskip; ordinary Node24.15core
+Flex/JSX2files69pass. Four experimental-only relative suites correctly skip9tests
+in ordinary mode and are not claimed as passing coverage. Typecheck, lint,
+catalog/Studio,109documentation mutation probes and scoped review pass. Source5192
+and built5193full baseline drivers pass errors[],cleanup000/all four ownership
+assertions; built470inputs. Inspected `/tmp/pibbl-slice214-studio.png`. Installed
+consumer explicitly gates relativeKnownFlexBaseline and prior known-root receipt;
+104marginfixtures/246inputs/strictBundler/NodeNext/nestedbrowser pass; tarballSHA
+`70a1f99db82e9f2cc53290c93de33aff52b88518a42bfb88a5685fca4920a43f`.
+ABI16and native artifact unchanged. Capability counts and all7gates unchanged.
+
+## [NEXT] Slice215: finite nowrap structural baseline closure
+
+Close the existing first-source structural class coherently through current
+prepared native plans: physical-y semantics across inner nowrap directions,
+empty content-bottom fallback, transparent selected primitive roots, and recursive
+known Flex selection. Preserve absolute skipping, exact root receivers, one-time
+slot claims, relative paint separation and four-counter cleanup. Review concrete
+policy/ownership blockers before implementation; do not turn incidental properties
+into an unbounded slice queue. Wrapped first-line membership, Flow/Grid selection
+and last-baseline remain distinct named closure classes. Consolidate214–216after216.
 
 ## Scope and execution
 
