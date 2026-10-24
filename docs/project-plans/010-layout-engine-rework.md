@@ -7683,7 +7683,7 @@ Source5192and built5193full baseline replay pass (errors[],cleanup000and all fou
 ownership checks). The inspected `/tmp/pibbl-slice209-studio.png` includes the new
 Fit middle control, whose custom fitted glyph remains clickable and aligned.
 
-## [NEXT] Slice210: direct prepared responsive baseline ownership
+## [DONE] Slice210: direct prepared responsive baseline ownership
 
 Admit only a direct settled leaf's current finite Flex-content responsive selection.
 Carry a one-shot internal owner proof into baseline measurement, preserve the
@@ -7692,6 +7692,33 @@ baseline entries. Keep unprepared/intrinsic/recursive query resolution rejected.
 Establish public RED with branch crossing, selected-signal detach/rejoin, final
 provider boxes, stable identity, real input and teardown. Consolidate208–210before
 further production.
+
+Public RED fails the former direct query guard before production. The final-box
+public fixture now crosses the parent-content width threshold, uses selected
+height30→34to move Ay8→4with a real pointer transfer, deselects to height20/Ay18,
+proves the selected height signal detaches, and reselects its latest36/Ay2. The
+provider receives the final40×heightcontent allocation; keyed identity and four
+teardown counters stay exact. The existing query role/receiver preparation owns
+selection; the transient clone gets a finite-parent/current-transaction/receiver/
+exact-query proof consumed once by baseline measurement. Query baseline results
+are uncached. No general intrinsic or recursive rule-resolution permission.
+
+Focused7files74pass/1skip, Canvas service/final-box17pass, types/lint, scoped review,
+catalog/discovery, Studio docs and109documentation mutation probes pass. Source5192
+and built5193full baseline replay pass (errors[],cleanup000and four ownership
+assertions). Inspected `/tmp/pibbl-slice210-studio.png`. Query off/narrow/wide in the
+lesson preserves default measured/aspect behavior; Measured height also changes
+the selected branch. Both final content allocation and real hit transfer are
+asserted before restoration. No native binary/ABI or public signature change.
+
+## [NEXT] Consolidation70: settled Text and responsive baseline composition
+
+Consolidate208–210before further production. Include permanent177and standalone
+Text origin regressions, all prior baseline/inset/margin cases, current responsive
+ownership tests, source/built end-to-end drivers and installed consumer receipts.
+After the checkpoint select coherent mixed alignSelf membership through existing
+ordinary cross placement, with measured hypothetical sizing for stretch if valid.
+No aggregate trust/full-program completion claim; seven release gates remain open.
 
 ## Scope and execution
 

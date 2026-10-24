@@ -2063,9 +2063,15 @@ required cross measurement fails before baseline preparation. Providers receive
 final content width/height at local origin0,0. Native cross placement computes
 common ascent starting at zero and each offset as common ascent minus first.
 This matches pinned Yoga3.2.1 numeric-provider probes, including signed/out-of-box
-baselines. Last-baseline placement, custom-font Text admission, nested providers,
-per-item alignment membership, absolute participation and prepared style-query
-ownership remain outside this admission. Main-axis automatic margins are
+baselines. A direct settled leaf may reuse its responsive style selected from the
+current finite Flex content box. A one-shot internal proof ties that selection to
+the current transaction, exact receiver, query and owner dimensions. Baseline
+measurement consumes the selected style without resolving rules again against its
+own content allocation. Query results bypass retained baseline entries; selected
+signal dependencies stay with the existing preparation receiver and detach when
+unselected. Unprepared, recursive or intrinsic query resolution remains rejected.
+Last-baseline placement, nested providers, per-item alignment membership and
+absolute participation remain outside this admission. Main-axis automatic margins are
 resolved by the existing native main allocator before baseline alignment; they
 do not change membership in the baseline-sharing group. Cross-axis automatic
 margins instead exclude that leaf from the baseline-sharing group and its pure

@@ -3,7 +3,7 @@ import type { BoxStyle } from '../style/types.js';
 import { hasPercentageBoxPadding } from './box-insets.js';
 import { contentBoxStyle } from './box-sizing.js';
 import { isLayoutComponent, placedLayoutComponentRoot } from './define-layout-component.js';
-import { getStyleMeasurementMode, withStyleMeasurement, rejectResponsiveMeasurement, UnsupportedResponsiveMeasurement } from '../style/responsive.js';
+import { getStyleMeasurementMode, withStyleMeasurement, rejectResponsiveMeasurement, UnsupportedResponsiveMeasurement, type PreparedQuery } from '../style/responsive.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { withMeasurementLayoutOwner } from './wasm/region.js';
@@ -141,6 +141,24 @@ interface PreparedMeasurementInput {
 }
 
 
+interface PreparedBaselineOwner {
+  readonly transaction: object;
+  readonly receiver: object;
+  readonly query: PreparedQuery;
+  readonly width: number;
+  readonly height: number;
+}
+const preparedBaselineOwners = new WeakMap<PibblElement<any>, PreparedBaselineOwner>();
+/** @internal One-shot proof of a direct child's current finite Flex selection. */
+export function setPreparedBaselineOwner(element: PibblElement<any>, owner: Readonly<LayoutBox>): void {
+  const transaction = GLOBAL_STATE.renderTransaction;
+  const receiver = getPrimitiveReceiverToken(element);
+  const query = peekPreNormalizedStyle(element)?.query;
+  if (!transaction || !receiver || !query || !Number.isFinite(owner.width) || !Number.isFinite(owner.height) ||
+      query.basis.width !== owner.width || query.basis.height !== owner.height) return;
+  preparedBaselineOwners.set(element, { transaction, receiver, query, width: owner.width, height: owner.height });
+}
+
 /** @internal Pure first/last baseline query at one final content allocation. */
 export function measureBaselineElement(
   element: PibblElement<any>,
@@ -199,8 +217,18 @@ function measureBaselineInput(
     return { status: 'unsupported', reason: `${component} does not provide baseline measurement` };
   }
   const preNormalized = takePreNormalizedStyle(element);
+  const preparedOwner = preparedBaselineOwners.get(element);
+  preparedBaselineOwners.delete(element);
   if (preNormalized?.query && getStyleMeasurementMode() !== 'standalone-root') {
-    rejectResponsiveMeasurement(element);
+    // Only the direct Flex owner's already-selected style may cross this pure
+    // boundary. Never evaluate responsive rules against the provider allocation.
+    const query = preNormalized.query;
+    if (getStyleMeasurementMode() !== 'mounted-intrinsic' || !preparedOwner ||
+        preparedOwner.transaction !== GLOBAL_STATE.renderTransaction ||
+        preparedOwner.receiver !== getPrimitiveReceiverToken(element) || preparedOwner.query !== query ||
+        preparedOwner.width !== query.basis.width || preparedOwner.height !== query.basis.height) {
+      rejectResponsiveMeasurement(element);
+    }
   }
   const inputs = resolvePrimitiveInputs(element, definition, preNormalized, {
     width: allocation.width, height: allocation.height,

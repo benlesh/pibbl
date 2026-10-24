@@ -57,7 +57,7 @@ import { getLayoutDirection, pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { markDerivedAbsoluteAxes } from '../style/positioning.js';
-import { measureElement, measureConstrainedLayoutChild, measureIntrinsicElement, measureConstrainedIntrinsicElement, measurePreparedLayoutElement, measureBaselineElement, withIsolatedRenderState } from './measure.js';
+import { measureElement, measureConstrainedLayoutChild, measureIntrinsicElement, measureConstrainedIntrinsicElement, measurePreparedLayoutElement, measureBaselineElement, setPreparedBaselineOwner, withIsolatedRenderState } from './measure.js';
 import { isSignal, withSignalWriteForbidden } from '../signals/graph.js';
 import type { Constraints, LayoutBox } from './types.js';
 
@@ -1752,9 +1752,10 @@ function resolveFlexPlacements(
       const measurementChild = clonePibblElement(item.child);
       const measuredStyle: SystemStyle & { width: number; height: number } = { ...item.normalized, width: allocation.width, height: allocation.height };
       setPreNormalizedStyle(measurementChild, measuredStyle, item.child, item.receiverToken, item.query);
+      if (item.query) setPreparedBaselineOwner(measurementChild, container);
       // Application-owned fonts can change outside retained layout revisions.
       // Query them on each admitted render; only generic Text results are retained.
-      const result = measureBaselineElement(measurementChild, allocation, measurement.service, region && (item.child.type !== Text || genericTextFont(item.normalized)) ? {
+      const result = measureBaselineElement(measurementChild, allocation, measurement.service, region && !item.query && (item.child.type !== Text || genericTextFont(item.normalized)) ? {
         cache: region,
         token: item.layoutToken ?? item.receiverToken,
         key: `${allocationInputRevision()}:${allocation.width}:${allocation.height}:${JSON.stringify(measurementStyle(item.normalized))}`,
@@ -2452,10 +2453,10 @@ function assertSupportedFirstBaselineFlex(
       (textStyle.lineHeight ?? 13) >= 0 &&
       (textStyle.wrap === undefined || typeof textStyle.wrap === 'boolean')
     );
-    if (!getPrimitiveDefinition(item.child.type) || isKnownLayoutType(item.child.type) || isLayoutComponent(item.child.type) || !supportedTextLeaf || item.query || item.alignSelf !== 'auto' ||
+    if (!getPrimitiveDefinition(item.child.type) || isKnownLayoutType(item.child.type) || isLayoutComponent(item.child.type) || !supportedTextLeaf || item.alignSelf !== 'auto' ||
         (style.position !== undefined && style.position !== 'static' && style.position !== 'relative') || item.crossAuto ||
         !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
-      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct primitive leaves with settled finite content boxes and no absolute position, query, or alignSelf override');
+      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct primitive leaves with settled finite content boxes and no absolute position or alignSelf override');
     }
   }
 }

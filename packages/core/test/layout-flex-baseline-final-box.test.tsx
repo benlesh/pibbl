@@ -271,6 +271,74 @@ it.runIf(experimentalLayout)(
 );
 
 it.runIf(experimentalLayout)(
+  'uses the current finite Flex content selection for a direct responsive first-baseline provider',
+  async () => {
+    const ownerWidth = signal(100);
+    const selectedHeight = signal(30);
+    const selectedFill = signal('#8a3248');
+    const boxes = new Map<string, LayoutBox>();
+    const hits: string[] = [];
+    const allocations: LayoutBox[] = [];
+    const stamps = new Map<string, number>();
+    let serial = 0;
+    interface QueryProps { readonly name: 'A' | 'B' | 'C'; }
+    const Leaf = definePrimitive<QueryProps, FinalStyle, FinalStyle, FinalStyle & { readonly width: number; readonly height: number }>((props, style) => {
+      const box = useLayoutBox(); const matrix = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      stamps.set(props.name, useConst(() => ++serial));
+      return <Rectangle onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: style.fill, cursor: 'pointer' }} />;
+    }, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: ({ props, allocation }) => {
+        if (props.name === 'A') allocations.push({ ...allocation });
+        const first = props.name === 'A' ? allocation.height - 8 : props.name === 'B' ? 30 : 8;
+        return { status: 'measured' as const, first, last: first };
+      },
+    });
+    const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 80; document.body.append(canvas);
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const controller = pibbl(canvas, <Flex style={{ width: ownerWidth, height: 80, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'first-baseline', alignContent: 'flex-start' }}>
+      <Leaf key="A" name="A" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, fill: '#426b61', when: [{ query: { minWidth: 90 }, style: { height: selectedHeight, fill: selectedFill } }] }} />
+      <Leaf key="B" name="B" style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, fill: '#a63758' }} />
+      <Leaf key="C" name="C" style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0, fill: '#6e9d35' }} />
+    </Flex>);
+    controllers.push(controller); await nextFrame();
+    // The query basis is the finite Flex content width (100), selecting height 30.
+    expect(boxes.get('A')).toEqual({ x: 0, y: 8, width: 40, height: 30 });
+    expect(boxes.get('B')).toEqual({ x: 40, y: 0, width: 40, height: 40 });
+    expect(boxes.get('C')).toEqual({ x: 0, y: 40, width: 60, height: 20 });
+    expect(allocations).toContainEqual({ x: 0, y: 0, width: 40, height: 30 });
+    const initialStamps = Object.fromEntries(stamps);
+    click(canvas, 5, 5); expect(hits).toEqual([]);
+
+    selectedHeight.set(34); await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 4, width: 40, height: 34 });
+    expect(allocations).toContainEqual({ x: 0, y: 0, width: 40, height: 34 });
+    expect(Object.fromEntries(stamps)).toEqual(initialStamps);
+    click(canvas, 5, 5); expect(hits).toEqual(['A']);
+
+    ownerWidth.set(80); await nextFrame();
+    // The branch is no longer selected: base height 20 restores its baseline slot.
+    expect(boxes.get('A')).toEqual({ x: 0, y: 18, width: 40, height: 20 });
+    expect(allocations.at(-1)).toEqual({ x: 0, y: 0, width: 40, height: 20 });
+    const unselected = snapshotWasmLayoutDiagnostics();
+    selectedHeight.set(36); await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 18, width: 40, height: 20 });
+    expect(snapshotWasmLayoutDiagnostics().solves).toBe(unselected.solves);
+
+    ownerWidth.set(100); await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 2, width: 40, height: 36 });
+    expect(allocations.at(-1)).toEqual({ x: 0, y: 0, width: 40, height: 36 });
+    expect(Object.fromEntries(stamps)).toEqual(initialStamps);
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+      baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+    ]);
+  },
+);
+
+it.runIf(experimentalLayout)(
   'remeasures a stable custom-family Text baseline when its application-owned face becomes available',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

@@ -195,7 +195,7 @@ content height, including column Flex. Intrinsic/max-only percentage-gap owners
 remain unsupported.
 
 The experimental `alignItems: "first-baseline"` aligns direct primitive
-leaves with settled finite content boxes in a finite LTR or RTL nowrap row or row-reverse after final allocation. Existing width/basis solving, final-width ordinary or paired-provider cross measurement, and acyclic aspect sizing settle that box before the baseline query. Unsupported required measurement fails; authored numeric basis/height is not an additional prerequisite. See
+leaves with settled finite content boxes in a finite LTR or RTL nowrap row or row-reverse after final allocation. Existing width/basis solving, final-width ordinary or paired-provider cross measurement, and acyclic aspect sizing settle that box before the baseline query. Unsupported required measurement fails; authored numeric basis/height is not an additional prerequisite. Direct settled leaves can use responsive styles already selected from the current finite Flex content box; baseline queries consume that selection without re-evaluating rules at their own allocation. Query results are not retained. Intrinsic/recursive query resolution remains unsupported. See
 [BaselineMeasureInput](#/api/types/layout#baselinemeasureinput) and the
 [first-baseline example](#/examples/layout/wasm-flex-baseline). Other baseline
 modes remain outside this first subset. A bounded wrapped profile also admits

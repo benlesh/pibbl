@@ -391,6 +391,25 @@ try {
   assert.deepEqual(finalBoxAspect.allocations.FA,{x:0,y:0,width:40,height:20});
   await click(400,292);await click(240,292);
   assert.deepEqual((await state()).boxes.FA,finalBoxBefore.boxes.FA);
+  // The trusted query is deliberately inactive below its parent-content-width
+  // threshold, then changes only the settled provider allocation at 160px.
+  await click(540,314);const queryNarrow=await state();
+  assert.equal(queryNarrow.queryMode,'narrow');assert.equal(queryNarrow.queryWidth,120);
+  assert.deepEqual(queryNarrow.allocations.FA,{x:0,y:0,width:40,height:20});
+  assert.ok(Math.abs(queryNarrow.boxes.FA.y-288)<1e-9&&queryNarrow.boxes.FA.height===20);
+  await click(540,314);const queryWide=await state();
+  assert.equal(queryWide.queryMode,'wide');assert.equal(queryWide.queryWidth,160);
+  assert.deepEqual(queryWide.allocations.FA,{x:0,y:0,width:40,height:30});
+  assert.ok(Math.abs(queryWide.boxes.FA.y-278)<1e-9&&queryWide.boxes.FA.height===30);
+  const queryHits=queryWide.hits.length;await click(32,274);assert.equal((await state()).hits.length,queryHits);
+  await click(240,292);const queryUpdated=await state();
+  assert.deepEqual(queryUpdated.allocations.FA,{x:0,y:0,width:40,height:40});
+  assert.ok(Math.abs(queryUpdated.boxes.FA.y-270)<1e-9&&Math.abs(queryUpdated.boxes.FB.y-272)<1e-9);
+  await click(32,274);assert.equal((await state()).hits.at(-1),'FA');
+  const queryStamp=queryUpdated.stamps.FA;
+  await click(240,292);await click(540,314);const queryRestored=await state();
+  assert.equal(queryRestored.queryMode,'off');assert.equal(queryRestored.queryWidth,120);
+  assert.deepEqual(queryRestored.boxes.FA,finalBoxBefore.boxes.FA);assert.equal(queryRestored.stamps.FA,queryStamp);
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
