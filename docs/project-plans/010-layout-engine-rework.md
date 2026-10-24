@@ -7617,7 +7617,7 @@ These are finite semantic exits, not a Cartesian fixture queue or a promised sli
 count. Relative placement, main/cross margins and resolved insets are closed and
 must not be rediscovered as missing classes.
 
-## [NEXT] Slice208: settled direct baseline content boxes
+## [DONE] Slice208: settled direct baseline content boxes
 
 Use the existing main solver and final-width cross measurement for direct leaves:
 accept already-settled numeric main allocations irrespective of authored basis,
@@ -7626,6 +7626,40 @@ queries. Establish public RED for ordinary-provider measurement and aspect cases
 then remove only raw property fences replaced by actual final-box evidence. Keep
 real query/group/structural/cyclic prerequisites explicit. No second solver or
 public per-engine selector.
+
+Public RED2failures at the raw baseline guard precede production (an initial
+fixture error reading a receiver-resolved height signal was corrected first).
+The existing row final-width pass now admits ordinary providers for baseline
+consumers, including wrapped rows, without an intrinsic callback prerequisite.
+Only successful final cross measurement clears crossAuto for this consumer;
+unsupported required measurement fails before baseline queries or paint. Existing
+aspect resolution already supplies the same finite box. The admission guard now
+checks settled finite main/cross values rather than authored numeric basis/height
+or presence of aspectRatio. Query, structural and alignSelf policies stay explicit.
+No new solver, public API or native ABI change.
+
+A40/no basis/auto-height uses exact-width40measurement, changes height20→30 and
+baseline12→22, moves Ay18→8while B/Cand keyed identity stay fixed, transfers a real
+pointer target and cleans up four counters. Aspect2derives40×20without ordinary
+measurement. Supplemental unsupported-measurement teardown and live Canvas generic
+Text auto-height alignment/glyph hits pass. Focused6files40pass/1skip, types/lint
+and scoped review pass. The lesson adds Measured height and Aspect controls with
+final provider allocations and no ordinary measure on the aspect route.
+
+Fresh source5192and built5193Studio replay passed the full baseline driver,
+including measured-height/aspect allocation, geometry, pointer transfer and exact
+teardown (four ownership counters; no browser errors). The inspected screenshot
+is `/tmp/pibbl-slice208-studio-final.png`. Pointer mapping now accounts for the
+Canvas content box and integral native event pixels; all target/geometry
+assertions remain intact. No native artifact or ABI change.
+
+## [NEXT] Slice209: existing Text baseline provider admission
+
+Resolve the remaining font/fit/overflow envelope through the existing Canvas
+measurement/application-font-readiness boundary, without a new font subsystem.
+Keep actual resolved/visible line and failure semantics explicit; classify any
+material blocker before selecting a different finite baseline exit. Consolidate
+208–210before further production.
 
 ## Scope and execution
 

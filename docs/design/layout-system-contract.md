@@ -2051,15 +2051,21 @@ Negative and out-of-box values are valid; they are not clamped. A missing
 capability uses the content bottom edge. A declared unsupported result, invalid
 result or thrown callback fails preparation instead of silently taking a fallback.
 
-The first consumer is experimental `alignItems: "first-baseline"` in a finite LTR or RTL
-nowrap row or row-reverse of direct fixed primitive leaves. Main sizes settle first; providers
-receive the final finite content width and height at local origin0,0. The native
-WASM cross-placement path computes the common ascent starting at zero and each
-offset as common ascent minus that leaf's first baseline. This matches pinned
-Yoga3.2.1 numeric-provider probes, including signed/out-of-box baselines. Last
-baseline placement, custom-font Text metrics, nested containers, broader outer wrapping,
-automatic cross size and absolute-position/query/aspect
-leaves remain outside this first admission. Main-axis automatic margins are
+The first consumer is experimental `alignItems: "first-baseline"` in finite
+horizontal LTR/RTL row or row-reverse Flex, with direct primitives whose final
+content boxes settle before baseline grouping. Existing main allocation selects
+width/basis and flex targets; authored numeric `flexBasis` or height is not a
+separate prerequisite. Acyclic aspect-derived cross size and successful final-main
+ordinary or paired-provider cross measurement supply the same finite content box.
+A successful baseline final-width cross measurement consumes that measured size;
+it does not stretch the leaf again after querying its baseline. Unsupported
+required cross measurement fails before baseline preparation. Providers receive
+final content width/height at local origin0,0. Native cross placement computes
+common ascent starting at zero and each offset as common ascent minus first.
+This matches pinned Yoga3.2.1 numeric-provider probes, including signed/out-of-box
+baselines. Last-baseline placement, custom-font Text admission, nested providers,
+per-item alignment membership, absolute participation and prepared style-query
+ownership remain outside this admission. Main-axis automatic margins are
 resolved by the existing native main allocator before baseline alignment; they
 do not change membership in the baseline-sharing group. Cross-axis automatic
 margins instead exclude that leaf from the baseline-sharing group and its pure

@@ -4,11 +4,11 @@ import {
   type Signal, type SystemStyle, type LayoutBox, type PibblNode, type BaselineMeasureInput, type BaselinesResult,
 } from "@pibbl/core";
 
-type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB" | "NC";
+type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB" | "NC" | "FA" | "FB";
 type WrappedAlign = "flex-start" | "flex-end" | "center" | "space-between" | "space-around" | "space-evenly" | "stretch";
 interface CardProps { id: Name; label: string; font: string; first: number | Signal<number> }
 interface CardStyle extends SystemStyle {
-  width?: number; height?: number; fill?: string;
+  width?: number; height?: number | "auto"; aspectRatio?: number; fill?: string;
   flexBasis?: number; flexGrow?: number; flexShrink?: number;
   position?: "static" | "relative"; left?: number; top?: number;
   minWidth?: number; minHeight?: number; marginLeft?: number | "auto"; marginTop?: number | "auto"; marginBottom?: number | "auto";
@@ -26,6 +26,13 @@ function createBaselineContent() {
   const crossTop = computed(() => crossMode.get() === "top" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossBottom = computed(() => crossMode.get() === "bottom" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossLabel = computed(() => crossMode.get() === "off" ? "Cross" : crossMode.get());
+  const measuredHeight = signal(20), aspectBox = signal(false);
+  const aspectValue = computed(() => aspectBox.get() ? 2 : undefined);
+  const measuredFirst = computed(() => (aspectBox.get() ? 20 : measuredHeight.get()) - 8);
+  const measuredFirstLabel = computed(() => String(measuredFirst.get()));
+  const measuredHeightLabel = computed(() => `Measured height ${measuredHeight.get()}`);
+  const aspectLabel = computed(() => aspectBox.get() ? "Aspect 2" : "Aspect off");
+  let finalBoxMeasureCalls = 0;
   const textFont = signal("10px monospace");
   const textInsets = signal(false);
   const textPadding = computed(() => textInsets.get() ? {left:5,right:7,top:10,bottom:4} : 0);
@@ -96,6 +103,15 @@ function createBaselineContent() {
       return { status: "measured", first, last: first };
     },
   });
+  const FinalBoxCard = definePrimitive<CardProps, CardStyle, CardStyle, ResolvedCardStyle>(renderCard, {
+    resolveStyle,
+    measure: () => { finalBoxMeasureCalls++; return {status:"measured",size:{width:40,height:measuredHeight.get()}}; },
+    measureBaselines: ({allocation}) => {
+      allocations.set("FA", {...allocation});
+      const first = allocation.height - 8;
+      return {status:"measured",first,last:first};
+    },
+  });
   const BottomCard = definePrimitive<CardProps, CardStyle, CardStyle, ResolvedCardStyle>(renderCard, { resolveStyle });
   function renderContent() {
     return <>
@@ -136,6 +152,14 @@ function createBaselineContent() {
         <BottomCard key="C" id="C" label="24" font="14px serif" first={24} style={{ width: 40, height: 24, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#a63758" }} />
       </Flex></FocusManagement>
       <Rectangle pointerEvents="none" style={{ left: 28, top: guide, width: owner, height: 1, fill: "#d16642", opacity: .6 }} />
+      <Flex style={{ left: 28, top: 270, width: 120, height: 40, alignItems: "first-baseline" }}>
+        <FinalBoxCard key="FA" id="FA" label={measuredFirstLabel} font="12px monospace" first={measuredFirst} style={{ width:40,height:"auto",minWidth:0,minHeight:0,flexGrow:0,flexShrink:0,aspectRatio:aspectValue,fill:"#426b61" }} />
+        <BaselineCard key="FB" id="FB" label="30" font="20px sans-serif" first={30} style={{ width:40,height:40,minWidth:0,minHeight:0,flexGrow:0,flexShrink:0,fill:"#19375b" }} />
+      </Flex>
+      <Rectangle onClick={() => measuredHeight.update(value => value === 20 ? 30 : 20)} style={{left:180,top:278,width:150,height:30,fill:"#426b61",cursor:"pointer"}} />
+      <Text pointerEvents="none" style={{left:188,top:287,font:"11px sans-serif",fill:"#ffffff"}}>{measuredHeightLabel}</Text>
+      <Rectangle onClick={() => aspectBox.update(value => !value)} style={{left:350,top:278,width:100,height:30,fill:"#426b61",cursor:"pointer"}} />
+      <Text pointerEvents="none" style={{left:358,top:287,font:"11px sans-serif",fill:"#ffffff"}}>{aspectLabel}</Text>
       <Text pointerEvents="none" style={{ left: 460, top: 185, font: "12px sans-serif", fill: "#475569" }}>Cross auto takes over alignment.</Text>
       <Flex style={{ left: 460, top: 210, width: 160, height: 80, flexDirection, flexWrap: "nowrap", layoutDirection, alignItems: "first-baseline" }}>
         <BaselineCard key="MA" id="MA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: mainMargin, marginTop: crossTop, marginBottom: crossBottom, fill: "#426b61" }} />
@@ -178,7 +202,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {

@@ -1689,9 +1689,9 @@ function resolveFlexPlacements(
       if (item.crossAuto && experimentalLayout && (options.flexWrap === 'nowrap' && options.flexDirection === 'row' && options.layoutDirection === 'ltr' || item.autoCrossBefore || item.autoCrossAfter) && !item.query && item.aspectRatio === undefined && isLayoutComponent(item.child.type)) {
         measuredRoot = prepareLayoutComponent(item.child, { receiverToken: item.receiverToken });
       }
-      const definition = experimentalLayout && (options.flexWrap === 'nowrap' || item.autoCrossBefore || item.autoCrossAfter) && !item.query && item.aspectRatio === undefined ? getPrimitiveDefinition(measuredRoot.type) : undefined;
+      const definition = experimentalLayout && (options.flexWrap === 'nowrap' || item.autoCrossBefore || item.autoCrossAfter || options[FLEX_FIRST_BASELINE]) && !item.query && item.aspectRatio === undefined ? getPrimitiveDefinition(measuredRoot.type) : undefined;
       const constrainedProvider = !!definition?.measureIntrinsic && !!definition.measure;
-      const ordinaryProvider = !!definition?.measure && (item.autoCrossBefore || item.autoCrossAfter);
+      const ordinaryProvider = !!definition?.measure && (item.autoCrossBefore || item.autoCrossAfter || options[FLEX_FIRST_BASELINE]);
       const requiredKnownCross = experimentalLayout && (item.autoCrossBefore || item.autoCrossAfter) && (measuredRoot.type === Flex || measuredRoot.type === Flow || measuredRoot.type === Grid);
       if (!item.crossAuto || (item.child.type !== Text && !(experimentalLayout && item.child.type === Flex) && !constrainedProvider && !ordinaryProvider && !requiredKnownCross)) continue;
       if (item.child.type === Flex && item.normalized.width === item.targetMain) continue;
@@ -1704,7 +1704,10 @@ function resolveFlexPlacements(
       }, measuredStyle, item.layoutToken ?? item.receiverToken, measurement, region, item.query, constrainedProvider, undefined, ordinaryProvider);
       if (result.status === 'measured') {
         item.preferredCross = clamp(result.size.height, item.minCross, item.maxCross) + item.paddingCross;
-      } else if (constrainedProvider || ordinaryProvider || requiredKnownCross || experimentalLayout && item.child.type === Text && (item.autoCrossBefore || item.autoCrossAfter)) throw childDiagnostic(item.child, 'height', 'auto', container, `final-width measurement is required but unsupported: ${result.reason}`);
+        // Baseline grouping consumes this final measured box rather than stretching
+        // an authored automatic cross size after the provider has been queried.
+        if (options[FLEX_FIRST_BASELINE]) item.crossAuto = false;
+      } else if (constrainedProvider || ordinaryProvider || requiredKnownCross || options[FLEX_FIRST_BASELINE] || experimentalLayout && item.child.type === Text && (item.autoCrossBefore || item.autoCrossAfter)) throw childDiagnostic(item.child, 'height', 'auto', container, `final-width measurement is required but unsupported: ${result.reason}`);
     }
   }
   // Defer column natural cross measurement until the kernel has resolved each
@@ -2451,10 +2454,9 @@ function assertSupportedFirstBaselineFlex(
       (textStyle.overflow ?? 'visible') === 'visible'
     );
     if (!getPrimitiveDefinition(item.child.type) || isKnownLayoutType(item.child.type) || isLayoutComponent(item.child.type) || !supportedTextLeaf || item.query || item.alignSelf !== 'auto' ||
-        (style.position !== undefined && style.position !== 'static' && style.position !== 'relative') || item.crossAuto || typeof style.flexBasis !== 'number' ||
-        typeof style.height !== 'number' ||
-        item.aspectRatio !== undefined) {
-      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct fixed primitive leaves with no absolute position, query, aspect ratio, or alignSelf override');
+        (style.position !== undefined && style.position !== 'static' && style.position !== 'relative') || item.crossAuto ||
+        !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
+      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct primitive leaves with settled finite content boxes and no absolute position, query, or alignSelf override');
     }
   }
 }

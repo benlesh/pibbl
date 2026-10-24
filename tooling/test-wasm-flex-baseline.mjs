@@ -44,9 +44,15 @@ try {
   const clearTextDraws = () => sandbox.evaluate(() => { globalThis.__PIBBL_TEXT_BASELINE_DRAWS__.length = 0; });
   const click = async (x, y) => {
     const position = await sandbox.evaluate(({ x, y, basis }) => {
-      const canvas = document.querySelector('canvas'), bounds = canvas.getBoundingClientRect();
+      const canvas = document.querySelector('canvas'), bounds = canvas.getBoundingClientRect(), style = getComputedStyle(canvas);
+      const px=value=>Number.parseFloat(value)||0;
+      const left=px(style.borderLeftWidth)+px(style.paddingLeft),right=px(style.borderRightWidth)+px(style.paddingRight);
+      const top=px(style.borderTopWidth)+px(style.paddingTop),bottom=px(style.borderBottomWidth)+px(style.paddingBottom);
       const point = new DOMMatrix([basis.a,basis.b,basis.c,basis.d,basis.e,basis.f]).transformPoint({x,y});
-      return { x: point.x * bounds.width / canvas.width, y: point.y * bounds.height / canvas.height };
+      // MouseEvent client coordinates are integral. Aim at the nearest CSS pixel
+      // instead of allowing fractional iframe offsets to truncate an edge target.
+      return { x: Math.round(bounds.left+left+point.x*(bounds.width-left-right)/canvas.width)+0.25-bounds.left,
+        y: Math.round(bounds.top+top+point.y*(bounds.height-top-bottom)/canvas.height)+0.25-bounds.top };
     }, { x, y, basis: (await state()).basis });
     await frame.locator('canvas').click({ position });
     await page.waitForTimeout(180);
@@ -349,6 +355,22 @@ try {
   await click((insetSmall.hitTopLeft.x+insetSmall.hitBottomRight.x)/2,(insetSmall.hitTopLeft.y+insetSmall.hitBottomRight.y)/2);
   assert.equal((await state()).textHits.length,insetHitBefore+1);
   await click(390,428);
+  const finalBoxBefore=await state();
+  assert.ok(Math.abs(finalBoxBefore.boxes.FA.y-288)<1e-9&&finalBoxBefore.boxes.FA.height===20);
+  assert.deepEqual(finalBoxBefore.allocations.FA,{x:0,y:0,width:40,height:20});
+  const finalBoxHits=finalBoxBefore.hits.length;await click(32,284);assert.equal((await state()).hits.length,finalBoxHits);
+  await click(240,292);const finalBoxMeasured=await state();
+  assert.ok(Math.abs(finalBoxMeasured.boxes.FA.y-278)<1e-9&&finalBoxMeasured.boxes.FA.height===30);
+  assert.deepEqual(finalBoxMeasured.allocations.FA,{x:0,y:0,width:40,height:30});
+  assert.deepEqual(finalBoxMeasured.boxes.FB,finalBoxBefore.boxes.FB);assert.equal(finalBoxMeasured.stamps.FA,finalBoxBefore.stamps.FA);
+  await click(32,284);assert.equal((await state()).hits.at(-1),'FA');
+  const measuredCalls=finalBoxMeasured.finalBoxMeasureCalls;
+  await click(400,292);const finalBoxAspect=await state();
+  assert.ok(Math.abs(finalBoxAspect.boxes.FA.y-288)<1e-9&&finalBoxAspect.boxes.FA.height===20);
+  assert.equal(finalBoxAspect.finalBoxMeasureCalls,measuredCalls);
+  assert.deepEqual(finalBoxAspect.allocations.FA,{x:0,y:0,width:40,height:20});
+  await click(400,292);await click(240,292);
+  assert.deepEqual((await state()).boxes.FA,finalBoxBefore.boxes.FA);
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
