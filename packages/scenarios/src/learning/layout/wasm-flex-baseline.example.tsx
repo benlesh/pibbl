@@ -4,17 +4,19 @@ import {
   type SystemStyle, type LayoutBox, type PibblNode, type BaselineMeasureInput, type BaselinesResult,
 } from "@pibbl/core";
 
-type Name = "A" | "B" | "C";
+type Name = "A" | "B" | "C" | "MA" | "MB";
 interface CardProps { id: Name; label: string; font: string; first: number }
 interface CardStyle extends SystemStyle {
   width?: number; height?: number; fill?: string;
   flexBasis?: number; flexGrow?: number; flexShrink?: number;
-  minWidth?: number; minHeight?: number;
+  minWidth?: number; minHeight?: number; marginLeft?: number | "auto";
 }
 type ResolvedCardStyle = CardStyle & { width: number; height: number };
 
 function createBaselineContent() {
-  const second = signal(30), owner = signal(180), paint = signal("#426b61");
+  const second = signal(30), owner = signal(180), paint = signal("#426b61"), mainAuto = signal(false);
+  const mainMargin = computed(() => mainAuto.get() ? "auto" as const : 0);
+  const mainLabel = computed(() => mainAuto.get() ? "Auto" : "Start");
   const textFont = signal("10px monospace");
   const textWrap = signal(false), textReflow = signal(false);
   const textWords = computed(() => textWrap.get() ? textReflow.get() ? "Ag Ag Ag" : "Ag Ag Ag Ag" : "Ag");
@@ -42,7 +44,7 @@ function createBaselineContent() {
       <Text pointerEvents="none" style={{ left: 4, top: props.first, textBaseline: "alphabetic", font: props.font, fill: "#ffffff" }}>{props.label}</Text>
     </>;
   }
-  const resolveStyle = (style: Readonly<CardStyle>, context: { allocation: Readonly<LayoutBox> }): ResolvedCardStyle => ({ ...style, width: context.allocation.width, height: context.allocation.height });
+  const resolveStyle = (style: Readonly<CardStyle>, context: { allocation: Readonly<LayoutBox> }): ResolvedCardStyle => ({ ...style, marginLeft: undefined, width: context.allocation.width, height: context.allocation.height });
   const BaselineCard = definePrimitive<CardProps, CardStyle, CardStyle, ResolvedCardStyle>(renderCard, {
     resolveStyle,
     measureBaselines(input: BaselineMeasureInput<CardProps, CardStyle>): BaselinesResult {
@@ -66,6 +68,8 @@ function createBaselineContent() {
       <Rectangle pointerEvents="none" style={{ left: 460, top: 144, width: 200, height: 8, fill: paint }} />
       <Rectangle onClick={() => textFont.update(value => value === "10px monospace" ? "16px monospace" : "10px monospace")} style={{ left: 676, top: 96, width: 56, height: 36, fill: "#a63758", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 684, top: 106, font: "12px sans-serif", fill: "#ffffff" }}>Text</Text>
+      <Rectangle onClick={() => mainAuto.update(value => !value)} style={{ left: 676, top: 144, width: 56, height: 36, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 682, top: 154, font: "11px sans-serif", fill: "#ffffff" }}>{mainLabel}</Text>
       <Text pointerEvents="none" style={{ left: 28, top: 160, font: "14px sans-serif", fill: "#475569" }}>A/B supply offsets. C has no provider and uses its bottom edge.</Text>
       <FocusManagement><Flex style={{ left: 28, top: 210, width: owner, height: 80, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
         <BaselineCard key="A" id="A" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#426b61" }} />
@@ -73,6 +77,11 @@ function createBaselineContent() {
         <BottomCard key="C" id="C" label="24" font="14px serif" first={24} style={{ width: 40, height: 24, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#a63758" }} />
       </Flex></FocusManagement>
       <Rectangle pointerEvents="none" style={{ left: 28, top: guide, width: owner, height: 1, fill: "#d16642", opacity: .6 }} />
+      <Text pointerEvents="none" style={{ left: 460, top: 185, font: "12px sans-serif", fill: "#475569" }}>Main auto keeps the aligned baseline.</Text>
+      <Flex style={{ left: 460, top: 210, width: 160, height: 80, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
+        <BaselineCard key="MA" id="MA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: mainMargin, fill: "#426b61" }} />
+        <BaselineCard key="MB" id="MB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+      </Flex>
       <Text pointerEvents="none" style={{ left: 28, top: 330, font: "14px sans-serif", fill: "#475569" }}>Click the cards at their new positions. Tab follows A → B → C.</Text>
       <Text pointerEvents="none" style={{ left: 28, top: 360, font: "14px sans-serif", fill: "#475569" }}>The Text panel uses live Canvas metrics; it makes no native font-metric claim.</Text>
       <Text onClick={() => { textFont.set("10px monospace"); textReflow.set(false); textWrap.update(value => !value); }} style={{ left: 28, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textWrapLabel}</Text>
@@ -88,7 +97,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), mainAuto: mainAuto.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {

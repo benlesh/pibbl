@@ -2038,8 +2038,11 @@ WASM cross-placement path computes the common ascent starting at zero and each
 offset as common ascent minus that leaf's first baseline. This matches pinned
 Yoga3.2.1 numeric-provider probes, including signed/out-of-box baselines. Last
 baseline placement, custom-font Text metrics, nested containers, outer Flex wrapping,
-reverse/RTL, automatic cross size and decorated/margin/position/query/aspect leaves
-remain outside this first admission. This adds no public operation selector.
+reverse/RTL, automatic cross size and decorated/numeric-margin/position/query/aspect
+leaves remain outside this first admission. Main-axis automatic margins are
+resolved by the existing native main allocator before baseline alignment; they
+do not change membership in the baseline-sharing group. Cross-axis automatic
+margins remain a separate unsupported alignment interaction. This adds no public operation selector.
 
 Provider reads use existing measurement-role receiver dependencies. Queries forbid
 hooks, writes and rendering work through the existing isolated pure boundary;

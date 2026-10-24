@@ -2449,9 +2449,9 @@ function assertSupportedFirstBaselineFlex(
         style.position !== undefined || item.crossAuto || typeof style.flexBasis !== 'number' ||
         typeof style.height !== 'number' || item.paddingMain !== 0 || item.paddingCross !== 0 ||
         item.marginMainBefore !== 0 || item.marginMainAfter !== 0 || item.marginCrossBefore !== 0 || item.marginCrossAfter !== 0 ||
-        item.autoMainBefore || item.autoMainAfter || item.autoCrossBefore || item.autoCrossAfter ||
+        item.autoCrossBefore || item.autoCrossAfter ||
         item.aspectRatio !== undefined || item.relativeX !== 0 || item.relativeY !== 0) {
-      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct fixed undecorated primitive leaves with no margins, position, query, aspect ratio, or alignSelf override');
+      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct fixed undecorated primitive leaves with no numeric margins, cross auto margins, position, query, aspect ratio, or alignSelf override');
     }
   }
 }

@@ -43,6 +43,8 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
 }
 
 interface BaselineStyle extends SystemStyle {
+  marginLeft?: number | 'auto' | ReturnType<typeof signal<0 | 'auto'>>;
+  marginRight?: number | 'auto' | ReturnType<typeof signal<0 | 'auto'>>;
   width?: number;
   height?: number;
   fill?: string;
@@ -413,3 +415,49 @@ it.runIf(experimentalLayout)(
     expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
   },
 );
+
+for (const edge of ['marginLeft', 'marginRight'] as const) {
+  it.runIf(experimentalLayout)(`places first-baseline ${edge} automatic margins after its zero-margin control`, async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const margin = signal<0 | 'auto'>(0);
+    const boxes = new Map<string, LayoutBox>();
+    const errors: unknown[] = [];
+    const hits: string[] = [];
+    const receive = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+    const Leaf = definePrimitive<{ readonly name: string; readonly first: number }, BaselineStyle, BaselineStyle, BaselineStyle & { readonly width: number; readonly height: number }>((props) => {
+      const box = useLayoutBox();
+      const transform = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: transform.e, y: transform.f, width: box.width, height: box.height });
+      return <Rectangle onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: '#8a3248' }} />;
+    }, {
+      resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: ({ props }) => ({ status: 'measured', first: props.first, last: props.first }),
+    });
+    const canvas = document.createElement('canvas'); canvas.width = 160; canvas.height = 80; document.body.append(canvas);
+    window.addEventListener('error', receive);
+    try {
+      const controller = pibbl(canvas, <Flex style={{ width: 160, height: 80, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'first-baseline' }}>
+        <Leaf key="A" name="A" first={12} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, [edge]: margin }} />
+        <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+      </Flex>);
+      controllers.push(controller); await nextFrame();
+      expect(errors).toEqual([]);
+      expect(boxes.get('A')).toEqual({ x: 0, y: 18, width: 40, height: 20 });
+      expect(boxes.get('B')).toEqual({ x: 40, y: 0, width: 40, height: 40 });
+
+      const mounted = snapshotWasmLayoutDiagnostics();
+      margin.set('auto'); await nextFrame();
+      expect(errors).toEqual([]);
+      expect(boxes.get('A')).toEqual({ x: edge === 'marginLeft' ? 80 : 0, y: 18, width: 40, height: 20 });
+      expect(boxes.get('B')).toEqual({ x: 120, y: 0, width: 40, height: 40 });
+      click(canvas, (edge === 'marginLeft' ? 80 : 0) + 4, 22); await nextFrame();
+      expect(hits).toEqual(['A']);
+      expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+      controller.dispose();
+      const disposed = snapshotWasmLayoutDiagnostics();
+      expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+        baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+      ]);
+    } finally { window.removeEventListener('error', receive); }
+  });
+}

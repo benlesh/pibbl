@@ -43,8 +43,12 @@ try {
   }, (await state()).basis);
   const clearTextDraws = () => sandbox.evaluate(() => { globalThis.__PIBBL_TEXT_BASELINE_DRAWS__.length = 0; });
   const click = async (x, y) => {
-    const box = await frame.locator('canvas').boundingBox(), scale = Math.min(box.width / 760, box.height / 460);
-    await frame.locator('canvas').click({ position: { x: (box.width - 760 * scale) / 2 + x * scale, y: (box.height - 460 * scale) / 2 + y * scale } });
+    const position = await sandbox.evaluate(({ x, y, basis }) => {
+      const canvas = document.querySelector('canvas'), bounds = canvas.getBoundingClientRect();
+      const point = new DOMMatrix([basis.a,basis.b,basis.c,basis.d,basis.e,basis.f]).transformPoint({x,y});
+      return { x: point.x * bounds.width / canvas.width, y: point.y * bounds.height / canvas.height };
+    }, { x, y, basis: (await state()).basis });
+    await frame.locator('canvas').click({ position });
     await page.waitForTimeout(180);
   };
   const geometry = (actual, width, first) => {
@@ -137,6 +141,21 @@ try {
   assert.equal(textPainted.crossPlacements, beforeTextPaint.crossPlacements);
   assert.equal(textPainted.nodeCreates, beforeTextPaint.nodeCreates);
   assert.equal(textPainted.measuredLeaves, beforeTextPaint.measuredLeaves);
+  // The companion row uses the same baseline offsets while a main-axis
+  // automatic margin consumes its free space.
+  const mainStart=await state();
+  assert.equal(mainStart.mainAuto,false);
+  assert.ok(Math.abs(mainStart.boxes.MA.x-460)<1e-9&&Math.abs(mainStart.boxes.MA.y-228)<1e-9);
+  assert.ok(Math.abs(mainStart.boxes.MB.x-500)<1e-9&&Math.abs(mainStart.boxes.MB.y-210)<1e-9);
+  const mainStamps=Object.fromEntries([['MA',mainStart.stamps.MA],['MB',mainStart.stamps.MB]]);
+  await click(700,160);
+  const mainAuto=await state();
+  assert.equal(mainAuto.mainAuto,true);
+  assert.ok(Math.abs(mainAuto.boxes.MA.x-540)<1e-9&&Math.abs(mainAuto.boxes.MA.y-228)<1e-9);
+  assert.ok(Math.abs(mainAuto.boxes.MB.x-580)<1e-9&&Math.abs(mainAuto.boxes.MB.y-210)<1e-9);
+  assert.deepEqual(Object.fromEntries([['MA',mainAuto.stamps.MA],['MB',mainAuto.stamps.MB]]),mainStamps);
+  await click(550,238);assert.equal((await state()).hits.at(-1),'MA');
+  await click(590,220);assert.equal((await state()).hits.at(-1),'MB');
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
   const disposed=await sandbox.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();});
