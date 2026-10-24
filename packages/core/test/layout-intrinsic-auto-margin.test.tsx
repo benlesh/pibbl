@@ -92,10 +92,10 @@ it.runIf(experimentalLayout)('keeps automatic physical main margins out of pure 
     });
   }
   const crossAuto = <Flex style={{ width: 'auto', height: 20, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr' }}>
-    <Rectangle style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginTop: 'auto' }} />
+    <Rectangle style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginTop: 'auto', marginStart: 0 }} />
   </Flex>;
   expect(measureElement(crossAuto, { minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: 20, maxHeight: 20 }, { measureText: () => { throw new Error('No text.'); } }))
-    .toEqual({ status: 'unsupported', reason: expect.stringMatching(/automatic cross-axis margin/i) });
+    .toEqual({ status: 'unsupported', reason: expect.stringMatching(/automatic physical margin/i) });
 });
 
 it.runIf(experimentalLayout)('reuses direct automatic-margin targets while an owner minimum changes final free space', async () => {
@@ -126,3 +126,137 @@ it.runIf(experimentalLayout)('reuses direct automatic-margin targets while an ow
     baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
   ]);
 });
+
+for (const axis of ['row', 'column'] as const) {
+  it.runIf(experimentalLayout)(`treats a physical ${axis} cross auto margin as zero for pure size, then places it in the final cross owner`, async () => {
+    const row = axis === 'row';
+    const firstStyle: RectStyle = row
+      ? { width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginTop: 'auto' }
+      : { width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginLeft: 'auto' };
+    const secondStyle: RectStyle = row
+      ? { width: 80, height: 20, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0 }
+      : { width: 20, height: 80, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0 };
+    const owner = <Flex style={{
+      width: row ? 'auto' : 200, height: row ? 200 : 'auto',
+      flexDirection: axis, flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0,
+    }}>
+      <Rectangle style={firstStyle} />
+      <Rectangle style={secondStyle} />
+    </Flex>;
+    expect(measureElement(owner, {
+      minWidth: row ? 0 : 200, maxWidth: row ? Number.POSITIVE_INFINITY : 200,
+      minHeight: row ? 200 : 0, maxHeight: row ? 200 : Number.POSITIVE_INFINITY,
+    }, { measureText: () => { throw new Error('No text.'); } })).toEqual({
+      status: 'measured', size: row ? { width: 120, height: 200 } : { width: 200, height: 120 },
+    });
+
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const cross = signal(200);
+    let hits = 0;
+    const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 240; document.body.append(canvas);
+    const controller = pibbl(canvas, row
+      ? <Flex style={{ width: 120, height: cross, flexDirection: 'row', alignItems: 'flex-start' }}>
+          <Flex style={{ width: 'auto', height: cross, minWidth: 0, minHeight: 0, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0 }}>
+            <Rectangle key="A" onClick={() => { hits++; }} style={{ ...firstStyle, fill: '#8a3248', cursor: 'pointer' }} />
+            <Rectangle key="B" style={{ ...secondStyle, fill: '#426b61' }} />
+          </Flex>
+        </Flex>
+      : <Flex style={{ width: cross, height: 120, flexDirection: 'column', alignItems: 'flex-start' }}>
+          <Flex style={{ width: cross, height: 'auto', minWidth: 0, minHeight: 0, flexDirection: 'column', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0 }}>
+            <Rectangle key="A" onClick={() => { hits++; }} style={{ ...firstStyle, fill: '#8a3248', cursor: 'pointer' }} />
+            <Rectangle key="B" style={{ ...secondStyle, fill: '#426b61' }} />
+          </Flex>
+        </Flex>,
+    );
+    controllers.push(controller); await frame();
+    const pixel = (x: number, y: number) => [...canvas.getContext('2d')!.getImageData(x, y, 1, 1).data];
+    const initialPoint = row ? { x: 4, y: 164 } : { x: 164, y: 4 };
+    const movedPoint = row ? { x: 4, y: 124 } : { x: 124, y: 4 };
+    const emptyPoint = row ? { x: 4, y: 156 } : { x: 156, y: 4 };
+    expect(pixel(initialPoint.x, initialPoint.y)).toEqual([138, 50, 72, 255]);
+    expect(pixel(emptyPoint.x, emptyPoint.y)).toEqual([0, 0, 0, 0]);
+    const dispatch = (point: { x: number; y: number }) => {
+      const rect = canvas.getBoundingClientRect();
+      for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: rect.left + point.x, clientY: rect.top + point.y }));
+    };
+    dispatch(initialPoint); await frame(); expect(hits).toBe(1);
+    const initial = snapshotWasmLayoutDiagnostics();
+    cross.set(160); await frame();
+    expect(pixel(initialPoint.x, initialPoint.y)).toEqual([0, 0, 0, 0]);
+    expect(pixel(movedPoint.x, movedPoint.y)).toEqual([138, 50, 72, 255]);
+    dispatch(initialPoint); await frame(); expect(hits).toBe(1);
+    dispatch(movedPoint); await frame(); expect(hits).toBe(2);
+    const moved = snapshotWasmLayoutDiagnostics();
+    expect(moved.nodeCreates).toBe(initial.nodeCreates);
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+      baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+    ]);
+  });
+}
+
+for (const axis of ['row', 'column'] as const) for (const profile of [
+  { name: 'both auto', cross: 200, expected: 80, margins: { before: 'auto' as const, after: 'auto' as const } },
+  { name: 'overflow', cross: 20, expected: 0, margins: { before: 'auto' as const, after: undefined } },
+  { name: 'numeric opposite', cross: 200, expected: 150, margins: { before: 'auto' as const, after: 10 } },
+]) {
+  it.runIf(experimentalLayout)(`keeps ${axis} ${profile.name} cross auto margins out of pure contribution and applies final cross placement`, async () => {
+    const row = axis === 'row';
+    const firstStyle: RectStyle = row ? {
+      width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0,
+      marginTop: profile.margins.before, marginBottom: profile.margins.after,
+    } : {
+      width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0,
+      marginLeft: profile.margins.before, marginRight: profile.margins.after,
+    };
+    const secondStyle: RectStyle = row
+      ? { width: 80, height: 20, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0 }
+      : { width: 20, height: 80, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0 };
+    const owner = <Flex style={{
+      width: row ? 'auto' : profile.cross, height: row ? profile.cross : 'auto',
+      flexDirection: axis, flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0,
+    }}>
+      <Rectangle style={firstStyle} />
+      <Rectangle style={secondStyle} />
+    </Flex>;
+    expect(measureElement(owner, {
+      minWidth: row ? 0 : profile.cross, maxWidth: row ? Number.POSITIVE_INFINITY : profile.cross,
+      minHeight: row ? profile.cross : 0, maxHeight: row ? profile.cross : Number.POSITIVE_INFINITY,
+    }, { measureText: () => { throw new Error('No text.'); } })).toEqual({
+      status: 'measured', size: row ? { width: 120, height: profile.cross } : { width: profile.cross, height: 120 },
+    });
+
+    const baseline = snapshotWasmLayoutDiagnostics();
+    let hits = 0;
+    const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 240; document.body.append(canvas);
+    const controller = pibbl(canvas, row
+      ? <Flex style={{ width: 120, height: profile.cross, flexDirection: 'row', alignItems: 'flex-start' }}>
+          <Flex style={{ width: 'auto', height: profile.cross, minWidth: 0, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0 }}>
+            <Rectangle key="A" onClick={() => { hits++; }} style={{ ...firstStyle, fill: '#8a3248', cursor: 'pointer' }} />
+            <Rectangle key="B" style={{ ...secondStyle, fill: '#426b61' }} />
+          </Flex>
+        </Flex>
+      : <Flex style={{ width: profile.cross, height: 120, flexDirection: 'column', alignItems: 'flex-start' }}>
+          <Flex style={{ width: profile.cross, height: 'auto', minHeight: 0, flexDirection: 'column', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0 }}>
+            <Rectangle key="A" onClick={() => { hits++; }} style={{ ...firstStyle, fill: '#8a3248', cursor: 'pointer' }} />
+            <Rectangle key="B" style={{ ...secondStyle, fill: '#426b61' }} />
+          </Flex>
+        </Flex>,
+    );
+    controllers.push(controller); await frame();
+    const point = row ? { x: 4, y: profile.expected + 4 } : { x: profile.expected + 4, y: 4 };
+    const pixel = [...canvas.getContext('2d')!.getImageData(point.x, point.y, 1, 1).data];
+    expect(pixel).toEqual([138, 50, 72, 255]);
+    const rect = canvas.getBoundingClientRect();
+    for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: rect.left + point.x, clientY: rect.top + point.y }));
+    await frame(); expect(hits).toBe(1);
+    const mounted = snapshotWasmLayoutDiagnostics();
+    expect(mounted.nodeCreates).toBeGreaterThanOrEqual(baseline.nodeCreates + 2);
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+      baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+    ]);
+  });
+}

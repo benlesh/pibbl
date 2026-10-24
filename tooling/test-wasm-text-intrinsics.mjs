@@ -81,6 +81,10 @@ try {
   assert.deepEqual(await autoCrossPixel(105, 416), [243, 240, 232, 255], 'automatic margin remains empty before A');
   assert.deepEqual(await autoCrossPixel(110, 416), [138, 50, 72, 255], 'A begins after the 80px automatic margin');
   assert.deepEqual(await autoCrossPixel(150, 416), [66, 107, 97, 255], 'B follows A at the final owner width');
+  assert.deepEqual(await autoCrossPixel(285, 410), [243, 240, 232, 255], 'cross-auto space remains inert before A');
+  assert.deepEqual(await autoCrossPixel(290, 420), [138, 50, 72, 255], 'cross-auto A sinks by the final 10px free space');
+  assert.deepEqual(await autoCrossPixel(325, 410), [66, 107, 97, 255], 'B remains at the cross start');
+  await click(290, 420); await selected('intrinsic cross A');
   if (process.env.PIBBL_LAYOUT_AUTO_MARGIN_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_AUTO_MARGIN_SCREENSHOT });
   const naturalWidth = await sandbox.evaluate(() => {
     const context = document.querySelector('canvas').getContext('2d');
@@ -120,7 +124,7 @@ try {
   await click(250, 110); // Sibling-only paint.
   const autoPainted = await read();
   assert.equal(autoPainted.solves, beforeAutoPaint.solves);
-  assert.equal(autoPainted.measuredLeaves, beforeAutoPaint.measuredLeaves + 2);
+  assert.equal(autoPainted.measuredLeaves, beforeAutoPaint.measuredLeaves + 3);
   assert.equal(autoPainted.nodeCreates, beforeAutoPaint.nodeCreates);
 
   // Restore the ordinary comparison, then exercise the bounded wrapped-row mode.
@@ -164,7 +168,7 @@ try {
   await click(250, 110); // Sibling-only paint remains a placement reuse.
   const wrappedPainted = await read();
   assert.equal(wrappedPainted.solves, beforeWrappedPaint.solves);
-  assert.equal(wrappedPainted.measuredLeaves, beforeWrappedPaint.measuredLeaves + 1);
+  assert.equal(wrappedPainted.measuredLeaves, beforeWrappedPaint.measuredLeaves + 2);
   assert.equal(wrappedPainted.nodeCreates, beforeWrappedPaint.nodeCreates);
 
   await click(500, 76); // Return to the existing controls.

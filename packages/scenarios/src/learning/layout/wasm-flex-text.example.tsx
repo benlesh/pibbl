@@ -170,6 +170,14 @@ function createWasmFlexTextContent() {
           <Rectangle style={{ width: 80, height: 20, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, fill: "#426b61" }} />
         </Flex>
       </Flex>
+      <Rectangle pointerEvents="none" style={{ left: 280, top: 404, width: 120, height: 24, stroke: "#a63758", strokeWidth: 1 }} />
+      <Flex style={{ left: 280, top: 406, width: 120, height: 20, alignItems: "flex-start" }}>
+        <Flex style={{ width: "auto", height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, flexWrap: "nowrap", layoutDirection: "ltr", alignItems: "flex-start" }}>
+          <Rectangle onClick={() => selected.set("intrinsic cross A")} style={{ width: 40, height: 10, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginTop: "auto", fill: "#8a3248", cursor: "pointer" }} />
+          <Rectangle style={{ width: 80, height: 10, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, fill: "#426b61" }} />
+        </Flex>
+      </Flex>
+      <Text pointerEvents="none" style={{ left: 280, top: 432, font: "12px sans-serif", fill: "#475569" }}>Cross auto: A sinks by 10px</Text>
     </>;
   }
   function AutoCrossComparison() {

@@ -20,11 +20,12 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice172 (intrinsic physical main auto margins).
+Latest delivery is slice173 (intrinsic physical cross auto margins).
+Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is173: intrinsic cross auto margins.
+Consolidation56 is `2fd34f0e` for166–168. Next is174: intrinsic auto margins across supported composition.
 The frozen min/max exits are satisfied. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
 intrinsic graphs, automatic minima and other measurement work remain outstanding.
@@ -6081,13 +6082,48 @@ and composition over supported provider/known-container measurements. Independen
 unsupported font/percentage/recursive graphs do not become margin parity evidence
 or circular prerequisites. Consolidation58 will cover172–174 after delivery.
 
-## [NEXT] Slice173: intrinsic cross-axis auto margins
+## Slice173 delivered: intrinsic cross-axis auto margins
 
 Extend the same zero intrinsic contribution rule to physical cross auto edges
 on the supported fixed numeric direct Rectangle profile. Pin row/column final
 cross-owner absorption and overflow with native geometry, preserve actual
 alignment precedence and source order, and add a public failing regression before
 production. Keep the full auto-margin target and remaining composition cells.
+
+Two public tests failed at the explicit cross-auto intrinsic rejection before
+production. The existing physical direct numeric profile now normalizes either
+axis's auto edges to zero. Final native cross placement remains authoritative.
+Fourteen public auto-owner tests pass, including original172 evidence, row/column
+leading cross auto with live200to160 target movement, both auto, overflow and
+numeric opposite10. Pinned offsets are160/80/0/150 respectively. Four focused files
+pass153tests/1skip on Node24.15.0/pnpm11.21.0/Chromium; ordinary40pass/14skip.
+Typecheck and changed-code lint pass; scoped runtime review found no material issue.
+
+Source and built470-input lesson checks pass with no browser errors and zero
+cleanup counters; visual inspection confirms readable labels and the sunk red A.
+Click Compare auto margins at
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-text`, then click red A in the
+lower-middle strip. Installed strict Bundler/NodeNext/no-alias checks pass with246
+inputs, exact cross targets and cleanup, and three conservative owner content
+measurements per paint while native solves/nodes are reused. Tarball SHA256
+`69badc6610ea4c56c1dc22203946d1fc3e1d2ecb414d8185131c74a9889bd01d`.
+The pinned probe preserves172's24records and appends8cross records; source SHA256
+`dba02290d8dc097156e451e059743e5fa0bb0e64765d864f6b4a1d1e48994a07`.
+Kernel/ABI unchanged. Auto-margin remains partial: effective logical/shorthand
+edges and supported provider/known-container intrinsic composition are still open,
+as is the original other automatic/custom/layout cross-sizing clause. Unsupported
+independent measurement contexts do not count as parity. Fixed33counts and all
+seven open gates are unchanged. Consolidation58 remains172–174.
+
+## [NEXT] Slice174: intrinsic auto margins across supported composition
+
+Apply the zero intrinsic-contribution rule consistently to effective shorthand,
+physical and logical auto edges across already-supported Flex measurement paths.
+Use existing provider/known-container measurement contracts and validation; do
+not add another solver or broaden unrelated font, graph, direction or wrap sizing.
+Freeze representative public/native composition exits, preserve numeric override
+precedence, normal allocation, input receipts, cache conservatism and teardown.
+Start with public failing evidence for the remaining margin-specific restrictions.
 
 ## Scope and execution
 

@@ -65,6 +65,44 @@ void run(bool column, bool finiteParent, OwnerBound bound, bool bothAuto) {
     column ? "column" : "row", finiteParent ? "finite200" : "undefined", boundName(bound), bothAuto ? "both" : "start", main(root, column), main(owner, column), mainStart(a, column), main(a, column), mainStart(b, column), main(b, column));
   YGNodeFreeRecursive(root); YGConfigFree(config);
 }
+
+// Cross-axis auto margins are final placement only: the automatic main owner
+// remains 120 (A40+B80), while the explicit 200 cross owner distributes free
+// cross space after sizing. `opposite10` retains a numeric trailing margin.
+enum class CrossProfile { Start, Both, Overflow, Opposite10 };
+const char* crossName(CrossProfile value) {
+  switch (value) { case CrossProfile::Start: return "start"; case CrossProfile::Both: return "both"; case CrossProfile::Overflow: return "overflow"; case CrossProfile::Opposite10: return "start-opposite10"; }
+  return "invalid";
+}
+void runCrossAuto(bool column, CrossProfile profile) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false);
+  YGConfigSetPointScaleFactor(config, 0);
+  YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config);
+  auto a = YGNodeNewWithConfig(config);
+  auto b = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, column ? YGFlexDirectionColumn : YGFlexDirectionRow);
+  YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+  // Main stays automatic; cross is fixed 200 except the overflow control.
+  setCross(root, column, profile == CrossProfile::Overflow ? 20 : 200);
+  for (auto child : { a, b }) { YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 0); setMinMain(child, column, 0); }
+  setMain(a, column, 40); YGNodeStyleSetFlexBasis(a, 40);
+  setMain(b, column, 80); YGNodeStyleSetFlexBasis(b, 80);
+  setCross(a, column, 40); setCross(b, column, 20);
+  YGNodeStyleSetMarginAuto(a, column ? YGEdgeLeft : YGEdgeTop);
+  if (profile == CrossProfile::Both) YGNodeStyleSetMarginAuto(a, column ? YGEdgeRight : YGEdgeBottom);
+  if (profile == CrossProfile::Opposite10) {
+    if (column) YGNodeStyleSetMargin(a, YGEdgeRight, 10); else YGNodeStyleSetMargin(a, YGEdgeBottom, 10);
+  }
+  YGNodeInsertChild(root, a, 0); YGNodeInsertChild(root, b, 1);
+  YGNodeCalculateLayout(root, column ? (profile == CrossProfile::Overflow ? 20 : 200) : YGUndefined, column ? YGUndefined : (profile == CrossProfile::Overflow ? 20 : 200), YGDirectionLTR);
+  const float aCrossStart = column ? YGNodeLayoutGetLeft(a) : YGNodeLayoutGetTop(a);
+  const float bCrossStart = column ? YGNodeLayoutGetLeft(b) : YGNodeLayoutGetTop(b);
+  std::printf("intrinsic-auto-cross-margin axis=%s profile=%s root={main:%.17g,cross:%.17g} A={main:%.17g,crossStart:%.17g,cross:%.17g} B={main:%.17g,crossStart:%.17g,cross:%.17g}\n",
+    column ? "column" : "row", crossName(profile), main(root, column), column ? YGNodeLayoutGetWidth(root) : YGNodeLayoutGetHeight(root), main(a, column), aCrossStart, column ? YGNodeLayoutGetWidth(a) : YGNodeLayoutGetHeight(a), main(b, column), bCrossStart, column ? YGNodeLayoutGetWidth(b) : YGNodeLayoutGetHeight(b));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
 }
 int main() {
   for (bool column : { false, true }) for (bool bothAuto : { false, true }) {
@@ -75,4 +113,5 @@ int main() {
     run(column, false, OwnerBound::Max160, bothAuto);
     run(column, false, OwnerBound::Min200, bothAuto);
   }
+  for (bool column : { false, true }) for (auto profile : { CrossProfile::Start, CrossProfile::Both, CrossProfile::Overflow, CrossProfile::Opposite10 }) runCrossAuto(column, profile);
 }

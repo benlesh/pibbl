@@ -1521,7 +1521,7 @@ suppress a physical auto edge. Cross-axis support is bounded below; intrinsic au
 margin support is limited to the direct numeric main-axis profile below. The ordinary build retains its experimental-margin
 diagnostic. Numeric/percentage margin behavior is unchanged.
 
-Pure intrinsic measurement supports physical main-axis auto margins on direct
+Pure intrinsic measurement supports physical main/cross-axis auto margins on direct
 childless fixed numeric Rectangles with zero grow/shrink in forward LTR nowrap
 experimental Flex rows/columns. Each auto edge contributes zero to content size;
 final native placement distributes positive space after owner bounds. A40+B80
@@ -1530,7 +1530,11 @@ and gives a single leading auto edge80, or both edges40 each. Numeric max160 and
 finite200/unbounded availability leave the contribution120. This preserves the
 existing distinction between pure content measurement and final owner bounds;
 it does not claim that the pure result is Yoga's final bounded root size.
-Cross-auto, logical/shorthand auto, other directions/wrapping and provider or known
+Cross-auto edges likewise contribute zero: a40cross item under200cross receives
+160leading or80on each edge; overflow under20cross keeps auto edges0; opposite
+numeric10 leaves150for the leading auto edge. Final cross-auto placement overrides
+alignment. Owner cross200to160 moves paint and targets without changing native
+identities. Logical/shorthand auto, other directions/wrapping and provider or known
 container children retain their existing intrinsic admission boundaries. Signal
 paint keeps native solves/nodes reusable; conservative owner content measurement
 may repeat once per owner during preparation. Exact cleanup remains required.

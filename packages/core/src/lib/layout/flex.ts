@@ -631,7 +631,7 @@ function measureFlex(
     if (!hasLogicalMargin) numericMargin(style.margin, 'margin', child, diagnosticBox);
     // Final allocation already represents automatic margins as zero until the
     // native placement pass divides free space. The intrinsic contribution uses
-    // the same zero contribution only for the bounded physical main-axis path.
+    // the same zero contribution only for the bounded physical-margin path.
     const marginTop = numericMargin(autoTop ? 0 : topValue, 'marginTop', child, diagnosticBox);
     const marginRight = numericMargin(autoRight ? 0 : rightValue, logicalRight !== undefined ? marginDirection === 'rtl' ? 'marginStart' : 'marginEnd' : 'marginRight', child, diagnosticBox);
     const marginBottom = numericMargin(autoBottom ? 0 : bottomValue, 'marginBottom', child, diagnosticBox);
@@ -670,14 +670,13 @@ function measureFlex(
     }
     const mainValue = basis === 'auto' ? style[mainProperty] : basis;
     const crossValue = style[crossProperty];
-    if (pureAutoCrossMargin) return unsupportedIntrinsic('does not support automatic cross-axis margins during intrinsic Flex measurement');
-    if (pureAutoMainMargin && (!experimentalLayout || options.flexWrap !== 'nowrap' || options.layoutDirection !== 'ltr' ||
+    if ((pureAutoMainMargin || pureAutoCrossMargin) && (!experimentalLayout || options.flexWrap !== 'nowrap' || options.layoutDirection !== 'ltr' ||
       (options.flexDirection !== 'row' && options.flexDirection !== 'column') || hasLogicalMargin || style.margin !== undefined ||
       child.type !== Rectangle || Object.hasOwn(child.props, 'children') || layoutChild !== child ||
       typeof mainValue !== 'number' || !Number.isFinite(mainValue) || mainValue < 0 ||
       typeof crossValue !== 'number' || !Number.isFinite(crossValue) || crossValue < 0 ||
       grow !== 0 || shrink !== 0)) {
-      return unsupportedIntrinsic('supports automatic physical main-axis margins only for direct fixed numeric Rectangles in forward LTR nowrap Flex measurement');
+      return unsupportedIntrinsic('supports automatic physical margins only for direct fixed numeric Rectangles in forward LTR nowrap Flex measurement');
     }
     if (isPercentage(mainValue) || isPercentage(crossValue) ||
       hasPercentageBounds(style)) {
