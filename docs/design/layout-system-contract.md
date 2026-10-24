@@ -1580,6 +1580,26 @@ follows [Flexbox main-axis alignment](https://www.w3.org/TR/css-flexbox-1/#main-
 an independent Chromium CSS fixture confirms the first row at10/60 and second
 row at60 for three40px items in100px with10px gaps.
 
+### Paired column natural cross queries
+
+Direct paired primitives may supply automatic width before effective side-auto
+placement in finite experimental LTR nowrap columns. Height is a declared finite
+nonnegative number, basis automatic, growth/shrink zero, minHeight0; width bounds,
+maxHeight, responsive query and aspect sizing remain outside this profile. Existing
+logical/shorthand edge precedence applies. Both provider operations are required.
+The shared constrained path receives width0toInfinity and exact normalized height,
+then uses its result as preferred cross size with ordinary receiver/input ownership.
+
+At height40 in a200x120 column, natural40to80 moves A x160to120; B stays x0/y40.
+Natural240 remains240wide at x0, including overflow paint and targets beyond200.
+Pinned Yoga supplies at-most200/exact40 rather than Pibbl's unbounded/exact40
+natural-size query. The returned-width geometry agrees for40/80/240; callback
+parity is not claimed. Shared provider validation remains authoritative. A required
+unsupported result diagnoses before paint even under stretch alignment, releases
+resources and permits an explicit remount. No retained-screen rollback is promised.
+Disposal detaches provider dependencies. Known-layout natural column widths and
+broader wrapped/Text profiles retain their current independent admission rules.
+
 ### Bounded experimental cross-axis auto margins
 
 Finite nowrap/wrapped/wrap-reverse rows and columns accept physical and logical

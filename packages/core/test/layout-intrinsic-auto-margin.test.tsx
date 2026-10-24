@@ -372,3 +372,125 @@ it.runIf(experimentalLayout)('keeps a paired provider’s pure cross query and f
   natural.set(60); await frame();
   expect(calls.length).toBe(afterDispose);
 });
+
+it.runIf(experimentalLayout)('measures a paired provider at exact column height before a physical side auto margin absorbs cross free space', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const natural = signal(40);
+  const calls: (readonly [number, number, number, number])[] = [];
+  const hits: string[] = [];
+  let stamps = 0;
+  type ProviderStyle = FlexStyle & { readonly fill?: string };
+  type ResolvedProviderStyle = SystemStyle & { readonly width: number; readonly height: number; readonly fill?: string };
+  const Leaf = definePrimitive<{ readonly natural: typeof natural }, ProviderStyle, ProviderStyle, ResolvedProviderStyle>((_props, style) => {
+    const stamp = useConst(() => ++stamps);
+    return <Rectangle onClick={() => hits.push(`A:${stamp}`)} style={{ width: style.width, height: style.height, fill: style.fill, cursor: 'pointer' }} />;
+  }, {
+    preserveSignalProps: ['natural'],
+    resolveStyle: (style, context) => ({ width: context.allocation.width, height: context.allocation.height, fill: style.fill }),
+    measureIntrinsic: ({ props }) => ({ status: 'measured' as const, minContent: { width: props.natural.get(), height: 40 }, maxContent: { width: props.natural.get(), height: 40 } }),
+    measure: ({ props, constraints }) => {
+      calls.push([constraints.minWidth, constraints.maxWidth, constraints.minHeight, constraints.maxHeight]);
+      return { status: 'measured' as const, size: { width: props.natural.get(), height: 40 } };
+    },
+  });
+  const service = { measureText: () => { throw new Error('No text.'); } };
+  const leaf = (fill = '#8a3248') => <Leaf key="A" natural={natural} style={{
+    width: 'auto', height: 40, minHeight: 0,
+    flexBasis: 'auto', flexGrow: 0, flexShrink: 0,
+    marginLeft: 'auto', fill,
+  }} />;
+  expect(measureElement(leaf(), {
+    minWidth: 0, maxWidth: Number.POSITIVE_INFINITY,
+    minHeight: 40, maxHeight: 40,
+  }, service)).toEqual({ status: 'measured', size: { width: 40, height: 40 } });
+  natural.set(80);
+  expect(measureElement(leaf(), {
+    minWidth: 0, maxWidth: Number.POSITIVE_INFINITY,
+    minHeight: 40, maxHeight: 40,
+  }, service)).toEqual({ status: 'measured', size: { width: 80, height: 40 } });
+  natural.set(40);
+
+  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 140; document.body.append(canvas);
+  const controller = pibbl(canvas, <Flex style={{ width: 200, height: 120, flexDirection: 'column', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start' }}>
+    {leaf()}
+    <Rectangle key="B" style={{ width: 20, height: 80, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, fill: '#426b61' }} />
+  </Flex>);
+  controllers.push(controller); await frame();
+  const pixel = (x: number, y: number) => [...canvas.getContext('2d')!.getImageData(x, y, 1, 1).data];
+  expect(pixel(130, 10)).toEqual([0, 0, 0, 0]);
+  expect(pixel(160, 10)).toEqual([138, 50, 72, 255]);
+  expect(pixel(4, 44)).toEqual([66, 107, 97, 255]);
+  expect(calls).toContainEqual([0, Number.POSITIVE_INFINITY, 40, 40]);
+  const click = (x: number, y: number) => {
+    const rect = canvas.getBoundingClientRect();
+    for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: rect.left + x, clientY: rect.top + y }));
+  };
+  click(130, 10); await frame(); expect(hits).toEqual([]);
+  const initial = snapshotWasmLayoutDiagnostics();
+  natural.set(80); await frame();
+  expect(pixel(130, 10)).toEqual([138, 50, 72, 255]);
+  expect(pixel(120, 10)).toEqual([138, 50, 72, 255]);
+  click(130, 10); await frame(); expect(hits).toEqual(['A:1']);
+  const moved = snapshotWasmLayoutDiagnostics();
+  expect(moved.nodeCreates).toBe(initial.nodeCreates);
+  expect(stamps).toBe(1);
+  natural.set(240); await frame();
+  expect(pixel(4, 10)).toEqual([138, 50, 72, 255]);
+  expect(pixel(220, 10)).toEqual([138, 50, 72, 255]);
+  click(220, 10); await frame(); expect(hits).toEqual(['A:1', 'A:1']);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+  ]);
+  const afterDispose = calls.length;
+  natural.set(120); await frame();
+  expect(calls.length).toBe(afterDispose);
+});
+
+it.runIf(experimentalLayout)('fails a required column provider cross query before paint, releases ownership, and permits an explicit remount', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const available = signal(false);
+  let paints = 0;
+  type ProviderStyle = FlexStyle;
+  type ResolvedProviderStyle = SystemStyle & { readonly width: number; readonly height: number };
+  const Leaf = definePrimitive<{ readonly available: typeof available }, ProviderStyle, ProviderStyle, ResolvedProviderStyle>((_props, style) => {
+    paints++;
+    return <Rectangle style={{ width: style.width, height: style.height, fill: '#8a3248' }} />;
+  }, {
+    preserveSignalProps: ['available'],
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: 'measured' as const, minContent: { width: 40, height: 40 }, maxContent: { width: 40, height: 40 } }),
+    measure: ({ props }) => props.available.get() ?
+      { status: 'measured' as const, size: { width: 40, height: 40 } } :
+      { status: 'unsupported' as const, reason: 'column width unavailable' },
+  });
+  const root = <Flex style={{ width: 200, height: 120, flexDirection: 'column', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'stretch' }}>
+    <Leaf key="A" available={available} style={{ width: 'auto', height: 40, minHeight: 0, flexBasis: 'auto', flexGrow: 0, flexShrink: 0, marginLeft: 'auto' }} />
+    <Rectangle key="B" style={{ width: 20, height: 80, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0 }} />
+  </Flex>;
+  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 140; document.body.append(canvas);
+  const errors: unknown[] = [];
+  const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+  window.addEventListener('error', prevent);
+  try {
+    const failed = pibbl(canvas, root); controllers.push(failed); await frame();
+    expect(errors).toHaveLength(1);
+    expect(String(errors[0])).toMatch(/column width unavailable/i);
+    expect(paints).toBe(0);
+    failed.dispose();
+    const released = snapshotWasmLayoutDiagnostics();
+    expect([released.activeNodes, released.activeArenas, released.cachedMeasurements, released.activeWasmInstances]).toEqual([
+      baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+    ]);
+    available.set(true);
+    const recovered = pibbl(canvas, root); controllers.push(recovered); await frame();
+    expect(paints).toBe(1);
+    recovered.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+      baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+    ]);
+  } finally { window.removeEventListener('error', prevent); }
+});

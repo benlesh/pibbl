@@ -20,13 +20,14 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice174 `fabe4508` (uniform intrinsic auto-margin normalization).
+Latest delivery is slice175 (paired column natural width with side auto margins).
+Slice174 is `fabe4508` (uniform intrinsic auto-margin normalization).
 Slice173 is `de0a5fe7` (intrinsic physical cross auto margins).
 Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is175: paired column automatic cross sizing with auto margins.
+Consolidation56 is `2fd34f0e` for166–168. Next is176: known Flex natural column cross sizing with auto margins.
 The frozen min/max exits are satisfied. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
 intrinsic graphs, automatic minima and other measurement work remain outstanding.
@@ -6182,7 +6183,7 @@ material issue. Native kernel/ABI9 and corpus721 remain unchanged. No aggregate
 trust or release-gate closure is claimed. Fixed33 remains10complete/12experimental/
 5partial/5missing/1excluded, all seven gates open. Exactly one next slice follows.
 
-## [NEXT] Slice175: paired column automatic cross sizing with auto margins
+## Slice175 delivered: paired column automatic cross sizing with auto margins
 
 Check a direct paired provider with numeric height40, automatic width and left
 auto margin in a finite200x120 column beside a20x80 leaf. Establish its standalone
@@ -6190,6 +6191,50 @@ public measurement result independently of auto placement. If the provider query
 is supported, remove the margin-specific admission obstacle with exact native
 geometry, a failing public regression, live target movement and resource evidence.
 Keep staged percentage-owner margins and other original cells explicitly open.
+
+The public standalone primitive query already returned natural40to80 at exact
+height40; normal column placement failed its auto-margin admission before
+production. A distinct paired column cross-query profile now uses width0toInfinity
+and exact normalized height through the existing constrained provider path, then
+native placement. Effective logical/shorthand edges retain ordinary precedence.
+A second focused RED caught unsupported required measurement silently falling back
+under stretch alignment. That case now diagnoses before paint, releases ownership
+and permits an explicit successful remount.
+
+Eighteen auto-owner tests pass, including exact callbacks, A x160to120 while B
+stays x0/y40, hit130 miss-to-A, stable hook/native identity, cleanup and detached
+provider writes. Natural240 paints and targets through240 at x0 without new native
+nodes. Four focused files and107targeted column/auto regressions pass; ordinary
+40pass/18skip. Final types and changed lint pass.
+
+Pinned native40/80/240 geometry matches. Yoga's callback is at-most200/exact40;
+Pibbl deliberately requests natural width with unbounded width/exact40. This is an
+explicit callback-envelope difference, not callback parity. The probe preserves
+44earlier records and appends3; SHA256
+`ec6314accd21aedae07cda0a0a24ed427ae38ff3a4ff63271b6adaa60573523c`.
+Kernel/ABI unchanged. Installed strict Bundler/NodeNext/no-alias checks pass246
+inputs with pure query, moved targets, removal/detached source and cleanup;
+tarball SHA256 `7a80b2fa22be63813127ece019f57c1230dd2921d1cf3be486a253eeeb653a31`.
+
+Source/built470-input checks pass without browser errors and with zero cleanup.
+At `http://127.0.0.1:5192/#/examples/layout/wasm-flex-text`, click Compare auto
+margins, then cycle Column provider through Text,40px,80px. A expands left while
+its sibling stays fixed. Final visual inspection found and repaired a label overlap.
+Auto-margin remains partial: known layout natural column widths, broader wrapped
+column/row Text and staged nonexact percentage owners with authored margins remain
+open. Fixed33counts and all seven open gates are unchanged. Consolidation59 will
+cover175–177. Docs109mutation probes, public JSDoc, catalog174/12/33 and
+Studio metadata/routes/search pass; focused final review found no material issue.
+
+## [NEXT] Slice176: known Flex natural column cross sizing with auto margins
+
+Compare public exact-height/natural-width measurement for a direct/described known
+Flex row with normal column side-auto placement. Start with numeric height40 and
+numeric descendants; preserve prepared receivers, inputs and exact resources.
+The existing closure table also retains wrapped column Text and row-wrap Text
+natural-width cells: the former needs a Canvas wrapping policy; the latter lacks
+a main-basis/line-formation measurement contract even without auto margins. Do not
+count independent unsupported measurement as parity. Staged owner margins stay open.
 
 ## Scope and execution
 

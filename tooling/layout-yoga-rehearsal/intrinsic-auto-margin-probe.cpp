@@ -145,6 +145,39 @@ void runShorthand(bool column, YGDirection direction, ShorthandProfile profile) 
     column ? "column" : "row", direction == YGDirectionRTL ? "rtl" : "ltr", shorthandName(profile), main(owner, column), column ? YGNodeLayoutGetWidth(owner) : YGNodeLayoutGetHeight(owner), YGNodeLayoutGetLeft(a), YGNodeLayoutGetTop(a), main(a, column), column ? YGNodeLayoutGetWidth(a) : YGNodeLayoutGetHeight(a), YGNodeLayoutGetLeft(b), YGNodeLayoutGetTop(b), main(b, column), column ? YGNodeLayoutGetWidth(b) : YGNodeLayoutGetHeight(b));
   YGNodeFreeRecursive(root); YGConfigFree(config);
 }
+struct ColumnProviderCall { int count = 0; float width = 0; float height = 0; YGMeasureMode widthMode = YGMeasureModeUndefined; YGMeasureMode heightMode = YGMeasureModeUndefined; } columnProviderCall;
+const char* measureMode(YGMeasureMode value) {
+  return value == YGMeasureModeExactly ? "exact" : value == YGMeasureModeAtMost ? "at-most" : "undefined";
+}
+float columnProviderNatural = 40;
+YGSize measureColumnProvider(YGNodeConstRef, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+  columnProviderCall = {columnProviderCall.count + 1, width, height, widthMode, heightMode};
+  return { columnProviderNatural, 40 };
+}
+// Direct measured A has an explicit main height40 and automatic cross width in
+// a finite 200×120 LTR column. This records Yoga's actual callback envelope,
+// which may differ from Pibbl's explicit unbounded-width provider contract.
+void runColumnProvider(float natural) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false);
+  YGConfigSetPointScaleFactor(config, 0);
+  YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config);
+  auto a = YGNodeNewWithConfig(config);
+  auto b = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, YGFlexDirectionColumn);
+  YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+  YGNodeStyleSetWidth(root, 200); YGNodeStyleSetHeight(root, 120);
+  for (auto child : {a, b}) { YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 0); YGNodeStyleSetMinWidth(child, 0); YGNodeStyleSetMinHeight(child, 0); }
+  YGNodeStyleSetHeight(a, 40); YGNodeStyleSetFlexBasisAuto(a); YGNodeStyleSetMarginAuto(a, YGEdgeLeft); YGNodeSetMeasureFunc(a, measureColumnProvider);
+  YGNodeStyleSetWidth(b, 20); YGNodeStyleSetHeight(b, 80); YGNodeStyleSetFlexBasis(b, 80);
+  columnProviderNatural = natural; columnProviderCall = {};
+  YGNodeInsertChild(root, a, 0); YGNodeInsertChild(root, b, 1);
+  YGNodeCalculateLayout(root, 200, 120, YGDirectionLTR);
+  std::printf("intrinsic-auto-column-provider natural=%.17g root={width:%.17g,height:%.17g} A={left:%.17g,top:%.17g,width:%.17g,height:%.17g} B={left:%.17g,top:%.17g,width:%.17g,height:%.17g} query={count:%d,width:%.17g,widthMode:%s,height:%.17g,heightMode:%s}\n",
+    natural, YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(a), YGNodeLayoutGetTop(a), YGNodeLayoutGetWidth(a), YGNodeLayoutGetHeight(a), YGNodeLayoutGetLeft(b), YGNodeLayoutGetTop(b), YGNodeLayoutGetWidth(b), YGNodeLayoutGetHeight(b), columnProviderCall.count, columnProviderCall.width, measureMode(columnProviderCall.widthMode), columnProviderCall.height, measureMode(columnProviderCall.heightMode));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
 }
 int main() {
   for (bool column : { false, true }) for (bool bothAuto : { false, true }) {
@@ -157,4 +190,5 @@ int main() {
   }
   for (bool column : { false, true }) for (auto profile : { CrossProfile::Start, CrossProfile::Both, CrossProfile::Overflow, CrossProfile::Opposite10 }) runCrossAuto(column, profile);
   for (bool column : { false, true }) for (auto direction : { YGDirectionLTR, YGDirectionRTL }) for (auto profile : { ShorthandProfile::AllAuto, ShorthandProfile::PhysicalLeft0, ShorthandProfile::LogicalStartAuto }) runShorthand(column, direction, profile);
+  runColumnProvider(40); runColumnProvider(80); runColumnProvider(240);
 }

@@ -94,6 +94,19 @@ try {
   assert.equal((await read()).nodeCreates, beforeIntrinsicLogical.nodeCreates);
   await click(80, 444);
   assert.match(await frame.locator('pre').innerText(), /intrinsic logical: false/);
+  // Cycle the bounded column paired-provider proof, then restore Text before
+  // the existing Text-only draw and counter checks below.
+  await click(540, 434);
+  assert.match(await frame.locator('pre').innerText(), /column provider: 40/);
+  assert.deepEqual(await autoCrossPixel(550, 290), [243, 240, 232, 255]);
+  assert.deepEqual(await autoCrossPixel(570, 290), [138, 50, 72, 255]);
+  await click(570, 290); await selected('column provider A');
+  await click(540, 434);
+  assert.match(await frame.locator('pre').innerText(), /column provider: 80/);
+  assert.deepEqual(await autoCrossPixel(530, 290), [138, 50, 72, 255]);
+  if (process.env.PIBBL_LAYOUT_COLUMN_PROVIDER_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_COLUMN_PROVIDER_SCREENSHOT });
+  await click(540, 434);
+  assert.match(await frame.locator('pre').innerText(), /column provider: text/);
   if (process.env.PIBBL_LAYOUT_AUTO_MARGIN_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_AUTO_MARGIN_SCREENSHOT });
   const naturalWidth = await sandbox.evaluate(() => {
     const context = document.querySelector('canvas').getContext('2d');

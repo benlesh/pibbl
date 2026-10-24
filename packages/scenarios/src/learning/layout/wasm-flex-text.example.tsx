@@ -8,6 +8,9 @@ import {
   useCanvasContext,
   signal,
   computed,
+  definePrimitive,
+  type FlexStyle,
+  type SystemStyle,
 } from "@pibbl/core";
 
 // Application authoring stays unchanged. This experiment is selected by the
@@ -148,17 +151,40 @@ function createWasmFlexTextContent() {
   Object.freeze(frozenPanelStyle); Object.freeze(frozenPanel.props); Object.freeze(frozenPanel);
   const columnWords = signal("jobs jobs jobs");
   const columnHits = signal(0);
+  const columnProviderMode = signal<"text" | 40 | 80>("text");
+  const columnProviderNatural = signal(40);
+  type ColumnProviderStyle = FlexStyle & { readonly fill?: string };
+  type ResolvedColumnProviderStyle = SystemStyle & { readonly width: number; readonly height: number; readonly fill?: string };
+  const ColumnProvider = definePrimitive<{ readonly natural: typeof columnProviderNatural }, ColumnProviderStyle, ColumnProviderStyle, ResolvedColumnProviderStyle>((_props, style) =>
+    <Rectangle onClick={() => selected.set("column provider A")} style={{ width: style.width, height: style.height, fill: style.fill, cursor: "pointer" }} />,
+  {
+    preserveSignalProps: ["natural"],
+    resolveStyle: (style, context) => ({ width: context.allocation.width, height: context.allocation.height, fill: style.fill }),
+    measureIntrinsic: ({ props }) => ({ status: "measured" as const, minContent: { width: props.natural.get(), height: 20 }, maxContent: { width: props.natural.get(), height: 20 } }),
+    measure: ({ props }) => ({ status: "measured" as const, size: { width: props.natural.get(), height: 20 } }),
+  });
   // Stable descriptors keep the pure-measurement cache conservative on paint.
   const columnAutoPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch" }}>
     <Text key="column-text" onClick={() => { columnHits.update(value => value + 1); selected.set("column auto text"); }} style={{ width: "auto", height: 20, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: "auto", wrap: false, font: "10px monospace", fill: "#19375b", cursor: "pointer" }}>{columnWords}</Text>
     <Rectangle key="column-sibling" onClick={() => selected.set("column auto sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
   </Flex>;
+  const columnProviderPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch" }}>
+    <ColumnProvider key="column-provider" natural={columnProviderNatural} style={{ width: "auto", height: 20, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: "auto", fill: "#8a3248" }} />
+    <Rectangle key="column-provider-sibling" onClick={() => selected.set("column provider sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
+  </Flex>;
   function ColumnAutoComparison() {
+    const providerMode = columnProviderMode.get();
+    const provider = providerMode !== "text";
     return <>
-      <Text pointerEvents="none" style={{ left: 420, top: 258, font: "12px sans-serif", fill: "#475569" }}>Column · natural Text width, automatic left margin</Text>
+      <Text pointerEvents="none" style={{ left: 420, top: 258, font: "12px sans-serif", fill: "#475569" }}>{provider ? "Column · paired provider, natural width" : "Column · natural Text width, automatic left margin"}</Text>
       <Rectangle pointerEvents="none" style={{ left: 420, top: 278, width: 180, height: 82, stroke: "#a63758", strokeWidth: 1 }} />
-      {columnAutoPanel}
+      {provider ? columnProviderPanel : columnAutoPanel}
       <Button x={420} y={380} width={240} label="Change column text" onClick={() => columnWords.update(value => value === "jobs jobs jobs" ? "jobs jobs" : "jobs jobs jobs")} />
+      <Button x={420} y={416} width={240} label={`Column provider: ${providerMode === "text" ? "text" : `${providerMode}px`}`} onClick={() => {
+        if (providerMode === "text") { columnProviderNatural.set(40); columnProviderMode.set(40); }
+        else if (providerMode === 40) { columnProviderNatural.set(80); columnProviderMode.set(80); }
+        else columnProviderMode.set("text");
+      }} />
     </>;
   }
   function IntrinsicAutoMarginComparison() {
@@ -181,7 +207,7 @@ function createWasmFlexTextContent() {
       </Flex>
       <Rectangle onClick={() => intrinsicLogical.update(value => !value)} style={{ left: 28, top: 434, width: 200, height: 20, fill: "#19375b", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 38, top: 437, font: "12px sans-serif", fill: "#ffffff" }}>Toggle shorthand + logical</Text>
-      <Text pointerEvents="none" style={{ left: 280, top: 432, font: "12px sans-serif", fill: "#475569" }}>Cross auto: A sinks by 10px</Text>
+      <Text pointerEvents="none" style={{ left: 280, top: 432, font: "12px sans-serif", fill: "#475569" }}>Top auto: A drops 10px</Text>
     </>;
   }
   function AutoCrossComparison() {
@@ -387,7 +413,7 @@ function createWasmFlexTextContent() {
   return {
     node,
     readInputs: () =>
-      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · intrinsic logical: ${intrinsicLogical.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
+      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · column provider: ${columnProviderMode.get()} · intrinsic logical: ${intrinsicLogical.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
   };
 }
 
