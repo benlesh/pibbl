@@ -1078,6 +1078,50 @@ try {
 
 
 
+// Empty aspect-ratio Rectangles keep zero content minima before final cross sizing.
+const emptyAspectCanvas = document.createElement('canvas');
+emptyAspectCanvas.width = 220; emptyAspectCanvas.height = 100; emptyAspectCanvas.style.cssText = 'width:220px;height:100px';
+document.body.append(emptyAspectCanvas);
+const emptyAspectBaseline = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+const emptyAspectMinimum = signal<number | undefined>(undefined), emptyAspectHits: string[] = [];
+let emptyAspectController = pibblSync(emptyAspectCanvas, createElement(Flex, {
+  style: { width: 80, height: 80, alignItems: 'flex-start' },
+  children: [
+    createElement(Rectangle, { key: 'aspect', onClick: () => emptyAspectHits.push('aspect'), style: { width: 'auto', height: 'auto', flexBasis: 90, flexShrink: 1, minWidth: emptyAspectMinimum, aspectRatio: 3, fill: 'red' } }),
+    createElement(Rectangle, { key: 'sibling', onClick: () => emptyAspectHits.push('sibling'), style: { width: 20, height: 20, minWidth: 0, flexShrink: 0, fill: 'blue' } }),
+  ],
+}));
+try {
+  const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
+  const pixel = (x: number, y: number) => [...emptyAspectCanvas.getContext('2d')!.getImageData(x,y,1,1).data];
+  const click = (x: number, y: number) => {
+    const rect = emptyAspectCanvas.getBoundingClientRect();
+    for (const type of ['mousedown','mouseup','click']) emptyAspectCanvas.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: rect.left+x, clientY: rect.top+y }));
+  };
+  await frame();
+  if (JSON.stringify(pixel(59,10)) !== '[255,0,0,255]' || JSON.stringify(pixel(60,10)) !== '[0,0,255,255]') throw Error('installed aspect row zero content minimum');
+  click(70,10);
+  const nodes = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates;
+  emptyAspectMinimum.set(80); await frame();
+  click(70,22);
+  if (JSON.stringify(pixel(70,22)) !== '[255,0,0,255]' || JSON.stringify(emptyAspectHits) !== '["sibling","aspect"]' || (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates !== nodes) throw Error('installed aspect explicit floor / identity / target');
+  emptyAspectController.dispose();
+  emptyAspectController = pibblSync(emptyAspectCanvas, createElement(Flex, {
+    style: { width: 200, height: 80, flexDirection: 'column', alignItems: 'flex-start' },
+    children: [
+      createElement(Rectangle, { style: { width: 'auto', height: 'auto', flexBasis: 90, flexShrink: 1, aspectRatio: 3, maxWidth: 150, fill: 'red' } }),
+      createElement(Rectangle, { style: { width: 20, height: 20, minHeight: 0, flexShrink: 0, fill: 'blue' } }),
+    ],
+  }));
+  await frame();
+  if (JSON.stringify(pixel(149,59)) !== '[255,0,0,255]' || JSON.stringify(pixel(150,59)) !== '[0,0,0,0]' || JSON.stringify(pixel(10,60)) !== '[0,0,255,255]') throw Error('installed aspect column derived cross cap');
+  receipt.emptyAspectMinimum = true;
+} finally {
+  emptyAspectController.dispose(); emptyAspectCanvas.remove();
+  const after = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+  if (after.activeNodes !== emptyAspectBaseline.activeNodes || after.activeArenas !== emptyAspectBaseline.activeArenas || after.cachedMeasurements !== emptyAspectBaseline.cachedMeasurements || after.activeWasmInstances !== emptyAspectBaseline.activeWasmInstances) throw Error('installed aspect ownership cleanup');
+}
+
 const structuralRowCanvas = document.createElement('canvas');
 structuralRowCanvas.width = 100;
 structuralRowCanvas.height = 100;

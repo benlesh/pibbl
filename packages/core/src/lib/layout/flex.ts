@@ -1044,7 +1044,17 @@ function resolveFlexPlacements(
         (typeof normalized.width === 'number' || automaticTextBasis));
     // An empty authored rectangle has no intrinsic content contribution. Keep
     // opaque/child-bearing primitives conservative without evaluating children.
-    const automaticRectangleMinimum = hasEmptyRectangleMinimum(child, normalized, preparedStyleQuery(prepared), true);
+    const aspectMain = basisValue === 'auto' ? normalized[row ? 'width' : 'height'] : basisValue;
+    const aspectCross = normalized[row ? 'height' : 'width'];
+    // An empty shape has no content floor. Aspect sizing still derives cross
+    // size from the solved main allocation; it does not transfer a cross floor.
+    const automaticAspectRectangleMinimum = experimentalLayout && aspectRatio !== undefined &&
+      child.type === Rectangle && !Object.hasOwn(child.props, 'children') && !preparedStyleQuery(prepared) &&
+      typeof aspectMain === 'number' && Number.isFinite(aspectMain) && aspectMain >= 0 &&
+      (aspectCross === undefined || aspectCross === 'auto' ||
+        typeof aspectCross === 'number' && Number.isFinite(aspectCross) && aspectCross >= 0);
+    const automaticRectangleMinimum = automaticAspectRectangleMinimum ||
+      hasEmptyRectangleMinimum(child, normalized, preparedStyleQuery(prepared), true);
     const customIntrinsic = experimentalLayout && row && options.flexWrap === 'nowrap' &&
       !preparedStyleQuery(prepared) && !!pairedLayoutDefinition?.measureIntrinsic &&
       (!isLayoutComponent(child.type) || options.flexDirection === 'row' && options.layoutDirection === 'ltr' && aspectRatio === undefined && !!pairedLayoutDefinition.measure) &&

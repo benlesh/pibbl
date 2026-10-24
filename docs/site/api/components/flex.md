@@ -177,6 +177,13 @@ Supply a definite main dimension or `flexBasis`. Each wrapped line solves its ma
 allocations first, then derives cross sizes; cross bounds may break the ratio.
 Intrinsic main inference remains unsupported.
 
+In experimental layout, a direct empty `Rectangle` with a finite numeric main
+size or basis and an automatic aspect-derived cross size may omit its main
+minimum. Its content minimum is zero, just as with explicit `minWidth: 0` or
+`minHeight: 0`; an explicit numeric floor still wins. This does not add a
+minimum derived from the declared cross size. Try the
+[aspect minimum example](#/examples/layout/wasm-flex-aspect-minimum).
+
 ```tsx
 const wrappedRatioFlex = (
   <Flex

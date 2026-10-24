@@ -420,7 +420,13 @@ floor content at zero, clamp cross content bounds, then add insets once. Cross
 bounds can break the ratio; main size is not recomputed. Width90/height50/ratio3
 in a row yields90×30; maxHeight20 yields90×20; two width90 shrinkable items in a
 100px row yield50×16⅔ each. A column derives width from final height instead.
-Margins remain outside the ratio. General intrinsic and coupled-axis ratio
+Margins remain outside the ratio. In experimental direct allocation, a childless
+Rectangle with a finite numeric main size or basis may omit the main minimum
+when its cross size is omitted, automatic or numeric. Its automatic content
+minimum is zero; the final-main-to-cross rule and explicit bounds remain unchanged.
+This does not infer a transferred cross-to-main floor. Responsive queries,
+authored children, nonnumeric main sizes and general intrinsic content retain
+their existing boundary. General intrinsic and coupled-axis ratio
 measurement are deferred and pure intrinsic Flex measurement reports unsupported.
 The reproducible native semantic probe is `tooling/layout-yoga-rehearsal/aspect-probe.cpp`.
 

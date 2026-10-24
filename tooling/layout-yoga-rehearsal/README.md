@@ -554,3 +554,20 @@ local content mutations to the recorded eight-job input.
 The combined `--nested-cross-matrix` selector exercises all five cross-min/max
 resize pairs consecutively, checking pair-name isolation. Decorative bottom
 notes opt out of hit testing so tall fixture targets remain reachable.
+
+## Independent empty aspect minimum probe
+
+Run `node tooling/layout-yoga-rehearsal.mjs --source /path/to/yoga --aspect-minimum-probe`.
+It compiles `aspect-minimum-probe.cpp` from the archived pinned3.2.1 commit
+`042f5013152eb81c1552dec945b88f7b95ca350f`, with non-web defaults, point scale0
+and no errata. It prints source SHA256 and16 row/column × omitted/zero minimum ×
+decoration × cross-cap records without changing the721-case corpus.
+
+A90basis/shrink1/ratio3 item beside a fixed20 sibling in80main units uses
+60main units under both omitted and zero minima. Row cross is20; column cross
+is180, or150 under maxWidth150. Native `SizingMode.h` explicitly states that
+this version lacks CSS automatic minimum sizing; `BoundAxis.h` applies authored
+bounds, and `CalculateLayout.cpp` derives aspect cross after main flexing. These
+records justify Pibbl's empty-content zero floor, not a CSS transferred-size
+minimum or automatic-minimum parity for Text/images/custom content. The larger
+aspect automatic-minimum category stays open.

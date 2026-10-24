@@ -5690,3 +5690,50 @@ it.runIf(experimentalLayout)('rejects unsupported column automatic-margin Text p
     expect(calls, name).toBe(0);
   }
 });
+
+it.runIf(experimentalLayout)('uses a zero automatic main minimum for empty aspect-ratio Rectangles without changing final ratio sizing', async () => {
+  const rowChild = (minimum?: number) => createElement(Rectangle, {
+    style: { width: 90, height: 'auto', aspectRatio: 3, flexShrink: 1, minWidth: minimum },
+  });
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const rowSibling = createElement(Rectangle, { style: { width: 20, height: 20, flexShrink: 0, minWidth: 0 } });
+  expect(layoutFlex({ x: 0, y: 0, width: 80, height: 50 }, [rowChild(), rowSibling], { alignItems: 'flex-start' }, measurement))
+    .toEqual([{ x: 0, y: 0, width: 60, height: 20 }, { x: 60, y: 0, width: 20, height: 20 }]);
+  expect(layoutFlex({ x: 0, y: 0, width: 80, height: 50 }, [rowChild(0), rowSibling], { alignItems: 'flex-start' }, measurement))
+    .toEqual([{ x: 0, y: 0, width: 60, height: 20 }, { x: 60, y: 0, width: 20, height: 20 }]);
+  expect(layoutFlex({ x: 0, y: 0, width: 80, height: 50 }, [rowChild(80), rowSibling], { alignItems: 'flex-start' }, measurement))
+    .toEqual([{ x: 0, y: 0, width: 80, height: 80 / 3 }, { x: 80, y: 0, width: 20, height: 20 }]);
+
+  const basisOnly = createElement(Rectangle, { style: { width: 'auto', height: 'auto', flexBasis: 90, aspectRatio: 3, flexShrink: 1 } });
+  expect(layoutFlex({ x: 0, y: 0, width: 80, height: 50 }, [basisOnly, rowSibling], { alignItems: 'flex-start' }, measurement))
+    .toEqual([{ x: 0, y: 0, width: 60, height: 20 }, { x: 60, y: 0, width: 20, height: 20 }]);
+
+  const columnChild = (minimum?: number) => createElement(Rectangle, {
+    style: { width: 'auto', height: 90, aspectRatio: 3, flexShrink: 1, minHeight: minimum, maxWidth: 150 },
+  });
+  const columnSibling = createElement(Rectangle, { style: { width: 20, height: 20, flexShrink: 0, minHeight: 0 } });
+  expect(layoutFlex({ x: 0, y: 0, width: 200, height: 80 }, [columnChild(), columnSibling], { flexDirection: 'column', alignItems: 'flex-start' }, measurement))
+    .toEqual([{ x: 0, y: 0, width: 150, height: 60 }, { x: 0, y: 60, width: 20, height: 20 }]);
+  expect(layoutFlex({ x: 0, y: 0, width: 200, height: 80 }, [columnChild(80), columnSibling], { flexDirection: 'column', alignItems: 'flex-start' }, measurement))
+    .toEqual([{ x: 0, y: 0, width: 150, height: 80 }, { x: 0, y: 80, width: 20, height: 20 }]);
+
+  const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 50; document.body.append(canvas);
+  const minimum = signal<number | undefined>(undefined); const hits: string[] = [];
+  const App = () => createElement(Flex, { style: { width: 80, height: 50, alignItems: 'flex-start' }, children: [
+    createElement(Rectangle, { key: 'ratio', style: { width: 90, height: 'auto', aspectRatio: 3, flexShrink: 1, minWidth: minimum, fill: 'red' }, onClick: () => hits.push('ratio') }),
+    createElement(Rectangle, { key: 'sibling', style: { width: 20, height: 20, minWidth: 0, flexShrink: 0, fill: 'blue' }, onClick: () => hits.push('sibling') }),
+  ] });
+  const controller = pibbl(canvas, createElement(App, {})); controllers.push(controller); await nextFrame();
+  const pixel = (x: number, y: number) => [...canvas.getContext('2d')!.getImageData(x, y, 1, 1).data];
+  expect(pixel(59, 10)).toEqual([255, 0, 0, 255]); expect(pixel(60, 10)).toEqual([0, 0, 255, 255]);
+  clickCanvas(canvas, 70, 10); expect(hits).toEqual(['sibling']);
+  const mounted = snapshotWasmLayoutDiagnostics();
+  minimum.set(80); await nextFrame();
+  expect(pixel(70, 22)).toEqual([255, 0, 0, 255]); clickCanvas(canvas, 70, 22); expect(hits).toEqual(['sibling', 'ratio']);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+  ]);
+});

@@ -2053,6 +2053,7 @@
           "public Text automatic/zero-minimum comparison",
           "paired direct finite column provider exact-width natural height, explicit-zero escape and measurement-only signal invalidation",
           "empty Rectangle direct row/column shrink, explicit minimum and no-shrink precedence",
+          "slice165: empty Rectangle numeric main/basis with automatic aspect cross uses zero content minimum; omitted/zero equivalence, explicit floor, cross cap, public target movement and pinned native probe",
           "percentage Rectangle row/column shrink",
           "outer padding floor under zero content minimum",
           "numeric Rectangle intrinsic Flex measurement",
@@ -2068,7 +2069,7 @@
         "missing": [
           "general text/font/line-breaking rules",
           "images",
-          "aspect ratio",
+          "aspect ratio with nonempty/intrinsic content and broader automatic-minimum compatibility",
           "other overflow and fitting modes",
           "pinned native/Yoga divergence"
         ]

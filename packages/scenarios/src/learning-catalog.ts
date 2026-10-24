@@ -4411,10 +4411,38 @@ const drafts = [
       "Experimental finite LTR nowrap rows and direct fixed primitive leaves only. Text support uses nonempty visible lines at final allocation with generic px fonts, including wrapped first/last provider metrics; last-baseline alignment remains outside this lesson.",
       "Offsets are finite and ordered, including values outside the content box. A missing provider uses its bottom edge; a declared unsupported provider diagnoses before paint. Canvas metrics determine the Text row; no native font-parity or performance claim.",
     ],
-    canvas: { width: 760, height: 460 },
+    canvas: { width: 760, height: 540 },
     related: ["wasm-flex-intrinsic-primitive", "wasm-flex-text", "flex"],
     exportName: "WasmFlexBaselineExample",
     load: () => import("./learning/layout/wasm-flex-baseline.example"),
+  },
+  {
+    slug: "wasm-flex-aspect-minimum",
+    title: "Experimental WASM aspect-ratio minimum",
+    shortTitle: "WASM aspect minimum",
+    section: "layout",
+    order: 172,
+    summary:
+      "Direct empty Rectangles show zero-content shrink before aspect-ratio cross sizing, with an explicit numeric minimum as the escape.",
+    api: ["Flex", "Rectangle", "useSignal"],
+    objectives: [
+      "Compare omitted and explicit-zero main minima for direct empty Rectangles.",
+      "See main-axis shrink settle before aspect-ratio cross sizing in both rows and columns.",
+    ],
+    prompts: {
+      gesture:
+        "Resize the owner, cycle omitted → 0 → 240 minimum, and click blue A or green B. The inspector reports expected sizes, runtime counters and hit history.",
+      code:
+        "Each A is a direct empty Rectangle with a numeric basis, shrink and aspectRatio. The example uses no custom measurement provider or hidden child content.",
+    },
+    apiNotes: [
+      "Experimental finite direct LTR nowrap Flex only. This documents Yoga's zero-content behavior; it is not a CSS transferred-size automatic-minimum policy.",
+      "Explicit numeric minimum wins before the final aspect-ratio cross dimension is derived. Text, images, custom providers, overflow/fit modes and general automatic-minimum compatibility remain separate work.",
+    ],
+    canvas: { width: 760, height: 540 },
+    related: ["wasm-flex-intrinsic-primitive", "wasm-flex-text", "flex"],
+    exportName: "WasmFlexAspectMinimumExample",
+    load: () => import("./learning/layout/wasm-flex-aspect-minimum.example"),
   },
   {
     slug: "wasm-flex-intrinsic-primitive",

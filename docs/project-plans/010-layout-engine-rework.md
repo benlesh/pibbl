@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice164 (wrapped-leaf aggregate measurement reuse).
+Latest delivery is slice165 (empty-Rectangle aspect automatic minimum).
+Slice164 is `ff72e0ab` (wrapped-leaf aggregate measurement reuse).
 Slice163 is `1ca71af2` (nested described paired leaf measurement).
 Slice162 is `dcae6348` (parent-owned prepared measurement reuse).
 Consolidation54 is `56da579c` for160–162.
@@ -5181,24 +5182,61 @@ This closes the one-wrapper receiver-path cache hole for the163 shape only.
 Hands-on: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-nested-intrinsic`:
 Nested row, Wrap row leaf, Toggle width, Paint only, Raise badge min.
 
-## [NEXT] Slice165: aspect-ratio automatic minimum
+## Slice165 ready for feedback: empty aspect Rectangle zero minimum
 
-Advance the existing `flex.automatic-minimum` aspect-ratio exit using public
-`aspectRatio`, definite cross dimensions, finite basis/shrink and explicit-zero
-minimum escape. First determine the pinned native transferred-size rule and
-Pibbl compatibility policy, then add the public row/column observable RED before
-production. Preserve ownership, target movement and exact teardown; do not expand
-this slice into percentage/intrinsic feedback. Consolidation55 follows163–165.
+The focused public RED rejected an empty Rectangle with numeric main90, ratio3
+and automatic cross size because its main minimum was omitted. Experimental
+direct allocation now uses zero content minimum for a childless, query-free
+Rectangle with numeric finite main/basis and automatic/omitted/numeric cross.
+Existing native main solving still precedes outer aspect cross sizing; explicit
+min/max and decoration ownership remain unchanged. This is not a transferred
+cross-to-main content floor, intrinsic measurement, or a new cache/ABI path.
 
-The remaining Flex ledger has one `flex.min-max` missing row with two clauses:
-indefinite/cyclic owner policy and the explicit measured-owner matrix beyond exact
-row/column availability. It has five `flex.automatic-minimum` categories: general
-Text/font/line-breaking, images, aspect ratio, other overflow/fitting, and pinned
-native divergence. This is not six finite slices. Bounded structural/cache work
-supports particular measurement cases; completing the entire measurement gate is
-not a prerequisite for the Flex gate. Its formal dependency remains Flex→measurement.
-The min/max missing-row policy/matrix remains the shortest following closure task;
-no further wrapper/cache variants are prerequisites for it.
+The pinned3.2.1 source explicitly lacks CSS automatic minimum sizing. The new
+independent native probe records16 cases with absent/zero minima, axes,
+decoration and cross caps, without changing the721-case corpus. Basis90 beside
+fixed20 at main80 yields row60×20 or column180×60; maxWidth150 clamps only the
+column cross. Omitted and zero agree. This closes the empty-Rectangle automatic
+cross aspect profile, not the whole aspect automatic-minimum category: nonempty
+Text/image/custom intrinsic content and broader compatibility remain open.
+
+Public tests first assert semantic geometry, explicit floors and basis-only
+admission, then mounted pixels, target movement, stable native nodes and cleanup.
+Focused Node24.15/Chromium:9passed/416skipped in425tests. Source/built lesson
+checks omitted=zero and floor240 at owner240→300→240 on both axes, actual painted
+boundaries, transferred old targets, stable native nodes and disposal0000;
+built470inputs. Initial browser blankness was the inspector taking all flex-host
+height (canvas1018×18); capping its height restores1018×540. The root-fit pixel
+mapping includes letterbox offsets. The rendered lesson was inspected.
+
+Installed246-input Bundler/NodeNext proof covers basis-only omitted minimum,
+row floor/target/identity and column derived-cross cap; SHA256
+`10e2ee1cc55dffbaff0b2341793dd6cebfa4f3943decc09c46208c09b6291f78`.
+Typecheck, changed-code lint and scoped review pass. No capability/gate promotion.
+
+Hands-on: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-aspect-minimum`
+(or built5193). Owner toggles240/300; Minimum cycles omitted/0/240. The panel's
+sizes are explicitly labeled expected, separate from actual runtime counters;
+paint/hit verification and public numeric geometry establish actual behavior.
+Consolidation55 for163–165 follows as a separate evidence commit.
+
+## [NEXT] Slice166: min/max indefinite-owner phase policy and measured matrix
+
+The sole `flex.min-max` missing row has two clauses: indefinite/cyclic owner
+policy and the explicit measured-owner matrix beyond exact row/column availability.
+Start with the existing pinned percentage-owner probe's exact, max-only and
+unbounded cap/floor outputs. Define query-phase percentage references separately
+from final containing size; max-only availability must not silently become an
+exact/definite owner. The public outcome must preserve query→final-layout geometry
+and diagnostics for unresolved cycles, then cover the agreed measured-owner
+matrix through the public surface. Do not turn missing profiles into exclusions
+or declare the capability complete from the six probe records alone.
+
+The automatic-minimum ledger still has five categories (general Text/font rules,
+images, remaining intrinsic aspect interactions, overflow/fitting, pinned-native
+compatibility). Structural/cache work above is a foundation for particular
+measurement cases; finishing the entire measurement gate is not a prerequisite
+for Flex. No further wrapper/cache variants are prerequisites for the min/max row.
 
 ### Finite positioning exit matrix after134
 
