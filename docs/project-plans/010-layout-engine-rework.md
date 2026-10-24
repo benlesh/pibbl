@@ -7861,6 +7861,29 @@ strictBundler/NodeNext and nested browser; SHA
 `1d0fed582d97e2fe3409fdfd7ce9f08ac88b01b2ca7353d89988c9524f43a7d3`.
 Capability counts and all7release gates remain unchanged.
 
+## [DONE] Consolidation71: slices211–213
+
+Fresh Node24.15.0/pnpm11.21.0/Playwright Chromium accumulated89-file matrix:
+experimental1169pass/12skip out of1181in84.16s; ordinary352pass/829skip out of1181
+in8.40s. This adds per-item alignment, measured stretch, transparent primitive roots
+and known row descendant selection to consolidation70's responsive/final-box set.
+Logs: `/tmp/pibbl-consolidation71-{wasm,ordinary}.txt`. Typecheck, changed-code lint,
+109documentation mutation probes, public JSDoc52entries/1486declarations/
+18inherited/3472members/6576links and catalog/Studio checks pass.
+
+Full source/built Text replay passes errors[],cleanup000; built470inputs
+(`/tmp/pibbl-consolidation71-{source,built}.txt`). Slice213's final reviewed source/
+built baseline drivers and installed consumer cover all211–213receipts, including
+actual known-descendant movement and exact ownership; installed104marginfixtures/
+246inputs and strictBundler/NodeNext pass, SHA1d0fed582d97e2fe3409fdfd7ce9f08ac88b01b2ca7353d89988c9524f43a7d3.
+Presentation-only label repair was subsequently replayed in both browser modes;
+runtime matrix remained unchanged. ABI16/83603bytes/SHA
+`d3be3dc538a62456c2fa6ef07e849bf1be036e8395b9b7774a11690f88af3c97`
+unchanged; slice211's fresh45native tests remain the native evidence. No aggregate
+trust or feature-completion claim: fixed33 remains12complete/12experimental/
+3partial/5missing/1excluded; all7release gates remain open. Independent final
+whole-codebase review remains due at program exit. Next214.
+
 ## [NEXT] Slice214: relative selected structural baseline children
 
 Preserve the existing pre-relative physical layout-y origin as one scalar in the
