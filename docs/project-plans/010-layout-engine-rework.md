@@ -20,11 +20,13 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice170 (percentage own-owner bounds). Slice169 is `f0d087a1`.
+Latest delivery is slice171 (native main contribution versus final content).
+Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is171: capped known-owner main
-contribution versus final content size. The own-percentage-bound cell is evidenced;
-the same-axis main-contribution mismatch keeps min/max partial.
+Consolidation56 is `2fd34f0e` for166–168. Next is172: intrinsic main auto margins.
+The frozen min/max exits are satisfied. Fixed33 is now10complete/12experimental/
+5partial/5missing/1excluded. All seven release gates remain open; independent
+intrinsic graphs, automatic minima and other measurement work remain outstanding.
 Consolidation55 is `98bf8b8d` for163–165.
 Slice165 is `cc334a0a` (empty-Rectangle aspect automatic minimum).
 Slice164 is `ff72e0ab` (wrapped-leaf aggregate measurement reuse).
@@ -5971,7 +5973,7 @@ size as its parent-main basis. Four public row/column171tests reproduce this
 before production. This is the remaining accepted bound-specific composition
 cell; broader independent intrinsic/basis/gap work stays in its own capabilities.
 
-## [NEXT] Slice171: native main contribution versus final content
+## Slice171 delivered: native main contribution versus final content
 
 Expose the native initial bound-adjusted line alongside final intrinsic main as
 one fixed return contract. A receiver-scoped known-root main-contribution query
@@ -5981,6 +5983,53 @@ existing exact allocated continuation then remeasures descendants at the correct
 allocation. Preserve the query role in any cache identity and retain all resource,
 cycle and source-order rules. No second solver, public selector, persistent graph
 or implicit opaque query-to-render association. Consolidation57 covers169–171.
+
+Delivered with a public failing four-case regression before production. Native ABI9
+returns final main and contribution main together; both invalidate on failure and
+are copied before arena release. Known same-axis parent measurement scopes the
+contribution role to its receiver and axis; allocated preflight replaces that stage
+before placement. Public full, cross-axis and opaque size-only queries retain their
+contract. Contribution queries bypass only the relevant full-query cache.
+
+Point max160 gives full110/contribution120 and leaf30; own max75% gives
+full109.375/contribution117.5 and leaf29.375. Eight raw/described row/column cases
+and a live role/provider transition verify geometry, query limits, stable nodes and
+cleanup. The following blue target demonstrates the actual owner extent. Source
+and built470-input checks pass; installed strict Bundler/NodeNext/no-alias consumer
+passes with246inputs. Packed tarball SHA256
+`a73c45d4c6a702986104a6b00f337b789bcdcca42d4217e228be53060aed674b`.
+Kernel75558bytes SHA256
+`70da201119e49227e202bb20527a533e9ac98867c261bbe5aa6d776698878701`;
+22native tests pass. Pinned probe SHA256
+`76f85d2c4005713d5b8e6b09f234aac35e2dbbec902f8e1342b10ed7d41b5cae`.
+Visual inspection confirms readable contribution and full-query labels, the gap,
+and the following blue target. Focused role/cache/loader31tests, typecheck, changed
+lint and catalog174/12/33 pass. Consolidation57 records the broader fresh runs.
+
+The original166 acceptance matrix is closed without changing its target:
+
+| Frozen exit                                                                 | Delivered evidence                                                                            |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Exact declared/caller main bounds                                           | Existing exact-row and exact-column suites                                                    |
+| Max160 with absent/80/160/200 external owner; unbounded; min160; min/max160 | 166 numeric and167 paired matrix;169 described-owner matrix                                   |
+| Cap/floor, row/column, numeric/paired/known composition                     | 166–169 public queries, finite mounts, deeper and branching trees                             |
+| Own numeric and percentage bounds and native parent contribution            | 170 original-reference resolution;171 dual native result and exact continuation               |
+| Invalid/opposing/unresolved inputs, cycles, provider failures               | Existing validation and168/170 failure-before-publication evidence                            |
+| Resize, paint, reorder/removal, disposal and resource ownership             | 166–169 interaction suites and171 live role/provider transition; source/built/packed receipts |
+
+`flex.min-max` is complete for this supported contract and its missing list is
+empty. General percentage-dependent intrinsic graphs remain explicitly unsupported
+under their own open capabilities; the pure auto-parent percentage-bound rejection
+is not recorded as Yoga parity. No aggregate trust or group-gate closure is claimed.
+
+## [NEXT] Slice172: intrinsic main auto margins
+
+Treat main-axis auto margins as zero during supported pure Flex intrinsic
+contribution. Existing native final placement distributes positive free space.
+Start with LTR forward nowrap rows/columns, numeric children40+80, own min200
+or max160/unbounded, and start-auto/both-auto edges. Preserve unsupported cross-axis
+and percentage-margin diagnostics. Add public failing evidence before production,
+then expose the behavior through the supported public surface.
 
 ## Scope and execution
 

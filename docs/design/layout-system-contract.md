@@ -1387,7 +1387,15 @@ a fit-content envelope. An authored maximum keeps its own initial envelope,
 even when external availability differs. Neither becomes an exact final size.
 
 A same-axis parent contribution and the child's allocated main are separate
-native phases. A matching transaction-local stage records the original normalized
+native phases. Native ABI9 returns final intrinsic main and parent-main contribution
+in one fixed result, cleared together on failure and copied before arena release.
+Only a matching receiver/axis parent query uses the contribution; public full,
+cross-axis and opaque size-only queries retain final content. The contribution
+role bypasses the corresponding full-query cache without disabling ordinary reuse.
+For min100/max160, a natural80 leaf capped25% plus fixed80 contributes120 while
+the full query is110; exact allocated continuation queries30 and paints30. With
+own max75% under external200 these values are117.5,109.375 and29.375.
+A matching transaction-local stage records the original normalized
 root style, receiver, source children, axis, final main and input revision. Known
 preparation at the allocated main remeasures through the existing pure provider
 context with native exact mode, replacing the contribution stage before normal

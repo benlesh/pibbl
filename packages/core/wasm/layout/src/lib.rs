@@ -19,7 +19,7 @@ const INTRINSIC_EXACT: u32 = 0;
 const INTRINSIC_FIT_CONTENT: u32 = 1;
 const INTRINSIC_MAX_CONTENT: u32 = 2;
 #[derive(Default)]
-struct Arena { nodes: Vec<f64>, main_auto: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64>, flow: Vec<f64>, intrinsic_main: Vec<f64>, intrinsic_main_result: f64 }
+struct Arena { nodes: Vec<f64>, main_auto: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64>, flow: Vec<f64>, intrinsic_main: Vec<f64>, intrinsic_main_result: f64, intrinsic_main_contribution: f64 }
 struct ArenaSlot { generation: u32, arena: Option<Arena> }
 struct ArenaPool { slots: Vec<ArenaSlot>, closed: bool }
 thread_local! {
@@ -101,7 +101,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v8() -> u32 { 8 }
+pub extern "C" fn layout_abi_v9() -> u32 { 9 }
 #[no_mangle]
 pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
@@ -464,6 +464,7 @@ pub extern "C" fn resize_intrinsic_main(handle: u32, generation: u32, count: usi
         let Some(length) = count.checked_mul(INTRINSIC_MAIN_STRIDE) else { return std::ptr::null_mut(); };
         arena.intrinsic_main.resize(length, 0.0);
         arena.intrinsic_main_result = f64::NAN;
+        arena.intrinsic_main_contribution = f64::NAN;
         arena.intrinsic_main.as_mut_ptr()
     })
 }
@@ -478,6 +479,7 @@ pub extern "C" fn prepare_intrinsic_main_queries(
 ) -> u32 {
     with_arena(handle, generation, 1, |arena| {
         arena.intrinsic_main_result = f64::NAN;
+        arena.intrinsic_main_contribution = f64::NAN;
         match prepare_intrinsic_main_queries_records(
             &mut arena.intrinsic_main, external_owner, initial_available,
             root_min, root_max, root_mode, gap,
@@ -493,11 +495,16 @@ pub extern "C" fn resolve_intrinsic_main(
 ) -> u32 {
     with_arena(handle, generation, 1, |arena| {
         arena.intrinsic_main_result = f64::NAN;
-        match resolve_intrinsic_main_fixed_leaves(
+        arena.intrinsic_main_contribution = f64::NAN;
+        match resolve_intrinsic_main_fixed_leaves_result(
             &mut arena.intrinsic_main, external_owner, initial_available,
             root_min, root_max, root_mode, gap,
         ) {
-            Ok(result) => { arena.intrinsic_main_result = result; 0 }
+            Ok(result) => {
+                arena.intrinsic_main_result = result.main;
+                arena.intrinsic_main_contribution = result.contribution_main;
+                0
+            }
             Err(status) => status,
         }
     })
@@ -506,6 +513,14 @@ pub extern "C" fn resolve_intrinsic_main(
 #[no_mangle]
 pub extern "C" fn intrinsic_main_result(handle: u32, generation: u32) -> f64 {
     with_arena(handle, generation, f64::NAN, |arena| arena.intrinsic_main_result)
+}
+
+/// Root-bound line contribution used by a same-axis known-Flex parent.
+/// This differs from final `intrinsic_main_result` when recursive child
+/// constraints change the root's final sum.
+#[no_mangle]
+pub extern "C" fn intrinsic_main_contribution(handle: u32, generation: u32) -> f64 {
+    with_arena(handle, generation, f64::NAN, |arena| arena.intrinsic_main_contribution)
 }
 
 fn resolve_intrinsic_length(value: f64, unit: f64, reference: f64) -> Result<Option<f64>, u32> {
@@ -595,10 +610,13 @@ fn prepare_intrinsic_main_queries_records(
     Ok(())
 }
 
-fn resolve_intrinsic_main_fixed_leaves(
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct IntrinsicMainResolution { main: f64, contribution_main: f64 }
+
+fn resolve_intrinsic_main_fixed_leaves_result(
     records: &mut [f64], external_owner: f64, initial_available: f64,
     root_min: f64, root_max: f64, root_mode: u32, gap: f64,
-) -> Result<f64, u32> {
+) -> Result<IntrinsicMainResolution, u32> {
     let (root_min, root_max) = validate_intrinsic_main_envelope(
         records, external_owner, initial_available, root_min, root_max, root_mode, gap,
     )?;
@@ -649,7 +667,19 @@ fn resolve_intrinsic_main_fixed_leaves(
         final_sum += record[5];
     }
     if !final_sum.is_finite() { return Err(1); }
-    Ok(if root_mode == INTRINSIC_EXACT { initial_available } else { clamp_bounds(final_sum, root_min, root_max)? })
+    let main = if root_mode == INTRINSIC_EXACT { initial_available } else { clamp_bounds(final_sum, root_min, root_max)? };
+    Ok(IntrinsicMainResolution { main, contribution_main: adjusted_line })
+}
+
+// Scalar assertion helper for existing phase fixtures; production uses both results.
+#[cfg(test)]
+fn resolve_intrinsic_main_fixed_leaves(
+    records: &mut [f64], external_owner: f64, initial_available: f64,
+    root_min: f64, root_max: f64, root_mode: u32, gap: f64,
+) -> Result<f64, u32> {
+    Ok(resolve_intrinsic_main_fixed_leaves_result(
+        records, external_owner, initial_available, root_min, root_max, root_mode, gap,
+    )?.main)
 }
 
 #[no_mangle]
@@ -812,6 +842,34 @@ mod tests {
         assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut records,160.,160.,f64::NAN,f64::NAN,INTRINSIC_EXACT,1.),Err(1));
     }
 
+    #[test] fn intrinsic_main_keeps_final_size_and_parent_contribution_distinct() {
+        // Numeric bases retain the old final scalar while exposing the parent
+        // contribution Yoga forms before recursive child constraint resolution.
+        let mut numeric = cap_records();
+        let resolution = resolve_intrinsic_main_fixed_leaves_result(
+            &mut numeric, 200., 160., f64::NAN, 160., INTRINSIC_FIT_CONTENT, 0.,
+        ).unwrap();
+        assert_eq!(resolution, IntrinsicMainResolution { main: 112.5, contribution_main: 130. });
+
+        let mut max_160 = measured_cap_records(80., 40., INTRINSIC_MEASURED_READY);
+        let resolution = resolve_intrinsic_main_fixed_leaves_result(
+            &mut max_160, 200., 160., f64::NAN, 160., INTRINSIC_FIT_CONTENT, 0.,
+        ).unwrap();
+        assert_eq!(resolution, IntrinsicMainResolution { main: 110., contribution_main: 120. });
+
+        let mut max_150 = measured_cap_records(80., 37.5, INTRINSIC_MEASURED_READY);
+        let resolution = resolve_intrinsic_main_fixed_leaves_result(
+            &mut max_150, 200., 150., f64::NAN, 150., INTRINSIC_FIT_CONTENT, 0.,
+        ).unwrap();
+        assert_eq!(resolution, IntrinsicMainResolution { main: 109.375, contribution_main: 117.5 });
+
+        let mut exact = measured_cap_records(80., 40., INTRINSIC_MEASURED_READY);
+        let resolution = resolve_intrinsic_main_fixed_leaves_result(
+            &mut exact, 200., 160., f64::NAN, 160., INTRINSIC_EXACT, 0.,
+        ).unwrap();
+        assert_eq!(resolution, IntrinsicMainResolution { main: 160., contribution_main: 160. });
+    }
+
     #[test] fn intrinsic_main_stale_handles_cannot_return_or_mutate_results() {
         let handle = arena_create(); let generation = arena_generation(handle);
         let pointer = resize_intrinsic_main(handle, generation, 1);
@@ -819,12 +877,15 @@ mod tests {
         unsafe { std::slice::from_raw_parts_mut(pointer, INTRINSIC_MAIN_STRIDE).copy_from_slice(&intrinsic_record(80.,0.,INTRINSIC_NONE as f64,0.,INTRINSIC_NONE as f64)); }
         assert_eq!(resolve_intrinsic_main(handle,generation,160.,160.,f64::NAN,f64::NAN,INTRINSIC_EXACT,0.),0);
         assert_eq!(intrinsic_main_result(handle,generation),160.);
+        assert_eq!(intrinsic_main_contribution(handle,generation),160.);
         assert_eq!(resolve_intrinsic_main(handle,generation,160.,160.,f64::NAN,f64::NAN,INTRINSIC_EXACT,1.),1);
         assert!(intrinsic_main_result(handle,generation).is_nan());
+        assert!(intrinsic_main_contribution(handle,generation).is_nan());
         assert_eq!(arena_dispose(handle,generation),0);
         assert_eq!(resize_intrinsic_main(handle,generation,1),std::ptr::null_mut());
         assert_eq!(resolve_intrinsic_main(handle,generation,160.,160.,f64::NAN,f64::NAN,INTRINSIC_EXACT,0.),1);
         assert!(intrinsic_main_result(handle,generation).is_nan());
+        assert!(intrinsic_main_contribution(handle,generation).is_nan());
     }
 
     #[test] fn partial_free_space_uses_initially_frozen_sizes() {

@@ -31,6 +31,9 @@ try {
   assert.ok(initial.nestedQueries.length >= 2 && initial.nestedQueries.length % 2 === 0 && initial.nestedQueries.every((value, index) => value === (index % 2 ? 80 : 40)));
   assert.deepEqual(await pixel(187, 480), red);
   assert.deepEqual(await pixel(189, 480), [243, 240, 232, 255]);
+  assert.ok(initial.contributionQueries.length >= 2 && initial.contributionQueries.every((value, index) => value === (index % 2 ? 30 : 40)));
+  assert.deepEqual(await pixel(475, 480), [243, 240, 232, 255]);
+  assert.deepEqual(await pixel(485, 480), [53, 95, 150, 255]);
   assert.deepEqual(await pixel(57, 210), red); assert.deepEqual(await pixel(59, 210), green);
   assert.deepEqual((await click(57, 210)).hits, ['A']);
   assert.deepEqual((await click(59, 210)).hits, ['A', 'B']);
@@ -38,6 +41,8 @@ try {
   assert.deepEqual(await pixel(57, 210), red); assert.deepEqual(await pixel(59, 210), green);
   assert.deepEqual((await click(59, 210)).hits, ['A', 'B', 'B']);
   const naturalSmall = await click(300, 138); assert.equal(naturalSmall.natural, 20);
+  assert.deepEqual(await pixel(465, 480), [53, 95, 150, 255]);
+  assert.deepEqual(await pixel(485, 480), [243, 240, 232, 255]);
   assert.deepEqual(await pixel(47, 210), red); assert.deepEqual(await pixel(49, 210), green);
   const naturalRestored = await click(300, 138); assert.equal(naturalRestored.natural, 80);
   assert.ok(naturalRestored.queries.length && naturalRestored.queries.every(value => value === 40));
@@ -54,6 +59,9 @@ try {
   assert.equal(percentage.queries.at(-1), 37.5);
   assert.deepEqual(await pixel(56, 210), red); assert.deepEqual(await pixel(59, 210), green);
   assert.equal(percentage.layout.nodeCreates, initial.layout.nodeCreates);
+  const following = await click(485, 480);
+  assert.deepEqual(following.hits, [...percentage.hits, 'next']);
+  assert.deepEqual((await click(475, 480)).hits, following.hits);
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
   const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);

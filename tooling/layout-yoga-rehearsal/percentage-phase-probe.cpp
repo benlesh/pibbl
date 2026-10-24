@@ -199,6 +199,50 @@ void runUndefinedOwnPercentOwner(bool column, int profile) {
   YGNodeFreeRecursive(owner); YGConfigFree(config);
 }
 
+// Same-axis owner contribution cases expose the line phase consumed by a
+// following outer sibling. The outer is exact-main 200; C is source-order
+// after the automatic owner, so its start is the observable contribution.
+struct ContributionCall { float w; YGMeasureMode wm; float h; YGMeasureMode hm; };
+static ContributionCall contributionCalls[4];
+static int contributionCallCount;
+YGSize measureContributionLeaf(YGNodeConstRef, float w, YGMeasureMode wm, float h, YGMeasureMode hm) {
+  contributionCalls[contributionCallCount++] = { w, wm, h, hm };
+  return currentColumn ? YGSize{20, 80} : YGSize{80, 20};
+}
+void runSameAxisContribution(bool column, bool percentMax) {
+  currentColumn = column; currentNaturalMain = 80; contributionCallCount = 0;
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto outer = YGNodeNewWithConfig(config), owner = YGNodeNewWithConfig(config);
+  auto leaf = YGNodeNewWithConfig(config), b = YGNodeNewWithConfig(config), c = YGNodeNewWithConfig(config);
+  const auto direction = column ? YGFlexDirectionColumn : YGFlexDirectionRow;
+  YGNodeStyleSetFlexDirection(outer, direction); YGNodeStyleSetAlignItems(outer, YGAlignFlexStart);
+  setMain(outer, column, 200); setCross(outer, column, 20);
+  configureOwnPercentChildren(owner, leaf, b, column);
+  YGNodeSetMeasureFunc(leaf, measureContributionLeaf);
+  if (column) YGNodeStyleSetMinHeight(owner, 100); else YGNodeStyleSetMinWidth(owner, 100);
+  if (percentMax) setMaxPct(owner, column, 75); else if (column) YGNodeStyleSetMaxHeight(owner, 160); else YGNodeStyleSetMaxWidth(owner, 160);
+  YGNodeStyleSetFlexGrow(c, 0); YGNodeStyleSetFlexShrink(c, 0);
+  setMain(c, column, 20); setBasis(c, column, 20); setCross(c, column, 20);
+  if (column) YGNodeStyleSetMinHeight(c, 0); else YGNodeStyleSetMinWidth(c, 0);
+  YGNodeInsertChild(outer, owner, 0); YGNodeInsertChild(outer, c, 1);
+  YGNodeCalculateLayout(outer, column ? 20 : 200, column ? 200 : 20, YGDirectionLTR);
+  const float ownerMain = column ? YGNodeLayoutGetHeight(owner) : YGNodeLayoutGetWidth(owner);
+  const float leafMain = column ? YGNodeLayoutGetHeight(leaf) : YGNodeLayoutGetWidth(leaf);
+  const float siblingMain = column ? YGNodeLayoutGetHeight(b) : YGNodeLayoutGetWidth(b);
+  const float cStart = column ? YGNodeLayoutGetTop(c) : YGNodeLayoutGetLeft(c);
+  std::printf("same-axis-contribution axis=%s profile=%s outer=%.17g owner=%.17g leaf=%.17g b=%.17g cStart=%.17g calls=%d",
+    column ? "column" : "row", percentMax ? "min100-max75percent" : "min100-max160", column ? YGNodeLayoutGetHeight(outer) : YGNodeLayoutGetWidth(outer), ownerMain, leafMain, siblingMain, cStart, contributionCallCount);
+  for (int index = 0; index < contributionCallCount; index++) {
+    const auto& call = contributionCalls[index];
+    std::printf(" query%d={main:%.17g,%s,cross:%.17g,%s}", index,
+      column ? call.h : call.w, mode(column ? call.hm : call.wm),
+      column ? call.w : call.h, mode(column ? call.wm : call.hm));
+  }
+  std::puts("");
+  YGNodeFreeRecursive(outer); YGConfigFree(config);
+}
+
 void run(bool column, Owner owner, bool floor, bool measured, float supplied = YGUndefined, float naturalMain = 80) {
   currentColumn = column; currentNaturalMain = naturalMain;
   auto config=YGConfigNew(); YGConfigSetUseWebDefaults(config,false); YGConfigSetPointScaleFactor(config,0); YGConfigSetErrata(config,YGErrataNone);
@@ -248,5 +292,7 @@ int main() {
       runOppositeAxisOwnPercentOwner(column, profile);
       runUndefinedOwnPercentOwner(column, profile);
     }
+    runSameAxisContribution(column, false);
+    runSameAxisContribution(column, true);
   }
 }

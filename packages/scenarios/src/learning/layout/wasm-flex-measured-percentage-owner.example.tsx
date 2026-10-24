@@ -29,6 +29,13 @@ const MeasuredOverflowRow = defineLayoutComponent((props: { readonly natural: Si
   </Flex>,
 );
 
+const MeasuredContributionRow = defineLayoutComponent((props: { readonly natural: Signal<number>; readonly record: (maximum: number) => void; readonly hitA: () => void; readonly hitB: () => void }) =>
+  <Flex style={{ width: "auto", height: 20, minWidth: 100, minHeight: 0, maxWidth: 160, flexGrow: 0, flexShrink: 0, flexDirection: "row", alignItems: "flex-start" }}>
+    <MeasuredChip natural={props.natural} record={props.record} hit={props.hitA} style={{ width: "auto", height: 20, minWidth: 0, maxWidth: "25%", flexGrow: 0, flexShrink: 0 }} />
+    <Rectangle onClick={props.hitB} style={{ width: 80, height: 20, flexBasis: 80, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: "#426b61" }} />
+  </Flex>,
+);
+
 /** A measured natural main size participates in two native percentage stages. */
 export function WasmFlexMeasuredPercentageOwnerExample() {
   const read = (globalThis as typeof globalThis & { __PIBBL_LAYOUT_DIAGNOSTICS__?: () => Record<string, number> }).__PIBBL_LAYOUT_DIAGNOSTICS__;
@@ -36,15 +43,15 @@ export function WasmFlexMeasuredPercentageOwnerExample() {
   const canvas = useCanvasContext().canvas as HTMLCanvasElement;
   const maximum = useSignal<number | Percentage>(160);
   const owner = useSignal(200), natural = useSignal(80), nestedNatural = useSignal(40), hits = useSignal<readonly string[]>([]);
-  const queries = useConst<number[]>(() => []), nestedQueries = useConst<number[]>(() => []), panel = useConst(() => document.createElement("pre"));
+  const queries = useConst<number[]>(() => []), nestedQueries = useConst<number[]>(() => []), contributionQueries = useConst<number[]>(() => []), panel = useConst(() => document.createElement("pre"));
   useReaction(() => {
     panel.style.cssText = "font:12px monospace;white-space:pre-wrap;max-height:160px;overflow:auto;flex-shrink:0;padding:12px;background:#e7e5df;color:#19375b";
     canvas.insertAdjacentElement("afterend", panel);
-    const refresh = () => { panel.textContent = JSON.stringify({ externalOwner: owner.get(), maximum: maximum.get(), natural: natural.get(), queries, nestedQueries, hits: hits.get(), layout: read(), note: "The provider returns natural width; its query limit comes from the owner's declared limit. Native placement retains the distinct later line reference." }, null, 2); };
+    const refresh = () => { panel.textContent = JSON.stringify({ externalOwner: owner.get(), maximum: maximum.get(), natural: natural.get(), queries, nestedQueries, contributionQueries, hits: hits.get(), layout: read(), note: "The provider returns natural width; its query limit comes from the owner's declared limit. Native placement retains the distinct later line reference." }, null, 2); };
     refresh(); const timer = window.setInterval(refresh, 100);
     return () => { window.clearInterval(timer); panel.remove(); };
   }, [canvas, panel]);
-  const current = owner.get(), currentMaximum = maximum.get();
+  const current = owner.get(), currentMaximum = maximum.get(), currentNatural = natural.get();
   return <>
     <Rectangle style={{ width: 760, height: 540, fill: "#f3f0e8" }} />
     <Text style={{ left: 28, top: 24, font: "bold 24px sans-serif", fill: "#19375b" }}>WASM · measured leaves and percentage stages</Text>
@@ -62,9 +69,14 @@ export function WasmFlexMeasuredPercentageOwnerExample() {
       <MeasuredPercentageRow key="row" maximum={currentMaximum} natural={natural} record={maximum => { queries.push(maximum); if (queries.length > 16) queries.shift(); }} hitA={() => hits.update(values => [...values, "A"])} hitB={() => hits.update(values => [...values, "B"])} style={{ width: "auto", height: 40, minWidth: 0, minHeight: 0, maxWidth: currentMaximum, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }} />
     </Flex>
     <Text pointerEvents="none" style={{ left: 28, top: 330, width: 690, wrap: true, font: "16px sans-serif", fill: "#19375b" }}>At limit160/natural80: A30 / row110 for external200 or160; A20 / row100 for external80. Natural20 produces A20 / row100. At limit75%/external200: A29.375 / row109.375, queried at37.5.</Text>
-    <Text pointerEvents="none" style={{ left: 28, top: 420, width: 690, wrap: true, font: "14px sans-serif", fill: "#475569" }}>Below: 40 px available → 80 px inner owner → 160 px red leaf. The 200% minimum uses two finite native passes; the inspector records query limits 40, then 80.</Text>
+    <Text pointerEvents="none" style={{ left: 28, top: 414, width: 300, wrap: true, font: "12px sans-serif", fill: "#475569" }}>40 px available → 80 px inner owner → 160 px red leaf. The inspector records two native query limits: 40, then 80.</Text>
+    <Text pointerEvents="none" style={{ left: 360, top: 414, width: 370, wrap: true, font: "12px sans-serif", fill: "#475569" }}>Main contribution: {currentNatural === 80 ? 120 : 100} px; full size query: {currentNatural === 80 ? 110 : 100} px. The leaf queries 40 then {currentNatural === 80 ? 30 : 25}. Blue follows at {currentNatural === 80 ? 120 : 100}, leaving a {currentNatural === 80 ? 10 : 0} px gap after green.</Text>
     <Flex style={{ left: 28, top: 472, width: 40, height: 20, flexDirection: "row", alignItems: "flex-start" }}>
       <MeasuredOverflowRow key="overflow" natural={nestedNatural} record={maximum => { nestedQueries.push(maximum); if (nestedQueries.length > 16) nestedQueries.shift(); }} hit={() => hits.update(values => [...values, "overflow"])} />
+    </Flex>
+    <Flex style={{ left: 360, top: 472, width: 200, height: 20, flexDirection: "row", alignItems: "flex-start" }}>
+      <MeasuredContributionRow key="contribution" natural={natural} record={maximum => { contributionQueries.push(maximum); if (contributionQueries.length > 16) contributionQueries.shift(); }} hitA={() => hits.update(values => [...values, "contribution-A"])} hitB={() => hits.update(values => [...values, "contribution-B"])} />
+      <Rectangle key="next" onClick={() => hits.update(values => [...values, "next"])} style={{ width: 20, height: 20, flexBasis: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: "#355f96", cursor: "pointer" }} />
     </Flex>
   </>;
 }

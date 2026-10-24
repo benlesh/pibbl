@@ -17,9 +17,9 @@ for (const source of sources)
 const sourceHash = hash.digest("hex");
 const destination = new URL("src/lib/layout/wasm/bytes.ts", root);
 const requiredLayoutAbiExports = [
-  ['layout_abi_v8', 'function'],
+  ['layout_abi_v9', 'function'],
   ['prepare_intrinsic_main_queries', 'function'],
-  ['resize_intrinsic_main', 'function'], ['resolve_intrinsic_main', 'function'], ['intrinsic_main_result', 'function'],
+  ['resize_intrinsic_main', 'function'], ['resolve_intrinsic_main', 'function'], ['intrinsic_main_result', 'function'], ['intrinsic_main_contribution', 'function'],
   ['place_first_baseline', 'function'], ['resize_main_auto', 'function'], ['place_main_auto', 'function'], ['place_wrap_main_auto', 'function'],
   ['memory', 'memory'], ['solve', 'function'], ['dispose', 'function'],
   ['resize_flow', 'function'], ['place_flow', 'function'],

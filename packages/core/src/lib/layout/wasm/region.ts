@@ -59,6 +59,7 @@ interface Kernel {
   prepare_intrinsic_main_queries(handle: number, generation: number, externalOwner: number, initialAvailable: number, rootMin: number, rootMax: number, mode: number, gap: number): number;
   resolve_intrinsic_main(handle: number, generation: number, externalOwner: number, initialAvailable: number, rootMin: number, rootMax: number, mode: number, gap: number): number;
   intrinsic_main_result(handle: number, generation: number): number;
+  intrinsic_main_contribution(handle: number, generation: number): number;
   dispose(): void;
 }
 const rootOwners = new WeakMap<PibblInstance, RootLayoutOwner>();
@@ -160,6 +161,8 @@ export interface NumericIntrinsicMainQuery {
 }
 export interface NumericIntrinsicMainResult {
   readonly main: number;
+  /** Native root-bound line contribution for a same-axis parent continuation. */
+  readonly contributionMain: number;
   readonly targets: readonly number[];
   readonly effectiveMins: readonly number[];
   readonly effectiveMaxes: readonly number[];
@@ -268,7 +271,10 @@ export function resolveTransientIntrinsicMain(items: readonly NumericIntrinsicMa
     );
     intrinsicStatus(status, 'resolution');
     const main = owner.kernel.intrinsic_main_result(handle, generation);
-    if (!Number.isFinite(main) || main < 0) throw new Error('Experimental staged intrinsic Flex query produced an invalid owner size.');
+    const contributionMain = owner.kernel.intrinsic_main_contribution(handle, generation);
+    if (!Number.isFinite(main) || main < 0 || !Number.isFinite(contributionMain) || contributionMain < 0) {
+      throw new Error('Experimental staged intrinsic Flex query produced invalid native owner phases.');
+    }
     // Native may grow its memory while resolving. Copy all outputs before release.
     const output = new Float64Array(owner.kernel.memory.buffer, pointer, items.length * 10);
     const targets = new Array<number>(items.length);
@@ -284,7 +290,7 @@ export function resolveTransientIntrinsicMain(items: readonly NumericIntrinsicMa
       targets[index] = target; effectiveMins[index] = minimum; effectiveMaxes[index] = maximum;
     }
     counters.solves++; counters.measurementSolves++;
-    return { main, targets, effectiveMins, effectiveMaxes };
+    return { main, contributionMain, targets, effectiveMins, effectiveMaxes };
   } catch (error) {
     if (error instanceof WebAssembly.RuntimeError) owner.dispose(true);
     throw error;

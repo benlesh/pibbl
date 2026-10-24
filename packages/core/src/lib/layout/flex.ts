@@ -323,6 +323,12 @@ export const Flex = definePrimitive<
 // A known Absolute sibling boundary resolves these receiver inputs before any
 // sibling's opaque component executes. Geometry still solves in normal traversal.
 let allocatedIntrinsicMain: { receiver: object; main: number; rootMin?: number; rootMax?: number } | undefined;
+
+// A known Flex contributes its native adjusted line size while its parent is
+// measuring the same main axis. The scope is receiver-bound and only exists
+// through the immediate child measurement; ordinary public queries retain the
+// resolved outer size.
+let requestedIntrinsicContribution: { receiver: object; axis: 'row' | 'column' } | undefined;
 if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, content, receiver, slot, parentMainAxis) => {
   const options = normalizeFlexOptions(style as Readonly<FlexStyle>, content);
   const releaseLayout = pushLayoutBox(content, options);
@@ -678,11 +684,18 @@ function measureFlex(
       // the shared pure context. Its finite cross size makes this descent acyclic.
       const measuredChild = clonePibblElement(layoutChild);
       setPreNormalizedStyle(measuredChild, style, layoutChild, layoutReceiverToken, preparedStyleQuery(prepared));
-      const result = input.measureElement(measuredChild, row ? {
-        minWidth: 0, maxWidth: input.constraints.maxWidth, minHeight: crossValue, maxHeight: crossValue,
-      } : {
-        minWidth: crossValue, maxWidth: crossValue, minHeight: 0, maxHeight: input.constraints.maxHeight,
-      });
+      const previousContribution = requestedIntrinsicContribution;
+      requestedIntrinsicContribution = { receiver: layoutReceiverToken, axis: row ? 'row' : 'column' };
+      let result: MeasureResult;
+      try {
+        result = input.measureElement(measuredChild, row ? {
+          minWidth: 0, maxWidth: input.constraints.maxWidth, minHeight: crossValue, maxHeight: crossValue,
+        } : {
+          minWidth: crossValue, maxWidth: crossValue, minHeight: 0, maxHeight: input.constraints.maxHeight,
+        });
+      } finally {
+        requestedIntrinsicContribution = previousContribution;
+      }
       if (result.status !== 'measured') return result;
       baseMain = row ? result.size.width : result.size.height;
       baseCross = crossValue;
@@ -920,15 +933,23 @@ function measureStagedNonexactMain(
   }
   const resolved = resolveTransientIntrinsicMain(items, intrinsicQuery);
   const receiver = GLOBAL_STATE.primitiveReceiverToken;
+  const axis = row ? 'row' : 'column';
+  // A same-axis known Flex is contributing to a parent's intrinsic line. Its
+  // parent needs the adjusted native contribution, while standalone queries
+  // deliberately continue to report the full resolved size.
+  const contribution = allocated === undefined && requestedIntrinsicContribution !== undefined && requestedIntrinsicContribution.receiver === receiver &&
+    requestedIntrinsicContribution.axis === axis;
+  const stagedMain = allocated?.main ?? (contribution ? resolved.contributionMain : resolved.main);
   stagePreparedIntrinsicMain(receiver, {
-    elements: children, axis: row ? 'row' : 'column', style: input.style, rootMin, rootMax, contentMain: resolved.main,
+    elements: children, axis, style: input.style, rootMin, rootMax, contentMain: stagedMain,
     revision: allocationInputRevision(),
     items: resolved.targets.map((target, sourceIndex) => ({
       sourceIndex, target, min: resolved.effectiveMins[sourceIndex], max: resolved.effectiveMaxes[sourceIndex],
       measured: items[sourceIndex].measured,
     })),
   });
-  return { status: 'measured', size: row ? { width: resolved.main, height: cross } : { width: cross, height: resolved.main } };
+  const reportedMain = contribution ? resolved.contributionMain : resolved.main;
+  return { status: 'measured', size: row ? { width: reportedMain, height: cross } : { width: cross, height: reportedMain } };
 }
 
 /** Own bounds use the caller reference, never the eventual auto-owner size. */
@@ -1368,7 +1389,12 @@ function resolveFlexPlacements(
         receiverToken,
         preparedStyleQuery(prepared),
       );
-      const result = measureFlexChild(measurementChild, constraints, normalized, layoutToken ?? receiverToken, measurement, region, preparedStyleQuery(prepared), (experimentalLayout && row && options.flexWrap === 'nowrap') || measuredColumnProvider);
+      const result = measureFlexChild(
+        measurementChild, constraints, normalized, layoutToken ?? receiverToken, measurement, region,
+        preparedStyleQuery(prepared),
+        (experimentalLayout && row && options.flexWrap === 'nowrap') || measuredColumnProvider,
+        needsMeasuredMain ? (row ? 'row' : 'column') : undefined,
+      );
       if (result.status === 'measured') {
         measured = result.size;
       } else if (measuredFlexCrossAuto || needsMeasuredMain || (crossAuto && effectiveAlignment(
@@ -2031,7 +2057,28 @@ function measureFlexChild(
   child: PibblElement<any>, constraints: Constraints,
   style: Readonly<BoxStyle & Record<string, unknown>>, token: object,
   measurement: FlexMeasurementInput, region?: LayoutRegion, query?: PreparedQuery, constrainedProvider = false,
+  parentMainAxis?: 'row' | 'column',
 ): MeasureResult {
+  const measuredRoot = !query && isLayoutComponent(child.type) && (constrainedProvider || parentMainAxis !== undefined) ?
+    prepareLayoutComponent(child) : child;
+  // `style` is the direct-placement normalized style, including the described
+  // Flex root's forwarded values. Do not reread authored component props here:
+  // signals or callbacks there would describe a different phase.
+  const rootAxis = style.flexDirection === 'column' || style.flexDirection === 'column-reverse' ? 'column' : 'row';
+  const contributionReceiver = parentMainAxis !== undefined && measuredRoot.type === Flex && rootAxis === parentMainAxis ?
+    getPrimitiveReceiverToken(measuredRoot) : undefined;
+  // The prepared-row cache is a normal final-size result. A same-axis
+  // contribution has a distinct native result contract and must bypass it.
+  if (contributionReceiver) {
+    const previousContribution = requestedIntrinsicContribution;
+    requestedIntrinsicContribution = { receiver: contributionReceiver, axis: parentMainAxis! };
+    try {
+      if (region) recordWasmMeasurement();
+      return measurement.measureElement(child, constraints);
+    } finally {
+      requestedIntrinsicContribution = previousContribution;
+    }
+  }
   // A direct paired primitive keeps the original descriptor as the receiver
   // boundary. A described row uses the same parent-region entry, but only after a
   // conservative structural snapshot has established fresh direct-child receiver
@@ -2047,7 +2094,6 @@ function measureFlexChild(
       }, prepared.snapshot, prepared.receivers);
     }
   }
-  const measuredRoot = constrainedProvider && !query && isLayoutComponent(child.type) ? prepareLayoutComponent(child) : child;
   const definition = constrainedProvider && !query ? getPrimitiveDefinition(measuredRoot.type) : undefined;
   if (definition?.measureIntrinsic && definition.measure) return measureConstrainedIntrinsicElement(child, constraints, measurement.service, region ? { cache: region, token, key: JSON.stringify([allocationInputRevision(), measurementStyle(style), constraints]), recordMeasurement: recordWasmMeasurement } : undefined);
   const content = region && child.type === Text ? prepareLayoutTextContent(

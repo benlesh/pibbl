@@ -1935,8 +1935,8 @@
       "id": "flex.min-max",
       "target": "parity",
       "group": "flex-core",
-      "current": "numeric bounds, definite-owner percentage main-axis caps/floors and wrapped stretched cross bounds in row/column, including owner resize; an acyclic exact caller width/height supplies an omitted LTR nowrap row/column main reference for direct percentage bounds; bounded undecorated zero-factor numeric Rectangle owners use native staged percentage references for max-only, min-only and unbounded measurement; direct childless paired custom leaves use released native query preparation and constrained natural-result continuation; broader intrinsic profiles retain explicit admission boundaries; bounded direct nested row Flex cross minimum resolves from a definite wrapped outer owner; decorated border-box row-reverse/wrap nested cross minima use the final content owner; described known owners cover the same staged numeric/paired matrix, with finite native exact continuation through deeper and branching same-axis known Flex trees; receiving-owner percentage min/max resolve once against the original external reference, remain unresolved under unbounded availability and retain scalar bounds through allocated continuation",
-      "status": "partial",
+      "current": "numeric bounds, definite-owner percentage main-axis caps/floors and wrapped stretched cross bounds in row/column, including owner resize; an acyclic exact caller width/height supplies an omitted LTR nowrap row/column main reference for direct percentage bounds; bounded undecorated zero-factor numeric Rectangle owners use native staged percentage references for max-only, min-only and unbounded measurement; direct childless paired custom leaves use released native query preparation and constrained natural-result continuation; broader intrinsic profiles retain explicit admission boundaries; bounded direct nested row Flex cross minimum resolves from a definite wrapped outer owner; decorated border-box row-reverse/wrap nested cross minima use the final content owner; described known owners cover the same staged numeric/paired matrix, with finite native exact continuation through deeper and branching same-axis known Flex trees; receiving-owner percentage min/max resolve once against the original external reference, remain unresolved under unbounded availability and retain scalar bounds through allocated continuation; native parent-main contribution is distinct from final intrinsic content, with receiver-scoped roles and exact allocated remeasurement",
+      "status": "complete",
       "evidenceRefs": [
         "packages/core/src/lib/layout/flex.test.ts",
         "tooling/layout-yoga-rehearsal/reference.json",
@@ -1957,10 +1957,12 @@
         "packages/scenarios/src/learning/layout/wasm-flex-intrinsic-primitive.example.tsx",
         "tooling/test-wasm-intrinsic-primitive.mjs",
         "packages/core/test/layout-measured-leaf-composition.test.tsx",
-        "packages/core/test/layout-percent-owner-bound.test.tsx"
+        "packages/core/test/layout-percent-owner-bound.test.tsx",
+        "packages/core/test/layout-main-contribution.test.tsx"
       ],
       "evidence": {
         "positive": [
+          "Same-axis capped numeric and percentage known owners allocate native contributions120 and117.5, requery paired leaves at30 and29.375, preserve full queries110 and109.375, and move the following target with exact teardown",
           "cap",
           "shrink",
           "definite percentage grow caps and shrink floors in both axes",
@@ -2039,9 +2041,7 @@
           "decorated-main-cap-column-reverse",
           "decorated-main-cap-column-reverse-resized"
         ],
-        "missing": [
-          "same-axis capped known owner main contribution differs from final content size: outer200, own min100/max160, natural80 leaf max25% and B80 must allocate owner120/leaf30 (queries40 then30), while pure full query stays110; own max75% must allocate117.5/29.375 (queries37.5 then29.375) in both axes"
-        ]
+        "missing": []
       }
     },
     {
