@@ -173,3 +173,123 @@ for (const axis of ['row', 'column'] as const) for (const fixture of [
     }
   });
 }
+
+for (const axis of ['row', 'column'] as const) for (const branches of [1, 2]) it.runIf(experimentalLayout)(`continues finite native owner phases through two known ${axis} descriptors with ${branches} branches`, async () => {
+  const row = axis === 'row', baseline = snapshotWasmLayoutDiagnostics();
+  const queries: number[] = [], widths: number[] = [];
+  const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>((_props, style) => {
+    const box = useLayoutBox(); widths.push(row ? box.width : box.height);
+    return <Rectangle style={{ width: style.width, height: style.height, fill: '#b63d3d' }} />;
+  }, {
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: 'measured', minContent: { width: 0, height: 0 }, maxContent: row ? { width: 40, height: 20 } : { width: 20, height: 40 } }),
+    measure: ({ constraints }) => { queries.push(row ? constraints.maxWidth : constraints.maxHeight); return { status: 'measured', size: row ? { width: 40, height: 20 } : { width: 20, height: 40 } }; },
+  });
+  const ownerStyle: FlexStyle = { width: row ? 'auto' : 20, height: row ? 20 : 'auto', minWidth: 0, minHeight: 0, flexDirection: axis, alignItems: 'flex-start', flexGrow: 0, flexShrink: 0 };
+  const Inner = defineLayoutComponent(() => <Flex style={ownerStyle}><Leaf style={{ width: row ? 'auto' : 20, height: row ? 20 : 'auto', minWidth: row ? '200%' : 0, minHeight: row ? 0 : '200%', flexGrow: 0, flexShrink: 0 }} /></Flex>);
+  const Middle = defineLayoutComponent(() => <Flex style={ownerStyle}>{branches === 1 ? <Inner key="inner" /> : [<Inner key="A" />, <Inner key="B" />]}</Flex>);
+  const root = <Flex style={{ width: row ? 'auto' : 20, height: row ? 20 : 'auto', flexDirection: axis, alignItems: 'flex-start' }}><Middle key="middle" /></Flex>;
+  expect(measureElement(root, { minWidth: row ? 0 : 20, maxWidth: row ? Infinity : 20, minHeight: row ? 20 : 0, maxHeight: row ? 20 : Infinity }, { measureText: () => { throw new Error('No text.'); } }))
+    .toEqual({ status: 'measured', size: row ? { width: branches * 40, height: 20 } : { width: 20, height: branches * 40 } });
+  expect(queries).toEqual(branches === 1 ? [Infinity] : [Infinity, Infinity]); queries.length = 0;
+  const canvas = document.createElement('canvas'); canvas.width = row ? 100 : 20; canvas.height = row ? 20 : 100; document.body.append(canvas);
+  const controller = pibbl(canvas, root); controllers.push(controller); await frame();
+  expect({ widths, queries }).toEqual(branches === 1 ? { widths: [800], queries: [100, 200, 400] } : { widths: [1600, 1600], queries: [100, 100, 400, 400, 800, 800] });
+  controller.dispose();
+  const after = snapshotWasmLayoutDiagnostics();
+  expect([after.activeNodes, after.activeArenas, after.cachedMeasurements, after.activeWasmInstances]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+  ]);
+});
+
+const stagedKnownOwnerCases = [
+  { name: 'max-only, no external reference', min: undefined, max: 160, available: Infinity, numericCap: 120, numericFloor: 160, pairedCap: 110, pairedFloor: 160, capQuery: 40, floorQuery: 160 },
+  { name: 'max-only, external80', min: undefined, max: 160, available: 80, numericCap: 100, numericFloor: 160, pairedCap: 100, pairedFloor: 160, capQuery: 40, floorQuery: 160 },
+  { name: 'max-only, external160', min: undefined, max: 160, available: 160, numericCap: 110, numericFloor: 160, pairedCap: 110, pairedFloor: 160, capQuery: 40, floorQuery: 160 },
+  { name: 'max-only, external200', min: undefined, max: 160, available: 200, numericCap: 112.5, numericFloor: 160, pairedCap: 110, pairedFloor: 160, capQuery: 40, floorQuery: 160 },
+  { name: 'unbounded', min: undefined, max: undefined, available: Infinity, numericCap: 120, numericFloor: 100, pairedCap: 120, pairedFloor: 100, capQuery: Infinity, floorQuery: Infinity },
+  { name: 'min-only', min: 160, max: undefined, available: Infinity, numericCap: 160, numericFloor: 160, pairedCap: 160, pairedFloor: 160, capQuery: Infinity, floorQuery: Infinity },
+  { name: 'min-and-max', min: 160, max: 160, available: Infinity, numericCap: 160, numericFloor: 160, pairedCap: 160, pairedFloor: 160, capQuery: 40, floorQuery: 160 },
+] as const;
+
+for (const axis of ['row', 'column'] as const) for (const owner of stagedKnownOwnerCases) for (const bound of ['cap', 'floor'] as const) for (const kind of ['numeric', 'paired'] as const) {
+  it.runIf(experimentalLayout)(`measures a described ${kind} ${axis} Card through the staged ${bound} owner branch: ${owner.name}`, () => {
+    const row = axis === 'row';
+    const natural = bound === 'cap' ? 80 : 20;
+    const queries: number[] = [];
+    const before = snapshotWasmLayoutDiagnostics();
+    const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>(() => null, {
+      resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+      measureIntrinsic: () => ({ status: 'measured' as const, minContent: { width: 0, height: 0 }, maxContent: row ? { width: natural, height: 20 } : { width: 20, height: natural } }),
+      measure: ({ constraints }) => {
+        queries.push(row ? constraints.maxWidth : constraints.maxHeight);
+        expect(row ? [constraints.minHeight, constraints.maxHeight] : [constraints.minWidth, constraints.maxWidth]).toEqual([20, 20]);
+        return { status: 'measured' as const, size: row ? { width: natural, height: 20 } : { width: 20, height: natural } };
+      },
+    });
+    const cardStyle: FlexStyle = {
+      width: row ? 'auto' : 20, height: row ? 20 : 'auto',
+      minWidth: row ? owner.min : undefined, maxWidth: row ? owner.max : undefined,
+      minHeight: row ? undefined : owner.min, maxHeight: row ? undefined : owner.max,
+      flexDirection: axis, flexWrap: 'nowrap', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0,
+    };
+    const child = kind === 'numeric' ?
+      <Rectangle key="A" style={{ width: row ? natural : 20, height: row ? 20 : natural, flexBasis: natural, flexGrow: 0, flexShrink: 0, minWidth: row ? (bound === 'floor' ? '50%' : 0) : undefined, maxWidth: row && bound === 'cap' ? '25%' : undefined, minHeight: row ? undefined : (bound === 'floor' ? '50%' : 0), maxHeight: !row && bound === 'cap' ? '25%' : undefined, fill: '#b63d3d' }} /> :
+      <Leaf key="A" style={{ width: row ? 'auto' : 20, height: row ? 20 : 'auto', flexGrow: 0, flexShrink: 0, minWidth: row ? (bound === 'floor' ? '50%' : 0) : undefined, maxWidth: row && bound === 'cap' ? '25%' : undefined, minHeight: row ? undefined : (bound === 'floor' ? '50%' : 0), maxHeight: !row && bound === 'cap' ? '25%' : undefined }} />;
+    const Card = defineLayoutComponent((props: { readonly style: FlexStyle }) => <Flex style={props.style}>
+      {child}
+      <Rectangle key="B" style={{ width: row ? 80 : 20, height: row ? 20 : 80, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: '#426b61' }} />
+    </Flex>);
+    const result = measureElement(<Card style={cardStyle} />, {
+      minWidth: row ? 0 : 20, maxWidth: row ? owner.available : 20,
+      minHeight: row ? 20 : 0, maxHeight: row ? 20 : owner.available,
+    }, { measureText: () => { throw new Error('Known numeric Cards do not shape text.'); } });
+    const main = kind === 'numeric' ? owner[bound === 'cap' ? 'numericCap' : 'numericFloor'] : owner[bound === 'cap' ? 'pairedCap' : 'pairedFloor'];
+    expect(result).toEqual({ status: 'measured', size: row ? { width: main, height: 20 } : { width: 20, height: main } });
+    expect(queries).toEqual(kind === 'paired' ? [owner[bound === 'cap' ? 'capQuery' : 'floorQuery']] : []);
+    const after = snapshotWasmLayoutDiagnostics();
+    expect([after.activeNodes, after.activeArenas, after.cachedMeasurements, after.activeWasmInstances]).toEqual([before.activeNodes, before.activeArenas, before.cachedMeasurements, before.activeWasmInstances]);
+  });
+}
+
+for (const axis of ['row', 'column'] as const) for (const owner of stagedKnownOwnerCases.slice(1, 4)) for (const bound of ['cap', 'floor'] as const) for (const kind of ['numeric', 'paired'] as const) {
+  it.runIf(experimentalLayout)(`places a described ${kind} ${axis} Card with staged ${bound} bounds under external${owner.available}`, async () => {
+    const row = axis === 'row';
+    const natural = bound === 'cap' ? 80 : 20;
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const hits: string[] = [], queries: number[] = [], allocated: number[] = [];
+    const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>((_props, style) => {
+      const box = useLayoutBox(); allocated.push(row ? box.width : box.height);
+      return <Rectangle onClick={() => hits.push('A')} style={{ width: style.width, height: style.height, fill: '#b63d3d' }} />;
+    }, {
+      resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+      measureIntrinsic: () => ({ status: 'measured' as const, minContent: { width: 0, height: 0 }, maxContent: row ? { width: natural, height: 20 } : { width: 20, height: natural } }),
+      measure: ({ constraints }) => { queries.push(row ? constraints.maxWidth : constraints.maxHeight); return { status: 'measured' as const, size: row ? { width: natural, height: 20 } : { width: 20, height: natural } }; },
+    });
+    const cardStyle: FlexStyle = { width: row ? 'auto' : 20, height: row ? 20 : 'auto', minWidth: 0, minHeight: 0, maxWidth: row ? 160 : undefined, maxHeight: row ? undefined : 160, flexDirection: axis, flexWrap: 'nowrap', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0 };
+    const child = kind === 'numeric' ?
+      <Rectangle key="A" onClick={() => hits.push('A')} style={{ width: row ? natural : 20, height: row ? 20 : natural, flexBasis: natural, flexGrow: 0, flexShrink: 0, minWidth: row ? (bound === 'floor' ? '50%' : 0) : undefined, maxWidth: row && bound === 'cap' ? '25%' : undefined, minHeight: row ? undefined : (bound === 'floor' ? '50%' : 0), maxHeight: !row && bound === 'cap' ? '25%' : undefined, fill: '#b63d3d' }} /> :
+      <Leaf key="A" style={{ width: row ? 'auto' : 20, height: row ? 20 : 'auto', flexGrow: 0, flexShrink: 0, minWidth: row ? (bound === 'floor' ? '50%' : 0) : undefined, maxWidth: row && bound === 'cap' ? '25%' : undefined, minHeight: row ? undefined : (bound === 'floor' ? '50%' : 0), maxHeight: !row && bound === 'cap' ? '25%' : undefined }} />;
+    const Card = defineLayoutComponent(() => <Flex style={cardStyle}>{child}<Rectangle key="B" onClick={() => hits.push('B')} style={{ width: row ? 80 : 20, height: row ? 20 : 80, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: '#426b61' }} /></Flex>);
+    const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 240; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: row ? owner.available : 100, height: row ? 100 : owner.available, flexDirection: row ? 'column' : 'row', alignItems: 'flex-start' }}><Card /></Flex>);
+    controllers.push(controller); await frame();
+    const main = kind === 'numeric' ? owner[bound === 'cap' ? 'numericCap' : 'numericFloor'] : owner[bound === 'cap' ? 'pairedCap' : 'pairedFloor'];
+    // The root max160 can cap the owner below its children's 180px sum.
+    // External200 retains its earlier 50%=100 floor; it is not erased by max160.
+    const a = bound === 'floor' ? owner.available === 200 ? 100 : 80 : main - 80;
+    const context = canvas.getContext('2d')!;
+    const pixel = (offset: number) => [...context.getImageData(row ? offset : 10, row ? 10 : offset, 1, 1).data];
+    if (kind === 'paired') expect(allocated).toEqual([a]);
+    expect(pixel(Math.max(0, Math.floor(a) - 1))).toEqual([182, 61, 61, 255]);
+    expect(pixel(Math.ceil(a) + 1)).toEqual([66, 107, 97, 255]);
+    const bounds = canvas.getBoundingClientRect();
+    const clickAt = (mainOffset: number) => { const x = bounds.left + (row ? mainOffset : 10), y = bounds.top + (row ? 10 : mainOffset); for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: x, clientY: y })); };
+    clickAt(Math.max(0, Math.floor(a) - 1)); clickAt(Math.ceil(a) + 1);
+    expect(hits).toEqual(['A', 'B']);
+    expect(queries).toEqual(kind === 'paired' ? [owner[bound === 'cap' ? 'capQuery' : 'floorQuery']] : []);
+    controller.dispose();
+    const after = snapshotWasmLayoutDiagnostics();
+    expect([after.activeNodes, after.activeArenas, after.cachedMeasurements, after.activeWasmInstances]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances]);
+  });
+}

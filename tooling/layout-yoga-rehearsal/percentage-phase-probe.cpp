@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include <initializer_list>
+#include <cstdint>
 
 namespace {
 bool currentColumn = false;
@@ -76,6 +77,71 @@ void runNestedKnownPercentOwner(bool column, const char* owner, float availableM
   YGConfigFree(config);
 }
 
+struct KnownOwnerCall { int leaf; float w; YGMeasureMode wm; float h; YGMeasureMode hm; };
+static KnownOwnerCall knownOwnerCalls[16];
+static int knownOwnerCallCount;
+YGSize measureKnownOwnerLeaf(YGNodeConstRef node, float w, YGMeasureMode wm, float h, YGMeasureMode hm) {
+  const auto leaf = static_cast<int>(reinterpret_cast<intptr_t>(YGNodeGetContext(node)));
+  knownOwnerCalls[knownOwnerCallCount++] = { leaf, w, wm, h, hm };
+  return currentColumn ? YGSize{20, 40} : YGSize{40, 20};
+}
+void configureKnownOwner(YGNodeRef node, bool column) {
+  YGNodeStyleSetFlexDirection(node, column ? YGFlexDirectionColumn : YGFlexDirectionRow);
+  YGNodeStyleSetAlignItems(node, YGAlignFlexStart);
+  YGNodeStyleSetFlexGrow(node, 0);
+  YGNodeStyleSetFlexShrink(node, 0);
+  setCross(node, column, 20);
+}
+// `branches=1` is outer -> middle -> inner -> leaf. `branches=2` replaces the
+// last inner owner with two source-order siblings. This remains a probe only;
+// it has no reference.json or public-paint parity implication.
+void runKnownOwnerTree(bool column, int branches, const char* availability, float available) {
+  currentColumn = column;
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false);
+  YGConfigSetPointScaleFactor(config, 0);
+  YGConfigSetErrata(config, YGErrataNone);
+  auto outer = YGNodeNewWithConfig(config);
+  auto middle = YGNodeNewWithConfig(config);
+  YGNodeRef inners[2] = {nullptr, nullptr};
+  YGNodeRef leaves[2] = {nullptr, nullptr};
+  configureKnownOwner(outer, column);
+  configureKnownOwner(middle, column);
+  for (int index = 0; index < branches; index++) {
+    inners[index] = YGNodeNewWithConfig(config);
+    leaves[index] = YGNodeNewWithConfig(config);
+    configureKnownOwner(inners[index], column);
+    YGNodeStyleSetFlexGrow(leaves[index], 0);
+    YGNodeStyleSetFlexShrink(leaves[index], 0);
+    setCross(leaves[index], column, 20);
+    setMinPct(leaves[index], column, 200);
+    YGNodeSetContext(leaves[index], reinterpret_cast<void*>(static_cast<intptr_t>(index)));
+    YGNodeSetMeasureFunc(leaves[index], measureKnownOwnerLeaf);
+    YGNodeInsertChild(inners[index], leaves[index], 0);
+    YGNodeInsertChild(middle, inners[index], index);
+  }
+  YGNodeInsertChild(outer, middle, 0);
+  knownOwnerCallCount = 0;
+  YGNodeCalculateLayout(outer, column ? YGUndefined : available, column ? available : YGUndefined, YGDirectionLTR);
+  std::printf("known-owner-tree axis=%s branches=%d availability=%s main={outer:%.17g,middle:%.17g",
+    column ? "column" : "row", branches, availability,
+    column ? YGNodeLayoutGetHeight(outer) : YGNodeLayoutGetWidth(outer),
+    column ? YGNodeLayoutGetHeight(middle) : YGNodeLayoutGetWidth(middle));
+  for (int index = 0; index < branches; index++) {
+    const float inner = column ? YGNodeLayoutGetHeight(inners[index]) : YGNodeLayoutGetWidth(inners[index]);
+    const float leaf = column ? YGNodeLayoutGetHeight(leaves[index]) : YGNodeLayoutGetWidth(leaves[index]);
+    std::printf(",inner%d:%.17g,leaf%d:%.17g", index, inner, index, leaf);
+  }
+  std::printf("} calls=%d\n", knownOwnerCallCount);
+  for (int index = 0; index < knownOwnerCallCount; index++) {
+    const auto& call = knownOwnerCalls[index];
+    std::printf("  known-owner-query[%d]=leaf%d{width:%.17g,%s,height:%.17g,%s}\n", index,
+      call.leaf, call.w, mode(call.wm), call.h, mode(call.hm));
+  }
+  YGNodeFreeRecursive(outer);
+  YGConfigFree(config);
+}
+
 void run(bool column, Owner owner, bool floor, bool measured, float supplied = YGUndefined, float naturalMain = 80) {
   currentColumn = column; currentNaturalMain = naturalMain;
   auto config=YGConfigNew(); YGConfigSetUseWebDefaults(config,false); YGConfigSetPointScaleFactor(config,0); YGConfigSetErrata(config,YGErrataNone);
@@ -116,5 +182,10 @@ int main() {
     runNestedKnownPercentOwner(column, "finite-40", 40);
     runNestedKnownPercentOwner(column, "finite-100", 100);
     runNestedKnownPercentOwner(column, "finite-200", 200);
+    // Undefined descendant geometry is native-only; public pure queries return root size.
+    for (int branches = 1; branches <= 2; branches++) {
+      runKnownOwnerTree(column, branches, "undefined", YGUndefined);
+      runKnownOwnerTree(column, branches, "finite-100", 100);
+    }
   }
 }

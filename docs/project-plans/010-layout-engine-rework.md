@@ -20,10 +20,11 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice168 `de3945c1` (described measured-owner composition and
-native allocated-owner continuation; separate commit). Slice167 is `91470858`; slice166
-is `fcc06741`. Next is169: finish the indefinite-owner/measured-owner closure
-audit against the complete accepted matrix, preserving all remaining targets.
+Latest delivery is slice169 (known-owner matrix and structural phase evidence).
+Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
+Consolidation56 is `2fd34f0e` for166–168. Next is170: percentage own-owner min/max
+references under nonexact availability. Numeric own-owner and known composition
+matrix evidence is complete; the min/max percentage-own-bound cell remains open.
 Consolidation55 is `98bf8b8d` for163–165.
 Slice165 is `cc334a0a` (empty-Rectangle aspect automatic minimum).
 Slice164 is `ff72e0ab` (wrapped-leaf aggregate measurement reuse).
@@ -5877,7 +5878,7 @@ No unchanged broad release checks were repeated. Kernel ABI8/75199bytes and
 721corpus remain unchanged; no aggregate trust or release-gate closure claim.
 The fixed33 counts remain9complete/12experimental/6partial/5missing/1excluded.
 
-## [NEXT] Slice169: min/max owner-policy matrix closure audit
+## Slice169 delivered: known-owner matrix and finite structural phase audit
 
 Reconcile each clause of166's accepted matrix with actual query, normal layout,
 ownership and failure evidence. The bounded nested same-axis result closes its
@@ -5886,6 +5887,53 @@ Retain the opaque size-only distinction; identify unresolved percentage dimensio
 or basis references and recursive descriptor cases explicitly. Do not promote
 `flex.min-max` while the indefinite-owner/measured-owner missing row still has
 an unevidenced accepted branch. Consolidation56 for166–168 is recorded below as a separate evidence commit.
+
+Delivered2026-10-23 as evidence hardening; no production change. The accepted
+numeric/paired known-owner matrix now has56public queries (row/column × seven
+owner states × cap/floor × numeric/paired), plus24finite normal-layout cases at
+external80/160/200. Paired allocation is asserted before pixels; adjacent solid
+pixels avoid fractional antialias edges, targets cross the same semantic boundary,
+and every mounted case explicitly disposes to the resource baseline. A fixture
+initially subtracted the fixed80 sibling from root160 for the external200 floor;
+that inference was wrong. Native retains the earlier100 floor, so A100+B80
+overflows a root capped at160. The corrected fixture preserves that behavior.
+
+| Original166 exit                                           | Evidence/result                                                                                                                                                                                                            |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Exact caller main                                          | Existing exact row/column public paths retained.                                                                                                                                                                           |
+| Own numeric max/min/min+max; finite or undefined reference | 166/167 direct matrix and169known-Card query matrix.                                                                                                                                                                       |
+| Known descriptions and paired composition                  | 169finite normal-layout matrix;168opaque content-size semantics remain separate.                                                                                                                                           |
+| Recursive known owners                                     | Both axes: finite100 single chain100/200/400/800 and two branches100/400/800/1600, with native callback envelopes. Undefined pure queries return root40/80 and one unbounded callback per leaf; no descendant paint claim. |
+| Invalid/opposing bounds, cycles and providers              | 157/166/167validation plus168allocated-phase failure/remount and shared descriptor-cycle detection.                                                                                                                        |
+| Input/lifecycle                                            | 166reorder/removal/live bound;167provider-only signal and targets;168known-chain signal, stable nodes, failure/remount and disposal.                                                                                       |
+
+Fresh Node24.15/Chromium:91composition tests pass; the combined166–169 owner
+lane passes156tests across3files,2.38s. Types/lint pass. The tracked pinned
+percentage-phase probe preserves168's original cases and adds deeper/branching
+known trees; source SHA256
+`02ee98865c880b770980f216f2f4f6265e27e47d4aa644ce0ba4be39c73c1605`.
+No new source/built/installed implementation was introduced;168's corresponding
+receipts remain applicable. ABI8/75199bytes and721corpus are unchanged.
+
+The original target is full numeric/percentage min/max with supported intrinsic
+rules, not just numeric bounds on the receiving owner. A concrete remaining
+cell uses own max-main75% on the auto owner, external200, natural80 leaf capped
+at25%, and a fixed80 sibling. Pinned Yoga gives root109.375/A29.375/B80 and a
+leaf query maximum37.5; undefined external gives120/40/80 and an unbounded query.
+The current public path rejects this because the staged receiver's own bounds
+must be numeric. This is a real remaining unit/reference branch, not a new
+exclusion or a generic recursive-policy placeholder. `flex.min-max` remains
+partial; its missing row now names this counterexample. Other intrinsic size,
+percentage dimension/basis and tree capabilities keep their original targets.
+
+## [NEXT] Slice170: native percentage own-owner bounds
+
+Establish the public row/column percentage-own-maximum counterexample before
+production code. Resolve the receiving owner's percentage min/max against its
+actual external reference, preserving undefined references and the distinct
+initial/later/final native phases. Reuse the current numeric native operation,
+prepared receiver handoff and release-before-callback ownership. No implicit
+size-query association, fixed point, new public selector or parallel solver.
 
 ## Scope and execution
 

@@ -1390,6 +1390,15 @@ signal changes rerun both finite phases without replacing native nodes. A failur
 in the allocated phase releases transaction-owned resources; an explicit remount
 can recover.
 
+The same preparation composes through deeper and branching known descriptions.
+With outer100, a second known owner produces middle200/inner400/leaf800 and
+provider maxima100,200,400. Two source-order inner siblings produce middle400,
+each inner800 and leaf1600, with each provider receiving100,400,800. The native
+undefined records have different descendant extents; public pure measurement
+checks only the root content size40/80 and one unbounded query per leaf. Those
+records do not claim undefined-availability mounted paint parity. Existing cycle
+checks and receiver-owned failure/removal/disposal rules still apply.
+
 An opaque primitive's recursive `measureElement(card, ...)` returns content size
 only. Its eventual rendered Card is a normally allocated subtree, not the receiver
 that owned a speculative size query. For a direct described max160 Card with
