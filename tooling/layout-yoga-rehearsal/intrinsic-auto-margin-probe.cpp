@@ -178,6 +178,34 @@ void runColumnProvider(float natural) {
     natural, YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(a), YGNodeLayoutGetTop(a), YGNodeLayoutGetWidth(a), YGNodeLayoutGetHeight(a), YGNodeLayoutGetLeft(b), YGNodeLayoutGetTop(b), YGNodeLayoutGetWidth(b), YGNodeLayoutGetHeight(b), columnProviderCall.count, columnProviderCall.width, measureMode(columnProviderCall.widthMode), columnProviderCall.height, measureMode(columnProviderCall.heightMode));
   YGNodeFreeRecursive(root); YGConfigFree(config);
 }
+// Synthetic wrapped generic Text for the proposed Pibbl column profile.
+// This is a geometric callback provenance probe, not a font-parity claim.
+struct ColumnTextCall { int count = 0; float width = 0; float height = 0; YGMeasureMode widthMode = YGMeasureModeUndefined; YGMeasureMode heightMode = YGMeasureModeUndefined; } columnTextCall;
+float columnTextAdvance = 60;
+bool columnTextLongWord = false;
+YGSize measureColumnText(YGNodeConstRef, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+  columnTextCall = {columnTextCall.count + 1, width, height, widthMode, heightMode};
+  const float used = !columnTextLongWord && widthMode == YGMeasureModeAtMost ? (columnTextAdvance < width ? columnTextAdvance : width) : columnTextAdvance;
+  return { used, 40 };
+}
+const char* textMarginName(int profile) { return profile == 0 ? "none" : profile == 1 ? "left-auto" : "both-auto"; }
+void runColumnText(float ownerWidth, float advance, int marginProfile, bool longWord) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config); auto text = YGNodeNewWithConfig(config); auto b = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, YGFlexDirectionColumn); YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+  YGNodeStyleSetWidth(root, ownerWidth); YGNodeStyleSetHeight(root, 120);
+  YGNodeStyleSetHeight(text, 40); YGNodeStyleSetFlexBasisAuto(text); YGNodeStyleSetFlexGrow(text, 0); YGNodeStyleSetFlexShrink(text, 0);
+  YGNodeStyleSetMinWidth(text, 0); YGNodeStyleSetMinHeight(text, 0);
+  if (marginProfile >= 1) YGNodeStyleSetMarginAuto(text, YGEdgeLeft); if (marginProfile == 2) YGNodeStyleSetMarginAuto(text, YGEdgeRight);
+  YGNodeSetMeasureFunc(text, measureColumnText);
+  YGNodeStyleSetWidth(b, 20); YGNodeStyleSetHeight(b, 80); YGNodeStyleSetFlexBasis(b, 80); YGNodeStyleSetFlexGrow(b, 0); YGNodeStyleSetFlexShrink(b, 0); YGNodeStyleSetMinWidth(b, 0); YGNodeStyleSetMinHeight(b, 0);
+  columnTextAdvance = advance; columnTextLongWord = longWord; columnTextCall = {};
+  YGNodeInsertChild(root, text, 0); YGNodeInsertChild(root, b, 1); YGNodeCalculateLayout(root, ownerWidth, 120, YGDirectionLTR);
+  std::printf("intrinsic-auto-column-text owner=%.17g advance=%.17g margin=%s longWord=%s root={width:%.17g,height:%.17g} Text={left:%.17g,top:%.17g,width:%.17g,height:%.17g} B={left:%.17g,top:%.17g,width:%.17g,height:%.17g} query={count:%d,width:%.17g,widthMode:%s,height:%.17g,heightMode:%s}\n", ownerWidth, advance, textMarginName(marginProfile), longWord ? "true" : "false", YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(text), YGNodeLayoutGetTop(text), YGNodeLayoutGetWidth(text), YGNodeLayoutGetHeight(text), YGNodeLayoutGetLeft(b), YGNodeLayoutGetTop(b), YGNodeLayoutGetWidth(b), YGNodeLayoutGetHeight(b), columnTextCall.count, columnTextCall.width, measureMode(columnTextCall.widthMode), columnTextCall.height, measureMode(columnTextCall.heightMode));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
+
 // A direct known row Flex with automatic width is a non-provider counterpart
 // to the paired provider column profile. Its children are fixed numeric leaves.
 void runKnownColumn(float firstWidth) {
@@ -222,4 +250,7 @@ int main() {
   for (bool column : { false, true }) for (auto direction : { YGDirectionLTR, YGDirectionRTL }) for (auto profile : { ShorthandProfile::AllAuto, ShorthandProfile::PhysicalLeft0, ShorthandProfile::LogicalStartAuto }) runShorthand(column, direction, profile);
   runColumnProvider(40); runColumnProvider(80); runColumnProvider(240);
   runKnownColumn(40); runKnownColumn(80); runKnownColumn(220);
+  runColumnText(200, 60, 0, false); runColumnText(200, 60, 1, false); runColumnText(200, 60, 2, false);
+  runColumnText(160, 60, 1, false); runColumnText(200, 260, 1, false); runColumnText(160, 260, 1, false);
+  runColumnText(200, 260, 1, true);
 }

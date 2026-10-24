@@ -116,6 +116,10 @@ try {
   await click(530, 290); await selected('column known A');
   if (process.env.PIBBL_LAYOUT_COLUMN_PROVIDER_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_COLUMN_PROVIDER_SCREENSHOT });
   await click(540, 434);
+  assert.match(await frame.locator('pre').innerText(), /column provider: wrappedText/);
+  // The dedicated column-auto-margin replay verifies the wrapped Text geometry.
+  // This established sequence only restores the original Text state.
+  await click(540, 434);
   assert.match(await frame.locator('pre').innerText(), /column provider: text/);
   if (process.env.PIBBL_LAYOUT_AUTO_MARGIN_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_AUTO_MARGIN_SCREENSHOT });
   const naturalWidth = await sandbox.evaluate(() => {

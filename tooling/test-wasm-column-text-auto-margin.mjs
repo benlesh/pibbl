@@ -58,12 +58,49 @@ try {
   await click(initial.x + 2, 284); assert.equal(await hits(), 1);
   await click(changed.x + 2, 284); assert.equal(await hits(), 2);
   await click(425, 305); assert.match(await frame.locator('pre').innerText(), /selected: column auto sibling/);
+  // Preserve the old five content states, then prove the sixth wrapped Text
+  // state before restoring the original Text state.
+  for (let step = 0; step < 4; step++) await click(500, 434);
+  const wrappedLongStart = await sandbox.evaluate(() => globalThis.__PIBBL_COLUMN_AUTO_DRAWS__.length);
+  await click(500, 434);
+  const wrappedLong = await sandbox.evaluate(start => globalThis.__PIBBL_COLUMN_AUTO_DRAWS__.slice(start), wrappedLongStart);
+  assert.ok(wrappedLong.length >= 2, `wrapped long text needs multiple glyph lines: ${JSON.stringify(wrappedLong)}`);
+  const wrappedLongPoints = await sandbox.evaluate((draws) => {
+    const context = document.querySelector('canvas').getContext('2d');
+    context.save(); context.font = '10px monospace';
+    const basis = JSON.parse(document.querySelector('pre').textContent.split('auto cross transform: ')[1]);
+    const inverse = new DOMMatrix([basis.a, basis.b, basis.c, basis.d, basis.e, basis.f]).inverse();
+    const points = draws.map(draw => inverse.transformPoint(draw.point));
+    context.restore();
+    return points.map(point => ({ x: point.x, y: point.y }));
+  }, wrappedLong);
+  assert.ok(wrappedLongPoints.every(point => Math.abs(point.x - 420) < 1e-9), `long run uses all available width: ${JSON.stringify(wrappedLongPoints)}`);
+  await click(422, 284); assert.equal(await hits(), 3);
+  const wrappedShortStart = await sandbox.evaluate(() => globalThis.__PIBBL_COLUMN_AUTO_DRAWS__.length);
+  await click(500, 394);
+  const wrappedShort = await sandbox.evaluate(start => globalThis.__PIBBL_COLUMN_AUTO_DRAWS__.slice(start), wrappedShortStart);
+  assert.equal(wrappedShort.length, 1, `short natural run stays on one line: ${JSON.stringify(wrappedShort)}`);
+  const wrappedShortPoint = await sandbox.evaluate((draw) => {
+    const context = document.querySelector('canvas').getContext('2d');
+    context.save(); context.font = '10px monospace';
+    const width = context.measureText(draw.text).width;
+    const basis = JSON.parse(document.querySelector('pre').textContent.split('auto cross transform: ')[1]);
+    const point = new DOMMatrix([basis.a, basis.b, basis.c, basis.d, basis.e, basis.f]).inverse().transformPoint(draw.point);
+    context.restore();
+    return { x: point.x, y: point.y, width };
+  }, wrappedShort[0]);
+  assert.ok(Math.abs(wrappedShortPoint.x - (600 - wrappedShortPoint.width)) < 1e-9, `short run keeps its automatic margin: ${JSON.stringify(wrappedShortPoint)}`);
+  await click(422, 284); assert.equal(await hits(), 3);
+  await click(wrappedShortPoint.x + 2, 284); assert.equal(await hits(), 4);
+  if (process.env.PIBBL_LAYOUT_WRAPPED_COLUMN_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_WRAPPED_COLUMN_SCREENSHOT });
+  await click(500, 434);
+  assert.match(await frame.locator('pre').innerText(), /column provider: text/);
   const beforePaint = await counters(); await click(250, 110); const painted = await counters();
-  // The adjacent natural-width row retains its existing automatic-minimum query.
-  // The isolated public column test proves zero new column measurements.
-  assert.equal(painted.measuredLeaves, beforePaint.measuredLeaves + 1);
+  // The adjacent natural-width row keeps its automatic-minimum query; the two
+  // intrinsic-owner strips each remeasure once. Isolated Text adds no measurement.
+  assert.equal(painted.measuredLeaves, beforePaint.measuredLeaves + 3);
   assert.equal(painted.solves, beforePaint.solves);
-  assert.equal(painted.nodeCreates, before.nodeCreates);
+  assert.equal(painted.nodeCreates, beforePaint.nodeCreates);
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if (built) { assert.equal(proof?.mode, 'layout-wasm-built'); assert.ok(proof.coreInputs.every(value => value.includes('packages/core/.layout-wasm-package/dist/'))); }
   const disposed = await sandbox.evaluate(() => { dispatchEvent(new PageTransitionEvent('pagehide')); return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__(); });

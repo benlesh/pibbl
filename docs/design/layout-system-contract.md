@@ -1811,8 +1811,9 @@ A direct generic unwrapped Text child in an experimental finite LTR nowrap
 column may use automatic width with an automatic side margin. This bounded
 contract requires declared finite numeric height, automatic basis, zero grow
 and shrink, explicit minHeight0, no maximum height or width bounds, no prepared
-query/aspect sizing, and visible/default fit and overflow. Reverse, RTL, wrapping,
-automatic main height, other providers and fitting modes retain their diagnostics.
+query/aspect sizing, and visible/default fit and overflow. Reverse, RTL, wrapped
+containers, automatic main height, other providers and fitting modes retain their
+diagnostics. Wrapped Text itself has the separate bounded profile below.
 
 The existing Text measurement receives unbounded width and exact declared height.
 Its natural Canvas ink width precedes cross-auto absorption; the margin suppresses
@@ -1822,6 +1823,44 @@ application descriptors reuse pure measurement and native solves on sibling pain
 no cache guard is weakened. The public Flex/Text lesson shows a right-aligned
 column label beside the existing row comparison. Canvas metrics define its
 width; there is no synthetic native font-parity claim or new public API.
+
+### Wrapped natural-width Text in finite columns
+
+Direct generic wrapped Text in a finite LTR nowrap column may have automatic
+width and a fixed finite nonnegative numeric height. It requires automatic basis,
+zero grow/shrink, minHeight0, omitted or neutral minWidth0, no other width/height
+bounds, no aspect/query, and visible/default fit and overflow. This is an allocated
+Flex policy; standalone public Text availability queries retain their existing
+width results.
+
+For non-stretch alignment or an effective cross-auto margin, Flex reads the
+existing receiver-owned natural advance run and chooses the smaller of that
+advance and nonnegative available content width after padding and resolved numeric
+cross margins. The existing Text provider then receives that exact chosen width
+and exact declared height. Natural advance rather than ink width avoids creating
+an extra wrap merely because glyph ink is narrower than its advance. Ordinary
+non-auto stretch retains its previous full-width path. Auto margins change final
+cross placement without changing the chosen natural width. Physical/logical
+percentage margins resolve through the existing definite-width normalizer first.
+
+A100width column wraps a114px run to two10px lines; expanding to140 uses one
+natural-width line. Numeric0 to auto then shifts the same run to the right.
+Content changes move glyph paint and targets together while the fixed-height
+following item retains its slot. Padding is subtracted before wrapping; a100box
+with20horizontal padding wraps an84px run at80. Stable descriptors reuse existing
+natural-maximum and constrained Text caches; failure and teardown rules are
+unchanged. Long unbroken words retain visible glyph overflow and can be targeted
+outside the capped owner: Text's word wrapping does not invent character breaks.
+
+The independent Yoga probe uses synthetic breakable callbacks for placement:
+natural60 in200 gives left-auto x140 or both-auto x70, and natural260 caps to200.
+Yoga requests at-most width/exact height; Pibbl selects a width then requests it
+exactly. A synthetic callback returning an unbroken260 despite at-most200 also
+records Yoga's260box, distinct from Pibbl's capped allocation with visible glyph
+overflow. These are explicit callback/box provenance differences, not a font or
+unconditional Text geometry parity claim. The public browser uses actual Canvas
+metrics. Reverse/RTL, wrapped column containers, both-auto dimensions, custom
+fonts and other independently unsupported measurement contexts remain separate.
 
 ### Experimental first-baseline primitive composition
 

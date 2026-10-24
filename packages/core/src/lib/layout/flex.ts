@@ -1214,6 +1214,18 @@ function resolveFlexPlacements(
       !preparedStyleQuery(prepared) && aspectRatio === undefined;
     const measuredAutoCross = measuredCrossContext && typeof declared.width === 'number' &&
       typeof normalized.width === 'number' && Number.isFinite(normalized.width) && normalized.width >= 0;
+    const columnNaturalWrappedTextCross = experimentalLayout && !row &&
+      options.flexDirection === 'column' && options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' &&
+      child.type === Text && (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      typeof declared.height === 'number' && typeof normalized.height === 'number' &&
+      Number.isFinite(normalized.height) && normalized.height >= 0 &&
+      (normalized.flexBasis === undefined || normalized.flexBasis === 'auto') &&
+      (normalized.flexGrow ?? 0) === 0 && normalized.flexShrink === 0 && normalized.minHeight === 0 &&
+      normalized.maxHeight === undefined && (normalized.minWidth === undefined || normalized.minWidth === 0) && normalized.maxWidth === undefined &&
+      normalized.wrap === true &&
+      (normalized.fit === undefined || normalized.fit === 'visible') &&
+      (normalized.overflow === undefined || normalized.overflow === 'visible') &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined && genericTextFont(normalized);
     const measuredColumnTextCross = hasAutoCrossMargin && experimentalLayout && !row &&
       options.flexDirection === 'column' && options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' &&
       child.type === Text && (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
@@ -1266,7 +1278,7 @@ function resolveFlexPlacements(
     const measuredFlexCrossAuto = measuredAutoCross && child.type === Flex &&
       (normalized.flexDirection ?? 'row') === 'row' && normalized.flexWrap === 'wrap' &&
       (normalized.layoutDirection ?? options.layoutDirection) === 'ltr';
-    if (hasAutoCrossMargin && !measuredTextCrossAuto && !measuredColumnTextCross && !measuredColumnProviderCross && !measuredColumnKnownCrossAuto && !measuredPrimitiveCrossAuto && !measuredFlexCrossAuto &&
+    if (hasAutoCrossMargin && !measuredTextCrossAuto && !measuredColumnTextCross && !columnNaturalWrappedTextCross && !measuredColumnProviderCross && !measuredColumnKnownCrossAuto && !measuredPrimitiveCrossAuto && !measuredFlexCrossAuto &&
         (typeof declaredCrossSize !== 'number' || !Number.isFinite(declaredCrossSize) || declaredCrossSize < 0 || aspectRatio !== undefined)) {
       throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child cross size without aspect sizing');
     }
@@ -1398,6 +1410,8 @@ function resolveFlexPlacements(
     const measuredColumnProvider = !!measuredColumnProviderDefinition?.measureIntrinsic &&
       !!measuredColumnProviderDefinition.measure;
     const alignment = normalizeItemAlignment(normalized.alignSelf, child, container, authoredWrapReverse);
+    const naturalColumnWrappedTextCross = columnNaturalWrappedTextCross &&
+      (hasAutoCrossMargin || effectiveAlignment(alignment, options.alignItems) !== 'stretch');
     if (experimentalLayout && !row && options.flexWrap !== 'nowrap' &&
       (needsMeasuredMain && !measuredColumnWrapText || aspectRatio === undefined && crossAuto && effectiveAlignment(alignment, options.alignItems) !== 'stretch')) {
       throw childDiagnostic(child, needsMeasuredMain ? mainProperty : crossProperty, 'auto', container,
@@ -1410,7 +1424,7 @@ function resolveFlexPlacements(
     const deferredIntrinsicColumn = aspectRatio === undefined && experimentalLayout && !row && knownIntrinsicLayout &&
       needsMeasuredMain && crossAuto && effectiveAlignment(alignment, options.alignItems) === 'stretch';
     if (intrinsicSizes) measured = intrinsicSizes.maxContent;
-    if (!intrinsicSizes && !deferredIntrinsicColumn && (needsMeasuredMain || aspectRatio === undefined && (needsMeasuredCross || crossAuto))) {
+    if (!intrinsicSizes && !deferredIntrinsicColumn && !naturalColumnWrappedTextCross && (needsMeasuredMain || aspectRatio === undefined && (needsMeasuredCross || crossAuto))) {
       const constraints = {
         minWidth: measuredColumnTextCross || measuredColumnProviderCross || measuredColumnKnownCrossAuto ? 0 : measuredColumnWrapText || measuredColumnProvider ? normalized.width as number : 0,
         maxWidth: measuredColumnTextCross || measuredColumnProviderCross || measuredColumnKnownCrossAuto ? Number.POSITIVE_INFINITY : measuredColumnWrapText || measuredColumnProvider ? normalized.width as number : container.width,
@@ -1503,6 +1517,30 @@ function resolveFlexPlacements(
       child,
       container,
     );
+    if (naturalColumnWrappedTextCross) {
+      const content = prepareLayoutTextContent(child.props, { receiverToken });
+      const font = normalized.font as string ?? '13px sans-serif';
+      const token = layoutToken ?? receiverToken;
+      let naturalWidth = region?.readTextMaximum(token, content, font);
+      if (naturalWidth === undefined) {
+        if (region) recordWasmMeasurement();
+        naturalWidth = measureLayoutTextNaturalRun(content, { font, service: measurement.service });
+        region?.writeTextMaximum(token, content, font, naturalWidth);
+      }
+      const chosenWidth = Math.min(naturalWidth, Math.max(0, crossSize - paddingCross - marginCrossBefore - marginCrossAfter));
+      const measuredStyle = { ...normalized, width: chosenWidth };
+      const measurementChild = clonePibblElement(child);
+      setPreNormalizedStyle(measurementChild, measuredStyle, child, receiverToken, preparedStyleQuery(prepared));
+      const result = measureFlexChild(measurementChild, {
+        minWidth: chosenWidth, maxWidth: chosenWidth,
+        minHeight: normalized.height as number, maxHeight: normalized.height as number,
+      }, measuredStyle, token, measurement, region, preparedStyleQuery(prepared));
+      if (result.status !== 'measured') {
+        throw childDiagnostic(child, 'width', 'auto', container,
+          `measurement is required but unsupported: ${result.reason}`);
+      }
+      measured = result.size;
+    }
     if (minMain > maxMain) {
       throw childDiagnostic(
         child,

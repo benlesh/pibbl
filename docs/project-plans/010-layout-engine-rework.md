@@ -20,8 +20,9 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice177 `2173ccfb` (native normal-owner phases and staged zero/auto margins).
-Consolidation59 below covers175–177; the next production slice is178.
+Latest delivery is slice178 (wrapped column Text natural cross sizing).
+Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
+Consolidation59 is `750fb588` for175–177; the next production slice is179.
 Slice176 is `3d4fcfee` (known-layout natural column widths).
 Slice175 is `6adf0e2b` (paired column natural width with side auto margins).
 Slice174 is `fabe4508` (uniform intrinsic auto-margin normalization).
@@ -30,7 +31,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is178: wrapped-column Text cross sizing.
+Consolidation56 is `2fd34f0e` for166–168. Next is179: wrapped-row Text natural basis and final-width cross sizing.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6364,14 +6365,63 @@ Concise divergences and separate column query receipts retain their own scope.
 No production/default migration, release trust, performance or whole-program
 completion claim is made. Whole-codebase review remains the final exit step.
 
-## [NEXT] Slice178: wrapped-column Text cross sizing before side-auto placement
+## Slice178 delivered: wrapped column Text natural cross sizing
 
-Define the smallest finite generic wrapped-Text column natural-width contract,
-using the existing pure Canvas measurement surface. Establish its semantic query,
-paint and moved-target contract before changing admission; distinguish available
-width from an exact final width and preserve overflow, fixed height and line
-metrics. Keep row-wrap natural basis and staged nonzero numeric margins visible
-as separate remaining cells. No new font cross-product or silent target exclusion.
+Delivered2026-10-24. The fixed-width wrapped-column case was already supported;
+a corrected public automatic-width/fixed-height case freshly failed its side-auto
+guard before production. Flex now composes the existing receiver-owned natural
+advance cache with an exact chosen-width/declared-height Text query. The chosen
+width is capped by finite content availability after padding and resolved margins.
+Standalone public Text availability queries and non-auto stretch stay unchanged.
+
+A100width column wraps the run into two10px lines;140fits one natural-width line
+at x0. Changing margin0toauto shifts the same width. Content updates move paint/
+hits without replacing native nodes; source focus order and exact teardown remain.
+A second public RED caught padding before the fix:20horizontal padding requires
+an80content width in100, yielding two lines instead of one. Matched physical and
+logical10% versus numeric10 margins, resize and long-word outside-owner targeting
+complete the focused seven-test check (five new, two existing). The changed-file/
+regression seven-file run passed510/9skip in82.02s before the three additional
+hardening cases, which then passed the final focused run in2.20s. The ordinary
+seven-file snapshot passed131/388skip in2.69s. Node24.15.0/Chromium; no aggregate
+trust claim. Permanent177regressions remain in the combined run.
+
+The pinned auto-margin probe preserves50records and appends7; SHA256
+`c24926ffb8953a7f7860e17fd4053cd809f7832777addb63fe87e0d8604ab85e`.
+Breakable synthetic natural60/260 gives x140/0 under200 and x100/0 under160;
+both-auto natural60 gives x70. Yoga's at-most callback and Pibbl's selected exact
+query are distinguished. The synthetic unbroken-word260 callback records a260
+Yoga box while Pibbl caps allocation and preserves visible glyph overflow; this
+is an explicit provenance difference, not font parity. Kernel/ABI10 unchanged.
+
+Source/built dedicated glyph/click proofs and the full existing Flex/Text replay
+pass with no browser errors and cleanup000. Built proof uses470inputs. The
+installed strict Bundler/NodeNext/no-alias246-input consumer passes wrapped Text
+resize, moved targets, paint measurement reuse, identity and exact teardown;
+tarball SHA256 `ae39226150edcf18c365adfadbba29ba64b11ef0abb768902dac71d1709f3477`.
+The sixth Column content mode is wrapped Text in
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-text`; click Compare auto margins,
+cycle Column content, then Change column text. Visual inspection confirms readable
+controls and aligned short versus wrapped long text. Review's percentage-margin
+question is closed by the existing definite-width resolver and matched public
+checks; no artificial rejection was added. Final types/lint, catalog174/12/33,
+Studio metadata/routes/search, public JSDoc and109documentation mutation probes
+pass; scoped review has no unresolved material finding.
+
+Fixed33stays10complete/12experimental/5partial/5missing/1excluded; auto-margin
+remains partial and all7gates stay open. Row-wrap natural Text basis, natural
+column directions/wrapping and staged nonzero numeric margin contributions stay
+explicit. Consolidation60 will cover178–180 before further capability production.
+
+## [NEXT] Slice179: wrapped-row Text natural basis before cross-auto placement
+
+Compose the existing natural-advance basis and longest-word floor with native
+wrap-line membership before shrink, without a re-line pass. Measure Text height
+at its settled native target width before line-cross sizing and auto absorption.
+Establish matched numeric0/auto public regressions first, owner resizing and
+longest-word overflow, plus synthetic numeric basis/minimum provenance; preserve
+Canvas metrics, identity, targets and exact teardown. No new API or font-parity
+claim. Keep remaining independent measurement cells visible.
 
 ## Scope and execution
 

@@ -5671,7 +5671,6 @@ it.runIf(experimentalLayout)('rejects unsupported column automatic-margin Text p
     marginLeft: 'auto', wrap: false, overflow: 'visible', font: '10px monospace',
   };
   const profiles: readonly [string, TextStyle & FlexItemStyle, { readonly layoutDirection?: 'rtl'; readonly flexWrap?: 'wrap' }][] = [
-    ['wrapped', { wrap: true }, {}],
     ['custom font', { font: '10px CustomFont' }, {}],
     ['cross maximum', { maxWidth: 80 }, {}],
     ['automatic main size', { height: 'auto' }, {}],
@@ -5737,5 +5736,168 @@ it.runIf(experimentalLayout)('uses a zero automatic main minimum for empty aspec
   const disposed = snapshotWasmLayoutDiagnostics();
   expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([
     baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+  ]);
+});
+
+it.runIf(experimentalLayout)('uses the smaller natural run or finite column cross width for wrapped Text before optional side-auto placement', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const words = signal('aaaa aaaa aaaa aaaa');
+  const sideMargin = signal<0 | 'auto'>(0);
+  const siblingInk = signal('#426b61');
+  const hits: string[] = [], focused: string[] = [];
+  const canvas = document.createElement('canvas'); canvas.width = 140; canvas.height = 80; document.body.append(canvas);
+  const context = canvas.getContext('2d')!;
+  context.font = '10px monospace';
+  const advance = (value: string) => context.measureText(value).width;
+  const initialAdvance = advance(words.get());
+  expect(initialAdvance).toBeGreaterThan(100);
+  expect(initialAdvance).toBeLessThan(140);
+  const service = { measureText(value: string, font: string) { context.font = font; return context.measureText(value); } };
+  const standalone = (value: string) => createElement(Text, {
+    children: value,
+    style: { width: 'auto', height: 40, minHeight: 0, flexGrow: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, overflow: 'visible', fit: 'visible' },
+  });
+  // Public Text measurement keeps its availability contract. Flex chooses and
+  // remeasures the smaller final cross width before placement.
+  expect(measureElement(standalone(words.get()), { minWidth: 0, maxWidth: 100, minHeight: 40, maxHeight: 40 }, service))
+    .toEqual({ status: 'measured', size: { width: 100, height: 40 } });
+  expect(measureElement(standalone(words.get()), { minWidth: 0, maxWidth: 140, minHeight: 40, maxHeight: 40 }, service))
+    .toEqual({ status: 'measured', size: { width: 140, height: 40 } });
+
+  const draws: Array<{ text: string; x: number; y: number }> = [];
+  const fillText = context.fillText;
+  vi.spyOn(context, 'fillText').mockImplementation(function(this: CanvasRenderingContext2D, text, x, y, maxWidth) {
+    if (text.includes('aaaa')) { const transform = this.getTransform(); draws.push({ text, x: transform.e + x, y: transform.f + y }); }
+    fillText.call(this, text, x, y, maxWidth);
+  });
+  const ownerWidth = signal(100);
+  function Scene() {
+    return <FocusManagement><Flex style={{ width: ownerWidth, height: 80, flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'flex-start' }}>
+      <Text key="text" keyboardFocusable onFocus={() => focused.push('text')} onClick={() => hits.push('text')} style={{ width: 'auto', height: 40, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: sideMargin, wrap: true, font: '10px monospace', lineHeight: 10, fill: '#19375b', cursor: 'pointer' }}>{words}</Text>
+      <Rectangle key="sibling" keyboardFocusable onFocus={() => focused.push('sibling')} onClick={() => hits.push('sibling')} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 20, flexGrow: 0, flexShrink: 0, fill: siblingInk, cursor: 'pointer' }} />
+    </Flex></FocusManagement>;
+  }
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  expect(draws.slice(-2).map(draw => draw.y)).toEqual([0, 10]);
+  expect(draws.slice(-2).every(draw => draw.x === 0)).toBe(true);
+  canvas.blur(); canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['text', 'sibling']);
+  clickCanvas(canvas, 4, 4); await nextFrame();
+  clickCanvas(canvas, 4, 45); await nextFrame();
+  expect(hits).toEqual(['text', 'sibling']);
+  const initial = snapshotWasmLayoutDiagnostics();
+
+  draws.length = 0; ownerWidth.set(140); await nextFrame();
+  expect(draws.slice(-1)).toEqual([{ text: words.get(), x: 0, y: 0 }]);
+  const widened = snapshotWasmLayoutDiagnostics();
+  expect(widened.measuredLeaves).toBeGreaterThan(initial.measuredLeaves);
+  expect(widened.nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, 120, 4); await nextFrame();
+  clickCanvas(canvas, 4, 4); await nextFrame();
+  expect(hits).toEqual(['text', 'sibling', 'text']);
+
+  draws.length = 0; sideMargin.set('auto'); await nextFrame();
+  const wideX = 140 - initialAdvance;
+  expect(draws.slice(-1)).toEqual([{ text: words.get(), x: wideX, y: 0 }]);
+  clickCanvas(canvas, 4, 4); await nextFrame();
+  clickCanvas(canvas, wideX + 2, 4); await nextFrame();
+  expect(hits).toEqual(['text', 'sibling', 'text', 'text']);
+
+  const short = 'aaaa aaaa';
+  const shortAdvance = advance(short);
+  draws.length = 0; words.set(short); await nextFrame();
+  const shortX = 140 - shortAdvance;
+  expect(draws.slice(-1)).toEqual([{ text: short, x: shortX, y: 0 }]);
+  clickCanvas(canvas, wideX + 2, 4); await nextFrame();
+  clickCanvas(canvas, shortX + 2, 4); await nextFrame();
+  expect(hits).toEqual(['text', 'sibling', 'text', 'text', 'text']);
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  siblingInk.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.measuredLeaves).toBe(beforePaint.measuredLeaves);
+  expect(painted.solves).toBe(beforePaint.solves);
+  expect(painted.nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+it.runIf(experimentalLayout)('wraps automatic column Text inside its padding before sharing side-auto space', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 80; document.body.append(canvas);
+  const context = canvas.getContext('2d')!;
+  const draws: string[] = [];
+  const fillText = context.fillText;
+  vi.spyOn(context, 'fillText').mockImplementation(function(this: CanvasRenderingContext2D, text, x, y, maxWidth) {
+    if (text.includes('aaaa')) draws.push(text);
+    fillText.call(this, text, x, y, maxWidth);
+  });
+  const controller = pibbl(canvas, <Flex style={{ width: 100, height: 80, flexDirection: 'column', alignItems: 'flex-start' }}>
+    <Text style={{ width: 'auto', height: 40, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: 'auto', padding: { left: 10, right: 10 }, wrap: true, font: '10px monospace', lineHeight: 10, fill: '#19375b' }}>aaaa aaaa aaaa</Text>
+  </Flex>);
+  controllers.push(controller); await nextFrame();
+  expect(draws).toEqual(['aaaa aaaa', 'aaaa']);
+  controller.dispose();
+});
+
+for (const logical of [false, true]) {
+  it.runIf(experimentalLayout)(`uses resolved ${logical ? 'logical' : 'physical'} percentage margins for wrapped column Text width`, async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const ownerWidth = signal(100), opposite = signal<number | '10%'>(10);
+    const canvas = document.createElement('canvas'); canvas.width = 140; canvas.height = 80; document.body.append(canvas);
+    const context = canvas.getContext('2d')!; context.font = '10px monospace';
+    const content = 'aaaa aaaa aaaa', advance = context.measureText(content).width;
+    const draws: Array<{ text: string; x: number }> = [];
+    const fillText = context.fillText;
+    vi.spyOn(context, 'fillText').mockImplementation(function(this: CanvasRenderingContext2D, text, x, y, maxWidth) {
+      if (text.includes('aaaa')) draws.push({ text, x: this.getTransform().e + x });
+      fillText.call(this, text, x, y, maxWidth);
+    });
+    const controller = pibbl(canvas, <Flex style={{ width: ownerWidth, height: 80, flexDirection: 'column', layoutDirection: 'ltr', alignItems: 'flex-start' }}>
+      <Text style={{ width: 'auto', height: 40, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: 'auto', ...(logical ? { marginEnd: opposite } : { marginRight: opposite }), wrap: true, font: '10px monospace', lineHeight: 10, fill: '#19375b' }}>{content}</Text>
+    </Flex>);
+    controllers.push(controller); await nextFrame();
+    expect(draws.at(-1)!.text).toBe(content);
+    expect(draws.at(-1)!.x).toBeCloseTo(100 - 10 - advance, 8);
+    const mounted = snapshotWasmLayoutDiagnostics();
+    opposite.set('10%'); await nextFrame();
+    expect(draws.at(-1)!.x).toBeCloseTo(100 - 10 - advance, 8);
+    draws.length = 0; ownerWidth.set(80); await nextFrame();
+    expect(draws.map(draw => draw.text)).toEqual(['aaaa aaaa', 'aaaa']);
+    expect(draws.every(draw => draw.x === 0)).toBe(true);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+      baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+    ]);
+  });
+}
+
+it.runIf(experimentalLayout)('preserves visible long-word paint and targeting beyond a capped wrapped column Text box', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 80; document.body.append(canvas);
+  let hits = 0;
+  const context = canvas.getContext('2d')!;
+  const draws: string[] = [];
+  const fillText = context.fillText;
+  vi.spyOn(context, 'fillText').mockImplementation(function(this: CanvasRenderingContext2D, text, x, y, maxWidth) {
+    if (text.startsWith('aaaa')) draws.push(text);
+    fillText.call(this, text, x, y, maxWidth);
+  });
+  const content = 'a'.repeat(30);
+  const controller = pibbl(canvas, <Flex style={{ width: 100, height: 80, flexDirection: 'column', alignItems: 'flex-start' }}>
+    <Text onClick={() => { hits++; }} style={{ width: 'auto', height: 40, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: 'auto', wrap: true, font: '10px monospace', lineHeight: 10, fill: '#19375b', cursor: 'pointer' }}>{content}</Text>
+  </Flex>);
+  controllers.push(controller); await nextFrame();
+  expect(draws).toEqual([content]);
+  clickCanvas(canvas, 150, 4); await nextFrame();
+  expect(hits).toBe(1);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
   ]);
 });
