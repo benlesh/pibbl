@@ -152,6 +152,21 @@ function createWasmFlexTextContent() {
   const frozenPanel = <Flex style={{ left: 28, top: 260, width, height: 200, gap: 20, alignItems: "flex-start" }}>{frozenChildren}</Flex>;
   const frozenPanelStyle = (frozenPanel.props as Readonly<{ style: object }>).style;
   Object.freeze(frozenPanelStyle); Object.freeze(frozenPanel.props); Object.freeze(frozenPanel);
+  const rowContent = signal<"wrappedText" | "unwrappedText" | "provider" | "known">("wrappedText");
+  const RowProvider = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { readonly width: number; readonly height: number }>((_props, style) =>
+    <Rectangle onClick={() => selected.set("auto cross provider")} style={{ width: style.width, height: style.height, fill: "#8a3248", cursor: "pointer" }} />, {
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: "measured", minContent: { width: 40, height: 20 }, maxContent: { width: 80, height: 20 } }),
+    measure: ({ constraints }) => ({ status: "measured", size: { width: constraints.maxWidth, height: constraints.maxWidth <= 40 ? 40 : 20 } }),
+  });
+  function RowSourceButton() {
+    const comparison = autoCrossProof.get();
+    return <Button x={372} y={144} label={comparison ? `Row: ${rowContent.get() === "wrappedText" ? "wrapped Text" : rowContent.get() === "unwrappedText" ? "one-line Text" : rowContent.get() === "provider" ? "provider" : "Flex"}` : "Switch source"} onClick={() => {
+      if (!comparison) { alternate.update(value => !value); return; }
+      const next = rowContent.get() === "wrappedText" ? "unwrappedText" : rowContent.get() === "unwrappedText" ? "provider" : rowContent.get() === "provider" ? "known" : "wrappedText";
+      rowContent.set(next); autoCrossWrap.set(next === "provider" || next === "known"); naturalRowWidth.set(false); autoTextGrow.set(false);
+    }} />;
+  }
   const columnWords = signal("jobs jobs jobs");
   const columnHits = signal(0);
   const columnProviderMode = signal<"text" | "wrappedText" | 40 | 80 | "known60" | "known100">("text");
@@ -273,24 +288,25 @@ function createWasmFlexTextContent() {
     const transform = useCanvasContext().getTransform();
     const wrapped = autoCrossWrap.get();
     const natural = naturalRowWidth.get();
+    const content = rowContent.get();
     const comparisonWidth = autoCrossWidth.get();
     const rowWidth = natural ? comparisonWidth === 140 ? 180 : 70 : wrapped ? 150 : comparisonWidth;
     const textWidth = comparisonWidth === 140 ? 80 : 40;
     autoCrossTransform = { a: transform.a, b: transform.b, c: transform.c, d: transform.d, e: transform.e, f: transform.f };
     return <>
       <Text pointerEvents="none" style={{ left: 28, top: 238, font: "12px sans-serif", fill: "#475569" }}>
-        {autoTextGrow.get() ? "Text flexes first; top auto uses its final height." : natural ? "Natural Text width; wrapping and top margins follow each line." : wrapped ? "Wrapped rows settle Text height before the automatic top margin is placed." : "Text starts at its natural width. Narrowing adds a line and reduces the top margin."}
+        {content === "known" ? "Flex content keeps its measured height; top auto uses the space in its line." : content === "provider" ? "The provider measures at its final width; top auto follows each line." : content === "unwrappedText" ? "One-line Text uses its measured ink height before top auto is placed." : autoTextGrow.get() ? "Text flexes first; top auto uses its final height." : natural ? "Natural Text width; wrapping and top margins follow each line." : wrapped ? "Wrapped rows settle Text height before the automatic top margin is placed." : "Text starts at its natural width. Narrowing adds a line and reduces the top margin."}
       </Text>
       <ColumnAutoComparison />
       <IntrinsicAutoMarginComparison />
       <Rectangle pointerEvents="none" style={{ left: 28, top: 258, width: rowWidth, height: wrapped ? 122 : 102, stroke: "#a63758", strokeWidth: 1 }} />
       <Flex style={{ left: 28, top: 260, width: rowWidth, height: wrapped ? 120 : 100, flexWrap: wrapped ? "wrap" : undefined, gap: wrapped ? 10 : undefined, alignItems: wrapped ? "flex-start" : undefined, alignContent: wrapped ? "flex-start" : undefined }}>
-        <Text
+        {content === "known" ? <Flex style={{ width: textWidth, height: "auto", minWidth: 0, minHeight: 0, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, marginTop: "auto", alignItems: "flex-start" }}><Rectangle onClick={() => selected.set("auto cross known")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: "#8a3248", cursor: "pointer" }} /></Flex> : content === "provider" ? <RowProvider style={{ width: textWidth, height: "auto", minWidth: 0, minHeight: 0, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, marginTop: "auto" }} /> : <Text
           onClick={() => { autoCrossHits.update(value => value + 1); selected.set("auto cross text"); }}
-          style={{ width: natural ? "auto" : wrapped ? textWidth : undefined, minWidth: natural ? undefined : wrapped ? 0 : undefined, flexGrow: autoTextGrow.get() ? 1 : undefined, flexShrink: natural ? 1 : wrapped ? 0 : undefined, wrap: true, font: "10px monospace", lineHeight: 10, marginTop: "auto", fill: "#19375b", cursor: "pointer" }}
+          style={{ width: content === "unwrappedText" ? textWidth : natural ? "auto" : wrapped ? textWidth : undefined, minWidth: content === "unwrappedText" ? 0 : natural ? undefined : wrapped ? 0 : undefined, flexGrow: autoTextGrow.get() ? 1 : undefined, flexShrink: content === "unwrappedText" ? 0 : natural ? 1 : wrapped ? 0 : undefined, wrap: content !== "unwrappedText", font: "10px monospace", lineHeight: 10, marginTop: "auto", fill: "#19375b", cursor: "pointer" }}
         >
           aaaa aaaa aaaa
-        </Text>
+        </Text>}
         <Rectangle
           onClick={() => selected.set("auto cross sibling")}
           style={{ width: natural ? 60 : wrapped ? 60 : 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }}
@@ -394,21 +410,7 @@ function createWasmFlexTextContent() {
       <Button x={420} y={60} width={280} label="Compare auto margins" onClick={() => autoCrossProof.update(value => !value)} />
       <ProofControls />
       <BasisButton />
-      {[
-        {
-          x: 372,
-          label: "Switch source",
-          click: () => alternate.update((value) => !value),
-        },
-      ].map((button) => (
-        <Button
-          key={button.label}
-          x={button.x}
-          y={144}
-          label={button.label}
-          onClick={button.click}
-        />
-      ))}
+      <RowSourceButton />
       <TextSizingControls />
       <InactiveWidthButton />
       {[
@@ -451,7 +453,7 @@ function createWasmFlexTextContent() {
   return {
     node,
     readInputs: () =>
-      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · natural row width: ${naturalRowWidth.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · text grow: ${autoTextGrow.get()} · column sizing: ${columnSizing.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · column direction: ${columnDirection.get()} · column reading: ${columnReadingDirection.get()} · column provider: ${columnProviderMode.get()} · intrinsic logical: ${intrinsicLogical.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
+      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · natural row width: ${naturalRowWidth.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · row content: ${rowContent.get()} · text grow: ${autoTextGrow.get()} · column sizing: ${columnSizing.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · column direction: ${columnDirection.get()} · column reading: ${columnReadingDirection.get()} · column provider: ${columnProviderMode.get()} · intrinsic logical: ${intrinsicLogical.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
   };
 }
 

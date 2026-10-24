@@ -119,6 +119,25 @@ try {
   await click(564,304); assert.match(await state(),/selected: column wrapped sibling/);
   await click(430,wrappedShort.at(-1).y+columnInkMiddle); assert.match(await state(),/selected: column wrapped sibling/);
   await click(wrappedShort.at(-1).x+8,wrappedShort.at(-1).y+columnInkMiddle); assert.match(await state(),/selected: column wrapped text/);
+  await clearDraws(); await click(450,160);
+  assert.match(await state(),/row content: unwrappedText/);
+  const oneLine=await draws('aaaa');assert.ok(oneLine.length && oneLine.every(draw=>draw.y>350&&draw.y<360));
+  const rowInkMiddle=await sandbox.evaluate(text=>{const context=document.querySelector('canvas').getContext('2d');context.save();context.font='10px monospace';context.textBaseline='top';const metric=context.measureText(text);context.restore();return(metric.actualBoundingBoxDescent-metric.actualBoundingBoxAscent)/2;},oneLine.at(-1).text);
+  await click(72,264);assert.match(await state(),/selected: auto cross sibling/);
+  await click(32,264);assert.match(await state(),/selected: auto cross sibling/);
+  await click(32,oneLine.at(-1).y+rowInkMiddle);assert.match(await state(),/selected: auto cross text/);
+  await click(450,160);assert.match(await state(),/row content: provider/);
+  await click(90,110); // Wide80 provider:20 high beside40 peer.
+  assert.deepEqual(await pixel(32,284),[138,50,72,255]);
+  await click(32,284);assert.match(await state(),/selected: auto cross provider/);
+  await click(90,110); // Narrow40 provider:40 high, same line top.
+  assert.deepEqual(await pixel(32,264),[138,50,72,255]);
+  await click(82,264);assert.match(await state(),/selected: auto cross sibling/);
+  await click(32,264);assert.match(await state(),/selected: auto cross provider/);
+  await click(450,160);assert.match(await state(),/row content: known/);
+  assert.deepEqual(await pixel(32,284),[138,50,72,255]);
+  await click(82,264);assert.match(await state(),/selected: auto cross sibling/);
+  await click(32,284);assert.match(await state(),/selected: auto cross known/);
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if (built) {
     assert.equal(proof.mode, 'layout-wasm-built');
@@ -131,5 +150,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements,disposed.activeWasmInstances],[0,0,0,0]);
   assert.deepEqual(errors, []);
-  console.warn(`${built ? 'Built' : 'Source'} shared Text auto sizing: growing row and width reflow, column basis/auto-height allocations, wrapped reverse/RTL short/long targets; cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
+  console.warn(`${built ? 'Built' : 'Source'} shared Text auto sizing: growing row and width reflow, column basis/auto-height allocations, wrapped reverse/RTL short/long targets, unwrapped row Text and wrapped provider/Flex targets; cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
 } finally { await browser.close(); }

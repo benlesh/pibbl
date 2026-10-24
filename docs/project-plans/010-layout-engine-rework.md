@@ -20,11 +20,12 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice183 (real settled-main measurement before auto-cross placement).
+Latest delivery is slice184 (shared row measurement before line-local auto-cross placement).
+Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 verifies181–183; next is184: two proven auto-only row measurement gaps.
+Consolidation61 is `8162fea2` for181–183; next is185: classify the remaining Text measurement envelope.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -37,7 +38,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is184: unwrapped row Text and wrapped-row paired providers.
+Consolidation56 is `2fd34f0e` for166–168. Next is185: one consistent Text cross-measurement contract.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6683,15 +6684,64 @@ nonzero numeric margins still fail zero and auto; their original prerequisites
 remain separately tracked. Fixed33 remains10complete/12experimental/5partial/
 5missing/1excluded, all7release gates open.
 
-## [NEXT] Slice184: the two remaining proven row measurement guards
+## Slice184 delivered: shared row measurement and finite guard receipt
 
-First record focused public failing tests for numeric-width unwrapped generic
-row Text and paired-provider automatic-height content in wrapped rows. Reuse the
-existing real settled-width query and native line-local cross placement. Assert
-matched zero/auto main geometry, final measured height, moved targets, identity,
-reuse and exact cleanup. Preserve independent main/intrinsic guards; no new
-query protocol or margin solver. Keep the original finite auto-margin exit open
-until this exact evidence is implemented and checked.
+Two focused public failures preceded production changes: unwrapped numeric-width
+row Text and paired providers in wrapped rows. A finite family audit found the
+same actual zero-mount/auto-reject condition on described Flex in wrapped rows;
+its failing test joined this same slice before that guard changed. All three use
+the existing settled-width measurement and native line-local placement. No API,
+ABI, extra solver, query ownership or scheduler was introduced.
+
+Node24.15.0/Chromium eight focused files pass85tests in3.41s;46prior cross-margin
+cases pass/382skip in2.91s. Ordinary Flex/measurement passes49/skip3 in2.20s.
+The unwrapped Text test compares real public Canvas measurement: its ink height
+is8.33984375 for this font/run, so top auto gives91.66015625, not the wrapped
+line-height assumption90. Paired and described Flex height20 move y0to20 beside
+a40px peer, then return y0when the peer splits at owner100. Public tests assert
+moved targets, native/hook identity, paint query/solve reuse and four-counter cleanup.
+Old unit rejection checks now assert supported geometry or exact independent
+missing-minimum/nonfinite-fake-font-metric diagnostics; no invalid size is accepted.
+
+Source/built Studio replay passes all three new Row modes and prior column,
+growth/reflow and reverse/RTL target checks; cleanup0000, built470inputs. Visual
+inspection confirms the controls and wrapped Flex presentation. The installed
+strict Bundler/NodeNext/no-alias246-input consumer passes Text ink-height placement,
+wrapped provider/direct Flex zero/auto/split-line pixels, exact provider query,
+identity and cleanup plus104prior margin fixtures. Tarball SHA256
+`b5185c8a1723e6119150af7bb7b01b6721d09a95b493d0b295e353b3b9855d17`.
+Pinned native118records preserve103and add15; source SHA256
+`b906c32eb8f1969e917b645e2b79e05ab6ec65d997ec367d7dcd1620eed5b9bc`.
+Native wrapped provider/known auto offsets remain0while Pibbl keeps its documented
+line-local20offset. Callback/font provenance is explicit; this is not parity.
+Scoped review is clean. Types, lint and catalog/Studio consistency pass.
+
+The finite family receipt is a supported-envelope audit, not full capability exit:
+
+| Parent        | Text                                                                   | Paired primitive                         | Prepared Flex                              |
+| ------------- | ---------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------ |
+| Row/nowrap    | Wrapped profiles182; unwrapped184                                      | Existing provider and183 final width     | Existing measured owner and183             |
+| Row/wrap      | Wrapped profiles179/182; unwrapped shared184 path                      | 184 exact width, line split and cleanup  | 184 described root, line split and cleanup |
+| Column/nowrap | Unwrapped181–183; fixed-height wrapped178/182                          | 175/181/183 exact final height           | 176/181/183 natural cross measurement      |
+| Column/wrap   | Automatic natural cross remains a zero-baseline intrinsic prerequisite | Same independent zero-query prerequisite | Same independent zero-query prerequisite   |
+
+Text entries mean generic px font, visible/default fit/overflow and existing
+query/aspect admission. Those fences do not prove that numeric0 fails outside
+them; broader font/fit/overflow contexts require matched public evidence before
+classifying the original auto-margin target. Staged intrinsic nonzero numeric
+margins remain an independent zero/auto prerequisite. Fixed33 stays10complete/
+12experimental/5partial/5missing/1excluded and all7release gates open.
+
+## [NEXT] Slice185: classify and unify the Text cross-measurement envelope
+
+Use three representative matched public zero/auto probes for non-generic fonts,
+fitting and clipped overflow, with non-stretch zero alignment so a valid natural
+measurement is actually required. Distinguish real auto-only failures from an
+independently unsupported pure query. Read the existing Text measurement contract
+and make one consistent receiver-owned final-width policy, rather than adding
+another direction/selector whitelist. Preserve the original auto-margin and
+measurement targets. No completion promotion without executable geometry/query
+and ownership evidence; consolidate184–186 before further production.
 
 ## Scope and execution
 

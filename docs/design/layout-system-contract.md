@@ -1749,7 +1749,7 @@ geometry, so Studio scaling is not mistaken for a layout difference.
 
 A direct `definePrimitive` child with both pure `measureIntrinsic` and `measure`
 providers may use automatic height with a cross-auto margin in a finite
-experimental nowrap row. Width and basis follow the existing main-sizing contract;
+experimental row, including wrapped rows. Width and basis follow the existing main-sizing contract;
 automatic width with numeric or automatic basis may participate. No aspect ratio
 or prepared query is admitted. Existing initial and final allocated-width
 measurement determines height before auto absorption and suppresses stretch.
@@ -1761,7 +1761,7 @@ The eight-job public example uses20px columns and10px rows: width80→40 changes
 height20→40 and top80→60 in a100px row. Both native records use that explicit
 application measurement callback. Stable props/style inputs permit paint-only
 measurement reuse; changed props or inputs retain conservative invalidation.
-Missing either provider, wrapped rows, aspect sizing and independently unsupported
+Missing either provider, aspect sizing and independently unsupported
 pure intrinsic owners remain unsupported. Column measurement is described below. A required
 final-width measurement failure prevents earlier paint, releases layout ownership
 and permits clean remount.
@@ -1786,6 +1786,25 @@ the existing measurement and placement paths without a new protocol or cache.
 Paint-only sibling updates reuse native solves and identities, but this wrapped
 owner performs one existing pure measurement per preparation. It is not admitted
 to the existing column/Text snapshot cache; broader owner caching remains open.
+
+### Shared row Text and Flex cross measurement
+
+Generic unwrapped as well as wrapped Text may use its real measured automatic
+height before cross-auto placement in a finite row. Unwrapped Text uses Canvas
+ink-height measurement, not the authored wrapped line height. Existing normal
+main sizing remains authoritative and auto cross margins suppress stretch.
+Generic px font, visible/default fit/overflow and existing query/aspect fences
+remain explicit; this extension does not define broader font or fitting policy.
+
+Paired pure providers and otherwise measurable direct/described Flex roots also
+use their real settled-width height in wrapped rows. Native line membership is
+formed from main sizing first; final height feeds the existing line cross sizing
+and line-local auto absorption. A20px child beside a40px peer moves y0to20;
+when the peer wraps to another line, that child's line has no free cross space
+and its y returns to0. Receiver roles, caches and exact teardown remain shared.
+Unsupported required queries fail before paint. Wrapped Yoga records retain
+zero-auto offsets in these fixtures; Pibbl deliberately preserves its documented
+line-local rule rather than claiming native auto-margin parity.
 
 ### Natural-width Text cross-auto sizing
 

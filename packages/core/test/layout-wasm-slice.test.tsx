@@ -4645,7 +4645,8 @@ it.runIf(experimentalLayout).each([
     expect(placement.width).toBe(before.width);
     expect(placement.height).toBe(before.height);
     expect(placement.y + placement.height).toBe(100);
-  } else expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/auto cross-axis margins/);
+  } else if (label === 'unwrapped text') expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/measured dimensions must be finite/);
+  else expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/auto cross-axis margins/);
 });
 
 it.runIf(experimentalLayout)('measures a finite custom primitive before allocating an automatic cross-axis margin', async () => {
@@ -4764,7 +4765,8 @@ it.runIf(experimentalLayout)('keeps automatic cross-margin custom primitive admi
   };
   expectRejected(createElement(IntrinsicOnly, { style: automaticCross }));
   expectRejected(createElement(MeasureOnly, { style: automaticCross }));
-  expectRejected(createElement(Both, { style: automaticCross }), { flexWrap: 'wrap' });
+  expect(() => layoutFlex(row, [createElement(Both, { style: automaticCross })], { flexWrap: 'wrap' }, measurement)).toThrow(/explicit main-axis minimum/);
+  expect(layoutFlex(row, [createElement(Both, { style: { ...automaticCross, minWidth: 0 } })], { flexWrap: 'wrap', alignContent: 'flex-start' }, measurement)).toEqual([{ x: 0, y: 0, width: 80, height: 20 }]);
   expect(layoutFlex(row, [createElement(Both, { style: { ...automaticCross, width: 'auto' } })], {}, measurement)).toEqual([{ x: 0, y: 80, width: 100, height: 20 }]);
   expect(layoutFlex(row, [createElement(Both, { style: { ...automaticCross, minWidth: 0, aspectRatio: 2 } })], {}, measurement))
     .toEqual([{ x: 0, y: 60, width: 80, height: 40 }]);

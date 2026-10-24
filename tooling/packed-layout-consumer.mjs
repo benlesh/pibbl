@@ -1212,6 +1212,30 @@ try {
     if(!finalColumnQueries.some(query=>query[0]===height&&query[1]===height)||pixel(201-height/2,4)!=='[138,50,72,255]'||pixel(4,height+2)!=='[66,107,97,255]')throw Error('installed final column query and allocation');
     if((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==nodes)throw Error('installed final column identity');sharedTextController.dispose();
   }
+  sharedTextCanvas.height=120;sharedTextCanvas.style.height='120px';
+  const unwrappedMargin=signal<0|'auto'>(0);
+  const unwrapped=createElement(Text,{style:{width:80,height:'auto',minWidth:0,minHeight:0,flexBasis:80,flexGrow:0,flexShrink:0,wrap:false,font:'10px monospace',marginTop:unwrappedMargin,fill:'#19375b'},children:'alpha'});
+  const unwrappedNatural=measureElement(unwrapped,{minWidth:0,maxWidth:80,minHeight:0,maxHeight:100},{measureText:(text:string,font:string)=>{context.save();context.font=font;const result=context.measureText(text);context.restore();return result;}});
+  if(unwrappedNatural.status!=='measured')throw Error('installed unwrapped Text measurement');
+  sharedTextController=pibblSync(sharedTextCanvas,createElement(Flex,{style:{width:180,height:100,alignItems:'flex-start'},children:[unwrapped,createElement(Rectangle,{style:{width:40,height:40,minWidth:0,minHeight:0,flexShrink:0,fill:'#426b61'}})]}));await frame();draws.length=0;unwrappedMargin.set('auto');await frame();
+  if(Math.abs(draws.at(-1)!.y-(100-unwrappedNatural.size.height))>1e-6||pixel(84,4)!=='[66,107,97,255]')throw Error('installed unwrapped row Text cross placement');sharedTextController.dispose();
+  const rowQueries:number[]=[];
+  const WrappedRowProvider=definePrimitive<{},FlexStyle,FlexStyle,SystemStyle&{width:number;height:number}>((_props,style)=>createElement(Rectangle,{style:{width:style.width,height:style.height,fill:'#8a3248'}}),{
+    resolveStyle:(_style,context)=>({width:context.allocation.width,height:context.allocation.height}),
+    measureIntrinsic:()=>({status:'measured',minContent:{width:80,height:20},maxContent:{width:80,height:20}}),
+    measure:({constraints})=>{if(constraints.minWidth===constraints.maxWidth)rowQueries.push(constraints.maxWidth);return{status:'measured',size:{width:80,height:20}};},
+  });
+  for(const known of [false,true]){
+    const margin=signal<0|'auto'>(0),width=signal(180),style={width:80,height:'auto' as const,minWidth:0,minHeight:0,flexBasis:80,flexGrow:0,flexShrink:0,marginTop:margin};
+    const leaf=known?createElement(Flex,{style:{...style,alignItems:'flex-start'},children:[createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,fill:'#8a3248'}}),createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,fill:'#8a3248'}})]}):createElement(WrappedRowProvider,{style});
+    sharedTextController=pibblSync(sharedTextCanvas,createElement(Flex,{style:{width,height:100,flexWrap:'wrap',alignItems:'flex-start',alignContent:'flex-start'},children:[leaf,createElement(Rectangle,{style:{width:60,height:40,minWidth:0,minHeight:0,flexShrink:0,fill:'#426b61'}})]}));await frame();
+    if(pixel(4,4)!=='[138,50,72,255]'||pixel(84,4)!=='[66,107,97,255]')throw Error('installed wrapped row zero geometry');
+    const nodes=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates;margin.set('auto');await frame();
+    if(pixel(4,4)!=='[0,0,0,0]'||pixel(4,24)!=='[138,50,72,255]'||pixel(84,4)!=='[66,107,97,255]')throw Error('installed wrapped row line-local auto geometry');
+    width.set(100);await frame();if(pixel(4,4)!=='[138,50,72,255]'||pixel(4,24)!=='[66,107,97,255]'||(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==nodes)throw Error('installed wrapped row membership/identity');sharedTextController.dispose();
+  }
+  if(!rowQueries.includes(80))throw Error('installed wrapped provider exact-width query');
+  receipt.rowSharedMeasurement=true;
   receipt.finalMainCrossMeasurement=true;
   receipt.sharedTextAutoSizing=true;
 } finally {

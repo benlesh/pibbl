@@ -2205,6 +2205,7 @@
       "unresolvedPolicy": "Finite explicit-cross main/cross directions, shorthand, numeric/percentage cross bounds, resolved percentage cross sizes and supported aspect-derived cross sizes are evidenced. Direct generic Text and paired pure-provider custom primitive automatic height are supported in finite nowrap rows at declared width. Row Text cross-auto follows existing supported main allocation, including growth/shrink and bounds, then requires the real settled-width Text height; independent automatic-basis/minimum rules remain unchanged. Numeric-width Text also supports bounded LTR wrapped rows with auto basis and zero grow/shrink. Wrapped generic fixed-height Text has finite nowrap column natural-advance sizing across parent directions, deliberately extending zero-margin natural cross boxes as well. Unwrapped generic column Text, paired primitives and prepared Flex roots can use existing main profiles followed by required exact-final-height natural-width measurement; cross bounds clamp the result; required provider failures diagnose even under stretch alignment. Other automatic/layout cross sizing beyond these bounded owners, broader wrapping/column Text and other pure intrinsic owner profiles remain outstanding; broader percentage/intrinsic feedback follows separate sizing gates.",
       "evidence": {
         "positive": [
+          "slice184: unwrapped generic row Text uses real Canvas ink height; wrapped-row paired providers and direct/described Flex roots use real settled-width height before native line-local cross-auto placement; zero/auto geometry, split-line resize, moved targets, cache/identity/cleanup pass in public/source/built/installed consumers",
           "slice183:11 public column cases and one paired/known row matrix require real settled-main cross measurement; provider final-height widths20/50, known natural60to100, Text factors/bounds, moved targets, identity and failure/remount cleanup pass; no new intrinsic-query policy or known Flow/Grid main profile",
           "slice182:15 public Text cases cover ordinary row growth/shrink/bounds, numeric controls, column numeric/automatic basis and height, and wrapped reverse/RTL capped natural advance; zero/auto preserve supported main sizing and final height, required failures cannot fallback to0; wrapped zero cross-box extension is explicit",
           "slice181:12 public Text/paired/known cases preserve zero baseline and physical left/both/right auto geometry in column/reverse across LTR/RTL; natural updates, moved targets, paint reuse and teardown pass; child-own intrinsic query admission is unchanged",
@@ -2370,7 +2371,7 @@
           "owner-cross-auto-top-stretch-narrow"
         ],
         "missing": [
-          "proven auto-only gaps: numeric-width unwrapped generic row Text and paired-provider automatic cross height in wrapped rows mount at numeric0 then reject auto; slice184 targets the existing settled-width and line-local placement paths",
+          "Text font/fit/overflow and prepared-query contexts outside the current generic visible measurement envelope still require matched zero/auto evidence and an explicit measurement-contract decision; the finite family table is not full auto-margin completion",
           "automatic-width Text in wrapped column containers, reverse/RTL natural cross sizing and wrapped natural-basis contexts, both-auto dimensions and other independently unsupported measurement contexts",
           "staged percentage-bound intrinsic owners with nonzero numeric margin contributions remain outside the admitted zero/auto profile"
         ]
@@ -2382,6 +2383,7 @@
         "packages/core/test/layout-column-auto-margin-directions.test.tsx",
         "packages/core/test/layout-auto-margin-measured-text.test.tsx",
         "packages/core/test/layout-column-auto-margin-final-cross.test.tsx",
+        "packages/core/test/layout-row-auto-margin-measurement.test.tsx",
         "packages/core/test/layout-staged-auto-margin.test.tsx",
         "tooling/layout-yoga-rehearsal/percentage-phase-probe.cpp",
         "tooling/test-wasm-measured-percentage-owner.mjs",
