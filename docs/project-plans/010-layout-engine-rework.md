@@ -20,9 +20,10 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice178 (wrapped column Text natural cross sizing).
+Latest delivery is slice179 (wrapped-row Text natural basis and final-width sizing).
+Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
-Consolidation59 is `750fb588` for175–177; the next production slice is179.
+Consolidation59 is `750fb588` for175–177; the next production slice is180.
 Slice176 is `3d4fcfee` (known-layout natural column widths).
 Slice175 is `6adf0e2b` (paired column natural width with side auto margins).
 Slice174 is `fabe4508` (uniform intrinsic auto-margin normalization).
@@ -31,7 +32,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is179: wrapped-row Text natural basis and final-width cross sizing.
+Consolidation56 is `2fd34f0e` for166–168. Next is180: remaining finite natural-cross direction gaps and matched prerequisite classification.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6413,15 +6414,59 @@ remains partial and all7gates stay open. Row-wrap natural Text basis, natural
 column directions/wrapping and staged nonzero numeric margin contributions stay
 explicit. Consolidation60 will cover178–180 before further capability production.
 
-## [NEXT] Slice179: wrapped-row Text natural basis before cross-auto placement
+## Slice179 delivered: wrapped-row Text natural basis and final-width cross sizing
 
-Compose the existing natural-advance basis and longest-word floor with native
-wrap-line membership before shrink, without a re-line pass. Measure Text height
-at its settled native target width before line-cross sizing and auto absorption.
-Establish matched numeric0/auto public regressions first, owner resizing and
-longest-word overflow, plus synthetic numeric basis/minimum provenance; preserve
-Canvas metrics, identity, targets and exact teardown. No new API or font-parity
-claim. Keep remaining independent measurement cells visible.
+Delivered2026-10-24. A public direct Text fixture with omitted width minimum first
+failed before paint at the explicit-main-minimum diagnostic. The narrow LTR
+forward row/wrap path now composes the existing natural advance/longest-word floor,
+native wrap membership and settled-width Text-height measurement. No API/ABI,
+new solver/cache, re-line pass, ordinary-mode change or numeric-wrap migration.
+
+Matched cross margin0toauto preserves main sizes and wrap membership. Text shares
+a line with a40px peer, then reflows into two10px lines at70width; a below-word
+owner retains the longest-word floor and outside-owner glyph targeting. Public
+focus/hits, width updates, native identity, paint reuse and exact teardown pass.
+The permanent177regressions and prior Text minimum/basis cases remain in the
+8-file experimental run:98pass/1skip in3.11s underNode24.15.0/Chromium.
+The same ordinary-mode files pass50/skip49 in2.44s.
+
+The native probe preserves57earlier records and appends8, including width16 below
+the explicit24minimum. Source SHA256
+`87656ae6e5c7f3d1aa7cc8347ca591b372a9f729a5c95cc91c23ed4c75d72eb2`.
+The synthetic84basis/24floor model records at-most callback envelopes, line
+membership and final widths. It does not represent browser fonts. Yoga keeps
+wrapped top-auto at0; Pibbl retains its already documented CSS line-local rule,
+with a10px Text taking30px beside a40px peer. This difference is explicitly
+classified and is not new full-geometry parity. Kernel/ABI10 remain unchanged.
+
+Source/built full Flex/Text replay passes with no browser errors and cleanup000;
+built470inputs. The installed strict Bundler/NodeNext/no-alias246-input consumer
+passes natural-row reflow, targets, node/paint ownership and cleanup, with explicit
+non-font-parity receipts. Tarball SHA256
+`a199dd17032c18c51f0153fc7e1ce5fbd58f6895fb2e660ec0236301fe1d5db1`.
+At `http://127.0.0.1:5192/#/examples/layout/wasm-flex-text`, click Compare auto
+margins, then Natural row width and Toggle comparison width. The opt-in control
+enables wrapping and starts at180before narrowing to70. Ordinary controls remain
+unchanged. Visual inspection confirms readable copy and first-line placement.
+Scoped changed-runtime review is clean and types/lint pass. Public JSDoc,
+catalog174/12/33, Studio metadata/routes/search and109documentation mutation
+probes pass.
+
+Fixed33remains10complete/12experimental/5partial/5missing/1excluded; auto-margin
+and all7gates remain open. Consolidation60 covers178–180 before further capability
+production. The next slice must distinguish true auto-only failures from matched
+numeric0 failures belonging to independent intrinsic sizing prerequisites.
+
+## [NEXT] Slice180: remaining natural-cross directions and prerequisite evidence
+
+Use matched numeric0/auto public cases to close remaining finite direction gaps
+where the underlying natural-cross query already works. Cover nowrap columns,
+reverse and RTL for Text/paired/known roots as supported by their pure query;
+preserve existing query and placement ownership instead of duplicating algorithms.
+Classify wrapped intrinsic contexts and staged nonzero numeric-margin contribution
+using identical zero/auto baselines and exact failure evidence; retain their
+original capability targets and responsible sizing gates. No label-only gap
+removal or circular auto prerequisite. Rerun178–180 in consolidation60 afterward.
 
 ## Scope and execution
 

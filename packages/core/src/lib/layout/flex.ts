@@ -1212,6 +1212,14 @@ function resolveFlexPlacements(
     const measuredCrossContext = hasAutoCrossMargin && experimentalLayout && row && options.flexWrap === 'nowrap' &&
       (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
       !preparedStyleQuery(prepared) && aspectRatio === undefined;
+    const wrappedNaturalTextCrossContext = hasAutoCrossMargin && experimentalLayout && options.flexDirection === 'row' &&
+      options.flexWrap === 'wrap' && options.layoutDirection === 'ltr' && child.type === Text &&
+      (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      (normalized.width === undefined || normalized.width === 'auto') &&
+      (normalized.flexBasis === undefined || normalized.flexBasis === 'auto') &&
+      (normalized.flexGrow ?? 0) === 0 && typeof (normalized.flexShrink ?? 1) === 'number' &&
+      (normalized.flexShrink ?? 1) > 0 && normalized.minWidth === undefined && normalized.maxWidth === undefined &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined;
     const measuredAutoCross = measuredCrossContext && typeof declared.width === 'number' &&
       typeof normalized.width === 'number' && Number.isFinite(normalized.width) && normalized.width >= 0;
     const columnNaturalWrappedTextCross = experimentalLayout && !row &&
@@ -1259,7 +1267,7 @@ function resolveFlexPlacements(
       (normalized.flexGrow ?? 0) === 0 && normalized.flexShrink === 0 && normalized.minHeight === 0 &&
       normalized.maxHeight === undefined && (normalized.minWidth === undefined || normalized.minWidth === 0) && normalized.maxWidth === undefined &&
       !preparedStyleQuery(prepared) && aspectRatio === undefined;
-    const automaticTextCrossWidth = measuredCrossContext && child.type === Text &&
+    const automaticTextCrossWidth = (measuredCrossContext || wrappedNaturalTextCrossContext) && child.type === Text &&
       (normalized.width === undefined || normalized.width === 'auto') &&
       (normalized.flexBasis === undefined || normalized.flexBasis === 'auto') &&
       (normalized.flexGrow ?? 0) === 0 && typeof (normalized.flexShrink ?? 1) === 'number' && (normalized.flexShrink ?? 1) > 0 &&
@@ -1306,11 +1314,24 @@ function resolveFlexPlacements(
     const minimumProperty = row ? 'minWidth' : 'minHeight';
     // A bounded native Text contribution; other missing minima keep their
     // diagnostic. A flex basis is a distribution input, never a width cap.
-    const intrinsicTextSizing = experimentalLayout && row && options.flexWrap === 'nowrap' &&
+    const nowrapIntrinsicTextSizing = experimentalLayout && row && options.flexWrap === 'nowrap' &&
       child.type === Text && normalized.wrap === true &&
       (normalized.fit === undefined || normalized.fit === 'visible') && !preparedStyleQuery(prepared) &&
       (normalized.width === undefined || normalized.width === 'auto' || typeof normalized.width === 'number') &&
       (normalized.maxWidth === undefined || typeof normalized.maxWidth === 'number') && genericTextFont(normalized);
+    // Wrapped automatic-width Text uses the same natural run and word floor as
+    // nowrap Text. Keep its first admission narrow: native forms membership
+    // from those inputs, then the shared final-width pass determines height.
+    const wrappedIntrinsicTextSizing = experimentalLayout && options.flexDirection === 'row' && options.flexWrap === 'wrap' &&
+      options.layoutDirection === 'ltr' && child.type === Text && normalized.wrap === true &&
+      (normalized.fit === undefined || normalized.fit === 'visible') &&
+      (normalized.overflow === undefined || normalized.overflow === 'visible') &&
+      (normalized.width === undefined || normalized.width === 'auto') &&
+      (normalized.flexBasis === undefined || normalized.flexBasis === 'auto') &&
+      (normalized.flexGrow ?? 0) === 0 && typeof (normalized.flexShrink ?? 1) === 'number' &&
+      (normalized.flexShrink ?? 1) > 0 && normalized.minWidth === undefined && normalized.maxWidth === undefined &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined && genericTextFont(normalized);
+    const intrinsicTextSizing = nowrapIntrinsicTextSizing || wrappedIntrinsicTextSizing;
     const automaticTextBasis = intrinsicTextSizing && basisValue === 'auto' &&
       (normalized.width === undefined || normalized.width === 'auto') &&
       (normalized.minWidth === undefined || typeof normalized.minWidth === 'number');

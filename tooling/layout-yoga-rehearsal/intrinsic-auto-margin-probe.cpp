@@ -236,6 +236,38 @@ void runKnownColumn(float firstWidth) {
     firstWidth, YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(known), YGNodeLayoutGetTop(known), YGNodeLayoutGetWidth(known), YGNodeLayoutGetHeight(known), YGNodeLayoutGetLeft(a), YGNodeLayoutGetTop(a), YGNodeLayoutGetWidth(a), YGNodeLayoutGetHeight(a), YGNodeLayoutGetLeft(b), YGNodeLayoutGetTop(b), YGNodeLayoutGetWidth(b), YGNodeLayoutGetHeight(b), YGNodeLayoutGetLeft(following), YGNodeLayoutGetTop(following), YGNodeLayoutGetWidth(following), YGNodeLayoutGetHeight(following));
   YGNodeFreeRecursive(root); YGConfigFree(config);
 }
+
+
+// Synthetic wrapped row Text. The callback is deliberately geometric: it
+// models a natural 84px run and a 10px/20px final height transition without
+// asserting platform font parity. Yoga receives an at-most width envelope;
+// Pibbl passes its natural run and word floor through native line formation,
+// then queries the settled target width. Yoga's envelope is recorded separately.
+struct RowWrappedTextCall { int count = 0; float width = 0; float height = 0; YGMeasureMode widthMode = YGMeasureModeUndefined; YGMeasureMode heightMode = YGMeasureModeUndefined; } rowWrappedTextCall;
+YGSize measureRowWrappedText(YGNodeConstRef, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+  rowWrappedTextCall = {rowWrappedTextCall.count + 1, width, height, widthMode, heightMode};
+  const float natural = 84;
+  const float used = widthMode == YGMeasureModeAtMost ? (natural < width ? natural : width) : natural;
+  return { used, used < natural ? 20.0f : 10.0f };
+}
+void runRowWrappedText(float ownerWidth, bool autoTop) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config), text = YGNodeNewWithConfig(config), peer = YGNodeNewWithConfig(config), following = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow); YGNodeStyleSetFlexWrap(root, YGWrapWrap);
+  YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+  YGNodeStyleSetWidth(root, ownerWidth); YGNodeStyleSetHeight(root, 140); YGNodeStyleSetGap(root, YGGutterAll, 10);
+  for (auto child : {text, peer, following}) { YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 1); YGNodeStyleSetMinWidth(child, 0); YGNodeStyleSetMinHeight(child, 0); }
+  YGNodeStyleSetMinWidth(text, 24); if (autoTop) YGNodeStyleSetMarginAuto(text, YGEdgeTop); YGNodeSetMeasureFunc(text, measureRowWrappedText);
+  YGNodeStyleSetWidth(peer, 60); YGNodeStyleSetHeight(peer, 40); YGNodeStyleSetFlexBasis(peer, 60);
+  YGNodeStyleSetWidth(following, 80); YGNodeStyleSetHeight(following, 20); YGNodeStyleSetFlexBasis(following, 80);
+  rowWrappedTextCall = {};
+  YGNodeInsertChild(root, text, 0); YGNodeInsertChild(root, peer, 1); YGNodeInsertChild(root, following, 2);
+  YGNodeCalculateLayout(root, ownerWidth, 140, YGDirectionLTR);
+  std::printf("intrinsic-auto-row-wrapped-text owner=%.17g autoTop=%s model=synthetic-not-font-parity root={width:%.17g,height:%.17g} Text={left:%.17g,top:%.17g,width:%.17g,height:%.17g} B={left:%.17g,top:%.17g,width:%.17g,height:%.17g} C={left:%.17g,top:%.17g,width:%.17g,height:%.17g} query={count:%d,width:%.17g,widthMode:%s,height:%.17g,heightMode:%s}\n",
+    ownerWidth, autoTop ? "true" : "false", YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(text), YGNodeLayoutGetTop(text), YGNodeLayoutGetWidth(text), YGNodeLayoutGetHeight(text), YGNodeLayoutGetLeft(peer), YGNodeLayoutGetTop(peer), YGNodeLayoutGetWidth(peer), YGNodeLayoutGetHeight(peer), YGNodeLayoutGetLeft(following), YGNodeLayoutGetTop(following), YGNodeLayoutGetWidth(following), YGNodeLayoutGetHeight(following), rowWrappedTextCall.count, rowWrappedTextCall.width, measureMode(rowWrappedTextCall.widthMode), rowWrappedTextCall.height, measureMode(rowWrappedTextCall.heightMode));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
 }
 int main() {
   for (bool column : { false, true }) for (bool bothAuto : { false, true }) {
@@ -253,4 +285,5 @@ int main() {
   runColumnText(200, 60, 0, false); runColumnText(200, 60, 1, false); runColumnText(200, 60, 2, false);
   runColumnText(160, 60, 1, false); runColumnText(200, 260, 1, false); runColumnText(160, 260, 1, false);
   runColumnText(200, 260, 1, true);
+  for (auto width : {180.0f, 100.0f, 70.0f, 16.0f}) for (auto autoTop : {false, true}) runRowWrappedText(width, autoTop);
 }

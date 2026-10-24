@@ -139,6 +139,8 @@ try {
       assert.equal(receipt.automaticTextCrossWidth, true, 'Installed package must settle automatic-width Text before automatic cross-margin placement');
       assert.equal(receipt.wrappedTextCrossAuto, true, 'Installed package must settle wrapped Text before cross-auto placement in its final line');
       assert.equal(receipt.columnTextCrossAuto, true, 'Installed package must settle direct unwrapped Text ink width before a finite column automatic cross margin, preserve glyph targeting, paint reuse, and cleanup');
+      assert.equal(receipt.naturalRowWrappedText, true, 'Installed package must settle an automatic-width wrapped row Text at its finite owner, preserve targets, and clean up');
+      assert.equal(receipt.naturalRowWrappedTextNative, 'synthetic Yoga callback constraints classified separately', 'Installed row Text proof must classify synthetic native callback evidence instead of claiming font parity');
       assert.equal(receipt.columnWrappedTextAutoMargin, true, 'Installed package must cap wrapped generic Text at a finite column owner before automatic margin placement, preserve targets and clean up');
       assert.equal(receipt.columnWrappedTextNativeMetric, 'actual-canvas; Yoga callback constraints are classified separately', 'Installed Text proof must not claim synthetic native font parity');
       assert.equal(receipt.sourceOrderCanvas, true, 'Installed package must preserve source paint order through reverse Flex, Group, Layer and filter composition');

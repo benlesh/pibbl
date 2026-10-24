@@ -43,6 +43,7 @@ function createWasmFlexTextContent() {
   const naturalBasis = signal(false);
   const autoCrossProof = signal(false);
   const autoCrossWrap = signal(false);
+  const naturalRowWidth = signal(false);
   const intrinsicLogical = signal(false);
   let autoCrossTransform = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
   const autoCrossWidth = signal(140);
@@ -239,26 +240,28 @@ function createWasmFlexTextContent() {
   function AutoCrossComparison() {
     const transform = useCanvasContext().getTransform();
     const wrapped = autoCrossWrap.get();
+    const natural = naturalRowWidth.get();
     const comparisonWidth = autoCrossWidth.get();
+    const rowWidth = natural ? comparisonWidth === 140 ? 180 : 70 : wrapped ? 150 : comparisonWidth;
     const textWidth = comparisonWidth === 140 ? 80 : 40;
     autoCrossTransform = { a: transform.a, b: transform.b, c: transform.c, d: transform.d, e: transform.e, f: transform.f };
     return <>
       <Text pointerEvents="none" style={{ left: 28, top: 238, font: "12px sans-serif", fill: "#475569" }}>
-        {wrapped ? "Wrapped rows settle Text height before the automatic top margin is placed." : "Text starts at its natural width. Narrowing adds a line and reduces the top margin."}
+        {natural ? "Natural Text width; wrapping and top margins follow each line." : wrapped ? "Wrapped rows settle Text height before the automatic top margin is placed." : "Text starts at its natural width. Narrowing adds a line and reduces the top margin."}
       </Text>
       <ColumnAutoComparison />
       <IntrinsicAutoMarginComparison />
-      <Rectangle pointerEvents="none" style={{ left: 28, top: 258, width: wrapped ? 150 : comparisonWidth, height: wrapped ? 122 : 102, stroke: "#a63758", strokeWidth: 1 }} />
-      <Flex style={{ left: 28, top: 260, width: wrapped ? 150 : comparisonWidth, height: wrapped ? 120 : 100, flexWrap: wrapped ? "wrap" : undefined, gap: wrapped ? 10 : undefined, alignItems: wrapped ? "flex-start" : undefined, alignContent: wrapped ? "flex-start" : undefined }}>
+      <Rectangle pointerEvents="none" style={{ left: 28, top: 258, width: rowWidth, height: wrapped ? 122 : 102, stroke: "#a63758", strokeWidth: 1 }} />
+      <Flex style={{ left: 28, top: 260, width: rowWidth, height: wrapped ? 120 : 100, flexWrap: wrapped ? "wrap" : undefined, gap: wrapped ? 10 : undefined, alignItems: wrapped ? "flex-start" : undefined, alignContent: wrapped ? "flex-start" : undefined }}>
         <Text
           onClick={() => { autoCrossHits.update(value => value + 1); selected.set("auto cross text"); }}
-          style={{ width: wrapped ? textWidth : undefined, minWidth: wrapped ? 0 : undefined, flexShrink: wrapped ? 0 : undefined, wrap: true, font: "10px monospace", lineHeight: 10, marginTop: "auto", fill: "#19375b", cursor: "pointer" }}
+          style={{ width: natural ? "auto" : wrapped ? textWidth : undefined, minWidth: natural ? undefined : wrapped ? 0 : undefined, flexShrink: natural ? 1 : wrapped ? 0 : undefined, wrap: true, font: "10px monospace", lineHeight: 10, marginTop: "auto", fill: "#19375b", cursor: "pointer" }}
         >
           aaaa aaaa aaaa
         </Text>
         <Rectangle
           onClick={() => selected.set("auto cross sibling")}
-          style={{ width: wrapped ? 60 : 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }}
+          style={{ width: natural ? 60 : wrapped ? 60 : 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }}
         />
         {wrapped ? <Rectangle onClick={() => selected.set("auto cross following")} style={{ width: 60, height: 30, minWidth: 0, minHeight: 0, flexShrink: 0, fill: "#6e3e79", cursor: "pointer" }} /> : null}
       </Flex>
@@ -384,11 +387,15 @@ function createWasmFlexTextContent() {
         },
         {
           x: 544,
-          label: "Bump inactive",
-          click: () =>
-            (alternate.get() ? primaryWidth : alternateWidth).update(
-              (value) => value + 40,
-            ),
+          label: autoCrossProof.get() ? "Natural row width" : "Bump inactive",
+          click: () => {
+            if (autoCrossProof.get()) {
+              const next = !naturalRowWidth.get();
+              naturalRowWidth.set(next);
+              if (next) { autoCrossWrap.set(true); autoCrossWidth.set(140); }
+            }
+            else (alternate.get() ? primaryWidth : alternateWidth).update(value => value + 40);
+          },
         },
       ].map((button) => (
         <Button
@@ -439,7 +446,7 @@ function createWasmFlexTextContent() {
   return {
     node,
     readInputs: () =>
-      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · column provider: ${columnProviderMode.get()} · intrinsic logical: ${intrinsicLogical.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
+      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · natural row width: ${naturalRowWidth.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · column provider: ${columnProviderMode.get()} · intrinsic logical: ${intrinsicLogical.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
   };
 }
 

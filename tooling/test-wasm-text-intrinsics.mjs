@@ -198,6 +198,18 @@ try {
   assert.match(await frame.locator('pre').innerText(), /auto cross hits: 3/);
   await click(35, 275); await selected('auto cross text');
   assert.match(await frame.locator('pre').innerText(), /auto cross hits: 4/);
+  // This opt-in branch uses natural automatic row width. It deliberately
+  // labels Pibbl's first-line auto-margin behavior apart from Yoga's synthetic
+  // callback classification, and the existing width control drives 180 -> 70.
+  await click(620, 160);
+  assert.match(await frame.locator('pre').innerText(), /natural row width: true/);
+  if (process.env.PIBBL_LAYOUT_NATURAL_ROW_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_NATURAL_ROW_SCREENSHOT });
+  await sandbox.evaluate(() => { globalThis.__PIBBL_AUTO_CROSS_DRAWS__.length = 0; });
+  await click(90, 110);
+  const naturalRowNarrow = await autoCrossDraws();
+  assert.ok(naturalRowNarrow.length >= 2, `natural row reflows at 70px: ${JSON.stringify(naturalRowNarrow)}`);
+  await click(620, 160);
+  assert.match(await frame.locator('pre').innerText(), /natural row width: false/);
   await click(148, 280); await selected('auto cross text'); // Former B target misses.
   await click(108, 280); await selected('auto cross sibling');
   const beforeWrappedPaint = await read();

@@ -1805,6 +1805,41 @@ and top20→10 beside a60×40 sibling; a60×30 second-line sibling stays at y50.
 The first sibling moves x90→50. Browser Canvas draw/hit/identity evidence defines
 the Text contract; no native font-parity fixture is asserted.
 
+### Natural-width Text cross-auto sizing in wrapped rows
+
+A direct generic wrapped Text child in a finite LTR forward row/wrap Flex may
+leave width and basis automatic with no authored width minimum/maximum, zero
+growth and positive shrink (including the default). Aspect sizing, prepared
+queries and non-visible fit/overflow are outside this profile. Numeric-width
+wrapped Text and existing nowrap profiles keep their separate behavior.
+
+Flex reuses the existing natural advance as its native main basis and longest
+ASCII-space-delimited word as the automatic minimum. Native line membership is
+formed from those hypothetical values before shrink. The existing final-target
+width Text query determines height before native line-cross sizing and auto-margin
+placement. There is no re-line pass after Text wrapping, JS line solver, new cache,
+scheduler or public operation. Plain numeric0 and auto cross margins preserve the
+same natural main sizes and line membership; only the applicable cross placement
+changes.
+
+The public Canvas example fits a natural line beside a40px-high peer and places
+the following rectangle on the next native line. At70px, Text shrinks to its
+allocated width and renders two10px lines before cross placement. Below the
+longest word, that measured minimum keeps the Text item wider than the owner,
+with visible glyph targeting outside it. Signal resize/paint preserve identity,
+focus and cleanup. Sibling paint retains native allocation reuse; the existing
+automatic-minimum measurement policy is unchanged.
+
+Pibbl retains its documented CSS line-local cross-auto rule: a10px Text beside a
+40px peer can absorb30px within that line. The pinned Yoga wrapped-line callback
+keeps that top-auto margin at0. This is the existing classified line-local
+cross-auto divergence, not newly claimed parity. The independent synthetic
+84basis/24minimum probe records owner180/100/70/16, final width70 and the explicit
+24floor under16, plus Yoga callback envelopes; actual browser fonts and Pibbl's
+line-auto offsets are separate evidence. Reverse/RTL/wrap-reverse, explicit width
+bounds and other independent intrinsic profiles retain their prior behavior or
+diagnostics.
+
 ### Natural-width Text cross-auto sizing in columns
 
 A direct generic unwrapped Text child in an experimental finite LTR nowrap
