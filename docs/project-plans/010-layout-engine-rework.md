@@ -20,7 +20,7 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice159 (wrapped Text first/last baseline metrics).
+Latest delivery is slice159 `0b893348` (wrapped Text first/last baseline metrics).
 Slice158 is `40965850` (single-line Text baselines from live Canvas metrics).
 Slice157 is `72da2305`; its public Studio companion is `b725101c`.
 Consolidation52 is `8f65cb34` for154–156.
@@ -4939,16 +4939,31 @@ nested invalidation/feedback and consumer matrices. No fixed33 capability or gat
 was promoted. Statuses remain9complete/12experimental/6partial/5missing/1excluded,
 all7gates open. No aggregate trust or font-parity claim.
 
-## [NEXT] Consolidation53: slices157–159
+## Consolidation53: slices157–159
 
-Run the bounded regression lane in experimental and ordinary modes, including
-percentage validity, Canvas service state, Text line layout and current baseline
-paths. Verify declarations/docs/editor/catalog and preserve all existing
-measurement, ownership and geometry rules. Then select a substantive existing
-gate prerequisite from the owned/prepared measurement/tree work or a genuinely
-closable capability, without shrinking accepted scope or adding more equivalent
-finite profiles. Root remains sole writer; helpers provide read-only notes or
-reviewable temporary patches.
+Fresh Node24.15/Playwright Chromium verification: experimental744passed/12skipped
+across52files (756tests),82.54s; ordinary287passed/469skipped,5.74s. The bounded
+lane includes percentage validity, Canvas measurement state, Text line layout,
+Flow and baseline behavior. Both runs passed without a production correction.
+
+Typecheck, refreshed ordinary declarations/build, exact source/built/editor export
+parity and runtime/Three addons passed. Documentation and109RED mutation probes,
+public JSDoc, catalog171lessons/12snapshots/33labs, Studio routes/search and kernel
+integrity passed. The69628byte binary is unchanged; the concise5case public
+comparison agrees with the721record reference. Slice159 source/built interaction,
+wrapped screenshot and installed-package receipts remain separate evidence.
+No aggregate trust, capability promotion or release-gate closure is claimed.
+
+## [NEXT] Slice160: prepared structural intrinsic measurement
+
+Permit an existing pure `defineLayoutComponent` description resolving to a paired
+custom measurement primitive to contribute its intrinsic floor through the same
+transaction-owned preparation boundary. Preserve description reuse, receiver
+ownership, cycle detection, failure-before-publication and conservative cache
+rules. Start with a public failing test; then show a runnable structural example.
+This advances the accepted prepared measurement graph without claiming general
+Flex/Grid/Flow intrinsic composition or introducing another public API. Root is
+sole repository writer; helpers supply temporary patches and scoped review.
 
 ### Finite positioning exit matrix after134
 
