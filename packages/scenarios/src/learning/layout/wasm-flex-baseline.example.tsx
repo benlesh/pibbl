@@ -18,6 +18,8 @@ function createBaselineContent() {
   const mainMargin = computed(() => mainAuto.get() ? "auto" as const : 0);
   const mainLabel = computed(() => mainAuto.get() ? "Auto" : "Start");
   const directionLabel = computed(() => layoutDirection.get().toUpperCase());
+  const reverse = signal(false), flexDirection = computed(() => reverse.get() ? "row-reverse" as const : "row" as const);
+  const reverseLabel = computed(() => reverse.get() ? "Reverse" : "Row");
   const crossMode = signal<"off" | "top" | "bottom" | "both">("off");
   const crossTop = computed(() => crossMode.get() === "top" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossBottom = computed(() => crossMode.get() === "bottom" || crossMode.get() === "both" ? "auto" as const : 0);
@@ -79,6 +81,8 @@ function createBaselineContent() {
       <Text pointerEvents="none" style={{ left: 679, top: 198, font: "10px sans-serif", fill: "#ffffff" }}>{crossLabel}</Text>
       <Rectangle onClick={() => layoutDirection.update(value => value === "ltr" ? "rtl" : "ltr")} style={{ left: 676, top: 226, width: 56, height: 28, fill: "#19375b", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 682, top: 234, font: "10px sans-serif", fill: "#ffffff" }}>{directionLabel}</Text>
+      <Rectangle onClick={() => reverse.update(value => !value)} style={{ left: 676, top: 262, width: 56, height: 28, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 679, top: 270, font: "10px sans-serif", fill: "#ffffff" }}>{reverseLabel}</Text>
       <Text pointerEvents="none" style={{ left: 28, top: 160, font: "14px sans-serif", fill: "#475569" }}>A/B supply offsets. C has no provider and uses its bottom edge.</Text>
       <FocusManagement><Flex style={{ left: 28, top: 210, width: owner, height: 80, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
         <BaselineCard key="A" id="A" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#426b61" }} />
@@ -87,7 +91,7 @@ function createBaselineContent() {
       </Flex></FocusManagement>
       <Rectangle pointerEvents="none" style={{ left: 28, top: guide, width: owner, height: 1, fill: "#d16642", opacity: .6 }} />
       <Text pointerEvents="none" style={{ left: 460, top: 185, font: "12px sans-serif", fill: "#475569" }}>Cross auto takes over alignment.</Text>
-      <Flex style={{ left: 460, top: 210, width: 160, height: 80, flexDirection: "row", flexWrap: "nowrap", layoutDirection, alignItems: "first-baseline" }}>
+      <Flex style={{ left: 460, top: 210, width: 160, height: 80, flexDirection, flexWrap: "nowrap", layoutDirection, alignItems: "first-baseline" }}>
         <BaselineCard key="MA" id="MA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: mainMargin, marginTop: crossTop, marginBottom: crossBottom, fill: "#426b61" }} />
         <BaselineCard key="MB" id="MB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
       </Flex>
@@ -106,7 +110,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), mainAuto: mainAuto.get(), crossMode: crossMode.get(), layoutDirection: layoutDirection.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {

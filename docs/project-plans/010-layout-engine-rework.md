@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice196: finite RTL row first-baseline composition.
+Latest delivery is slice197: row-reverse first-baseline composition.
+Slice196 is `acbcc5fa`: finite RTL row first-baseline composition.
 Slice195 is `729b6bc0`: installed nested percentage-padding proof.
 Slice194 is `3df57566`: logical raw-child ownership and described dispatch.
 Slice193 is `e804c084`: actual direct-child percentage padding; slice192 is `57e0de5f`.
@@ -36,7 +37,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; consolidation65 is `6acd644c`; next is197.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; consolidation65 is `6acd644c`; next is198.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -49,7 +50,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Consolidation65 closes allocated padding; next is197: row-reverse first-baseline evidence.
+Consolidation56 is `2fd34f0e` for166–168. Consolidation65 closes allocated padding; next is198: line-local wrapped first baselines.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now12complete/12experimental/
 3partial/5missing/1excluded. All seven release gates remain open; independent
@@ -7215,13 +7216,42 @@ baseline class. Preserve their regressions, completed padding and177proportional
 This finite inventory comes from the accepted baseline target and current manifest;
 no capability/release gate is promoted by196alone.
 
-## [NEXT] Slice197: row-reverse first-baseline composition
+## [DONE] Slice197: row-reverse first-baseline composition
 
-Establish public paired LTR/RTL row-reverse geometry, focus and hits plus a retained
-pinned native probe, then lift only the literal-row admission if the cross solver
-remains independent. Preserve no-wrap/fixed-leaf admission. After this direction
-closure, select the next substantive baseline policy rather than inventing margin
-variants. Consolidate196–198after the next three delivered slices.
+The only production extension uses the existing isRowDirection predicate in
+baseline admission. Fresh public RED1at the guard precedes implementation;
+Node24.15/Chromium GREEN12pass/1skip across2baseline files. Retained pinned
+Yoga3.2.1`baseline-row-reverse-probe.cpp` freshly matches120x60geometry:
+LTR A(80,18)/B(40,0), RTL A(0,18)/B(40,0), fixed40x20/40x40sizes. Public focus
+remains A→B; targets, source placement and four-counter cleanup pass.
+
+The lesson adds a Row/Reverse control beside LTR/RTL. Source5192and refreshed
+built5193passes all earlier provider/Text/main/cross-auto proofs plus reverse
+LTR/RTL baseline sharing, stable stamps and actual moved targets. Screenshot
+inspected,470built inputs/errors[]/four-counter cleanup. The first built replay
+had retained the previous package’s row-only guard; restarting the verified
+owned5193server and rerunning unchanged assertions passes. This was a stale
+preview, not a runtime repair. Types, changed-code lint,175/12/33catalog,
+docs109mutation probes and scoped review pass. Kernel/ABI unchanged.
+
+Finite baseline exit is reconciled against current Canvas/font ownership:
+no new font-loading/shaping subsystem. Remaining Text font admission must use
+existing measurement/application readiness. Real structural work is line-local
+wrapping, nested/reference-child propagation, last-baseline placement, explicit
+column interpretation and the remaining declared leaf allocation profiles.
+No capability promotion or release claim; installed directions follow at66.
+
+## [NEXT] Slice198: line-local wrapped first baselines
+
+First supported wrapped profile: finite LTR row+wrap, alignContentflex-start,
+zero gaps, existing direct fixed numeric primitive providers/fallback, no new
+public API. Native solve_wrap already owns source line ranges; add one native
+line-local baseline placement operation. For100x100with A60x20/b12,B40x40/b30,
+C60x20/b8,D40x30/b20: A(0,18),B(60,0),C(0,52),D(60,40).
+D baseline20→26moves only C to58. Establish public/native RED before production,
+preserve ownership/cache semantics, then expose a runnable lesson. Other wrapped
+profiles remain explicit until this vertical slice is observed. Consolidate66
+for196–198before more production, including installed direction/wrap evidence.
 
 ## Scope and execution
 

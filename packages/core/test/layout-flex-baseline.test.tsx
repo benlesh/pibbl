@@ -519,3 +519,61 @@ it.runIf(experimentalLayout)(
     }
   },
 );
+
+
+it.runIf(experimentalLayout)(
+  'keeps first-baseline offsets while row-reverse composes with LTR and RTL main placement',
+  async () => {
+    for (const direction of ['ltr', 'rtl'] as const) {
+      const baseline = snapshotWasmLayoutDiagnostics();
+      const boxes = new Map<string, LayoutBox>();
+      const hits: string[] = [];
+      const focused: string[] = [];
+      const errors: unknown[] = [];
+      const receive = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+      const Leaf = definePrimitive<{ readonly name: string; readonly first: number }, BaselineStyle, BaselineStyle, BaselineStyle & { readonly width: number; readonly height: number }>((props) => {
+        const box = useLayoutBox();
+        const matrix = useCanvasContext().getTransform();
+        boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+        return <Rectangle keyboardFocusable onFocus={() => focused.push(props.name)} onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: props.name === 'A' ? '#8a3248' : '#426b61', cursor: 'pointer' }} />;
+      }, {
+        resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+        measureBaselines: ({ props }) => ({ status: 'measured' as const, first: props.first, last: props.first }),
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = 120; canvas.height = 60; document.body.append(canvas);
+      window.addEventListener('error', receive);
+      try {
+        const controller = pibbl(canvas, <FocusManagement><Flex style={{ width: 120, height: 60, flexDirection: 'row-reverse', flexWrap: 'nowrap', layoutDirection: direction, alignItems: 'first-baseline' }}>
+          <Leaf key="A" name="A" first={12} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+          <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+        </Flex></FocusManagement>);
+        controllers.push(controller);
+        await nextFrame();
+
+        const ax = direction === 'ltr' ? 80 : 0;
+        expect(errors).toEqual([]);
+        expect(boxes.get('A')).toEqual({ x: ax, y: 18, width: 40, height: 20 });
+        expect(boxes.get('B')).toEqual({ x: 40, y: 0, width: 40, height: 40 });
+
+        canvas.blur(); canvas.focus({ preventScroll: true });
+        canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+        canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+        expect(focused).toEqual(['A', 'B']);
+        click(canvas, ax + 4, 22);
+        click(canvas, 44, 4);
+        expect(hits).toEqual(['A', 'B']);
+
+        const mounted = snapshotWasmLayoutDiagnostics();
+        controller.dispose();
+        const disposed = snapshotWasmLayoutDiagnostics();
+        expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+          baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+        ]);
+        expect(mounted.nodeCreates).toBeGreaterThan(baseline.nodeCreates);
+      } finally {
+        window.removeEventListener('error', receive);
+      }
+    }
+  },
+);

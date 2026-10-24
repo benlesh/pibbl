@@ -2430,8 +2430,8 @@ function assertSupportedFirstBaselineFlex(
   container: Readonly<LayoutBox>,
   mounted: boolean,
 ): void {
-  if (!mounted || !experimentalLayout || options.flexDirection !== 'row' || options.flexWrap !== 'nowrap') {
-    throw optionDiagnostic('alignItems', 'first-baseline', container, 'requires a mounted experimental finite row-nowrap Flex');
+  if (!mounted || !experimentalLayout || !isRowDirection(options.flexDirection) || options.flexWrap !== 'nowrap') {
+    throw optionDiagnostic('alignItems', 'first-baseline', container, 'requires a mounted experimental finite horizontal nowrap Flex');
   }
   for (const item of items) {
     const style = item.normalized;

@@ -2052,13 +2052,13 @@ capability uses the content bottom edge. A declared unsupported result, invalid
 result or thrown callback fails preparation instead of silently taking a fallback.
 
 The first consumer is experimental `alignItems: "first-baseline"` in a finite LTR or RTL
-nowrap row of direct fixed primitive leaves. Main sizes settle first; providers
+nowrap row or row-reverse of direct fixed primitive leaves. Main sizes settle first; providers
 receive the final finite content width and height at local origin0,0. The native
 WASM cross-placement path computes the common ascent starting at zero and each
 offset as common ascent minus that leaf's first baseline. This matches pinned
 Yoga3.2.1 numeric-provider probes, including signed/out-of-box baselines. Last
 baseline placement, custom-font Text metrics, nested containers, outer Flex wrapping,
-row-reverse, automatic cross size and decorated/numeric-margin/position/query/aspect
+automatic cross size and decorated/numeric-margin/position/query/aspect
 leaves remain outside this first admission. Main-axis automatic margins are
 resolved by the existing native main allocator before baseline alignment; they
 do not change membership in the baseline-sharing group. Cross-axis automatic
@@ -2077,7 +2077,10 @@ placement divergence, not a font or unconditional geometry parity claim. This ad
 RTL uses the existing native main-axis slots while baseline offsets stay physical
 vertical coordinates; it preserves source keyboard order and paint order. A fixed
 120px row puts A40x20/baseline12 at x80,y18and B40x40/baseline30 at x40,y0;
-the paired LTR control places A at x0with the same y offsets.
+the paired LTR control places A at x0with the same y offsets. Row-reverse
+composes with the same physical main placement: LTR gives A at x80, RTL at x0;
+B stays at x40and baseline y offsets remain18/0. Source paint and keyboard order
+remain A then B.
 
 Provider reads use existing measurement-role receiver dependencies. Queries forbid
 hooks, writes and rendering work through the existing isolated pure boundary;

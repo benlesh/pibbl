@@ -180,6 +180,17 @@ try {
   assert.ok(Math.abs(rtlBaseline.boxes.MA.x-580)<1e-9&&Math.abs(rtlBaseline.boxes.MA.y-228)<1e-9,'RTL first-baseline card');
   assert.ok(Math.abs(rtlBaseline.boxes.MB.x-460)<1e-9&&Math.abs(rtlBaseline.boxes.MB.y-210)<1e-9,'RTL shared baseline peer');
   await click(590,232);assert.equal((await state()).hits.at(-1),'MA');
+  await click(700,276);
+  const reverseRtl=await state();assert.equal(reverseRtl.reverse,true);
+  assert.ok(Math.abs(reverseRtl.boxes.MA.x-540)<1e-9&&Math.abs(reverseRtl.boxes.MA.y-228)<1e-9,'row-reverse RTL baseline');
+  assert.ok(Math.abs(reverseRtl.boxes.MB.x-580)<1e-9&&Math.abs(reverseRtl.boxes.MB.y-210)<1e-9,'row-reverse RTL peer');
+  await click(700,240);
+  const reverseLtr=await state();assert.equal(reverseLtr.layoutDirection,'ltr');
+  assert.ok(Math.abs(reverseLtr.boxes.MA.x-580)<1e-9&&Math.abs(reverseLtr.boxes.MA.y-228)<1e-9,'row-reverse LTR baseline');
+  assert.ok(Math.abs(reverseLtr.boxes.MB.x-460)<1e-9&&Math.abs(reverseLtr.boxes.MB.y-210)<1e-9,'row-reverse LTR peer');
+  assert.deepEqual(Object.fromEntries([['MA',reverseLtr.stamps.MA],['MB',reverseLtr.stamps.MB]]),mainStamps);
+  await click(590,232);let reverseHit=await state();assert.equal(reverseHit.hits.length,reverseLtr.hits.length+1);assert.equal(reverseHit.hits.at(-1),'MA');
+  const reverseHits=reverseHit.hits.length;await click(470,214);reverseHit=await state();assert.equal(reverseHit.hits.length,reverseHits+1);assert.equal(reverseHit.hits.at(-1),'MB');
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
