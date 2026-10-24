@@ -12,7 +12,7 @@ const buildEnvironment = import.meta.env;
 export const experimentalLayout =
   (typeof __PIBBL_LAYOUT_WASM__ !== 'undefined' && __PIBBL_LAYOUT_WASM__) ||
   buildEnvironment?.MODE === 'layout-wasm';
-const counters = { flowPlacements: 0, gridCellPlacements: 0, gridTrackResolutions: 0, lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, activeWasmInstances: 0, wasmInstanceCreates: 0, frames: 0, allocationPasses: 0, allocationItemVisits: 0, allocationCacheHits: 0 };
+const counters = { flowPlacements: 0, gridCellPlacements: 0, gridTrackResolutions: 0, lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measurementSolves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, activeWasmInstances: 0, wasmInstanceCreates: 0, frames: 0, allocationPasses: 0, allocationItemVisits: 0, allocationCacheHits: 0 };
 export function snapshotWasmLayoutDiagnostics() {
   const signals = signalGraphSnapshot();
   return {
@@ -114,6 +114,81 @@ function acquireRootOwner(mount?: PibblInstance): RootLayoutOwner {
   let owner = rootOwners.get(mount);
   if (!owner) { owner = new RootLayoutOwner(mount); rootOwners.set(mount, owner); }
   return owner;
+}
+
+// Measurement clears GLOBAL_STATE before recursive provider evaluation. Preserve only
+// the current root owner in this synchronous scope; it never lends a mounted region.
+let measurementOwner: PibblInstance | undefined;
+export function withMeasurementLayoutOwner<T>(owner: PibblInstance | undefined, work: () => T): T {
+  const previous = measurementOwner;
+  if (owner) measurementOwner = owner;
+  try { return work(); }
+  finally { measurementOwner = previous; }
+}
+
+/**
+ * Solves a finite nowrap main axis in a disposable native arena. This is used only
+ * while intrinsic measurement has an exact main constraint and must finish before
+ * any descendant measurement callback runs.
+ */
+export type NumericFlexMainInput = Pick<NumericFlexItem,
+  'baseMain' | 'minMain' | 'maxMain' | 'paddingMain' | 'grow' | 'shrink' |
+  'marginMainBefore' | 'marginMainAfter'>;
+function writeFlexMainInput(records: Float64Array, offset: number, item: NumericFlexMainInput): void {
+  records[offset] = item.baseMain;
+  records[offset + 1] = item.minMain;
+  records[offset + 2] = item.maxMain;
+  records[offset + 3] = item.paddingMain;
+  records[offset + 4] = item.grow;
+  records[offset + 5] = item.shrink;
+  records[offset + 6] = 0;
+  records[offset + 7] = 0;
+  records[offset + 8] = item.marginMainBefore ?? 0;
+  records[offset + 9] = item.marginMainAfter ?? 0;
+}
+export function solveTransientFlexMain(items: readonly NumericFlexMainInput[], main: number, gap: number): number[] {
+  if (!Number.isFinite(main) || main < 0 || !Number.isFinite(gap) || gap < 0) {
+    throw new RangeError('Intrinsic Flex main size and gap must be finite and nonnegative.');
+  }
+  for (let index = 0; index < items.length; index++) {
+    const item = items[index];
+    if (!Number.isFinite(item.baseMain) || item.baseMain < 0 ||
+        !Number.isFinite(item.minMain) || item.minMain < 0 ||
+        !(Number.isFinite(item.maxMain) || item.maxMain === Infinity) || item.maxMain < item.minMain ||
+        !Number.isFinite(item.paddingMain) || item.paddingMain < 0 ||
+        !Number.isFinite(item.grow) || item.grow < 0 ||
+        !Number.isFinite(item.shrink) || item.shrink < 0 ||
+        !Number.isFinite(item.marginMainBefore ?? 0) || !Number.isFinite(item.marginMainAfter ?? 0)) {
+      throw new RangeError('Intrinsic Flex inputs must contain finite numeric factors, sizes and margins with ordered main bounds.');
+    }
+  }
+  const owner = acquireRootOwner(measurementOwner);
+  const standalone = measurementOwner === undefined;
+  let handle = 0, generation = 0;
+  try {
+    ({ handle, generation } = owner.create());
+    const pointer = owner.kernel.resize(handle, generation, items.length);
+    if (!pointer && items.length) throw new Error('Layout measurement storage allocation failed.');
+    const records = new Float64Array(owner.kernel.memory.buffer, pointer, items.length * 10);
+    for (let index = 0; index < items.length; index++) {
+      writeFlexMainInput(records, index * 10, items[index]);
+    }
+    if (owner.kernel.solve(handle, generation, main, gap) !== 0) {
+      throw new Error('Experimental Flex intrinsic main allocation failed; numeric overflow or no progress.');
+    }
+    // Rust may grow linear memory during solve. Copy results before releasing arena.
+    const output = new Float64Array(owner.kernel.memory.buffer, pointer, items.length * 10);
+    const results = new Array<number>(items.length);
+    for (let index = 0; index < items.length; index++) results[index] = output[index * 10 + 6];
+    counters.solves++; counters.measurementSolves++;
+    return results;
+  } catch (error) {
+    if (error instanceof WebAssembly.RuntimeError) owner.dispose(true);
+    throw error;
+  } finally {
+    try { if (handle) owner.release(handle, generation); }
+    finally { if (standalone) owner.dispose(); }
+  }
 }
 export interface NumericFlexItem {
   baseMain: number; minMain: number; maxMain: number; paddingMain: number;
@@ -386,7 +461,7 @@ export class LayoutRegion {
       if (previous) counters.nodeReuses++;
       else { counters.nodeCreates++; counters.activeNodes++; }
       if (!previous || record.some((v, n) => v !== previous[n]) || this.order[i] !== token) {
-        view.set(record, i * 10);
+        writeFlexMainInput(view, i * 10, item);
         this.records.set(token, record);
         changed = true;
       }

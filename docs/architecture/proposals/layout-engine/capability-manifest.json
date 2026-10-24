@@ -2078,7 +2078,7 @@
       "id": "flex.nested-intrinsic-containers",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "known nowrap Flex columns, bounded finite-width numeric row-wrap auto height, Text, Flow wrap measurement and fixed-row Grid at settled finite width; pure structural descriptions; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows",
+      "current": "known nowrap Flex columns, bounded finite-width numeric row-wrap auto height, Text, Flow wrap measurement and fixed-row Grid at settled finite width; pure structural descriptions; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows; finite forward LTR nowrap row height derives from native final-width paired leaf queries",
       "status": "experimental",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
@@ -2094,7 +2094,8 @@
           "Flow automatic height uses final clamped width and moves following footer",
           "Grid fixed-row sums/gaps contribute automatic height and move following footer",
           "known child percentage cross widths/bounds resolve once against explicit numeric column content width before intrinsic height",
-          "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components"
+          "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components",
+          "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks"
         ],
         "negative": [
           "ordinary opaque providers, wrapped intrinsic shapes beyond direct numeric row leaves, indefinite Grid fraction/percentage rows and unresolved feedback remain unsupported",
@@ -2102,7 +2103,8 @@
         ],
         "interaction": [
           "text width, keyed restore, moved footer target",
-          "structural badge minimum60→70 moves the following target with stable keyed identity and unrelated-paint measurement reuse"
+          "structural badge minimum60→70 moves the following target with stable keyed identity and unrelated-paint measurement reuse",
+          "nested row width80→60 gives leaf60×20→40×40, then resolved content signal height50 moves following target with stable identity; temporary native arena released before callback"
         ],
         "yogaCases": [],
         "missing": [
@@ -2896,7 +2898,7 @@
       "id": "measurement.custom-leaf",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom providers with one exact declared and one unbounded natural axis across finite nowrap main directions; native column-width query differences labeled separately from deterministic geometry; bounded built-in wrapped height and unwrapped natural ink dimensions, including both-auto, use the same owned query with real Canvas metrics; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows",
+      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom providers with one exact declared and one unbounded natural axis across finite nowrap main directions; native column-width query differences labeled separately from deterministic geometry; bounded built-in wrapped height and unwrapped natural ink dimensions, including both-auto, use the same owned query with real Canvas metrics; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows; finite forward LTR nowrap row height derives from native final-width paired leaf queries",
       "status": "partial",
       "unresolvedPolicy": "Paired intrinsic and first/last baseline callbacks are implemented for bounded direct-leaf consumers; broader constraint modes, nested intrinsic consumers and feedback remain open.",
       "evidenceRefs": [
@@ -2919,7 +2921,8 @@
           "slice128: pure absolute width query at exact height, measurement-owned signals, conservative layout revision and stable sibling-paint reuse",
           "slices129/134: symmetric exact-width natural height and both absolute provider profiles across directions, query-before-bounds, owned signals, removal/restore and explicit native column-width query differences",
           "slices137/138: built-in Text width-driven wrapped height and unwrapped natural ink width, conservative interactive callbacks versus stable plain cache reuse, font/content/dimension changes, bounds/precedence and exact teardown",
-          "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components"
+          "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components",
+          "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks"
         ],
         "negative": [
           "opaque component measurement unsupported",
@@ -2928,7 +2931,8 @@
         ],
         "interaction": [
           "reactive intrinsic minimum moves the public target; unrelated sibling paint reuses snapshot; exact disposal",
-          "structural badge minimum60→70 moves the following target with stable keyed identity and unrelated-paint measurement reuse"
+          "structural badge minimum60→70 moves the following target with stable keyed identity and unrelated-paint measurement reuse",
+          "nested row width80→60 gives leaf60×20→40×40, then resolved content signal height50 moves following target with stable identity; temporary native arena released before callback"
         ],
         "yogaCases": [
           "custom-column-measure",

@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice160 (prepared structural paired measurement).
+Latest delivery is slice161 (native final-width nested row measurement).
+Slice160 is `f49be444` (prepared structural paired measurement).
 Slice159 is `0b893348` (wrapped Text first/last baseline metrics).
 Consolidation53 is `370015c4` for157–159.
 Slice158 is `40965850` (single-line Text baselines from live Canvas metrics).
@@ -5000,16 +5001,57 @@ post-fix review had no material finding. No aggregate trust claim or capability
 promotion: fixed33 remain9complete/12experimental/6partial/5missing/1excluded,
 all7release gates open.
 
-## [NEXT] Slice161: settle measured row children inside a prepared Flex root
+## Slice161 ready for feedback: native final-width nested row measurement
 
-Start with the public outer-column → pure description → known Flex → paired-leaf
-contract. If already supported, record evidence without inventing a runtime
-slice. Otherwise implement the existing missing finite row measurement dependency:
-exact owner width → child main allocation → final-width provider query → owner
-height. Reuse the current numeric allocation path and shared measurement context;
-ordinary components remain opaque. This advances nested intrinsic composition,
-not general percentage feedback or transactional publication. Root is sole writer;
-helpers provide temporary tests/proposals and scoped review.
+A pure described Flex row with definite numeric width (or exact finite caller
+width) can now derive automatic height from direct paired custom leaves. The
+focused public RED failed before production with “requires a definite child
+cross size.” Forward LTR nowrap rows validate numeric child bases/minima, zero
+grow and fixed nonmeasured cross sizes, then batch the main query through the
+existing native solver. Exact copied widths feed unbounded-height provider
+queries; their heights determine the row and following sibling. There is no
+invented finite cross size, JavaScript main-solver fallback, new ABI or retained
+measurement graph.
+
+A private synchronous owner scope survives measurement isolation. Raw temporary
+arenas share the mounted root instance and release before callbacks; standalone
+queries dispose their temporary instance before callbacks. The retained and raw
+paths share the same numeric record writer. The paired-child continuation retains
+the current cycle context, receiver provision and measurement role, including
+normally resolved scalar signal inputs. No cache guard or allocation revision was
+relaxed. Aggregate Card measurement still reruns during sibling paint;162 owns
+that separate prepared-graph prerequisite.
+
+Fresh Node24.15/Playwright Chromium:67passed/1skipped across4files (68tests),
+ordinary56passed/12skipped. Public tests cover width60→40/height20→40→50,
+following geometry and stable keys, released raw arenas at callback entry, one
+mounted root instance, resolved signal updates, throwing-provider cleanup before
+later painting and standalone no-Canvas cleanup after a failed measurement scope.
+Source/built lesson checks use height20→60→70 and footer168→208→218, distinct
+moved targets, stable identity, native instance/arena counts and disposal0000;
+built470dist inputs. The rendered nested row was inspected.
+
+Hands-on: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-nested-intrinsic`
+(or port5193 built). Click Nested row, Toggle width, then Raise badge min.
+Isolated offline tarball passed strict Bundler/NodeNext,246installed inputs,
+SHA256 `8e4b4f8e1c518eeec5c076904ac43b1e1d188a2f8301495770f33addd4bd0f48`.
+Installed nested geometry, old/new targets, stamp retention, signal updates,
+removal cleanup and prior104auto-margin fixtures passed. Typecheck, changed-code
+lint, docs109mutation probes, public JSDoc, catalog/Studio and scoped final review
+passed. Binary remains69628bytes. No aggregate trust or capability promotion:
+fixed33 remain9complete/12experimental/6partial/5missing/1excluded; all7gates open.
+
+## [NEXT] Slice162: parent-owned aggregate prepared measurement reuse
+
+Use the parent region and layout token already passed into `measureFlexChild`.
+A safe recursive snapshot of the described known row must include child semantic
+identity/order, scalar program inputs and resolved geometry; opaque/query/mutable
+or function-shaped inputs retain conservative remeasurement. Reuse the existing
+successful-transaction `PrimitiveMeasurementEntry` cache and receiver provisions,
+not child-slot lookup or a parallel graph. Public RED: unrelated footer paint must
+stop native aggregate/provider queries; provider content changes must still move
+the footer, and removal/failure must release ownership. Then consolidation54 for
+160–162 runs as a separate evidence commit. Root remains sole writer.
 
 ### Finite positioning exit matrix after134
 

@@ -6,6 +6,7 @@ import {
   defineLayoutComponent,
   definePrimitive,
   signal,
+  measureElement,
   type PibblController,
   type SystemStyle,
   type FlexStyle,
@@ -342,4 +343,151 @@ it.runIf(experimentalLayout).each([
     expect(errors).toHaveLength(1);
     expect(String(errors[0])).toContain('an explicit main-axis minimum is required');
   } finally { window.removeEventListener('error', prevent); }
+});
+
+it.runIf(experimentalLayout)(
+  'measures a described known Flex root through a paired leaf at the final outer width',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const owner = signal(80);
+    const contentHeight = signal(40);
+    const fail = signal(false);
+    let footerRenders = 0;
+    const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+    let stamps = 0;
+    let measurements = 0;
+    const rawQueryArenas: number[] = [];
+    const rawQueryInstances: number[] = [];
+
+    interface ProviderStyle extends SystemStyle {
+      readonly width?: number;
+      readonly height?: number | 'auto';
+      readonly minWidth?: number;
+      readonly minHeight?: number;
+      readonly flexBasis?: number;
+      readonly flexGrow?: number;
+      readonly flexShrink?: number;
+      readonly fill?: string;
+    }
+    type ResolvedProviderStyle = ProviderStyle & { readonly width: number; readonly height: number };
+    const Provider = definePrimitive<
+      { readonly contentHeight: number }, ProviderStyle, ProviderStyle, ResolvedProviderStyle
+    >((_props, style) => {
+      const box = useLayoutBox();
+      const matrix = useCanvasContext().getTransform();
+      const stamp = useConst(() => ++stamps);
+      boxes.set('provider', { x: matrix.e, y: matrix.f, width: box.width, height: box.height, stamp });
+      return <Rectangle style={{ width: box.width, height: box.height, fill: style.fill }} />;
+    }, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measureIntrinsic: () => ({
+        status: 'measured' as const,
+        minContent: { width: 0, height: 20 },
+        maxContent: { width: 100, height: 20 },
+      }),
+      measure: ({ props, constraints }) => {
+        measurements++;
+        if (constraints.maxHeight === Infinity && fail.get()) throw new Error('paired row measurement failed');
+        // The new native main query is complete before this unbounded-height
+        // provider callback. A mounted root may own its normal region later,
+        // but no disposable raw arena may leak into this callback.
+        if (constraints.maxHeight === Infinity) {
+          const diagnostics = snapshotWasmLayoutDiagnostics();
+          rawQueryArenas.push(diagnostics.activeArenas);
+          rawQueryInstances.push(diagnostics.wasmInstanceCreates);
+        }
+        return {
+          status: 'measured' as const,
+          size: { width: constraints.maxWidth, height: constraints.maxWidth <= 40 ? props.contentHeight : 20 },
+        };
+      },
+    });
+    const Footer = definePrimitive<{}, ProviderStyle, ProviderStyle, ResolvedProviderStyle>((_props, style) => {
+      footerRenders++;
+      const box = useLayoutBox();
+      const matrix = useCanvasContext().getTransform();
+      const stamp = useConst(() => ++stamps);
+      boxes.set('footer', { x: matrix.e, y: matrix.f, width: box.width, height: box.height, stamp });
+      return <Rectangle style={{ width: box.width, height: box.height, fill: style.fill }} />;
+    }, { resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }) });
+
+    const provider = <Provider key="provider" contentHeight={contentHeight} style={{ flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' }} />;
+    const follower = <Rectangle key="follower" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#426b61' }} />;
+    const Card = defineLayoutComponent((props: { readonly style: FlexStyle }) =>
+      <Flex style={{ ...props.style, width: owner.get() }}>{[provider, follower]}</Flex>,
+    );
+    const card = <Card key="card" style={{ minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start' }} />;
+    const footer = <Footer key="footer" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: '#a63758' }} />;
+    const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: owner, height: 80, flexDirection: 'column', alignItems: 'flex-start' }}>{[card, footer]}</Flex>);
+    controllers.push(controller);
+    await nextFrame();
+
+    expect(boxes.get('provider')).toEqual({ x: 0, y: 0, width: 60, height: 20, stamp: 1 });
+    expect(boxes.get('footer')).toEqual({ x: 0, y: 20, width: 20, height: 20, stamp: 2 });
+    expect(rawQueryArenas).toEqual([baseline.activeArenas]);
+    expect(rawQueryInstances).toEqual([baseline.wasmInstanceCreates + 1]);
+    const mountedArenas = snapshotWasmLayoutDiagnostics().activeArenas;
+    const initialMeasurements = measurements;
+    owner.set(60); await nextFrame();
+    expect(boxes.get('provider')).toEqual({ x: 0, y: 0, width: 40, height: 40, stamp: 1 });
+    expect(boxes.get('footer')).toEqual({ x: 0, y: 40, width: 20, height: 20, stamp: 2 });
+    expect(measurements).toBeGreaterThan(initialMeasurements);
+    expect(rawQueryArenas).toEqual([baseline.activeArenas, mountedArenas]);
+    expect(rawQueryInstances).toEqual([baseline.wasmInstanceCreates + 1, baseline.wasmInstanceCreates + 1]);
+
+    const afterResize = measurements;
+    contentHeight.set(50); await nextFrame();
+    expect(boxes.get('provider')).toEqual({ x: 0, y: 0, width: 40, height: 50, stamp: 1 });
+    expect(boxes.get('footer')).toEqual({ x: 0, y: 50, width: 20, height: 20, stamp: 2 });
+    expect(measurements).toBeGreaterThan(afterResize);
+    const errors: unknown[] = [];
+    const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+    window.addEventListener('error', prevent);
+    try {
+      const beforeFailure = footerRenders;
+      fail.set(true); owner.set(50); await nextFrame();
+      expect(errors).toHaveLength(1);
+      expect(String(errors[0])).toContain('paired row measurement failed');
+      expect(footerRenders).toBe(beforeFailure);
+      const failed = snapshotWasmLayoutDiagnostics();
+      expect([failed.activeNodes, failed.activeArenas, failed.cachedMeasurements]).toEqual([
+        baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+      ]);
+    } finally { window.removeEventListener('error', prevent); }
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([
+      baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+    ]);
+  },
+);
+
+it.runIf(experimentalLayout)('releases a standalone native row query before invoking its provider without a Canvas mount', () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  type Style = SystemStyle & { flexBasis?: number; flexShrink?: number; minWidth?: number; height?: number | 'auto' };
+  const Leaf = definePrimitive<{}, Style, Style, SystemStyle>(() => null, {
+    resolveStyle: () => ({}),
+    measureIntrinsic: () => ({ status: 'measured', minContent: { width: 0, height: 20 }, maxContent: { width: 100, height: 20 } }),
+    measure: ({ constraints }) => {
+      const during = snapshotWasmLayoutDiagnostics();
+      expect(during.activeArenas).toBe(baseline.activeArenas);
+      expect(during.activeWasmInstances).toBe(baseline.activeWasmInstances);
+      expect(constraints).toEqual({ minWidth: 40, maxWidth: 40, minHeight: 0, maxHeight: Infinity });
+      return { status: 'measured', size: { width: 40, height: 40 } };
+    },
+  });
+  const result = measureElement(<Flex style={{ width: 60, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start' }}>
+    <Leaf style={{ flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto' }} />
+    <Rectangle style={{ width: 20, height: 20, minWidth: 0, flexShrink: 0 }} />
+  </Flex>, { minWidth: 0, maxWidth: 60, minHeight: 0, maxHeight: Infinity }, {
+    measureText: () => { throw new Error('This numeric query must not measure text.'); },
+  });
+  expect(result).toEqual({ status: 'measured', size: { width: 60, height: 40 } });
+  const after = snapshotWasmLayoutDiagnostics();
+  expect([after.activeNodes, after.activeArenas, after.activeWasmInstances, after.cachedMeasurements]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.activeWasmInstances, baseline.cachedMeasurements,
+  ]);
+  expect(after.measurementSolves).toBe(baseline.measurementSolves + 1);
+  expect(after.wasmInstanceCreates).toBe(baseline.wasmInstanceCreates + 1);
 });

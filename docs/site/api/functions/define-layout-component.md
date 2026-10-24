@@ -75,3 +75,10 @@ measurement cache with the current transaction; unrelated sibling paint can reus
 a successful measurement. Ordinary components remain opaque. Other intrinsic
 structures retain contextual unsupported-measurement diagnostics;
 this does not enable general CSS sizing or switch the production layout engine.
+
+A known forward LTR nowrap Flex row with definite numeric width can derive its
+automatic height from paired custom leaves after their native main allocation.
+Leaves require definite numeric bases and explicit minima; siblings need declared
+cross sizes. The [nested intrinsic lesson](#/examples/layout/wasm-flex-nested-intrinsic)
+shows width-dependent height moving a following target. Percentage feedback,
+wrapping and aggregate structural paint reuse remain open.

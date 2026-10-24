@@ -6,6 +6,7 @@ import { isLayoutComponent, placedLayoutComponentRoot } from './define-layout-co
 import { getStyleMeasurementMode, withStyleMeasurement, rejectResponsiveMeasurement, UnsupportedResponsiveMeasurement } from '../style/responsive.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { GLOBAL_STATE } from '../global-state.js';
+import { withMeasurementLayoutOwner } from './wasm/region.js';
 import { EMPTY_STYLE } from '../style/empty-style.js';
 import {
   takePreNormalizedStyle,
@@ -65,10 +66,11 @@ export function measureElement(
   };
   const mode = getStyleMeasurementMode() ? 'recursive' :
     GLOBAL_STATE.componentRefs ? 'mounted-intrinsic' : 'standalone-root';
+  const owner = GLOBAL_STATE.currentPibblInstance?.interactionRoot ?? GLOBAL_STATE.currentPibblInstance;
   return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () =>
-    withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
+    withMeasurementLayoutOwner(owner, () => withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
       measureElementInternal(element, constraints, service, context),
-    )),
+    ))),
   );
 }
 
@@ -235,7 +237,8 @@ function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly
   const context: MeasurementContext = { active: new Set(), stack: [] };
   const mode = getStyleMeasurementMode() ? 'recursive' : GLOBAL_STATE.componentRefs ? 'mounted-intrinsic' : 'standalone-root';
   const key = `${intrinsic ? 'intrinsic' : 'finite'}:${options?.key ?? ''}`;
-  return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () => withReceiverInputProvision(transaction, receiver, () => withSignalDependencyRole('measurement', () => {
+  const owner = GLOBAL_STATE.currentPibblInstance?.interactionRoot ?? GLOBAL_STATE.currentPibblInstance;
+  return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () => withMeasurementLayoutOwner(owner, () => withReceiverInputProvision(transaction, receiver, () => withSignalDependencyRole('measurement', () => {
     const inputSnapshot = intrinsicInputSnapshot(element);
     let receivers = transaction && intrinsicTransactions.get(transaction);
     let entries = options && receivers?.get(options.token);
@@ -260,12 +263,29 @@ function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly
     }
     for (const node of entry.dependencies) trackSignalDependency(node, 'measurement');
     return entry.result as IntrinsicSizesResult | MeasureResult;
-  })));
+  }))));
 }
 
 interface MeasurementContext {
   active: Set<PibblElement<any>>;
   stack: PibblElement<any>[];
+}
+
+// Present only while a primitive measurement callback is evaluating. Flex uses this
+// continuation for its explicitly admitted paired structural child, so the child
+// shares the caller's cycle stack and receives provider inputs with measurement
+// dependency tracking. Ordinary `input.measureElement` remains unchanged.
+let constrainedChildContext: MeasurementContext | undefined;
+let constrainedChildService: CanvasMeasurementService | undefined;
+export function measureConstrainedLayoutChild(
+  element: PibblElement<any>,
+  constraints: Readonly<Constraints>,
+): MeasureResult {
+  const context = constrainedChildContext, service = constrainedChildService;
+  if (!context || !service) throw new Error('Constrained structural measurement requires an active provider measurement.');
+  return withReceiverInputProvision(GLOBAL_STATE.renderTransaction, getPrimitiveReceiverToken(element), () =>
+    withSignalDependencyRole('measurement', () => measureElementInternal(element, constraints, service, context, false, true)),
+  );
 }
 
 function measureElementInternal(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, context: MeasurementContext, intrinsic: true): IntrinsicSizesResult;
@@ -344,6 +364,9 @@ function measureElementInternal(
     GLOBAL_STATE.primitiveReceiverToken =
       getPrimitiveReceiverToken(element) ?? createPrimitiveReceiverToken();
     let result: MeasureResult | IntrinsicSizesResult;
+    const previousConstrainedChildContext = constrainedChildContext;
+    const previousConstrainedChildService = constrainedChildService;
+    if (!intrinsic) { constrainedChildContext = context; constrainedChildService = service; }
     try {
       result = withStyleMeasurement('recursive', () => intrinsic ? definition!.measureIntrinsic!({
         props: inputs.props, style: normalized, service,
@@ -360,6 +383,8 @@ function measureElementInternal(
           measureElementInternal(child, childConstraints, service, context),
       }));
     } finally {
+      constrainedChildContext = previousConstrainedChildContext;
+      constrainedChildService = previousConstrainedChildService;
       GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
     }
     if (result.status === 'unsupported') return result;

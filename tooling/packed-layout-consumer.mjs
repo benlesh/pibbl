@@ -1076,6 +1076,181 @@ try {
     throw Error('installed structural provider detached input');
 }
 
+
+
+const structuralRowCanvas = document.createElement('canvas');
+structuralRowCanvas.width = 100;
+structuralRowCanvas.height = 100;
+structuralRowCanvas.style.cssText = 'width:100px;height:100px';
+document.body.append(structuralRowCanvas);
+type InstalledStructuralRowStyle = SystemStyle & {
+  width?: number;
+  height?: number | 'auto';
+  minWidth?: number;
+  minHeight?: number;
+  flexBasis?: number;
+  flexGrow?: number;
+  flexShrink?: number;
+  fill?: string;
+};
+const structuralRowOwner = signal(80),
+  structuralRowContentHeight = signal(40),
+  structuralRowBoxes = new Map<
+    string,
+    { x: number; y: number; width: number; height: number; stamp: number }
+  >(),
+  structuralRowHits: string[] = [];
+let structuralRowSerial = 0,
+  structuralRowCalls = 0;
+const InstalledStructuralRowLeaf = definePrimitive<
+  { contentHeight: typeof structuralRowContentHeight },
+  InstalledStructuralRowStyle,
+  InstalledStructuralRowStyle,
+  SystemStyle & { width: number; height: number }
+>(
+  (_props, _style) => {
+    const box = useLayoutBox(),
+      matrix = useCanvasContext().getTransform(),
+      stamp = useConst(() => ++structuralRowSerial);
+    structuralRowBoxes.set('leaf', {
+      x: matrix.e,
+      y: matrix.f,
+      width: box.width,
+      height: box.height,
+      stamp,
+    });
+    return createElement(Rectangle, {
+      onClick: () => structuralRowHits.push('leaf'),
+      style: { width: box.width, height: box.height, fill: '#19375b', cursor: 'pointer' },
+    });
+  },
+  {
+    preserveSignalProps: ['contentHeight'],
+    resolveStyle: (_style, context) => ({
+      width: context.allocation.width,
+      height: context.allocation.height,
+    }),
+    measureIntrinsic: () => ({
+      status: 'measured',
+      minContent: { width: 0, height: 20 },
+      maxContent: { width: 100, height: 20 },
+    }),
+    measure: ({ props, constraints }) => {
+      structuralRowCalls++;
+      return {
+        status: 'measured',
+        size: {
+          width: constraints.maxWidth,
+          height: constraints.maxWidth <= 40 ? props.contentHeight.get() : 20,
+        },
+      };
+    },
+  },
+);
+const InstalledStructuralRowFooter = definePrimitive<
+  {}, InstalledStructuralRowStyle, InstalledStructuralRowStyle,
+  SystemStyle & { width: number; height: number }
+>((_props, _style) => {
+  const box = useLayoutBox(), matrix = useCanvasContext().getTransform(),
+    stamp = useConst(() => ++structuralRowSerial);
+  structuralRowBoxes.set('footer', {
+    x: matrix.e, y: matrix.f, width: box.width, height: box.height, stamp,
+  });
+  return createElement(Rectangle, {
+    onClick: () => structuralRowHits.push('footer'),
+    style: { width: box.width, height: box.height, fill: '#426b61', cursor: 'pointer' },
+  });
+}, {
+  resolveStyle: (_style, context) => ({
+    width: context.allocation.width,
+    height: context.allocation.height,
+  }),
+});
+const InstalledStructuralRowCard = defineLayoutComponent((props: {
+  style: InstalledStructuralRowStyle;
+  contentHeight: typeof structuralRowContentHeight;
+}) => createElement(Flex, {
+  style: {
+    ...props.style,
+    width: structuralRowOwner.get(),
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
+    layoutDirection: 'ltr',
+    alignItems: 'flex-start',
+  },
+  children: [
+    createElement(InstalledStructuralRowLeaf, {
+      key: 'leaf', contentHeight: props.contentHeight,
+      style: { flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' },
+    }),
+    createElement(Rectangle, {
+      key: 'row-sibling',
+      style: { width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#6e3e79' },
+    }),
+  ],
+}));
+const structuralRowCard = createElement(InstalledStructuralRowCard, {
+  key: 'card', contentHeight: structuralRowContentHeight,
+  style: { height: 'auto', minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 },
+});
+const structuralRowFooter = createElement(InstalledStructuralRowFooter, {
+  key: 'footer',
+  style: { width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 },
+});
+const structuralRowBaseline = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__(),
+  structuralRowController = pibblSync(structuralRowCanvas, createElement(Flex, {
+    style: {
+      width: structuralRowOwner, height: 80, flexDirection: 'column', alignItems: 'flex-start',
+    },
+    children: [structuralRowCard, structuralRowFooter],
+  }));
+try {
+  const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+  const click = (x: number, y: number) => {
+    const rect = structuralRowCanvas.getBoundingClientRect();
+    for (const type of ['mousedown', 'mouseup', 'click']) structuralRowCanvas.dispatchEvent(
+      new MouseEvent(type, { clientX: rect.left + x, clientY: rect.top + y, bubbles: true, button: 0 }),
+    );
+  };
+  await frame();
+  const initialLeaf = structuralRowBoxes.get('leaf'), initialFooter = structuralRowBoxes.get('footer');
+  if (JSON.stringify(initialLeaf) !== JSON.stringify({ x: 0, y: 0, width: 60, height: 20, stamp: 1 }) ||
+    JSON.stringify(initialFooter) !== JSON.stringify({ x: 0, y: 20, width: 20, height: 20, stamp: 2 }) ||
+    structuralRowCalls < 1) throw Error('installed structural row initial '+JSON.stringify({initialLeaf,initialFooter,calls:structuralRowCalls}));
+  click(5, 30); if (JSON.stringify(structuralRowHits) !== JSON.stringify(['footer'])) throw Error('installed structural row initial footer target');
+  const mounted = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__(), initialCalls = structuralRowCalls;
+  structuralRowOwner.set(60); await frame();
+  const narrowLeaf = structuralRowBoxes.get('leaf'), narrowFooter = structuralRowBoxes.get('footer');
+  if (JSON.stringify(narrowLeaf) !== JSON.stringify({ x: 0, y: 0, width: 40, height: 40, stamp: 1 }) ||
+    JSON.stringify(narrowFooter) !== JSON.stringify({ x: 0, y: 40, width: 20, height: 20, stamp: 2 }) ||
+    structuralRowCalls <= initialCalls ||
+    (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates !== mounted.nodeCreates)
+    throw Error('installed structural row narrowed '+JSON.stringify({narrowLeaf,narrowFooter,calls:structuralRowCalls}));
+  click(5, 30); click(5, 45);
+  if (JSON.stringify(structuralRowHits) !== JSON.stringify(['footer', 'leaf', 'footer']))
+    throw Error('installed structural row moved targets '+JSON.stringify(structuralRowHits));
+  const beforeContent = structuralRowCalls;
+  structuralRowContentHeight.set(50); await frame();
+  const tallLeaf = structuralRowBoxes.get('leaf'), tallFooter = structuralRowBoxes.get('footer');
+  if (JSON.stringify(tallLeaf) !== JSON.stringify({ x: 0, y: 0, width: 40, height: 50, stamp: 1 }) ||
+    JSON.stringify(tallFooter) !== JSON.stringify({ x: 0, y: 50, width: 20, height: 20, stamp: 2 }) ||
+    structuralRowCalls <= beforeContent)
+    throw Error('installed structural row content update '+JSON.stringify({tallLeaf,tallFooter,calls:structuralRowCalls}));
+  receipt.structuralFinalWidthProvider = true;
+} finally {
+  structuralRowController.dispose(); structuralRowCanvas.remove();
+  const disposed = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+  if (disposed.activeNodes !== structuralRowBaseline.activeNodes ||
+    disposed.activeArenas !== structuralRowBaseline.activeArenas ||
+    disposed.cachedMeasurements !== structuralRowBaseline.cachedMeasurements ||
+    disposed.activeWasmInstances !== structuralRowBaseline.activeWasmInstances)
+    throw Error('installed structural row cleanup');
+  const nodes = disposed.nodeCreates;
+  structuralRowContentHeight.set(60); await new Promise((resolve) => requestAnimationFrame(resolve));
+  if ((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates !== nodes)
+    throw Error('installed structural row detached input');
+}
+
 const controller = pibblSync(document.querySelector('canvas')!, createElement(WasmFlexNestedIntrinsicExample, {}));
 addEventListener('pagehide', () => controller.dispose(), {once:true});`,
   );

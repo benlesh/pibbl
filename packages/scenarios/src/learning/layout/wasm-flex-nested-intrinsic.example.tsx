@@ -25,6 +25,8 @@ function createWasmFlexNestedIntrinsicExampleContent(
   const percentageCap = signal(false);
   const measuredBadge = signal(false);
   const badgeMinimum = signal(60);
+  const nestedMeasurement = signal(false);
+  const nestedWidth = signal(80);
   let descriptions = 0, paragraphDescriptions = 0;
   const longText =
     "Nested columns settle their widths before Text determines their heights. The following sibling uses the complete Card height.";
@@ -177,9 +179,11 @@ function createWasmFlexNestedIntrinsicExampleContent(
   }
   interface BadgeStyle extends SystemStyle {
     readonly width?: number;
-    readonly height?: number;
+    readonly height?: number | "auto";
     readonly minWidth?: number;
     readonly minHeight?: number;
+    readonly flexBasis?: number;
+    readonly flexGrow?: number;
     readonly flexShrink?: number;
     readonly fill?: string;
   }
@@ -205,7 +209,10 @@ function createWasmFlexNestedIntrinsicExampleContent(
       badgeCalls++;
       return { status: "measured" as const, minContent: { width: props.minimum.get(), height: 20 }, maxContent: { width: 100, height: 20 } };
     },
-    measure: ({ constraints }) => ({ status: "measured" as const, size: { width: constraints.maxWidth, height: 20 } }),
+    measure: ({ props, constraints }) => {
+      badgeCalls++;
+      return { status: "measured" as const, size: { width: constraints.maxWidth, height: constraints.maxWidth <= 40 ? props.minimum.get() : 20 } };
+    },
   });
   const Badge = defineLayoutComponent((props: { readonly minimum: typeof badgeMinimum; readonly style: BadgeStyle }) =>
     <BadgeLeaf key="leaf" minimum={props.minimum} style={props.style} />,
@@ -221,8 +228,24 @@ function createWasmFlexNestedIntrinsicExampleContent(
     <Badge key="badge" minimum={badgeMinimum} style={{ height: 20, flexShrink: 1, fill: "#426b61" }} />
     <BadgeFollower key="follower" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: ink }} />
   </Flex>;
+  const MeasuredRow = defineLayoutComponent(() => <Flex style={{
+    width: nestedWidth.get(), flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start", minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+  }}>
+    <BadgeLeaf key="measured" minimum={badgeMinimum} style={{ flexBasis: 100, minWidth: 0, minHeight: 0, height: "auto", flexShrink: 1, fill: "#426b61" }} />
+    <Rectangle key="fixed" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: "#a63758" }} />
+  </Flex>);
+  const nestedContent = <Flex style={{ left: 28, top: 148, width: nestedWidth, height: 200, flexDirection: "column", alignItems: "flex-start" }}>
+    <MeasuredRow key="row" />
+    <BadgeFollower key="footer" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: ink }} />
+  </Flex>;
   function Workspace() {
     rootTransform = useCanvasContext().getTransform();
+    if (nestedMeasurement.get()) return <>
+      {nestedContent}
+      <Text pointerEvents="none" style={{ left: 28, top: 320, font: "14px sans-serif", fill: "#475569" }}>
+        Toggle width: the inner row measures its green card before placing the following target.
+      </Text>
+    </>;
     if (measuredBadge.get()) return <>
       {badgeContent}
       <Text pointerEvents="none" style={{ left: 28, top: 188, font: "14px sans-serif", fill: "#475569" }}>
@@ -310,7 +333,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
       <Button
         x={28}
         label="Toggle width"
-        onClick={() => width.update((value) => (value === 420 ? 220 : 420))}
+        onClick={() => nestedMeasurement.get() ? nestedWidth.update(value => value === 80 ? 60 : 80) : width.update((value) => (value === 420 ? 220 : 420))}
       />
       <Button
         x={224}
@@ -321,7 +344,8 @@ function createWasmFlexNestedIntrinsicExampleContent(
           )
         }
       />
-      <Button x={612} width={120} label="Measured badge" onClick={() => measuredBadge.update(value => !value)} />
+      <Button x={612} width={120} label="Measured badge" onClick={() => { nestedMeasurement.set(false); measuredBadge.update(value => !value); }} />
+      <Button x={612} y={148} width={120} label="Nested row" onClick={() => nestedMeasurement.update(value => !value)} />
       <Button
         x={420}
         label="Paint only"
@@ -367,6 +391,8 @@ function createWasmFlexNestedIntrinsicExampleContent(
       structuralCard: structuralCard.get(),
       percentageCap: percentageCap.get(),
       measuredBadge: measuredBadge.get(),
+      nestedMeasurement: nestedMeasurement.get(),
+      nestedWidth: nestedWidth.get(),
       badgeMinimum: badgeMinimum.get(),
       badgeBox,
       badgeFollowerBox,

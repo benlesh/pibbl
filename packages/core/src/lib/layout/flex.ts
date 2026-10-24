@@ -7,7 +7,7 @@ import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyl
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
-import { experimentalLayout, LayoutRegion, mountedLayoutRegion, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
+import { experimentalLayout, LayoutRegion, mountedLayoutRegion, solveTransientFlexMain, type NumericFlexMainInput, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
 import { Rectangle } from '../components/rect.js';
 import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth, measureLayoutTextNaturalRun } from '../components/text.js';
 
@@ -57,7 +57,7 @@ import { getLayoutDirection, pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { markDerivedAbsoluteAxes } from '../style/positioning.js';
-import { measureElement, measureIntrinsicElement, measureConstrainedIntrinsicElement, measureBaselineElement, withIsolatedRenderState } from './measure.js';
+import { measureElement, measureConstrainedLayoutChild, measureIntrinsicElement, measureConstrainedIntrinsicElement, measureBaselineElement, withIsolatedRenderState } from './measure.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
 import type { Constraints, LayoutBox } from './types.js';
 
@@ -401,6 +401,18 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
     }
 }
 
+interface IntrinsicRowItem extends NumericFlexMainInput {
+  readonly child: PibblElement<any>;
+  readonly style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>>;
+  readonly receiverToken: object;
+  readonly measureCross: boolean;
+  readonly baseCross: number;
+  readonly minCross: number;
+  readonly maxCross: number;
+  readonly paddingCross: number;
+  readonly marginCross: number;
+}
+
 function measureFlex(
   input: MeasureInput<FlexProps, FlexStyle>,
 ): MeasureResult {
@@ -459,6 +471,18 @@ function measureFlex(
   if (wrappedIntrinsic && !(experimentalLayout && options.flexDirection === 'row' && options.flexWrap === 'wrap' && options.layoutDirection === 'ltr' && typeof input.style.width === 'number' && !heightDefinite)) return unsupportedIntrinsic('wrapped intrinsic height requires a finite numeric row width, LTR wrap and automatic height');
   const wrapWidth = wrappedIntrinsic ? resolveMeasuredContainerLength(measuredWidth!, input.constraints.maxWidth, 'width', input.constraints) : 0;
   const mainGap = row ? options.columnGap : options.rowGap;
+  // An exact width makes this dependency acyclic: main allocation precedes each
+  // paired leaf's height query. Metadata inspection never evaluates components.
+  const measuredRowWidth = experimentalLayout && options.flexDirection === 'row' &&
+    options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' && !heightDefinite &&
+    typeof measuredWidth === 'number' ?
+    resolveMeasuredContainerLength(measuredWidth, input.constraints.maxWidth, 'width', input.constraints) : undefined;
+  let rowItems: IntrinsicRowItem[] | undefined;
+  if (measuredRowWidth !== undefined) for (let index = 0; index < children.length; index++) {
+    const definition = getPrimitiveDefinition(children[index].type);
+    if (definition?.measureIntrinsic && definition.measure) { rowItems = []; break; }
+  }
+  let requiresSolvedCross = false;
   let lineMain = 0, lineCross = 0, lineItems = 0, wrappedHeight = 0;
   let intrinsicMain = 0;
   let intrinsicCross = 0;
@@ -585,6 +609,10 @@ function measureFlex(
     }
     let baseMain: number;
     let baseCross: number;
+    const provider = rowItems ? getPrimitiveDefinition(child.type) : undefined;
+    const measureCross = !!rowItems && !!provider?.measureIntrinsic && !!provider.measure &&
+      (crossValue === undefined || crossValue === 'auto');
+    if (rowItems && preparedStyleQuery(prepared)) return unsupportedIntrinsic('does not support responsive child queries during solved row measurement');
     if (experimentalLayout && !row && widthDefinite && !heightDefinite &&
       (child.type === Text || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap') &&
       (mainValue === undefined || mainValue === 'auto' || crossValue === undefined || crossValue === 'auto')) {
@@ -612,11 +640,11 @@ function measureFlex(
       if (mainValue === undefined || mainValue === 'auto') {
         return unsupportedIntrinsic('requires a definite child basis; measured auto basis is deferred');
       }
-      if (crossValue === undefined || crossValue === 'auto') {
+      if ((crossValue === undefined || crossValue === 'auto') && !measureCross) {
         return unsupportedIntrinsic('requires a definite child cross size');
       }
       baseMain = intrinsicNumber(mainValue, 'flexBasis');
-      baseCross = intrinsicNumber(crossValue, crossProperty);
+      baseCross = measureCross ? 0 : intrinsicNumber(crossValue, crossProperty);
     }
     const minMain = intrinsicOptionalNumber(style[minimumProperty], 0, minimumProperty);
     const maxMainProperty = row ? 'maxWidth' : 'maxHeight';
@@ -654,12 +682,38 @@ function measureFlex(
       lineCross = Math.max(lineCross, outerCross);
       lineItems++;
     }
-    intrinsicMain += clamp(baseMain, minMain, maxMain) + paddingMain + marginMain;
-    intrinsicCross = Math.max(
-      intrinsicCross,
-      clamp(baseCross, minCross, maxCross) + paddingCross + marginCross,
-    );
+    if (rowItems) {
+      rowItems.push({ child, style, receiverToken, measureCross, baseMain, minMain, maxMain,
+        paddingMain, grow, shrink, marginMainBefore: marginLeft, marginMainAfter: marginRight,
+        baseCross, minCross, maxCross, paddingCross, marginCross });
+      if (measureCross) requiresSolvedCross = true;
+    } else {
+      intrinsicMain += clamp(baseMain, minMain, maxMain) + paddingMain + marginMain;
+      intrinsicCross = Math.max(intrinsicCross,
+        clamp(baseCross, minCross, maxCross) + paddingCross + marginCross);
+    }
     count++;
+  }
+  if (rowItems) {
+    const targets = requiresSolvedCross ? solveTransientFlexMain(rowItems, measuredRowWidth!, mainGap) : undefined;
+    for (let index = 0; index < rowItems.length; index++) {
+      const item = rowItems[index];
+      const main = targets ? targets[index] : clamp(item.baseMain, item.minMain, item.maxMain);
+      let cross = item.baseCross;
+      if (item.measureCross) {
+        const measuredChild = clonePibblElement(item.child);
+        const measuredStyle = { ...item.style, width: main };
+        setPreNormalizedStyle(measuredChild, measuredStyle, item.child, item.receiverToken);
+        const result = measureConstrainedLayoutChild(measuredChild, {
+          minWidth: main, maxWidth: main, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
+        });
+        if (result.status !== 'measured') return result;
+        cross = result.size.height;
+      }
+      intrinsicMain += main + item.paddingMain + item.marginMainBefore! + item.marginMainAfter!;
+      intrinsicCross = Math.max(intrinsicCross,
+        clamp(cross, item.minCross, item.maxCross) + item.paddingCross + item.marginCross);
+    }
   }
   intrinsicMain = Math.max(0, intrinsicMain + Math.max(0, count - 1) * mainGap);
   return { status: 'measured', size: {

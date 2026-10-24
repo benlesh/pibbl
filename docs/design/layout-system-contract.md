@@ -901,7 +901,21 @@ existing receiver provision and region-owned measurement cache; unsuccessful
 transactions publish no new cache entry. A successful cached scalar/signal input
 snapshot can serve unrelated sibling paint. Mutable nested inputs and functions
 retain conservative remeasurement. Ordinary components are never evaluated to
-obtain a measurement. General structural intrinsic composition and aggregate Card
+obtain a measurement.
+
+A described known Flex row may also derive automatic height from direct paired
+custom leaves at a definite numeric width (or an exact finite caller width). This
+experimental forward LTR nowrap path requires numeric child main bases, explicit
+main minima, zero grow, and finite declared cross sizes for nonmeasured siblings.
+Percentage/query/aspect feedback, automatic child main bases and wrapped or
+reversed rows remain outside this query. Native main allocation runs first;
+paired leaves then receive exact solved content widths and unbounded height,
+using the existing measurement context and receiver-owned resolved inputs. The
+resulting cross contributions determine the owner's height and following target.
+There is no guessed finite cross constraint or JavaScript main-solver fallback.
+Aggregate measurement may still rerun during sibling paint.
+
+General structural intrinsic composition and aggregate Card
 measurement reuse remain unimplemented; unsupported cases stay diagnostic. See
 [the API page](../site/api/functions/define-layout-component.md) and
 [Plan 010](../project-plans/010-layout-engine-rework.md).
