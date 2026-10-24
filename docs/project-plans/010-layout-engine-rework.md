@@ -7455,7 +7455,7 @@ Source5192/refreshed built5193 pass errors[]/cleanup000/470built inputs; screens
 inspected. Catalog/Studio175/12/33, docs109mutation probes and scoped runtime review
 pass. No baseline release promotion or aggregate trust claim.
 
-## [NEXT] Consolidation68: baseline main composition and numeric margins
+## [DONE] Consolidation68: baseline main composition and numeric margins
 
 Consolidate202–204before further production: accumulated experimental/ordinary
 checks, installed ABI14 Text/main-flex/shrink/numeric-margin receipts, source/built
@@ -7463,6 +7463,28 @@ replay, package identity, types, catalog and documentation checks. Baselines rem
 experimental and all seven release gates remain open. Next finite baseline exits
 include remaining leaf profiles, automatic wrapped cross margins, nested/reference
 propagation, explicit column interpretation and last-baseline placement.
+
+Fresh Node24.15 accumulated checks:79files1091pass/12skip of1103,83.04s;
+ordinary304pass/799skip,9.99s. Full source5192/built5193 replay passes errors[] and
+cleanup000/470built inputs. Installed ABI14 browser driver explicitly asserts new
+firstBaselineMainComposition and firstBaselineNumericMargins receipts: fixed Text
+growth→main-auto, provider shrink100→120, numeric main10→20, top30/bottom10line
+extents, real targets, identity and cleanup. Earlier installed receipts remain.
+Packed246inputs/104margin fixtures and strict Bundler/NodeNext consumers pass;
+tarball SHA256
+`1eb485d9f715c93362606b99802c01315eed031f935968d302a1037ac8139c4d`.
+Types, lint, catalog/Studio/discovery, docs109mutations and public JSDoc pass.
+Native36tests/ABI14fingerprint recorded in204. No aggregate trust or final
+whole-codebase review claimed. Ledger12complete/12experimental/3partial/5missing/
+1excluded and seven open release gates are unchanged.
+
+## [NEXT] Slice205: wrapped automatic cross-margin baseline participants
+
+Establish the physical per-line policy using native/reference/public evidence:
+automatic cross-margin leaves opt out of baseline sharing, contribute their outer
+height to line extent, and absorb free cross space within their own allocated
+line. Preserve existing nowrap behavior and classify known Yoga differences rather
+than adding another arbitrary admission fence. No new public API or scheduler.
 
 ## Scope and execution
 
