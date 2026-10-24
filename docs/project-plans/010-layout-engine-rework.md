@@ -7574,7 +7574,7 @@ docs109mutations and scoped mapping/Text review pass. No ABI change, layout-padd
 capability reopening, or baseline release promotion is needed; Text drawing defect
 is fixed with both-lane evidence before this slice is committed.
 
-## [NEXT] Consolidation69: automatic margins, relative placement and decoration
+## [DONE] Consolidation69: automatic margins, relative placement and decoration
 
 Consolidate205–207before further production: accumulated both-lane tests,
 installed automatic-cross/relative/decorated-provider/Text receipts, source/built
@@ -7583,6 +7583,49 @@ one final-allocation capability boundary: existing finite boxes should compose
 without a queue per authored-property fence; retain only actual sizing/provider/
 alignment prerequisites and record the finite closure classes. Baselines remain
 experimental and all seven release gates remain open.
+
+Fresh final Node24.15 matrix:79files1099pass/12skip of1111,82.98s; ordinary
+305pass/806skip,8.94s. Earlier pre-supplement totals1097/12of1109are superseded by
+this final run. Full source5192/built5193 replay passes errors[]/cleanup000 and470
+built inputs. Installed ABI15 receipts explicitly assert automatic wrap-reverse
+stretch/provider detach-rejoin, relative/static placement, decorated provider
+content40×20/outer57×48, and Text content-origin baseline/glyph hits. Earlier
+installed receipts remain. Packed246inputs/104margin fixtures and strict Bundler/
+NodeNext pass; tarball SHA256
+`53bb412ad0060fcf9445aa17c1a6cd9c9afec2bdf2cef2bc369cdfab6a9efbb7`.
+Types/lint, catalog/Studio/discovery175/12/33, docs109mutations and public JSDoc
+52entries/1486declarations/6576links pass. Native39tests/ABI15fingerprint are in205;
+206/207need no binary change. No aggregate trust or final whole-codebase review
+claimed. Ledger12complete/12experimental/3partial/5missing/1excluded and all seven
+open release gates remain unchanged.
+
+Finite baseline closure inventory after this checkpoint:
+
+- One settled direct-leaf box capability replaces raw width/basis/height/aspect
+  fences where existing main allocation and acyclic final-main cross measurement
+  supply a finite content box before baseline queries.
+- Prepared style-query ownership/revision must be demonstrated through existing
+  receiver roles; a final-box shortcut cannot conceal an allocation cycle.
+- Per-item alignSelf membership needs mixed baseline/nonbaseline placement rules.
+- Nested/reference baselines need declared provider propagation/synthesis ownership.
+- Columns need an explicit physical baseline/fallback interpretation.
+- Last-baseline placement needs its public alignment and native grouping contract.
+- Broader Text fit/overflow/font admission must use actual Canvas metrics and
+  application font readiness, without a new font-loading/shaping subsystem.
+
+These are finite semantic exits, not a Cartesian fixture queue or a promised slice
+count. Relative placement, main/cross margins and resolved insets are closed and
+must not be rediscovered as missing classes.
+
+## [NEXT] Slice208: settled direct baseline content boxes
+
+Use the existing main solver and final-width cross measurement for direct leaves:
+accept already-settled numeric main allocations irrespective of authored basis,
+and acyclic measured/aspect-derived cross results before content-sized baseline
+queries. Establish public RED for ordinary-provider measurement and aspect cases,
+then remove only raw property fences replaced by actual final-box evidence. Keep
+real query/group/structural/cyclic prerequisites explicit. No second solver or
+public per-engine selector.
 
 ## Scope and execution
 
