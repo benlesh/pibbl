@@ -351,6 +351,7 @@ it.runIf(experimentalLayout)(
     const baseline = snapshotWasmLayoutDiagnostics();
     const owner = signal(80);
     const contentHeight = signal(40);
+    const footerFill = signal('#a63758');
     const fail = signal(false);
     let footerRenders = 0;
     const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
@@ -417,7 +418,7 @@ it.runIf(experimentalLayout)(
       <Flex style={{ ...props.style, width: owner.get() }}>{[provider, follower]}</Flex>,
     );
     const card = <Card key="card" style={{ minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start' }} />;
-    const footer = <Footer key="footer" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: '#a63758' }} />;
+    const footer = <Footer key="footer" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: footerFill }} />;
     const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100; document.body.append(canvas);
     const controller = pibbl(canvas, <Flex style={{ width: owner, height: 80, flexDirection: 'column', alignItems: 'flex-start' }}>{[card, footer]}</Flex>);
     controllers.push(controller);
@@ -428,6 +429,15 @@ it.runIf(experimentalLayout)(
     expect(rawQueryArenas).toEqual([baseline.activeArenas]);
     expect(rawQueryInstances).toEqual([baseline.wasmInstanceCreates + 1]);
     const mountedArenas = snapshotWasmLayoutDiagnostics().activeArenas;
+    const beforeFooterPaint = snapshotWasmLayoutDiagnostics();
+    const beforeFooterPaintMeasurements = measurements;
+    footerFill.set('#8c3154'); await nextFrame();
+    // A footer-only paint input must not repeat the described Card's paired
+    // measurement or disposable native main query after aggregate caching.
+    expect(measurements).toBe(beforeFooterPaintMeasurements);
+    expect(snapshotWasmLayoutDiagnostics().measurementSolves).toBe(beforeFooterPaint.measurementSolves);
+    expect(boxes.get('provider')).toEqual({ x: 0, y: 0, width: 60, height: 20, stamp: 1 });
+    expect(boxes.get('footer')).toEqual({ x: 0, y: 20, width: 20, height: 20, stamp: 2 });
     const initialMeasurements = measurements;
     owner.set(60); await nextFrame();
     expect(boxes.get('provider')).toEqual({ x: 0, y: 0, width: 40, height: 40, stamp: 1 });
@@ -436,6 +446,9 @@ it.runIf(experimentalLayout)(
     expect(rawQueryArenas).toEqual([baseline.activeArenas, mountedArenas]);
     expect(rawQueryInstances).toEqual([baseline.wasmInstanceCreates + 1, baseline.wasmInstanceCreates + 1]);
 
+    const beforeNarrowPaint = measurements;
+    footerFill.set('#426b61'); await nextFrame();
+    expect(measurements).toBe(beforeNarrowPaint);
     const afterResize = measurements;
     contentHeight.set(50); await nextFrame();
     expect(boxes.get('provider')).toEqual({ x: 0, y: 0, width: 40, height: 50, stamp: 1 });
@@ -445,8 +458,11 @@ it.runIf(experimentalLayout)(
     const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
     window.addEventListener('error', prevent);
     try {
+      footerFill.set('#a63758'); await nextFrame();
       const beforeFailure = footerRenders;
-      fail.set(true); owner.set(50); await nextFrame();
+      const cachedFailureMeasurements = measurements;
+      fail.set(true); await nextFrame();
+      expect(measurements).toBeGreaterThan(cachedFailureMeasurements);
       expect(errors).toHaveLength(1);
       expect(String(errors[0])).toContain('paired row measurement failed');
       expect(footerRenders).toBe(beforeFailure);
@@ -491,3 +507,180 @@ it.runIf(experimentalLayout)('releases a standalone native row query before invo
   expect(after.measurementSolves).toBe(baseline.measurementSolves + 1);
   expect(after.wasmInstanceCreates).toBe(baseline.wasmInstanceCreates + 1);
 });
+
+it.runIf(experimentalLayout)(
+  'releases a removed described paired row cache and detaches its provider signal while the parent stays mounted',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const shown = signal(true);
+    const content = signal(40);
+    const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+    let serial = 0;
+    let calls = 0;
+
+    interface Style extends SystemStyle {
+      readonly width?: number;
+      readonly height?: number | 'auto';
+      readonly minWidth?: number;
+      readonly minHeight?: number;
+      readonly flexBasis?: number;
+      readonly flexGrow?: number;
+      readonly flexShrink?: number;
+      readonly fill?: string;
+    }
+    type ResolvedStyle = Style & { readonly width: number; readonly height: number };
+    const Provider = definePrimitive<
+      { readonly content: typeof content }, Style, Style, ResolvedStyle
+    >((_props, style) => {
+      const box = useLayoutBox();
+      const matrix = useCanvasContext().getTransform();
+      const stamp = useConst(() => ++serial);
+      boxes.set('provider', { x: matrix.e, y: matrix.f, width: box.width, height: box.height, stamp });
+      return <Rectangle style={{ width: box.width, height: box.height, fill: style.fill }} />;
+    }, {
+      preserveSignalProps: ['content'],
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measureIntrinsic: () => ({
+        status: 'measured' as const,
+        minContent: { width: 0, height: 20 },
+        maxContent: { width: 100, height: 20 },
+      }),
+      measure: ({ props, constraints }) => {
+        calls++;
+        return {
+          status: 'measured' as const,
+          size: { width: constraints.maxWidth, height: constraints.maxWidth <= 60 ? props.content.get() : 20 },
+        };
+      },
+    });
+    const Footer = definePrimitive<{}, Style, Style, ResolvedStyle>((_props, style) => {
+      const box = useLayoutBox();
+      const matrix = useCanvasContext().getTransform();
+      const stamp = useConst(() => ++serial);
+      boxes.set('footer', { x: matrix.e, y: matrix.f, width: box.width, height: box.height, stamp });
+      return <Rectangle style={{ width: box.width, height: box.height, fill: style.fill }} />;
+    }, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+    });
+    const Card = defineLayoutComponent((props: { readonly style: FlexStyle }) =>
+      <Flex style={{ ...props.style, width: 80, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start' }}>
+        <Provider key="provider" content={content} style={{ flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' }} />
+        <Rectangle key="fixed" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#426b61' }} />
+      </Flex>,
+    );
+    const card = <Card key="card" style={{ minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 }} />;
+    const footer = <Footer key="footer" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: '#a63758' }} />;
+    function Scene() {
+      return <Flex style={{ width: 80, height: 80, flexDirection: 'column', alignItems: 'flex-start' }}>
+        {shown.get() ? card : null}
+        {footer}
+      </Flex>;
+    }
+
+    const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100; document.body.append(canvas);
+    const controller = pibbl(canvas, <Scene />);
+    controllers.push(controller);
+    await nextFrame();
+    expect(boxes.get('provider')).toEqual({ x: 0, y: 0, width: 60, height: 40, stamp: 1 });
+    expect(boxes.get('footer')).toEqual({ x: 0, y: 40, width: 20, height: 20, stamp: 2 });
+    const mounted = snapshotWasmLayoutDiagnostics();
+
+    shown.set(false); await nextFrame();
+    expect(boxes.get('footer')).toEqual({ x: 0, y: 0, width: 20, height: 20, stamp: 2 });
+    const removed = snapshotWasmLayoutDiagnostics();
+    expect(removed.activeNodes).toBeLessThan(mounted.activeNodes);
+    const callsAfterRemoval = calls;
+    content.set(60); await nextFrame();
+    expect(calls).toBe(callsAfterRemoval);
+    expect(boxes.get('footer')).toEqual({ x: 0, y: 0, width: 20, height: 20, stamp: 2 });
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(removed.nodeCreates);
+
+    shown.set(true); await nextFrame();
+    expect(boxes.get('provider')).toEqual({ x: 0, y: 0, width: 60, height: 60, stamp: 3 });
+    expect(boxes.get('footer')).toEqual({ x: 0, y: 60, width: 20, height: 20, stamp: 2 });
+    expect(calls).toBeGreaterThan(callsAfterRemoval);
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([
+      baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+    ]);
+    const finalCalls = calls;
+    content.set(20); await nextFrame();
+    expect(calls).toBe(finalCalls);
+  },
+);
+
+it.runIf(experimentalLayout)(
+  'does not cache a described paired row when its provider performs an untraced nested public measurement',
+  async () => {
+    const owner = signal(80);
+    const footerFill = signal('#a63758');
+    let providerCalls = 0;
+    let nestedCalls = 0;
+
+    interface Style extends SystemStyle {
+      readonly width?: number;
+      readonly height?: number | 'auto';
+      readonly minWidth?: number;
+      readonly minHeight?: number;
+      readonly flexBasis?: number;
+      readonly flexGrow?: number;
+      readonly flexShrink?: number;
+      readonly fill?: string;
+    }
+    type ResolvedStyle = Style & { readonly width: number; readonly height: number };
+    const Nested = definePrimitive<{}, Style, Style, ResolvedStyle>(() => null, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measure: () => {
+        nestedCalls++;
+        return { status: 'measured' as const, size: { width: 1, height: 1 } };
+      },
+    });
+    const nested = <Nested key="nested" style={{ width: 1, height: 1 }} />;
+    const Provider = definePrimitive<{}, Style, Style, ResolvedStyle>((_props, style) => {
+      const box = useLayoutBox();
+      return <Rectangle style={{ width: box.width, height: box.height, fill: style.fill }} />;
+    }, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measureIntrinsic: () => ({
+        status: 'measured' as const,
+        minContent: { width: 0, height: 20 },
+        maxContent: { width: 100, height: 20 },
+      }),
+      measure: ({ constraints, measureElement }) => {
+        providerCalls++;
+        const nestedResult = measureElement(nested, { minWidth: 0, maxWidth: 1, minHeight: 0, maxHeight: 1 });
+        expect(nestedResult.status).toBe('measured');
+        return { status: 'measured' as const, size: { width: constraints.maxWidth, height: 20 } };
+      },
+    });
+    const Card = defineLayoutComponent((props: { readonly style: FlexStyle }) =>
+      <Flex style={{ ...props.style, width: owner.get(), flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start' }}>
+        <Provider key="provider" style={{ flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' }} />
+        <Rectangle key="fixed" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#426b61' }} />
+      </Flex>,
+    );
+    const card = <Card key="card" style={{ minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 }} />;
+    const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 80; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: owner, height: 60, flexDirection: 'column', alignItems: 'flex-start' }}>
+      {card}
+      <Rectangle key="footer" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: footerFill }} />
+    </Flex>);
+    controllers.push(controller);
+    await nextFrame();
+    expect(providerCalls).toBeGreaterThan(0);
+    expect(nestedCalls).toBeGreaterThan(0);
+    const beforePaint = snapshotWasmLayoutDiagnostics();
+    const providerBeforePaint = providerCalls;
+    const nestedBeforePaint = nestedCalls;
+
+    footerFill.set('#426b61'); await nextFrame();
+    const afterPaint = snapshotWasmLayoutDiagnostics();
+    // `input.measureElement` has no direct-child receiver index. Until it has a
+    // replay receipt, aggregate reuse must decline rather than retain its reads.
+    expect(providerCalls).toBeGreaterThan(providerBeforePaint);
+    expect(nestedCalls).toBeGreaterThan(nestedBeforePaint);
+    expect(afterPaint.measurementSolves).toBeGreaterThan(beforePaint.measurementSolves);
+    controller.dispose();
+  },
+);

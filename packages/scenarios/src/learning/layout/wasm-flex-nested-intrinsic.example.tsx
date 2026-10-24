@@ -228,12 +228,11 @@ function createWasmFlexNestedIntrinsicExampleContent(
     <Badge key="badge" minimum={badgeMinimum} style={{ height: 20, flexShrink: 1, fill: "#426b61" }} />
     <BadgeFollower key="follower" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: ink }} />
   </Flex>;
+  const measuredRowBadge = <BadgeLeaf key="measured" minimum={badgeMinimum} style={{ flexBasis: 100, minWidth: 0, minHeight: 0, height: "auto", flexShrink: 1, fill: "#426b61" }} />;
+  const measuredRowFixed = <Rectangle key="fixed" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: "#a63758" }} />;
   const MeasuredRow = defineLayoutComponent(() => <Flex style={{
     width: nestedWidth.get(), flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start", minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
-  }}>
-    <BadgeLeaf key="measured" minimum={badgeMinimum} style={{ flexBasis: 100, minWidth: 0, minHeight: 0, height: "auto", flexShrink: 1, fill: "#426b61" }} />
-    <Rectangle key="fixed" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: "#a63758" }} />
-  </Flex>);
+  }}>{[measuredRowBadge, measuredRowFixed]}</Flex>);
   const nestedContent = <Flex style={{ left: 28, top: 148, width: nestedWidth, height: 200, flexDirection: "column", alignItems: "flex-start" }}>
     <MeasuredRow key="row" />
     <BadgeFollower key="footer" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: ink }} />

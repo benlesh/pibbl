@@ -13,10 +13,10 @@ import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth, measureL
 
 const unsupportedProperties = ['order'] as const;
 
-import { ResponsiveStylePreparation, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
+import { ResponsiveStylePreparation, UnsupportedResponsiveMeasurement, withStyleMeasurement, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
-import { getChildPrimitiveReceiverToken, getPrimitiveReceiverToken, getPrimitiveDefinition, getElementMetadata, setElementMetadata } from '../element/metadata.js';
+import { getChildPrimitiveReceiverToken, getPrimitiveReceiverToken, getPrimitiveDefinition, getPrimitiveProgramProps, getElementMetadata, setElementMetadata } from '../element/metadata.js';
 import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
@@ -57,8 +57,8 @@ import { getLayoutDirection, pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { markDerivedAbsoluteAxes } from '../style/positioning.js';
-import { measureElement, measureConstrainedLayoutChild, measureIntrinsicElement, measureConstrainedIntrinsicElement, measureBaselineElement, withIsolatedRenderState } from './measure.js';
-import { withSignalWriteForbidden } from '../signals/graph.js';
+import { measureElement, measureConstrainedLayoutChild, measureIntrinsicElement, measureConstrainedIntrinsicElement, measurePreparedLayoutElement, measureBaselineElement, withIsolatedRenderState } from './measure.js';
+import { isSignal, withSignalWriteForbidden } from '../signals/graph.js';
 import type { Constraints, LayoutBox } from './types.js';
 
 type FlexDirection = 'row' | 'column' | 'row-reverse' | 'column-reverse';
@@ -402,6 +402,7 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
 }
 
 interface IntrinsicRowItem extends NumericFlexMainInput {
+  readonly sourceIndex: number;
   readonly child: PibblElement<any>;
   readonly style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>>;
   readonly receiverToken: object;
@@ -683,7 +684,7 @@ function measureFlex(
       lineItems++;
     }
     if (rowItems) {
-      rowItems.push({ child, style, receiverToken, measureCross, baseMain, minMain, maxMain,
+      rowItems.push({ sourceIndex, child, style, receiverToken, measureCross, baseMain, minMain, maxMain,
         paddingMain, grow, shrink, marginMainBefore: marginLeft, marginMainAfter: marginRight,
         baseCross, minCross, maxCross, paddingCross, marginCross });
       if (measureCross) requiresSolvedCross = true;
@@ -706,7 +707,7 @@ function measureFlex(
         setPreNormalizedStyle(measuredChild, measuredStyle, item.child, item.receiverToken);
         const result = measureConstrainedLayoutChild(measuredChild, {
           minWidth: main, maxWidth: main, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
-        });
+        }, item.sourceIndex);
         if (result.status !== 'measured') return result;
         cross = result.size.height;
       }
@@ -1687,14 +1688,121 @@ function intrinsicTextSnapshot(child: PibblElement<any>, style: Readonly<BoxStyl
   }));
 }
 
+interface PreparedRowMeasurement {
+  readonly snapshot: readonly unknown[];
+  readonly receivers: readonly object[];
+}
+
+// This snapshot is intentionally stricter than the ordinary primitive snapshot:
+// a layout description can otherwise hide mutable leaf props behind its own stable
+// descriptor. It records every direct leaf's identity and resolved full style, so
+// cache reuse never bypasses a provider-visible paint/style or program input.
+function preparedRowMeasurement(
+  child: PibblElement<any>,
+  style: Readonly<BoxStyle & Record<string, unknown>>,
+): PreparedRowMeasurement | undefined {
+  try { return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () =>
+    withStyleMeasurement('recursive', () => withIsolatedRenderState(() => {
+      const previous = GLOBAL_STATE.primitiveReceiverToken;
+      try {
+        const root = prepareLayoutComponent(child);
+        if (root.type !== Flex) return;
+        const rootReceiver = getPrimitiveReceiverToken(root);
+        if (!rootReceiver) return;
+        GLOBAL_STATE.primitiveReceiverToken = rootReceiver;
+        const rootStyle = style as Readonly<FlexStyle & Record<string, unknown>>;
+        if ((rootStyle.flexDirection ?? 'row') !== 'row' ||
+          (rootStyle.flexWrap ?? 'nowrap') !== 'nowrap' ||
+          (rootStyle.layoutDirection ?? getLayoutDirection()) !== 'ltr' ||
+          typeof rootStyle.width !== 'number' || !Number.isFinite(rootStyle.width) || rootStyle.width < 0 ||
+          rootStyle.height !== undefined && rootStyle.height !== 'auto') return;
+        const snapshot: unknown[] = ['prepared-row', root.type, root.key];
+        if (!appendPreparedProgramSnapshot(snapshot, getPrimitiveProgramProps(child))) return;
+        if (!appendPreparedProgramSnapshot(snapshot, getPrimitiveProgramProps(root), true)) return;
+        if (!appendPreparedStyleSnapshot(snapshot, rootStyle)) return;
+        const children = prepareLayoutChildren(root.props.children, 'Flex');
+        snapshot.push(children.length);
+        const receivers: object[] = [];
+        for (let index = 0; index < children.length; index++) {
+          const leaf = children[index];
+          if (isLayoutComponent(leaf.type)) return;
+          const receiver = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, rootReceiver, index);
+          const prepared = prepareDirectChildStyle(leaf, receiver, undefined, true);
+          if (preparedStyleQuery(prepared)) return;
+          const leafStyle = preparedStyleValue(prepared) as Readonly<
+            BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
+          >;
+          const paired = getPrimitiveDefinition(leaf.type);
+          const emptyRectangle = leaf.type === Rectangle &&
+            !Object.hasOwn(leaf.props, 'children');
+          if (!emptyRectangle && !(paired?.measureIntrinsic && paired.measure)) return;
+          if (!appendPreparedProgramSnapshot(snapshot, getPrimitiveProgramProps(leaf)) ||
+            !appendPreparedStyleSnapshot(snapshot, leafStyle)) return;
+          snapshot.push(index, leaf.type, leaf.key);
+          receivers.push(receiver);
+        }
+        return { snapshot, receivers };
+      } finally {
+        GLOBAL_STATE.primitiveReceiverToken = previous;
+      }
+    })),
+  ); } catch (error) {
+    if (error instanceof UnsupportedResponsiveMeasurement) return undefined;
+    throw error;
+  }
+}
+
+function appendPreparedProgramSnapshot(
+  snapshot: unknown[],
+  props: Readonly<Record<PropertyKey, unknown>>,
+  omitChildren = false,
+): boolean {
+  const keys = Reflect.ownKeys(props);
+  let count = 0;
+  for (let index = 0; index < keys.length; index++) if (!omitChildren || keys[index] !== 'children') count++;
+  snapshot.push(count);
+  for (let index = 0; index < keys.length; index++) {
+    const key = keys[index];
+    if (omitChildren && key === 'children') continue;
+    const value = props[key];
+    if (typeof value === 'function' || value !== null && typeof value === 'object' && !isSignal(value)) return false;
+    snapshot.push(key, value);
+  }
+  return true;
+}
+
+function appendPreparedStyleSnapshot(snapshot: unknown[], style: Readonly<Record<PropertyKey, unknown>>): boolean {
+  const keys = Reflect.ownKeys(style);
+  snapshot.push(keys.length);
+  for (let index = 0; index < keys.length; index++) {
+    const key = keys[index];
+    const value = style[key];
+    if (typeof value === 'function' || value !== null && typeof value === 'object') return false;
+    snapshot.push(key, value);
+  }
+  return true;
+}
+
 function measureFlexChild(
   child: PibblElement<any>, constraints: Constraints,
   style: Readonly<BoxStyle & Record<string, unknown>>, token: object,
   measurement: FlexMeasurementInput, region?: LayoutRegion, query?: PreparedQuery, constrainedProvider = false,
 ): MeasureResult {
-  // A pure layout description may expose one paired primitive root. Keep the
-  // provider query on the original descriptor so recursive measurement retains its
-  // source identity, receiver provision, and signal-dependency ownership.
+  // A direct paired primitive keeps the original descriptor as the receiver
+  // boundary. A described row uses the same parent-region entry, but only after a
+  // conservative structural snapshot has established fresh direct-child receiver
+  // paths for receipt replay on a later transaction.
+  if (region && !query && isLayoutComponent(child.type)) {
+    const prepared = preparedRowMeasurement(child, style);
+    if (prepared) {
+      return measurePreparedLayoutElement(child, constraints, measurement.service, {
+        cache: region,
+        token,
+        key: JSON.stringify(['prepared-row', allocationInputRevision(), measurementStyle(style), constraints]),
+        recordMeasurement: recordWasmMeasurement,
+      }, prepared.snapshot, prepared.receivers);
+    }
+  }
   const measuredRoot = constrainedProvider && !query && isLayoutComponent(child.type) ? prepareLayoutComponent(child) : child;
   const definition = constrainedProvider && !query ? getPrimitiveDefinition(measuredRoot.type) : undefined;
   if (definition?.measureIntrinsic && definition.measure) return measureConstrainedIntrinsicElement(child, constraints, measurement.service, region ? { cache: region, token, key: JSON.stringify([allocationInputRevision(), measurementStyle(style), constraints]), recordMeasurement: recordWasmMeasurement } : undefined);

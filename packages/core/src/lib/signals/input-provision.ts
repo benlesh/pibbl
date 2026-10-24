@@ -24,10 +24,50 @@ const transactionProvisions = new WeakMap<
   WeakMap<object, ReceiverInputProvision>
 >();
 
+/** @internal Immutable input reads captured for replay into a current receiver. */
+export type ReceiverInputProvisionReceipt = readonly { readonly node: SignalNode<unknown>; readonly roles: number }[];
+
 export function withReceiverInputProvision<T>(
   transaction: PibblRenderTransaction | undefined,
   receiver: object | undefined,
   callback: () => T,
+): T {
+  return runReceiverInputProvision(transaction, receiver, callback);
+}
+
+/** @internal Captures every callback read, including roles already provisioned earlier. */
+export function captureReceiverInputProvision<T>(
+  transaction: PibblRenderTransaction | undefined,
+  receiver: object | undefined,
+  callback: () => T,
+): { value: T; receipt: ReceiverInputProvisionReceipt | undefined } {
+  if (!transaction || !receiver || currentComponentOwnsReceiver(receiver)) {
+    return { value: runReceiverInputProvision(transaction, receiver, callback), receipt: undefined };
+  }
+  const receipt: Array<{ node: SignalNode<unknown>; roles: number }> = [];
+  const value = runReceiverInputProvision(transaction, receiver, callback, receipt);
+  return { value, receipt };
+}
+
+/** @internal Replays reads into the current transaction, never an old receiver token. */
+export function replayReceiverInputProvision(
+  transaction: PibblRenderTransaction | undefined,
+  receiver: object | undefined,
+  receipt: ReceiverInputProvisionReceipt,
+): void {
+  withReceiverInputProvision(transaction, receiver, () => {
+    for (let index = 0; index < receipt.length; index++) {
+      const entry = receipt[index];
+      trackSignalDependency(entry.node, entry.roles);
+    }
+  });
+}
+
+function runReceiverInputProvision<T>(
+  transaction: PibblRenderTransaction | undefined,
+  receiver: object | undefined,
+  callback: () => T,
+  receipt?: Array<{ node: SignalNode<unknown>; roles: number }>,
 ): T {
   if (!transaction || !receiver) return untracked(callback);
   if (currentComponentOwnsReceiver(receiver)) return callback();
@@ -41,6 +81,17 @@ export function withReceiverInputProvision<T>(
       const existing = provision.nodes.find(entry => entry.node === node);
       if (existing === undefined) provision.nodes.push({ node, roles: signalDependencyRoleMask(role) });
       else existing.roles |= signalDependencyRoleMask(role);
+      if (receipt) {
+        const roles = signalDependencyRoleMask(role);
+        let captured = false;
+        for (let index = 0; index < receipt.length; index++) {
+          if (receipt[index].node !== node) continue;
+          receipt[index].roles |= roles;
+          captured = true;
+          break;
+        }
+        if (!captured) receipt.push({ node, roles });
+      }
     },
   };
   return withSignalTracking(collector, callback);

@@ -2095,7 +2095,8 @@
           "Grid fixed-row sums/gaps contribute automatic height and move following footer",
           "known child percentage cross widths/bounds resolve once against explicit numeric column content width before intrinsic height",
           "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components",
-          "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks"
+          "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks",
+          "slice162: parent-owned bounded aggregate reuse replays direct-child receiver receipts after sibling paint; content invalidation, live-parent removal and conservative nested-query fallback"
         ],
         "negative": [
           "ordinary opaque providers, wrapped intrinsic shapes beyond direct numeric row leaves, indefinite Grid fraction/percentage rows and unresolved feedback remain unsupported",
@@ -2922,7 +2923,8 @@
           "slices129/134: symmetric exact-width natural height and both absolute provider profiles across directions, query-before-bounds, owned signals, removal/restore and explicit native column-width query differences",
           "slices137/138: built-in Text width-driven wrapped height and unwrapped natural ink width, conservative interactive callbacks versus stable plain cache reuse, font/content/dimension changes, bounds/precedence and exact teardown",
           "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components",
-          "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks"
+          "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks",
+          "slice162: parent-owned bounded aggregate reuse replays direct-child receiver receipts after sibling paint; content invalidation, live-parent removal and conservative nested-query fallback"
         ],
         "negative": [
           "opaque component measurement unsupported",

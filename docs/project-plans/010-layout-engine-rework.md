@@ -5041,17 +5041,38 @@ lint, docs109mutation probes, public JSDoc, catalog/Studio and scoped final revi
 passed. Binary remains69628bytes. No aggregate trust or capability promotion:
 fixed33 remain9complete/12experimental/6partial/5missing/1excluded; all7gates open.
 
-## [NEXT] Slice162: parent-owned aggregate prepared measurement reuse
+## Slice162 ready for feedback: parent-owned prepared measurement reuse
 
-Use the parent region and layout token already passed into `measureFlexChild`.
-A safe recursive snapshot of the described known row must include child semantic
-identity/order, scalar program inputs and resolved geometry; opaque/query/mutable
-or function-shaped inputs retain conservative remeasurement. Reuse the existing
-successful-transaction `PrimitiveMeasurementEntry` cache and receiver provisions,
-not child-slot lookup or a parallel graph. Public RED: unrelated footer paint must
-stop native aggregate/provider queries; provider content changes must still move
-the footer, and removal/failure must release ownership. Then consolidation54 for
-160–162 runs as a separate evidence commit. Root remains sole writer.
+The public footer-paint RED repeated aggregate paired measurement. The existing
+parent region/layout-token cache now admits conservatively snapshotted described
+forward LTR nowrap rows with direct paired leaves and fixed Rectangle siblings.
+Descriptions still execute fresh. Entries retain scalar/nominal-signal program
+inputs, full resolved styles and direct child identity/order. Existing revision,
+function/mutable-input guards, bounded storage and success-only publication stay
+intact. Captured measurement reads replay into current child receiver tokens,
+never cached transaction tokens or wrapper subscriptions.
+
+A second public RED proved that nested public `input.measureElement` queries
+could otherwise escape the direct-child receipt path. Such callbacks now decline
+aggregate reuse. Removal keeps the parent/footer mounted, detaches the removed
+provider input and restores current content with fresh provider identity. Failure
+cleans up before later paint. The public lesson keeps its leaf descriptors stable
+so separate direct-provider caches can also reuse results.
+
+Fresh Node24.15/Chromium:63passed/1skipped across4files (64tests), ordinary
+55passed/9skipped. Receipt-unit coverage captures already-provisioned reads,
+replays into fresh ownership, preserves role masks and detaches exactly.
+Source/built nested-row proof checks unchanged provider/native solve counts on
+paint, subsequent content-driven geometry/target movement, stable keyed identity,
+one root native instance and disposal0000. Installed246-input strict Bundler and
+NodeNext consumer includes the same paint-hit→content-update contract; tarball
+SHA256 `056c03ff3f0184903c18b2d9986e7e11f70974117d947878ab7952b68a630a4e`.
+
+Hands-on: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-nested-intrinsic`
+(or built port5193). Select Nested row, Toggle width, Paint only, then Raise
+badge min. This is a bounded prepared-graph prerequisite, not full graph closure.
+Fixed33 remain9complete/12experimental/6partial/5missing/1excluded; all7gates open.
+Consolidation54 for160–162 follows as a separate evidence commit.
 
 ### Finite positioning exit matrix after134
 

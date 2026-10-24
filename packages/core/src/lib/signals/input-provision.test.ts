@@ -8,6 +8,8 @@ import {
 import { batch, computed, flushPendingComputedValidations, signal, signalGraphSnapshot, withSignalDependencyRole } from './graph.js';
 import {
   adoptReceiverInputProvision,
+  captureReceiverInputProvision,
+  replayReceiverInputProvision,
   withReceiverInputProvision,
 } from './input-provision.js';
 
@@ -45,6 +47,48 @@ describe('receiver input provisions', () => {
     transaction.finish(true);
     disposeSignalRenderConsumer(owner.signalConsumer!);
     expect(signalGraphSnapshot().rendererEdges).toBe(baseline.rendererEdges);
+  });
+
+  it('captures already-provisioned reads and replays them into a fresh receiver without mutating the receipt', () => {
+    const source = signal(1);
+    const baseline = signalGraphSnapshot();
+    const first = testTransaction();
+    const oldReceiver = {};
+    withReceiverInputProvision(first, oldReceiver, () =>
+      withSignalDependencyRole('measurement', () => source.get()),
+    );
+    const captured = captureReceiverInputProvision(first, oldReceiver, () =>
+      withSignalDependencyRole('measurement', () => source.get() + source.get()),
+    );
+    expect(captured.value).toBe(2);
+    expect(captured.receipt).toHaveLength(1);
+    const receipt = captured.receipt!;
+    const savedRoles = receipt[0].roles;
+    first.finish(false);
+
+    const next = testTransaction();
+    const newReceiver = {};
+    replayReceiverInputProvision(next, newReceiver, receipt);
+    replayReceiverInputProvision(next, newReceiver, receipt);
+    const owner: ComponentSignalRenderOwner = { signalConsumer: undefined };
+    let invalidations = 0;
+    collectComponentSignalReads(owner, () => ({
+      debugName: 'receipt receiver', invalidate: () => { invalidations++; }, onMaterialize: () => undefined,
+    }), commit => {
+      adoptReceiverInputProvision(next, newReceiver);
+      commit();
+    });
+    next.finish(true);
+    owner.signalConsumer!.markClean();
+    const beforeWrite = signalGraphSnapshot();
+    source.set(2);
+    expect(invalidations).toBe(1);
+    expect(signalGraphSnapshot().measurementInputInvalidations).toBe(beforeWrite.measurementInputInvalidations + 1);
+    expect(receipt).toHaveLength(1);
+    expect(receipt[0].roles).toBe(savedRoles);
+    disposeSignalRenderConsumer(owner.signalConsumer!);
+    expect(signalGraphSnapshot().rendererEdges).toBe(baseline.rendererEdges);
+    expect(signalGraphSnapshot().receiverInputProvisions).toBe(baseline.receiverInputProvisions);
   });
 
   it('rolls back an unclaimed provision when its render transaction fails', () => {

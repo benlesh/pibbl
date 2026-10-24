@@ -1150,7 +1150,7 @@ const InstalledStructuralRowLeaf = definePrimitive<
 const InstalledStructuralRowFooter = definePrimitive<
   {}, InstalledStructuralRowStyle, InstalledStructuralRowStyle,
   SystemStyle & { width: number; height: number }
->((_props, _style) => {
+>((_props, style) => {
   const box = useLayoutBox(), matrix = useCanvasContext().getTransform(),
     stamp = useConst(() => ++structuralRowSerial);
   structuralRowBoxes.set('footer', {
@@ -1158,13 +1158,22 @@ const InstalledStructuralRowFooter = definePrimitive<
   });
   return createElement(Rectangle, {
     onClick: () => structuralRowHits.push('footer'),
-    style: { width: box.width, height: box.height, fill: '#426b61', cursor: 'pointer' },
+    style: { width: box.width, height: box.height, fill: style.fill, cursor: 'pointer' },
   });
 }, {
-  resolveStyle: (_style, context) => ({
-    width: context.allocation.width,
+  resolveStyle: (style, context) => ({
+    ...style, width: context.allocation.width,
     height: context.allocation.height,
   }),
+});
+const structuralRowPaint = signal('#426b61');
+const installedStructuralRowLeaf = createElement(InstalledStructuralRowLeaf, {
+  key: 'leaf', contentHeight: structuralRowContentHeight,
+  style: { flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' },
+});
+const installedStructuralRowFixed = createElement(Rectangle, {
+  key: 'row-sibling',
+  style: { width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#6e3e79' },
 });
 const InstalledStructuralRowCard = defineLayoutComponent((props: {
   style: InstalledStructuralRowStyle;
@@ -1178,16 +1187,7 @@ const InstalledStructuralRowCard = defineLayoutComponent((props: {
     layoutDirection: 'ltr',
     alignItems: 'flex-start',
   },
-  children: [
-    createElement(InstalledStructuralRowLeaf, {
-      key: 'leaf', contentHeight: props.contentHeight,
-      style: { flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' },
-    }),
-    createElement(Rectangle, {
-      key: 'row-sibling',
-      style: { width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#6e3e79' },
-    }),
-  ],
+  children: [installedStructuralRowLeaf, installedStructuralRowFixed],
 }));
 const structuralRowCard = createElement(InstalledStructuralRowCard, {
   key: 'card', contentHeight: structuralRowContentHeight,
@@ -1195,7 +1195,7 @@ const structuralRowCard = createElement(InstalledStructuralRowCard, {
 });
 const structuralRowFooter = createElement(InstalledStructuralRowFooter, {
   key: 'footer',
-  style: { width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 },
+  style: { width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: structuralRowPaint },
 });
 const structuralRowBaseline = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__(),
   structuralRowController = pibblSync(structuralRowCanvas, createElement(Flex, {
@@ -1229,6 +1229,11 @@ try {
   click(5, 30); click(5, 45);
   if (JSON.stringify(structuralRowHits) !== JSON.stringify(['footer', 'leaf', 'footer']))
     throw Error('installed structural row moved targets '+JSON.stringify(structuralRowHits));
+  const beforePaint = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__(), beforePaintCalls = structuralRowCalls;
+  structuralRowPaint.set('#a63758'); await frame();
+  const afterPaint = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+  if (structuralRowCalls !== beforePaintCalls || afterPaint.measurementSolves !== beforePaint.measurementSolves || afterPaint.solves !== beforePaint.solves)
+    throw Error('installed prepared row paint repeated measurement');
   const beforeContent = structuralRowCalls;
   structuralRowContentHeight.set(50); await frame();
   const tallLeaf = structuralRowBoxes.get('leaf'), tallFooter = structuralRowBoxes.get('footer');
@@ -1237,6 +1242,7 @@ try {
     structuralRowCalls <= beforeContent)
     throw Error('installed structural row content update '+JSON.stringify({tallLeaf,tallFooter,calls:structuralRowCalls}));
   receipt.structuralFinalWidthProvider = true;
+  receipt.structuralAggregatePaintReuse = true;
 } finally {
   structuralRowController.dispose(); structuralRowCanvas.remove();
   const disposed = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();

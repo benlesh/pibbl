@@ -36,6 +36,11 @@ try {
   assert.ok(narrow.layout.measurementSolves > initial.layout.measurementSolves);
   assert.equal((await click(33, 178)).badgeTarget, 'badge');
   assert.equal((await click(33, 218)).badgeTarget, 'follower');
+  const beforePaint = await state();
+  const cachedPaint = await click(432, 110);
+  assert.equal(cachedPaint.badgeCalls, beforePaint.badgeCalls);
+  assert.equal(cachedPaint.layout.measurementSolves, beforePaint.layout.measurementSolves);
+  assert.equal(cachedPaint.layout.solves, beforePaint.layout.solves);
   const raised = await click(432, 426);
   assert.equal(raised.badgeMinimum, 70);
   assert.equal(raised.badgeBox.height, 70);
@@ -46,6 +51,9 @@ try {
   assert.equal((await click(33, 228)).badgeTarget, 'follower');
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
   const painted = await click(432, 110);
+  assert.equal(painted.badgeCalls, raised.badgeCalls);
+  assert.equal(painted.layout.measurementSolves, raised.layout.measurementSolves);
+  assert.equal(painted.layout.solves, raised.layout.solves);
   assert.equal(painted.layout.nodeCreates, raised.layout.nodeCreates);
   assert.equal(painted.layout.activeArenas, raised.layout.activeArenas);
   const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
@@ -60,5 +68,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances], [0, 0, 0, 0]);
   assert.deepEqual(errors, []);
-  console.warn(`${source ? 'Source' : 'Built'} recursive row: width60→40, height20→60→70, footer168→208→218, distinct moved targets, keyed identity, one root WASM instance, native measurement arenas released, cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs. Aggregate paint reuse remains open.`);
+  console.warn(`${source ? 'Source' : 'Built'} recursive row: width60→40, height20→60→70, footer168→208→218, distinct moved targets, keyed identity, one root WASM instance, native measurement arenas released, cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs. Paint-only updates reuse aggregate measurement; provider signals still invalidate after reuse.`);
 } finally { await browser.close(); }

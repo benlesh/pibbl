@@ -1663,3 +1663,22 @@ repaint changed content, and detach targets/resources on disposal. The browser's
 direct-alpha reference can differ from a filtered intermediate bitmap by one
 RGB byte due to premultiplication; only that documented tolerance is allowed,
 with exact alpha, geometry and target assertions. No visual baseline changes.
+
+### Bounded prepared-row measurement reuse
+
+Experimental finite forward LTR nowrap described rows reuse aggregate paired-leaf
+measurement through the existing parent region and semantic layout token. A fresh
+structural description still runs each transaction. Admission snapshots direct
+child identity/order, scalar or nominal-signal program inputs, and full resolved
+styles. Functions, mutable nested records, responsive queries and unknown nested
+public measurement paths conservatively remeasure. This does not add a retained
+layout tree or change ordinary component evaluation.
+
+Successful transactions publish bounded entries only. A cache hit replays saved
+measurement reads into the current direct-child receiver tokens; it never retains
+old transaction tokens or transfers those reads to the structural wrapper.
+Content changes still invalidate after a sibling-paint hit. Removing the row
+prunes its parent-owned entry and detaches its provider inputs while keyed
+siblings remain mounted. Failure and disposal retain exact existing teardown.
+Stable leaf descriptors also allow their separate direct-provider caches to reuse
+results; freshly recreated descriptors may still repeat those direct queries.
