@@ -376,6 +376,7 @@ try {
   assert.equal((await state()).textHits.length,insetHitBefore+1);
   await click(390,428);
   const finalBoxBefore=await state();
+  assert.equal(finalBoxBefore.describedRoot,true);
   assert.ok(Math.abs(finalBoxBefore.boxes.FA.y-288)<1e-9&&finalBoxBefore.boxes.FA.height===20);
   assert.deepEqual(finalBoxBefore.allocations.FA,{x:0,y:0,width:40,height:20});
   const finalBoxHits=finalBoxBefore.hits.length;await click(32,284);assert.equal((await state()).hits.length,finalBoxHits);

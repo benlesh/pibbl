@@ -159,12 +159,17 @@ export function setPreparedBaselineOwner(element: PibblElement<any>, owner: Read
   preparedBaselineOwners.set(element, { transaction, receiver, query, width: owner.width, height: owner.height });
 }
 
+/** @internal Cache identity for a transparent, currently prepared primitive root. */
+export interface BaselineMeasurementOptions extends PrimitiveMeasurementOptions {
+  source?: PibblElement<any>;
+}
+
 /** @internal Pure first/last baseline query at one final content allocation. */
 export function measureBaselineElement(
   element: PibblElement<any>,
   allocation: Readonly<LayoutBox>,
   service: CanvasMeasurementService,
-  options?: PrimitiveMeasurementOptions,
+  options?: BaselineMeasurementOptions,
 ): BaselinesResult {
   const transaction = GLOBAL_STATE.renderTransaction;
   const receiver = getPrimitiveReceiverToken(element);
@@ -175,18 +180,30 @@ export function measureBaselineElement(
     minHeight: allocation.height, maxHeight: allocation.height,
   };
   return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () => withReceiverInputProvision(transaction, receiver, () => withSignalDependencyRole('measurement', () => {
-    const inputSnapshot = intrinsicInputSnapshot(element);
+    const source = options?.source ?? element;
+    let inputSnapshot = intrinsicInputSnapshot(element);
+    if (source !== element) {
+      const sourceSnapshot = intrinsicInputSnapshot(source);
+      if (!sourceSnapshot || !inputSnapshot) inputSnapshot = undefined;
+      else {
+        // The source props retain one wrapper occurrence; the complete scalar
+        // root snapshot permits fresh JSX descriptions without retaining roots.
+        sourceSnapshot.push(source.type, source.key, element.type, element.key, inputSnapshot.length);
+        for (let index = 0; index < inputSnapshot.length; index++) sourceSnapshot.push(inputSnapshot[index]);
+        inputSnapshot = sourceSnapshot;
+      }
+    }
     let receivers = transaction && intrinsicTransactions.get(transaction);
     let entries = options && receivers?.get(options.token);
     let entry = options && (entries?.get(key) ?? options.cache.readPrimitiveMeasurement(options.token, key));
-    if (!entry || entry.mode !== 'baseline' || entry.props !== element.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot)) {
+    if (!entry || entry.mode !== 'baseline' || entry.props !== source.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot)) {
       options?.recordMeasurement();
       const dependencies: SignalNode<unknown>[] = [];
       const result = withSignalTracking({ addDependency(node) { if (!dependencies.includes(node)) dependencies.push(node); } }, () =>
         withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
           measureBaselineInput(element, allocation, constraints, service),
         )));
-      entry = { props: element.props, key, result, mode: 'baseline', dependencies, inputSnapshot };
+      entry = { props: source.props, key, result, mode: 'baseline', dependencies, inputSnapshot };
       if (options && transaction && inputSnapshot && result.status === 'measured') {
         if (!receivers) { receivers = new WeakMap(); intrinsicTransactions.set(transaction, receivers); }
         if (!entries) { entries = new Map(); receivers.set(options.token, entries); }

@@ -57,7 +57,7 @@ import { getLayoutDirection, pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { markDerivedAbsoluteAxes } from '../style/positioning.js';
-import { measureElement, measureConstrainedLayoutChild, measureIntrinsicElement, measureConstrainedIntrinsicElement, measurePreparedLayoutElement, measureBaselineElement, setPreparedBaselineOwner, withIsolatedRenderState } from './measure.js';
+import { measureElement, measureConstrainedLayoutChild, measureIntrinsicElement, measureConstrainedIntrinsicElement, measurePreparedLayoutElement, measureBaselineElement, setPreparedBaselineOwner, type BaselineMeasurementOptions, withIsolatedRenderState } from './measure.js';
 import { isSignal, withSignalWriteForbidden } from '../signals/graph.js';
 import type { Constraints, LayoutBox } from './types.js';
 
@@ -179,6 +179,8 @@ interface FlexItem {
   relativeY: number;
   /** Signed first-baseline offset resolved after final main allocation. */
   firstBaseline?: number;
+  /** Current transaction root of a transparent layout description. */
+  baselineRoot?: PibblElement<any>;
   /** Column natural cross size is measured only after native main allocation. */
   deferredColumnAutoCross: boolean;
   ordinaryColumnAutoCross: boolean;
@@ -1686,7 +1688,7 @@ function resolveFlexPlacements(
     // Width-dependent content uses the settled content allocation.
     if (row) for (const item of line.items) {
       let measuredRoot = item.child;
-      if (item.crossAuto && experimentalLayout && (options.flexWrap === 'nowrap' && options.flexDirection === 'row' && options.layoutDirection === 'ltr' || item.autoCrossBefore || item.autoCrossAfter) && !item.query && item.aspectRatio === undefined && isLayoutComponent(item.child.type)) {
+      if (item.crossAuto && experimentalLayout && (options.flexWrap === 'nowrap' && options.flexDirection === 'row' && options.layoutDirection === 'ltr' || item.autoCrossBefore || item.autoCrossAfter || options[FLEX_FIRST_BASELINE]) && !item.query && item.aspectRatio === undefined && isLayoutComponent(item.child.type)) {
         measuredRoot = prepareLayoutComponent(item.child, { receiverToken: item.receiverToken });
       }
       const definition = experimentalLayout && (options.flexWrap === 'nowrap' || item.autoCrossBefore || item.autoCrossAfter || options[FLEX_FIRST_BASELINE]) && !item.query && item.aspectRatio === undefined ? getPrimitiveDefinition(measuredRoot.type) : undefined;
@@ -1744,23 +1746,26 @@ function resolveFlexPlacements(
       // nor consumes a shared baseline. Native placement resolves its free space.
       if (item.alignSelf !== 'auto' || item.autoCrossBefore || item.autoCrossAfter) { item.firstBaseline = 0; continue; }
       const allocation = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
-      const definition = getPrimitiveDefinition(item.child.type);
+      const baselineRoot = item.baselineRoot ?? item.child;
+      const definition = getPrimitiveDefinition(baselineRoot.type);
       if (!definition?.measureBaselines) {
         item.firstBaseline = item.paddingCrossBefore + allocation.height;
         continue;
       }
-      const measurementChild = clonePibblElement(item.child);
+      const measurementChild = clonePibblElement(baselineRoot);
       const measuredStyle: SystemStyle & { width: number; height: number } = { ...item.normalized, width: allocation.width, height: allocation.height };
-      setPreNormalizedStyle(measurementChild, measuredStyle, item.child, item.receiverToken, item.query);
+      setPreNormalizedStyle(measurementChild, measuredStyle, baselineRoot, getPrimitiveReceiverToken(baselineRoot) ?? item.receiverToken, item.query);
       if (item.query) setPreparedBaselineOwner(measurementChild, container);
       // Application-owned fonts can change outside retained layout revisions.
       // Query them on each admitted render; only generic Text results are retained.
-      const result = measureBaselineElement(measurementChild, allocation, measurement.service, region && !item.query && (item.child.type !== Text || genericTextFont(item.normalized)) ? {
+      const cacheOptions: BaselineMeasurementOptions | undefined = region && !item.query && (baselineRoot.type !== Text || genericTextFont(item.normalized)) ? {
         cache: region,
         token: item.layoutToken ?? item.receiverToken,
         key: `${allocationInputRevision()}:${allocation.width}:${allocation.height}:${JSON.stringify(measurementStyle(item.normalized))}`,
         recordMeasurement: recordWasmMeasurement,
-      } : undefined);
+      } : undefined;
+      if (cacheOptions && item.baselineRoot) cacheOptions.source = item.child;
+      const result = measureBaselineElement(measurementChild, allocation, measurement.service, cacheOptions);
       if (result.status === 'unsupported') {
         throw childDiagnostic(item.child, 'measureBaselines', 'unsupported', container, `first-baseline alignment requires a baseline result: ${result.reason}`);
       }
@@ -2443,7 +2448,10 @@ function assertSupportedFirstBaselineFlex(
   }
   for (const item of items) {
     const style = item.normalized;
-    const textLeaf = item.child.type === Text;
+    const baselineRoot = isLayoutComponent(item.child.type) ?
+      prepareLayoutComponent(item.child, { receiverToken: item.receiverToken }) : item.child;
+    if (baselineRoot !== item.child) item.baselineRoot = baselineRoot;
+    const textLeaf = baselineRoot.type === Text;
     const textStyle = style as Readonly<TextStyle>;
     const fontSize = textLeaf ? /(?:^| )(\d+(?:\.\d+)?)px(?:\s*\/\s*(?:normal|\d+(?:\.\d+)?(?:px|%)?))?\s+\S/.exec(String(textStyle.font ?? '13px sans-serif')) : null;
     const supportedTextLeaf = !textLeaf || (
@@ -2454,10 +2462,10 @@ function assertSupportedFirstBaselineFlex(
       (textStyle.wrap === undefined || typeof textStyle.wrap === 'boolean')
     );
     const sharesBaseline = item.alignSelf === 'auto' && !item.autoCrossBefore && !item.autoCrossAfter;
-    if (!getPrimitiveDefinition(item.child.type) || isKnownLayoutType(item.child.type) || isLayoutComponent(item.child.type) || (!supportedTextLeaf && sharesBaseline) ||
+    if (!getPrimitiveDefinition(baselineRoot.type) || isKnownLayoutType(baselineRoot.type) || isLayoutComponent(baselineRoot.type) || (!supportedTextLeaf && sharesBaseline) ||
         (style.position !== undefined && style.position !== 'static' && style.position !== 'relative') || (item.crossAuto && item.alignSelf !== 'stretch') ||
         !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
-      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct primitive leaves with settled finite content boxes and no absolute position');
+      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires primitive roots with settled finite content boxes and no absolute position');
     }
   }
 }

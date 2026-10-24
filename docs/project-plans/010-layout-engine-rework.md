@@ -7797,7 +7797,7 @@ strictBundler/NodeNext pass; tarballSHA
 The earlier generic packed check alone is not this new receipt. Capability counts
 and all7open release gates are unchanged. Consolidate211–213before further production.
 
-## [NEXT] Slice212: transparent described-root baseline propagation
+## [DONE] Slice212: transparent described-root baseline propagation
 
 A defineLayoutComponent with one already-prepared primitive root forwards that
 root's final content-local baseline without another origin. Reuse the current
@@ -7805,6 +7805,34 @@ prepared root, actual root receiver, transaction and successful-cache receipt
 ownership. Prove signal movement, paint reuse, removal and exact cleanup through
 the public API. Keep general Flex/Flow/Grid child/reference selection as a distinct
 structural contract; no speculative reference-child flag or second solver.
+
+Delivered through the actual prepared primitive root and receiver. Cache receipts
+include both wrapper inputs and resolved root scalar inputs; unchanged paint reuses
+measurement, while changed root values invalidate it. Controlled removal of the
+root snapshot reproduced stale y18 instead of y8. The installed wrapped case first
+failed the unsettled-content guard; preparing final-width roots for baseline rows
+repairs that path without a second solver or new public API.
+
+Fresh Node26.9/Chromium focused checks: 59pass/1normal-only skip across8files;
+typecheck, changed-code lint, catalog/Studio and109documentation mutation probes
+pass. Final source5192and built5193baseline drivers pass with errors[], cleanup000
+and all four ownership assertions; built470inputs. Inspected final Studio screenshot.
+Installed consumer explicitly gates describedRootBaseline and preserves the mixed
+self-alignment receipt:104marginfixtures,246inputs, strictBundler/NodeNext and
+nested browser all pass. Tarball SHA
+`bf954f3047ad0099168cadbdaf168efa0775e62c951e0507199607603c74430f`.
+ABI16and native artifact are unchanged. Capability counts and all7release gates
+remain unchanged.
+
+## [NEXT] Slice213: known Flex descendant baseline selection
+
+Use the existing prepared native plan for a direct finite nowrap row Flex.
+Select the first source-order in-flow primitive child, skipping absolute decoration;
+combine its physical content-y placement with its content-local provider baseline
+or content-bottom fallback. Preserve exact receiver/slot ownership and prove live
+movement, targeting, focus, identity and teardown through the public API. Column,
+wrapped and other structural selection remain explicit exits. Consolidate211–213
+before further production; no reference-marker API or JavaScript line inference.
 
 ## Scope and execution
 

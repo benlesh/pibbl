@@ -224,6 +224,7 @@ try {
       assert.equal(receipt.settledMeasuredAspectFinalBox, true, 'Installed settled baseline providers must receive the final aspect-constrained box, retain targets, reuse paint, and clean up');
       assert.equal(receipt.customFittedMiddleText, true, 'Installed custom-family fitted middle Text must align using real Canvas alphabetic metrics and retain its glyph target');
       assert.equal(receipt.mixedSelfBaselineMembership, true, 'Installed mixed alignment must exclude baseline queries, stretch through native line allocation, preserve identity and moved targets, and clean up');
+      assert.equal(receipt.describedRootBaseline, true, 'Installed described baseline roots must forward final allocations and receiver-owned inputs while retaining targets, identity, opt-out behavior, and cleanup');
       assert.equal(receipt.currentParentQueryBranch, true, 'Installed direct responsive baseline leaves must select the current parent-width branch, preserve identity, update selected inputs, and clean up');
 
       assert.equal(receipt.wrappedTextFirstBaseline, true, 'Installed wrapped Text must align its first visible line from real Canvas baseline metrics, move the last-line target after content and line updates, reuse paint, and clean up');

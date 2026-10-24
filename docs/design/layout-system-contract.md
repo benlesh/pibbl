@@ -2070,6 +2070,17 @@ measurement consumes the selected style without resolving rules again against it
 own content allocation. Query results bypass retained baseline entries; selected
 signal dependencies stay with the existing preparation receiver and detach when
 unselected. Unprepared, recursive or intrinsic query resolution remains rejected.
+A transparent `defineLayoutComponent` may forward its one prepared primitive
+root's baseline at the same final content allocation. The wrapper adds no origin;
+the actual current root receiver owns provider reads and cache-hit replay. The
+existing region cache compares source-wrapper props plus complete scalar wrapper/
+root type, key, program inputs and selected normalized style. Fresh JSX roots can
+reuse an equal snapshot; mutable/function inputs decline caching rather than
+admission. Description evaluation stays current-transaction work, removal detaches
+the root receiver, and only successful transactions publish results. Responsive
+owner proofs attach to the actual root; query/non-generic Text cache bypasses stay
+in force. This does not choose a child baseline for Flex/Flow/Grid containers.
+
 Inherited `alignSelf: auto` joins the baseline group. Existing explicit
 `alignSelf` values opt out, skip baseline queries and use ordinary per-line cross
 placement. Their hypothetical outer sizes and numeric margins still contribute

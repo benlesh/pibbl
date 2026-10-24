@@ -1,7 +1,7 @@
 import {
-  Flex, Group, Rectangle, Text, FocusManagement, definePrimitive, signal, computed,
+  Flex, Group, Rectangle, Text, FocusManagement, definePrimitive, defineLayoutComponent, signal, computed,
   useCanvasContext, useLayoutBox, useConst, useReaction, untracked,
-  type Signal, type SystemStyle, type LayoutBox, type PibblNode, type BaselineMeasureInput, type BaselinesResult,
+  type Signal, type SystemStyle, type LayoutBox, type PibblNode, type PibblResponsiveStyle, type BaselineMeasureInput, type BaselinesResult,
 } from "@pibbl/core";
 
 type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB" | "NC" | "FA" | "FB";
@@ -138,6 +138,9 @@ function createBaselineContent() {
     },
   });
   const BottomCard = definePrimitive<CardProps, CardStyle, CardStyle, ResolvedCardStyle>(renderCard, { resolveStyle });
+  const DescribedFinalBox = defineLayoutComponent((props: Omit<CardProps, "label"> & { readonly label: string | Signal<string>; readonly style: PibblResponsiveStyle<CardStyle> | Signal<CardStyle> }) =>
+    <FinalBoxCard key="final-root" id={props.id} label={props.label} font={props.font} first={props.first} style={props.style} />,
+  );
   function renderContent() {
     return <>
       <Rectangle style={{ width: 760, height: 640, fill: "#f3f0e8" }} />
@@ -178,7 +181,7 @@ function createBaselineContent() {
       </Flex></FocusManagement>
       <Rectangle pointerEvents="none" style={{ left: 28, top: guide, width: owner, height: 1, fill: "#d16642", opacity: .6 }} />
       <Flex style={{ left: 28, top: 270, width: finalBoxWidth, height: 40, alignItems: "first-baseline" }}>
-        <FinalBoxCard key="FA" id="FA" label={measuredFirstLabel} font="12px monospace" first={measuredFirst} style={finalBoxStyle} />
+        <DescribedFinalBox key="FA" id="FA" label={measuredFirstLabel} font="12px monospace" first={measuredFirst} style={finalBoxStyle} />
         <BaselineCard key="FB" id="FB" label="30" font="20px sans-serif" first={30} style={{ width:40,height:40,minWidth:0,minHeight:0,flexGrow:0,flexShrink:0,fill:"#19375b" }} />
       </Flex>
       <Rectangle onClick={() => measuredHeight.update(value => value === 20 ? 30 : 20)} style={{left:180,top:278,width:150,height:30,fill:"#426b61",cursor:"pointer"}} />
@@ -233,7 +236,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), describedRoot: true, selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {
