@@ -20,9 +20,10 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice181 (natural column cross sizing across parent directions).
+Latest delivery is slice182 (shared real Text measurement before auto-cross placement).
+Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation60 is `f5083bcb` for178–180; the next slice is182.
+Consolidation60 is `f5083bcb` for178–180; the next slice is183.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -35,7 +36,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is182: remaining matched Text sizing/admission branches.
+Consolidation56 is `2fd34f0e` for166–168. Next is183: remaining finite paired/known measurement admission branches.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6560,16 +6561,67 @@ passes, errors[]/cleanup000. Types/lint, public JSDoc, catalog174/12/33, Studio
 routes/search and109docs mutation probes pass. Fixed33stays10complete/12experimental/5partial/5missing/
 1excluded; auto margins and all7release gates remain open.
 
-## [NEXT] Slice182: remaining matched Text auto-cross admission branches
+## Slice182 delivered: shared measured Text cross-auto placement
 
-Freeze one case per remaining predicate branch, comparing otherwise identical
-numeric0/auto public mounts. Initial real controls identify column Text with a
-numeric basis and automatic height as margin-only candidates; wrapped-column
-intrinsic width under parentwrap fails atzero too and remains an independent
-foundation. Audit the existing natural-row growth/shrink/bounds branches and
-wrapped Text under parentnowrap before selecting a shared-path implementation.
-Preserve original targets and responsible gates; no untested-profile parity or
-label-only removal. Consolidate181–183 before further capability production.
+Delivered2026-10-24. Actual matched public probes distinguish true auto-only
+failures from missing-minimum failures already present atnumeric0. The normal
+row Text path now uses its existing supported main allocation and real settled
+width measurement before cross-auto placement, removing a separate factor/bounds
+whitelist. Generic font, visible fit/overflow, no prepared query/aspect remain.
+The independent wrapped natural-basis/minimum profile is unchanged. Required
+initial/final Text measurements diagnose rather than silently retaining zero.
+
+Unwrapped nowrap column Text now permits numeric/automatic basis and height under
+the existing zero-factor/minHeight0 profile. Numeric height is queried exactly;
+auto height is measured naturally under the finite owner. Main allocation stays
+authoritative; auto margins suppress stretch in the final-width continuation too.
+Wrapped fixed-height column Text reuses the capped natural advance in reverse/RTL
+parents. This deliberately extends numeric0logical cross boxes there as well;
+it preserves line membership but does not claim the former full-available zero
+box was identical. It adds no bidi or intrinsic graph policy.
+
+Fifteen permanent public cases cover grow/shrink/min0/min20/active min120/max60,
+wrapped min controls, numeric flexible-width controls, column basis/auto-height
+with public hooked follower allocation, and reverse/RTL short/long wrapped Text.
+They assert paint/geometry, source targets, native/hook identity, measurement/solve
+reuse and four-counter cleanup. Node24.15.0/Chromium10files pass127/skip1 in3.51s;
+65prior auto/Text cases pass/skip363 in2.93s after migrating old rejection
+expectations to supported geometry. Scoped runtime review has no material finding.
+
+Pinned Yoga preserves85records and adds12, total97; source SHA256
+`8ed2916a277da55a541b1fa5364418227f83e12a621d9cd1a568434ca095e05e`.
+Synthetic callbacks honor settled exact widths: grow120/height20/top60;
+shrink≈40/min70/max60 give height40/top40; column basis40/autoheight gives
+width84/height40/left116. Callback and font provenance are explicit and separate
+from actual Canvas geometry. Wrapped reverse/RTL records retain native zero-auto
+observations alongside Pibbl's documented line-local policy. Kernel/ABI10 unchanged.
+
+Source/built dedicated replay passes growing-row reflow, column basis/auto-height
+allocations, wrapped reverse/RTL targets and cleanup0000; built470inputs. Visible
+controls are Grow Text and Column sizing in the existing Flex/Text lesson; wrapped
+column direction controls now apply the same natural-width policy. Visual review
+confirms readable controls and the moved Text. Hit probes use actual font ink
+bounds rather than assuming glyph ink begins at the line origin.
+
+The installed strict Bundler/NodeNext/no-alias246-input consumer passes new row
+factor/bounds and column numeric/automatic basis/height cases, native identity,
+exact cleanup and104prior margin fixtures. Its canvas fixes CSS size explicitly
+so backing-store resize is not mistaken for layout geometry. Tarball SHA256
+`ff281a9e152403f745d4540f5985893a70d79dc2b46ff3bcd77f5e3400810e71`.
+Full source/built Flex/Text replays also pass, errors[]/cleanup000. Types/lint,
+public JSDoc, catalog174/12/33, Studio routes/search and109docs mutation probes
+pass. Fixed33stays10complete/12experimental/5partial/5missing/1excluded; auto margins
+and all7release gates remain open. No aggregate trust/program-exit review claim.
+
+## [NEXT] Slice183: remaining finite measured-cross admission branches
+
+Actual column probes identify zero-render/auto-reject cases for Text main factors
+and cross bounds, paired providers and known Flex with numeric basis/auto authored
+height or final growth. Verify exact final-main allocation and existing pure query
+before a shared final-cross continuation; do not invent arbitrary intrinsic graph
+support or fallback sizes. Row paired/known automatic-width candidates require the
+same matched public evidence. Keep original targets and separate unsupported zero
+queries from auto-only failures. Consolidate181–183 before further production.
 
 ## Scope and execution
 

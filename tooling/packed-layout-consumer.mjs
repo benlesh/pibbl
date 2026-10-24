@@ -1158,6 +1158,51 @@ try {
   if (after.activeNodes !== emptyAspectBaseline.activeNodes || after.activeArenas !== emptyAspectBaseline.activeArenas || after.cachedMeasurements !== emptyAspectBaseline.cachedMeasurements || after.activeWasmInstances !== emptyAspectBaseline.activeWasmInstances) throw Error('installed aspect ownership cleanup');
 }
 
+// Shared Text measurement precedes auto-cross placement after existing main sizing.
+const sharedTextCanvas=document.createElement('canvas');sharedTextCanvas.width=220;sharedTextCanvas.height=100;sharedTextCanvas.style.cssText='width:220px;height:100px';document.body.append(sharedTextCanvas);
+const sharedTextBaseline=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+let sharedTextController:ReturnType<typeof pibblSync>|undefined;
+try {
+  const context=sharedTextCanvas.getContext('2d')!,original=context.fillText;
+  const draws:Array<{x:number;y:number;text:string}>=[];
+  context.fillText=function(text,x,y,maxWidth){const matrix=this.getTransform();draws.push({text,x:matrix.e+x,y:matrix.f+y});return maxWidth===undefined?original.call(this,text,x,y):original.call(this,text,x,y,maxWidth);};
+  const pixel=(x:number,y:number)=>JSON.stringify([...context.getImageData(x,y,1,1).data]);
+  const frame=()=>new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+  for(const main of [{flexGrow:1,flexShrink:0},{flexGrow:0,flexShrink:0},{minWidth:0},{minWidth:20},{maxWidth:60}] as const){
+    const margin=signal<0|'auto'>(0),words=signal('alpha beta gamma');
+    sharedTextController=pibblSync(sharedTextCanvas,createElement(Flex,{style:{width:180,height:80,alignItems:'flex-start',gap:10},children:[
+      createElement(Text,{style:{wrap:true,font:'10px monospace',lineHeight:10,marginTop:margin,fill:'#19375b',...main},children:words}),
+      createElement(Rectangle,{style:{width:60,height:40,minWidth:0,minHeight:0,flexShrink:0,fill:'#426b61'}}),
+    ]}));await frame();
+    const zero=draws.slice(),mounted=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();draws.length=0;
+    margin.set('auto');await frame();
+    if(JSON.stringify(draws.map(draw=>draw.text))!==JSON.stringify(zero.map(draw=>draw.text))||draws[0].y!==80-(draws.at(-1)!.y-draws[0].y+10))throw Error('installed shared Text row final-height auto placement '+JSON.stringify({main,zero,draws}));
+    context.save();context.font='10px monospace';const natural=context.measureText(words.get()).width;context.restore();
+    const mainWidth='maxWidth' in main?60:'flexGrow' in main&&main.flexGrow===1?110:natural;
+    if(pixel(Math.ceil(mainWidth+11),4)!=='[66,107,97,255]')throw Error('installed shared Text row main allocation');
+    words.set('alpha beta gamma alpha');await frame();
+    if((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==mounted.nodeCreates)throw Error('installed shared Text row identity');
+    sharedTextController.dispose();draws.length=0;
+  }
+  for(const model of [{height:40,flexBasis:40},{height:'auto' as const,flexBasis:40},{height:'auto' as const,flexBasis:'auto' as const}]){
+    const margin=signal<0|'auto'>(0);
+    const text=createElement(Text,{style:{width:'auto',...model,minHeight:0,flexGrow:0,flexShrink:0,marginLeft:margin,wrap:false,font:'10px monospace',fill:'#19375b'},children:'aaaa aaaa'});
+    const pure=measureElement(text,{minWidth:0,maxWidth:100,minHeight:0,maxHeight:80},{measureText:(value:string,font:string)=>{context.save();context.font=font;const metrics=context.measureText(value);context.restore();return metrics;}});
+    if(pure.status!=='measured')throw Error('installed shared Text column pure baseline');
+    sharedTextController=pibblSync(sharedTextCanvas,createElement(Flex,{style:{width:100,height:80,flexDirection:'column',alignItems:'flex-start'},children:[text,createElement(Rectangle,{style:{width:20,height:20,minWidth:0,minHeight:0,flexShrink:0,fill:'#426b61'}})]}));await frame();
+    const nodes=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates;draws.length=0;margin.set('auto');await frame();
+    if(Math.abs(draws[0].x-(100-pure.size.width))>1e-6||draws[0].y!==0)throw Error('installed shared Text column natural cross');
+    const main=typeof model.flexBasis==='number'?model.flexBasis:pure.size.height;
+    if(pixel(4,Math.ceil(main)+2)!=='[66,107,97,255]'||(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==nodes)throw Error('installed shared Text column main allocation');
+    sharedTextController.dispose();draws.length=0;
+  }
+  receipt.sharedTextAutoSizing=true;
+} finally {
+  sharedTextController?.dispose();sharedTextCanvas.remove();
+  const after=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+  if(after.activeNodes!==sharedTextBaseline.activeNodes||after.activeArenas!==sharedTextBaseline.activeArenas||after.cachedMeasurements!==sharedTextBaseline.cachedMeasurements||after.activeWasmInstances!==sharedTextBaseline.activeWasmInstances)throw Error('installed shared Text sizing cleanup');
+}
+
 // Paired natural main results continue through native staged percentage bounds.
 const measuredStageCanvas=document.createElement('canvas');measuredStageCanvas.width=220;measuredStageCanvas.height=120;measuredStageCanvas.style.cssText='width:220px;height:120px';document.body.append(measuredStageCanvas);
 const measuredStageBaseline=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__(),measuredStageNatural=signal(80),measuredStageMaximum=signal<number|'75%'>(160),measuredStageHits:string[]=[],measuredStageQueries:number[]=[];

@@ -4635,9 +4635,13 @@ it.runIf(experimentalLayout).each([
   { label: 'fitted text', options: {}, style: { fit: 'ellipsis' } },
   { label: 'unwrapped text', options: {}, style: { wrap: false } },
   { label: 'automatic column width', options: { flexDirection: 'column' as const }, style: { width: 'auto', height: 20, marginTop: 0, marginLeft: 'auto' } },
-])('keeps unsupported automatic Text cross-margin shapes explicit: $label', ({ options, style }) => {
+])('resolves supported Text cross-auto profiles and diagnoses unsupported queries: $label', ({ label, options, style }) => {
   const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 80, minWidth: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', ...style } as import('@pibbl/core').TextStyle });
-  expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/auto cross-axis margins/);
+  if (label === 'wrapped automatic width' || label === 'automatic width') {
+    const placement = layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)[0]!;
+    expect(placement.width).toBe(160);
+    expect(placement.y + placement.height).toBe(100);
+  } else expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/auto cross-axis margins/);
 });
 
 it.runIf(experimentalLayout)('measures a finite custom primitive before allocating an automatic cross-axis margin', async () => {
@@ -4984,9 +4988,14 @@ it.runIf(experimentalLayout).each([
   { label: 'zero shrink', style: { flexShrink: 0 } },
   { label: 'explicit main minimum', style: { minWidth: 0 } },
   { label: 'main maximum', style: { maxWidth: 80 } },
-])('keeps automatic-width cross-auto Text bounded: $label', ({ style }) => {
+])('uses final measured height for automatic-width cross-auto Text: $label', ({ style }) => {
   const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 'auto', wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', ...style } as import('@pibbl/core').TextStyle });
-  expect(() => layoutFlex({ x: 0, y: 0, width: 140, height: 100 }, [text], {}, measurement)).toThrow(/auto cross-axis margins/);
+  const allocation = { x: 0, y: 0, width: 140, height: 100 };
+  const zero = createElement(Text, { ...text.props, style: { ...text.props.style, marginTop: 0 } });
+  const before = layoutFlex(allocation, [zero], {}, measurement)[0]!;
+  const after = layoutFlex(allocation, [text], {}, measurement)[0]!;
+  expect([after.x, after.width]).toEqual([before.x, before.width]);
+  expect(after.y + after.height).toBe(100);
 });
 
 it.runIf(experimentalLayout)('preserves a decorated row-reverse nested percentage cross minimum through a height-only resize', async () => {
@@ -5308,9 +5317,14 @@ it.runIf(experimentalLayout).each([
   { label: 'numeric basis', options: {}, style: { flexBasis: 80 } },
   { label: 'positive grow', options: {}, style: { flexGrow: 1 } },
   { label: 'positive shrink', options: {}, style: { flexShrink: 1 } },
-])('keeps wrapped cross-auto Text admission bounded: $label', ({ options, style }) => {
+])('uses final measured height for supported wrapped cross-auto Text: $label', ({ options, style }) => {
   const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 80, minWidth: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', ...style } as import('@pibbl/core').TextStyle });
-  expect(() => layoutFlex({ x: 0, y: 0, width: 150, height: 120 }, [text], { flexWrap: 'wrap', ...options }, measurement)).toThrow(/auto cross-axis margins/);
+  const allocation = { x: 0, y: 0, width: 150, height: 120 };
+  const zero = createElement(Text, { ...text.props, style: { ...text.props.style, marginTop: 0 } });
+  const before = layoutFlex(allocation, [zero], { flexWrap: 'wrap', ...options }, measurement)[0]!;
+  const after = layoutFlex(allocation, [text], { flexWrap: 'wrap', ...options }, measurement)[0]!;
+  expect([after.x, after.width]).toEqual([before.x, before.width]);
+  expect(after.y + after.height).toBe(120);
 });
 
 
@@ -5672,7 +5686,6 @@ it.runIf(experimentalLayout)('rejects unsupported column automatic-margin Text p
   const profiles: readonly [string, TextStyle & FlexItemStyle, { readonly layoutDirection?: 'rtl'; readonly flexWrap?: 'wrap' }][] = [
     ['custom font', { font: '10px CustomFont' }, {}],
     ['cross maximum', { maxWidth: 80 }, {}],
-    ['automatic main size', { height: 'auto' }, {}],
     ['wrapped container', {}, { flexWrap: 'wrap' }],
   ];
   for (const [name, override, options] of profiles) {

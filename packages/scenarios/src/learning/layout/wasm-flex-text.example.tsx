@@ -44,6 +44,7 @@ function createWasmFlexTextContent() {
   const autoCrossProof = signal(false);
   const autoCrossWrap = signal(false);
   const naturalRowWidth = signal(false);
+  const autoTextGrow = signal(false);
   const intrinsicLogical = signal(false);
   let autoCrossTransform = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
   const autoCrossWidth = signal(140);
@@ -155,6 +156,9 @@ function createWasmFlexTextContent() {
   const columnHits = signal(0);
   const columnProviderMode = signal<"text" | "wrappedText" | 40 | 80 | "known60" | "known100">("text");
   const columnProviderNatural = signal(40);
+  const columnSizing = signal(0);
+  const columnTextHeight = computed(() => columnSizing.get() >= 2 ? "auto" as const : 20);
+  const columnTextBasis = computed(() => columnSizing.get() === 1 || columnSizing.get() === 2 ? 40 : "auto" as const);
   const columnDirection = signal<"column" | "column-reverse">("column");
   const columnReadingDirection = signal<"ltr" | "rtl">("ltr");
   const columnKnownWidth = signal(40);
@@ -174,7 +178,7 @@ function createWasmFlexTextContent() {
   </Flex>);
   // Stable descriptors keep the pure-measurement cache conservative on paint.
   const columnAutoPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: columnDirection, layoutDirection: columnReadingDirection, flexWrap: "nowrap", alignItems: "stretch" }}>
-    <Text key="column-text" onClick={() => { columnHits.update(value => value + 1); selected.set("column auto text"); }} style={{ width: "auto", height: 20, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: "auto", wrap: false, font: "10px monospace", fill: "#19375b", cursor: "pointer" }}>{columnWords}</Text>
+    <Text key="column-text" onClick={() => { columnHits.update(value => value + 1); selected.set("column auto text"); }} style={{ width: "auto", height: columnTextHeight, minHeight: 0, flexBasis: columnTextBasis, flexGrow: 0, flexShrink: 0, marginLeft: "auto", wrap: false, font: "10px monospace", fill: "#19375b", cursor: "pointer" }}>{columnWords}</Text>
     <Rectangle key="column-sibling" onClick={() => selected.set("column auto sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
   </Flex>;
   // The same button alternates a short natural run with a longer wrapped run.
@@ -183,7 +187,7 @@ function createWasmFlexTextContent() {
   const columnWrappedWords = computed(() =>
     columnWords.get() === "jobs jobs jobs" ? "jobs jobs" : "jobs jobs jobs jobs jobs jobs jobs",
   );
-  const columnWrappedPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch" }}>
+  const columnWrappedPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: columnDirection, layoutDirection: columnReadingDirection, flexWrap: "nowrap", alignItems: "stretch" }}>
     <Text key="column-wrapped-text" onClick={() => { columnHits.update(value => value + 1); selected.set("column wrapped text"); }} style={{ width: "auto", height: 40, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: "auto", wrap: true, font: "10px monospace", lineHeight: 10, fill: "#19375b", cursor: "pointer" }}>{columnWrappedWords}</Text>
     <Rectangle key="column-wrapped-sibling" onClick={() => selected.set("column wrapped sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
   </Flex>;
@@ -200,24 +204,37 @@ function createWasmFlexTextContent() {
       if (autoCrossProof.get()) {
         const next = !naturalRowWidth.get();
         naturalRowWidth.set(next);
-        if (next) { autoCrossWrap.set(true); autoCrossWidth.set(140); }
+        if (next) { autoTextGrow.set(false); autoCrossWrap.set(true); autoCrossWidth.set(140); }
       } else (alternate.get() ? primaryWidth : alternateWidth).update(value => value + 40);
     }} />;
+  }
+  function TextSizingControls() {
+    const comparison = autoCrossProof.get();
+    return <>
+      <Button x={28} y={144} label={comparison ? "Column sizing" : "Change text"} onClick={() => {
+        if (comparison) { columnProviderMode.set("text"); columnSizing.update(value => (value + 1) % 4); }
+        else paragraph.update(value => value === longText ? shortText : value === shortText ? alternateText : longText);
+      }} />
+      <Button x={200} y={144} label={comparison ? `Grow Text: ${autoTextGrow.get() ? "on" : "off"}` : "Nudge width"} onClick={() => {
+        if (comparison) { autoTextGrow.update(value => !value); naturalRowWidth.set(false); autoCrossWrap.set(false); }
+        else activeWidth().update(value => value + 1);
+      }} />
+    </>;
   }
   function ColumnAutoComparison() {
     const providerMode = columnProviderMode.get();
     const provider = providerMode === 40 || providerMode === 80;
     const known = providerMode === "known60" || providerMode === "known100";
     const wrapped = providerMode === "wrappedText";
-    const label = provider ? "Column · paired provider, natural width" : known ? "Column · row content, natural width" : wrapped ? "Column · wrapped Text, natural width" : "Column · natural Text width, automatic left margin";
+    const label = provider ? "Column · paired provider, natural width" : known ? "Column · row content, natural width" : wrapped ? "Column · wrapped Text, natural width" : `Column · Text: basis ${columnTextBasis.get()}, height ${columnTextHeight.get()}`;
     return <>
       <Text pointerEvents="none" style={{ left: 420, top: 258, font: "12px sans-serif", fill: "#475569" }}>{label}</Text>
       <Rectangle pointerEvents="none" style={{ left: 420, top: 278, width: 180, height: 82, stroke: "#a63758", strokeWidth: 1 }} />
       {provider ? columnProviderPanel : known ? columnKnownPanel : wrapped ? columnWrappedPanel : columnAutoPanel}
-      {!wrapped ? <>
+      <>
         <Button x={668} y={380} width={68} label={columnReadingDirection.get() === "ltr" ? "LTR" : "RTL"} onClick={() => columnReadingDirection.update(value => value === "ltr" ? "rtl" : "ltr")} />
         <Button x={668} y={416} width={68} label="Reverse" onClick={() => columnDirection.update(value => value === "column" ? "column-reverse" : "column")} />
-      </> : null}
+      </>
       <Button x={420} y={380} width={240} label="Change column text" onClick={() => columnWords.update(value => value === "jobs jobs jobs" ? "jobs jobs" : "jobs jobs jobs")} />
       <Button x={420} y={416} width={240} label={`Column content: ${providerMode === "text" ? "Text" : providerMode === "wrappedText" ? "wrapped Text" : providerMode === "known60" ? "row 60px" : providerMode === "known100" ? "row 100px" : `${providerMode}px`}`} onClick={() => {
         if (providerMode === "text") { columnProviderNatural.set(40); columnProviderMode.set(40); }
@@ -262,7 +279,7 @@ function createWasmFlexTextContent() {
     autoCrossTransform = { a: transform.a, b: transform.b, c: transform.c, d: transform.d, e: transform.e, f: transform.f };
     return <>
       <Text pointerEvents="none" style={{ left: 28, top: 238, font: "12px sans-serif", fill: "#475569" }}>
-        {natural ? "Natural Text width; wrapping and top margins follow each line." : wrapped ? "Wrapped rows settle Text height before the automatic top margin is placed." : "Text starts at its natural width. Narrowing adds a line and reduces the top margin."}
+        {autoTextGrow.get() ? "Text flexes first; top auto uses its final height." : natural ? "Natural Text width; wrapping and top margins follow each line." : wrapped ? "Wrapped rows settle Text height before the automatic top margin is placed." : "Text starts at its natural width. Narrowing adds a line and reduces the top margin."}
       </Text>
       <ColumnAutoComparison />
       <IntrinsicAutoMarginComparison />
@@ -270,7 +287,7 @@ function createWasmFlexTextContent() {
       <Flex style={{ left: 28, top: 260, width: rowWidth, height: wrapped ? 120 : 100, flexWrap: wrapped ? "wrap" : undefined, gap: wrapped ? 10 : undefined, alignItems: wrapped ? "flex-start" : undefined, alignContent: wrapped ? "flex-start" : undefined }}>
         <Text
           onClick={() => { autoCrossHits.update(value => value + 1); selected.set("auto cross text"); }}
-          style={{ width: natural ? "auto" : wrapped ? textWidth : undefined, minWidth: natural ? undefined : wrapped ? 0 : undefined, flexShrink: natural ? 1 : wrapped ? 0 : undefined, wrap: true, font: "10px monospace", lineHeight: 10, marginTop: "auto", fill: "#19375b", cursor: "pointer" }}
+          style={{ width: natural ? "auto" : wrapped ? textWidth : undefined, minWidth: natural ? undefined : wrapped ? 0 : undefined, flexGrow: autoTextGrow.get() ? 1 : undefined, flexShrink: natural ? 1 : wrapped ? 0 : undefined, wrap: true, font: "10px monospace", lineHeight: 10, marginTop: "auto", fill: "#19375b", cursor: "pointer" }}
         >
           aaaa aaaa aaaa
         </Text>
@@ -379,23 +396,6 @@ function createWasmFlexTextContent() {
       <BasisButton />
       {[
         {
-          x: 28,
-          label: "Change text",
-          click: () =>
-            paragraph.update((value) =>
-              value === longText
-                ? shortText
-                : value === shortText
-                  ? alternateText
-                  : longText,
-            ),
-        },
-        {
-          x: 200,
-          label: "Nudge width",
-          click: () => activeWidth().update((value) => value + 1),
-        },
-        {
           x: 372,
           label: "Switch source",
           click: () => alternate.update((value) => !value),
@@ -409,6 +409,7 @@ function createWasmFlexTextContent() {
           onClick={button.click}
         />
       ))}
+      <TextSizingControls />
       <InactiveWidthButton />
       {[
         {
@@ -450,7 +451,7 @@ function createWasmFlexTextContent() {
   return {
     node,
     readInputs: () =>
-      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · natural row width: ${naturalRowWidth.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · column direction: ${columnDirection.get()} · column reading: ${columnReadingDirection.get()} · column provider: ${columnProviderMode.get()} · intrinsic logical: ${intrinsicLogical.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
+      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · natural row width: ${naturalRowWidth.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · text grow: ${autoTextGrow.get()} · column sizing: ${columnSizing.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · column direction: ${columnDirection.get()} · column reading: ${columnReadingDirection.get()} · column provider: ${columnProviderMode.get()} · intrinsic logical: ${intrinsicLogical.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
   };
 }
 

@@ -1632,8 +1632,7 @@ main y is0for column and80for column-reverse; physical left-auto places x200−w
 both-auto centers x(200−w)/2, and right-auto places x0 in either reading direction.
 Numeric0uses normal alignment. Child layouts retain their own measurement
 admission: an explicitly LTR known row may be measured under an RTL parent, but
-this does not grant unsupported intrinsic RTL child queries. The separately
-bounded wrapped-column Text policy remains LTR forward-column only.
+this does not grant unsupported intrinsic RTL child queries. The wrapped-column Text policy below uses the same parent-direction placement.
 
 Finite normal same-axis placement of a direct numeric staged owner has a separate
 native operation from standalone and recursive pure queries. With outer200,
@@ -1721,13 +1720,15 @@ cross sizing remains unsupported; the auto-margin capability is still partial.
 
 ### Measured direct Text cross-auto sizing
 
-Direct `Text` in a finite experimental nowrap row may omit height or use automatic
-height with a cross-auto margin. Width must be a declared finite nonnegative
-number; wrapping must be enabled, font generic, fit/overflow visible/default, and
-there must be no aspect ratio or prepared style query. Unsupported Text shapes,
-opaque components and columns retain the existing explicit diagnostic. Direct custom
-primitives have the separate bounded contract below.
-This is allocated Text sizing, not pure intrinsic Flex-owner measurement.
+Direct wrapped `Text` in a finite experimental row may omit height or use automatic
+height with a cross-auto margin. Generic font, visible/default fit and overflow,
+and no aspect ratio or prepared query remain required. Main dimension, basis,
+growth/shrink, bounds and line formation follow the existing normal Flex rules;
+auto cross margins add no separate main-sizing whitelist. This admits only main
+profiles that already produce a supported allocation, not missing automatic minima
+or unsupported intrinsic owner queries. Custom primitives and columns retain the
+separate measurement rules below. This is allocated Text sizing, not pure intrinsic
+Flex-owner measurement.
 
 The existing initial and final-main-width measurement passes determine Text’s
 preferred cross size. Cross auto then suppresses stretch and absorbs the remaining
@@ -1789,11 +1790,13 @@ to the existing column/Text snapshot cache; broader owner caching remains open.
 
 Direct generic wrapped `Text` in a finite experimental nowrap row may omit width
 or use `'auto'` together with automatic height and cross-auto margins. This
-bounded path requires automatic basis, zero grow, positive/default shrink, no
-main min/max, no prepared query/aspect sizing and visible/default fit/overflow.
-Other main sizing combinations retain the explicit cross-auto diagnostic.
+path uses the same ordinary main sizing and final-width measurement as a numeric
+zero margin. Existing numeric basis, growth/shrink and main bounds are permitted
+when normal layout supports them. Generic font, no prepared query/aspect sizing
+and visible/default fit/overflow remain required.
 
-Existing natural Text width supplies the main basis and automatic word minimum;
+For the supported automatic-basis profile, natural Text width supplies the main
+basis and automatic word minimum;
 existing final allocated-width measurement determines line count and height
 before cross-auto placement. A140→100px row with a40px sibling changes
 `aaaa aaaa aaaa` in10px monospace from one10px line at y90 to two10px lines at
@@ -1806,13 +1809,14 @@ exact cleanup cover the mounted transition.
 
 ### Measured Text cross-auto sizing in wrapped rows
 
-Direct generic wrapped Text with a declared finite numeric width may use
-automatic height and cross-auto margins in an experimental LTR row/wrap
-container. This bounded subset requires automatic basis, zero grow/shrink,
-visible/default fit/overflow and no prepared query/aspect sizing. Explicit
-main minimum participation remains required by existing Flex rules. Automatic
-width, reverse/RTL/wrap-reverse, provider/layout-owner and column variants retain
-their existing diagnostics; nowrap support remains separate.
+Direct generic wrapped Text may use automatic height and cross-auto margins in
+experimental wrapped rows, including supported reverse/RTL/wrap-reverse main
+profiles. The existing main minimum and intrinsic-basis rules remain authoritative;
+where normal layout succeeds, the same settled-width query supplies cross height
+before line-local auto placement. Visible/default fit/overflow and no prepared
+query/aspect remain required. Provider/layout-owner and column variants keep their
+separate admission. This does not add natural-basis support to main profiles that
+already fail without auto margins.
 
 Native main solving forms lines before the existing final-width Text measurement
 updates preferred cross size. Native cross placement then absorbs free space
@@ -1853,21 +1857,25 @@ keeps that top-auto margin at0. This is the existing classified line-local
 cross-auto divergence, not newly claimed parity. The independent synthetic
 84basis/24minimum probe records owner180/100/70/16, final width70 and the explicit
 24floor under16, plus Yoga callback envelopes; actual browser fonts and Pibbl's
-line-auto offsets are separate evidence. Reverse/RTL/wrap-reverse, explicit width
-bounds and other independent intrinsic profiles retain their prior behavior or
-diagnostics.
+line-auto offsets are separate evidence. Automatic-basis/minimum generation outside this narrow main profile retains
+its prior behavior or diagnostics; cross-auto permission adds no new intrinsic
+main policy.
 
 ### Natural-width Text cross-auto sizing in columns
 
-A direct generic unwrapped Text child in an experimental finite LTR nowrap
-column may use automatic width with an automatic side margin. This bounded
-contract requires declared finite numeric height, automatic basis, zero grow
-and shrink, explicit minHeight0, no maximum height or width bounds, no prepared
-query/aspect sizing, and visible/default fit and overflow. Reverse, RTL, wrapped
-containers, automatic main height, other providers and fitting modes retain their
-diagnostics. Wrapped Text itself has the separate bounded profile below.
+A direct generic unwrapped Text child in an experimental finite nowrap column
+may use automatic width with an automatic side margin in either main or reading
+direction. Height may be numeric or automatic; basis may be numeric or automatic.
+Zero grow/shrink, minHeight0, no maximum height or width bounds, no prepared
+query/aspect, and visible/default fit/overflow remain required. Wrapped containers,
+other provider profiles and fitting modes retain their own admission.
 
-The existing Text measurement receives unbounded width and exact declared height.
+The existing Text measurement receives unbounded width and exact numeric height
+when declared; automatic height uses bounded natural measurement. The existing
+main basis remains authoritative: basis40 places the following item at40 even
+with automatic height, while automatic basis uses the measured natural main size.
+Auto cross margins suppress stretch during the final-width continuation as well
+as during placement, so a stretched available width cannot erase the natural width.
 Its natural Canvas ink width precedes cross-auto absorption; the margin suppresses
 stretch. Signal text changes move its draw and glyph hit bounds together while
 the following sibling retains its main slot and source focus order. Stable
@@ -1878,8 +1886,9 @@ width; there is no synthetic native font-parity claim or new public API.
 
 ### Wrapped natural-width Text in finite columns
 
-Direct generic wrapped Text in a finite LTR nowrap column may have automatic
-width and a fixed finite nonnegative numeric height. It requires automatic basis,
+Direct generic wrapped Text in a finite nowrap column, including reverse main
+order and LTR/RTL parents, may have automatic width and a fixed finite nonnegative
+numeric height. It requires automatic basis,
 zero grow/shrink, minHeight0, omitted or neutral minWidth0, no other width/height
 bounds, no aspect/query, and visible/default fit and overflow. This is an allocated
 Flex policy; standalone public Text availability queries retain their existing
@@ -1894,6 +1903,13 @@ an extra wrap merely because glyph ink is narrower than its advance. Ordinary
 non-auto stretch retains its previous full-width path. Auto margins change final
 cross placement without changing the chosen natural width. Physical/logical
 percentage margins resolve through the existing definite-width normalizer first.
+
+The natural-width selection applies before placement for numeric0 as well as auto
+margins. Extending this rule to reverse/RTL columns deliberately replaces their
+former full-available zero-margin cross box with the same capped natural box;
+short Text can therefore change its logical hit/focus width while keeping glyph
+line membership. This is an allocated sizing extension, not a claim that the
+previous zero-margin box was identical. It adds no bidi or intrinsic graph policy.
 
 A100width column wraps a114px run to two10px lines; expanding to140 uses one
 natural-width line. Numeric0 to auto then shifts the same run to the right.

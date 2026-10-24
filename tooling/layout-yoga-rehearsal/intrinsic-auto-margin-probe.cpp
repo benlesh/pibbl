@@ -331,6 +331,57 @@ void runColumnDirectionText(YGFlexDirection direction, YGDirection layoutDirecti
   YGNodeFreeRecursive(root); YGConfigFree(config);
 }
 
+
+// Slice 182 records finite generic-Text geometry with flexible main sizing.
+// The callback is intentionally synthetic. Its query envelope is provenance,
+// not a claim that platform font metrics agree with Yoga.
+struct SharedTextCall { int count = 0; float width = 0; float height = 0; YGMeasureMode widthMode = YGMeasureModeUndefined; YGMeasureMode heightMode = YGMeasureModeUndefined; } sharedTextCall;
+YGSize measureSharedText(YGNodeConstRef, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+  sharedTextCall = {sharedTextCall.count + 1, width, height, widthMode, heightMode};
+  const float used = widthMode != YGMeasureModeUndefined && width < 84 ? width : 84;
+  return {used, used < 84 ? 40.0f : 20.0f};
+}
+enum class RowFlexibleProfile { Grow, Shrink, Min, Max };
+const char* rowFlexibleName(RowFlexibleProfile profile) {
+  switch (profile) { case RowFlexibleProfile::Grow: return "grow"; case RowFlexibleProfile::Shrink: return "shrink"; case RowFlexibleProfile::Min: return "min70"; case RowFlexibleProfile::Max: return "max60"; }
+  return "invalid";
+}
+void runRowFlexibleText(RowFlexibleProfile profile, bool autoTop) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  const float ownerWidth = profile == RowFlexibleProfile::Grow || profile == RowFlexibleProfile::Max ? 180 : 100;
+  auto root = YGNodeNewWithConfig(config), text = YGNodeNewWithConfig(config), peer = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetWidth(root, ownerWidth); YGNodeStyleSetHeight(root, 80);
+  YGNodeStyleSetFlexGrow(text, profile == RowFlexibleProfile::Grow || profile == RowFlexibleProfile::Max ? 1 : 0); YGNodeStyleSetFlexShrink(text, profile == RowFlexibleProfile::Grow ? 0 : 1); YGNodeStyleSetMinWidth(text, profile == RowFlexibleProfile::Min ? 70 : 0); if (profile == RowFlexibleProfile::Max) YGNodeStyleSetMaxWidth(text, 60); if (autoTop) YGNodeStyleSetMarginAuto(text, YGEdgeTop); else YGNodeStyleSetMargin(text, YGEdgeTop, 0); YGNodeSetMeasureFunc(text, measureSharedText);
+  YGNodeStyleSetWidth(peer, 60); YGNodeStyleSetHeight(peer, 40); YGNodeStyleSetFlexBasis(peer, 60); YGNodeStyleSetFlexGrow(peer, 0); YGNodeStyleSetFlexShrink(peer, 0); YGNodeStyleSetMinWidth(peer, 0); YGNodeStyleSetMinHeight(peer, 0);
+  sharedTextCall = {}; YGNodeInsertChild(root, text, 0); YGNodeInsertChild(root, peer, 1); YGNodeCalculateLayout(root, ownerWidth, 80, YGDirectionLTR);
+  std::printf("intrinsic-auto-row-flexible-text profile=%s marginTop=%s model=synthetic-not-font-parity root={width:%.17g,height:%.17g} Text={left:%.17g,top:%.17g,width:%.17g,height:%.17g} B={left:%.17g,top:%.17g,width:%.17g,height:%.17g} query={count:%d,width:%.17g,widthMode:%s,height:%.17g,heightMode:%s}\n", rowFlexibleName(profile), autoTop ? "auto" : "0", YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(text), YGNodeLayoutGetTop(text), YGNodeLayoutGetWidth(text), YGNodeLayoutGetHeight(text), YGNodeLayoutGetLeft(peer), YGNodeLayoutGetTop(peer), YGNodeLayoutGetWidth(peer), YGNodeLayoutGetHeight(peer), sharedTextCall.count, sharedTextCall.width, measureMode(sharedTextCall.widthMode), sharedTextCall.height, measureMode(sharedTextCall.heightMode));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
+void runColumnBasisAutoHeight(bool autoLeft) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config), text = YGNodeNewWithConfig(config), peer = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, YGFlexDirectionColumn); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetWidth(root, 200); YGNodeStyleSetHeight(root, 120);
+  YGNodeStyleSetFlexBasis(text, 40); YGNodeStyleSetFlexGrow(text, 0); YGNodeStyleSetFlexShrink(text, 0); YGNodeStyleSetMinWidth(text, 0); YGNodeStyleSetMinHeight(text, 0); if (autoLeft) YGNodeStyleSetMarginAuto(text, YGEdgeLeft); else YGNodeStyleSetMargin(text, YGEdgeLeft, 0); YGNodeSetMeasureFunc(text, measureSharedText);
+  YGNodeStyleSetWidth(peer, 20); YGNodeStyleSetHeight(peer, 80); YGNodeStyleSetFlexBasis(peer, 80); YGNodeStyleSetFlexGrow(peer, 0); YGNodeStyleSetFlexShrink(peer, 0); YGNodeStyleSetMinWidth(peer, 0); YGNodeStyleSetMinHeight(peer, 0);
+  sharedTextCall = {}; YGNodeInsertChild(root, text, 0); YGNodeInsertChild(root, peer, 1); YGNodeCalculateLayout(root, 200, 120, YGDirectionLTR);
+  std::printf("intrinsic-auto-column-basis-auto-height marginLeft=%s model=synthetic-not-font-parity root={width:%.17g,height:%.17g} Text={left:%.17g,top:%.17g,width:%.17g,height:%.17g} B={left:%.17g,top:%.17g,width:%.17g,height:%.17g} query={count:%d,width:%.17g,widthMode:%s,height:%.17g,heightMode:%s}\n", autoLeft ? "auto" : "0", YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(text), YGNodeLayoutGetTop(text), YGNodeLayoutGetWidth(text), YGNodeLayoutGetHeight(text), YGNodeLayoutGetLeft(peer), YGNodeLayoutGetTop(peer), YGNodeLayoutGetWidth(peer), YGNodeLayoutGetHeight(peer), sharedTextCall.count, sharedTextCall.width, measureMode(sharedTextCall.widthMode), sharedTextCall.height, measureMode(sharedTextCall.heightMode));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
+void runWrappedReverseRtlText(bool autoTop) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config), text = YGNodeNewWithConfig(config), peer = YGNodeNewWithConfig(config), following = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, YGFlexDirectionRowReverse); YGNodeStyleSetFlexWrap(root, YGWrapWrapReverse); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetAlignContent(root, YGAlignFlexStart); YGNodeStyleSetWidth(root, 100); YGNodeStyleSetHeight(root, 120); YGNodeStyleSetGap(root, YGGutterAll, 10);
+  YGNodeStyleSetFlexGrow(text, 0); YGNodeStyleSetFlexShrink(text, 1); YGNodeStyleSetMinWidth(text, 24); YGNodeStyleSetMinHeight(text, 0); if (autoTop) YGNodeStyleSetMarginAuto(text, YGEdgeTop); else YGNodeStyleSetMargin(text, YGEdgeTop, 0); YGNodeSetMeasureFunc(text, measureSharedText);
+  for (auto child : {peer, following}) { YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 0); YGNodeStyleSetMinWidth(child, 0); YGNodeStyleSetMinHeight(child, 0); }
+  YGNodeStyleSetWidth(peer, 60); YGNodeStyleSetHeight(peer, 40); YGNodeStyleSetFlexBasis(peer, 60); YGNodeStyleSetWidth(following, 80); YGNodeStyleSetHeight(following, 20); YGNodeStyleSetFlexBasis(following, 80);
+  sharedTextCall = {}; YGNodeInsertChild(root, text, 0); YGNodeInsertChild(root, peer, 1); YGNodeInsertChild(root, following, 2); YGNodeCalculateLayout(root, 100, 120, YGDirectionRTL);
+  std::printf("intrinsic-auto-row-wrap-reverse-rtl-text marginTop=%s model=synthetic-not-font-parity root={width:%.17g,height:%.17g} Text={left:%.17g,top:%.17g,width:%.17g,height:%.17g} B={left:%.17g,top:%.17g,width:%.17g,height:%.17g} C={left:%.17g,top:%.17g,width:%.17g,height:%.17g} query={count:%d,width:%.17g,widthMode:%s,height:%.17g,heightMode:%s}\n", autoTop ? "auto" : "0", YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(text), YGNodeLayoutGetTop(text), YGNodeLayoutGetWidth(text), YGNodeLayoutGetHeight(text), YGNodeLayoutGetLeft(peer), YGNodeLayoutGetTop(peer), YGNodeLayoutGetWidth(peer), YGNodeLayoutGetHeight(peer), YGNodeLayoutGetLeft(following), YGNodeLayoutGetTop(following), YGNodeLayoutGetWidth(following), YGNodeLayoutGetHeight(following), sharedTextCall.count, sharedTextCall.width, measureMode(sharedTextCall.widthMode), sharedTextCall.height, measureMode(sharedTextCall.heightMode));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
+
 }
 int main() {
   for (bool column : { false, true }) for (bool bothAuto : { false, true }) {
@@ -351,4 +402,7 @@ int main() {
   for (auto width : {180.0f, 100.0f, 70.0f, 16.0f}) for (auto autoTop : {false, true}) runRowWrappedText(width, autoTop);
   for (auto direction : { YGFlexDirectionColumn, YGFlexDirectionColumnReverse }) for (auto layoutDirection : { YGDirectionLTR, YGDirectionRTL }) for (auto autoLeft : {false, true}) runColumnDirectionText(direction, layoutDirection, autoLeft);
   for (auto ownerHeight : {100.0f, 80.0f}) for (auto profile : { ResolvedCrossProfile::Aspect, ResolvedCrossProfile::PercentSize, ResolvedCrossProfile::PercentMin }) for (auto autoTop : {false, true}) runResolvedCross(ownerHeight, profile, autoTop);
+  for (auto profile : { RowFlexibleProfile::Grow, RowFlexibleProfile::Shrink, RowFlexibleProfile::Min, RowFlexibleProfile::Max }) for (auto autoTop : {false, true}) runRowFlexibleText(profile, autoTop);
+  for (auto autoLeft : {false, true}) runColumnBasisAutoHeight(autoLeft);
+  for (auto autoTop : {false, true}) runWrappedReverseRtlText(autoTop);
 }
