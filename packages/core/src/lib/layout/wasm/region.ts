@@ -723,8 +723,19 @@ export class LayoutRegion {
     if (baseline && reverse && !wrap) throw new Error('Experimental Flex baseline cross reversal requires wrapped line membership.');
     if (!this.layoutOwner?.has(this.handle, this.generation)) throw new Error('Experimental Flex cross placement requires a solved region.');
     const kernel = this.layoutOwner.kernel;
-    const records = items.map(item => [item.preferredCross, item.paddingCross, item.minCross, item.maxCross,
-      item.crossAuto ? 1 : 0, alignmentCodes[item.alignSelf === 'auto' ? alignment : item.alignSelf] + (item.autoCrossBefore ? 4 : 0) + (item.autoCrossAfter ? 8 : 0), baseline ? item.marginCrossBefore ?? 0 : 0, baseline ? item.marginCrossAfter ?? 0 : 0, baseline ? item.firstBaseline ?? Number.NaN : item.marginCrossBefore ?? 0, baseline ? 0 : item.marginCrossAfter ?? 0]);
+    const records = items.map(item => {
+      // Ordinary cross placement reflects logical edges. Baseline groups retain
+      // physical content-top offsets, including reversed line allocations.
+      const physicalEdges = baseline && reverse;
+      const beforeAuto = physicalEdges ? item.autoCrossAfter : item.autoCrossBefore;
+      const afterAuto = physicalEdges ? item.autoCrossBefore : item.autoCrossAfter;
+      const before = physicalEdges ? item.marginCrossAfter : item.marginCrossBefore;
+      const after = physicalEdges ? item.marginCrossBefore : item.marginCrossAfter;
+      return [item.preferredCross, item.paddingCross, item.minCross, item.maxCross,
+        item.crossAuto ? 1 : 0, alignmentCodes[item.alignSelf === 'auto' ? alignment : item.alignSelf] + (beforeAuto ? 4 : 0) + (afterAuto ? 8 : 0),
+        baseline ? before ?? 0 : 0, baseline ? after ?? 0 : 0,
+        baseline ? item.firstBaseline ?? Number.NaN : before ?? 0, baseline ? 0 : after ?? 0];
+    });
     const code = wrap ? ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly', 'stretch'].indexOf(wrap.alignContent) : -1;
     const modeKey = baseline ? `baseline:${this.allocationRevision}:${wrap ? `wrap:${wrap.gap}:${code}:${reverse ? 1 : 0}` : 'nowrap'}` : wrap ? `${this.allocationRevision}:${wrap.gap}:${code}:${reverse ? 1 : 0}` : `nowrap:${reverse ? 1 : 0}`;
     const changed = modeKey !== this.crossModeKey || size !== this.crossSize || records.length !== this.crossRecords.length ||

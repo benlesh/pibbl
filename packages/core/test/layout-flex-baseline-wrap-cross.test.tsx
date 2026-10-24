@@ -194,3 +194,193 @@ it.runIf(experimentalLayout)(
     }
   },
 );
+
+it.runIf(experimentalLayout)(
+  'excludes automatic cross-margin leaves from wrapped first-baseline queries while retaining their physical line extent and stretch absorption',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const top = signal<0 | 'auto'>(0);
+    const bottom = signal<0 | 'auto'>(0);
+    const aFirst = signal(12);
+    const boxes = new Map<string, LayoutBox>();
+    const stamps = new Map<string, number>();
+    const hits: string[] = [];
+    const calls = new Map<string, number>();
+    const errors: unknown[] = [];
+    let serial = 0;
+    interface AutoCrossStyle extends BaselineStyle {
+      readonly marginTop?: number | 'auto' | ReturnType<typeof signal<0 | 'auto'>>;
+      readonly marginBottom?: 0 | 'auto' | ReturnType<typeof signal<0 | 'auto'>>;
+    }
+    interface AutoCrossProps { readonly name: string; readonly first: number | ReturnType<typeof signal<number>>; readonly autoOnly?: boolean; }
+    const Leaf = definePrimitive<AutoCrossProps, AutoCrossStyle, AutoCrossStyle, AutoCrossStyle & { readonly width: number; readonly height: number }>((props) => {
+      const box = useLayoutBox();
+      const matrix = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      stamps.set(props.name, useConst(() => ++serial));
+      return <Rectangle onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: '#8a3248', cursor: 'pointer' }} />;
+    }, {
+      resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: ({ props }) => {
+        if (props.autoOnly) throw new Error(`automatic cross leaf ${props.name} must not provide a baseline`);
+        calls.set(props.name, (calls.get(props.name) ?? 0) + 1);
+        const first = typeof props.first === 'number' ? props.first : props.first.get();
+        return { status: 'measured' as const, first, last: first };
+      },
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = 100; canvas.height = 120; document.body.append(canvas);
+    const receive = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+    window.addEventListener('error', receive);
+    try {
+      const controller = pibbl(canvas, <Flex style={{ width: 100, height: 120, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'first-baseline', alignContent: 'stretch' }}>
+        <Leaf key="A" name="A" first={aFirst} style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0, marginTop: top, marginBottom: bottom }} />
+        <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+        <Leaf key="C" name="C" first={8} style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0 }} />
+        <Leaf key="D" name="D" first={20} style={{ width: 40, height: 30, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+      </Flex>);
+      controllers.push(controller);
+      await nextFrame();
+      const expectLines = (aY: number) => {
+        expect(boxes.get('A')).toEqual({ x: 0, y: aY, width: 60, height: 20 });
+        expect(boxes.get('B')).toEqual({ x: 60, y: 0, width: 40, height: 40 });
+        expect(boxes.get('C')).toEqual({ x: 0, y: 76, width: 60, height: 20 });
+        expect(boxes.get('D')).toEqual({ x: 60, y: 64, width: 40, height: 30 });
+      };
+      expect(errors).toEqual([]);
+      expectLines(18);
+      const providerCalls = calls.get('A') ?? 0;
+      expect(providerCalls).toBeGreaterThan(0);
+      const initialStamps = Object.fromEntries(stamps);
+      const mounted = snapshotWasmLayoutDiagnostics();
+
+      top.set('auto'); await nextFrame();
+      expect(errors).toEqual([]); expectLines(44);
+      expect(calls.get('A')).toBe(providerCalls);
+      click(canvas, 4, 22); expect(hits).toEqual([]);
+      click(canvas, 4, 49); expect(hits).toEqual(['A']);
+
+      top.set(0); bottom.set('auto'); await nextFrame();
+      expect(errors).toEqual([]); expectLines(0);
+      expect(calls.get('A')).toBe(providerCalls);
+      click(canvas, 4, 4); expect(hits).toEqual(['A', 'A']);
+
+      top.set('auto'); await nextFrame();
+      expect(errors).toEqual([]); expectLines(22);
+      expect(calls.get('A')).toBe(providerCalls);
+      expect(Object.fromEntries(stamps)).toEqual(initialStamps);
+      expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+
+      const detached = snapshotWasmLayoutDiagnostics();
+      aFirst.set(100); await nextFrame();
+      const afterDetached = snapshotWasmLayoutDiagnostics();
+      expect(calls.get('A')).toBe(providerCalls);
+      expect(afterDetached.solves).toBe(detached.solves);
+      expect(afterDetached.crossPlacements).toBe(detached.crossPlacements);
+
+      top.set(0); bottom.set(0); await nextFrame();
+      expect(boxes.get('A')).toEqual({ x: 0, y: 0, width: 60, height: 20 });
+      expect(boxes.get('B')).toEqual({ x: 60, y: 70, width: 40, height: 40 });
+      expect(boxes.get('C')).toEqual({ x: 0, y: 122, width: 60, height: 20 });
+      expect(boxes.get('D')).toEqual({ x: 60, y: 110, width: 40, height: 30 });
+      expect(calls.get('A')).toBeGreaterThan(providerCalls);
+      aFirst.set(12); await nextFrame();
+      expectLines(18);
+
+      controller.dispose();
+      const allAutoCanvas = document.createElement('canvas');
+      allAutoCanvas.width = 100; allAutoCanvas.height = 80; document.body.append(allAutoCanvas);
+      const allAuto = pibbl(allAutoCanvas, <Flex style={{ width: 100, height: 80, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'first-baseline', alignContent: 'flex-start' }}>
+        <Leaf key="fallback-A" name="fallback-A" first={100} autoOnly style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0, marginTop: 'auto' }} />
+        <Leaf key="fallback-B" name="fallback-B" first={100} autoOnly style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginTop: 'auto' }} />
+        <Leaf key="fallback-C" name="fallback-C" first={8} style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0 }} />
+      </Flex>);
+      controllers.push(allAuto);
+      await nextFrame();
+      expect(errors).toEqual([]);
+      expect(boxes.get('fallback-A')).toEqual({ x: 0, y: 20, width: 60, height: 20 });
+      expect(boxes.get('fallback-B')).toEqual({ x: 60, y: 0, width: 40, height: 40 });
+      expect(boxes.get('fallback-C')).toEqual({ x: 0, y: 40, width: 60, height: 20 });
+      allAuto.dispose();
+      const disposed = snapshotWasmLayoutDiagnostics();
+      expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+        baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+      ]);
+    } finally {
+      window.removeEventListener('error', receive);
+    }
+  },
+);
+
+it.runIf(experimentalLayout)(
+  'uses physical cross edges for wrap-reverse first-baseline automatic margins without reflecting an automatic leaf',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const top = signal<0 | 'auto'>(0);
+    const bottom = signal<0 | 10 | 'auto'>('auto');
+    const boxes = new Map<string, LayoutBox>();
+    const stamps = new Map<string, number>();
+    const hits: string[] = [];
+    let serial = 0;
+    interface ReverseStyle extends BaselineStyle {
+      readonly marginTop?: number | 'auto' | ReturnType<typeof signal<0 | 'auto'>>;
+      readonly marginBottom?: 0 | 10 | 'auto' | ReturnType<typeof signal<0 | 10 | 'auto'>>;
+    }
+    interface ReverseProps { readonly name: 'A' | 'B' | 'C' | 'D'; readonly first: number; readonly automatic?: boolean; }
+    const Leaf = definePrimitive<ReverseProps, ReverseStyle, ReverseStyle, ReverseStyle & { readonly width: number; readonly height: number }>((props) => {
+      const box = useLayoutBox();
+      const matrix = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      stamps.set(props.name, useConst(() => ++serial));
+      return <Rectangle onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: '#8a3248', cursor: 'pointer' }} />;
+    }, {
+      resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: ({ props }) => {
+        if (props.automatic) throw new Error('automatic cross-margin leaf must not query its baseline');
+        return { status: 'measured' as const, first: props.first, last: props.first };
+      },
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = 100; canvas.height = 120; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: 100, height: 120, flexDirection: 'row', flexWrap: 'wrap-reverse', alignItems: 'first-baseline', alignContent: 'flex-start' }}>
+      <Leaf key="A" name="A" first={100} automatic style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0, marginTop: top, marginBottom: bottom }} />
+      <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+      <Leaf key="C" name="C" first={8} style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0 }} />
+      <Leaf key="D" name="D" first={20} style={{ width: 40, height: 30, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+    </Flex>);
+    controllers.push(controller);
+    await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 80, width: 60, height: 20 });
+    expect(boxes.get('B')).toEqual({ x: 60, y: 80, width: 40, height: 40 });
+    expect(boxes.get('C')).toEqual({ x: 0, y: 60, width: 60, height: 20 });
+    expect(boxes.get('D')).toEqual({ x: 60, y: 48, width: 40, height: 30 });
+    const initialStamps = Object.fromEntries(stamps);
+    const mounted = snapshotWasmLayoutDiagnostics();
+
+    top.set('auto'); bottom.set(10); await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 90, width: 60, height: 20 });
+    expect(boxes.get('B')).toEqual({ x: 60, y: 80, width: 40, height: 40 });
+    expect(boxes.get('C')).toEqual({ x: 0, y: 60, width: 60, height: 20 });
+    expect(boxes.get('D')).toEqual({ x: 60, y: 48, width: 40, height: 30 });
+    expect(Object.fromEntries(stamps)).toEqual(initialStamps);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+    click(canvas, 4, 84); expect(hits).toEqual([]);
+    click(canvas, 4, 94); expect(hits).toEqual(['A']);
+
+    controller.dispose();
+    const numeric = pibbl(canvas, <Flex style={{ width: 100, height: 90, flexDirection: 'row', flexWrap: 'wrap-reverse', alignItems: 'first-baseline', alignContent: 'flex-start' }}>
+      <Leaf key="numeric-A" name="A" first={12} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginTop: 30, marginBottom: 10 }} />
+      <Leaf key="numeric-B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+      <Leaf key="numeric-C" name="C" first={8} style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0 }} />
+    </Flex>);
+    controllers.push(numeric); await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 60, width: 40, height: 20 });
+    expect(boxes.get('B')).toEqual({ x: 40, y: 42, width: 40, height: 40 });
+    expect(boxes.get('C')).toEqual({ x: 0, y: 10, width: 60, height: 20 });
+    numeric.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+      baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+    ]);
+  },
+);

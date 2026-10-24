@@ -2089,9 +2089,18 @@ resolved numeric and automatic main margins compose through native final main al
 measurement. Resolved finite signed numeric cross margins contribute to each line's
 ascent as before-margin plus first baseline, and descent as after-margin plus
 content height minus first baseline. Provider allocations retain content height;
-content placement is common baseline minus first baseline. Automatic cross margins
-and the other leaf exclusions remain outside
-this wrapped profile. Native line membership is reused.
+content placement is common baseline minus first baseline. Automatic cross-margin
+leaves opt out of baseline sharing and provider queries. Their outer heights still
+contribute to line extent; an all-automatic line uses its maximum outer height.
+Positive free space within each allocated line, including align-content stretch,
+is divided between that leaf's automatic cross edges. Numeric opposite margins
+consume free space first; nonpositive free space contributes zero. Reverse wrapping
+uses the allocated line origin for automatic leaves while preserving the existing
+intrinsic physical origin for baseline participants. This retains Pibbl's accepted
+per-line automatic-margin policy and matches the retained Chromium control; pinned
+Yoga's baseline-sharing/reflection differences are classified, not parity claims.
+Provider dependencies detach while excluded and read current values when rejoining.
+The other leaf exclusions remain; native line membership is reused.
 Each line has its own maximum ascent and descent, so the next line begins after
 the complete baseline extent. The common baseline never spans two lines. In a
 100px-wide row, A60x20/b12 and B40x40/b30 occupy y18/0; C60x20/b8 and

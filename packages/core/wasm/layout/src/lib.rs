@@ -101,7 +101,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v14() -> u32 { 14 }
+pub extern "C" fn layout_abi_v15() -> u32 { 15 }
 #[no_mangle]
 pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
@@ -126,14 +126,23 @@ pub extern "C" fn place_wrap_first_baseline(handle: u32, generation: u32, size: 
 fn wrapped_first_baseline_line_metrics(records: &[f64], start: usize, end: usize) -> Result<(f64, f64), u32> {
     let mut ascent = 0.0_f64;
     let mut descent = 0.0_f64;
+    let mut automatic_cross = 0.0_f64;
     for n in records[start * STRIDE..end * STRIDE].chunks_exact(STRIDE) {
-        let item_descent = n[7] + n[0] - n[8];
-        if !item_descent.is_finite() { return Err(1); }
-        ascent = ascent.max(n[6] + n[8]);
-        descent = descent.max(item_descent);
+        if n[5] == 1.0 {
+            let item_ascent = n[6] + n[8];
+            let item_descent = n[7] + n[0] - n[8];
+            if !item_ascent.is_finite() || !item_descent.is_finite() { return Err(1); }
+            ascent = ascent.max(item_ascent);
+            descent = descent.max(item_descent);
+        } else {
+            let outer = n[6] + n[0] + n[7];
+            if !outer.is_finite() { return Err(1); }
+            automatic_cross = automatic_cross.max(outer);
+        }
     }
-    let cross = ascent + descent;
-    if !ascent.is_finite() || !cross.is_finite() || cross < 0.0 { return Err(1); }
+    let baseline_cross = ascent + descent;
+    if !baseline_cross.is_finite() { return Err(1); }
+    let cross = baseline_cross.max(automatic_cross);
     Ok((ascent, cross))
 }
 
@@ -150,10 +159,12 @@ fn align_wrapped_first_baseline(records: &mut [f64], lines: &[(usize, usize)], s
     if expected_start != count { return 1; }
     for n in records.chunks_exact(STRIDE) {
         // Wrapped first-baseline starts with the same fixed, undecorated
-        // participant contract as the single-line operation, without auto edges.
+        // participant contract as the single-line operation. Auto edges opt out.
         if !n[0].is_finite() || n[0] < 0.0 || n[1] != 0.0
             || !n[2].is_finite() || n[2] < 0.0 || n[3].is_nan() || n[2] > n[3]
-            || n[4] != 0.0 || n[5] != 1.0 || !n[6].is_finite() || !n[7].is_finite() || !n[8].is_finite() || n[9] != 0.0 { return 1; }
+            || n[4] != 0.0 || !n[5].is_finite() || n[5].fract() != 0.0
+            || n[5] < 1.0 || n[5] > 13.0 || (n[5] as u32 & 3) != 1
+            || !n[6].is_finite() || !n[7].is_finite() || !n[8].is_finite() || n[9] != 0.0 { return 1; }
     }
 
     let mut occupied = lines.len().saturating_sub(1) as f64 * gap;
@@ -180,7 +191,8 @@ fn align_wrapped_first_baseline(records: &mut [f64], lines: &[(usize, usize)], s
         let origin = if reverse { size - cursor - cross } else { cursor };
         if !extent.is_finite() || extent < 0.0 || !origin.is_finite() { return 1; }
         for n in records[line_start * STRIDE..line_end * STRIDE].chunks_exact(STRIDE) {
-            if !(origin + ascent - n[8]).is_finite() { return 1; }
+            let item_origin = if n[5] == 1.0 { origin } else if reverse { size - cursor - extent } else { cursor };
+            if !(extent - n[0] - n[6] - n[7]).is_finite() || !(item_origin + first_baseline_offset(n, extent, ascent)).is_finite() { return 1; }
         }
         if line_index + 1 < lines.len() { cursor += extent + gap + between; }
         if !cursor.is_finite() { return 1; }
@@ -192,8 +204,10 @@ fn align_wrapped_first_baseline(records: &mut [f64], lines: &[(usize, usize)], s
         let extent = cross + stretch;
         let origin = if reverse { size - cursor - cross } else { cursor };
         for n in records[line_start * STRIDE..line_end * STRIDE].chunks_exact_mut(STRIDE) {
+            let item_origin = if n[5] == 1.0 { origin } else if reverse { size - cursor - extent } else { cursor };
+            let offset = item_origin + first_baseline_offset(n, extent, ascent);
             n[6] = n[0];
-            n[7] = origin + ascent - n[8];
+            n[7] = offset;
         }
         if line_index + 1 < lines.len() { cursor += extent + gap + between; }
     }
@@ -1471,6 +1485,55 @@ mod tests {
         assert_eq!(align_wrapped_first_baseline(&mut records, &[(0,2)], 80., 0., 0, false), 1);
         assert!(records[6].is_infinite());
         assert_eq!((records[7],records[16],records[17]),(0.,0.,0.));
+    }
+
+    #[test] fn wrapped_first_baseline_places_automatic_cross_margins_inside_each_line_allocation() {
+        // A has top:auto plus a numeric bottom10 edge. B/C/D retain
+        // baseline participation. Each line uses its own intrinsic extent;
+        // A's automatic edge consumes only its line's positive free space.
+        let mut mixed = [
+            20.,0.,0.,f64::INFINITY,0.,5.,0.,10.,0.,0.,
+            40.,0.,0.,f64::INFINITY,0.,1.,0.,0.,30.,0.,
+            20.,0.,0.,f64::INFINITY,0.,1.,0.,0.,8.,0.,
+            30.,0.,0.,f64::INFINITY,0.,1.,0.,0.,20.,0.,
+        ];
+        assert_eq!(align_wrapped_first_baseline(&mut mixed, &[(0,2),(2,4)], 120., 8., 0, false), 0);
+        assert_eq!((mixed[6],mixed[7],mixed[16],mixed[17],mixed[26],mixed[27],mixed[36],mixed[37]),
+            (20.,10.,40.,0.,20.,60.,30.,48.));
+
+        // With no baseline participant, each line derives its intrinsic extent
+        // from the largest outer automatic child and still distributes free
+        // space per line.
+        let mut all_auto = [
+            20.,0.,0.,f64::INFINITY,0.,5.,0.,0.,0.,0.,
+            40.,0.,0.,f64::INFINITY,0.,5.,0.,0.,0.,0.,
+            20.,0.,0.,f64::INFINITY,0.,5.,0.,0.,0.,0.,
+            30.,0.,0.,f64::INFINITY,0.,5.,0.,0.,0.,0.,
+        ];
+        assert_eq!(align_wrapped_first_baseline(&mut all_auto, &[(0,2),(2,4)], 120., 8., 0, false), 0);
+        assert_eq!((all_auto[7],all_auto[17],all_auto[27],all_auto[37]), (20.,0.,58.,48.));
+    }
+
+    #[test] fn wrapped_first_baseline_automatic_cross_margins_use_reverse_stretch_line_allocations() {
+        let mut records = [
+            20.,0.,0.,f64::INFINITY,0.,5.,0.,10.,0.,0.,
+            40.,0.,0.,f64::INFINITY,0.,1.,0.,0.,30.,0.,
+            20.,0.,0.,f64::INFINITY,0.,1.,0.,0.,8.,0.,
+            30.,0.,0.,f64::INFINITY,0.,1.,0.,0.,20.,0.,
+        ];
+        // The regular participants retain physical content-top baseline origins;
+        // A absorbs its free space from the reverse line's stretched allocation.
+        assert_eq!(align_wrapped_first_baseline(&mut records, &[(0,2),(2,4)], 120., 8., 6, true), 0);
+        assert_eq!((records[7],records[17],records[27],records[37]), (90.,80.,32.,20.));
+    }
+
+    #[test] fn wrapped_first_baseline_rejects_unknown_automatic_cross_policy_before_writing_results() {
+        let mut records = [
+            20.,0.,0.,f64::INFINITY,0.,3.,0.,0.,0.,0.,
+            40.,0.,0.,f64::INFINITY,0.,1.,0.,0.,30.,0.,
+        ];
+        assert_eq!(align_wrapped_first_baseline(&mut records, &[(0,2)], 80., 0., 0, false), 1);
+        assert_eq!((records[6],records[7],records[16],records[17]), (0.,0.,0.,0.));
     }
 
     #[test] fn wrapped_first_baseline_uses_each_line_ascent_and_descent() {

@@ -7478,13 +7478,52 @@ Native36tests/ABI14fingerprint recorded in204. No aggregate trust or final
 whole-codebase review claimed. Ledger12complete/12experimental/3partial/5missing/
 1excluded and seven open release gates are unchanged.
 
-## [NEXT] Slice205: wrapped automatic cross-margin baseline participants
+## [DONE] Slice205: wrapped automatic cross-margin baseline participants
 
 Establish the physical per-line policy using native/reference/public evidence:
 automatic cross-margin leaves opt out of baseline sharing, contribute their outer
 height to line extent, and absorb free cross space within their own allocated
 line. Preserve existing nowrap behavior and classify known Yoga differences rather
 than adding another arbitrary admission fence. No new public API or scheduler.
+
+Public RED1fail/1pass and native RED2fail/37pass precede production. ABI15permits
+existing automatic cross flags in wrapped baseline records. Per-line metrics
+combine baseline ascent/descent with maximum automatic outer height; all-automatic
+lines retain their outer extent. Existing first-baseline auto offset logic absorbs
+free space within each allocated line. Reverse+stretch uses allocated origin for
+auto leaves and retains intrinsic physical origin for baseline participants.
+Native preflight still completes before result publication; complete ABI14rejects.
+
+Native39tests and final focused5files45pass/1skip pass. Public off→top→bottom→both proves
+A18→44→0→22with C76/D64in120px stretched owner; excluded provider signal changes
+cause no query/solve/cross placement, then rejoining reads the live100baseline
+(A0/B70/C122/D110) and restoring12recovers geometry. All-auto fallback, stable
+identity, targets and exact cleanup pass. Initial expected C77/D65used an incorrect
+30px line extent; C's12px descent makes it32, corrected without runtime changes.
+Fresh retained Chromium control confirms mixed/all-auto and reverse stretch
+A90/B80/C32/D20. Pinned Yoga differences remain explicitly classified. Native RED
+fixtures were corrected to use content heights rather than main widths before run.
+Scoped review found a physical-edge mapping defect for reverse automatic and
+numeric margins. A focused public RED reproduces bottom-auto inversion; baseline
+region records now undo the ordinary logical reverse edge mapping before native
+physical baseline placement. Bottom-autoA80→top-auto+bottom10A90, numeric asymmetric
+reverseA60/B42/C10, identity/targets/cleanup pass; changed-code re-review is clean.
+ABI15artifact81889bytes SHA256
+`b427577af2687dfb1af29ddfd89fbc53b1248f3753a92d733473a2d225060a26`.
+
+Final source5192/refreshed built5193 reruns pass errors[]/cleanup000/470built inputs,
+including forward/reverse automatic-margin cycles in the lower lesson. Screenshot
+inspected. Types, lint, catalog/Studio175/12/33, docs109mutations and changed-code
+re-review pass. No baseline release promotion or aggregate trust claim.
+
+## [NEXT] Slice206: relative and static baseline placement
+
+Admit existing resolved static/relative placement after baseline-group allocation;
+assert unchanged provider size and following-line geometry with moved paint/input.
+No new kernel or public API. Remaining
+classes are final cross sizing, decorated content offsets, existing query/aspect/
+relative/alignSelf composition, nested/reference propagation, column interpretation
+and last-baseline placement. Consolidate205–207before more production.
 
 ## Scope and execution
 

@@ -317,6 +317,19 @@ try {
   await click(400,556);const crossNumericRestored=await state();
   for(const id of ['NA','NB','NC'])assert.equal(crossNumericRestored.stamps[id],crossNumericBefore.stamps[id]);
   assert.ok(Math.abs(crossNumericRestored.boxes.NC.y-570)<1e-9);
+  const autoCrossStamps=(await state()).stamps;
+  for(const [aY,cY] of [[570,590],[530,590],[550,590],[548,570]]) {
+    await click(240,600);const lineAuto=await state();
+    assert.ok(Math.abs(lineAuto.boxes.NA.y-aY)<1e-9&&Math.abs(lineAuto.boxes.NC.y-cY)<1e-9);
+    for(const id of ['NA','NB','NC'])assert.equal(lineAuto.stamps[id],autoCrossStamps[id]);
+  }
+  await click(700,484);
+  for(const [aY,cY] of [[610,550],[570,550],[590,550],[568,530]]) {
+    await click(240,600);const lineAutoReverse=await state();
+    assert.ok(Math.abs(lineAutoReverse.boxes.NA.y-aY)<1e-9&&Math.abs(lineAutoReverse.boxes.NC.y-cY)<1e-9);
+    for(const id of ['NA','NB','NC'])assert.equal(lineAutoReverse.stamps[id],autoCrossStamps[id]);
+  }
+  await click(700,484);assert.ok(Math.abs((await state()).boxes.NC.y-570)<1e-9);
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}

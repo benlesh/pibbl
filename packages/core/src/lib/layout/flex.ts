@@ -2430,15 +2430,11 @@ function assertSupportedFirstBaselineFlex(
   container: Readonly<LayoutBox>,
   mounted: boolean,
 ): void {
-  const wrapped = options.flexWrap !== 'nowrap';
   if (!mounted || !experimentalLayout || !isRowDirection(options.flexDirection)) {
     throw optionDiagnostic('alignItems', 'first-baseline', container, 'requires mounted experimental horizontal Flex');
   }
   for (const item of items) {
     const style = item.normalized;
-    if (wrapped && (item.autoCrossBefore || item.autoCrossAfter)) {
-      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: wrapped first-baseline requires fixed cross sizes without automatic cross margins');
-    }
     const textLeaf = item.child.type === Text;
     const textStyle = style as Readonly<TextStyle>;
     const fontSize = textLeaf ? /(?:^| )(\d+(?:\.\d+)?)px /.exec(String(textStyle.font ?? '13px sans-serif')) : null;
