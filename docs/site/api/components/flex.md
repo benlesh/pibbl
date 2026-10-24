@@ -244,7 +244,8 @@ the containing content width: `{ left: "10%", right: "15%", top: "5%", bottom: "
 at width200 means20/30/10/20 logical units. Resolve padding before border-box
 conversion, so a150×100 border box contains100×70 content; at owner width300 its
 content becomes75×55. Painted content and its targets use the same resolved insets.
-Raw percentage padding outside an allocated Flex child and pure intrinsic
+Mounted Flow, Grid, Absolute and Overlay can also resolve their own padding from
+an actual containing owner. Unallocated child preparation and pure intrinsic
 measurement remain unsupported; borders remain numeric. In the
 [comparison example](#/examples/layout/wasm-yoga-migration), click Next section
 four times to inspect content-box and border-box cases.

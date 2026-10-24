@@ -2501,9 +2501,9 @@
       "id": "box.padding-and-layout-border",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "numeric padding, allocated experimental Flex percentage padding and mounted Flow/Grid own-style percentage padding from the established containing-owner basis, receiver-aware logical paddingStart/paddingEnd, and receiver-aware numeric borderStartWidth/borderEndWidth over physical layout borderWidth; painted stroke remains separate",
+      "current": "numeric padding, allocated experimental Flex percentage padding and mounted Flow/Grid/Absolute/Overlay own-style percentage padding from the established containing-owner basis, receiver-aware logical paddingStart/paddingEnd, and receiver-aware numeric borderStartWidth/borderEndWidth over physical layout borderWidth; painted stroke remains separate",
       "status": "partial",
-      "unresolvedPolicy": "Flow and Grid own mounted dispatch resolve percentage padding from the established containing allocation; pure constraints do not establish that owner. Remaining finite ownership classes are Absolute/Overlay own allocation, raw child inset preparation in non-Flex parents including Grid, and Layer raster-padding semantics. Unallocated intrinsic percentage feedback remains an independent measurement policy; no advanced Grid track capability is added.",
+      "unresolvedPolicy": "The four mounted own-style container boundaries resolve percentage padding from their established containing allocation. Remaining work is raw child inset preparation in non-Flex parents using the actual parent content/area, and the separate unallocated intrinsic feedback policy. Layer intentionally strips padding/border/box-sizing inputs and preserves its explicit raster dimensions and zero child origin; it is not a missing percentage-padding owner.",
       "evidenceRefs": [
         "docs/design/layout-system-contract.md#flex",
         "docs/architecture/proposals/layout-engine/design.md#boxes-and-units",
@@ -2512,7 +2512,11 @@
         "tooling/test-wasm-flow-padding.mjs",
         "tooling/packed-layout-consumer.mjs",
         "packages/core/test/layout-grid-percentage-padding.test.tsx",
-        "packages/core/src/lib/layout/grid.ts"
+        "packages/core/src/lib/layout/grid.ts",
+        "packages/core/test/layout-root-percentage-padding.test.tsx",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/src/lib/layout/absolute.ts",
+        "packages/core/src/lib/layout/overlay.ts"
       ],
       "evidence": {
         "positive": [
@@ -2525,13 +2529,15 @@
           "isolated RTL intrinsic measurement accepts numeric winners and rejects active percentages",
           "slice91: numeric logical border edges and receiver precedence implemented; stale missing marker removed in slice95",
           "slice190: direct experimental Flow numeric0/numeric20/percentage10% preserves keyed content, targets and paint reuse; containing Canvas width200 remains the20px basis when Flow border-box width narrows200to160; pure measurement stays unsupported; public/source/built/installed evidence and exact cleanup pass",
-          "slice191: finite explicit-track Grid numeric0/numeric20/percentage10% shares the containing-owner width200 reference across own-width200to160, preserving keyed cell targets, native track/area reuse and exact disposal; pure measurement remains unsupported; public/source/built/installed evidence passes"
+          "slice191: finite explicit-track Grid numeric0/numeric20/percentage10% shares the containing-owner width200 reference across own-width200to160, preserving keyed cell targets, native track/area reuse and exact disposal; pure measurement remains unsupported; public/source/built/installed evidence passes",
+          "slice192: direct Absolute/Overlay roots match numeric20 and10% against owner200 while own boxes narrow200to160; distinct placement/start alignment, real moved targets, hook identity, paint reuse and four-counter cleanup pass in public/source/built/installed consumers; both pure0/percentage queries retain missing-provider diagnostics",
+          "Layer source/contract audit and existing fresh consolidated raster regression preserve ignored padding/border inputs, including logical15%, explicit bitmap dimensions and zero child origin; no Layer padding implementation is required"
         ],
         "negative": [
           "paint stroke is not a layout border",
           "negative/nonfinite borders and inset overflow rejected",
           "raw unallocated intrinsic percentage padding unsupported before native work",
-          "percentage borders and ordinary JavaScript padding rejected"
+          "percentage borders and ordinary JavaScript percentage padding rejected"
         ],
         "interaction": [
           "owner resize moves inner paint/hit geometry without remount",
@@ -2553,9 +2559,7 @@
           "logical-padding-{start-zero,end-percent}-{ltr,rtl}-{logical-first,logical-last}: outer plus complete content region"
         ],
         "missing": [
-          "remaining finite Absolute/Overlay container percentage-inset ownership",
-          "raw child inset preparation in non-Flex parents before child dispatch",
-          "Layer percentage raster-padding resolution preserving its existing child origin semantics",
+          "raw child inset preparation in non-Flex parents using actual parent content or Grid area width",
           "unallocated intrinsic percentage feedback has no actual owner and remains a separate measurement policy"
         ]
       }

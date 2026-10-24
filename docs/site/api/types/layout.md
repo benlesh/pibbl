@@ -105,10 +105,13 @@ layout resolution and pure measurement.
 
 `EdgeValues<T extends number | Percentage = number>` supplies one scalar or
 independent physical edges; omitted sides resolve to zero. `padding` uses
-`EdgeValues<number | Percentage>`. In experimental allocated Flex, every padding
-percentage uses the containing content width, including top/bottom, before
-border-box conversion. Raw root/other-parent and intrinsic percentage padding
-remain unsupported. `borderWidth` and `normalizeEdges` keep numeric defaults.
+`EdgeValues<number | Percentage>`. Experimental allocated Flex children and
+mounted own-style Flow, Grid, Absolute and Overlay resolution use the containing
+owner width for every padding percentage, including top/bottom, before border-box
+conversion. Unallocated pure measurement and upstream child preparation without
+that owner remain unsupported. Layer’s own raster sizing ignores layout padding and borders, keeping
+its explicit dimensions and child origin. `borderWidth` and `normalizeEdges` keep
+numeric defaults. Compare [allocated padding](#/examples/layout/wasm-flow-padding).
 
 ## FlexItemStyle
 

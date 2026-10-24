@@ -392,12 +392,14 @@ the same border box has content75×55. Basis and combined border/padding insets
 convert once, before solving, and canonical numeric padding travels into prepared
 child painting/hit geometry with the original receiver and query ownership.
 
-An experimental Flow or Grid resolving its own mounted style can also canonicalize raw
+Experimental Flow, Grid, Absolute and Overlay resolving their own mounted styles can also canonicalize raw
 percentage padding from its established containing-owner width before computing
-its box. A200px containing owner resolves10%to20on every edge even when its own
-border box narrows from200to160. Grid retains its supported explicit track and
+its box. A 200px containing owner resolves 10% to 20 on every edge even when its own
+border box narrows from 200 to 160. Grid retains its supported explicit track and
 area rules; this does not add advanced or intrinsic tracks. Numeric input keeps the existing inexpensive path;
-logical percentage edges use the same inherited-direction resolver. Upstream
+logical percentage edges use the same inherited-direction resolver. Absolute and
+Overlay retain their distinct placement/alignment and still provide no pure
+measurement operation. Upstream
 parent layout/measurement admission remains authoritative: this dispatch path
 does not grant a missing pure query or canonicalize every parent’s children.
 

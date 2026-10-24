@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice191: allocated Grid percentage padding.
+Latest delivery is slice192: allocated Absolute/Overlay percentage padding.
+Slice191 is `13f53057`: allocated Grid percentage padding.
 Slice190 is `dd5b47f0`: allocated Flow percentage padding.
 Slice189 is `233311da`: baseline cross-auto participant handling.
 Slice188 is `bb30e361`: baseline main-axis automatic margins.
@@ -32,7 +33,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; next is192.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; next is consolidation64.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -45,7 +46,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is192: allocated Absolute/Overlay percentage padding.
+Consolidation56 is `2fd34f0e` for166–168. Next is consolidation64 for190–192.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now11complete/12experimental/
 4partial/5missing/1excluded. All seven release gates remain open; independent
@@ -7036,14 +7037,49 @@ inset preparation in non-Flex parents, and Layer's separate raster semantics.
 Unallocated intrinsic feedback remains a separate existing measurement policy.
 Fixed33and all7release gates remain unchanged; consolidation190–192is next.
 
-## [NEXT] Slice192: allocated Absolute/Overlay percentage padding
+## Slice192 delivered: allocated Absolute/Overlay percentage padding
 
-Use actual root allocations with numeric0/numeric20controls, percentage10%and
-containing-owner200/own-width200to160geometry. Reuse the inset resolver at each
-own-style dispatch while preserving their distinct placement/alignment and exact
-resource behavior. Their existing missing pure measurement providers stay missing;
-this slice does not add an opaque query, Flex positioning mode or Layer policy.
-Consolidate190–192before further production.
+Two public tests fail percentage admission after numeric0/numeric20controls.
+Each actual mounted own-style boundary now resolves percentage insets from its
+existing containing basis before normal box resolution. Numeric20and10%match;
+owner200retains20while each border box narrows200to160. Absolute placement and
+Overlay start alignment remain distinct; both pure0andpercentage queries still
+report their missing measurement provider. No new query operation or Layer policy.
+
+Fresh Node24.15.0/Chromium7focused files pass47tests, including190/191, known-family
+auto margins,177owner staging and existing Absolute/Overlay units. Source/built
+four-container replay passes all geometry, actual stale/new targets, per-container
+identity, paint reuse and four-counter teardown, errors[]. The installed246-input
+strict Bundler/NodeNext consumer passes both root families plus all previous
+fixtures; SHA256
+`353d6747d679e3314607165f332549fbd2b04b2ae174afce2122e49d370fa178`.
+An initial installed assertion incorrectly searched for “provider”; its corrected
+exact diagnostic is “does not provide measurement”, matching the public test.
+Types, lint,175/12/33catalog/Studio, docs109mutation probes and scoped review pass.
+Kernel78986bytes/ABI10and pinned reference sources are unchanged; no new Yoga
+Absolute/Overlay equivalence is fabricated.
+
+Try `http://127.0.0.1:5192/#/examples/layout/wasm-flow-padding`: cycle Grid to
+Absolute and Overlay, compare20and10%, narrow each box and click the inset card.
+Built equivalent uses5193. Switching families remounts; each family preserves
+its own keyed content identity through padding/width updates.
+
+The finite inventory is corrected by a Layer source/contract audit: Layer strips
+padding, borders and box-sizing, preserving explicit raster dimensions and child
+origin0,0. The existing raster regression includes logical15%padding and passes
+in the accumulated matrix. Earlier notes listing Layer percentage resolution as
+missing were mistaken; no such implementation is authorized or needed. Remaining
+classes are actual raw-child inset preparation outside Flex and unallocated
+intrinsic feedback. Box padding stays partial; fixed33and all7gates unchanged.
+
+## [NEXT] Consolidation64: slices190–192
+
+Consolidate the allocated own-style padding family before further production.
+Include190/191/192public tests, existing automatic-margin closure, permanent177
+owner phases, Layer raster semantics, ordinary mode and full source/built/installed
+proofs. Distinguish the still-missing non-Flex child preparation and intrinsic
+owner-feedback classes from the now-supported own-style boundaries. No generic
+Layer normalization or additional automatic-margin profiles.
 
 ## Scope and execution
 

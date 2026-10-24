@@ -41,8 +41,22 @@ try {
   await click(100, 118); grid = await state(); assert.equal(grid.containerWidth, 160); assert.equal(grid.allocationWidth, 200); expectBox(grid.box, 20, 20, gridStamp); assert.equal(grid.layout.nodeCreates, gridMounted.nodeCreates);
   const gridBeforePaint = grid.layout; await click(164, 118); const gridPainted = await state();
   for (const key of ['solves', 'gridTrackResolutions', 'gridCellPlacements', 'mainPlacements', 'crossPlacements', 'measuredLeaves', 'nodeCreates']) { assert.equal(typeof gridBeforePaint[key], 'number', key); assert.equal(gridPainted.layout[key], gridBeforePaint[key], `grid paint ${key}`); }
+  let latest = gridPainted;
+  for (const family of ['absolute', 'overlay']) {
+    await click(164, 88); latest = await state(); assert.equal(latest.container, family);
+    await click(36, 118); latest = await state(); assert.equal(latest.padding, 0);
+    await click(100, 118); latest = await state(); assert.equal(latest.containerWidth, 200); expectBox(latest.box, 0, 0, latest.box.stamp);
+    const stamp = latest.box.stamp, mounted = latest.layout, hits = latest.hits;
+    await click(36, 118); latest = await state(); assert.equal(latest.padding, 20); expectBox(latest.box, 20, 20, stamp); assert.equal(latest.layout.nodeCreates, mounted.nodeCreates);
+    await click(4, 4); latest = await state(); assert.equal(latest.hits, hits);
+    await click(24, 24); latest = await state(); assert.equal(latest.hits, hits + 1);
+    await click(36, 118); latest = await state(); assert.equal(latest.padding, '10%'); expectBox(latest.box, 20, 20, stamp); assert.equal(latest.layout.nodeCreates, mounted.nodeCreates);
+    await click(100, 118); latest = await state(); assert.equal(latest.containerWidth, 160); assert.equal(latest.allocationWidth, 200); expectBox(latest.box, 20, 20, stamp); assert.equal(latest.layout.nodeCreates, mounted.nodeCreates);
+    const beforePaint = latest.layout; await click(164, 118); latest = await state();
+    for (const key of ['solves', 'nodeCreates']) { assert.equal(typeof beforePaint[key], 'number', `${family} ${key}`); assert.equal(latest.layout[key], beforePaint[key], `${family} paint ${key}`); }
+  }
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__); if (built) { assert.equal(proof?.mode, 'layout-wasm-built'); assert.ok(proof.coreInputs.length && proof.coreInputs.every(value => value.includes('packages/core/.layout-wasm-package/dist/'))); }
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const disposed = await sandbox.evaluate(() => { dispatchEvent(new PageTransitionEvent('pagehide')); return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__(); }); assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances], [0, 0, 0, 0]); assert.deepEqual(errors, []);
-  console.warn(JSON.stringify({ base, initial: initial.box, numeric: numeric.box, percentage: percentage.box, resized: resized.box, grid: grid.box, cleanup: [0, 0, 0], errors }));
+  console.warn(JSON.stringify({ base, initial: initial.box, numeric: numeric.box, percentage: percentage.box, resized: resized.box, grid: grid.box, latest: latest.box, cleanup: [0, 0, 0], errors }));
 } finally { await browser.close(); }

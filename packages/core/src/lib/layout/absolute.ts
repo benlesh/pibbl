@@ -15,7 +15,7 @@ import {
 import { resolvePrimitiveStyleInput } from '../element/resolve-primitive-inputs.js';
 import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import { normalizeBoxInsets } from './box-insets.js';
+import { normalizeBoxInsets, hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
 import { resolveLength } from '../style/resolve-length.js';
 import {
   extractSystemFilter,
@@ -136,10 +136,16 @@ export const Absolute = definePrimitive<
   ResolvedAbsoluteStyle
 >(renderAbsolute, {
   childInput: 'structural',
-  resolveStyle: (style, context) => ({
-    box: resolveContainerBox(style, context, 'Absolute', 'absolute'),
-    overflow: style.overflow ?? 'visible',
-  }),
+  resolveStyle: (style, context) => {
+    if (experimentalLayout && hasPercentageBoxPadding(style)) {
+      style = resolveAllocatedInsets(style, { width: context.percentageBasis.width,
+        context: { ...context, component: 'Absolute', algorithm: 'absolute' } });
+    }
+    return {
+      box: resolveContainerBox(style, context, 'Absolute', 'absolute'),
+      overflow: style.overflow ?? 'visible',
+    };
+  },
 });
 
 if (experimentalLayout) registerKnownLayoutPreflight(Absolute, (element, _style, content, receiver, slot) => {

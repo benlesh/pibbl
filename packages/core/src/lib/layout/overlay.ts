@@ -1,3 +1,4 @@
+import { hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
 import { experimentalLayout } from './wasm/region.js';
 import { registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
@@ -116,12 +117,18 @@ export const Overlay = definePrimitive<
   ResolvedOverlayStyle
 >(renderOverlay, {
   childInput: 'structural',
-  resolveStyle: (style, context) => ({
-    box: resolveContainerBox(style, context, 'Overlay', 'overlay'),
-    overflow: style.overflow ?? 'visible',
-    alignItems: style.alignItems ?? 'stretch',
-    justifyItems: style.justifyItems ?? 'stretch',
-  }),
+  resolveStyle: (style, context) => {
+    if (experimentalLayout && hasPercentageBoxPadding(style)) {
+      style = resolveAllocatedInsets(style, { width: context.percentageBasis.width,
+        context: { ...context, component: 'Overlay', algorithm: 'overlay' } });
+    }
+    return {
+      box: resolveContainerBox(style, context, 'Overlay', 'overlay'),
+      overflow: style.overflow ?? 'visible',
+      alignItems: style.alignItems ?? 'stretch',
+      justifyItems: style.justifyItems ?? 'stretch',
+    };
+  },
 });
 
 function prepareOverlayPlacements(children: readonly PibblElement<any>[], content: Readonly<LayoutBox>, alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>>): { box: LayoutBox; element: PibblElement<any> }[] {

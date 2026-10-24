@@ -1,10 +1,10 @@
-import { Flow, Grid, Group, Rectangle, Text, computed, definePrimitive, signal, untracked, useCanvasContext, useConst, useLayoutBox, useReaction, type BoxStyle, type GridItemStyle, type PibblNode, type Signal, type SystemStyle } from '@pibbl/core';
+import { Absolute, Flow, Grid, Group, Overlay, Rectangle, Text, computed, definePrimitive, signal, untracked, useCanvasContext, useConst, useLayoutBox, useReaction, type BoxStyle, type GridItemStyle, type PibblNode, type Signal, type SystemStyle } from '@pibbl/core';
 
 function createFlowPaddingContent() {
-  const containerWidth = signal(200), padding = signal<0 | 20 | '10%'>(0), container = signal<'flow' | 'grid'>('flow'), ink = signal('#a63758');
+  const containerWidth = signal(200), padding = signal<0 | 20 | '10%'>(0), container = signal<'flow' | 'grid' | 'absolute' | 'overlay'>('flow'), ink = signal('#a63758');
   const paddingLabel = computed(() => padding.get() === 0 ? 'Pad 20' : padding.get() === 20 ? 'Pad 10%' : 'Pad 0');
   const widthLabel = computed(() => containerWidth.get() === 200 ? 'Width 160' : 'Width 200');
-  const containerLabel = computed(() => container.get() === 'flow' ? 'Grid' : 'Flow');
+  const containerLabel = computed(() => container.get() === 'flow' ? 'Grid' : container.get() === 'grid' ? 'Absolute' : container.get() === 'absolute' ? 'Overlay' : 'Flow');
   let serial = 0, hits = 0, basis = new DOMMatrix(), box = { x: 0, y: 0, width: 0, height: 0, stamp: 0 };
   const diagnostics = (globalThis as typeof globalThis & { __PIBBL_LAYOUT_DIAGNOSTICS__?: () => Record<string, number> }).__PIBBL_LAYOUT_DIAGNOSTICS__;
   const CanvasBasis = definePrimitive<{ children: PibblNode }>((props, _style, context) => { basis = context.getTransform(); return props.children; });
@@ -18,19 +18,30 @@ function createFlowPaddingContent() {
     return <><Rectangle onClick={onClick} style={{ left: x, top: 104, width: 56, height: 28, fill: '#19375b', cursor: 'pointer' }} /><Text pointerEvents="none" style={{ left: x + 5, top: 113, font: '9px sans-serif', fill: '#ffffff' }}>{label}</Text></>;
   }
   function ContainerButton() {
-    return <><Rectangle onClick={() => container.update(value => value === 'flow' ? 'grid' : 'flow')} style={{ left: 136, top: 76, width: 56, height: 24, fill: '#19375b', cursor: 'pointer' }} /><Text pointerEvents="none" style={{ left: 145, top: 83, font: '9px sans-serif', fill: '#ffffff' }}>{containerLabel}</Text></>;
+    return <><Rectangle onClick={() => container.update(value => value === 'flow' ? 'grid' : value === 'grid' ? 'absolute' : value === 'absolute' ? 'overlay' : 'flow')} style={{ left: 136, top: 76, width: 56, height: 24, fill: '#19375b', cursor: 'pointer' }} /><Text pointerEvents="none" style={{ left: 140, top: 83, font: '9px sans-serif', fill: '#ffffff' }}>{containerLabel}</Text></>;
+  }
+  function FlowPadding() {
+    return <Flow style={{ width: containerWidth, height: 80, boxSizing: 'border-box', padding, direction: 'horizontal', wrap: false, alignItems: 'start' }}><Content key="content" style={{ width: 100, height: 40 }} /></Flow>;
+  }
+  function GridPadding() {
+    return <Grid style={{ width: containerWidth, height: 80, boxSizing: 'border-box', padding, gridTemplateColumns: [100], gridTemplateRows: [40] }}><Content key="content" style={{ width: 100, height: 40, gridColumnStart: 1, gridRowStart: 1 }} /></Grid>;
+  }
+  function AbsolutePadding() {
+    return <Absolute style={{ width: containerWidth, height: 80, boxSizing: 'border-box', padding }}><Content key="content" style={{ width: 100, height: 40 }} /></Absolute>;
+  }
+  function OverlayPadding() {
+    return <Overlay style={{ width: containerWidth, height: 80, boxSizing: 'border-box', padding, alignItems: 'start', justifyItems: 'start' }}><Content key="content" style={{ width: 100, height: 40 }} /></Overlay>;
   }
   function PaddingContainer() {
-    const child = container.get() === 'grid'
-      ? <Content key="content" style={{ width: 100, height: 40, gridColumnStart: 1, gridRowStart: 1 }} />
-      : <Content key="content" style={{ width: 100, height: 40 }} />;
-    return container.get() === 'grid'
-      ? <Grid style={{ width: containerWidth, height: 80, boxSizing: 'border-box', padding, gridTemplateColumns: [100], gridTemplateRows: [40] }}>{child}</Grid>
-      : <Flow style={{ width: containerWidth, height: 80, boxSizing: 'border-box', padding, direction: 'horizontal', wrap: false, alignItems: 'start' }}>{child}</Flow>;
+    const kind = container.get();
+    if (kind === 'flow') return <FlowPadding />;
+    if (kind === 'grid') return <GridPadding />;
+    if (kind === 'absolute') return <AbsolutePadding />;
+    return <OverlayPadding />;
   }
   const node = <CanvasBasis><Group>
     <Rectangle pointerEvents="none" style={{ width: 200, height: 160, fill: '#f3f0e8' }} />
-    <Text pointerEvents="none" style={{ left: 8, top: 138, width: 184, wrap: true, lineHeight: 10, font: '9px sans-serif', fill: '#475569' }}>The 200px surface owns padding. Narrowing Flow or Grid keeps the 20px inset.</Text>
+    <Text pointerEvents="none" style={{ left: 8, top: 138, width: 184, wrap: true, lineHeight: 10, font: '9px sans-serif', fill: '#475569' }}>The 200px surface owns padding. Narrowing any box keeps the 20px inset.</Text>
     <Rectangle pointerEvents="none" style={{ width: containerWidth, height: 80, stroke: '#a0aab8', strokeWidth: 1 }} />
     <PaddingContainer />
     <ContainerButton />
