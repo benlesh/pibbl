@@ -1122,6 +1122,25 @@ try {
   if (after.activeNodes !== emptyAspectBaseline.activeNodes || after.activeArenas !== emptyAspectBaseline.activeArenas || after.cachedMeasurements !== emptyAspectBaseline.cachedMeasurements || after.activeWasmInstances !== emptyAspectBaseline.activeWasmInstances) throw Error('installed aspect ownership cleanup');
 }
 
+// Staged percentage bounds preserve the measured owner through installed rendering.
+const stagedPercentCanvas = document.createElement('canvas');
+stagedPercentCanvas.width=220; stagedPercentCanvas.height=120; stagedPercentCanvas.style.cssText='width:220px;height:120px'; document.body.append(stagedPercentCanvas);
+const stagedPercentBaseline=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__(),stagedPercentOwner=signal(200),stagedPercentHits:string[]=[];
+const StagedPercentApp=()=>createElement(Flex,{style:{width:stagedPercentOwner,height:100,flexDirection:'column',alignItems:'flex-start'},children:createElement(Flex,{key:'row',style:{width:'auto',height:20,minWidth:0,minHeight:0,maxWidth:160,flexBasis:20,flexGrow:0,flexShrink:0,flexDirection:'row',alignItems:'flex-start'},children:[
+createElement(Rectangle,{key:'A',onClick:()=>stagedPercentHits.push('A'),style:{width:80,height:20,flexBasis:80,minWidth:0,maxWidth:'25%',flexGrow:0,flexShrink:0,fill:'red'}}),
+createElement(Rectangle,{key:'B',onClick:()=>stagedPercentHits.push('B'),style:{width:80,height:20,flexBasis:80,minWidth:0,flexGrow:0,flexShrink:0,fill:'blue'}}),
+]})});
+const stagedPercentController=pibblSync(stagedPercentCanvas,createElement(StagedPercentApp,{}));
+try {
+const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
+const pixel=(x:number)=>JSON.stringify([...stagedPercentCanvas.getContext('2d')!.getImageData(x,10,1,1).data]);
+const click=(x:number)=>{const bounds=stagedPercentCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])stagedPercentCanvas.dispatchEvent(new MouseEvent(type,{bubbles:true,button:0,clientX:bounds.left+x,clientY:bounds.top+10}));};
+await frame(); if(pixel(31)!=='[255,0,0,255]'||pixel(33)!=='[0,0,255,255]')throw Error('installed staged percentage initial geometry');click(31);
+const initial=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();stagedPercentOwner.set(160);await frame();if(pixel(29)!=='[255,0,0,255]'||pixel(31)!=='[0,0,255,255]')throw Error('installed staged percentage resized geometry');click(31);
+if(JSON.stringify(stagedPercentHits)!=='["A","B"]'||(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==initial.nodeCreates)throw Error('installed staged percentage targets/identity');
+receipt.stagedPercentageOwner=true;
+} finally {stagedPercentController.dispose();stagedPercentCanvas.remove();const after=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();if(after.activeNodes!==stagedPercentBaseline.activeNodes||after.activeArenas!==stagedPercentBaseline.activeArenas||after.cachedMeasurements!==stagedPercentBaseline.cachedMeasurements||after.activeWasmInstances!==stagedPercentBaseline.activeWasmInstances)throw Error('installed staged percentage cleanup');}
+
 const structuralRowCanvas = document.createElement('canvas');
 structuralRowCanvas.width = 100;
 structuralRowCanvas.height = 100;

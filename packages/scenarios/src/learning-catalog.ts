@@ -4445,6 +4445,28 @@ const drafts = [
     load: () => import("./learning/layout/wasm-flex-aspect-minimum.example"),
   },
   {
+    slug: "wasm-flex-percentage-owner",
+    title: "Experimental WASM staged percentage bounds",
+    shortTitle: "WASM percentage owner",
+    section: "layout",
+    order: 173,
+    summary: "A measured numeric Flex row preserves Yoga's staged percentage bounds through final paint and targeting.",
+    api: ["Flex", "Rectangle", "useSignal"],
+    objectives: ["Distinguish external availability from the nested owner's final main size.", "Compare native percentage caps as the outer owner resizes."],
+    prompts: {
+      gesture: "Cycle external availability 200 → 160 → 80 and click around the red/green shared edge. Inspect hit history and native resource counts below.",
+      code: "The nested auto-width row has maxWidth 160; its direct numeric A has maxWidth 25% and B stays 80 px. Both use explicit zero growth and shrink.",
+    },
+    apiNotes: [
+      "Experimental LTR nowrap automatic-main owners with numeric cross size and undecorated direct empty numeric Rectangles only. Percentage main bounds use native staged references; the maximum is not relabeled an exact owner.",
+      "General measured providers, decoration, wrapping, reverse/RTL, percentage dimensions/basis and broader intrinsic compatibility remain outside this numeric profile.",
+    ],
+    canvas: { width: 760, height: 540 },
+    related: ["wasm-flex-aspect-minimum", "wasm-flex-intrinsic-primitive", "flex"],
+    exportName: "WasmFlexPercentageOwnerExample",
+    load: () => import("./learning/layout/wasm-flex-percentage-owner.example"),
+  },
+  {
     slug: "wasm-flex-intrinsic-primitive",
     title: "Experimental WASM custom intrinsic leaves",
     shortTitle: "WASM intrinsic leaves",

@@ -3,11 +3,11 @@ import { canvasMeasurementService } from './canvas-measurement.js';
 import { Grid } from './grid.js';
 import { Flow } from './flow.js';
 import type { PreparedFlexLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
-import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot } from './prepared-root.js';
+import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedIntrinsicMain, takePreparedIntrinsicMain, type PreparedIntrinsicMainStage } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
-import { experimentalLayout, LayoutRegion, mountedLayoutRegion, solveTransientFlexMain, type NumericFlexMainInput, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
+import { experimentalLayout, LayoutRegion, mountedLayoutRegion, solveTransientFlexMain, resolveTransientIntrinsicMain, type NumericFlexMainInput, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
 import { Rectangle } from '../components/rect.js';
 import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth, measureLayoutTextNaturalRun } from '../components/text.js';
 
@@ -272,10 +272,18 @@ function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexSty
     }
   } else {
     if (region) region.allocationCache = undefined;
+    const axis = isRowDirection(style.flexDirection) ? 'row' : 'column';
+    const staged = takePreparedIntrinsicMain(
+      GLOBAL_STATE.primitiveReceiverToken,
+      children,
+      axis,
+      axis === 'row' ? localContent.width : localContent.height,
+      revision,
+    );
     placements = resolveFlexPlacements(localContent, children, style, {
       service,
       measureElement: (element, constraints) => measureElement(element, constraints, service),
-    }, region);
+    }, region, staged);
   }
   return { children, placements, revision, content: localContent, cached: cached !== undefined };
 }
@@ -471,6 +479,8 @@ function measureFlex(
       input.constraints.maxHeight : 0,
   };
   const options = normalizeFlexOptions(input.style, diagnosticBox);
+  const stagedNonexact = measureStagedNonexactMain(input, children, options, diagnosticBox);
+  if (stagedNonexact) return stagedNonexact;
   if (wrappedIntrinsic && !(experimentalLayout && options.flexDirection === 'row' && options.flexWrap === 'wrap' && options.layoutDirection === 'ltr' && typeof input.style.width === 'number' && !heightDefinite)) return unsupportedIntrinsic('wrapped intrinsic height requires a finite numeric row width, LTR wrap and automatic height');
   const wrapWidth = wrappedIntrinsic ? resolveMeasuredContainerLength(measuredWidth!, input.constraints.maxWidth, 'width', input.constraints) : 0;
   const mainGap = row ? options.columnGap : options.rowGap;
@@ -747,6 +757,96 @@ function measureFlex(
   } };
 }
 
+function intrinsicMainLength(value: unknown, property: string, child: PibblElement<any>, box: Readonly<LayoutBox>): { value?: number; unit: 'none' | 'point' | 'percent' } | undefined {
+  if (value === undefined) return { unit: 'none' };
+  if (typeof value === 'number' && Number.isFinite(value) && value >= 0) return { value, unit: 'point' };
+  if (isPercentage(value)) return { value: parsePercentage(value, property, childContext(child, box)), unit: 'percent' };
+  return undefined;
+}
+
+/**
+ * The native query retains Yoga's two main-axis phases. It returns final numeric
+ * child bounds, which are staged only for the matching normal placement; raw
+ * percentage styles are deliberately left untouched for forwarding.
+ */
+function measureStagedNonexactMain(
+  input: MeasureInput<FlexProps, FlexStyle>,
+  children: readonly PibblElement<any>[],
+  options: Readonly<ReturnType<typeof normalizeFlexOptions>>,
+  diagnosticBox: Readonly<LayoutBox>,
+): MeasureResult | undefined {
+  if (!experimentalLayout || options.flexWrap !== 'nowrap' || options.layoutDirection !== 'ltr') return;
+  if (options.flexDirection !== 'row' && options.flexDirection !== 'column') return;
+  const row = options.flexDirection === 'row';
+  const automaticMain = row ? input.style.width === undefined || input.style.width === 'auto' : input.style.height === undefined || input.style.height === 'auto';
+  const cross = row ? input.style.height : input.style.width;
+  const rootMin = row ? input.style.minWidth : input.style.minHeight;
+  const rootMax = row ? input.style.maxWidth : input.style.maxHeight;
+  const available = row ? input.constraints.maxWidth : input.constraints.maxHeight;
+  if (input.style.padding !== undefined || input.style.paddingStart !== undefined || input.style.paddingEnd !== undefined ||
+      input.style.borderWidth !== undefined || input.style.borderStartWidth !== undefined || input.style.borderEndWidth !== undefined ||
+      input.style.boxSizing !== undefined || input.style.aspectRatio !== undefined ||
+      (row ? input.style.minHeight !== undefined && input.style.minHeight !== 0 || input.style.maxHeight !== undefined : input.style.minWidth !== undefined && input.style.minWidth !== 0 || input.style.maxWidth !== undefined)) return;
+  if (!automaticMain || typeof cross !== 'number' || !Number.isFinite(cross) || cross < 0 ||
+      (rootMin !== undefined && (typeof rootMin !== 'number' || !Number.isFinite(rootMin) || rootMin < 0)) ||
+      (rootMax !== undefined && (typeof rootMax !== 'number' || !Number.isFinite(rootMax) || rootMax < 0)) ||
+      typeof input.style.gap === 'number' && input.style.gap !== 0 ||
+      input.style.rowGap !== undefined || input.style.columnGap !== undefined) return;
+  if (typeof rootMin === 'number' && typeof rootMax === 'number' && rootMin > rootMax) {
+    throw layoutDiagnostic({ component: 'Flex', property: row ? 'minWidth' : 'minHeight', value: rootMin, algorithm: 'measurement', constraints: input.constraints, reason: 'minimum must not exceed maximum' });
+  }
+  const mode = typeof rootMax === 'number' ? 'fit-content' as const : 'max-content' as const;
+  const externalOwner = Number.isFinite(available) ? available : undefined;
+  const initialAvailable = mode === 'fit-content' ? rootMax as number : undefined;
+  let hasPercentageBound = false;
+  const items: { base: number; min: { value?: number; unit: 'none' | 'point' | 'percent' }; max: { value?: number; unit: 'none' | 'point' | 'percent' } }[] = [];
+  for (let sourceIndex = 0; sourceIndex < children.length; sourceIndex++) {
+    const child = children[sourceIndex];
+    if (child.type !== Rectangle || Object.hasOwn(child.props, 'children') ||
+        !child.props.style || typeof child.props.style !== 'object' || isSignal(child.props.style)) return;
+    const receiver = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, sourceIndex);
+    const prepared = prepareDirectChildStyle(child, receiver, diagnosticBox, true);
+    const style = preparedStyleValue(prepared) as Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>;
+    validateIntrinsicBound(style.minWidth, 'minWidth', child, diagnosticBox);
+    validateIntrinsicBound(style.maxWidth, 'maxWidth', child, diagnosticBox);
+    validateIntrinsicBound(style.minHeight, 'minHeight', child, diagnosticBox);
+    validateIntrinsicBound(style.maxHeight, 'maxHeight', child, diagnosticBox);
+    const main = row ? style.width : style.height;
+    const basis = style.flexBasis ?? 'auto';
+    const childCross = row ? style.height : style.width;
+    const min = row ? style.minWidth : style.minHeight;
+    const max = row ? style.maxWidth : style.maxHeight;
+    if (preparedStyleQuery(prepared) || style.position !== undefined || style.aspectRatio !== undefined ||
+        typeof main !== 'number' || !Number.isFinite(main) || main < 0 ||
+        typeof basis !== 'number' || !Number.isFinite(basis) || basis < 0 || main !== basis ||
+        typeof childCross !== 'number' || !Number.isFinite(childCross) || childCross < 0 ||
+        (style.flexGrow ?? 0) !== 0 || (style.flexShrink ?? 1) !== 0 ||
+        style.margin !== undefined || style.marginTop !== undefined || style.marginRight !== undefined || style.marginBottom !== undefined || style.marginLeft !== undefined ||
+        style.marginStart !== undefined || style.marginEnd !== undefined ||
+        style.padding !== undefined || style.paddingStart !== undefined || style.paddingEnd !== undefined ||
+        style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined) return;
+    const intrinsicMin = intrinsicMainLength(min, row ? 'minWidth' : 'minHeight', child, diagnosticBox);
+    const intrinsicMax = intrinsicMainLength(max, row ? 'maxWidth' : 'maxHeight', child, diagnosticBox);
+    if (!intrinsicMin || !intrinsicMax) return;
+    if (intrinsicMin.unit === 'percent' || intrinsicMax.unit === 'percent') hasPercentageBound = true;
+    items.push({ base: basis, min: intrinsicMin, max: intrinsicMax });
+  }
+  if (!items.length || !hasPercentageBound) return;
+  const resolved = resolveTransientIntrinsicMain(items, {
+    externalOwner, initialAvailable, rootMin: rootMin as number | undefined,
+    rootMax: rootMax as number | undefined, mode, gap: 0,
+  });
+  const receiver = GLOBAL_STATE.primitiveReceiverToken;
+  stagePreparedIntrinsicMain(receiver, {
+    elements: children, axis: row ? 'row' : 'column', contentMain: resolved.main,
+    revision: allocationInputRevision(),
+    items: resolved.targets.map((target, sourceIndex) => ({
+      sourceIndex, target, min: resolved.effectiveMins[sourceIndex], max: resolved.effectiveMaxes[sourceIndex],
+    })),
+  });
+  return { status: 'measured', size: row ? { width: resolved.main, height: cross } : { width: cross, height: resolved.main } };
+}
+
 function resolveMeasuredContainerLength(
   value: Exclude<BoxStyle['width'], undefined>,
   reference: number,
@@ -846,6 +946,7 @@ function resolveFlexPlacements(
   style: Readonly<FlexStyle>,
   measurement: FlexMeasurementInput,
   region?: LayoutRegion,
+  stagedIntrinsic?: PreparedIntrinsicMainStage,
 ): FlexPlacement[] {
   if (region) recordWasmAllocationPass();
   assertFiniteBox(container);
@@ -1182,7 +1283,11 @@ function resolveFlexPlacements(
     const padding = normalizeBoxInsets(normalized, childContext(child, container));
     const paddingMain = row ? padding.left + padding.right : padding.top + padding.bottom;
     const paddingCross = row ? padding.top + padding.bottom : padding.left + padding.right;
-    let minMain = resolveOptionalBound(
+    const stagedItem = stagedIntrinsic?.items[sourceIndex];
+    if (stagedItem && stagedItem.sourceIndex !== sourceIndex) {
+      throw new Error('Staged intrinsic Flex children are out of source order.');
+    }
+    let minMain = stagedItem ? stagedItem.min : resolveOptionalBound(
       normalized[minimumProperty],
       mainReference,
       minimumProperty,
@@ -1191,7 +1296,7 @@ function resolveFlexPlacements(
       container,
     );
     const maximumProperty = row ? 'maxWidth' : 'maxHeight';
-    const maxMain = resolveOptionalBound(
+    const maxMain = stagedItem ? stagedItem.max : resolveOptionalBound(
       normalized[maximumProperty],
       mainReference,
       maximumProperty,

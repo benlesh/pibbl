@@ -1261,9 +1261,9 @@ Malformed decimal syntax, nonfinite coefficients and negative minimum/maximum
 percentages diagnose before an unsupported owner result, child provider calls or
 layout-resource allocation. This does not invent a zero reference for validation.
 
-A maximum-only limit or unbounded availability never supplies a percentage basis.
-When percentage main bounds need it, those calls return an unsupported result
-requiring an exact finite row width. Existing diagnostics remain for percentage
+Outside the bounded staged numeric profile below, maximum-only or unbounded
+availability does not supply an exact percentage owner. Those calls return an
+unsupported result requiring an exact finite row width. Existing diagnostics remain for percentage
 main dimensions/basis, percentage gaps/padding/margins, grow, wrapping/reversal/RTL,
 automatic child cross size and cyclic/indefinite owners outside documented paths.
 No new public signature, measurement vocabulary, resource owner, cache or fixed
@@ -1273,10 +1273,42 @@ The column counterpart takes equal finite, nonnegative `minHeight` and `maxHeigh
 for an omitted/automatic-height LTR `column`, `nowrap` Flex. Its numeric-main,
 declared-cross contributions may use percentage `minHeight`/`maxHeight` against
 that exact height, returning natural width and exact main height. Exact zero is
-valid. A maximum-only or unbounded height remains unsupported when those bounds
-need a basis; contradictory resolved bounds diagnose before child evaluation.
+valid. Outside the staged numeric profile below, maximum-only or unbounded height
+remains unsupported when those bounds need a basis; contradictory resolved bounds diagnose before child evaluation.
 This is a one-axis exact admission with natural opposite extent, not a new
 both-axes-exact fast path. The existing all-authored-dimensions shortcut remains.
+
+### Experimental staged numeric main bounds
+
+Automatic-main LTR nowrap rows and columns with a finite numeric cross size may
+query direct empty numeric Rectangles with point or percentage main bounds.
+Each leaf declares equal numeric main size and basis, zero growth and shrink;
+the root and leaves have no padding, layout borders, margins, aspect ratio,
+responsive styles or whole-style callbacks/signals. Numeric root minima/maxima
+are allowed. General measured leaves and other intrinsic profiles retain their
+existing admission rules.
+
+Native sizing keeps external owner reference, initial main availability, later
+line availability and final root size distinct. A root maximum participates in
+an initial fit-content envelope; it does not become an exact/final owner. With
+root max160, A basis80/max25% and B basis80, external availability200 produces
+A32.5/B80/root112.5; availability160 gives30/80/110, and80 gives20/80/100.
+With no external reference, max160 gives40/80/120. Unbounded floor50% on a
+basis20 leaf leaves20/80/root100; root min160 changes only the finished root
+floor. Adding root max160 supplies an earlier envelope and produces80/80/160.
+The row/column numeric matrix is transposed exactly. Contradictory bounds still
+diagnose rather than adopting Yoga's max-first conflict policy.
+
+Each query copies native targets/effective bounds and releases its temporary
+arena before returning. A render transaction may hand these bounds once to the
+matching current root, child descriptor sequence, input revision and final main
+allocation. The existing region owns final native placement, paint and targeting;
+no JavaScript feedback solve or persistent measurement graph is introduced.
+Query failure publishes no successful result. Standalone queries leave no live
+native instance/arena. Reorder, removal, signal updates and teardown preserve
+current receiver ownership. This numeric profile does not close the general
+measured-provider or intrinsic-compatibility matrix.
+
 
 The public intrinsic-provider lesson composes the existing finite column provider
 with a measured row. The column delivers exact width80→40; the nested row omits

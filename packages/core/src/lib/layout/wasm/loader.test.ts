@@ -29,7 +29,7 @@ describe('layout entry import inertness', () => {
 
 });
 
-it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])('rejects older or incomplete layout ABI exports before publishing compiled code (generation=%s)', async version => {
+it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])('rejects older or incomplete layout ABI exports before publishing compiled code (generation=%s)', async version => {
   vi.resetModules();
   const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
   const legacyExports: WebAssembly.ModuleExportDescriptor[] = [
@@ -42,25 +42,31 @@ it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])('rejects older or incomplete layout 
   if (version === 5) legacyExports.push({ name: 'layout_abi_v1', kind: 'function' });
   if (version >= 6) legacyExports.push({ name: version === 10 ? 'layout_abi_v5' : version === 6 ? 'layout_abi_v2' : version === 9 ? 'layout_abi_v4' : 'layout_abi_v3', kind: 'function' }, { name: 'resize_main_auto', kind: 'function' }, { name: 'place_main_auto', kind: 'function' });
   if (version >= 8) legacyExports.push({ name: 'place_wrap_main_auto', kind: 'function' });
+  if (version >= 11) legacyExports.push({ name: 'layout_abi_v6', kind: 'function' });
   vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(legacyExports);
   expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
   expect(hasReadyLayoutModule()).toBe(false);
 });
 
 
-it('rejects ABI v6 when the baseline placement export is absent', async () => {
-  vi.resetModules();
-  const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
-  const exports: WebAssembly.ModuleExportDescriptor[] = [
-    { name: 'memory', kind: 'memory' }, { name: 'solve', kind: 'function' }, { name: 'dispose', kind: 'function' },
-    { name: 'arena_create', kind: 'function' }, { name: 'arena_generation', kind: 'function' }, { name: 'arena_dispose', kind: 'function' },
-    { name: 'resize_grid', kind: 'function' }, { name: 'resolve_grid_tracks', kind: 'function' },
-    { name: 'resize_grid_cells', kind: 'function' }, { name: 'place_grid_cells', kind: 'function' },
-    { name: 'resize_flow', kind: 'function' }, { name: 'place_flow', kind: 'function' }, { name: 'place_cross', kind: 'function' },
-    { name: 'resize_main_auto', kind: 'function' }, { name: 'place_main_auto', kind: 'function' }, { name: 'place_wrap_main_auto', kind: 'function' },
-    { name: 'layout_abi_v6', kind: 'function' },
-  ];
-  vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(exports);
-  expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
-  expect(hasReadyLayoutModule()).toBe(false);
-});
+const abiV7Exports: WebAssembly.ModuleExportDescriptor[] = [
+  { name: 'memory', kind: 'memory' }, { name: 'solve', kind: 'function' }, { name: 'dispose', kind: 'function' },
+  { name: 'arena_create', kind: 'function' }, { name: 'arena_generation', kind: 'function' }, { name: 'arena_dispose', kind: 'function' },
+  { name: 'resize_grid', kind: 'function' }, { name: 'resolve_grid_tracks', kind: 'function' },
+  { name: 'resize_grid_cells', kind: 'function' }, { name: 'place_grid_cells', kind: 'function' },
+  { name: 'resize_flow', kind: 'function' }, { name: 'place_flow', kind: 'function' }, { name: 'place_cross', kind: 'function' },
+  { name: 'resize_main_auto', kind: 'function' }, { name: 'place_main_auto', kind: 'function' }, { name: 'place_wrap_main_auto', kind: 'function' },
+  { name: 'resize_intrinsic_main', kind: 'function' }, { name: 'resolve_intrinsic_main', kind: 'function' }, { name: 'intrinsic_main_result', kind: 'function' },
+  { name: 'place_first_baseline', kind: 'function' }, { name: 'layout_abi_v7', kind: 'function' },
+];
+
+it.each(['resize_intrinsic_main', 'resolve_intrinsic_main', 'intrinsic_main_result'])(
+  'rejects ABI v7 when %s is absent',
+  async absent => {
+    vi.resetModules();
+    const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
+    vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(abiV7Exports.filter(entry => entry.name !== absent));
+    expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
+    expect(hasReadyLayoutModule()).toBe(false);
+  },
+);

@@ -221,3 +221,45 @@ export function prepareKnownLayoutDescendants(plan: Pick<PreparedLayoutPlan, 'ch
     preparePlacedKnownLayout(plan.placements[index].element, occurrence, parentSlot);
   }
 }
+
+/**
+ * A native intrinsic-main query has already chosen final numeric child bounds.
+ * It is scoped to this render transaction and consumed once by the matching
+ * normal Flex root; no persistent layout graph or receiver receipt is retained.
+ */
+export interface PreparedIntrinsicMainStage {
+  /** The flattened source descriptors measured by this stage. */
+  readonly elements: readonly PibblElement<any>[];
+  readonly axis: 'row' | 'column';
+  readonly contentMain: number;
+  readonly revision: number;
+  readonly items: readonly Readonly<{ sourceIndex: number; target: number; min: number; max: number }>[];
+}
+const intrinsicMainStages = new WeakMap<PibblRenderTransaction, WeakMap<object, PreparedIntrinsicMainStage>>();
+export function stagePreparedIntrinsicMain(receiver: object | undefined, stage: PreparedIntrinsicMainStage): void {
+  const transaction = GLOBAL_STATE.renderTransaction;
+  if (!transaction || !receiver) return;
+  let pending = intrinsicMainStages.get(transaction);
+  if (!pending) {
+    pending = new WeakMap(); intrinsicMainStages.set(transaction, pending);
+    transaction.onFinish(() => intrinsicMainStages.delete(transaction));
+  }
+  pending.set(receiver, stage);
+}
+export function takePreparedIntrinsicMain(
+  receiver: object | undefined,
+  elements: readonly PibblElement<any>[],
+  axis: 'row' | 'column',
+  contentMain: number,
+  revision: number,
+): PreparedIntrinsicMainStage | undefined {
+  const transaction = GLOBAL_STATE.renderTransaction;
+  const stage = transaction && receiver ? intrinsicMainStages.get(transaction)?.get(receiver) : undefined;
+  if (!stage || stage.axis !== axis || stage.contentMain !== contentMain || stage.revision !== revision ||
+      stage.elements.length !== elements.length) return;
+  for (let index = 0; index < elements.length; index++) {
+    if (stage.elements[index] !== elements[index]) return;
+  }
+  intrinsicMainStages.get(transaction!)!.delete(receiver!);
+  return stage;
+}

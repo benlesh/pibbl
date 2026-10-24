@@ -20,7 +20,10 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice165 `cc334a0a` (empty-Rectangle aspect automatic minimum).
+Latest delivery is slice166 (native staged percentage bounds for numeric owners;
+separate commit). Next is167: the remaining measured-leaf phase matrix.
+Consolidation55 is `98bf8b8d` for163–165.
+Slice165 is `cc334a0a` (empty-Rectangle aspect automatic minimum).
 Slice164 is `ff72e0ab` (wrapped-leaf aggregate measurement reuse).
 Slice163 is `1ca71af2` (nested described paired leaf measurement).
 Slice162 is `dcae6348` (parent-owned prepared measurement reuse).
@@ -5236,17 +5239,98 @@ installed-package receipts remain separate evidence. Kernel69628bytes is unchang
 concise5public cases still agree with the721record reference. No aggregate trust,
 capability promotion or release-gate closure is claimed. One NEXT remains below.
 
-## [NEXT] Slice166: min/max indefinite-owner phase policy and measured matrix
+## Slice166 delivered: native staged percentage bounds for numeric owners
 
 The sole `flex.min-max` missing row has two clauses: indefinite/cyclic owner
 policy and the explicit measured-owner matrix beyond exact row/column availability.
-Start with the existing pinned percentage-owner probe's exact, max-only and
-unbounded cap/floor outputs. Define query-phase percentage references separately
-from final containing size; max-only availability must not silently become an
-exact/definite owner. The public outcome must preserve query→final-layout geometry
-and diagnostics for unresolved cycles, then cover the agreed measured-owner
-matrix through the public surface. Do not turn missing profiles into exclusions
-or declare the capability complete from the six probe records alone.
+The implementation direction preserves native staged references, never a final-size
+fixed point. External owner reference, initial available inner size, later line
+availability and final owner size are distinct quantities. Existing max-only
+rejection stays until each new profile carries its native result into actual
+prepared layout. This is a behavior extension, not a new public selector or
+permission to reinterpret a maximum as an exact owner.
+
+The finite acceptance matrix for this missing row is below. Each cap/floor pair
+runs on row and column axes; reuse established exact-owner evidence. Opposing
+limits retain Pibbl's contradiction rejection. Geometry and callbacks must be
+classified separately where the existing natural-query contract differs from Yoga.
+
+| Owner state                                                                                    | Bound inputs / expected policy                                                                   | Evidence and exit                                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Declared numeric main; exact finite caller bounds                                              | Cap25%, floor50%, numeric opposing bounds                                                        | Existing exact-row/column public tests and pinned geometry; regression only.                                                                                                                                            |
+| Own max160, no external main reference                                                         | Cap25% and floor50%; native initial available envelope differs from final owner                  | Full-precision pinned result plus standalone public query and exact teardown.                                                                                                                                           |
+| Own max160 with external availability80,160,200                                                | Cap25% and floor50%; preserve external-reference, later max constraint and final geometry phases | Public measured known owner; query result and final child paint/targets must agree. Initial foothold is row/external200 cap: owner112.5/A32.5/B80, then external160:110/30/80. This alone does not complete the matrix. |
+| No own main bound and unbounded availability                                                   | Cap25% and floor50%; missing references follow the specified native phase                        | Native/public query result, no invented final-owner reference.                                                                                                                                                          |
+| Own min160 without maximum                                                                     | Cap25% and floor50%; final root floor is not exact child availability                            | Native/public query result and preserved final sizing.                                                                                                                                                                  |
+| Own min160 plus max160                                                                         | Cap25% and floor50%; max participates before child sizing even when limits are equal             | Native/public query result; distinguish from merely labeling the final size definite.                                                                                                                                   |
+| Numeric declared leaves; pure described known owners; paired measured-owner composition        | Same accepted constraint branches                                                                | Supported public measurement and normal render use the same staged result. Unknown opaque content is not discovered by executing components during measurement.                                                         |
+| Invalid/opposing bounds, unresolved percentage owners, descriptor cycles and provider failures | Preserve documented diagnostics and purity, with finite termination                              | Public error before later paint, no partially published bindings, no leaked raw arena/instance/receipts.                                                                                                                |
+| Resize, unrelated paint, reorder/removal and disposal                                          | Geometry and ownership hold across input changes                                                 | Stable keys/native nodes, correct old/new targets, fresh signal ownership, bounded successful publication; exact teardown.                                                                                              |
+
+The native query must be a distinct fixed-contract numeric operation over existing
+root ownership, with copied results and released temporary arena before callbacks.
+Only the existing prepared plan/region may carry validated scalar results into
+normal allocation. No second dependency graph, retained draw tree, JavaScript
+solver or guessed fixed-point pass is authorized. A failed query publishes no
+successful record. Complete the matrix before promoting the capability, rather
+than numbering each cap/direction variant as a new capability.
+
+Delivered2026-10-23 in one separately committed vertical slice. The numeric
+row/column matrix above is now executable for direct empty Rectangles: max160
+with no external reference or80/160/200; unbounded; min160; min160/max160. The
+28public query cases transpose cap25% and floor50% exactly. Mounted row/column
+resize, paint, hit transfer, stable native nodes, live percentage input, reorder,
+removal and exact cleanup are covered. Described Flex owner queries and mounted
+paint agree; a paired owner callback may delegate to the same described owner.
+Direct measured **leaves** remain unsupported; owner delegation does not close
+that callback/query matrix.
+
+The native fixed-contract query returns copied targets/effective bounds from a
+released temporary arena. The existing render transaction consumes a matching
+root/descriptor-sequence/revision/final-main handoff once. Normal region solve
+still owns placement. Root/child decoration, logical insets, responsive/whole-style
+callbacks, nonzero factors/gaps and arbitrary measured leaves are conservatively
+outside this new profile. Contradictions diagnose; unsupported cyclic owners
+terminate before provider discovery; existing recursive provider cycle detection
+still passes. No retained graph or JavaScript sizing loop was added.
+
+Fresh evidence (Node24.15.0, Chromium): final five-file experimental regression
+469passed/8skipped477tests; corresponding ordinary lane94passed/383skipped.
+Subsequent final public composition file33passed, adding a described/paired owner
+query and mounted described-owner paint to that prior batch. Typecheck, targeted
+lint, catalog173lessons/12snapshots/33labs, Studio manifest,109documentation
+mutation probes and public JSDoc pass. Source5192 and built5193 both prove exact
+pixel boundaries, target transfer, node reuse and disposal0000; built470inputs.
+The offline installed consumer passes Bundler/NodeNext and246dist inputs with
+stagedPercentageOwner receipt; tarball SHA256
+`1ebec2daa1e028d4d54841c4014cb690a842976e16074e4ff16d111478eeafa9`.
+
+ABI7 native tests18pass. Matching external/embedded kernel73402bytes, SHA256
+`c7aa80790db928be6dab5131ee72e152ce07642df28272018da587360d8e9212`.
+The independent full-precision `--percentage-phase-probe` runs against pinned
+Yoga3.2.1 commit042f5013152eb81c1552dec945b88f7b95ca350f; probe source SHA256
+`0ac0dcfdae7ca8f3bf2dcf86185d7f2d752adf9b9ed3118c694f4b7e7a77d6a1`.
+Its measured callback correctly transposes natural main80/cross20. The721case
+conformance corpus is unchanged. No visual baseline was rewritten, capability
+promoted, aggregate trust claim made, or release gate closed.
+
+Runnable: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-percentage-owner`.
+Cycle200→160→80 and click at the red/green edge. Numeric phase references and
+source paint order are visible; inspector counters are observed diagnostics,
+while the prose sizes are explicitly expected values.
+
+## [NEXT] Slice167: measured-leaf percentage-owner phase matrix
+
+The remaining `flex.min-max` row still requires the direct measured-provider
+callback/query clauses and supported described/provider composition across the
+accepted owner states. Reuse the numeric phase evidence; do not reinterpret a
+max-only envelope as exact or infer provider parity from equal final boxes.
+First pin natural-main/cross callbacks and finite/exact/undefined query envelopes
+on both axes, then implement the smallest native-authoritative continuation
+through the existing paired measurement and prepared-root lifetime. Release
+native temporary storage before callbacks and preserve cycle/failure/receipt
+cleanup. No new public selector, JavaScript fixed point or persistent graph.
+Promote only after the remaining agreed matrix is implemented and verified.
 
 The automatic-minimum ledger still has five categories (general Text/font rules,
 images, remaining intrinsic aspect interactions, overflow/fitting, pinned-native

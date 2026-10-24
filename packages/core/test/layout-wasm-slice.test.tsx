@@ -3138,11 +3138,13 @@ for (const axis of ['row', 'column'] as const) {
     const child = createElement(Rectangle, {style:{width:80,height:80,flexBasis:80,flexShrink:0,minWidth:0,minHeight:0,[minimum]:'75%',[maximum]:'25%'} as RectStyle});
     expect(() => layoutFlex({x:0,y:0,width:100,height:100},[child],{flexDirection:axis},measurement)).toThrow(/minimum/);
   });
-  it(`keeps percentage-dependent intrinsic ${axis} owners explicitly unsupported`, () => {
+  it(`classifies the bounded numeric percentage-dependent intrinsic ${axis} owner`, () => {
     const child = createElement(Rectangle, {style:{width:40,height:40,flexBasis:40,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,[maximum]:'25%'} as RectStyle});
-    const owner = createElement(Flex,{style:axis==='row'?{height:100,maxWidth:200}:{width:100,maxHeight:200},children:child});
+    const owner = createElement(Flex,{style:axis==='row'?{flexDirection:axis,height:100,maxWidth:200}:{flexDirection:axis,width:100,maxHeight:200},children:child});
     const before = snapshotWasmLayoutDiagnostics();
-    expect(measureElement(owner,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:200},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining(experimentalLayout && axis === 'row' ? 'exact finite row width' : 'percentage child sizes or bounds')});
+    expect(measureElement(owner,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:200},service)).toMatchObject(experimentalLayout ?
+      {status:'measured',size:axis==='row'?{width:10,height:100}:{width:100,height:10}} :
+      {status:'unsupported',reason:expect.stringContaining('percentage child sizes or bounds')});
     expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
     expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(before.activeArenas);
   });

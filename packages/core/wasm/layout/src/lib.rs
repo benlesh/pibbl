@@ -1,8 +1,18 @@
 //! Experimental region-owned f64 Flex allocator. No rendering or scheduling.
 use std::cell::RefCell;
 const STRIDE: usize = 10; // basis, min, max, padding, grow, shrink, result, frozen/offset, margin before, margin after
+// base, min value/unit, max value/unit, target, effective min, effective max.
+// The ordinary allocator still owns grow/shrink; this staged query admits only
+// callers that have already restricted those factors to zero.
+const INTRINSIC_MAIN_STRIDE: usize = 8;
+const INTRINSIC_NONE: u32 = 0;
+const INTRINSIC_POINT: u32 = 1;
+const INTRINSIC_PERCENT: u32 = 2;
+const INTRINSIC_EXACT: u32 = 0;
+const INTRINSIC_FIT_CONTENT: u32 = 1;
+const INTRINSIC_MAX_CONTENT: u32 = 2;
 #[derive(Default)]
-struct Arena { nodes: Vec<f64>, main_auto: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64>, flow: Vec<f64> }
+struct Arena { nodes: Vec<f64>, main_auto: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64>, flow: Vec<f64>, intrinsic_main: Vec<f64>, intrinsic_main_result: f64 }
 struct ArenaSlot { generation: u32, arena: Option<Arena> }
 struct ArenaPool { slots: Vec<ArenaSlot>, closed: bool }
 thread_local! {
@@ -84,7 +94,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v6() -> u32 { 6 }
+pub extern "C" fn layout_abi_v7() -> u32 { 7 }
 #[no_mangle]
 pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
@@ -442,6 +452,128 @@ pub extern "C" fn place_wrap_cross(handle: u32, generation: u32, size: f64, gap:
 }
 
 #[no_mangle]
+pub extern "C" fn resize_intrinsic_main(handle: u32, generation: u32, count: usize) -> *mut f64 {
+    with_arena(handle, generation, std::ptr::null_mut(), |arena| {
+        let Some(length) = count.checked_mul(INTRINSIC_MAIN_STRIDE) else { return std::ptr::null_mut(); };
+        arena.intrinsic_main.resize(length, 0.0);
+        arena.intrinsic_main_result = f64::NAN;
+        arena.intrinsic_main.as_mut_ptr()
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn resolve_intrinsic_main(
+    handle: u32, generation: u32,
+    external_owner: f64, initial_available: f64,
+    root_min: f64, root_max: f64, root_mode: u32, gap: f64,
+) -> u32 {
+    with_arena(handle, generation, 1, |arena| {
+        arena.intrinsic_main_result = f64::NAN;
+        match resolve_intrinsic_main_fixed_leaves(
+            &mut arena.intrinsic_main, external_owner, initial_available,
+            root_min, root_max, root_mode, gap,
+        ) {
+            Ok(result) => { arena.intrinsic_main_result = result; 0 }
+            Err(status) => status,
+        }
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn intrinsic_main_result(handle: u32, generation: u32) -> f64 {
+    with_arena(handle, generation, f64::NAN, |arena| arena.intrinsic_main_result)
+}
+
+fn resolve_intrinsic_length(value: f64, unit: f64, reference: f64) -> Result<Option<f64>, u32> {
+    if unit == INTRINSIC_NONE as f64 {
+        return if value == 0.0 { Ok(None) } else { Err(1) };
+    }
+    if (unit != INTRINSIC_POINT as f64 && unit != INTRINSIC_PERCENT as f64) || !value.is_finite() || value < 0.0 { return Err(1); }
+    if unit == INTRINSIC_POINT as f64 { return Ok(Some(value)); }
+    if reference.is_nan() { return Ok(None); }
+    if !reference.is_finite() || reference < 0.0 { return Err(1); }
+    let resolved = (value * 0.01) * reference;
+    if !resolved.is_finite() { return Err(1); }
+    Ok(Some(resolved))
+}
+
+fn resolve_root_bound(value: f64) -> Result<Option<f64>, u32> {
+    if value.is_nan() { return Ok(None); }
+    if !value.is_finite() || value < 0.0 { return Err(1); }
+    Ok(Some(value))
+}
+
+fn maximum(left: Option<f64>, right: Option<f64>) -> Option<f64> {
+    match (left, right) { (Some(a), Some(b)) => Some(a.max(b)), (value, None) | (None, value) => value }
+}
+fn minimum(left: Option<f64>, right: Option<f64>) -> Option<f64> {
+    match (left, right) { (Some(a), Some(b)) => Some(a.min(b)), (value, None) | (None, value) => value }
+}
+fn checked_bounds(minimum: Option<f64>, maximum: Option<f64>) -> Result<(), u32> {
+    if let (Some(minimum), Some(maximum)) = (minimum, maximum) { if minimum > maximum { return Err(2); } }
+    Ok(())
+}
+fn clamp_bounds(value: f64, minimum: Option<f64>, maximum: Option<f64>) -> Result<f64, u32> {
+    checked_bounds(minimum, maximum)?;
+    let value = if let Some(maximum) = maximum { value.min(maximum) } else { value };
+    Ok(if let Some(minimum) = minimum { value.max(minimum) } else { value })
+}
+
+fn resolve_intrinsic_main_fixed_leaves(
+    records: &mut [f64], external_owner: f64, initial_available: f64,
+    root_min: f64, root_max: f64, root_mode: u32, gap: f64,
+) -> Result<f64, u32> {
+    if records.len() % INTRINSIC_MAIN_STRIDE != 0 || !gap.is_finite() || gap != 0.0 { return Err(1); }
+    if !external_owner.is_nan() && (!external_owner.is_finite() || external_owner < 0.0) { return Err(1); }
+    if root_mode != INTRINSIC_EXACT && root_mode != INTRINSIC_FIT_CONTENT && root_mode != INTRINSIC_MAX_CONTENT { return Err(1); }
+    if root_mode == INTRINSIC_MAX_CONTENT {
+        if !initial_available.is_nan() { return Err(1); }
+    } else if !initial_available.is_finite() || initial_available < 0.0 { return Err(1); }
+    let root_min = resolve_root_bound(root_min)?;
+    let root_max = resolve_root_bound(root_max)?;
+    checked_bounds(root_min, root_max)?;
+
+    // Basis binding sees the external owner reference. Retain these bounds: a
+    // later phase may tighten, never erase, a valid early bound.
+    let mut consumed = 0.0;
+    for record in records.chunks_exact_mut(INTRINSIC_MAIN_STRIDE) {
+        let base = record[0];
+        if !base.is_finite() || base < 0.0 { return Err(1); }
+        if record[2] == record[4] && record[2] != INTRINSIC_NONE as f64 && record[1] > record[3] { return Err(2); }
+        let initial_min = resolve_intrinsic_length(record[1], record[2], external_owner)?;
+        let initial_max = resolve_intrinsic_length(record[3], record[4], external_owner)?;
+        record[5] = clamp_bounds(base, initial_min, initial_max)?;
+        record[6] = initial_min.unwrap_or(0.0);
+        record[7] = initial_max.unwrap_or(f64::INFINITY);
+        consumed += record[5];
+    }
+    if !consumed.is_finite() { return Err(1); }
+
+    // Exact roots retain their supplied envelope. Fit/max-content roots form a
+    // line from the initially bound bases and clamp that line through own bounds.
+    let adjusted_line = if root_mode == INTRINSIC_EXACT { initial_available } else { clamp_bounds(consumed, root_min, root_max)? };
+    let mut final_sum = 0.0;
+    for record in records.chunks_exact_mut(INTRINSIC_MAIN_STRIDE) {
+        let initial_min = if record[6] == 0.0 { None } else { Some(record[6]) };
+        let initial_max = if record[7].is_infinite() { None } else { Some(record[7]) };
+        // Yoga's later constrainMaxSizeForMode sees the adjusted line.
+        let query_max = resolve_intrinsic_length(record[3], record[4], adjusted_line)?;
+        // Recursive child layout sees the original envelope (undefined for max-content).
+        let recursive_min = resolve_intrinsic_length(record[1], record[2], initial_available)?;
+        let recursive_max = resolve_intrinsic_length(record[3], record[4], initial_available)?;
+        let effective_min = maximum(initial_min, recursive_min);
+        let effective_max = minimum(minimum(initial_max, query_max), recursive_max);
+        checked_bounds(effective_min, effective_max)?;
+        record[6] = effective_min.unwrap_or(0.0);
+        record[7] = effective_max.unwrap_or(f64::INFINITY);
+        record[5] = clamp_bounds(record[0], effective_min, effective_max)?;
+        final_sum += record[5];
+    }
+    if !final_sum.is_finite() { return Err(1); }
+    Ok(if root_mode == INTRINSIC_EXACT { initial_available } else { clamp_bounds(final_sum, root_min, root_max)? })
+}
+
+#[no_mangle]
 pub extern "C" fn solve(handle: u32, generation: u32, main: f64, gap: f64) -> u32 {
     with_arena(handle, generation, 1, |arena| allocate(&mut arena.nodes, main, gap))
 }
@@ -501,6 +633,73 @@ fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
 }
 #[cfg(test)]
 mod tests {
+    fn intrinsic_record(base: f64, min_value: f64, min_unit: f64, max_value: f64, max_unit: f64) -> [f64; INTRINSIC_MAIN_STRIDE] {
+        [base, min_value, min_unit, max_value, max_unit, 0.0, 0.0, 0.0]
+    }
+    fn cap_records() -> Vec<f64> {
+        let mut records = Vec::new();
+        records.extend_from_slice(&intrinsic_record(80.,0.,INTRINSIC_POINT as f64,25.,INTRINSIC_PERCENT as f64));
+        records.extend_from_slice(&intrinsic_record(80.,0.,INTRINSIC_POINT as f64,0.,INTRINSIC_NONE as f64));
+        records
+    }
+    fn floor_records() -> Vec<f64> {
+        let mut records = Vec::new();
+        records.extend_from_slice(&intrinsic_record(20.,50.,INTRINSIC_PERCENT as f64,0.,INTRINSIC_NONE as f64));
+        records.extend_from_slice(&intrinsic_record(80.,0.,INTRINSIC_POINT as f64,0.,INTRINSIC_NONE as f64));
+        records
+    }
+
+    #[test] fn intrinsic_main_preserves_yoga_percentage_owner_phases() {
+        let mut finite_cap=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut finite_cap,200.,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(112.5)); assert_eq!((finite_cap[5],finite_cap[6],finite_cap[7],finite_cap[13]),(32.5,0.,32.5,80.));
+        let mut owner_160=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut owner_160,160.,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(110.)); assert_eq!((owner_160[5],owner_160[7],owner_160[13]),(30.,30.,80.));
+        let mut undefined_max=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut undefined_max,f64::NAN,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(120.)); assert_eq!((undefined_max[5],undefined_max[7],undefined_max[13]),(40.,40.,80.));
+        let mut unbounded_cap=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut unbounded_cap,f64::NAN,f64::NAN,f64::NAN,f64::NAN,INTRINSIC_MAX_CONTENT,0.),Ok(120.)); assert_eq!((unbounded_cap[5],unbounded_cap[7],unbounded_cap[13]),(40.,40.,80.));
+        let mut unbounded_floor=floor_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut unbounded_floor,f64::NAN,f64::NAN,f64::NAN,f64::NAN,INTRINSIC_MAX_CONTENT,0.),Ok(100.)); assert_eq!((unbounded_floor[5],unbounded_floor[6],unbounded_floor[13]),(20.,0.,80.));
+        let mut max_floor=floor_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut max_floor,f64::NAN,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(160.)); assert_eq!((max_floor[5],max_floor[6],max_floor[13]),(80.,80.,80.));
+    }
+
+    // These lock the three distinct references Yoga applies: external owner for
+    // initial percentage basis, initial available envelope for recursive bounds,
+    // and own min/max for the final root clamp.
+    #[test] fn intrinsic_main_keeps_external_and_own_bound_phases_distinct() {
+        let mut external_cap = cap_records();
+        assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut external_cap,80.,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.), Ok(100.));
+        assert_eq!((external_cap[5], external_cap[7], external_cap[13]), (20.,20.,80.));
+
+        let mut external_floor = floor_records();
+        assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut external_floor,80.,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.), Ok(160.));
+        assert_eq!((external_floor[5], external_floor[6], external_floor[13]), (80.,80.,80.));
+
+        let mut own_min_cap = cap_records();
+        assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut own_min_cap,f64::NAN,160.,160.,f64::NAN,INTRINSIC_FIT_CONTENT,0.), Ok(160.));
+        assert_eq!((own_min_cap[5], own_min_cap[7], own_min_cap[13]), (40.,40.,80.));
+
+        let mut minmax_floor = floor_records();
+        assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut minmax_floor,f64::NAN,160.,160.,160.,INTRINSIC_FIT_CONTENT,0.), Ok(160.));
+        assert_eq!((minmax_floor[5], minmax_floor[6], minmax_floor[13]), (80.,80.,80.));
+    }
+
+    #[test] fn intrinsic_main_rejects_unsupported_or_contradictory_inputs() {
+        let mut records=intrinsic_record(80.,50.,INTRINSIC_PERCENT as f64,25.,INTRINSIC_PERCENT as f64).to_vec(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut records,160.,160.,f64::NAN,f64::NAN,INTRINSIC_EXACT,0.),Err(2));
+        records=intrinsic_record(80.,0.,INTRINSIC_NONE as f64,0.,INTRINSIC_NONE as f64).to_vec();
+        assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut records,160.,160.,f64::NAN,f64::NAN,INTRINSIC_EXACT,1.),Err(1));
+    }
+
+    #[test] fn intrinsic_main_stale_handles_cannot_return_or_mutate_results() {
+        let handle = arena_create(); let generation = arena_generation(handle);
+        let pointer = resize_intrinsic_main(handle, generation, 1);
+        assert!(!pointer.is_null());
+        unsafe { std::slice::from_raw_parts_mut(pointer, INTRINSIC_MAIN_STRIDE).copy_from_slice(&intrinsic_record(80.,0.,INTRINSIC_NONE as f64,0.,INTRINSIC_NONE as f64)); }
+        assert_eq!(resolve_intrinsic_main(handle,generation,160.,160.,f64::NAN,f64::NAN,INTRINSIC_EXACT,0.),0);
+        assert_eq!(intrinsic_main_result(handle,generation),160.);
+        assert_eq!(resolve_intrinsic_main(handle,generation,160.,160.,f64::NAN,f64::NAN,INTRINSIC_EXACT,1.),1);
+        assert!(intrinsic_main_result(handle,generation).is_nan());
+        assert_eq!(arena_dispose(handle,generation),0);
+        assert_eq!(resize_intrinsic_main(handle,generation,1),std::ptr::null_mut());
+        assert_eq!(resolve_intrinsic_main(handle,generation,160.,160.,f64::NAN,f64::NAN,INTRINSIC_EXACT,0.),1);
+        assert!(intrinsic_main_result(handle,generation).is_nan());
+    }
+
     #[test] fn partial_free_space_uses_initially_frozen_sizes() {
         let mut grow = [20.,0.,10.,0.,0.25,0.,0.,0.,0.,0.,20.,0.,f64::INFINITY,0.,0.25,0.,0.,0.,0.,0.];
         assert_eq!(allocate(&mut grow,112.,12.),0);
