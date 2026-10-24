@@ -33,7 +33,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; next is consolidation64.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 passes; next is193.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -46,7 +46,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is consolidation64 for190–192.
+Consolidation56 is `2fd34f0e` for166–168. Next is193: actual direct-child percentage insets.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now11complete/12experimental/
 4partial/5missing/1excluded. All seven release gates remain open; independent
@@ -7072,14 +7072,42 @@ missing were mistaken; no such implementation is authorized or needed. Remaining
 classes are actual raw-child inset preparation outside Flex and unallocated
 intrinsic feedback. Box padding stays partial; fixed33and all7gates unchanged.
 
-## [NEXT] Consolidation64: slices190–192
+## Consolidation64: slices190–192
 
-Consolidate the allocated own-style padding family before further production.
-Include190/191/192public tests, existing automatic-margin closure, permanent177
-owner phases, Layer raster semantics, ordinary mode and full source/built/installed
-proofs. Distinguish the still-missing non-Flex child preparation and intrinsic
-owner-feedback classes from the now-supported own-style boundaries. No generic
-Layer normalization or additional automatic-margin profiles.
+Fresh Node24.15.0/Chromium75-file matrix passes1074/skip12 of1086in82.77s;
+ordinary mode passes302/skip784in7.90s. No runtime or accumulated-test repair was
+required. Permanent177owner phases, completed automatic margins and existing
+Layer raster semantics are in this matrix. Full source/built Flex/Text replay
+passes errors[]/cleanup000with470built inputs. The four-container padding replay
+also passes source/built geometry, actual targets, per-container identity and
+four-counter cleanup. Installed246-input strict Bundler/NodeNext proof passes
+all current receipts, including both192root families; tarball SHA256
+`353d6747d679e3314607165f332549fbd2b04b2ae174afce2122e49d370fa178`.
+The installed diagnostic assertion correction is recorded under192and adds no
+runtime repair. Types, lint,175/12/33catalog/Studio, docs109mutation probes, matching
+78986-byte ABI10artifacts and public JSDoc pass. Native reference sources remain
+unchanged from the dated118-record consolidation63receipt; no new native run or
+aggregate trust is claimed here.
+
+This closes the allocated own-style family: Flow, Grid, Absolute and Overlay use
+an actual containing basis; their pure-query limits remain explicit. Layer's
+ignored insets are the existing raster contract, not another implementation gap.
+Box padding remains partial for raw child preparation outside Flex and broader
+measurement/owner feedback. The fixed ledger remains11complete/12experimental/
+4partial/5missing/1excluded with all7release gates open. Final independent
+whole-codebase review remains at the full program exit.
+
+## [NEXT] Slice193: allocated direct-child percentage insets
+
+Establish public numeric controls for actual Flow/Absolute/Overlay parent content
+width200and a160x80border-box child: numeric20and10%give120x40content at20;
+parent160gives16percent insets and128x48content. A Grid160px area in a200px parent
+instead uses16from the start, proving the cell is the owner. Reuse the existing
+resolver only after actual child allocation, before box conversion; preserve
+receiver/query metadata and existing placement. Pure Flow/Grid raw-child queries
+stay unsupported because constraints are not allocation ownership. Absolute and
+Overlay retain missing providers. No Layer normalization or advanced Grid tracks.
+Consolidation193–195follows the next three delivered slices.
 
 ## Scope and execution
 
