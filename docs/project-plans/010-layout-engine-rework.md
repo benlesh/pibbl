@@ -20,7 +20,7 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice165 (empty-Rectangle aspect automatic minimum).
+Latest delivery is slice165 `cc334a0a` (empty-Rectangle aspect automatic minimum).
 Slice164 is `ff72e0ab` (wrapped-leaf aggregate measurement reuse).
 Slice163 is `1ca71af2` (nested described paired leaf measurement).
 Slice162 is `dcae6348` (parent-owned prepared measurement reuse).
@@ -5219,6 +5219,22 @@ Hands-on: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-aspect-minimum`
 sizes are explicitly labeled expected, separate from actual runtime counters;
 paint/hit verification and public numeric geometry establish actual behavior.
 Consolidation55 for163–165 follows as a separate evidence commit.
+
+## Consolidation55: slices163–165
+
+Fresh Node24.15/Playwright Chromium: experimental764passed/12skipped across55files
+(776tests),84.44s; ordinary293passed/483skipped,5.73s. This extends the prior
+bounded lane with described paired-leaf recursion/replay, conservative nested
+query and function-input misses, cycle/removal ownership and empty aspect minima.
+Both runs passed without another production correction.
+
+Refreshed ordinary declarations/build and exact source/built/editor exports with
+runtime/Three addons pass. Slice165 typecheck, changed-code lint, docs109mutation
+probes, public JSDoc,172lesson/12snapshot/33lab catalog and Studio checks pass.
+The independent16-record pinned aspect probe, source/built lesson and246-input
+installed-package receipts remain separate evidence. Kernel69628bytes is unchanged;
+concise5public cases still agree with the721record reference. No aggregate trust,
+capability promotion or release-gate closure is claimed. One NEXT remains below.
 
 ## [NEXT] Slice166: min/max indefinite-owner phase policy and measured matrix
 
