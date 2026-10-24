@@ -142,6 +142,63 @@ void runKnownOwnerTree(bool column, int branches, const char* availability, floa
   YGConfigFree(config);
 }
 
+void setOwnPercentBounds(YGNodeRef node, bool column, int profile) {
+  if (profile == 0) setMinPct(node, column, 75);
+  else if (profile == 1) { setMinPct(node, column, 50); setMaxPct(node, column, 75); }
+  else setMaxPct(node, column, 75);
+}
+const char* ownPercentProfile(int profile) { return profile == 0 ? "min75" : profile == 1 ? "min50-max75" : "max75"; }
+void configureOwnPercentChildren(YGNodeRef owner, YGNodeRef leaf, YGNodeRef sibling, bool column) {
+  YGNodeStyleSetFlexDirection(owner, column ? YGFlexDirectionColumn : YGFlexDirectionRow);
+  YGNodeStyleSetAlignItems(owner, YGAlignFlexStart);
+  YGNodeStyleSetFlexGrow(owner, 0); YGNodeStyleSetFlexShrink(owner, 0); setCross(owner, column, 20);
+  YGNodeStyleSetFlexGrow(leaf, 0); YGNodeStyleSetFlexShrink(leaf, 0); setCross(leaf, column, 20);
+  if (column) YGNodeStyleSetMinHeight(leaf, 0); else YGNodeStyleSetMinWidth(leaf, 0);
+  setMaxPct(leaf, column, 25); YGNodeSetMeasureFunc(leaf, measure);
+  YGNodeStyleSetFlexGrow(sibling, 0); YGNodeStyleSetFlexShrink(sibling, 0); setCross(sibling, column, 20); setMain(sibling, column, 80); setBasis(sibling, column, 80);
+  if (column) YGNodeStyleSetMinHeight(sibling, 0); else YGNodeStyleSetMinWidth(sibling, 0);
+  YGNodeInsertChild(owner, leaf, 0); YGNodeInsertChild(owner, sibling, 1);
+}
+// Exact physical 200 parent on the opposite axis produces the public finite
+// at-most child envelope. This is intentionally distinct from a root StretchFit call.
+void runOppositeAxisOwnPercentOwner(bool column, int profile) {
+  currentColumn = column; currentNaturalMain = 80; calls = {};
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto outer = YGNodeNewWithConfig(config), owner = YGNodeNewWithConfig(config), leaf = YGNodeNewWithConfig(config), sibling = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(outer, column ? YGFlexDirectionRow : YGFlexDirectionColumn);
+  YGNodeStyleSetAlignItems(outer, YGAlignFlexStart);
+  if (column) { YGNodeStyleSetWidth(outer, 100); YGNodeStyleSetHeight(outer, 200); }
+  else { YGNodeStyleSetWidth(outer, 200); YGNodeStyleSetHeight(outer, 100); }
+  configureOwnPercentChildren(owner, leaf, sibling, column); setOwnPercentBounds(owner, column, profile);
+  YGNodeInsertChild(outer, owner, 0);
+  YGNodeCalculateLayout(outer, column ? 100 : 200, column ? 200 : 100, YGDirectionLTR);
+  const float ownerMain = column ? YGNodeLayoutGetHeight(owner) : YGNodeLayoutGetWidth(owner);
+  const float leafMain = column ? YGNodeLayoutGetHeight(leaf) : YGNodeLayoutGetWidth(leaf);
+  const float siblingMain = column ? YGNodeLayoutGetHeight(sibling) : YGNodeLayoutGetWidth(sibling);
+  std::printf("own-percent-opposite-parent axis=%s profile=%s owner=%.17g leaf=%.17g sibling=%.17g calls=%d", column ? "column" : "row", ownPercentProfile(profile), ownerMain, leafMain, siblingMain, calls.calls);
+  if (calls.calls) std::printf(" query={main:%.17g,%s,cross:%.17g,%s}", column ? calls.h : calls.w, mode(column ? calls.hm : calls.wm), column ? calls.w : calls.h, mode(column ? calls.wm : calls.hm));
+  std::puts("");
+  YGNodeFreeRecursive(outer); YGConfigFree(config);
+}
+// Undefined root calls establish unresolved-own-bound query policy separately;
+// they are not the finite parent/mounted evidence above.
+void runUndefinedOwnPercentOwner(bool column, int profile) {
+  currentColumn = column; currentNaturalMain = 80; calls = {};
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto owner = YGNodeNewWithConfig(config), leaf = YGNodeNewWithConfig(config), sibling = YGNodeNewWithConfig(config);
+  configureOwnPercentChildren(owner, leaf, sibling, column); setOwnPercentBounds(owner, column, profile);
+  YGNodeCalculateLayout(owner, column ? YGUndefined : YGUndefined, column ? YGUndefined : YGUndefined, YGDirectionLTR);
+  const float ownerMain = column ? YGNodeLayoutGetHeight(owner) : YGNodeLayoutGetWidth(owner);
+  const float leafMain = column ? YGNodeLayoutGetHeight(leaf) : YGNodeLayoutGetWidth(leaf);
+  const float siblingMain = column ? YGNodeLayoutGetHeight(sibling) : YGNodeLayoutGetWidth(sibling);
+  std::printf("own-percent-root-query axis=%s profile=%s owner=%.17g leaf=%.17g sibling=%.17g calls=%d", column ? "column" : "row", ownPercentProfile(profile), ownerMain, leafMain, siblingMain, calls.calls);
+  if (calls.calls) std::printf(" query={main:%.17g,%s,cross:%.17g,%s}", column ? calls.h : calls.w, mode(column ? calls.hm : calls.wm), column ? calls.w : calls.h, mode(column ? calls.wm : calls.hm));
+  std::puts("");
+  YGNodeFreeRecursive(owner); YGConfigFree(config);
+}
+
 void run(bool column, Owner owner, bool floor, bool measured, float supplied = YGUndefined, float naturalMain = 80) {
   currentColumn = column; currentNaturalMain = naturalMain;
   auto config=YGConfigNew(); YGConfigSetUseWebDefaults(config,false); YGConfigSetPointScaleFactor(config,0); YGConfigSetErrata(config,YGErrataNone);
@@ -186,6 +243,10 @@ int main() {
     for (int branches = 1; branches <= 2; branches++) {
       runKnownOwnerTree(column, branches, "undefined", YGUndefined);
       runKnownOwnerTree(column, branches, "finite-100", 100);
+    }
+    for (int profile = 0; profile < 3; profile++) {
+      runOppositeAxisOwnPercentOwner(column, profile);
+      runUndefinedOwnPercentOwner(column, profile);
     }
   }
 }

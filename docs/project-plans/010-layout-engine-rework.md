@@ -20,11 +20,11 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice169 (known-owner matrix and structural phase evidence).
+Latest delivery is slice170 (percentage own-owner bounds). Slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is170: percentage own-owner min/max
-references under nonexact availability. Numeric own-owner and known composition
-matrix evidence is complete; the min/max percentage-own-bound cell remains open.
+Consolidation56 is `2fd34f0e` for166–168. Next is171: capped known-owner main
+contribution versus final content size. The own-percentage-bound cell is evidenced;
+the same-axis main-contribution mismatch keeps min/max partial.
 Consolidation55 is `98bf8b8d` for163–165.
 Slice165 is `cc334a0a` (empty-Rectangle aspect automatic minimum).
 Slice164 is `ff72e0ab` (wrapped-leaf aggregate measurement reuse).
@@ -5926,7 +5926,7 @@ exclusion or a generic recursive-policy placeholder. `flex.min-max` remains
 partial; its missing row now names this counterexample. Other intrinsic size,
 percentage dimension/basis and tree capabilities keep their original targets.
 
-## [NEXT] Slice170: native percentage own-owner bounds
+## Slice170 delivered: percentage own-owner bounds against original references
 
 Establish the public row/column percentage-own-maximum counterexample before
 production code. Resolve the receiving owner's percentage min/max against its
@@ -5934,6 +5934,53 @@ actual external reference, preserving undefined references and the distinct
 initial/later/final native phases. Reuse the current numeric native operation,
 prepared receiver handoff and release-before-callback ownership. No implicit
 size-query association, fixed point, new public selector or parallel solver.
+
+Delivered2026-10-23 after four public row/column finite/unbounded cases failed
+with unsupported measurement. Own percentage min/max now resolve to scalar bounds
+against the original caller reference before native preparation. Valid undefined
+references remain unresolved. The transaction stage retains the resolved scalars
+for exact allocated continuation; authored styles still forward unchanged. Native
+operations, ABI8/75199byte kernel and721reference corpus are unchanged.
+
+The matched opposite-axis finite parent is important: standalone Yoga root
+StretchFit would produce a different min-only owner. Under public at-most child
+availability200, own min75% gives owner150/leaf37.5 and leaf maximum50; own
+max75% or mixed min50/max75 gives109.375/29.375 and maximum37.5. Undefined
+availability gives120/40/80 and an unbounded callback. Thirteen public tests cover
+both axes/all three bound profiles, final allocation, exact cleanup and invalid
+syntax/sign/overflow/resolved conflicts before provider evaluation.
+
+Fresh Node24.15/Chromium focused7files:590passed/8skipped (598tests),82.41s;
+ordinary78passed/520skipped,2.91s. Typecheck, changed-code lint and catalog174 pass;
+scoped review found no material issue. Source/built lesson and installed-package
+receipts pass the live160px→75% limit transition, moved boundary, unchanged native
+nodes and disposal0000. Built uses470inputs; packed246dist inputs with strict
+Bundler/NodeNext consumers, tarball SHA256
+`25909a1718a523076cbf7b981e68d75b87e398953d12cb7e9db2c70c90fde9b8`.
+The tracked pinned probe preserves earlier cases and uses matching parent modes;
+source SHA256 `b8839b7b548e9d02b78e151d189586dccb19f248fc1a7383b5aff90f2866263a`.
+Visual inspection confirms readable labels and the75% control. No aggregate
+trust or release-gate closure is claimed; fixed33counts remain unchanged.
+
+A separate native-matched same-axis case remains open: outer200, owner auto with
+min100/max160, natural80 leaf capped25% and fixed80 sibling. Pure full query110
+is correct, but the parent must use contribution120, then query at30 and paint
+leaf30. With own max75%, pure full query109.375 differs from contribution117.5;
+the second query/leaf is29.375. Current placement incorrectly uses final full-query
+size as its parent-main basis. Four public row/column171tests reproduce this
+before production. This is the remaining accepted bound-specific composition
+cell; broader independent intrinsic/basis/gap work stays in its own capabilities.
+
+## [NEXT] Slice171: native main contribution versus final content
+
+Expose the native initial bound-adjusted line alongside final intrinsic main as
+one fixed return contract. A receiver-scoped known-root main-contribution query
+uses that value only where the parent needs a main basis; public pure full queries,
+cross-axis sizing and opaque size-only queries retain final content size. The
+existing exact allocated continuation then remeasures descendants at the correct
+allocation. Preserve the query role in any cache identity and retain all resource,
+cycle and source-order rules. No second solver, public selector, persistent graph
+or implicit opaque query-to-render association. Consolidation57 covers169–171.
 
 ## Scope and execution
 

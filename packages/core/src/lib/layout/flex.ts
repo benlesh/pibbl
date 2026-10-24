@@ -322,7 +322,7 @@ export const Flex = definePrimitive<
 
 // A known Absolute sibling boundary resolves these receiver inputs before any
 // sibling's opaque component executes. Geometry still solves in normal traversal.
-let allocatedIntrinsicMain: { receiver: object; main: number } | undefined;
+let allocatedIntrinsicMain: { receiver: object; main: number; rootMin?: number; rootMax?: number } | undefined;
 if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, content, receiver, slot, parentMainAxis) => {
   const options = normalizeFlexOptions(style as Readonly<FlexStyle>, content);
   const releaseLayout = pushLayoutBox(content, options);
@@ -343,7 +343,7 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
       const measuredRoot = clonePibblElement(element);
       setPreNormalizedStyle(measuredRoot, contribution.style, element, receiver);
       const previousPhase = allocatedIntrinsicMain;
-      allocatedIntrinsicMain = { receiver, main };
+      allocatedIntrinsicMain = { receiver, main, rootMin: contribution.rootMin, rootMax: contribution.rootMax };
       try {
         const result = measureConstrainedIntrinsicElement(measuredRoot, {
           minWidth: 0, maxWidth: content.width, minHeight: 0, maxHeight: content.height,
@@ -455,7 +455,7 @@ function measureFlex(
     allocatedIntrinsicMain = undefined;
     try {
       const diagnosticBox = { x: 0, y: 0, width: input.constraints.maxWidth, height: input.constraints.maxHeight };
-      const result = measureStagedNonexactMain(input, children, normalizeFlexOptions(input.style, diagnosticBox), diagnosticBox, phase.main);
+      const result = measureStagedNonexactMain(input, children, normalizeFlexOptions(input.style, diagnosticBox), diagnosticBox, phase);
       if (result) return result;
       return unsupportedIntrinsic('allocated known-owner continuation no longer matches its measured profile');
     } finally { allocatedIntrinsicMain = phase; }
@@ -825,16 +825,21 @@ function measureStagedNonexactMain(
   children: readonly PibblElement<any>[],
   options: Readonly<ReturnType<typeof normalizeFlexOptions>>,
   diagnosticBox: Readonly<LayoutBox>,
-  allocatedMain?: number,
+  allocated?: Readonly<{ main: number; rootMin?: number; rootMax?: number }>,
 ): MeasureResult | undefined {
   if (!experimentalLayout || options.flexWrap !== 'nowrap' || options.layoutDirection !== 'ltr') return;
   if (options.flexDirection !== 'row' && options.flexDirection !== 'column') return;
   const row = options.flexDirection === 'row';
   const automaticMain = row ? input.style.width === undefined || input.style.width === 'auto' : input.style.height === undefined || input.style.height === 'auto';
   const cross = row ? input.style.height : input.style.width;
-  const rootMin = row ? input.style.minWidth : input.style.minHeight;
-  const rootMax = row ? input.style.maxWidth : input.style.maxHeight;
   const available = row ? input.constraints.maxWidth : input.constraints.maxHeight;
+  const ownerReference = Number.isFinite(available) ? available : undefined;
+  const rootMin = allocated ? allocated.rootMin : intrinsicOwnerBound(
+    row ? input.style.minWidth : input.style.minHeight, ownerReference, row ? 'minWidth' : 'minHeight', input.constraints,
+  );
+  const rootMax = allocated ? allocated.rootMax : intrinsicOwnerBound(
+    row ? input.style.maxWidth : input.style.maxHeight, ownerReference, row ? 'maxWidth' : 'maxHeight', input.constraints,
+  );
   if (input.style.padding !== undefined || input.style.paddingStart !== undefined || input.style.paddingEnd !== undefined ||
       input.style.borderWidth !== undefined || input.style.borderStartWidth !== undefined || input.style.borderEndWidth !== undefined ||
       input.style.boxSizing !== undefined || input.style.aspectRatio !== undefined ||
@@ -847,11 +852,11 @@ function measureStagedNonexactMain(
   if (typeof rootMin === 'number' && typeof rootMax === 'number' && rootMin > rootMax) {
     throw layoutDiagnostic({ component: 'Flex', property: row ? 'minWidth' : 'minHeight', value: rootMin, algorithm: 'measurement', constraints: input.constraints, reason: 'minimum must not exceed maximum' });
   }
-  const externalOwner = allocatedMain ?? (Number.isFinite(available) ? available : undefined);
+  const externalOwner = allocated?.main ?? ownerReference;
   // An authored maximum retains its own initial envelope. Otherwise a finite
   // caller maximum is fit-content availability, still distinct from exact size.
-  const initialAvailable = allocatedMain ?? (typeof rootMax === 'number' ? rootMax : externalOwner);
-  const mode = allocatedMain !== undefined ? 'exact' as const : initialAvailable === undefined ? 'max-content' as const : 'fit-content' as const;
+  const initialAvailable = allocated?.main ?? (typeof rootMax === 'number' ? rootMax : externalOwner);
+  const mode = allocated !== undefined ? 'exact' as const : initialAvailable === undefined ? 'max-content' as const : 'fit-content' as const;
   let hasPercentageBound = false;
   const items: { base: number; min: { value?: number; unit: 'none' | 'point' | 'percent' }; max: { value?: number; unit: 'none' | 'point' | 'percent' }; measured?: boolean; queryMaximum?: number }[] = [];
   const measuredLeaves: { readonly sourceIndex: number; readonly child: PibblElement<any>; readonly normalized: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>; readonly receiver: object; readonly query: PreparedQuery | undefined }[] = [];
@@ -916,7 +921,7 @@ function measureStagedNonexactMain(
   const resolved = resolveTransientIntrinsicMain(items, intrinsicQuery);
   const receiver = GLOBAL_STATE.primitiveReceiverToken;
   stagePreparedIntrinsicMain(receiver, {
-    elements: children, axis: row ? 'row' : 'column', style: input.style, contentMain: resolved.main,
+    elements: children, axis: row ? 'row' : 'column', style: input.style, rootMin, rootMax, contentMain: resolved.main,
     revision: allocationInputRevision(),
     items: resolved.targets.map((target, sourceIndex) => ({
       sourceIndex, target, min: resolved.effectiveMins[sourceIndex], max: resolved.effectiveMaxes[sourceIndex],
@@ -924,6 +929,24 @@ function measureStagedNonexactMain(
     })),
   });
   return { status: 'measured', size: row ? { width: resolved.main, height: cross } : { width: cross, height: resolved.main } };
+}
+
+/** Own bounds use the caller reference, never the eventual auto-owner size. */
+function intrinsicOwnerBound(
+  value: BoxStyle['minWidth'], reference: number | undefined,
+  property: string, constraints: Readonly<Constraints>,
+): number | undefined {
+  if (value === undefined) return;
+  if (typeof value === 'number') {
+    if (Number.isFinite(value) && value >= 0) return value;
+    throw layoutDiagnostic({ component: 'Flex', property, value, algorithm: 'measurement', constraints, reason: 'must be finite and nonnegative' });
+  }
+  const percentage = parsePercentage(value, property, { component: 'Flex', algorithm: 'measurement', constraints });
+  if (percentage < 0) throw layoutDiagnostic({ component: 'Flex', property, value, algorithm: 'measurement', constraints, reason: 'must be nonnegative' });
+  if (reference === undefined) return;
+  const resolved = percentage / 100 * reference;
+  if (!Number.isFinite(resolved)) throw layoutDiagnostic({ component: 'Flex', property, value, algorithm: 'measurement', constraints, reason: 'resolved percentage arithmetic must remain finite' });
+  return resolved;
 }
 
 function resolveMeasuredContainerLength(

@@ -1284,8 +1284,9 @@ Automatic-main LTR nowrap rows and columns with a finite numeric cross size may
 query direct empty numeric Rectangles with point or percentage main bounds.
 Each leaf declares equal numeric main size and basis, zero growth and shrink;
 the root and leaves have no padding, layout borders, margins, aspect ratio,
-responsive styles or whole-style callbacks/signals. Numeric root minima/maxima
-are allowed. General measured leaves and other intrinsic profiles retain their
+responsive styles or whole-style callbacks/signals. Numeric or percentage root minima/maxima
+are allowed. Percentage own bounds use the original finite caller reference;
+valid unresolved percentages stay inert under undefined availability. General measured leaves and other intrinsic profiles retain their
 existing admission rules.
 
 Native sizing keeps external owner reference, initial main availability, later
@@ -1362,6 +1363,19 @@ current receiver ownership; natural-input changes move final paint/hit geometry.
 Callback exceptions, unsupported results, invalid dimensions and cycles publish
 no stage and leave no temporary arena/instance. This bounded provider profile
 adds no public operation or persistent measurement cache.
+
+Own percentage bounds resolve once before native query preparation. For an
+opposite-axis finite parent200, an auto owner max-main75% resolves its bound to150,
+then queries a natural80/25%-capped leaf at maximum37.5. With a fixed80 sibling,
+normal placement is owner109.375/leaf29.375. A min-main75% owner instead measures
+150 with leaf37.5 after a maximum50 query. Mixed min50%/max75% follows the maximum
+case. Rows and columns transpose; an undefined external reference leaves these
+valid own percentages unresolved, yielding120/40/80 and an unbounded leaf query.
+Raw malformed, negative or nonfinite percentage bounds and finite resolution
+overflow diagnose before provider evaluation. Resolved opposing own bounds also
+diagnose before native allocation or callbacks. The exact allocated continuation
+retains the original resolved root-bound scalars instead of reinterpreting raw
+percentages from the later owner size. Original styles still forward unchanged.
 
 ### Experimental nested known-owner main phases
 

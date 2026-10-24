@@ -232,6 +232,8 @@ export interface PreparedIntrinsicMainStage {
   readonly elements: readonly PibblElement<any>[];
   readonly axis: 'row' | 'column';
   readonly style: Readonly<BoxStyle>;
+  readonly rootMin?: number;
+  readonly rootMax?: number;
   readonly contentMain: number;
   readonly revision: number;
   readonly items: readonly Readonly<{ sourceIndex: number; target: number; min: number; max: number; measured?: boolean }>[];

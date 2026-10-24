@@ -49,6 +49,11 @@ try {
   assert.deepEqual((await click(180, 480)).hits, [...restored.hits, 'overflow']);
   assert.deepEqual(await pixel(57, 210), red);
   assert.equal(restored.layout.nodeCreates, initial.layout.nodeCreates);
+  const percentage = await click(670, 138);
+  assert.equal(percentage.maximum, '75%');
+  assert.equal(percentage.queries.at(-1), 37.5);
+  assert.deepEqual(await pixel(56, 210), red); assert.deepEqual(await pixel(59, 210), green);
+  assert.equal(percentage.layout.nodeCreates, initial.layout.nodeCreates);
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
   const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
