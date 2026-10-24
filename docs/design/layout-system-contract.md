@@ -2082,7 +2082,7 @@ composes with the same physical main placement: LTR gives A at x80, RTL at x0;
 B stays at x40and baseline y offsets remain18/0. Source paint and keyboard order
 remain A then B.
 
-The wrapped profile admits finite LTR/RTL `row` or `row-reverse` + `wrap`, all existing `alignContent` policies,
+The wrapped profile admits finite LTR/RTL `row` or `row-reverse` + `wrap`/`wrap-reverse`, all existing `alignContent` policies,
 resolved finite row/column gaps, and direct fixed numeric primitive providers or content-bottom
 fallback. Grow/shrink must be zero; Text, automatic margins and the other leaf
 exclusions remain outside this wrapped profile. Native line membership is reused.
@@ -2100,8 +2100,23 @@ a distinct cross-cache mode. For110x120, mainGap10/crossGap8and the same leaves,
 B/D y origins are0/48(start),40/88(end),20/68(center),0/88(between),10/78(around),
 40/3and224/3(evenly),0/68(stretch). The kernel retains f64 arithmetic; Canvas
 translations and the pinned float32 reference have their documented precision.
-The private ABI12 requires the line-distribution signature; previous binaries
+The private ABI13 requires the cross-reversal signature; previous binaries
 are rejected before publication. This adds no public API or second scheduler.
+
+Cross-reversed wrapping preserves the same physical content-top first-baseline
+relationship inside each line. It reverses line groups rather than reflecting
+individual leaves. For the110x120/gap10×8fixture, reverse flex-start gives
+A(0,98),B(70,80),C(0,52),D(70,40); reverse stretch gives y98/80/32/20.
+The origin uses the intrinsic baseline group extent; stretch advances the cursor
+with the expanded line extent. A changed D baseline20→26in reverse flex-start
+keeps C at52and moves D40→34. Mode, gap and alignment are all cross-cache inputs.
+
+A retained headless Chromium control reproduces these baseline groups using
+font-independent inline-block offsets. Yoga3.2.1instead reflects each final leaf:
+reverse flex-start y82/80/40/42does not preserve the supplied physical first
+baselines. Pibbl deliberately follows its content-top contract and Chromium here;
+this is a classified geometry difference, not unconditional Yoga parity. Chromium
+fractional CSS layout-unit quantization is separate from the kernel’s f64 output.
 
 Provider reads use existing measurement-role receiver dependencies. Queries forbid
 hooks, writes and rendering work through the existing isolated pure boundary;

@@ -199,9 +199,9 @@ leaves in a finite LTR or RTL nowrap row or row-reverse after final allocation. 
 [BaselineMeasureInput](#/api/types/layout#baselinemeasureinput) and the
 [first-baseline example](#/examples/layout/wasm-flex-baseline). Other baseline
 modes remain outside this first subset. A bounded wrapped profile also admits
-horizontal row/row-reverse in LTR/RTL with normal wrapping, all existing line-distribution policies, finite resolved gaps, and fixed numeric primitive
+horizontal row/row-reverse in LTR/RTL with wrap or wrap-reverse, all existing line-distribution policies, finite resolved gaps, and fixed numeric primitive
 providers or bottom-edge fallback with zero grow/shrink and no automatic margins.
-Each line shares its own first baseline. Direct nonempty Text with fixed dimensions, generic pixel fonts, visible
+Each line shares its own physical first baseline; cross reversal repositions line groups and preserves that alignment. Direct nonempty Text with fixed dimensions, generic pixel fonts, visible
 fit/overflow and the default top Canvas baseline supplies real host metrics
 through the optional measurement service. Wrapped Text measures its actual first
 and last visible lines at final allocation. Last-baseline alignment and custom-font

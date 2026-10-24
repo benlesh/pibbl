@@ -44,6 +44,7 @@ it.runIf(experimentalLayout)(
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const alignContent = signal<CrossPolicy>('flex-start');
+    const wrapMode = signal<'wrap' | 'wrap-reverse'>('wrap');
     const rowGap = signal<number | '10%'>(8);
     const columnGap = signal(10);
     const dFirst = signal(20);
@@ -74,7 +75,7 @@ it.runIf(experimentalLayout)(
     window.addEventListener('error', receive);
     try {
       const controller = pibbl(canvas, <FocusManagement><Group>
-        <Flex style={{ width: 110, height: 120, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'first-baseline', alignContent, columnGap, rowGap }}>
+        <Flex style={{ width: 110, height: 120, flexDirection: 'row', flexWrap: wrapMode, alignItems: 'first-baseline', alignContent, columnGap, rowGap }}>
           <Leaf key="A" name="A" first={12} style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0 }} />
           <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
           <Leaf key="C" name="C" first={8} style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0 }} />
@@ -104,6 +105,44 @@ it.runIf(experimentalLayout)(
         expect(errors).toEqual([]);
         expectPolicy(bY, dY);
       }
+      // Chromium preserves each source line's baseline alignment, then reverses
+      // the physical line origins. Yoga's per-leaf reflection differs, so this
+      // locks Pibbl's public physical-content-top contract before kernel admission.
+      alignContent.set('flex-start');
+      await nextFrame();
+      const reverseStamps = Object.fromEntries(stamps);
+      const beforeWrapReverse = snapshotWasmLayoutDiagnostics();
+      wrapMode.set('wrap-reverse');
+      await nextFrame();
+      expect(errors).toEqual([]);
+      expect(boxes.get('A')).toEqual({ x: 0, y: 98, width: 60, height: 20 });
+      expect(boxes.get('B')).toEqual({ x: 70, y: 80, width: 40, height: 40 });
+      expect(boxes.get('C')).toEqual({ x: 0, y: 52, width: 60, height: 20 });
+      expect(boxes.get('D')).toEqual({ x: 70, y: 40, width: 40, height: 30 });
+      expect(snapshotWasmLayoutDiagnostics().crossPlacements).toBe(beforeWrapReverse.crossPlacements + 1);
+      for (const [policy, bY, dY] of [
+        ['flex-start', 80, 40], ['flex-end', 40, 0], ['center', 60, 20],
+        ['space-between', 80, 0], ['space-around', 70, 10],
+        ['space-evenly', 200 / 3, 40 / 3], ['stretch', 80, 20],
+      ] as const) {
+        alignContent.set(policy); await nextFrame(); expect(errors).toEqual([]);
+        expectPolicy(bY, dY);
+      }
+      alignContent.set('flex-start'); await nextFrame();
+      dFirst.set(26); await nextFrame();
+      expect(boxes.get('A')).toEqual({ x: 0, y: 98, width: 60, height: 20 });
+      expect(boxes.get('B')).toEqual({ x: 70, y: 80, width: 40, height: 40 });
+      expect(boxes.get('C')).toEqual({ x: 0, y: 52, width: 60, height: 20 });
+      expect(boxes.get('D')).toEqual({ x: 70, y: 34, width: 40, height: 30 });
+      dFirst.set(20); await nextFrame();
+      const beforeWrapRestore = snapshotWasmLayoutDiagnostics();
+      wrapMode.set('wrap');
+      await nextFrame();
+      expectPolicy(0, 48);
+      expect(snapshotWasmLayoutDiagnostics().crossPlacements).toBe(beforeWrapRestore.crossPlacements + 1);
+
+      expect(Object.fromEntries(stamps)).toEqual(reverseStamps);
+      expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(beforeWrapReverse.nodeCreates);
       const initialStamps = Object.fromEntries(stamps);
       const mounted = snapshotWasmLayoutDiagnostics();
       alignContent.set('flex-start');

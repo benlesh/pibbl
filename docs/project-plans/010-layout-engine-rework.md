@@ -7342,7 +7342,7 @@ Gap button; moving those clicks to empty canvas preserved all geometry assertion
 Types, changed-code lint,175/12/33catalog/Studio, docs109mutation probes and scoped
 review pass. Installed full distribution follows at consolidation67.
 
-## [NEXT] Slice201: cross-reversed first-baseline groups
+## [DONE] Slice201: cross-reversed first-baseline groups
 
 Preserve the existing content-top baseline contract and Chromium line grouping,
 classifying Yoga3.2.1’s different per-leaf reflection. Narrow CSS forward control
@@ -7356,6 +7356,25 @@ receipt, then establish public/native RED and implement one generic cross-revers
 policy with the actual reverse bit in its cache key. No new public API or font
 subsystem. Keep remaining wrapped leaf exclusions and consolidate199–201before
 more production after this third slice.
+
+Delivered with public/native RED before implementation. Native ABI13 validates the
+reverse bit and reflects intrinsic baseline groups; stretch advances the cursor
+without changing the physical baseline origin. Its actual reverse value joins the
+region cache key. The complete ABI12 marker is rejected before the new call.
+Fresh native32 tests and focused public39pass/1skip pass; active D20→26 keeps C's
+baseline origin stable while moving D, with real old/new pointer targets and
+identity checks. Source5192 and refreshed built5193 pass with errors[] and clean
+ownership counters; the760×640 screenshot was inspected. Retained Chromium control
+covers all14 wrap/distribution combinations and classifies the Yoga difference.
+ABI13 artifact81500bytes SHA256
+`e10082fcef7ff365ebef2251a44c73a2df403638023b0f8f6eaf9423cb4afa52`.
+
+## [NEXT] Consolidation67: installed distribution and cross reversal
+
+Consolidate199–201 before further production: accumulated experimental and ordinary
+checks, installed ABI13 distribution/reversal receipts, source/built replay,
+package identity, types, catalog and documentation checks. Baselines remain
+experimental; all seven release gates remain open.
 
 ## Scope and execution
 

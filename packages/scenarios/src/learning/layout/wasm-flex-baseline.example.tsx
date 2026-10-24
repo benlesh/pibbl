@@ -27,11 +27,13 @@ function createBaselineContent() {
   const crossLabel = computed(() => crossMode.get() === "off" ? "Cross" : crossMode.get());
   const textFont = signal("10px monospace");
   const wrappedD = signal(20), wrappedDLabel = computed(() => `D ${wrappedD.get()}`);
-  const wrappedProfile = signal(false), wrappedRowGap = signal<number | "10%">(0), wrappedAlign = signal<WrappedAlign>("flex-start");
+  const wrappedProfile = signal(false), wrappedRowGap = signal<number | "10%">(0), wrappedAlign = signal<WrappedAlign>("flex-start"), wrappedReverse = signal(false);
   const wrappedMainGap = computed(() => wrappedProfile.get() ? 10 : 0);
+  const wrappedWrap = computed(() => wrappedReverse.get() ? "wrap-reverse" as const : "wrap" as const);
   const wrappedWidth = computed(() => wrappedProfile.get() ? 110 : 100);
   const wrappedProfileLabel = computed(() => wrappedProfile.get() ? "Policy" : "Profile");
   const wrappedGapLabel = computed(() => `Gap ${wrappedRowGap.get()}`);
+  const wrappedWrapLabel = computed(() => wrappedReverse.get() ? "Revwrap" : "Wrap");
   const wrappedAlignLabel = computed(() => {
     const value = wrappedAlign.get();
     return value === "flex-start" ? "start" : value === "flex-end" ? "end" : value === "space-between" ? "between" : value === "space-around" ? "around" : value === "space-evenly" ? "evenly" : value;
@@ -108,6 +110,8 @@ function createBaselineContent() {
       <Text pointerEvents="none" style={{ left: 679, top: 398, font: "9px sans-serif", fill: "#ffffff" }}>{wrappedGapLabel}</Text>
       <Rectangle onClick={toggleWrappedProfile} style={{ left: 676, top: 432, width: 56, height: 22, fill: "#a63758", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 679, top: 438, font: "9px sans-serif", fill: "#ffffff" }}>{wrappedProfileLabel}</Text>
+      <Rectangle onClick={() => wrappedReverse.update(value => !value)} style={{ left: 676, top: 470, width: 56, height: 28, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 679, top: 478, font: "9px sans-serif", fill: "#ffffff" }}>{wrappedWrapLabel}</Text>
       <Text pointerEvents="none" style={{ left: 28, top: 160, font: "14px sans-serif", fill: "#475569" }}>A/B supply offsets. C has no provider and uses its bottom edge.</Text>
       <FocusManagement><Flex style={{ left: 28, top: 210, width: owner, height: 80, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
         <BaselineCard key="A" id="A" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#426b61" }} />
@@ -122,7 +126,7 @@ function createBaselineContent() {
       </Flex>
       <Text pointerEvents="none" style={{ left: 28, top: 330, font: "14px sans-serif", fill: "#475569" }}>Click the cards at their new positions. Tab follows A → B → C.</Text>
       <Text pointerEvents="none" style={{ left: 460, top: 440, font: "12px sans-serif", fill: "#475569" }}>Wrapped baselines: spacing and gaps.</Text>
-      <Flex style={{ left: 460, top: 460, width: wrappedWidth, height: 120, flexDirection, layoutDirection, flexWrap: "wrap", alignItems: "first-baseline", alignContent: wrappedAlign, columnGap: wrappedMainGap, rowGap: wrappedRowGap }}>
+      <Flex style={{ left: 460, top: 460, width: wrappedWidth, height: 120, flexDirection, layoutDirection, flexWrap: wrappedWrap, alignItems: "first-baseline", alignContent: wrappedAlign, columnGap: wrappedMainGap, rowGap: wrappedRowGap }}>
         <BaselineCard key="WA" id="WA" label="12" font="12px monospace" first={12} style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248" }} />
         <BaselineCard key="WB" id="WB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
         <BaselineCard key="WC" id="WC" label="8" font="12px monospace" first={8} style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248" }} />
@@ -142,7 +146,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {

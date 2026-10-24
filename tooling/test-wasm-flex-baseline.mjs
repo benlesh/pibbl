@@ -257,6 +257,45 @@ try {
   assert.deepEqual(Object.fromEntries(['WA','WB','WC','WD'].map(id=>[id,zeroMainGap.stamps[id]])),policyStamps);
   const policyBeforePaint=await counters();await click(480,110);const policyPainted=await counters();
   assert.equal(policyPainted.solves,policyBeforePaint.solves);assert.equal(policyPainted.crossPlacements,policyBeforePaint.crossPlacements);assert.equal(policyPainted.nodeCreates,policyBeforePaint.nodeCreates);
+  // Start the reverse profile from its explicit normal-wrap baseline state.
+  await click(700,318);
+  await click(700,446);
+  await click(700,404);
+  await click(700,404);
+  await click(700,484);
+  const reverseStartState=await state();
+  const reverseStamps=Object.fromEntries(['WA','WB','WC','WD'].map(id=>[id,reverseStartState.stamps[id]]));
+  assert.deepEqual(reverseStamps,policyStamps);
+  const reverseExpected=[
+    ['flex-start',540,500],['flex-end',500,460],['center',520,480],
+    ['space-between',540,460],['space-around',530,470],
+    ['space-evenly',526.6666666666666,473.3333333333333],['stretch',540,480],
+  ];
+  for(let index=0;index<reverseExpected.length;index++){
+    if(index)await click(700,362);
+    const [align,bY,dY]=reverseExpected[index],reversed=await state();
+    assert.equal(reversed.wrappedReverse,true);assert.equal(reversed.wrappedProfile,true);assert.equal(reversed.wrappedGap,8);assert.equal(reversed.wrappedAlign,align);
+    for(const [id,x,y,width,height] of [['WA',460,bY+18,60,20],['WB',530,bY,40,40],['WC',460,dY+12,60,20],['WD',530,dY,40,30]]){
+      const box=reversed.boxes[id];assert.ok(Math.abs(box.x-x)<1e-9&&Math.abs(box.y-y)<1e-4,`reverse ${align} ${id}`);assert.equal(box.width,width);assert.equal(box.height,height);
+    }
+    assert.deepEqual(Object.fromEntries(['WA','WB','WC','WD'].map(id=>[id,reversed.stamps[id]])),reverseStamps);
+  }
+  await click(700,362);
+  const reverseStart=await state();assert.equal(reverseStart.wrappedAlign,'flex-start');
+  const oldDHits=reverseStart.hits.length;await click(536,528);let dHit=await state();assert.equal(dHit.hits.length,oldDHits+1);assert.equal(dHit.hits.at(-1),'WD');
+  await click(700,318);const reverseRaised=await state();assert.equal(reverseRaised.wrappedD,26);
+  assert.ok(Math.abs(reverseRaised.boxes.WC.y-512)<1e-9&&Math.abs(reverseRaised.boxes.WD.y-494)<1e-9,'reverse baseline input moves D');
+  const raisedReverseHits=reverseRaised.hits.length;await click(536,528);assert.equal((await state()).hits.length,raisedReverseHits);
+  await click(536,496);dHit=await state();assert.equal(dHit.hits.length,raisedReverseHits+1);assert.equal(dHit.hits.at(-1),'WD');
+  await click(700,318);const reverseRestoredD=await state();assert.equal(reverseRestoredD.wrappedD,20);
+  assert.deepEqual(Object.fromEntries(['WA','WB','WC','WD'].map(id=>[id,reverseRestoredD.stamps[id]])),reverseStamps);
+  const wrapReverseHits=reverseRestoredD.hits.length;await click(536,536);assert.equal((await state()).hits.length,wrapReverseHits);
+  await click(700,484);
+  const restoredWrap=await state();assert.equal(restoredWrap.wrappedReverse,false);assert.equal(restoredWrap.wrappedAlign,'flex-start');
+  assert.ok(Math.abs(restoredWrap.boxes.WA.y-478)<1e-9&&Math.abs(restoredWrap.boxes.WB.y-460)<1e-9);
+  assert.ok(Math.abs(restoredWrap.boxes.WC.y-520)<1e-9&&Math.abs(restoredWrap.boxes.WD.y-508)<1e-9);
+  assert.deepEqual(Object.fromEntries(['WA','WB','WC','WD'].map(id=>[id,restoredWrap.stamps[id]])),reverseStamps);
+  await click(536,536);const restoredHit=await state();assert.equal(restoredHit.hits.length,wrapReverseHits+1);assert.equal(restoredHit.hits.at(-1),'WD');
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}

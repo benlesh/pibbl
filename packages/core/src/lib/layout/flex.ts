@@ -2431,9 +2431,8 @@ function assertSupportedFirstBaselineFlex(
   mounted: boolean,
 ): void {
   const wrapped = options.flexWrap !== 'nowrap';
-  if (!mounted || !experimentalLayout || !isRowDirection(options.flexDirection) ||
-      wrapped && options.flexWrap !== 'wrap') {
-    throw optionDiagnostic('alignItems', 'first-baseline', container, 'requires mounted experimental horizontal nowrap Flex, or horizontal normal-wrap Flex');
+  if (!mounted || !experimentalLayout || !isRowDirection(options.flexDirection)) {
+    throw optionDiagnostic('alignItems', 'first-baseline', container, 'requires mounted experimental horizontal Flex');
   }
   for (const item of items) {
     const style = item.normalized;
