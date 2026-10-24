@@ -1226,11 +1226,16 @@ try {
     measure:({constraints})=>{if(constraints.minWidth===constraints.maxWidth)rowQueries.push(constraints.maxWidth);return{status:'measured',size:{width:80,height:20}};},
   });
   const DescribedRowProvider=defineLayoutComponent((props:{readonly style:PibblResponsiveStyle<FlexStyle>})=>createElement(WrappedRowProvider,{style:props.style}));
-  for(const family of ['provider','described-provider','Flex','Flow','Grid'] as const){
-    const known=family!=='provider'&&family!=='described-provider';
+  const OrdinaryRowProvider=definePrimitive<{},FlexStyle,FlexStyle,SystemStyle&{width:number;height:number}>((_props,style)=>createElement(Rectangle,{style:{width:style.width,height:style.height,fill:'#8a3248'}}),{
+    resolveStyle:(_style,context)=>({width:context.allocation.width,height:context.allocation.height}),
+    measure:({constraints})=>({status:'measured',size:{width:constraints.maxWidth,height:20}}),
+  });
+  const DescribedOrdinaryRowProvider=defineLayoutComponent((props:{readonly style:PibblResponsiveStyle<FlexStyle>})=>createElement(OrdinaryRowProvider,{style:props.style}));
+  for(const family of ['provider','described-provider','ordinary-provider','described-ordinary-provider','Flex','Flow','Grid'] as const){
+    const known=family==='Flex'||family==='Flow'||family==='Grid';
     const margin=signal<0|'auto'>(0),width=signal(180),style={width:80,height:'auto' as const,minWidth:0,minHeight:0,flexBasis:80,flexGrow:0,flexShrink:0,marginTop:margin};
     const numericChildren=[createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,gridColumnStart:1,gridRowStart:1,fill:'#8a3248'}}),createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,gridColumnStart:2,gridRowStart:1,fill:'#8a3248'}})];
-    const leaf=family==='Grid'?createElement(Grid,{style:{...style,gridTemplateColumns:[40,40],gridTemplateRows:[20]},children:numericChildren}):family==='Flow'?createElement(Flow,{style:{...style,direction:'horizontal',wrap:false},children:numericChildren}):known?createElement(Flex,{style:{...style,alignItems:'flex-start'},children:numericChildren}):family==='described-provider'?createElement(DescribedRowProvider,{style}):createElement(WrappedRowProvider,{style});
+    const leaf=family==='Grid'?createElement(Grid,{style:{...style,gridTemplateColumns:[40,40],gridTemplateRows:[20]},children:numericChildren}):family==='Flow'?createElement(Flow,{style:{...style,direction:'horizontal',wrap:false},children:numericChildren}):known?createElement(Flex,{style:{...style,alignItems:'flex-start'},children:numericChildren}):family==='described-provider'?createElement(DescribedRowProvider,{style}):family==='ordinary-provider'?createElement(OrdinaryRowProvider,{style}):family==='described-ordinary-provider'?createElement(DescribedOrdinaryRowProvider,{style}):createElement(WrappedRowProvider,{style});
     sharedTextController=pibblSync(sharedTextCanvas,createElement(Flex,{style:{width,height:100,flexWrap:'wrap',alignItems:'flex-start',alignContent:'flex-start'},children:[leaf,createElement(Rectangle,{style:{width:60,height:40,minWidth:0,minHeight:0,flexShrink:0,fill:'#426b61'}})]}));await frame();
     if(pixel(4,4)!=='[138,50,72,255]'||pixel(84,4)!=='[66,107,97,255]')throw Error('installed wrapped row zero geometry');
     const nodes=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates;margin.set('auto');await frame();

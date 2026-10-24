@@ -154,6 +154,16 @@ try {
     await click(82,264);assert.match(await state(),/selected: auto cross sibling/);
     await click(32,284);assert.match(await state(),new RegExp(`selected: auto cross ${family==='flow'?'Flow':'Grid'}`));
   }
+  // Grid -> measure-only provider. It follows the paired provider's existing
+  // 80px/20px then 40px/40px final-width behavior without intrinsic metadata.
+  await click(450,160);assert.match(await state(),/row content: ordinary/);
+  await click(90,110); // Enter at wide80, matching the paired-provider replay.
+  assert.deepEqual(await pixel(32,284),[138,50,72,255]);
+  await click(32,284);assert.match(await state(),/selected: auto cross ordinary provider/);
+  await click(90,110);
+  assert.deepEqual(await pixel(32,264),[138,50,72,255]);
+  await click(82,264);assert.match(await state(),/selected: auto cross sibling/);
+  await click(32,264);assert.match(await state(),/selected: auto cross ordinary provider/);
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if (built) {
     assert.equal(proof.mode, 'layout-wasm-built');
@@ -166,5 +176,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements,disposed.activeWasmInstances],[0,0,0,0]);
   assert.deepEqual(errors, []);
-  console.warn(`${built ? 'Built' : 'Source'} shared Text auto sizing: growing row and width reflow, column basis/auto-height allocations, wrapped reverse/RTL short/long targets, unwrapped row Text, wrapped provider/Flex targets and Canvas font/fitting policies and measured Flow/Grid rows; cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
+  console.warn(`${built ? 'Built' : 'Source'} shared Text auto sizing: growing row and width reflow, column basis/auto-height allocations, wrapped reverse/RTL short/long targets, unwrapped row Text, wrapped provider/Flex targets and Canvas font/fitting policies and measured Flow/Grid/ordinary-provider rows; cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
 } finally { await browser.close(); }

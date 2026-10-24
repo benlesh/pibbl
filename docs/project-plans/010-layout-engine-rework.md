@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice186 (existing measurable-family and described-provider dispatch).
+Latest delivery is slice187: ordinary finite cross measurement.
+Slice186 covers existing measurable-family and described-provider dispatch.
 Slice185 is `1b196156` (existing Text policy in final cross measurement).
 Slice184 is `7c62b066` (shared row measurement across wrapping modes).
 Slice183 is `5d29c54d` (real settled-main cross measurement).
@@ -6842,16 +6843,46 @@ interaction guard also requires explicit classification rather than a blanket
 completion claim. Fixed33 remains10complete/12experimental/5partial/5missing/
 1excluded and all7release gates remain open.
 
-## [NEXT] Slice187: one ordinary cross-measurement continuation
+## Slice187 delivered: ordinary finite cross measurement
 
-First record public failing tests for the ordinary measure-only capability and
-wrapped-child Text predicates together. Reuse the existing pure ordinary query,
-final-main allocation, native placement and exact ownership; preserve existing
-paired natural-query contracts and the already shipped capped-natural Text
-profile. Normal main-basis/minimum rules remain authoritative. Classify every
-remaining guard by capability/query versus alignment/placement, with actual
-numeric0controls where needed. No new solver, font system, intrinsic callback
-requirement or opaque measurement. The next consolidation is after187–189.
+Nine public tests failed before production changes. Four cover direct/described
+measure-only providers in row nowrap/wrap and nowrap columns; five cover wrapped
+Text with numeric basis, positive grow, maximum width, Canvas font or ellipsis.
+Numeric-zero controls establish existing finite measurement before auto admission.
+Final native main allocation remains authoritative, while ordinary column width
+stays finite; shortening Text does not silently select capped-natural sizing.
+
+The live signal test found isolated measurement reads escaping into a component
+consumer without its mount owner. Ordinary finite providers now use the existing
+receiver-owned measurement transaction for both numeric-zero and auto queries.
+Described definitions prepare their primitive root but retain the authored wrapper
+as the query/receiver boundary. No new dependency layer, solver or resource owner.
+
+Fresh Node24.15.0/Chromium11focused files pass179tests; ordinary lane passes3/skip104
+in5files. Typecheck, changed-file lint, catalog/Studio, documentation and109mutation
+probes, public JSDoc and scoped review pass. Source/built dedicated replays pass
+width changes, measured-provider hits and all previous Text/column/policy cases,
+with cleanup0000and470built inputs. Visual inspection prompted a shorter row
+button label. Installed246-input strict Bundler/NodeNext consumer passes direct
+and described ordinary providers alongside104margin fixtures and prior ownership
+receipts; tarball SHA256
+`9e89889d4e6e0e67a542710c8673e567be16b4c380272ae5b00ac837d9f25a4d`.
+
+Try `http://127.0.0.1:5192/#/examples/layout/wasm-flex-text`: choose Compare auto
+margins, cycle Row past Grid to measure only, then toggle comparison width and
+click the colored card. Built equivalent uses5193. Kernel/ABI10and pinned118probe
+are unchanged. Baseline alignment remains a separate explicit auto-only guard;
+all7release gates stay open and the fixed33ledger is not promoted by this slice.
+
+## [NEXT] Slice188: baseline alignment with automatic margins
+
+Classify the existing baseline guard with matched numeric-zero and automatic
+main/cross margin probes. Preserve baseline metadata ownership, native main
+allocation and line-local auto placement; exclude cross-auto items from the
+baseline-sharing group where required by the accepted alignment contract. Record
+native reference behavior before choosing exact geometry. Do not treat a passing
+ordinary cross query as evidence that this alignment interaction is complete.
+The next consolidation remains after187–189. All seven release gates remain open.
 
 ## Scope and execution
 

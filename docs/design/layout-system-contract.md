@@ -1955,8 +1955,25 @@ A described paired primitive uses its prepared root definition to choose the
 same existing provider operation as a direct child. The authored wrapper remains
 the source/receiver identity. No registry-wide opaque measurement, new cache or
 resource lifetime is introduced. Absolute/Overlay remain independent missing-pure-
-measurement cases; ordinary measure-only primitives and wrapped-column Text
-profiles outside the natural-width envelope remain separately tracked.
+measurement cases.
+
+### Ordinary finite cross measurement
+
+A direct or described primitive with `measure` can supply automatic cross size
+without `measureIntrinsic` in a finite row or nowrap column. Existing main-basis
+and minimum rules still apply. Rows query the settled content width; columns
+retain the ordinary finite available width and query exact settled content height.
+Resolved cross bounds clamp the result before native automatic-margin placement.
+Signal reads use the existing receiver-owned measurement dependency transaction,
+including the numeric-zero control and described primitive root.
+
+Wrapped Text children outside the capped-natural profile below use their existing
+finite-availability query in nowrap columns, including numeric basis, positive
+grow, maximum width, existing Canvas fonts and fitting. Shortening content does
+not switch these profiles to natural-width sizing. The capped-natural profile,
+paired unbounded natural query, main allocation and unsupported query diagnostics
+remain authoritative. Required failed queries reject before paint with exact
+teardown; no new measurement operation or cache lifetime is added.
 
 ### Wrapped natural-width Text in finite columns
 

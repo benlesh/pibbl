@@ -180,6 +180,7 @@ interface FlexItem {
   firstBaseline?: number;
   /** Column natural cross size is measured only after native main allocation. */
   deferredColumnAutoCross: boolean;
+  ordinaryColumnAutoCross: boolean;
   sourceIndex: number;
 }
 
@@ -1278,7 +1279,13 @@ function resolveFlexPlacements(
     const autoCrossDefinition = measuredCrossContext && !measuredTextCrossAuto ? pairedLayoutDefinition : undefined;
     const measuredPrimitiveCrossAuto = !!autoCrossDefinition?.measureIntrinsic && !!autoCrossDefinition.measure;
     const measuredKnownCrossAuto = measuredCrossContext && (layoutChild.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid);
-    if (hasAutoCrossMargin && !measuredTextCrossAuto && !measuredColumnTextCross && !columnNaturalWrappedTextCross && !measuredColumnProviderCross && !measuredColumnKnownCrossAuto && !deferredColumnAutoCross && !measuredPrimitiveCrossAuto && !measuredKnownCrossAuto &&
+    // Remaining ordinary providers keep the same finite-availability query as
+    // non-stretch sizing; an intrinsic callback is not a cross-size prerequisite.
+    const ordinaryCrossAuto = hasAutoCrossMargin && experimentalLayout &&
+      (row || options.flexWrap === 'nowrap') &&
+      (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined && !!pairedLayoutDefinition?.measure;
+    if (hasAutoCrossMargin && !measuredTextCrossAuto && !measuredColumnTextCross && !columnNaturalWrappedTextCross && !measuredColumnProviderCross && !measuredColumnKnownCrossAuto && !deferredColumnAutoCross && !measuredPrimitiveCrossAuto && !measuredKnownCrossAuto && !ordinaryCrossAuto &&
         aspectRatio === undefined && (declaredCrossSize === undefined || declaredCrossSize === 'auto')) {
       throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child cross size or supported measurement');
     }
@@ -1461,11 +1468,11 @@ function resolveFlexPlacements(
         measurementChild, constraints, normalized, layoutToken ?? receiverToken, measurement, region,
         preparedStyleQuery(prepared),
         (experimentalLayout && row && options.flexWrap === 'nowrap') || measuredPrimitiveCrossAuto || measuredColumnProvider || measuredColumnProviderCross,
-        needsMeasuredMain ? (row ? 'row' : 'column') : undefined,
+        needsMeasuredMain ? (row ? 'row' : 'column') : undefined, ordinaryCrossAuto || !!pairedLayoutDefinition?.measure && !pairedLayoutDefinition.measureIntrinsic && layoutChild.type !== Text && !isKnownLayoutType(layoutChild.type),
       );
       if (result.status === 'measured') {
         measured = result.size;
-      } else if (measuredTextCrossAuto || measuredColumnTextCross || measuredKnownCrossAuto || measuredColumnProviderCross || measuredColumnKnownCrossAuto || deferredColumnAutoCross || needsMeasuredMain || (crossAuto && effectiveAlignment(
+      } else if (measuredTextCrossAuto || measuredColumnTextCross || measuredKnownCrossAuto || measuredColumnProviderCross || measuredColumnKnownCrossAuto || deferredColumnAutoCross || ordinaryCrossAuto || needsMeasuredMain || (crossAuto && effectiveAlignment(
         alignment,
         options.alignItems,
       ) !== 'stretch')) {
@@ -1653,6 +1660,7 @@ function resolveFlexPlacements(
       relativeX,
       relativeY,
       deferredColumnAutoCross,
+      ordinaryColumnAutoCross: !row && ordinaryCrossAuto && !deferredColumnAutoCross && !naturalColumnWrappedTextCross,
       sourceIndex,
     });
   }
@@ -1681,39 +1689,43 @@ function resolveFlexPlacements(
       }
       const definition = experimentalLayout && (options.flexWrap === 'nowrap' || item.autoCrossBefore || item.autoCrossAfter) && !item.query && item.aspectRatio === undefined ? getPrimitiveDefinition(measuredRoot.type) : undefined;
       const constrainedProvider = !!definition?.measureIntrinsic && !!definition.measure;
+      const ordinaryProvider = !!definition?.measure && (item.autoCrossBefore || item.autoCrossAfter);
       const requiredKnownCross = experimentalLayout && (item.autoCrossBefore || item.autoCrossAfter) && (measuredRoot.type === Flex || measuredRoot.type === Flow || measuredRoot.type === Grid);
-      if (!item.crossAuto || (item.child.type !== Text && !(experimentalLayout && item.child.type === Flex) && !constrainedProvider && !requiredKnownCross)) continue;
+      if (!item.crossAuto || (item.child.type !== Text && !(experimentalLayout && item.child.type === Flex) && !constrainedProvider && !ordinaryProvider && !requiredKnownCross)) continue;
       if (item.child.type === Flex && item.normalized.width === item.targetMain) continue;
       const measuredStyle = { ...item.normalized, width: item.targetMain };
       const child = clonePibblElement(item.child);
       setPreNormalizedStyle(child, measuredStyle, item.child, item.receiverToken, item.query);
       const result = measureFlexChild(child, {
-        minWidth: constrainedProvider ? item.targetMain : 0, maxWidth: item.targetMain,
+        minWidth: constrainedProvider || ordinaryProvider ? item.targetMain : 0, maxWidth: item.targetMain,
         minHeight: 0, maxHeight: container.height,
-      }, measuredStyle, item.layoutToken ?? item.receiverToken, measurement, region, item.query, constrainedProvider);
+      }, measuredStyle, item.layoutToken ?? item.receiverToken, measurement, region, item.query, constrainedProvider, undefined, ordinaryProvider);
       if (result.status === 'measured') {
         item.preferredCross = clamp(result.size.height, item.minCross, item.maxCross) + item.paddingCross;
-      } else if (constrainedProvider || requiredKnownCross || experimentalLayout && item.child.type === Text && (item.autoCrossBefore || item.autoCrossAfter)) throw childDiagnostic(item.child, 'height', 'auto', container, `final-width measurement is required but unsupported: ${result.reason}`);
+      } else if (constrainedProvider || ordinaryProvider || requiredKnownCross || experimentalLayout && item.child.type === Text && (item.autoCrossBefore || item.autoCrossAfter)) throw childDiagnostic(item.child, 'height', 'auto', container, `final-width measurement is required but unsupported: ${result.reason}`);
     }
   }
   // Defer column natural cross measurement until the kernel has resolved each
   // item's final main allocation. The result is still measured through the
   // normal transaction/cache path and is required before any placement.
   if (!row) for (const item of items) {
-    if (!item.deferredColumnAutoCross || !item.crossAuto) continue;
+    if ((!item.deferredColumnAutoCross && !item.ordinaryColumnAutoCross) || !item.crossAuto) continue;
     let measuredRoot = item.child;
     if (isLayoutComponent(item.child.type)) {
       measuredRoot = prepareLayoutComponent(item.child, { receiverToken: item.receiverToken });
     }
     const definition = getPrimitiveDefinition(measuredRoot.type);
     const constrainedProvider = !!definition?.measureIntrinsic && !!definition.measure;
-    const measuredStyle = { ...item.normalized, height: item.targetMain };
+    const ordinaryWidth = Math.max(0, item.preferredCross - item.paddingCross);
+    const measuredStyle = item.ordinaryColumnAutoCross ?
+      { ...item.normalized, width: ordinaryWidth, height: item.targetMain } :
+      { ...item.normalized, height: item.targetMain };
     const measurementChild = clonePibblElement(item.child);
     setPreNormalizedStyle(measurementChild, measuredStyle, item.child, item.receiverToken, item.query);
     const result = measureFlexChild(measurementChild, {
-      minWidth: 0, maxWidth: Number.POSITIVE_INFINITY,
+      minWidth: 0, maxWidth: item.ordinaryColumnAutoCross ? ordinaryWidth : Number.POSITIVE_INFINITY,
       minHeight: item.targetMain, maxHeight: item.targetMain,
-    }, measuredStyle, item.layoutToken ?? item.receiverToken, measurement, region, item.query, constrainedProvider);
+    }, measuredStyle, item.layoutToken ?? item.receiverToken, measurement, region, item.query, constrainedProvider, undefined, item.ordinaryColumnAutoCross);
     if (result.status === 'unsupported') {
       throw childDiagnostic(item.child, 'width', 'auto', container,
         `final-height measurement is required but unsupported: ${result.reason}`);
@@ -2175,9 +2187,9 @@ function measureFlexChild(
   child: PibblElement<any>, constraints: Constraints,
   style: Readonly<BoxStyle & Record<string, unknown>>, token: object,
   measurement: FlexMeasurementInput, region?: LayoutRegion, query?: PreparedQuery, constrainedProvider = false,
-  parentMainAxis?: 'row' | 'column',
+  parentMainAxis?: 'row' | 'column', ordinaryProvider = false,
 ): MeasureResult {
-  const measuredRoot = !query && isLayoutComponent(child.type) && (constrainedProvider || parentMainAxis !== undefined) ?
+  const measuredRoot = !query && isLayoutComponent(child.type) && (constrainedProvider || ordinaryProvider || parentMainAxis !== undefined) ?
     prepareLayoutComponent(child) : child;
   // `style` is the direct-placement normalized style, including the described
   // Flex root's forwarded values. Do not reread authored component props here:
@@ -2212,8 +2224,8 @@ function measureFlexChild(
       }, prepared.snapshot, prepared.receivers);
     }
   }
-  const definition = constrainedProvider && !query ? getPrimitiveDefinition(measuredRoot.type) : undefined;
-  if (definition?.measureIntrinsic && definition.measure) return measureConstrainedIntrinsicElement(child, constraints, measurement.service, region ? { cache: region, token, key: JSON.stringify([allocationInputRevision(), measurementStyle(style), constraints]), recordMeasurement: recordWasmMeasurement } : undefined);
+  const definition = (constrainedProvider || ordinaryProvider) && !query ? getPrimitiveDefinition(measuredRoot.type) : undefined;
+  if (definition?.measure && (definition.measureIntrinsic || ordinaryProvider && measuredRoot.type !== Text)) return measureConstrainedIntrinsicElement(child, constraints, measurement.service, region ? { cache: region, token, key: JSON.stringify([allocationInputRevision(), measurementStyle(style), constraints]), recordMeasurement: recordWasmMeasurement } : undefined);
   const content = region && child.type === Text ? prepareLayoutTextContent(
     child.props, { receiverToken: getPrimitiveReceiverToken(child) },
   ) : undefined;
