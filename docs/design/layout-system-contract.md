@@ -2162,8 +2162,14 @@ removal/disposal releases the same owner. No second scheduler or persistent
 measurement observer system is introduced. Ordinary builds retain their diagnostic.
 
 Text has a bounded built-in baseline provider for nonempty visible content,
-including wrapped lines at final allocated width/height, a finite positive generic pixel font and
-the default/top Canvas baseline. `CanvasMeasurementService.measureTextAtBaseline`
+including wrapped lines at final allocated width/height, a finite positive pixel font with a nonempty family and any existing Canvas
+baseline. Existing visible/ellipsis/clip/squish fitting and overflow policies reuse
+the same resolved line layout as paint. Empty fitted first/last lines are explicit
+unsupported results; clipping or horizontal squishing does not change the logical
+line baseline. Application-owned font readiness follows the existing Canvas
+contract: applications schedule a render after their font becomes available.
+Non-generic baseline queries bypass the retained measurement cache; generic-font
+cache reuse is preserved. No font loader or readiness observer is added. `CanvasMeasurementService.measureTextAtBaseline`
 is an optional pure method taking text and named font/baseline options. First-party
 layout services save and restore the exact Canvas state on success or failure;
 the original `measureText(text, font)` contract is unchanged. Text reuses its paint

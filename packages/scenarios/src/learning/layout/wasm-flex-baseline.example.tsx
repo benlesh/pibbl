@@ -34,6 +34,7 @@ function createBaselineContent() {
   const aspectLabel = computed(() => aspectBox.get() ? "Aspect 2" : "Aspect off");
   let finalBoxMeasureCalls = 0;
   const textFont = signal("10px monospace");
+  const textFitPolicy = signal(false);
   const textInsets = signal(false);
   const textPadding = computed(() => textInsets.get() ? {left:5,right:7,top:10,bottom:4} : 0);
   const textBorder = computed(() => textInsets.get() ? {left:3,right:2,top:6,bottom:8} : 0);
@@ -73,6 +74,15 @@ function createBaselineContent() {
   const textPanelHeight = computed(() => textWrap.get() ? textReflow.get() ? 48 : 36 : 36);
   const textWrapLabel = computed(() => textWrap.get() ? textReflow.get() ? "Wrapped Text: three lines — click to restore" : "Wrapped Text: two lines — click to restore" : "Automatic Text first baseline — click to wrap");
   const textReflowLabel = computed(() => textWrap.get() && !textReflow.get() ? "Reflow → three lines" : "Reflow after wrap");
+  const displayedTextFont = computed(() => textFitPolicy.get() ? '10px "Pibbl App Font", serif' : textFont.get());
+  const displayedTextBaseline = computed(() => textFitPolicy.get() ? "middle" as const : "top" as const);
+  const displayedTextFit = computed(() => textFitPolicy.get() ? "ellipsis" as const : "visible" as const);
+  const displayedTextOverflow = computed(() => textFitPolicy.get() ? "clip" as const : "visible" as const);
+  const displayedTextWords = computed(() => textFitPolicy.get() ? "Ag baseline fitting string" : textWords.get());
+  const displayedTextWidth = computed(() => textFitPolicy.get() ? 40 : textWidth.get());
+  const displayedTextHeight = computed(() => textFitPolicy.get() ? "auto" as const : textPanelHeight.get());
+  const displayedTextWrap = computed(() => textFitPolicy.get() ? false : textWrap.get());
+  const textFitPolicyLabel = computed(() => textFitPolicy.get() ? "Plain Text" : "Fit middle");
   const textHits: string[] = [];
   const secondLabel = computed(() => String(second.get()));
   const guide = computed(() => 210 + Math.max(0,12,second.get(),24));
@@ -188,13 +198,15 @@ function createBaselineContent() {
       <Text pointerEvents="none" style={{ left: 360, top: 593, font: "12px sans-serif", fill: "#ffffff" }}>{relativeLabel}</Text>
       <Text pointerEvents="none" style={{ left: 28, top: 360, font: "14px sans-serif", fill: "#475569" }}>The Text panel uses live Canvas metrics; it makes no native font-metric claim.</Text>
       <Text onClick={() => { textFont.set("10px monospace"); textReflow.set(false); textWrap.update(value => !value); }} style={{ left: 28, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textWrapLabel}</Text>
+      <Rectangle onClick={() => textFitPolicy.update(value => !value)} style={{ left: 220, top: 414, width: 104, height: 28, fill: "#a63758", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 228, top: 422, font: "11px sans-serif", fill: "#ffffff" }}>{textFitPolicyLabel}</Text>
       <Rectangle onClick={() => textInsets.update(value => !value)} style={{ left: 340, top: 414, width: 110, height: 28, fill: "#426b61", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 348, top: 422, font: "11px sans-serif", fill: "#ffffff" }}>{textInsetsLabel}</Text>
       <Text onClick={() => { if (textWrap.get()) textReflow.set(true); }} style={{ left: 340, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textReflowLabel}</Text>
       <Group onClick={(event) => { if (event.target !== event.currentTarget) textHits.push("text"); }}>
         <Flex style={{ left: 28, top: 404, width: 180, height: textPanelHeight, flexDirection: "row", flexWrap: "wrap", alignContent: "flex-start", alignItems: "first-baseline" }}>
-          <Text key="text-small" style={{ width: 100, height: textPanelHeight, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: textFont, padding: textPadding, borderWidth: textBorder, lineHeight: textLineHeight, textBaseline: "top", wrap: textWrap, fit: "visible", overflow: "visible", fill: "#426b61" }}>{textWords}</Text>
-          <Text key="text-large" style={{ width: 90, height: 32, flexBasis: 90, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: "20px sans-serif", textBaseline: "top", wrap: false, fit: "visible", overflow: "visible", fill: "#a63758" }}>Ag</Text>
+          <Text key="text-small" style={{ width: 100, height: displayedTextHeight, flexBasis: displayedTextWidth, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: displayedTextFont, padding: textPadding, borderWidth: textBorder, lineHeight: textLineHeight, textBaseline: displayedTextBaseline, wrap: displayedTextWrap, fit: displayedTextFit, overflow: displayedTextOverflow, fill: "#426b61" }}>{displayedTextWords}</Text>
+          <Text key="text-large" style={{ width: 90, height: 32, flexBasis: 90, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: "20px sans-serif", textBaseline: displayedTextBaseline, wrap: false, fit: "visible", overflow: "visible", fill: "#a63758" }}>Ag</Text>
         </Flex>
       </Group>
     </>;
@@ -202,7 +214,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {

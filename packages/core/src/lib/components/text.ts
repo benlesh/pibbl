@@ -231,8 +231,8 @@ function measureTextBaselines(
   );
   const firstLine = layout.lines[0];
   const lastLine = layout.lines[layout.lines.length - 1];
-  if (!firstLine || !lastLine) {
-    return { status: 'unsupported' as const, reason: 'Text does not resolve a line for baseline measurement' };
+  if (!firstLine || !lastLine || firstLine.text.length === 0 || lastLine.text.length === 0) {
+    return { status: 'unsupported' as const, reason: 'Text does not resolve a line for baseline measurement: requires a nonempty rendered baseline line' };
   }
   const firstMetrics = measureAtBaseline.call(service, firstLine.text, { font, textBaseline });
   const first = firstLine.y - firstMetrics.alphabeticBaseline;

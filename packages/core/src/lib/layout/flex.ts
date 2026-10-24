@@ -1752,7 +1752,9 @@ function resolveFlexPlacements(
       const measurementChild = clonePibblElement(item.child);
       const measuredStyle: SystemStyle & { width: number; height: number } = { ...item.normalized, width: allocation.width, height: allocation.height };
       setPreNormalizedStyle(measurementChild, measuredStyle, item.child, item.receiverToken, item.query);
-      const result = measureBaselineElement(measurementChild, allocation, measurement.service, region ? {
+      // Application-owned fonts can change outside retained layout revisions.
+      // Query them on each admitted render; only generic Text results are retained.
+      const result = measureBaselineElement(measurementChild, allocation, measurement.service, region && (item.child.type !== Text || genericTextFont(item.normalized)) ? {
         cache: region,
         token: item.layoutToken ?? item.receiverToken,
         key: `${allocationInputRevision()}:${allocation.width}:${allocation.height}:${JSON.stringify(measurementStyle(item.normalized))}`,
@@ -2442,16 +2444,13 @@ function assertSupportedFirstBaselineFlex(
     const style = item.normalized;
     const textLeaf = item.child.type === Text;
     const textStyle = style as Readonly<TextStyle>;
-    const fontSize = textLeaf ? /(?:^| )(\d+(?:\.\d+)?)px /.exec(String(textStyle.font ?? '13px sans-serif')) : null;
+    const fontSize = textLeaf ? /(?:^| )(\d+(?:\.\d+)?)px(?:\s*\/\s*(?:normal|\d+(?:\.\d+)?(?:px|%)?))?\s+\S/.exec(String(textStyle.font ?? '13px sans-serif')) : null;
     const supportedTextLeaf = !textLeaf || (
-      genericTextFont(style) && fontSize !== null && Number.isFinite(Number(fontSize[1])) && Number(fontSize[1]) > 0 &&
-      (textStyle.textBaseline ?? 'top') === 'top' &&
+      fontSize !== null && Number.isFinite(Number(fontSize[1])) && Number(fontSize[1]) > 0 &&
       typeof (textStyle.lineHeight ?? 13) === 'number' &&
       Number.isFinite(textStyle.lineHeight ?? 13) &&
       (textStyle.lineHeight ?? 13) >= 0 &&
-      (textStyle.wrap === undefined || typeof textStyle.wrap === 'boolean') &&
-      (textStyle.fit ?? 'visible') === 'visible' &&
-      (textStyle.overflow ?? 'visible') === 'visible'
+      (textStyle.wrap === undefined || typeof textStyle.wrap === 'boolean')
     );
     if (!getPrimitiveDefinition(item.child.type) || isKnownLayoutType(item.child.type) || isLayoutComponent(item.child.type) || !supportedTextLeaf || item.query || item.alignSelf !== 'auto' ||
         (style.position !== undefined && style.position !== 'static' && style.position !== 'relative') || item.crossAuto ||

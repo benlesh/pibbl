@@ -16,7 +16,7 @@ try {
     const canvas = document.querySelector('canvas'), context = canvas.getContext('2d'), original = context.fillText.bind(context);
     globalThis.__PIBBL_TEXT_BASELINE_DRAWS__ = [];
     context.fillText = (text, x, y, maxWidth) => {
-      if (text === 'Ag' || text.startsWith('Ag ')) globalThis.__PIBBL_TEXT_BASELINE_DRAWS__.push({ text, x, y, font: context.font, baseline: context.textBaseline, matrix: [...context.getTransform().toFloat64Array()] });
+      if (text === 'Ag' || text.startsWith('Ag')) globalThis.__PIBBL_TEXT_BASELINE_DRAWS__.push({ text, x, y, font: context.font, baseline: context.textBaseline, matrix: [...context.getTransform().toFloat64Array()] });
       original(text, x, y, maxWidth);
     };
   });
@@ -27,17 +27,18 @@ try {
       context.save();
       try {
         context.font = draw.font;
-        context.textBaseline = 'top';
-        const top = context.measureText(draw.text).actualBoundingBoxAscent;
-        const left = context.measureText(draw.text).actualBoundingBoxLeft;
-        const right = context.measureText(draw.text).actualBoundingBoxRight;
-        const descent = context.measureText(draw.text).actualBoundingBoxDescent;
+        context.textBaseline = draw.baseline;
+        const current = context.measureText(draw.text);
+        const currentAscent = current.actualBoundingBoxAscent;
+        const left = current.actualBoundingBoxLeft;
+        const right = current.actualBoundingBoxRight;
+        const descent = current.actualBoundingBoxDescent;
         context.textBaseline = 'alphabetic';
         const alphabetic = context.measureText(draw.text).actualBoundingBoxAscent;
-        const alpha = inverse.transformPoint(matrix.transformPoint({ x: draw.x, y: draw.y + alphabetic - top }));
-        const hitTopLeft = inverse.transformPoint(matrix.transformPoint({ x: draw.x - left, y: draw.y - top }));
+        const alpha = inverse.transformPoint(matrix.transformPoint({ x: draw.x, y: draw.y + alphabetic - currentAscent }));
+        const hitTopLeft = inverse.transformPoint(matrix.transformPoint({ x: draw.x - left, y: draw.y - currentAscent }));
         const hitBottomRight = inverse.transformPoint(matrix.transformPoint({ x: draw.x + right, y: draw.y + descent }));
-        return { text: draw.text, font: draw.font, origin, alpha, hitTopLeft, hitBottomRight };
+        return { text: draw.text, font: draw.font, baseline: draw.baseline, origin, alpha, hitTopLeft, hitBottomRight };
       } finally { context.restore(); }
     });
   }, (await state()).basis);
@@ -147,6 +148,25 @@ try {
   assert.equal(textPainted.crossPlacements, beforeTextPaint.crossPlacements);
   assert.equal(textPainted.nodeCreates, beforeTextPaint.nodeCreates);
   assert.equal(textPainted.measuredLeaves, beforeTextPaint.measuredLeaves);
+  // This opt-in panel uses the normal Canvas font fallback chain and asks the
+  // renderer for a middle baseline. It proves the live alphabetic baseline,
+  // rather than synthesizing a font metric in the lesson.
+  const textHitCount = (await state()).textHits.length;
+  await clearTextDraws();
+  await click(272,428);
+  const customTextState = await state(), customText = await textDraws();
+  assert.equal(customTextState.textFitPolicy, true);
+  const customSmall = customText.find(value => value.font.includes('Pibbl App Font'));
+  const customLarge = customText.find(value => value.font === '20px sans-serif');
+  assert.ok(customSmall && customLarge, 'custom-family fitted Text and its peer render');
+  assert.equal(customSmall.baseline, 'middle');
+  assert.equal(customLarge.baseline, 'middle');
+  assert.ok(customSmall.text.startsWith('Ag') && customSmall.text.length < 'Ag baseline fitting string'.length, 'ellipsis fits the long custom-family label');
+  assert.ok(Math.abs(customSmall.alpha.y - customLarge.alpha.y) < 1e-9, 'middle-baseline Canvas draws share an alphabetic baseline');
+  await click((customSmall.hitTopLeft.x + customSmall.hitBottomRight.x) / 2, (customSmall.hitTopLeft.y + customSmall.hitBottomRight.y) / 2);
+  assert.equal((await state()).textHits.length, textHitCount + 1, 'the fitted custom-family glyph remains the real target');
+  await click(272,428);
+  assert.equal((await state()).textFitPolicy, false);
   // The companion row uses the same baseline offsets while a main-axis
   // automatic margin consumes its free space.
   const mainStart=await state();

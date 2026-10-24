@@ -200,12 +200,13 @@ leaves with settled finite content boxes in a finite LTR or RTL nowrap row or ro
 [first-baseline example](#/examples/layout/wasm-flex-baseline). Other baseline
 modes remain outside this first subset. A bounded wrapped profile also admits
 horizontal row/row-reverse in LTR/RTL with wrap or wrap-reverse, all existing line-distribution policies, finite resolved gaps, and fixed numeric primitive
-providers or bottom-edge fallback, fixed generic Text, main grow/shrink and resolved numeric or automatic main margins. Finite signed numeric cross margins contribute to line ascent/descent without changing provider content size. Automatic cross-margin leaves opt out of baseline sharing and queries, contribute outer height to their line, and absorb its positive allocated free space, including stretch; all-automatic lines use maximum outer height. Static/relative placement composes after baseline allocation; relative offsets move paint and hit geometry without changing provider size or following lines. Fixed padding/borders preserve content-sized provider queries and lift the result by the top content inset before outer-box placement; Text paint and glyph targets use the same content origin.
-Each line shares its own physical first baseline; cross reversal repositions line groups and preserves that alignment. Direct nonempty Text with fixed dimensions, generic pixel fonts, visible
-fit/overflow and the default top Canvas baseline supplies real host metrics
-through the optional measurement service. Wrapped Text measures its actual first
-and last visible lines at final allocation. Last-baseline alignment and custom-font
-lifecycle rules remain subsequent work.
+providers or bottom-edge fallback, finite Text content boxes, main grow/shrink and resolved numeric or automatic main margins. Finite signed numeric cross margins contribute to line ascent/descent without changing provider content size. Automatic cross-margin leaves opt out of baseline sharing and queries, contribute outer height to their line, and absorb its positive allocated free space, including stretch; all-automatic lines use maximum outer height. Static/relative placement composes after baseline allocation; relative offsets move paint and hit geometry without changing provider size or following lines. Fixed padding/borders preserve content-sized provider queries and lift the result by the top content inset before outer-box placement; Text paint and glyph targets use the same content origin.
+Each line shares its own physical first baseline; cross reversal repositions line groups and preserves that alignment. Direct nonempty Text with settled dimensions and positive pixel fonts supplies
+real host metrics for existing Canvas baselines, fitting and overflow policies
+through the optional measurement service. Empty fitted first/last lines fail
+explicitly. Applications own custom-font readiness and schedule its next render;
+non-generic baseline results bypass the retained cache. Wrapped Text measures its actual first
+and last visible lines at final allocation. Last-baseline alignment remains subsequent work.
 
 ## FlowProps
 

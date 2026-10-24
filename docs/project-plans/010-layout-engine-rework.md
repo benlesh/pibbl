@@ -7653,13 +7653,45 @@ is `/tmp/pibbl-slice208-studio-final.png`. Pointer mapping now accounts for the
 Canvas content box and integral native event pixels; all target/geometry
 assertions remain intact. No native artifact or ABI change.
 
-## [NEXT] Slice209: existing Text baseline provider admission
+## [DONE] Slice209: existing Text baseline provider admission
 
 Resolve the remaining font/fit/overflow envelope through the existing Canvas
 measurement/application-font-readiness boundary, without a new font subsystem.
 Keep actual resolved/visible line and failure semantics explicit; classify any
 material blocker before selecting a different finite baseline exit. Consolidate
 208–210before further production.
+
+Public RED4failures preceded production: custom-family ellipsis/middle baseline,
+clip, squish and empty fitted-line diagnostics. Existing Text layout/service now
+admits settled positive-pixel Canvas fonts (including shorthand line-height),
+existing Canvas baselines and fitting/overflow without a new font system. It
+rejects actual empty first/last fitted text; clipping or horizontal squishing does
+not change the logical line baseline. Custom-font baseline queries bypass retained
+entries while preserving transactional receiver dependencies. Frozen allocation
+reuse already excludes non-generic fonts. Applications own readiness and render
+scheduling; generic-font cache reuse stays intact. No native ABI/artifact change.
+
+Focused5files40pass/1skip covers all six Canvas baselines and an application-owned
+FontFace load with stable fixed-size Text and a sibling receiver-owned paint signal.
+Removing the cache bypass fails the real alphabetic-coordinate assertion
+(19.65625versus20); restoring it passes. The fixture holds size/input/revision
+stable so this cannot be masked by a different cache key. Four runtime counters
+and the application-owned font are released. Types/lint, catalog/discovery, Studio
+docs and109documentation mutation probes pass. Scoped review passes; its font
+shorthand finding is addressed with executable positive-px/line-height evidence.
+Source5192and built5193full baseline replay pass (errors[],cleanup000and all four
+ownership checks). The inspected `/tmp/pibbl-slice209-studio.png` includes the new
+Fit middle control, whose custom fitted glyph remains clickable and aligned.
+
+## [NEXT] Slice210: direct prepared responsive baseline ownership
+
+Admit only a direct settled leaf's current finite Flex-content responsive selection.
+Carry a one-shot internal owner proof into baseline measurement, preserve the
+already-selected style and receiver dependencies, and bypass retained query
+baseline entries. Keep unprepared/intrinsic/recursive query resolution rejected.
+Establish public RED with branch crossing, selected-signal detach/rejoin, final
+provider boxes, stable identity, real input and teardown. Consolidate208–210before
+further production.
 
 ## Scope and execution
 
