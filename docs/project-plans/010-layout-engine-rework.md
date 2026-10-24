@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice180 (resolved percentage/aspect cross size before auto margins).
+Latest delivery is slice180 `767ad9e2` (resolved percentage/aspect cross size before auto margins).
+Consolidation60 freshly verifies178–180; next is181 natural-column directions.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -33,7 +34,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is consolidation60 for178–180, then the finite auto-margin exit matrix.
+Consolidation56 is `2fd34f0e` for166–168. Next is181: finite natural-column direction gaps proven by matched public baselines.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6494,14 +6495,40 @@ Types/lint, public JSDoc, catalog174/12/33, Studio routes/search and109docs
 mutation probes pass. Remaining direction/intrinsic cases require actual paired
 baseline evidence.
 
-## [NEXT] Consolidation60: slices178–180
+## Consolidation60 delivered: slices178–180
 
-Run the consolidated prior matrix plus wrapped column/row Text and settled-cross
-regressions before further capability production. Preserve the finite auto-margin
-exit audit: prove numeric0andauto through the same public configuration before
-classifying a true margin gap or an independent intrinsic sizing prerequisite.
-Keep original targets and responsible gates; no label-only removal or circular
-prerequisite. Then select the next bounded natural-cross direction slice.
+Verified2026-10-24. Native kernel/ABI10 remain unchanged. Node24.15.0 with
+Playwright Chromium ran64files/1009tests: experimental997pass/12skip in84.17s;
+ordinary302pass/707skip in5.46s. This includes permanent prior phase/bounds,
+undefined/unbounded, ownership, layout, intrinsic, percentage and positioning
+coverage plus the new wrapped Text and resolved cross-auto regressions. Expected
+negative diagnostic fixtures remain asserted failures, not unhandled regressions.
+
+Fresh source5192/built5193 full Flex/Text replays pass, errors[] and cleanup000;
+built470inputs. Slice180's source/built aspect companion and installed246-input
+strict Bundler/NodeNext/no-alias consumer pass; tarball SHA256
+`a1e7afd12260dc5317b24f4de91a03b6e6cc21d2bf89ca632865721123ca3aea`.
+Pinned auto-margin probe77records, SHA256
+`94c144ef230a91c0d1edb0bac4a90f1de583b6bbe9221b4d81bd6fee8cb883c6`.
+Types/lint, public JSDoc, catalog174/12/33, Studio routes/search and109docs
+mutation probes pass; scoped180review is clean. Aggregate Node24trust and
+independent program-exit review remain outstanding. No capability promotion:
+fixed33stays10complete/12experimental/5partial/5missing/1excluded; all7gatesopen.
+
+The separate public numeric0/auto audit confirms unwrapped fixed-height Text
+mounts in columnRTL and column-reverseLTR/RTL atzero, but auto alone diagnoses.
+These are true margin-only direction gaps, unlike invalid companion fixtures
+whose sizing prerequisites still need correction. Preserve original remaining
+intrinsic/wrapping/staged numeric-margin targets and responsible gates.
+
+## [NEXT] Slice181: natural column cross sizing across parent directions
+
+Close the three proven unwrapped Text direction gaps using the shared existing
+exact-height/natural-width query and native placement. Extend paired/known and
+wrapped natural-column profiles only where identical valid numeric0/auto public
+pairs prove the same query works; retain query failures and resource ownership.
+Keep the finite exit table honest about independent unsupported intrinsic
+contexts, including staged percentage owners with opposite numeric margins.
 
 ## Scope and execution
 
