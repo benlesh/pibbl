@@ -22,6 +22,7 @@ import type { Constraints } from '../layout/types.js';
 import type { PibblRenderTransaction, PibblTextInput } from '../types.js';
 import type { PibblPhysics2DPropExtension } from '../types.js';
 import { resolveLength } from '../style/resolve-length.js';
+import { normalizeBoxInsets } from '../layout/box-insets.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
@@ -156,23 +157,31 @@ export const Text = definePrimitive<
   ResolvedTextStyle
 >(renderText, {
   childInput: 'text',
-  resolveStyle: (style, context) => ({
-    ...stripLayoutParticipation(style),
-    x: 0,
-    y: 0,
-    width: resolveOptionalLength(
-      style.width,
-      context.percentageBasis.width,
-      'width',
-      context,
-    ),
-    height: resolveOptionalLength(
-      style.height,
-      context.percentageBasis.height,
-      'height',
-      context,
-    ),
-  }) as ResolvedTextStyle,
+  resolveStyle: (style, context) => {
+    let x = 0, y = 0;
+    if (style.padding !== undefined || style.paddingStart !== undefined || style.paddingEnd !== undefined ||
+        style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined) {
+      const insets = normalizeBoxInsets(style, context);
+      x = insets.left; y = insets.top;
+    }
+    return {
+      ...stripLayoutParticipation(style),
+      x,
+      y,
+      width: resolveOptionalLength(
+        style.width,
+        context.percentageBasis.width,
+        'width',
+        context,
+      ),
+      height: resolveOptionalLength(
+        style.height,
+        context.percentageBasis.height,
+        'height',
+        context,
+      ),
+    } as ResolvedTextStyle;
+  },
   measure: ({ props, style, constraints, service }) =>
     measureTextStyle(
       materializeTextContent(props),

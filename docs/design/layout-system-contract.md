@@ -2058,7 +2058,7 @@ WASM cross-placement path computes the common ascent starting at zero and each
 offset as common ascent minus that leaf's first baseline. This matches pinned
 Yoga3.2.1 numeric-provider probes, including signed/out-of-box baselines. Last
 baseline placement, custom-font Text metrics, nested containers, broader outer wrapping,
-automatic cross size and decorated/absolute-position/query/aspect
+automatic cross size and absolute-position/query/aspect
 leaves remain outside this first admission. Main-axis automatic margins are
 resolved by the existing native main allocator before baseline alignment; they
 do not change membership in the baseline-sharing group. Cross-axis automatic
@@ -2104,7 +2104,16 @@ The other leaf exclusions remain; native line membership is reused. Static and r
 position reuse the existing final physical placement. Relative offsets move the
 paint/hit box after baseline-group allocation; they do not alter provider content
 size, the shared baseline calculation, or subsequent line origins. Static insets
-remain inert. Absolute baseline children remain outside this profile.
+remain inert. Absolute baseline children remain outside this profile. Resolved padding and layout borders use the
+existing content/outer box model, including already allocated percentage and logical
+insets. No additional raw-authored-property fence is introduced. Baseline providers receive settled content
+width/height; Flex adds the combined physical top inset to the returned first
+baseline. A missing provider uses content bottom plus the same top inset. Native
+placement receives the resolved outer height and outer-relative baseline, so lower
+insets participate in descent without a second sizing pass. Content-box and
+border-box conversion remains owned by the shared box resolver. Built-in Text
+paints, clips and targets from the combined left/top content origin; its baseline
+measurement remains content-local, preventing a double inset.
 Each line has its own maximum ascent and descent, so the next line begins after
 the complete baseline extent. The common baseline never spans two lines. In a
 100px-wide row, A60x20/b12 and B40x40/b30 occupy y18/0; C60x20/b8 and

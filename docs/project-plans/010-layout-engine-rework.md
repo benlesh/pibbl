@@ -7535,12 +7535,54 @@ lower lesson exposes Static/Relative beside numeric/automatic margin controls.
 Source5192/refreshed built5193 pass errors[]/cleanup000/470built inputs; screenshot
 inspected. Catalog/Studio175/12/33, docs109mutations and scoped review pass.
 
-## [NEXT] Slice207: fixed decorated baseline content mapping
+## [DONE] Slice207: resolved decorated baseline content mapping
 
 Define content-relative provider allocation and content-top padding/border offset
 within each fixed outer line box. Reuse existing content/outer sizing and native
 line metrics rather than adding another solver. Establish public/reference/native
 RED as needed, then consolidate205–207before further production.
+
+Public RED1fail/4pass precedes production. Providers receive content dimensions;
+Flex adds the already-resolved physical top combined padding/border inset to first
+or content-bottom fallback. Native baseline records retain resolved outer height
+and outer-relative baseline with zero unresolved padding, so no ABI/kernel change
+is needed. A content40×20with all-edge padding/border is outer57×48and outer-first28;
+Bfirst30places Aat y2/Bx57y0, line ascent30+descent20places Cat50. Provider A remains
+40×20; useLayoutBox correctly reports outer57×48. Initial helper assertions confused
+the outer box with content and forgot A's2px shift in line extent; corrected against
+public geometry and an equivalent outer-coordinate pinned Yoga probe.
+
+A supplemental Text paint/glyph test exposed a separate existing drawing defect:
+Text stripped insets then forced x/y0. Shared Text resolution now derives combined
+left/top origin before stripping participation fields, retaining used content
+width/height. Baseline measurement stays content-local. Thus paint, clip and glyph
+hit paths use one translated layout without double inset. No-inset Text retains
+its inexpensive path. Standalone ordinary Text fails under a controlled removal
+of the origin correction and passes after restoration; allocated decorated Text
+baseline and glyph hits pass. This repairs Text drawing rather than changing the
+completed containing-owner padding allocation. Focused5files26pass/1skip; ordinary
+Text2files3pass/11skip; types/lint pass. ABI15binary81889/SHA remains unchanged.
+
+Resolved allocated percentage/logical padding composes through the same canonical
+numeric inset path, without a new authored-property fence. Public owner100→120
+keeps provider40×20, changes Aouter50×40→52×44and y8→6, Bx50→52and C48→50;
+logical zero start overrides physical50%. A separate missing-provider control
+uses top10+content20=first30, not outer34. Additional2files19pass/1skip and typecheck
+pass. Source5192/refreshed built5193 pass errors[]/cleanup000/470built inputs,
+including decorated Text glyph clicks; screenshot inspected. Catalog/Studio175/12/33,
+docs109mutations and scoped mapping/Text review pass. No ABI change, layout-padding
+capability reopening, or baseline release promotion is needed; Text drawing defect
+is fixed with both-lane evidence before this slice is committed.
+
+## [NEXT] Consolidation69: automatic margins, relative placement and decoration
+
+Consolidate205–207before further production: accumulated both-lane tests,
+installed automatic-cross/relative/decorated-provider/Text receipts, source/built
+replays, package identity, types/docs/catalog. Assess remaining baseline guard as
+one final-allocation capability boundary: existing finite boxes should compose
+without a queue per authored-property fence; retain only actual sizing/provider/
+alignment prerequisites and record the finite closure classes. Baselines remain
+experimental and all seven release gates remain open.
 
 ## Scope and execution
 

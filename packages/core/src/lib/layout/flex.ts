@@ -162,6 +162,7 @@ interface FlexItem {
   autoCrossAfter: boolean;
   preferredCross: number;
   paddingCross: number;
+  paddingCrossBefore: number;
   minMain: number;
   maxMain: number;
   minCross: number;
@@ -1645,6 +1646,7 @@ function resolveFlexPlacements(
       marginMainBefore, marginMainAfter, autoMainBefore, autoMainAfter, marginCrossBefore, marginCrossAfter, autoCrossBefore, autoCrossAfter,
       preferredCross: clamp(preferredCross, minCross, maxCross) + paddingCross,
       paddingCross,
+      paddingCrossBefore: row ? padding.top : padding.left,
       minMain,
       maxMain,
       minCross,
@@ -1738,10 +1740,10 @@ function resolveFlexPlacements(
       // Automatic cross margins replace alignment, so this leaf neither supplies
       // nor consumes a shared baseline. Native placement resolves its free space.
       if (item.autoCrossBefore || item.autoCrossAfter) { item.firstBaseline = 0; continue; }
-      const allocation = { x: 0, y: 0, width: item.targetMain, height: item.preferredCross };
+      const allocation = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
       const definition = getPrimitiveDefinition(item.child.type);
       if (!definition?.measureBaselines) {
-        item.firstBaseline = allocation.height;
+        item.firstBaseline = item.paddingCrossBefore + allocation.height;
         continue;
       }
       const measurementChild = clonePibblElement(item.child);
@@ -1756,7 +1758,7 @@ function resolveFlexPlacements(
       if (result.status === 'unsupported') {
         throw childDiagnostic(item.child, 'measureBaselines', 'unsupported', container, `first-baseline alignment requires a baseline result: ${result.reason}`);
       }
-      item.firstBaseline = result.first;
+      item.firstBaseline = item.paddingCrossBefore + result.first;
     }
   }
   if (region) {
@@ -2450,9 +2452,9 @@ function assertSupportedFirstBaselineFlex(
     );
     if (!getPrimitiveDefinition(item.child.type) || isKnownLayoutType(item.child.type) || isLayoutComponent(item.child.type) || !supportedTextLeaf || item.query || item.alignSelf !== 'auto' ||
         (style.position !== undefined && style.position !== 'static' && style.position !== 'relative') || item.crossAuto || typeof style.flexBasis !== 'number' ||
-        typeof style.height !== 'number' || item.paddingMain !== 0 || item.paddingCross !== 0 ||
+        typeof style.height !== 'number' ||
         item.aspectRatio !== undefined) {
-      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct fixed undecorated primitive leaves with no absolute position, query, aspect ratio, or alignSelf override');
+      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct fixed primitive leaves with no absolute position, query, aspect ratio, or alignSelf override');
     }
   }
 }

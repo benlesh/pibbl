@@ -338,6 +338,17 @@ try {
   const relativeHits=relativeMoved.hits.length;await click(52,552);assert.equal((await state()).hits.length,relativeHits);
   await click(58,562);assert.equal((await state()).hits.at(-1),'NA');
   await click(400,600);assert.deepEqual((await state()).boxes.NA,relativeBefore.boxes.NA);
+  await clearTextDraws();await click(390,428);
+  const insetDraws=await textDraws();
+  const insetSmall=insetDraws.find(draw=>draw.font==='10px monospace'&&draw.text==='Ag'&&draw.origin.x<100&&draw.origin.y>400&&draw.origin.y<460);
+  const insetLarge=insetDraws.find(draw=>draw.font==='20px sans-serif'&&draw.text==='Ag'&&draw.origin.x<200&&draw.origin.y>400&&draw.origin.y<460);
+  assert.ok(insetSmall&&insetLarge,'decorated Text renders both baseline participants');
+  assert.ok(Math.abs(insetSmall.origin.x-wrappedSmall[0].origin.x-8)<1e-4&&Math.abs(insetLarge.origin.x-wrappedLarge.origin.x-17)<1e-4);
+  assert.ok(Math.abs(insetSmall.alpha.y-insetLarge.alpha.y)<1e-4,'decorated Text first baselines agree with paint');
+  const insetHitBefore=(await state()).textHits.length;
+  await click((insetSmall.hitTopLeft.x+insetSmall.hitBottomRight.x)/2,(insetSmall.hitTopLeft.y+insetSmall.hitBottomRight.y)/2);
+  assert.equal((await state()).textHits.length,insetHitBefore+1);
+  await click(390,428);
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}

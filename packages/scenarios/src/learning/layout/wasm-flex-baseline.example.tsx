@@ -27,6 +27,10 @@ function createBaselineContent() {
   const crossBottom = computed(() => crossMode.get() === "bottom" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossLabel = computed(() => crossMode.get() === "off" ? "Cross" : crossMode.get());
   const textFont = signal("10px monospace");
+  const textInsets = signal(false);
+  const textPadding = computed(() => textInsets.get() ? {left:5,right:7,top:10,bottom:4} : 0);
+  const textBorder = computed(() => textInsets.get() ? {left:3,right:2,top:6,bottom:8} : 0);
+  const textInsetsLabel = computed(() => textInsets.get() ? "Text insets on" : "Text insets off");
   const relativeShift = signal(false);
   const relativePosition = computed(() => relativeShift.get() ? "relative" as const : "static" as const);
   const relativeLabel = computed(() => relativeShift.get() ? "Relative" : "Static");
@@ -160,10 +164,12 @@ function createBaselineContent() {
       <Text pointerEvents="none" style={{ left: 360, top: 593, font: "12px sans-serif", fill: "#ffffff" }}>{relativeLabel}</Text>
       <Text pointerEvents="none" style={{ left: 28, top: 360, font: "14px sans-serif", fill: "#475569" }}>The Text panel uses live Canvas metrics; it makes no native font-metric claim.</Text>
       <Text onClick={() => { textFont.set("10px monospace"); textReflow.set(false); textWrap.update(value => !value); }} style={{ left: 28, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textWrapLabel}</Text>
+      <Rectangle onClick={() => textInsets.update(value => !value)} style={{ left: 340, top: 414, width: 110, height: 28, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 348, top: 422, font: "11px sans-serif", fill: "#ffffff" }}>{textInsetsLabel}</Text>
       <Text onClick={() => { if (textWrap.get()) textReflow.set(true); }} style={{ left: 340, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textReflowLabel}</Text>
       <Group onClick={(event) => { if (event.target !== event.currentTarget) textHits.push("text"); }}>
         <Flex style={{ left: 28, top: 404, width: 180, height: textPanelHeight, flexDirection: "row", flexWrap: "wrap", alignContent: "flex-start", alignItems: "first-baseline" }}>
-          <Text key="text-small" style={{ width: 100, height: textPanelHeight, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: textFont, lineHeight: textLineHeight, textBaseline: "top", wrap: textWrap, fit: "visible", overflow: "visible", fill: "#426b61" }}>{textWords}</Text>
+          <Text key="text-small" style={{ width: 100, height: textPanelHeight, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: textFont, padding: textPadding, borderWidth: textBorder, lineHeight: textLineHeight, textBaseline: "top", wrap: textWrap, fit: "visible", overflow: "visible", fill: "#426b61" }}>{textWords}</Text>
           <Text key="text-large" style={{ width: 90, height: 32, flexBasis: 90, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: "20px sans-serif", textBaseline: "top", wrap: false, fit: "visible", overflow: "visible", fill: "#a63758" }}>Ag</Text>
         </Flex>
       </Group>

@@ -472,3 +472,73 @@ it.runIf(experimentalLayout)(
     }
   },
 );
+
+it.runIf(experimentalLayout)(
+  'converts a fixed border-box first-baseline provider from content offsets to an outer wrapped line',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const boxes = new Map<string, LayoutBox>();
+    const stamps = new Map<string, number>();
+    const baselineAllocations = new Map<string, LayoutBox>();
+    const hits: string[] = [];
+    const errors: unknown[] = [];
+    let serial = 0;
+    interface DecoratedStyle extends BaselineStyle {
+      readonly boxSizing?: 'border-box';
+      readonly padding?: Readonly<{ left: number; right: number; top: number; bottom: number }>;
+      readonly borderWidth?: Readonly<{ left: number; right: number; top: number; bottom: number }>;
+    }
+    interface DecoratedProps { readonly name: 'A' | 'B' | 'C'; readonly first: number; }
+    const Leaf = definePrimitive<DecoratedProps, DecoratedStyle, DecoratedStyle, DecoratedStyle & { readonly width: number; readonly height: number }>((props) => {
+      const box = useLayoutBox();
+      const matrix = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      stamps.set(props.name, useConst(() => ++serial));
+      return <Rectangle onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: props.name === 'A' ? '#8a3248' : '#426b61', cursor: 'pointer' }} />;
+    }, {
+      resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: ({ props, allocation }) => {
+        baselineAllocations.set(props.name, { ...allocation });
+        return { status: 'measured' as const, first: props.first, last: props.first };
+      },
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = 100; canvas.height = 80; document.body.append(canvas);
+    const receive = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+    window.addEventListener('error', receive);
+    try {
+      const controller = pibbl(canvas, <Flex style={{ width: 100, height: 80, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'first-baseline', alignContent: 'flex-start' }}>
+        <Leaf key="A" name="A" first={12} style={{
+          boxSizing: 'border-box', width: 57, height: 48, flexBasis: 57, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+          padding: { left: 5, right: 7, top: 10, bottom: 4 }, borderWidth: { left: 3, right: 2, top: 6, bottom: 8 },
+        }} />
+        <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, flexBasis: 40, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 }} />
+        <Leaf key="C" name="C" first={8} style={{ width: 60, height: 20, flexBasis: 60, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 }} />
+      </Flex>);
+      controllers.push(controller);
+      await nextFrame();
+      expect(errors).toEqual([]);
+      // A's outer extent is 57×48, but its provider owns only the 40×20 content box.
+      // Its physical first baseline is outer top + (padding+border top 16) + 12 = B's 30.
+      expect(boxes.get('A')).toEqual({ x: 0, y: 2, width: 57, height: 48 });
+      expect(boxes.get('B')).toEqual({ x: 57, y: 0, width: 40, height: 40 });
+      expect(boxes.get('C')).toEqual({ x: 0, y: 50, width: 60, height: 20 });
+      expect(baselineAllocations.get('A')).toEqual({ x: 0, y: 0, width: 40, height: 20 });
+      expect(baselineAllocations.get('B')).toEqual({ x: 0, y: 0, width: 40, height: 40 });
+      const initialStamps = Object.fromEntries(stamps);
+      const mounted = snapshotWasmLayoutDiagnostics();
+      click(canvas, 4, 6); click(canvas, 4, 52);
+      expect(hits).toEqual(['A', 'C']);
+      expect(Object.fromEntries(stamps)).toEqual(initialStamps);
+      expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+
+      controller.dispose();
+      const disposed = snapshotWasmLayoutDiagnostics();
+      expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+        baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+      ]);
+    } finally {
+      window.removeEventListener('error', receive);
+    }
+  },
+);
