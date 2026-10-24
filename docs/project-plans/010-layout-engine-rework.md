@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice161 (native final-width nested row measurement).
+Latest delivery is slice162 `dcae6348` (parent-owned prepared measurement reuse).
+Slice161 is `b95d3412` (native final-width nested row measurement).
 Slice160 is `f49be444` (prepared structural paired measurement).
 Slice159 is `0b893348` (wrapped Text first/last baseline metrics).
 Consolidation53 is `370015c4` for157–159.
@@ -4956,6 +4957,50 @@ integrity passed. The69628byte binary is unchanged; the concise5case public
 comparison agrees with the721record reference. Slice159 source/built interaction,
 wrapped screenshot and installed-package receipts remain separate evidence.
 No aggregate trust, capability promotion or release-gate closure is claimed.
+
+## Consolidation54: slices160–162
+
+Fresh Node24.15/Playwright Chromium: experimental759passed/12skipped across54files
+(771tests),83.76s; ordinary293passed/478skipped,4.99s. This adds structural
+intrinsic public behavior and receiver receipt ownership to the previous bounded
+lane. Both runs passed without another production correction.
+
+Typecheck, changed-code lint, refreshed ordinary declarations/build and exact
+source/built/editor export parity with runtime/Three addons passed. Docs and109
+mutation probes, public JSDoc, catalog171lessons/12snapshots/33labs, Studio and
+kernel integrity passed. Concise5case public comparison still agrees with the
+721record reference. Source/built nested-row and246-input installed-package
+paint-reuse/content-update receipts are recorded under162. The69628byte binary
+is unchanged. No aggregate trust, capability promotion or gate closure claimed.
+The remaining closure sequence below retains the full original denominator.
+
+## Remaining gate closure order after162
+
+The denominator stays33 capabilities and7release gates. Slices160/161 advance
+`measurement.custom-leaf` and `flex.nested-intrinsic-containers`;162 advances
+`integration.signal-aware-caching` and the same prepared-measurement foundation.
+None closes those entries or a gate. The following order covers the original
+scope, including intrinsic/minmax Grid tracks; it is not a finite slice estimate.
+Current bounded diagnostics remain interim behavior, not permission to exclude
+unfinished branches from the target.
+
+| Order | Existing gate and entries                                                                                                                                     | Objective exit                                                                                                                                                                                                                                                                                                                         |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | `flex-core`: `flex.min-max`, `flex.automatic-minimum`, `flex.nested-intrinsic-containers`                                                                     | Complete finite/indefinite owner and percentage-feedback policy, automatic Text/custom/known-container contributions and bounds, with pinned semantic geometry and public recursive measurement/failure evidence. Next implementation should extend the known prepared measurement tree rather than add another direction-only matrix. |
+| 2     | `box-and-direction`: `flex.margin`, `flex.auto-margin`, `flex.percentage-gap`, `box.padding-and-layout-border`, `box.box-sizing`, `box.aspect-ratio`          | Complete sizing/percentage/physical-logical precedence and decoration ordering across the target matrix; classify intentional Yoga differences and prove paint/hit geometry stays coherent.                                                                                                                                            |
+| 3     | `measurement-and-intrinsic`: `measurement.custom-leaf`, `flex.baselines`, `intrinsic-size-vocabulary` and nested intrinsic dependencies                       | Deliver the full intrinsic vocabulary/constraint contract, recursive known-family providers, baseline composition and exact ownership. Retain real Canvas font-source classification. Unsupported interim profiles cannot count as complete.                                                                                           |
+| 4     | `placement-and-participation`: `position.relative-static-absolute`, `position.containing-block`, `participation.hidden-and-contents`, `overflow-sizing`       | Complete containing ancestry and hidden/contents participation, sizing, identity, hit/focus/source-order and measurement semantics through the same prepared tree. Bounded direct-Flex chains alone do not close it.                                                                                                                   |
+| 5     | `reactivity-and-publication`: `reactivity.incremental-layout`, `geometry.transactional-publication`, `integration.signal-aware-caching` with complete cleanup | Root-wide role-aware prepared graph and publication across accepted layout families, bounded topology/cache invalidation and failure isolation. Preserve current general render-failure teardown unless an approved contract changes it; do not claim retained-screen rollback.                                                        |
+| 6     | `grid-beyond-yoga`: `grid.explicit-placement`, `grid.implicit-tracks-and-auto-placement`, `intrinsic-size-vocabulary`                                         | Complete original spans, intrinsic/fr/minmax track sizing, implicit tracks and auto-placement target, plus nested Flex/Grid ownership and publication. Use the common measurement contract rather than a second measurement system.                                                                                                    |
+| 7     | `migration-and-conformance`: `migration.owned-tree-snapshots`, `migration.versioned-yoga-conversion`                                                          | Deliver the planned public layout boundary, owned-tree snapshots and versioned conversion analysis only after semantics settle; classify the complete pinned corpus and prove source/built/packed consumers.                                                                                                                           |
+
+Box and measurement work both depend on Flex foundations. Placement depends on
+both; publication depends on measurement, and Grid depends on measurement plus
+publication. Independent evidence preparation may run in parallel, while one
+writer commits each runnable slice. Migration remains after the semantic exits.
+Final completion additionally requires reproducible performance evidence, the
+fresh documented Node24/pnpm trust gate, and the final independent whole-codebase
+review. A bounded proof or documentation-only status change cannot satisfy it.
 
 ## Slice160 ready for feedback: prepared structural paired measurement
 
