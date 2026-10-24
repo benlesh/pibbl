@@ -1,7 +1,7 @@
 import type { PibblComponent, PibblElement, PibblNodeInput } from '../element/types.js';
 import { clonePibblElement } from '../element/create-element.js';
 import { materializeContainerChildren } from '../element/children.js';
-import { getChildPrimitiveReceiverToken, getElementMetadata, setElementMetadata, getPrimitiveDefinition, getPrimitiveReceiverToken, setPrimitiveReceiverToken } from '../element/metadata.js';
+import { getChildPrimitiveReceiverToken, getElementMetadata, setElementMetadata, getPrimitiveDefinition, getPrimitiveReceiverToken, setPrimitiveReceiverToken, isPlacementConsumed, setPlacementConsumed } from '../element/metadata.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { withHooksForbidden } from '../hooks/hook-slot.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
@@ -85,6 +85,9 @@ export function placedLayoutComponentRoot(element: PibblElement<any>, style?: Pr
   const slot = getElementMetadata(element)?.preparedLayoutSlot;
   if (!style && !slot) return root;
   const placed = clonePibblElement(root);
+  // The description is transparent: its one actual root consumes the already
+  // allocated placement, including explicit static/relative positioning, once.
+  if (isPlacementConsumed(element)) setPlacementConsumed(placed);
   if (style) setPreNormalizedStyle(placed, style.style, root, getPrimitiveReceiverToken(root), style.query);
   if (slot) setElementMetadata(placed, { ...getElementMetadata(placed), preparedLayoutSlot: slot });
   return placed;

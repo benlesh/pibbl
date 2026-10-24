@@ -134,17 +134,17 @@ export function claimPreparedFlexPlan(element: PibblElement<any>, content: Reado
 }
 
 /** @internal Reads a current staged plan without transferring its region. */
-export function peekPreparedLayoutPlan(slot: PreparedLayoutSlot, content: Readonly<LayoutBox>): PreparedLayoutPlan | undefined {
+export function peekPreparedLayoutPlan(slot: PreparedLayoutSlot, content: Readonly<LayoutBox>, direction: 'ltr' | 'rtl' = getLayoutDirection()): PreparedLayoutPlan | undefined {
   const transaction = GLOBAL_STATE.renderTransaction;
   const entry = transaction ? plans.get(transaction)?.get(slot) : undefined;
-  if (!entry || entry.claimed || entry.direction !== getLayoutDirection() ||
+  if (!entry || entry.claimed || entry.direction !== direction ||
       entry.plan.content.width !== content.width || entry.plan.content.height !== content.height) return;
   return entry.plan;
 }
 
 /** @internal Reads a current staged Flex plan without transferring its region. */
-export function peekPreparedFlexPlan(slot: PreparedLayoutSlot, content: Readonly<LayoutBox>): PreparedFlexLayoutPlan | undefined {
-  const plan = peekPreparedLayoutPlan(slot, content);
+export function peekPreparedFlexPlan(slot: PreparedLayoutSlot, content: Readonly<LayoutBox>, direction: 'ltr' | 'rtl' = getLayoutDirection()): PreparedFlexLayoutPlan | undefined {
+  const plan = peekPreparedLayoutPlan(slot, content, direction);
   if (!plan) return;
   if (!plan.region || !('cached' in plan) || typeof plan.cached !== 'boolean' ||
       !('revision' in plan) || typeof plan.revision !== 'number') {

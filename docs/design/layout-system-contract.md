@@ -2081,17 +2081,24 @@ the root receiver, and only successful transactions publish results. Responsive
 owner proofs attach to the actual root; query/non-generic Text cache bypasses stay
 in force.
 
-A direct known nowrap row Flex with a settled finite content allocation can
-forward its first source-order in-flow direct primitive child's baseline. Absolute
-decoration is skipped. The container adds the selected child's physical content-y
-origin to its content-local baseline; a child without a provider uses its content
-bottom. This reads the existing current-transaction prepared native placement plan;
-normal traversal remains its sole claimant. Selected relative offsets move paint,
-hit and focus geometry after baseline allocation; the contribution uses the
-pre-relative physical layout-y origin. There is no public reference-child
-marker or separate line solver. Static inner owners, empty containers, inner columns, wrapping inner
-containers, selected nested layout roots, and Flow/Grid selection remain outside
-this structural profile.
+A settled finite non-static nowrap Flex root contributes its first source-order
+in-flow child's baseline. Absolute decoration is skipped. This selection is
+independent of the inner main direction: row, row-reverse, column and
+column-reverse all use the selected child's physical content-y origin. Empty
+containers use their content bottom. Transparent descriptions forward their
+actual primitive or Flex roots; their placed roots inherit the consumed-placement
+marker so explicit positioning applies once. Selected Flex children recurse through already
+prepared slots. Each boundary adds the selected child's unshifted physical
+layout-y origin and top content inset exactly once. Selected relative offsets
+move paint, hit and focus geometry after baseline allocation without changing
+that contribution. Explicit inner writing directions are checked against the
+selected owner's prepared plan, while normal traversal remains its sole claimant.
+Structural traversal and provider reads use current root receivers and retain no
+aggregate baseline graph. There is no public reference-child marker or separate
+line solver. Static outer structural owners, wrapped structural selection,
+Flow/Grid selection, outer-column baseline alignment and last-baseline placement
+remain distinct unsupported classes. An inner column contributing a vertical
+source baseline does not enable baseline alignment on an outer column.
 
 Inherited `alignSelf: auto` joins the baseline group. Existing explicit
 `alignSelf` values opt out, skip baseline queries and use ordinary per-line cross
@@ -2101,8 +2108,8 @@ that contribution, then the ordinary padding/bounds-aware stretch rule consumes
 the allocated line extent. Automatic cross margins continue to override alignment.
 Wrap reversal preserves physical baseline group offsets while explicit self
 alignment follows ordinary logical reversal, including its numeric margins.
-Last-baseline placement, nested providers and absolute participation remain
-outside this admission. Main-axis automatic margins are
+Last-baseline placement, remaining structural classes and absolute participation
+remain outside this admission. Main-axis automatic margins are
 resolved by the existing native main allocator before baseline alignment; they
 do not change membership in the baseline-sharing group. Cross-axis automatic
 margins instead exclude that leaf from the baseline-sharing group and its pure

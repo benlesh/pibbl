@@ -1,12 +1,14 @@
 import {
   Flex, Group, Rectangle, Text, FocusManagement, definePrimitive, defineLayoutComponent, signal, computed,
   useCanvasContext, useLayoutBox, useConst, useReaction, untracked,
-  type Signal, type SystemStyle, type LayoutBox, type PibblNode, type PibblResponsiveStyle, type BaselineMeasureInput, type BaselinesResult,
+  type Signal, type SystemStyle, type FlexStyle, type LayoutBox, type PibblNode, type PibblResponsiveStyle, type BaselineMeasureInput, type BaselinesResult,
 } from "@pibbl/core";
 
 type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB" | "NC" | "FA" | "FB" | "KA" | "KB";
 type WrappedAlign = "flex-start" | "flex-end" | "center" | "space-between" | "space-around" | "space-evenly" | "stretch";
 type FinalBoxSelf = "auto" | "flex-end" | "center" | "flex-start" | "stretch";
+type KnownSource = "direct" | "described" | "nested" | "empty";
+type KnownDirection = "row" | "row-reverse" | "column" | "column-reverse";
 interface CardProps { id: Name; label: string; font: string; first: number | Signal<number> }
 interface CardStyle extends SystemStyle {
   width?: number; height?: number | "auto"; aspectRatio?: number; fill?: string;
@@ -27,7 +29,7 @@ function createBaselineContent() {
   const crossTop = computed(() => crossMode.get() === "top" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossBottom = computed(() => crossMode.get() === "bottom" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossLabel = computed(() => crossMode.get() === "off" ? "Cross" : crossMode.get());
-  const measuredHeight = signal(20), aspectBox = signal(false), knownFirst = signal(12), knownRelative = signal<"off" | "top" | "bottom">("off");
+  const measuredHeight = signal(20), aspectBox = signal(false), knownFirst = signal(12), knownRelative = signal<"off" | "top" | "bottom">("off"), knownSource = signal<KnownSource>("direct"), knownDirection = signal<KnownDirection>("row");
   const finalBoxSelf = signal<FinalBoxSelf>("auto");
   const finalBoxSelfLabel = computed(() => `Self ${finalBoxSelf.get()}`);
   const queryMode = signal<"off" | "narrow" | "wide">("off");
@@ -41,7 +43,9 @@ function createBaselineContent() {
   const knownLabel = computed(() => `Known leaf ${knownFirst.get()}`);
   const knownNumber = computed(() => String(knownFirst.get()));
   const knownRelativeLabel = computed(() => `Relative ${knownRelative.get()}`);
-  const knownLeafStyle = computed<CardStyle>(() => ({ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248", position: knownRelative.get() === "off" ? "static" : "relative", top: knownRelative.get() === "top" ? 10 : undefined, bottom: knownRelative.get() === "bottom" ? 10 : undefined }));
+  const knownSourceLabel = computed(() => `Source ${knownSource.get()}`);
+  const knownDirectionLabel = computed(() => `Inner ${knownDirection.get().replace("column", "col").replace("-reverse", " rev")}`);
+  const knownLeafStyle = computed<CardStyle>(() => ({ width: 40, height: 20, flexBasis: knownDirection.get() === "column" || knownDirection.get() === "column-reverse" ? 20 : 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248", position: knownRelative.get() === "off" ? "static" : "relative", top: knownRelative.get() === "top" ? 10 : undefined, bottom: knownRelative.get() === "bottom" ? 10 : undefined }));
   const aspectLabel = computed(() => aspectBox.get() ? "Aspect 2" : "Aspect off");
   const finalBoxStyle = computed<CardStyle>(() => ({
     width:40,height:finalBoxHeight.get(),minWidth:0,minHeight:0,flexGrow:0,flexShrink:0,
@@ -145,6 +149,21 @@ function createBaselineContent() {
   const DescribedFinalBox = defineLayoutComponent((props: Omit<CardProps, "label"> & { readonly label: string | Signal<string>; readonly style: PibblResponsiveStyle<CardStyle> | Signal<CardStyle> }) =>
     <FinalBoxCard key="final-root" id={props.id} label={props.label} font={props.font} first={props.first} style={props.style} />,
   );
+  const knownRootStyle = (direction: KnownDirection): FlexStyle => ({
+    width: 40, height: direction === "row" || direction === "row-reverse" ? 20 : 40, minWidth: 0, minHeight: 0,
+    flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: "nowrap", alignItems: "flex-start",
+  });
+  const renderKnownLeaf = () => <BaselineCard key="known-leaf" id="KA" label={knownNumber} font="12px monospace" first={knownFirst} style={knownLeafStyle} />;
+  const renderKnownDecoration = () => <Rectangle key="known-decoration" pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, width: 40, height: 20, fill: "#e7e5df" }} />;
+  const KnownDescribedLeaf = defineLayoutComponent((props: { readonly style: Signal<CardStyle> }) => <BaselineCard key="known-leaf" id="KA" label={knownNumber} font="12px monospace" first={knownFirst} style={props.style} />);
+  function renderKnownRoot() {
+    const direction = knownDirection.get(), source = knownSource.get(), style = knownRootStyle(direction);
+    if (source === "empty") return <Flex key="known" style={style} children={null} />;
+    if (source === "described") return <Flex key="known" style={style}>{renderKnownDecoration()}<KnownDescribedLeaf key="known-leaf" style={knownLeafStyle} /></Flex>;
+    if (source === "nested") return <Flex key="known" style={style}><Flex key="known-inner" style={style}>{renderKnownDecoration()}{renderKnownLeaf()}</Flex></Flex>;
+    return <Flex key="known" style={style}>{renderKnownDecoration()}{renderKnownLeaf()}</Flex>;
+  }
+  const KnownRoot = defineLayoutComponent(() => renderKnownRoot());
   function renderContent() {
     return <>
       <Rectangle style={{ width: 760, height: 640, fill: "#f3f0e8" }} />
@@ -197,24 +216,25 @@ function createBaselineContent() {
       <Rectangle onClick={() => finalBoxSelf.update(value => value === "auto" ? "flex-end" : value === "flex-end" ? "center" : value === "center" ? "flex-start" : value === "flex-start" ? "stretch" : "auto")} style={{left:180,top:310,width:150,height:18,fill:"#6e3e79",cursor:"pointer"}} />
       <Text pointerEvents="none" style={{left:188,top:313,font:"10px sans-serif",fill:"#ffffff"}}>{finalBoxSelfLabel}</Text>
       <Flex style={{ left: 460, top: 340, width: 100, height: 40, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
-        <Flex key="known" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}>
-          <Rectangle key="known-decoration" pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, width: 40, height: 20, fill: "#e7e5df" }} />
-          <BaselineCard key="known-leaf" id="KA" label={knownNumber} font="12px monospace" first={knownFirst} style={knownLeafStyle} />
-        </Flex>
+        <KnownRoot key="known" />
         <BaselineCard key="known-peer" id="KB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
       </Flex>
       <Rectangle onClick={() => knownFirst.update(value => value === 12 ? 22 : 12)} style={{ left: 576, top: 340, width: 84, height: 28, fill: "#426b61", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 582, top: 348, font: "10px sans-serif", fill: "#ffffff" }}>{knownLabel}</Text>
       <Rectangle onClick={() => knownRelative.update(value => value === "off" ? "top" : value === "top" ? "bottom" : "off")} style={{ left: 576, top: 372, width: 84, height: 24, fill: "#6e3e79", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 581, top: 379, font: "9px sans-serif", fill: "#ffffff" }}>{knownRelativeLabel}</Text>
-      <Text pointerEvents="none" style={{ left: 460, top: 408, font: "11px sans-serif", fill: "#475569" }}>Known leaf ignores its decorative overlay.</Text>
+      <Rectangle onClick={() => knownSource.update(value => value === "direct" ? "described" : value === "described" ? "nested" : value === "nested" ? "empty" : "direct")} style={{ left: 576, top: 404, width: 84, height: 22, fill: "#a63758", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 581, top: 410, font: "9px sans-serif", fill: "#ffffff" }}>{knownSourceLabel}</Text>
+      <Rectangle onClick={() => knownDirection.update(value => value === "row" ? "row-reverse" : value === "row-reverse" ? "column" : value === "column" ? "column-reverse" : "row")} style={{ left: 576, top: 432, width: 84, height: 22, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 581, top: 438, font: "9px sans-serif", fill: "#ffffff" }}>{knownDirectionLabel}</Text>
+      <Text pointerEvents="none" style={{ left: 460, top: 410, font: "10px sans-serif", fill: "#475569" }}>First in-flow source</Text>
       <Text pointerEvents="none" style={{ left: 460, top: 185, font: "12px sans-serif", fill: "#475569" }}>Cross auto takes over alignment.</Text>
       <Flex style={{ left: 460, top: 210, width: 160, height: 80, flexDirection, flexWrap: "nowrap", layoutDirection, alignItems: "first-baseline" }}>
         <BaselineCard key="MA" id="MA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: mainMargin, marginTop: crossTop, marginBottom: crossBottom, fill: "#426b61" }} />
         <BaselineCard key="MB" id="MB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
       </Flex>
       <Text pointerEvents="none" style={{ left: 28, top: 330, font: "14px sans-serif", fill: "#475569" }}>Click the cards at their new positions. Tab follows A → B → C.</Text>
-      <Text pointerEvents="none" style={{ left: 460, top: 440, font: "12px sans-serif", fill: "#475569" }}>Wrapped baselines: spacing and gaps.</Text>
+      <Text pointerEvents="none" style={{ left: 460, top: 440, font: "12px sans-serif", fill: "#475569" }}>Wrapped baselines</Text>
       <Flex style={{ left: 460, top: 460, width: wrappedWidth, height: 120, flexDirection, layoutDirection, flexWrap: wrappedWrap, alignItems: "first-baseline", alignContent: wrappedAlign, columnGap: wrappedMainGap, rowGap: wrappedRowGap }}>
         <BaselineCard key="WA" id="WA" label="12" font="12px monospace" first={12} style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248" }} />
         <BaselineCard key="WB" id="WB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
@@ -252,7 +272,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), describedRoot: true, knownFirst: knownFirst.get(), knownRelative: knownRelative.get(), selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), describedRoot: true, knownFirst: knownFirst.get(), knownRelative: knownRelative.get(), knownSource: knownSource.get(), knownDirection: knownDirection.get(), selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {

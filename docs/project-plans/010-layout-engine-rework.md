@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice214: relative selected structural baseline children.
+Latest delivery is slice215: finite nowrap structural baseline closure.
+Slice214 is `2bcc09f9`.
 Slice213 is `b823b569`; consolidation71 is `7a4aa4bf`.
 Slice212 is `beec926f`; slice211 is `7fdb88f8`; consolidation70 is `4439928d`.
 The older numbered checkpoint notes below are historical; the single NEXT heading
@@ -7912,7 +7913,7 @@ consumer explicitly gates relativeKnownFlexBaseline and prior known-root receipt
 `70a1f99db82e9f2cc53290c93de33aff52b88518a42bfb88a5685fca4920a43f`.
 ABI16and native artifact unchanged. Capability counts and all7gates unchanged.
 
-## [NEXT] Slice215: finite nowrap structural baseline closure
+## [DONE] Slice215: finite nowrap structural baseline closure
 
 Close the existing first-source structural class coherently through current
 prepared native plans: physical-y semantics across inner nowrap directions,
@@ -7922,6 +7923,53 @@ slot claims, relative paint separation and four-counter cleanup. Review concrete
 policy/ownership blockers before implementation; do not turn incidental properties
 into an unbounded slice queue. Wrapped first-line membership, Flow/Grid selection
 and last-baseline remain distinct named closure classes. Consolidate214–216after216.
+
+Delivered one coherent source-first prepared-Flex class: all four inner main
+directions, explicit inner RTL, empty content-bottom fallback, described outer
+Flex and selected primitive roots, and recursive known Flex. Absolute sources
+are skipped; physical layoutY/top inset lifts once. A column-reverse source with
+localy20/first12 contributes32, so Aglobal20/peer2 rather than forcing the peer's
+old30baseline. Outer-column baseline alignment remains a separate unresolved
+interpretation. Plan peeks now check the selected owner's direction; normal
+claims retain their original direction/allocation checks. Source-type occurrence
+identity covers described roots. No extra solver, native ABI or retained aggregate.
+
+Initial public RED:3fail. Final9files47pass; ordinary Node24.15core Flex/JSX/
+Absolute/measurement4files88pass; types/lint/catalog/Studio/docs109pass. Source
+preview exposed a transparent placement-consumed marker lost at the actual root;
+additional public RED1fail/2pass proves it. Placed roots now inherit that marker,
+with a relative top0→10 regression proving one translation. Scoped review clean.
+Final full source5192/built5193baseline replays pass errors[],cleanup000/all four
+ownership assertions, built470inputs. Inspected final reviewed screenshot; the
+inner direction control was moved away from existing Gap. Proportional source/
+built controls replays separately cycle all four directions and direct/described/
+nested/empty sources, preserve Gap behavior, and return all four counters0.
+
+Installed knownFlexTreeBaseline explicitly covers described row-reverse, nested
+column, direct column-reverse, empty fallback, live provider input/targets and
+cleanup;104marginfixtures/246inputs/strictBundler/NodeNext/nestedbrowser pass.
+Final tarballSHA
+`799a6ee74a141250400c80b45664688190fe040e5ae19d4800d4d74b2a4816f6`.
+Earlier esbuild failure was fixture syntax and earlier preview failures were not
+acceptance receipts. ABI16/native artifact unchanged; capability counts/all7gates
+unchanged. Static outer structural owners remain concrete: absolute descendants
+need the final owner origin not available before baseline grouping; do not
+silently preflight them at an assumed origin.
+
+## [NEXT] Slice216: native first-line structural baseline selection
+
+Extend the same source-first prepared-tree contract to wrapped Flex through an
+explicit current native first-source-line proof. Read native line membership,
+never infer lines from final geometry. Preserve valid cached same-count wrap
+allocations, reject stale/nonwrap/failed/disposed line evidence, and retain
+physical layoutY across wrap reversal and inner main/writing directions. Empty
+wrap uses content bottom. Consolidate214–216before further production.
+
+Remaining finite baseline closure classes stay explicit: static outer structural
+owner origin/preparation; wrapped first-line membership (this slice); Flow/Grid
+source policy; outer-column baseline fallback/interpretation; and last-baseline
+alignment. None is closed merely by an unsupported diagnostic. Final whole-codebase
+review and all7release gates remain at program exit.
 
 ## Scope and execution
 

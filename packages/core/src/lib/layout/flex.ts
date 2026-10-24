@@ -183,8 +183,8 @@ interface FlexItem {
   baselineRoot?: PibblElement<any>;
   /** Existing known-Flex slot prepared before this outer baseline pass. */
   structuralBaselineSlot?: PreparedLayoutSlot;
-  /** Unkeyed direct-Flex occurrence, shared with known descendant preparation. */
-  knownFlexOccurrence: number;
+  /** Unkeyed source-type occurrence, shared with known descendant preparation. */
+  layoutOccurrence: number;
   /** Column natural cross size is measured only after native main allocation. */
   deferredColumnAutoCross: boolean;
   ordinaryColumnAutoCross: boolean;
@@ -455,7 +455,7 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
       const staged = getElementMetadata(placement.element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
       // A baseline pass may have already staged this exact settled child. Retain
       // static containing-box metadata above, but never stage the slot twice.
-      if (staged && peekPreparedLayoutPlan(staged, content)) continue;
+      if (staged && peekPreparedLayoutPlan(staged, content, (prepared.style as FlexStyle).layoutDirection ?? style.layoutDirection)) continue;
       const nested = preflightKnownLayout(preparationChild, prepared.style, content, receiver, occurrence, parentSlot, isRowDirection(style.flexDirection) ? 'row' : 'column');
       attachPreparedLayoutSlot(placement.element, nested);
     }
@@ -1131,7 +1131,6 @@ function resolveFlexPlacements(
   let absoluteMeasurementTokens: Set<object> | undefined;
 
   const occurrences = new Map<object, number>();
-  let knownFlexOccurrence = 0;
   for (let sourceIndex = 0; sourceIndex < children.length; sourceIndex++) {
     const child = children[sourceIndex];
     if (region) recordWasmAllocationItem();
@@ -1686,7 +1685,7 @@ function resolveFlexPlacements(
       deferredColumnAutoCross,
       ordinaryColumnAutoCross: !row && ordinaryCrossAuto && !deferredColumnAutoCross && !naturalColumnWrappedTextCross,
       sourceIndex,
-      knownFlexOccurrence: child.type === Flex && child.key === undefined ? knownFlexOccurrence++ : 0,
+      layoutOccurrence: occurrence,
     });
   }
 
@@ -2475,55 +2474,75 @@ function prepareKnownFlexFirstBaseline(
   measurement: FlexMeasurementInput,
   parentSlot?: PreparedLayoutSlot,
 ): PreparedKnownFlexBaseline | undefined {
-  if (item.child.type !== Flex) return;
+  if ((item.baselineRoot ?? item.child).type !== Flex) return;
   const style = item.normalized as Readonly<FlexStyle>;
-  if ((style.flexDirection ?? 'row') !== 'row' || (style.flexWrap ?? 'nowrap') !== 'nowrap' || style.position === 'static') {
+  if ((style.flexWrap ?? 'nowrap') !== 'nowrap' || style.position === 'static') {
     throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
-      'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline currently requires a direct row nowrap Flex child');
+      'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires a settled non-static nowrap Flex root');
   }
   const content = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
-  const slot = preflightKnownLayout(item.child, item.normalized, content, item.receiverToken, item.knownFlexOccurrence, parentSlot, 'row');
+  const slot = preflightKnownLayout(item.child, item.normalized, content, item.receiverToken, item.layoutOccurrence, parentSlot, 'row');
   if (!slot) throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
     'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the direct Flex child did not prepare a native allocation');
-  const plan = peekPreparedFlexPlan(slot, content);
+  const direction = style.layoutDirection ?? getLayoutDirection();
+  const plan = peekPreparedFlexPlan(slot, content, direction);
   if (!plan) throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
     'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the direct Flex child has no current settled allocation');
+  return { slot, ...readPreparedFlexFirstBaseline(plan, measurement, direction) };
+}
+
+/** Reads only this transaction's settled native placements and receiver roots. */
+function readPreparedFlexFirstBaseline(
+  plan: PreparedFlexLayoutPlan,
+  measurement: FlexMeasurementInput,
+  direction: 'ltr' | 'rtl',
+): { readonly first: number; readonly last: number } {
+  const content = plan.content;
   for (let index = 0; index < plan.children.length; index++) {
     const source = plan.children[index];
     const placement = plan.placements[index];
     const prepared = peekPreNormalizedStyle(placement.element);
     if (!prepared) throw new Error('Known Flex baseline selection requires settled child inputs.');
-    const selectedStyle = prepared.style as Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>;
+    const selectedStyle = prepared.style as Readonly<FlexStyle>;
     if (selectedStyle.position === 'absolute') continue;
-    if (isKnownLayoutType(source.type) || isLayoutComponent(source.type) || !getPrimitiveDefinition(placement.element.type)) {
-      throw childDiagnostic(source, 'alignItems', 'first-baseline', content,
-        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the first in-flow structural child must be a direct primitive');
-    }
+    const receiver = getPrimitiveReceiverToken(placement.element);
+    const root = isLayoutComponent(source.type) ? prepareLayoutComponent(source, { receiverToken: receiver }) : placement.element;
     const allocation = { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight };
     const insets = normalizeBoxInsets(selectedStyle, childContext(source, content));
-    const definition = getPrimitiveDefinition(placement.element.type)!;
     let first = allocation.height, last = allocation.height;
-    if (definition.measureBaselines) {
-      const measurementChild = clonePibblElement(placement.element);
-      const receiver = getPrimitiveReceiverToken(placement.element);
-      setPreNormalizedStyle(measurementChild, selectedStyle, placement.element, receiver, prepared.query);
-      if (prepared.query) setPreparedBaselineOwner(measurementChild, content);
-      // Structural baseline reads belong to the selected current receiver. This
-      // initial profile keeps no retained provider result or transient token.
-      const result = measureBaselineElement(measurementChild, allocation, measurement.service);
-      if (result.status === 'unsupported') throw childDiagnostic(source, 'measureBaselines', 'unsupported', content,
-        `first-baseline alignment requires a baseline result: ${result.reason}`);
+    if (root.type === Flex) {
+      if ((selectedStyle.flexWrap ?? 'nowrap') !== 'nowrap') throw childDiagnostic(source, 'flexWrap', selectedStyle.flexWrap, content,
+        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected structural Flex roots require nowrap');
+      const slot = getElementMetadata(placement.element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
+      const childDirection = selectedStyle.layoutDirection ?? direction;
+      const nested = slot && peekPreparedFlexPlan(slot, allocation, childDirection);
+      if (!nested) throw childDiagnostic(source, 'alignItems', 'first-baseline', content,
+        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected Flex root requires its current prepared allocation');
+      const result = readPreparedFlexFirstBaseline(nested, measurement, childDirection);
       first = result.first;
       last = result.last;
+    } else {
+      const definition = getPrimitiveDefinition(root.type);
+      if (!definition || isKnownLayoutType(root.type)) throw childDiagnostic(source, 'alignItems', 'first-baseline', content,
+        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected structural source must resolve to a primitive or nowrap Flex root');
+      if (definition.measureBaselines) {
+        const measurementChild = clonePibblElement(root);
+        setPreNormalizedStyle(measurementChild, selectedStyle, root, getPrimitiveReceiverToken(root) ?? receiver, prepared.query);
+        if (prepared.query) setPreparedBaselineOwner(measurementChild, content);
+        // Read under the actual current root receiver; retain no aggregate result.
+        const result = measureBaselineElement(measurementChild, allocation, measurement.service);
+        if (result.status === 'unsupported') throw childDiagnostic(source, 'measureBaselines', 'unsupported', content,
+          `first-baseline alignment requires a baseline result: ${result.reason}`);
+        first = result.first;
+        last = result.last;
+      }
     }
     return {
-      slot,
       first: placement.layoutY + insets.top + first,
       last: placement.layoutY + insets.top + last,
     };
   }
-  throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
-    'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires one in-flow direct primitive child');
+  return { first: content.height, last: content.height };
 }
 
 function assertSupportedFirstBaselineFlex(
@@ -2540,11 +2559,11 @@ function assertSupportedFirstBaselineFlex(
     const baselineRoot = isLayoutComponent(item.child.type) ?
       prepareLayoutComponent(item.child, { receiverToken: item.receiverToken }) : item.child;
     if (baselineRoot !== item.child) item.baselineRoot = baselineRoot;
-    if (item.child.type === Flex) {
+    if (baselineRoot.type === Flex) {
       const childStyle = style as Readonly<FlexStyle>;
-      if ((childStyle.flexDirection ?? 'row') !== 'row' || (childStyle.flexWrap ?? 'nowrap') !== 'nowrap' || childStyle.position === 'static' || item.crossAuto || !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
+      if ((childStyle.flexWrap ?? 'nowrap') !== 'nowrap' || childStyle.position === 'static' || item.crossAuto || !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
         throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
-          'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline currently requires a direct row nowrap Flex child');
+          'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires a settled non-static nowrap Flex root');
       }
       continue;
     }
