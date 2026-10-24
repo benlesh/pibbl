@@ -2058,7 +2058,7 @@ WASM cross-placement path computes the common ascent starting at zero and each
 offset as common ascent minus that leaf's first baseline. This matches pinned
 Yoga3.2.1 numeric-provider probes, including signed/out-of-box baselines. Last
 baseline placement, custom-font Text metrics, nested containers, broader outer wrapping,
-automatic cross size and decorated/numeric-margin/position/query/aspect
+automatic cross size and decorated/numeric-cross-margin/position/query/aspect
 leaves remain outside this first admission. Main-axis automatic margins are
 resolved by the existing native main allocator before baseline alignment; they
 do not change membership in the baseline-sharing group. Cross-axis automatic
@@ -2085,7 +2085,7 @@ remain A then B.
 The wrapped profile admits finite LTR/RTL `row` or `row-reverse` + `wrap`/`wrap-reverse`, all existing `alignContent` policies,
 resolved finite row/column gaps, and direct fixed numeric primitive providers or content-bottom
 fallback, plus the existing fixed generic Text profile. Main grow/shrink and
-automatic main margins compose through native final main allocation before baseline
+resolved numeric and automatic main margins compose through native final main allocation before baseline
 measurement. Automatic cross margins and the other leaf exclusions remain outside
 this wrapped profile. Native line membership is reused.
 Each line has its own maximum ascent and descent, so the next line begins after

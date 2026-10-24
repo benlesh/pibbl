@@ -32,7 +32,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
 }
 
 interface BaselineStyle extends SystemStyle {
-  width?: number; height?: number; fill?: string;
+  width?: number; height?: number; fill?: string; marginLeft?: number;
   minWidth?: number; minHeight?: number;
   flexBasis?: number; flexGrow?: number; flexShrink?: number;
 }
@@ -357,5 +357,74 @@ it.runIf(experimentalLayout)(
     expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
       baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
     ]);
+  },
+);
+
+it.runIf(experimentalLayout)(
+  'places a numeric main margin after wrapped first-baseline allocation without replacing its final-width baseline query',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const margin = signal(10);
+    const widths: number[] = [];
+    const boxes = new Map<string, LayoutBox>();
+    const stamps = new Map<string, number>();
+    const hits: string[] = [];
+    const errors: unknown[] = [];
+    let serial = 0;
+    const Leaf = definePrimitive<{ readonly name: string; readonly first: number }, BaselineStyle, BaselineStyle, BaselineStyle & { readonly width: number; readonly height: number }>((props) => {
+      const box = useLayoutBox();
+      const matrix = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      stamps.set(props.name, useConst(() => ++serial));
+      return <Rectangle onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: '#8a3248', cursor: 'pointer' }} />;
+    }, {
+      resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: ({ props, allocation }) => {
+        if (props.name === 'A') widths.push(allocation.width);
+        return { status: 'measured' as const, first: props.first, last: props.first };
+      },
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = 120; canvas.height = 80; document.body.append(canvas);
+    const receive = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+    window.addEventListener('error', receive);
+    try {
+      const controller = pibbl(canvas, <Flex style={{ width: 120, height: 80, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'first-baseline', alignContent: 'flex-start' }}>
+        <Leaf key="A" name="A" first={12} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginLeft: margin }} />
+        <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+      </Flex>);
+      controllers.push(controller);
+      await nextFrame();
+
+      expect(errors).toEqual([]);
+      expect(boxes.get('A')).toEqual({ x: 10, y: 18, width: 40, height: 20 });
+      expect(boxes.get('B')).toEqual({ x: 50, y: 0, width: 40, height: 40 });
+      expect(widths).toContain(40);
+      const initialStamps = Object.fromEntries(stamps);
+      const mounted = snapshotWasmLayoutDiagnostics();
+      click(canvas, 14, 22);
+      expect(hits).toEqual(['A']);
+
+      margin.set(20);
+      await nextFrame();
+      expect(errors).toEqual([]);
+      expect(boxes.get('A')).toEqual({ x: 20, y: 18, width: 40, height: 20 });
+      expect(boxes.get('B')).toEqual({ x: 60, y: 0, width: 40, height: 40 });
+      expect(Object.fromEntries(stamps)).toEqual(initialStamps);
+      expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+      const beforeOldTarget = hits.length;
+      click(canvas, 14, 22);
+      expect(hits).toHaveLength(beforeOldTarget);
+      click(canvas, 24, 22);
+      expect(hits).toEqual(['A', 'A']);
+
+      controller.dispose();
+      const disposed = snapshotWasmLayoutDiagnostics();
+      expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+        baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+      ]);
+    } finally {
+      window.removeEventListener('error', receive);
+    }
   },
 );

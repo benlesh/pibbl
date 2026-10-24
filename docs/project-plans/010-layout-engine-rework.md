@@ -7410,12 +7410,30 @@ Source5192/refreshed built5193 pass errors[] and cleanup000/470built inputs afte
 freezing catalog changes; earlier runs were invalidated by catalog hot reload.
 Catalog175/12/33, Studio, docs109mutation probes and scoped review pass.
 
-## [NEXT] Slice203: resolved numeric main margins and baseline placement
+## [DONE] Slice203: resolved numeric main margins and baseline placement
 
 Define a public failing control for resolved numeric horizontal main margins,
 then remove only that mechanical fence if native final-width/main placement and
 physical baseline evidence agree. Retain cross-margin exclusions. Consolidate
 202–204before further production.
+
+Public RED reproduces the numeric-margin baseline guard. Removing only resolved
+main-margin exclusions reuses native membership/final sizing/main placement; numeric
+cross margins remain constrained. Public A40×20/b12 with left10and B40×40/b30in120
+starts at x10/50,y18/0; left20updates x20/60. Baseline provider receives width40;
+old/new targets, keyed identity and four-counter teardown pass. Focused3files
+16pass/1skip, types/lint and docs109mutations pass. A new lower Main margin control
+exposes the same fixed wrapped pair through the public lesson and browser driver.
+Source5192/refreshed built5193 pass errors[]/cleanup000/470built inputs; the new
+lower-row screenshot was inspected. Catalog/Studio175/12/33 and scoped review pass.
+
+## [NEXT] Slice204: remaining baseline placement profile
+
+Close numeric cross margins with reference and public/native RED: shared physical
+baseline ascent includes before margin, descent includes after margin, with content
+height retained for provider queries. Apply one generic nowrap/wrapped placement
+algorithm and preserve automatic cross-margin policy separately. Consolidate
+202–204before further production; baseline remains experimental.
 
 ## Scope and execution
 

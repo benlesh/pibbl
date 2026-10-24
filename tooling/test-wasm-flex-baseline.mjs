@@ -296,6 +296,15 @@ try {
   assert.ok(Math.abs(restoredWrap.boxes.WC.y-520)<1e-9&&Math.abs(restoredWrap.boxes.WD.y-508)<1e-9);
   assert.deepEqual(Object.fromEntries(['WA','WB','WC','WD'].map(id=>[id,restoredWrap.stamps[id]])),reverseStamps);
   await click(536,536);const restoredHit=await state();assert.equal(restoredHit.hits.length,wrapReverseHits+1);assert.equal(restoredHit.hits.at(-1),'WD');
+  const numericBefore=await state();
+  assert.ok(Math.abs(numericBefore.boxes.NA.x-38)<1e-9&&Math.abs(numericBefore.boxes.NA.y-548)<1e-9);
+  assert.ok(Math.abs(numericBefore.boxes.NB.x-78)<1e-9&&Math.abs(numericBefore.boxes.NB.y-530)<1e-9);
+  await click(42,552);const numericHit=await state();assert.equal(numericHit.hits.at(-1),'NA');
+  await click(240,556);const numericAfter=await state();
+  assert.ok(Math.abs(numericAfter.boxes.NA.x-48)<1e-9&&Math.abs(numericAfter.boxes.NB.x-88)<1e-9);
+  assert.equal(numericAfter.stamps.NA,numericBefore.stamps.NA);assert.equal(numericAfter.stamps.NB,numericBefore.stamps.NB);
+  const numericHits=numericAfter.hits.length;await click(42,552);assert.equal((await state()).hits.length,numericHits);
+  await click(52,552);assert.equal((await state()).hits.at(-1),'NA');
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
