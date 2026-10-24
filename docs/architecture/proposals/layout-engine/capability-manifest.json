@@ -2037,7 +2037,7 @@
       "id": "flex.automatic-minimum",
       "target": "parity",
       "group": "flex-core",
-      "current": "experimental bounded wrapped Text content minima; direct empty Rectangle zero content minima with numeric/percentage dimensions; numeric empty Rectangle contributions; direct paired custom intrinsic row minima, exact-width finite cross measurement and bounded finite column natural-height minima",
+      "current": "experimental bounded wrapped Text content minima; direct empty Rectangle zero content minima with numeric/percentage dimensions; numeric empty Rectangle contributions; direct paired custom intrinsic row minima, exact-width finite cross measurement and bounded finite column natural-height minima; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows",
       "status": "experimental",
       "unresolvedPolicy": "Bounded Text and direct paired custom row/finite-column providers are implemented; general intrinsic graphs, other fitting/overflow modes and Yoga conversion differences remain unresolved.",
       "evidenceRefs": [
@@ -2045,7 +2045,8 @@
         "docs/design/layout-system-contract.md",
         "packages/core/test/layout-wasm-slice.test.tsx",
         "tooling/layout-yoga-rehearsal/reference.json",
-        "tooling/test-wasm-yoga-migration.mjs"
+        "tooling/test-wasm-yoga-migration.mjs",
+        "packages/core/test/layout-structural-intrinsic.test.tsx"
       ],
       "evidence": {
         "positive": [
@@ -2054,12 +2055,14 @@
           "empty Rectangle direct row/column shrink, explicit minimum and no-shrink precedence",
           "percentage Rectangle row/column shrink",
           "outer padding floor under zero content minimum",
-          "numeric Rectangle intrinsic Flex measurement"
+          "numeric Rectangle intrinsic Flex measurement",
+          "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components"
         ],
         "negative": ["current explicit-minimum diagnostic for other items"],
         "interaction": [
           "resized sibling hit geometry in public example",
-          "public Rectangle 50/50 paint and click boundary"
+          "public Rectangle 50/50 paint and click boundary",
+          "structural badge minimum60→70 moves the following target with stable keyed identity and unrelated-paint measurement reuse"
         ],
         "yogaCases": ["rectangle-shrink", "rectangle-percent-content-box"],
         "missing": [
@@ -2075,12 +2078,13 @@
       "id": "flex.nested-intrinsic-containers",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "known nowrap Flex columns, bounded finite-width numeric row-wrap auto height, Text, Flow wrap measurement and fixed-row Grid at settled finite width; pure structural descriptions",
+      "current": "known nowrap Flex columns, bounded finite-width numeric row-wrap auto height, Text, Flow wrap measurement and fixed-row Grid at settled finite width; pure structural descriptions; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows",
       "status": "experimental",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
         "tooling/test-wasm-nested-intrinsic.mjs",
-        "packages/core/test/layout-structural-card.test.tsx"
+        "packages/core/test/layout-structural-card.test.tsx",
+        "packages/core/test/layout-structural-intrinsic.test.tsx"
       ],
       "evidence": {
         "positive": [
@@ -2089,13 +2093,17 @@
           "nested finite pure Card column",
           "Flow automatic height uses final clamped width and moves following footer",
           "Grid fixed-row sums/gaps contribute automatic height and move following footer",
-          "known child percentage cross widths/bounds resolve once against explicit numeric column content width before intrinsic height"
+          "known child percentage cross widths/bounds resolve once against explicit numeric column content width before intrinsic height",
+          "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components"
         ],
         "negative": [
           "ordinary opaque providers, wrapped intrinsic shapes beyond direct numeric row leaves, indefinite Grid fraction/percentage rows and unresolved feedback remain unsupported",
           "percentage main sizing, percentage-dependent owners, conflicting cross bounds and malformed cross percentages remain rejected during intrinsic measurement"
         ],
-        "interaction": ["text width, keyed restore, moved footer target"],
+        "interaction": [
+          "text width, keyed restore, moved footer target",
+          "structural badge minimum60→70 moves the following target with stable keyed identity and unrelated-paint measurement reuse"
+        ],
         "yogaCases": [],
         "missing": [
           "complete intrinsic Flex/Grid/Flow constraint graph",
@@ -2888,7 +2896,7 @@
       "id": "measurement.custom-leaf",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom providers with one exact declared and one unbounded natural axis across finite nowrap main directions; native column-width query differences labeled separately from deterministic geometry; bounded built-in wrapped height and unwrapped natural ink dimensions, including both-auto, use the same owned query with real Canvas metrics",
+      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom providers with one exact declared and one unbounded natural axis across finite nowrap main directions; native column-width query differences labeled separately from deterministic geometry; bounded built-in wrapped height and unwrapped natural ink dimensions, including both-auto, use the same owned query with real Canvas metrics; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows",
       "status": "partial",
       "unresolvedPolicy": "Paired intrinsic and first/last baseline callbacks are implemented for bounded direct-leaf consumers; broader constraint modes, nested intrinsic consumers and feedback remain open.",
       "evidenceRefs": [
@@ -2898,7 +2906,8 @@
         "tooling/layout-yoga-rehearsal/reference.json",
         "tooling/test-wasm-yoga-migration.mjs",
         "tooling/packed-layout-consumer.mjs",
-        "docs/design/layout-system-contract.md"
+        "docs/design/layout-system-contract.md",
+        "packages/core/test/layout-structural-intrinsic.test.tsx"
       ],
       "evidence": {
         "positive": [
@@ -2909,7 +2918,8 @@
           "finite-column measurement-only signal dependency moves following targets; unrelated paint reuses constrained snapshots",
           "slice128: pure absolute width query at exact height, measurement-owned signals, conservative layout revision and stable sibling-paint reuse",
           "slices129/134: symmetric exact-width natural height and both absolute provider profiles across directions, query-before-bounds, owned signals, removal/restore and explicit native column-width query differences",
-          "slices137/138: built-in Text width-driven wrapped height and unwrapped natural ink width, conservative interactive callbacks versus stable plain cache reuse, font/content/dimension changes, bounds/precedence and exact teardown"
+          "slices137/138: built-in Text width-driven wrapped height and unwrapped natural ink width, conservative interactive callbacks versus stable plain cache reuse, font/content/dimension changes, bounds/precedence and exact teardown",
+          "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components"
         ],
         "negative": [
           "opaque component measurement unsupported",
@@ -2917,7 +2927,8 @@
           "mutable nested inputs conservatively remeasure"
         ],
         "interaction": [
-          "reactive intrinsic minimum moves the public target; unrelated sibling paint reuses snapshot; exact disposal"
+          "reactive intrinsic minimum moves the public target; unrelated sibling paint reuses snapshot; exact disposal",
+          "structural badge minimum60→70 moves the following target with stable keyed identity and unrelated-paint measurement reuse"
         ],
         "yogaCases": [
           "custom-column-measure",

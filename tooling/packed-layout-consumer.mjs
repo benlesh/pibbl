@@ -101,7 +101,7 @@ try {
     ),
   );
   await writeFile(join(consumer, "margin-types.ts"), `
-import { createElement, Rectangle, Flex, definePrimitive, type FlexItemStyle, type FlexMargin, type BoxStyle, type IntrinsicAxisConstraints, type IntrinsicConstraints, type IntrinsicMeasureInput, type IntrinsicSizesResult, type BaselineMeasureInput, type BaselinesResult, type CanvasMeasurementService, type SystemStyle } from '@pibbl/core';
+import { createElement, Rectangle, Flex, definePrimitive, defineLayoutComponent, type FlexItemStyle, type FlexMargin, type BoxStyle, type IntrinsicAxisConstraints, type IntrinsicConstraints, type IntrinsicMeasureInput, type IntrinsicSizesResult, type BaselineMeasureInput, type BaselinesResult, type CanvasMeasurementService, type SystemStyle } from '@pibbl/core';
 const percentageAbsolute: BoxStyle & FlexItemStyle = { position: 'absolute', left: '10%', right: '15%', top: '10%', bottom: '20%', width: 'auto', height: 'auto' };
 void percentageAbsolute;
 const logicalAbsolute: BoxStyle & FlexItemStyle = { position: 'absolute', insetStart: '10%', insetEnd: 0, top: 8, width: 50, height: 20 };
@@ -152,6 +152,15 @@ export const baselineLeaf = definePrimitive<{ name: string }, BaselineStyle, Bas
 });
 export const baselineFlex = createElement(Flex, { style: { width: 120, height: 60, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'first-baseline' }, children: createElement(baselineLeaf, { name: 'baseline', style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 } }) });
 
+type StructuralProviderStyle = SystemStyle & { width?: number; height?: number; minWidth?: number; minHeight?: number; flexBasis?: number; flexGrow?: number; flexShrink?: number };
+const structuralProvider = definePrimitive<{ minimum: number }, StructuralProviderStyle, StructuralProviderStyle, StructuralProviderStyle & { width: number; height: number }>(() => undefined, {
+  resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+  measureIntrinsic: ({ props }) => ({ status: 'measured' as const, minContent: { width: props.minimum, height: 20 }, maxContent: { width: 100, height: 20 } }),
+  measure: ({ constraints }) => ({ status: 'measured' as const, size: { width: constraints.maxWidth, height: 20 } }),
+});
+export const structuralProviderWrapper = defineLayoutComponent((props: { minimum: number; style: StructuralProviderStyle }) => createElement(structuralProvider, { minimum: props.minimum, style: props.style }));
+
+
 // @ts-expect-error Box sizing is a closed policy, not arbitrary CSS.
 const invalidBox: BoxStyle = { boxSizing: 'padding-box' };
 // @ts-expect-error Percentage layout borders remain unsupported.
@@ -199,7 +208,7 @@ export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40
   await writeFile(
     join(consumer, "entry.ts"),
     `import { WasmFlexNestedIntrinsicExample } from './example';
-import { createElement, Absolute, Flex, Grid, Group, Layer, Rectangle, Text, FocusManagement, definePrimitive, measureElement, signal, computed, useConst, useCanvasContext, useLayoutBox, type SystemStyle, type FlexStyle, type FlexItemStyle, type BoxStyle, type GridItemStyle, type RectStyle, type PibblResponsiveStyle, type BaselineMeasureInput, type BaselinesResult, type CanvasMeasurementService } from '@pibbl/core';
+import { createElement, Absolute, Flex, Grid, Group, Layer, Rectangle, Text, FocusManagement, definePrimitive, defineLayoutComponent, measureElement, signal, computed, useConst, useCanvasContext, useLayoutBox, type SystemStyle, type FlexStyle, type FlexItemStyle, type BoxStyle, type GridItemStyle, type RectStyle, type PibblResponsiveStyle, type BaselineMeasureInput, type BaselinesResult, type CanvasMeasurementService } from '@pibbl/core';
 import { opacity } from '@pibbl/core/filters';
 import { pibblSync } from '@pibbl/core/sync';
 const receipt = globalThis.__PIBBL_PACKED_PROOF__;
@@ -840,6 +849,232 @@ const wrappedBaselineValue=(draw:{text:string;y:number;font:string})=>draw.y+wra
 const wrappedBaselineSnapshot=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__(),wrappedBaselineController=pibblSync(wrappedBaselineCanvas,wrappedBaselineRoot);
 try{const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));const click=(x:number,y:number)=>{const rect=wrappedBaselineCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])wrappedBaselineCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+y,bubbles:true,button:0}));};await frame();const initialWrapped=wrappedBaselineDraws.filter(draw=>draw.font==='10px monospace'),initialSibling=wrappedBaselineDraws.find(draw=>draw.font==='20px sans-serif');if(initialWrapped.length!==2||!initialSibling||Math.abs(wrappedBaselineValue(initialWrapped[0])-wrappedBaselineValue(initialSibling))>1e-6)throw Error('installed wrapped Text first-baseline initial '+JSON.stringify({initialWrapped,initialSibling}));const initialLast=initialWrapped.at(-1)!,initialLastMetrics=wrappedBaselineOwner.measureTextAtBaseline!(initialLast.text,{font:initialLast.font,textBaseline:'top'});click(initialLast.x-initialLastMetrics.actualBoundingBoxLeft+1,initialLast.y-initialLastMetrics.actualBoundingBoxAscent+1);if(wrappedBaselineHits!==1||!wrappedBaselineTarget)throw Error('installed wrapped Text last-line target '+JSON.stringify({initialLast,hits:wrappedBaselineHits,target:wrappedBaselineTarget}));const mounted=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();wrappedBaselineDraws.length=0;wrappedBaselineWidth.set(28);wrappedBaselineLineHeight.set(14);wrappedBaselineWords.set('Ag Ag Ag');await frame();const updatedWrapped=wrappedBaselineDraws.filter(draw=>draw.font==='10px monospace'),updatedSibling=wrappedBaselineDraws.find(draw=>draw.font==='20px sans-serif');if(updatedWrapped.length!==3||!updatedSibling||Math.abs(wrappedBaselineValue(updatedWrapped[0])-wrappedBaselineValue(updatedSibling))>1e-6||updatedWrapped.at(-1)!.y===initialLast.y)throw Error('installed wrapped Text update '+JSON.stringify({updatedWrapped,updatedSibling,initialLast}));const updatedLast=updatedWrapped.at(-1)!,updatedLastMetrics=wrappedBaselineOwner.measureTextAtBaseline!(updatedLast.text,{font:updatedLast.font,textBaseline:'top'});click(updatedLast.x-updatedLastMetrics.actualBoundingBoxLeft+1,updatedLast.y-updatedLastMetrics.actualBoundingBoxAscent+1);if(wrappedBaselineHits!==2)throw Error('installed wrapped Text moved last-line target '+JSON.stringify({updatedLast,hits:wrappedBaselineHits,target:wrappedBaselineTarget}));const afterUpdate=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();if(afterUpdate.nodeCreates!==mounted.nodeCreates||afterUpdate.measuredLeaves<=mounted.measuredLeaves)throw Error('installed wrapped Text update ownership');await frame();const beforePaint=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();wrappedBaselineInk.set('#6e9d35');await frame();const painted=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();if(painted.solves!==beforePaint.solves||painted.measuredLeaves!==beforePaint.measuredLeaves||painted.nodeCreates!==beforePaint.nodeCreates)throw Error('installed wrapped Text paint reuse');receipt.wrappedTextFirstBaseline=true;}finally{wrappedBaselineContext.fillText=wrappedBaselineDraw;wrappedBaselineController.dispose();wrappedBaselineCanvas.remove();const disposed=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();if(disposed.activeNodes!==wrappedBaselineSnapshot.activeNodes||disposed.activeArenas!==wrappedBaselineSnapshot.activeArenas||disposed.cachedMeasurements!==wrappedBaselineSnapshot.cachedMeasurements||disposed.activeWasmInstances!==wrappedBaselineSnapshot.activeWasmInstances)throw Error('installed wrapped Text first-baseline cleanup');}
 
+
+const structuralProviderCanvas = document.createElement('canvas');
+structuralProviderCanvas.width = 120;
+structuralProviderCanvas.height = 60;
+structuralProviderCanvas.style.cssText = 'width:120px;height:60px';
+document.body.append(structuralProviderCanvas);
+type InstalledStructuralProviderStyle = SystemStyle & {
+  width?: number;
+  height?: number | 'auto';
+  minWidth?: number;
+  minHeight?: number;
+  flexBasis?: number;
+  flexGrow?: number;
+  flexShrink?: number;
+  fill?: string;
+};
+const structuralProviderMinimum = signal(60),
+  structuralProviderInk = signal('#426b61'),
+  structuralProviderBoxes = new Map<
+    string,
+    { x: number; y: number; width: number; height: number; stamp: number }
+  >(),
+  structuralProviderHits: string[] = [];
+let structuralProviderSerial = 0,
+  structuralProviderIntrinsicCalls = 0,
+  structuralProviderMeasureCalls = 0;
+const InstalledStructuralProvider = definePrimitive<
+  { minimum: typeof structuralProviderMinimum },
+  InstalledStructuralProviderStyle,
+  InstalledStructuralProviderStyle,
+  SystemStyle & { width: number; height: number }
+>(
+  (_props, _style) => {
+    const box = useLayoutBox(),
+      matrix = useCanvasContext().getTransform(),
+      stamp = useConst(() => ++structuralProviderSerial);
+    structuralProviderBoxes.set('provider', {
+      x: matrix.e,
+      y: matrix.f,
+      width: box.width,
+      height: box.height,
+      stamp,
+    });
+    return createElement(Rectangle, {
+      pointerEvents: 'none',
+      style: { width: box.width, height: box.height, fill: '#19375b' },
+    });
+  },
+  {
+    preserveSignalProps: ['minimum'],
+    resolveStyle: (_style, context) => ({
+      width: context.allocation.width,
+      height: context.allocation.height,
+    }),
+    measureIntrinsic: ({ props }) => {
+      structuralProviderIntrinsicCalls++;
+      return {
+        status: 'measured',
+        minContent: { width: props.minimum.get(), height: 20 },
+        maxContent: { width: 100, height: 20 },
+      };
+    },
+    measure: ({ constraints }) => {
+      structuralProviderMeasureCalls++;
+      return {
+        status: 'measured',
+        size: { width: constraints.maxWidth, height: 20 },
+      };
+    },
+  },
+);
+const InstalledStructuralProviderWrapper = defineLayoutComponent(
+  (props: {
+    minimum: typeof structuralProviderMinimum;
+    style: InstalledStructuralProviderStyle;
+  }) =>
+    createElement(InstalledStructuralProvider, {
+      key: 'provider-root',
+      minimum: props.minimum,
+      style: props.style,
+    }),
+);
+const structuralProviderWrapper = createElement(
+  InstalledStructuralProviderWrapper,
+  {
+    key: 'wrapped',
+    minimum: structuralProviderMinimum,
+    style: {
+      width: 80,
+      height: 'auto',
+      flexBasis: 80,
+      flexGrow: 0,
+      flexShrink: 1,
+      minHeight: 0,
+    },
+  },
+);
+const structuralProviderSibling = createElement(Rectangle, {
+  key: 'sibling',
+  onClick: () => structuralProviderHits.push('sibling'),
+  style: {
+    width: 20,
+    height: 20,
+    minWidth: 0,
+    minHeight: 0,
+    flexBasis: 20,
+    flexGrow: 0,
+    flexShrink: 0,
+    fill: structuralProviderInk,
+    cursor: 'pointer',
+  },
+});
+const structuralProviderBaseline = (
+    globalThis as any
+  ).__PIBBL_LAYOUT_DIAGNOSTICS__(),
+  structuralProviderController = pibblSync(
+    structuralProviderCanvas,
+    createElement(Flex, {
+      style: {
+        width: 80,
+        height: 40,
+        flexDirection: 'row',
+        flexWrap: 'nowrap',
+        alignItems: 'flex-start',
+      },
+      children: [structuralProviderWrapper, structuralProviderSibling],
+    }),
+  );
+try {
+  const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+  const click = (x: number, y: number) => {
+    const rect = structuralProviderCanvas.getBoundingClientRect();
+    for (const type of ['mousedown', 'mouseup', 'click'])
+      structuralProviderCanvas.dispatchEvent(
+        new MouseEvent(type, {
+          clientX: rect.left + x,
+          clientY: rect.top + y,
+          bubbles: true,
+          button: 0,
+        }),
+      );
+  };
+  await frame();
+  const initial = structuralProviderBoxes.get('provider');
+  if (
+    JSON.stringify(initial) !==
+      JSON.stringify({ x: 0, y: 0, width: 60, height: 20, stamp: 1 }) ||
+    structuralProviderIntrinsicCalls < 1 ||
+    structuralProviderMeasureCalls < 1
+  )
+    throw Error(
+      'installed structural provider initial ' +
+        JSON.stringify({
+          initial,
+          intrinsic: structuralProviderIntrinsicCalls,
+          finite: structuralProviderMeasureCalls,
+        }),
+    );
+  click(65, 5);
+  if (JSON.stringify(structuralProviderHits) !== JSON.stringify(['sibling']))
+    throw Error('installed structural provider initial sibling target');
+  const mounted = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__(),
+    intrinsicBefore = structuralProviderIntrinsicCalls,
+    measureBefore = structuralProviderMeasureCalls;
+  structuralProviderMinimum.set(70);
+  await frame();
+  const updated = structuralProviderBoxes.get('provider');
+  if (
+    JSON.stringify(updated) !==
+      JSON.stringify({ x: 0, y: 0, width: 70, height: 20, stamp: 1 }) ||
+    structuralProviderIntrinsicCalls <= intrinsicBefore ||
+    structuralProviderMeasureCalls <= measureBefore
+  )
+    throw Error(
+      'installed structural provider minimum update ' +
+        JSON.stringify({
+          updated,
+          intrinsic: structuralProviderIntrinsicCalls,
+          finite: structuralProviderMeasureCalls,
+        }),
+    );
+  click(65, 5);
+  click(75, 5);
+  if (
+    JSON.stringify(structuralProviderHits) !==
+    JSON.stringify(['sibling', 'sibling'])
+  )
+    throw Error(
+      'installed structural provider moved sibling target ' +
+        JSON.stringify(structuralProviderHits),
+    );
+  await frame();
+  const beforePaint = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__(),
+    beforeIntrinsic = structuralProviderIntrinsicCalls,
+    beforeMeasure = structuralProviderMeasureCalls;
+  structuralProviderInk.set('#a63758');
+  await frame();
+  const painted = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+  if (
+    structuralProviderIntrinsicCalls !== beforeIntrinsic ||
+    structuralProviderMeasureCalls !== beforeMeasure ||
+    painted.solves !== beforePaint.solves ||
+    painted.measuredLeaves !== beforePaint.measuredLeaves ||
+    painted.nodeCreates !== beforePaint.nodeCreates
+  )
+    throw Error('installed structural provider paint reuse');
+  receipt.structuralIntrinsicProvider = true;
+} finally {
+  structuralProviderController.dispose();
+  structuralProviderCanvas.remove();
+  const disposed = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+  if (
+    disposed.activeNodes !== structuralProviderBaseline.activeNodes ||
+    disposed.activeArenas !== structuralProviderBaseline.activeArenas ||
+    disposed.cachedMeasurements !==
+      structuralProviderBaseline.cachedMeasurements ||
+    disposed.activeWasmInstances !==
+      structuralProviderBaseline.activeWasmInstances
+  )
+    throw Error('installed structural provider cleanup');
+  const nodes = disposed.nodeCreates;
+  structuralProviderMinimum.set(80);
+  await new Promise((resolve) => requestAnimationFrame(resolve));
+  if ((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates !== nodes)
+    throw Error('installed structural provider detached input');
+}
 
 const controller = pibblSync(document.querySelector('canvas')!, createElement(WasmFlexNestedIntrinsicExample, {}));
 addEventListener('pagehide', () => controller.dispose(), {once:true});`,

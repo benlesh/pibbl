@@ -92,6 +92,28 @@ try {
   const previousHits = cappedNarrow.footerHits;
   assert.equal((await click(40,capped.footerBox.y+4)).footerHits, previousHits, 'Old percentage-constrained target must miss');
   assert.equal((await click(40,cappedNarrow.footerBox.y+4)).footerHits, previousHits+1);
+  const badge = await click(672, 110);
+  assert.equal(badge.measuredBadge, true);
+  assert.deepEqual(badge.badgeBox, { x: 28, y: 148, width: 60, height: 20, stamp: badge.badgeBox.stamp });
+  assert.deepEqual(badge.badgeFollowerBox, { x: 88, y: 148, width: 20, height: 20, stamp: badge.badgeFollowerBox.stamp });
+  const badgeStamp = badge.badgeBox.stamp;
+  const followerStamp = badge.badgeFollowerBox.stamp;
+  const badgeFollowerHit = await click(93, 158);
+  assert.equal(badgeFollowerHit.badgeHits, badge.badgeHits + 1);
+  assert.equal(badgeFollowerHit.badgeTarget, 'follower');
+  const raised = await click(432, 426);
+  assert.equal(raised.badgeMinimum, 70);
+  assert.deepEqual(raised.badgeBox, { x: 28, y: 148, width: 70, height: 20, stamp: badgeStamp });
+  assert.deepEqual(raised.badgeFollowerBox, { x: 98, y: 148, width: 20, height: 20, stamp: followerStamp });
+  const badgeHit = await click(93, 158);
+  assert.equal(badgeHit.badgeHits, raised.badgeHits + 1);
+  assert.equal(badgeHit.badgeTarget, 'badge');
+  const beforeBadgePaint = raised.layout;
+  const paintedBadge = await click(432, 110);
+  assert.equal(paintedBadge.layout.solves, beforeBadgePaint.solves);
+  assert.equal(paintedBadge.layout.measuredLeaves, beforeBadgePaint.measuredLeaves);
+  assert.equal(paintedBadge.badgeCalls, raised.badgeCalls);
+  if (process.env.PIBBL_LAYOUT_BADGE_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_BADGE_SCREENSHOT });
   const sandbox = page.frames().find(item => item.url() === 'about:srcdoc');
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if (!sourceLane) {
@@ -180,6 +202,7 @@ try {
       assert.equal(receipt.firstBaseline, true, 'Installed baseline providers must use final allocations, native baseline placement, source focus, paint reuse, detached inputs, and exact cleanup');
       assert.equal(receipt.textFirstBaseline, true, 'Installed Text must use the public Canvas baseline service for mixed generic fonts, real Canvas alignment, moved glyph targets, paint reuse, and exact cleanup');
       assert.equal(receipt.wrappedTextFirstBaseline, true, 'Installed wrapped Text must align its first visible line from real Canvas baseline metrics, move the last-line target after content and line updates, reuse paint, and clean up');
+      assert.equal(receipt.structuralIntrinsicProvider, true, 'Installed structural layout descriptions must forward paired provider inputs for intrinsic floors and final-width measurement, retain keyed identity, reuse paint, detach inputs and clean up');
       assert.ok(receipt.modules > 0 && receipt.instances > 0, 'Installed package must execute embedded WASM');
       assert.match(proof.sha256, /^[a-f0-9]{64}$/);
     }
@@ -195,5 +218,5 @@ try {
   if (!base.includes('/offline') && !packedLane) {
     assert.ok(layoutDownloads.some(download => download.status === 200), 'Async public mounting must fetch the external layout asset');
   } else assert.equal(layoutDownloads.length, 0, 'Embedded sync must work without any external layout request');
-  console.warn(`${sourceLane ? 'Source' : 'Built'} nested intrinsic: footer ${initial.footerBox.y}→${narrow.footerBox.y}→${short.footerBox.y}, probe normal-only, moved targets, keyed remove/restore, detached source inert, ${structural ? 'per-transaction Card preparation' : 'bounded paint reuse'}, receiver roles, percentage cross cap with moved targets, zero disposal ownership; ${proof?.coreInputs.length ?? 'source'} inputs`);
+  console.warn(`${sourceLane ? 'Source' : 'Built'} nested intrinsic: footer ${initial.footerBox.y}→${narrow.footerBox.y}→${short.footerBox.y}, probe normal-only, moved targets, keyed remove/restore, detached source inert, ${structural ? 'per-transaction Card preparation' : 'bounded paint reuse'}, receiver roles, percentage cross cap with moved targets, structural paired minimum60→70 with identity and paint reuse, zero disposal ownership; ${proof?.coreInputs.length ?? 'source'} inputs`);
 } finally { await browser.close(); }

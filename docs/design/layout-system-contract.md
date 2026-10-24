@@ -891,8 +891,18 @@ including following-sibling geometry and hits in the experimental lane. Known
 fully definite roots can be measured in normal builds too. Finite nested structural Cards with known nowrap-column Flex roots use the same
 settled-width recursive measurement path. Original descriptor sources survive
 preparation clones so the existing active-source measurement guard detects cyclic
-descriptor dependencies. General structural intrinsic sizing outside that bounded
-column path and aggregate Card measurement reuse remain unimplemented; unsupported cases stay diagnostic. See
+descriptor dependencies.
+
+In the experimental finite LTR forward row-nowrap path, a structural description returning
+one primitive with paired `measureIntrinsic` and `measure` capabilities may supply
+the same automatic minimum as a direct provider. Intrinsic and constrained-provider
+measurement retain their query mode through the description boundary. They use the
+existing receiver provision and region-owned measurement cache; unsuccessful
+transactions publish no new cache entry. A successful cached scalar/signal input
+snapshot can serve unrelated sibling paint. Mutable nested inputs and functions
+retain conservative remeasurement. Ordinary components are never evaluated to
+obtain a measurement. General structural intrinsic composition and aggregate Card
+measurement reuse remain unimplemented; unsupported cases stay diagnostic. See
 [the API page](../site/api/functions/define-layout-component.md) and
 [Plan 010](../project-plans/010-layout-engine-rework.md).
 

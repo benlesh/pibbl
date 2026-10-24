@@ -865,6 +865,7 @@ function resolveFlexPlacements(
     }
     if (aspectRatio !== undefined) hasAspectRatio = true;
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
+    const pairedLayoutDefinition = getPrimitiveDefinition(layoutChild.type);
     const knownIntrinsicLayout = child.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex &&
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
     const layoutToken = region?.identity(child.type, child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`);
@@ -976,7 +977,8 @@ function resolveFlexPlacements(
     // opaque/child-bearing primitives conservative without evaluating children.
     const automaticRectangleMinimum = hasEmptyRectangleMinimum(child, normalized, preparedStyleQuery(prepared), true);
     const customIntrinsic = experimentalLayout && row && options.flexWrap === 'nowrap' &&
-      !preparedStyleQuery(prepared) && !!getPrimitiveDefinition(child.type)?.measureIntrinsic &&
+      !preparedStyleQuery(prepared) && !!pairedLayoutDefinition?.measureIntrinsic &&
+      (!isLayoutComponent(child.type) || options.flexDirection === 'row' && options.layoutDirection === 'ltr' && aspectRatio === undefined && !!pairedLayoutDefinition.measure) &&
       (basisValue === 'auto' && (normalized.width === undefined || normalized.width === 'auto') || shrink > 0 && normalized.minWidth === undefined);
     let intrinsicSizes: Extract<import('../types.js').IntrinsicSizesResult, { status: 'measured' }> | undefined;
     if (customIntrinsic) {
@@ -1269,7 +1271,11 @@ function resolveFlexPlacements(
     }
     // Width-dependent content uses the settled content allocation.
     if (row) for (const item of line.items) {
-      const definition = experimentalLayout && options.flexWrap === 'nowrap' && !item.query && item.aspectRatio === undefined ? getPrimitiveDefinition(item.child.type) : undefined;
+      let measuredRoot = item.child;
+      if (item.crossAuto && experimentalLayout && options.flexDirection === 'row' && options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' && !item.query && item.aspectRatio === undefined && isLayoutComponent(item.child.type)) {
+        measuredRoot = prepareLayoutComponent(item.child, { receiverToken: item.receiverToken });
+      }
+      const definition = experimentalLayout && options.flexWrap === 'nowrap' && !item.query && item.aspectRatio === undefined ? getPrimitiveDefinition(measuredRoot.type) : undefined;
       const constrainedProvider = !!definition?.measureIntrinsic && !!definition.measure;
       if (!item.crossAuto || (item.child.type !== Text && !(experimentalLayout && item.child.type === Flex) && !constrainedProvider)) continue;
       if (item.child.type === Flex && item.normalized.width === item.targetMain) continue;
@@ -1632,7 +1638,11 @@ function measureFlexChild(
   style: Readonly<BoxStyle & Record<string, unknown>>, token: object,
   measurement: FlexMeasurementInput, region?: LayoutRegion, query?: PreparedQuery, constrainedProvider = false,
 ): MeasureResult {
-  const definition = constrainedProvider && !query ? getPrimitiveDefinition(child.type) : undefined;
+  // A pure layout description may expose one paired primitive root. Keep the
+  // provider query on the original descriptor so recursive measurement retains its
+  // source identity, receiver provision, and signal-dependency ownership.
+  const measuredRoot = constrainedProvider && !query && isLayoutComponent(child.type) ? prepareLayoutComponent(child) : child;
+  const definition = constrainedProvider && !query ? getPrimitiveDefinition(measuredRoot.type) : undefined;
   if (definition?.measureIntrinsic && definition.measure) return measureConstrainedIntrinsicElement(child, constraints, measurement.service, region ? { cache: region, token, key: JSON.stringify([allocationInputRevision(), measurementStyle(style), constraints]), recordMeasurement: recordWasmMeasurement } : undefined);
   const content = region && child.type === Text ? prepareLayoutTextContent(
     child.props, { receiverToken: getPrimitiveReceiverToken(child) },

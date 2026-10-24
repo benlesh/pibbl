@@ -1,6 +1,7 @@
 import {
   useConst,
   defineLayoutComponent,
+  definePrimitive,
   Flex,
   Rectangle,
   Text,
@@ -12,6 +13,7 @@ import {
   useCanvasContext,
   type BoxStyle,
   type FlexItemStyle,
+  type SystemStyle,
 } from "@pibbl/core";
 
 function createWasmFlexNestedIntrinsicExampleContent(
@@ -21,6 +23,8 @@ function createWasmFlexNestedIntrinsicExampleContent(
   const width = signal(420);
   const structuralCard = signal(false);
   const percentageCap = signal(false);
+  const measuredBadge = signal(false);
+  const badgeMinimum = signal(60);
   let descriptions = 0, paragraphDescriptions = 0;
   const longText =
     "Nested columns settle their widths before Text determines their heights. The following sibling uses the complete Card height.";
@@ -30,8 +34,14 @@ function createWasmFlexNestedIntrinsicExampleContent(
   let rootTransform = new DOMMatrix();
   let cardBottom = 0,
     probeRenders = 0,
-    footerHits = 0;
+    footerHits = 0,
+    badgeHits = 0,
+    badgeCalls = 0,
+    badgeStamps = 0;
+  let badgeTarget = "none";
   let footerBox = { x: 0, y: 0, width: 0, height: 0 };
+  let badgeBox = { x: 0, y: 0, width: 0, height: 0, stamp: 0 };
+  let badgeFollowerBox = { x: 0, y: 0, width: 0, height: 0, stamp: 0 };
   function Boundary({ style: _style }: { style: BoxStyle & FlexItemStyle }) {
     const transform = rootTransform
       .inverse()
@@ -165,8 +175,60 @@ function createWasmFlexNestedIntrinsicExampleContent(
       </>
     );
   }
+  interface BadgeStyle extends SystemStyle {
+    readonly width?: number;
+    readonly height?: number;
+    readonly minWidth?: number;
+    readonly minHeight?: number;
+    readonly flexShrink?: number;
+    readonly fill?: string;
+  }
+  type ResolvedBadgeStyle = BadgeStyle & { readonly width: number; readonly height: number };
+  const BadgeLeaf = definePrimitive<
+    { readonly minimum: typeof badgeMinimum },
+    BadgeStyle,
+    BadgeStyle,
+    ResolvedBadgeStyle
+  >((_props, style) => {
+    const box = useLayoutBox();
+    const transform = rootTransform.inverse().multiply(useCanvasContext().getTransform());
+    const stamp = useConst(() => ++badgeStamps);
+    badgeBox = { x: +transform.e.toFixed(3), y: +transform.f.toFixed(3), width: box.width, height: box.height, stamp };
+    return <Rectangle
+      style={{ width: box.width, height: box.height, fill: style.fill, cursor: "pointer" }}
+      onClick={() => { badgeHits++; badgeTarget = "badge"; }}
+    />;
+  }, {
+    preserveSignalProps: ["minimum"],
+    resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: ({ props }) => {
+      badgeCalls++;
+      return { status: "measured" as const, minContent: { width: props.minimum.get(), height: 20 }, maxContent: { width: 100, height: 20 } };
+    },
+    measure: ({ constraints }) => ({ status: "measured" as const, size: { width: constraints.maxWidth, height: 20 } }),
+  });
+  const Badge = defineLayoutComponent((props: { readonly minimum: typeof badgeMinimum; readonly style: BadgeStyle }) =>
+    <BadgeLeaf key="leaf" minimum={props.minimum} style={props.style} />,
+  );
+  const BadgeFollower = definePrimitive<{}, BadgeStyle, BadgeStyle, ResolvedBadgeStyle>((_props, style) => {
+    const box = useLayoutBox();
+    const transform = rootTransform.inverse().multiply(useCanvasContext().getTransform());
+    const stamp = useConst(() => ++badgeStamps);
+    badgeFollowerBox = { x: +transform.e.toFixed(3), y: +transform.f.toFixed(3), width: box.width, height: box.height, stamp };
+    return <Rectangle style={{ width: box.width, height: box.height, fill: style.fill, cursor: "pointer" }} onClick={() => { badgeHits++; badgeTarget = "follower"; }} />;
+  }, { resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }) });
+  const badgeContent = <Flex style={{ left: 28, top: 148, width: 80, height: 20, alignItems: "flex-start" }}>
+    <Badge key="badge" minimum={badgeMinimum} style={{ height: 20, flexShrink: 1, fill: "#426b61" }} />
+    <BadgeFollower key="follower" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: ink }} />
+  </Flex>;
   function Workspace() {
     rootTransform = useCanvasContext().getTransform();
+    if (measuredBadge.get()) return <>
+      {badgeContent}
+      <Text pointerEvents="none" style={{ left: 28, top: 188, font: "14px sans-serif", fill: "#475569" }}>
+        The green badge's content minimum moves the following target. Raise its minimum below.
+      </Text>
+    </>;
     return (
       <Flex
         style={{
@@ -188,11 +250,13 @@ function createWasmFlexNestedIntrinsicExampleContent(
   function Button({
     x,
     y = 96,
+    width: buttonWidth = 180,
     label,
     onClick,
   }: {
     x: number;
     y?: number;
+    width?: number;
     label: string;
     onClick(): void;
   }) {
@@ -202,7 +266,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
           style={{
             left: x,
             top: y,
-            width: 180,
+            width: buttonWidth,
             height: 36,
             fill: "#19375b",
             cursor: "pointer",
@@ -214,7 +278,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
           style={{
             left: x + 12,
             top: y + 10,
-            font: "14px sans-serif",
+            font: buttonWidth < 180 ? "12px sans-serif" : "14px sans-serif",
             fill: "#ffffff",
           }}
         >
@@ -239,8 +303,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
       <Text
         style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}
       >
-        Two known columns size from wrapped Text. The following sibling moves
-        with them.
+        Known columns and pure components size from their content.
       </Text>
       <Button x={548} y={62} label="50% paragraph cap" onClick={() => percentageCap.update(value => !value)} />
       <Button x={548} y={24} label="Toggle pure Card" onClick={() => structuralCard.update(value => !value)} />
@@ -258,6 +321,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
           )
         }
       />
+      <Button x={612} width={120} label="Measured badge" onClick={() => measuredBadge.update(value => !value)} />
       <Button
         x={420}
         label="Paint only"
@@ -272,6 +336,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
         label="Reverse paragraphs"
         onClick={() => keys.update((value) => [...value].reverse())}
       />
+      <Button x={420} y={412} label="Raise badge min" onClick={() => badgeMinimum.update(value => value === 60 ? 70 : 60)} />
       <Button
         x={224}
         y={412}
@@ -301,6 +366,13 @@ function createWasmFlexNestedIntrinsicExampleContent(
       width: width.get(),
       structuralCard: structuralCard.get(),
       percentageCap: percentageCap.get(),
+      measuredBadge: measuredBadge.get(),
+      badgeMinimum: badgeMinimum.get(),
+      badgeBox,
+      badgeFollowerBox,
+      badgeHits,
+      badgeTarget,
+      badgeCalls,
       descriptions,
       paragraphDescriptions,
       keys: keys.get(),

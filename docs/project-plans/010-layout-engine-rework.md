@@ -20,7 +20,9 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice159 `0b893348` (wrapped Text first/last baseline metrics).
+Latest delivery is slice160 (prepared structural paired measurement).
+Slice159 is `0b893348` (wrapped Text first/last baseline metrics).
+Consolidation53 is `370015c4` for157–159.
 Slice158 is `40965850` (single-line Text baselines from live Canvas metrics).
 Slice157 is `72da2305`; its public Studio companion is `b725101c`.
 Consolidation52 is `8f65cb34` for154–156.
@@ -145,11 +147,11 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:709 records:518 geometry matches,183 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
+Current corpus:721 records:530 unclassified geometry comparisons,183 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
-Click Latest for both-auto Text ink dimensions; four cases compare row/column LTR/RTL using live Canvas metrics and explicit native-query provenance.
+Click Latest for the four numeric baseline-provider cases; Text baseline lessons use live Canvas metrics separately and make no native font-parity claim.
 The public lesson is `#/examples/layout/wasm-yoga-migration`.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -4954,16 +4956,60 @@ comparison agrees with the721record reference. Slice159 source/built interaction
 wrapped screenshot and installed-package receipts remain separate evidence.
 No aggregate trust, capability promotion or release-gate closure is claimed.
 
-## [NEXT] Slice160: prepared structural intrinsic measurement
+## Slice160 ready for feedback: prepared structural paired measurement
 
-Permit an existing pure `defineLayoutComponent` description resolving to a paired
-custom measurement primitive to contribute its intrinsic floor through the same
-transaction-owned preparation boundary. Preserve description reuse, receiver
-ownership, cycle detection, failure-before-publication and conservative cache
-rules. Start with a public failing test; then show a runnable structural example.
-This advances the accepted prepared measurement graph without claiming general
-Flex/Grid/Flow intrinsic composition or introducing another public API. Root is
-sole repository writer; helpers supply temporary patches and scoped review.
+Existing `defineLayoutComponent` descriptions returning one paired custom primitive
+now participate in finite forward LTR row-nowrap automatic minima and final-width
+height measurement. No public API, WASM ABI, cache graph or retained drawing path
+was added. Recursive measurement preserves intrinsic/provider-input mode, source
+cycle tracking and receiver ownership. The description is shared within the
+transaction, while the existing bounded successful-result cache can serve sibling
+paint. Conservative mutable/function input rules and allocation revisions remain.
+
+Public RED first rejected the wrapped automatic minimum. A second RED allocated
+width40 but retained height20 instead of the required final-width height40. Both
+passed after the bridge and final-width provider lookup changed. Scoped review
+found structural reverse/aspect admission beyond this slice; two public RED cases
+confirmed it. Only the new structural branch is now literal row/LTR/no-aspect;
+direct intrinsic-only and paired provider behavior remains intact.
+
+Fresh Node24.15/Playwright Chromium:65passed/1skipped across4files (66tests),
+ordinary56passed/10skipped; four selected legacy direct-provider regressions also
+passed. Focused failure evidence confirms no later opaque function evaluation,
+failed-render resource cleanup, inert old targets, explicit public remount with
+fresh hook identity and detached measurement inputs after removal. A proposed
+last-successful-geometry rollback assertion was corrected to the documented
+render-failure teardown contract after diagnostics returned all resources to zero.
+General transactional rollback remains an open release prerequisite.
+
+Source and built structural lessons passed existing Card behavior plus distinct
+badge/follower target transfer, keyed identity, minimum60→70, measurement/solve
+reuse on sibling paint and cleanup `[0,0,0]`. Built used470dist inputs. The final
+badge screenshot was inspected and overlapping explanatory copy shortened.
+Hands-on: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-nested-intrinsic`
+(and port5193 for built). Click Measured badge, Raise badge min, then Paint only;
+the inspector identifies the clicked badge/follower target.
+
+Isolated offline tarball: strict Bundler/NodeNext,246installed dist inputs,
+SHA256 `cb8500e7af12dd6b50531a602f356bf99eaf240b9a0ed609c2624e879bd8cd23`.
+The installed wrapper actually invokes both intrinsic and final-width finite
+callbacks, moves its sibling target, retains its stamp, reuses sibling paint and
+releases all owned diagnostics. Existing104auto-margin fixtures also passed.
+Typecheck, changed-code lint, docs/JSDoc, catalog and Studio checks passed; scoped
+post-fix review had no material finding. No aggregate trust claim or capability
+promotion: fixed33 remain9complete/12experimental/6partial/5missing/1excluded,
+all7release gates open.
+
+## [NEXT] Slice161: settle measured row children inside a prepared Flex root
+
+Start with the public outer-column → pure description → known Flex → paired-leaf
+contract. If already supported, record evidence without inventing a runtime
+slice. Otherwise implement the existing missing finite row measurement dependency:
+exact owner width → child main allocation → final-width provider query → owner
+height. Reuse the current numeric allocation path and shared measurement context;
+ordinary components remain opaque. This advances nested intrinsic composition,
+not general percentage feedback or transactional publication. Root is sole writer;
+helpers provide temporary tests/proposals and scoped review.
 
 ### Finite positioning exit matrix after134
 

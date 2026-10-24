@@ -68,6 +68,10 @@ This initial capability uses existing measurement support: a finite-width nowrap
 column containing wrapped Text is supported in the experimental layout lane.
 Nested Cards below known nowrap-column roots use that same settled-width path,
 with each description prepared once per receiver and transaction. Descriptor cycles
-retain the existing cyclic-measurement diagnostic. Other intrinsic structures retain
-contextual unsupported-measurement diagnostics;
+retain the existing cyclic-measurement diagnostic. A finite LTR forward nowrap row may also query a described root with both
+`measureIntrinsic` and `measure`, using its content minimum as the automatic
+shrink floor. The query shares the description, receiver dependencies and bounded
+measurement cache with the current transaction; unrelated sibling paint can reuse
+a successful measurement. Ordinary components remain opaque. Other intrinsic
+structures retain contextual unsupported-measurement diagnostics;
 this does not enable general CSS sizing or switch the production layout engine.

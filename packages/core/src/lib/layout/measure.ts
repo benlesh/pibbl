@@ -298,12 +298,16 @@ function measureElementInternal(
       reason: 'cyclic measurement dependency is not supported',
     });
   }
-  if (intrinsic && isLayoutComponent(type)) return { status: 'unsupported', reason: 'intrinsic providers currently require a direct custom primitive' };
   if (isLayoutComponent(type)) {
     context.active.add(source);
     context.stack.push(element);
     try {
-      return measureElementInternal(placedLayoutComponentRoot(element, preNormalized), constraints, service, context);
+      // A declared layout description is the existing pure boundary. Preserve the
+      // caller's measurement mode so a paired primitive root can contribute its
+      // intrinsic result or receive provider inputs under the same transaction.
+      const root = placedLayoutComponentRoot(element, preNormalized);
+      return intrinsic ? measureElementInternal(root, constraints, service, context, true) :
+        measureElementInternal(root, constraints, service, context, false, providerInputs);
     } finally {
       context.stack.pop();
       context.active.delete(source);
