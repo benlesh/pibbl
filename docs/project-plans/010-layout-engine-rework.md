@@ -35,7 +35,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; next is consolidation65.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; consolidation65 passes; next is196.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -48,10 +48,10 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is consolidation65: close the bounded padding inventory.
+Consolidation56 is `2fd34f0e` for166–168. Consolidation65 closes allocated padding; next is196: finite RTL row baselines.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
-owner/min-max closure matrix. Fixed33 is now11complete/12experimental/
-4partial/5missing/1excluded. All seven release gates remain open; independent
+owner/min-max closure matrix. Fixed33 is now12complete/12experimental/
+3partial/5missing/1excluded. All seven release gates remain open; independent
 intrinsic graphs, automatic minima and other measurement work remain outstanding.
 Consolidation55 is `98bf8b8d` for163–165.
 Slice165 is `cc334a0a` (empty-Rectangle aspect automatic minimum).
@@ -7157,15 +7157,38 @@ The initial proof failed parsing because the embedded fixture lacked an object
 brace; the fixture was corrected before this fresh pass, with no runtime repair.
 Changed-proof lint and scoped review pass. No new public API or production code.
 
-## [NEXT] Consolidation65: allocated padding exit, slices193–195
+## [DONE] Consolidation65: allocated padding exit, slices193–195
 
-Record the fresh accumulated experimental/ordinary matrices and source/built
-browser replay, reconcile stale logical-padding prose and delivered missing
-markers, and apply the explicit bounded padding completion rule. Independent
-exit audit finds no remaining allocated-padding behavior after195passes;
-unallocated intrinsic feedback belongs to separate measurement ownership work.
-Keep7release gates open and select the next concrete existing gap. Final
-whole-codebase review stays at the full program exit.
+Fresh Node24.15/Chromium experimental matrix:1080pass/12skip/1092in77files,
+82.56s. Ordinary lane:302pass/790skip,6.07s. No runtime or accumulated-test repair.
+Both full source5192and built5193Flex/Text replays pass errors[]/cleanup000;
+built proof uses470dist inputs.193’s own/direct-child padding browser passes
+both modes with four-counter disposal.195’s strict installed proof passes246
+inputs,104margin fixtures and all existing/new nested ownership receipts, SHA256
+`737e46e9dbedb3f740b165ec2e9bc66fa498c5c32ac24316510bc899d30e8a89`.
+Types, changed-code lint,175/12/33catalog/Studio, docs109mutation probes and public
+JSDoc52entries/1486declarations/18inherited/3472members/6576links pass. ABI10kernel
+remains78986bytes with matching fingerprint; native source unchanged since the
+dated118record consolidation63receipt. No new native or aggregate trust claim.
+
+Independent bounded exit audit plus installed evidence closes
+`box.padding-and-layout-border` for its stated allocated contract. Stale raw-child
+missing markers and Flex-only logical padding prose are reconciled. Layer’s
+stripped-inset raster rule remains intact. Unallocated intrinsic percentage
+feedback remains explicitly unsupported under separate measurement-owner work;
+it is not a fabricated allocated-padding blocker. Fixed33now12complete/
+12experimental/3partial/5missing/1excluded. All7release gates remain open;
+independent whole-codebase review remains at full program exit.
+
+## [NEXT] Slice196: finite RTL row first-baseline composition
+
+Inspect the existing fixed-leaf first-baseline admission against native row RTL
+main placement and the physical vertical baseline solver. If the supported
+contract composes mechanically, establish a focused public failing geometry/hit
+case and pinned reference before removing only the direction guard. Preserve
+other baseline exclusions; do not add columns, wrapping or a new public API.
+If source/reference evidence reveals a material public design decision, record
+that exact blocker and select another existing authorized gate instead.
 
 ## Scope and execution
 

@@ -2502,8 +2502,8 @@
       "target": "parity",
       "group": "box-and-direction",
       "current": "numeric padding, allocated experimental Flex percentage padding and mounted Flow/Grid/Absolute/Overlay own-style and actual direct-child percentage padding from the established containing-owner basis, receiver-aware logical paddingStart/paddingEnd, and receiver-aware numeric borderStartWidth/borderEndWidth over physical layout borderWidth; painted stroke remains separate",
-      "status": "partial",
-      "unresolvedPolicy": "Mounted own-style and actual direct-child boundaries use the established containing content width; Grid direct children use their final cell area width. Unallocated intrinsic feedback remains separate and unsupported. Layer intentionally strips padding/border/box-sizing inputs and preserves explicit raster dimensions and zero child origin. Logical raw-child precedence and explicit/inherited RTL described dispatch are covered; installed nested composition remains the bounded evidence prerequisite.",
+      "status": "complete",
+      "unresolvedPolicy": "Complete for the stated allocated experimental contract after consolidation65: actual containing content/cell widths, logical precedence and receiver direction, numeric borders, nested/described preparation, pure-query rejection, source/built/installed interactions and exact ownership are evidenced. Unallocated intrinsic percentage feedback remains a separate unsupported measurement-owner prerequisite. Layer preserves its existing stripped-inset fixed-raster rule. Capability completion does not enable the experimental engine or close a release gate.",
       "evidenceRefs": [
         "docs/design/layout-system-contract.md#flex",
         "docs/architecture/proposals/layout-engine/design.md#boxes-and-units",
@@ -2535,7 +2535,8 @@
           "slice192: direct Absolute/Overlay roots match numeric20 and10% against owner200 while own boxes narrow200to160; distinct placement/start alignment, real moved targets, hook identity, paint reuse and four-counter cleanup pass in public/source/built/installed consumers; both pure0/percentage queries retain missing-provider diagnostics",
           "Layer source/contract audit and existing fresh consolidated raster regression preserve ignored padding/border inputs, including logical15%, explicit bitmap dimensions and zero child origin; no Layer padding implementation is required",
           "slice193: actual Flow/Absolute/Overlay child owner200 resolves10%to20; owner160 resolves16; Grid fixed160cell uses16 within200parent; numeric controls, structural content geometry, targets, keyed identity, paint reuse and exact disposal",
-          "slice194: raw logical child precedence preserves zero winners under explicit RTL and described Flow inherited RTL, using actual parent width across resize, moved targets, stable identity, paint reuse and exact disposal"
+          "slice194: raw logical child precedence preserves zero winners under explicit RTL and described Flow inherited RTL, using actual parent width across resize, moved targets, stable identity, paint reuse and exact disposal",
+          "slice195: strict installed Bundler/NodeNext and browser proof covers all four actual parent/cell paths, pure rejection, moved targets, stable keyed content, paint reuse and per-family/aggregate exact disposal"
         ],
         "negative": [
           "paint stroke is not a layout border",
@@ -2562,10 +2563,7 @@
           "padding-percent-column-border-box-basis-resized",
           "logical-padding-{start-zero,end-percent}-{ltr,rtl}-{logical-first,logical-last}: outer plus complete content region"
         ],
-        "missing": [
-          "raw child inset preparation in non-Flex parents using actual parent content or Grid area width",
-          "unallocated intrinsic percentage feedback has no actual owner and remains a separate measurement policy"
-        ]
+        "missing": []
       }
     },
     {

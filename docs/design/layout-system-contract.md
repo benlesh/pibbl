@@ -1172,8 +1172,10 @@ of declaration order. Padding is finite and nonnegative. Physical-only box
 behavior is unchanged. Numeric logical padding uses ordinary box layout rules
 in the experimental build; normal box layout rejects it.
 
-Percentages require an actual finite allocated Flex owner and use its content
-width, including column allocation. Allocation resolves only winning edges, then
+Percentages require an actual finite allocation: Flex, Flow, Absolute and Overlay
+children use containing content width; Grid children use final cell area width.
+Mounted containers resolving their own styles use the established containing-owner
+width. Allocation resolves only winning edges, then
 clears consumed start/end fields and carries numeric physical padding through
 box conversion and nested preparation. Receivers do not resolve it again against
 their own width. Intrinsic measurement admits winning numeric edges and rejects
@@ -1192,8 +1194,8 @@ Padding on a standalone drawing primitive is parent-layout participation, as
 with its physical padding. Layer retains its separate raster sizing rule: its
 own physical or logical padding does not inset its child raster or change its
 explicit bitmap dimensions. Parent allocation remains distinct from that rule.
-Logical borders, unallocated percentage padding and broader intrinsic feedback
-remain subsequent work.
+Numeric logical borders use the same receiver precedence. Unallocated percentage
+padding and broader intrinsic feedback remain unsupported measurement-owner work.
 
 Eight pinned Yoga records compare a 100×60 border-box child and its complete
 content region under LTR/RTL, both setter orders, start0 and end15%. They preserve
