@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice177 (native normal-owner phases and staged zero/auto margins).
+Latest delivery is slice177 `2173ccfb` (native normal-owner phases and staged zero/auto margins).
+Consolidation59 below covers175–177; the next production slice is178.
 Slice176 is `3d4fcfee` (known-layout natural column widths).
 Slice175 is `6adf0e2b` (paired column natural width with side auto margins).
 Slice174 is `fabe4508` (uniform intrinsic auto-margin normalization).
@@ -6330,6 +6331,38 @@ green. Fixed33 returns to10complete/12experimental/5partial/5missing/1excluded.
 Auto margins remain partial: broader wrapped Text/independent sizing profiles and
 staged nonzero numeric margin contributions remain explicit. All7gates stay open.
 Consolidation59 follows as a separate evidence commit before further production.
+
+## Consolidation59: slices175–177 reverified
+
+Recorded2026-10-24 after the final finite-envelope guard in177. Separate slice
+commits are175 `6adf0e2b`,176 `3d4fcfee`,177 `2173ccfb`.
+
+Fresh macOS/Playwright Chromium, Node24.15.0, installed pnpm11.21.0 dependency
+entry points: the62-file owner/layout/measurement/loader matrix passed990tests,
+12skipped of1002, in82.55s with `vitest run --mode layout-wasm`. The ordinary
+lane passed302, skipped700 of1002, in7.52s. This includes the complete previous
+owner/min-max closure matrix, undefined/unbounded queries, the new permanent
+numeric regressions and matched no-bound controls. It is a scoped consolidation,
+not the aggregate `corepack pnpm@11.21.0 trust` gate.
+
+The final Rust1.99 rebuild passes26native tests, validates ABI10 and publishes
+matching external/embedded78814-byte artifacts. Final source and built browser
+checks (Node26.9.0/Chromium) pass the original measured-owner example and new
+staged auto-margin mode, with470built inputs and cleanup0000. The final isolated
+packed installation passes strict Bundler/NodeNext/no-alias246-input checks,
+104existing auto-margin fixtures and the added numeric/paired stage composition;
+its exact tarball identity is recorded in177. Types, changed lint, catalog174/12/33,
+Studio metadata/routes/search, public JSDoc and109documentation mutation probes
+pass. Scoped changed-production review has no unresolved material finding.
+
+Min/max returns to capability-complete for its stated supported contract after
+repairing177's counterexample and rerunning the full prior matrix. Auto-margin
+stays partial. The fixed33denominator is10complete/12experimental/5partial/
+5missing/1excluded; all7release gates remain open. The721-record corpus and its
+530unclassified/183preserved/8native-font-source classifications are unchanged.
+Concise divergences and separate column query receipts retain their own scope.
+No production/default migration, release trust, performance or whole-program
+completion claim is made. Whole-codebase review remains the final exit step.
 
 ## [NEXT] Slice178: wrapped-column Text cross sizing before side-auto placement
 
