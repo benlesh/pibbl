@@ -20,7 +20,7 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice174 (uniform intrinsic auto-margin normalization).
+Latest delivery is slice174 `fabe4508` (uniform intrinsic auto-margin normalization).
 Slice173 is `de0a5fe7` (intrinsic physical cross auto margins).
 Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
@@ -6167,6 +6167,20 @@ No kernel/ABI change. Final typecheck, changed-code lint, docs109mutation probes
 public JSDoc, catalog174/12/33 and Studio metadata/routes/search pass. Focused
 independent review found no material issue. Consolidation58 records the fresh
 broader final verification.
+
+## Consolidation58 completed for separately committed slices172–174
+
+Deliveries remain separate:172 `20bb1bc8`,173 `de0a5fe7`,174 `fabe4508`.
+Fresh Node24.15.0/pnpm11.21.0/Playwright Chromium runs cover61files/976tests:
+experimental964passed/12skipped in83.37s; ordinary299passed/677skipped in7.32s.
+Both pass without another production correction. The subsequent test-only unused
+parameter rename has no behavioral effect; final typecheck and lint pass.
+Source and built470-input Studio runs, installed246-input Bundler/NodeNext/no-alias
+consumers, pinned24+8+12auto-margin records, docs109mutation probes, public JSDoc,
+catalog174/12/33 and Studio metadata/routes/search pass. Focused review found no
+material issue. Native kernel/ABI9 and corpus721 remain unchanged. No aggregate
+trust or release-gate closure is claimed. Fixed33 remains10complete/12experimental/
+5partial/5missing/1excluded, all seven gates open. Exactly one next slice follows.
 
 ## [NEXT] Slice175: paired column automatic cross sizing with auto margins
 
