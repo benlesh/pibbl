@@ -369,7 +369,7 @@ overflow a smaller bound or parent allocation, matching pinned Yoga3.2.1; opposi
 min/max and negative/nonfinite inputs are still rejected before conversion.
 Default content-box constraint behavior is preserved. The option does not turn
 painted stroke into a layout border or expand intrinsic provider support.
-Percentage padding has the separate allocated-Flex admission below. Existing Layer raster sizing rules remain separate.
+Percentage padding has the separate allocated Flex/Flow admission below. Existing Layer raster sizing rules remain separate.
 
 `BoxStyle.borderWidth` accepts the same finite nonnegative physical numeric edge
 shorthand as padding, defaulting to zero. It reserves layout space without
@@ -384,7 +384,7 @@ Layer raster sizing continues to ignore these layout fields by its existing rule
 
 `BoxStyle.padding` accepts `EdgeValues<number | Percentage>`; the generic edge
 shorthand defaults to numbers, so `borderWidth` and `normalizeEdges` stay numeric.
-Only experimental direct Flex allocation resolves percentage padding. All physical
+Experimental direct Flex allocation resolves percentage padding. All physical
 edges use the containing Flex content width, including top/bottom; width200 yields
 L20/R30/T10/B20 from L10%/R15%/T5%/B10%. A content-box80×60 child is outer130×90;
 border-box150×100 keeps its outer box and has content100×70. At owner width300,
@@ -392,7 +392,15 @@ the same border box has content75×55. Basis and combined border/padding insets
 convert once, before solving, and canonical numeric padding travels into prepared
 child painting/hit geometry with the original receiver and query ownership.
 
-Root/unallocated and other-parent raw percentage padding remains rejected. Pure
+An experimental Flow resolving its own mounted style can also canonicalize raw
+percentage padding from its established containing-owner width before computing
+its box. A200px containing owner resolves10%to20on every edge even when the Flow
+box narrows from200to160. Numeric input keeps the existing inexpensive path;
+logical percentage edges use the same inherited-direction resolver. Upstream
+parent layout/measurement admission remains authoritative: this dispatch path
+does not grant a missing pure query or canonicalize every parent’s children.
+
+Unallocated and other unsupported-parent raw percentage padding remains rejected. Pure
 `measureElement` returns unsupported before measuring a raw percentage-padded
 node; constraints/maxima do not supply an allocated owner. A child already
 canonicalized by actual Flex allocation can follow existing numeric measurement.

@@ -13,7 +13,7 @@ import {
   type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
-import { normalizeBoxInsets } from './box-insets.js';
+import { normalizeBoxInsets, hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type { BoxStyle, LayoutItemStyle, ResolvedBoxStyle } from '../style/types.js';
 import type {
@@ -161,11 +161,17 @@ export const Flow = definePrimitive<
   ResolvedFlowStyle
 >(renderFlow, {
   childInput: 'structural',
-  resolveStyle: (style, context) => ({
-    box: resolveContainerBox(style, context, 'Flow', 'flow'),
-    overflow: style.overflow ?? 'visible',
-    ...normalizeFlowOptions(style, context.allocation),
-  }),
+  resolveStyle: (style, context) => {
+    if (experimentalLayout && hasPercentageBoxPadding(style)) {
+      style = resolveAllocatedInsets(style, { width: context.percentageBasis.width,
+        context: { ...context, component: 'Flow', algorithm: 'flow' } });
+    }
+    return {
+      box: resolveContainerBox(style, context, 'Flow', 'flow'),
+      overflow: style.overflow ?? 'visible',
+      ...normalizeFlowOptions(style, context.allocation),
+    };
+  },
   measure: input => measureFlow(input),
 });
 
