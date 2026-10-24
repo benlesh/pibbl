@@ -178,6 +178,36 @@ void runColumnProvider(float natural) {
     natural, YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(a), YGNodeLayoutGetTop(a), YGNodeLayoutGetWidth(a), YGNodeLayoutGetHeight(a), YGNodeLayoutGetLeft(b), YGNodeLayoutGetTop(b), YGNodeLayoutGetWidth(b), YGNodeLayoutGetHeight(b), columnProviderCall.count, columnProviderCall.width, measureMode(columnProviderCall.widthMode), columnProviderCall.height, measureMode(columnProviderCall.heightMode));
   YGNodeFreeRecursive(root); YGConfigFree(config);
 }
+// A direct known row Flex with automatic width is a non-provider counterpart
+// to the paired provider column profile. Its children are fixed numeric leaves.
+void runKnownColumn(float firstWidth) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false);
+  YGConfigSetPointScaleFactor(config, 0);
+  YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config);
+  auto known = YGNodeNewWithConfig(config);
+  auto a = YGNodeNewWithConfig(config);
+  auto b = YGNodeNewWithConfig(config);
+  auto following = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, YGFlexDirectionColumn);
+  YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+  YGNodeStyleSetWidth(root, 200); YGNodeStyleSetHeight(root, 120);
+  YGNodeStyleSetFlexDirection(known, YGFlexDirectionRow);
+  YGNodeStyleSetAlignItems(known, YGAlignFlexStart);
+  YGNodeStyleSetHeight(known, 40); YGNodeStyleSetMinHeight(known, 0);
+  YGNodeStyleSetFlexBasisAuto(known); YGNodeStyleSetFlexGrow(known, 0); YGNodeStyleSetFlexShrink(known, 0);
+  YGNodeStyleSetMarginAuto(known, YGEdgeLeft);
+  for (auto child : {a, b, following}) { YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 0); YGNodeStyleSetMinWidth(child, 0); YGNodeStyleSetMinHeight(child, 0); }
+  YGNodeStyleSetWidth(a, firstWidth); YGNodeStyleSetHeight(a, 40); YGNodeStyleSetFlexBasis(a, firstWidth);
+  YGNodeStyleSetWidth(b, 20); YGNodeStyleSetHeight(b, 20); YGNodeStyleSetFlexBasis(b, 20);
+  YGNodeStyleSetWidth(following, 20); YGNodeStyleSetHeight(following, 80); YGNodeStyleSetFlexBasis(following, 80);
+  YGNodeInsertChild(known, a, 0); YGNodeInsertChild(known, b, 1); YGNodeInsertChild(root, known, 0); YGNodeInsertChild(root, following, 1);
+  YGNodeCalculateLayout(root, 200, 120, YGDirectionLTR);
+  std::printf("intrinsic-auto-column-known first=%.17g root={width:%.17g,height:%.17g} known={left:%.17g,top:%.17g,width:%.17g,height:%.17g} A={left:%.17g,top:%.17g,width:%.17g,height:%.17g} B={left:%.17g,top:%.17g,width:%.17g,height:%.17g} following={left:%.17g,top:%.17g,width:%.17g,height:%.17g}\n",
+    firstWidth, YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(known), YGNodeLayoutGetTop(known), YGNodeLayoutGetWidth(known), YGNodeLayoutGetHeight(known), YGNodeLayoutGetLeft(a), YGNodeLayoutGetTop(a), YGNodeLayoutGetWidth(a), YGNodeLayoutGetHeight(a), YGNodeLayoutGetLeft(b), YGNodeLayoutGetTop(b), YGNodeLayoutGetWidth(b), YGNodeLayoutGetHeight(b), YGNodeLayoutGetLeft(following), YGNodeLayoutGetTop(following), YGNodeLayoutGetWidth(following), YGNodeLayoutGetHeight(following));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
 }
 int main() {
   for (bool column : { false, true }) for (bool bothAuto : { false, true }) {
@@ -191,4 +221,5 @@ int main() {
   for (bool column : { false, true }) for (auto profile : { CrossProfile::Start, CrossProfile::Both, CrossProfile::Overflow, CrossProfile::Opposite10 }) runCrossAuto(column, profile);
   for (bool column : { false, true }) for (auto direction : { YGDirectionLTR, YGDirectionRTL }) for (auto profile : { ShorthandProfile::AllAuto, ShorthandProfile::PhysicalLeft0, ShorthandProfile::LogicalStartAuto }) runShorthand(column, direction, profile);
   runColumnProvider(40); runColumnProvider(80); runColumnProvider(240);
+  runKnownColumn(40); runKnownColumn(80); runKnownColumn(220);
 }

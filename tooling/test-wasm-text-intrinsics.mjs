@@ -104,6 +104,16 @@ try {
   await click(540, 434);
   assert.match(await frame.locator('pre').innerText(), /column provider: 80/);
   assert.deepEqual(await autoCrossPixel(530, 290), [138, 50, 72, 255]);
+  await click(540, 434);
+  assert.match(await frame.locator('pre').innerText(), /column provider: known60/);
+  assert.deepEqual(await autoCrossPixel(530, 290), [243, 240, 232, 255], 'known 60px starts at 540px');
+  assert.deepEqual(await autoCrossPixel(550, 290), [138, 50, 72, 255]);
+  await click(530, 290);
+  assert.doesNotMatch(await frame.locator('pre').innerText(), /selected: column known A/);
+  await click(540, 434);
+  assert.match(await frame.locator('pre').innerText(), /column provider: known100/);
+  assert.deepEqual(await autoCrossPixel(530, 290), [138, 50, 72, 255], 'known 100px moves A to 500px');
+  await click(530, 290); await selected('column known A');
   if (process.env.PIBBL_LAYOUT_COLUMN_PROVIDER_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_COLUMN_PROVIDER_SCREENSHOT });
   await click(540, 434);
   assert.match(await frame.locator('pre').innerText(), /column provider: text/);

@@ -9,6 +9,7 @@ import {
   signal,
   computed,
   definePrimitive,
+  defineLayoutComponent,
   type FlexStyle,
   type SystemStyle,
 } from "@pibbl/core";
@@ -151,8 +152,9 @@ function createWasmFlexTextContent() {
   Object.freeze(frozenPanelStyle); Object.freeze(frozenPanel.props); Object.freeze(frozenPanel);
   const columnWords = signal("jobs jobs jobs");
   const columnHits = signal(0);
-  const columnProviderMode = signal<"text" | 40 | 80>("text");
+  const columnProviderMode = signal<"text" | 40 | 80 | "known60" | "known100">("text");
   const columnProviderNatural = signal(40);
+  const columnKnownWidth = signal(40);
   type ColumnProviderStyle = FlexStyle & { readonly fill?: string };
   type ResolvedColumnProviderStyle = SystemStyle & { readonly width: number; readonly height: number; readonly fill?: string };
   const ColumnProvider = definePrimitive<{ readonly natural: typeof columnProviderNatural }, ColumnProviderStyle, ColumnProviderStyle, ResolvedColumnProviderStyle>((_props, style) =>
@@ -163,6 +165,10 @@ function createWasmFlexTextContent() {
     measureIntrinsic: ({ props }) => ({ status: "measured" as const, minContent: { width: props.natural.get(), height: 20 }, maxContent: { width: props.natural.get(), height: 20 } }),
     measure: ({ props }) => ({ status: "measured" as const, size: { width: props.natural.get(), height: 20 } }),
   });
+  const ColumnKnown = defineLayoutComponent(() => <Flex style={{ width: "auto", height: 20, minWidth: 0, minHeight: 0, flexBasis: "auto", flexGrow: 0, flexShrink: 0, marginLeft: "auto", flexDirection: "row", flexWrap: "nowrap", layoutDirection: "ltr", alignItems: "flex-start" }}>
+    <Rectangle key="column-known-A" onClick={() => selected.set("column known A")} style={{ width: columnKnownWidth, height: 20, minWidth: 0, minHeight: 0, flexBasis: "auto", flexGrow: 0, flexShrink: 0, fill: "#8a3248", cursor: "pointer" }} />
+    <Rectangle key="column-known-C" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexBasis: 20, flexGrow: 0, flexShrink: 0, fill: "#6e3e79" }} />
+  </Flex>);
   // Stable descriptors keep the pure-measurement cache conservative on paint.
   const columnAutoPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch" }}>
     <Text key="column-text" onClick={() => { columnHits.update(value => value + 1); selected.set("column auto text"); }} style={{ width: "auto", height: 20, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: "auto", wrap: false, font: "10px monospace", fill: "#19375b", cursor: "pointer" }}>{columnWords}</Text>
@@ -172,17 +178,25 @@ function createWasmFlexTextContent() {
     <ColumnProvider key="column-provider" natural={columnProviderNatural} style={{ width: "auto", height: 20, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: "auto", fill: "#8a3248" }} />
     <Rectangle key="column-provider-sibling" onClick={() => selected.set("column provider sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
   </Flex>;
+  const columnKnownPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch" }}>
+    <ColumnKnown key="column-known" />
+    <Rectangle key="column-known-sibling" onClick={() => selected.set("column known sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
+  </Flex>;
   function ColumnAutoComparison() {
     const providerMode = columnProviderMode.get();
-    const provider = providerMode !== "text";
+    const provider = providerMode === 40 || providerMode === 80;
+    const known = providerMode === "known60" || providerMode === "known100";
+    const label = provider ? "Column · paired provider, natural width" : known ? "Column · row content, natural width" : "Column · natural Text width, automatic left margin";
     return <>
-      <Text pointerEvents="none" style={{ left: 420, top: 258, font: "12px sans-serif", fill: "#475569" }}>{provider ? "Column · paired provider, natural width" : "Column · natural Text width, automatic left margin"}</Text>
+      <Text pointerEvents="none" style={{ left: 420, top: 258, font: "12px sans-serif", fill: "#475569" }}>{label}</Text>
       <Rectangle pointerEvents="none" style={{ left: 420, top: 278, width: 180, height: 82, stroke: "#a63758", strokeWidth: 1 }} />
-      {provider ? columnProviderPanel : columnAutoPanel}
+      {provider ? columnProviderPanel : known ? columnKnownPanel : columnAutoPanel}
       <Button x={420} y={380} width={240} label="Change column text" onClick={() => columnWords.update(value => value === "jobs jobs jobs" ? "jobs jobs" : "jobs jobs jobs")} />
-      <Button x={420} y={416} width={240} label={`Column provider: ${providerMode === "text" ? "text" : `${providerMode}px`}`} onClick={() => {
+      <Button x={420} y={416} width={240} label={`Column content: ${providerMode === "text" ? "Text" : providerMode === "known60" ? "row 60px" : providerMode === "known100" ? "row 100px" : `${providerMode}px`}`} onClick={() => {
         if (providerMode === "text") { columnProviderNatural.set(40); columnProviderMode.set(40); }
         else if (providerMode === 40) { columnProviderNatural.set(80); columnProviderMode.set(80); }
+        else if (providerMode === 80) { columnKnownWidth.set(40); columnProviderMode.set("known60"); }
+        else if (providerMode === "known60") { columnKnownWidth.set(80); columnProviderMode.set("known100"); }
         else columnProviderMode.set("text");
       }} />
     </>;

@@ -1229,6 +1229,15 @@ function resolveFlexPlacements(
       getPrimitiveDefinition(child.type) : undefined;
     const measuredColumnProviderCross = !!measuredColumnProviderCrossDefinition?.measureIntrinsic &&
       !!measuredColumnProviderCrossDefinition.measure;
+    const measuredColumnKnownCrossAuto = hasAutoCrossMargin && experimentalLayout && !row &&
+      options.flexDirection === 'column' && options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' &&
+      isKnownLayoutType(layoutChild.type) && (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      typeof declared.height === 'number' && typeof normalized.height === 'number' &&
+      Number.isFinite(normalized.height) && normalized.height >= 0 &&
+      (normalized.flexBasis === undefined || normalized.flexBasis === 'auto') &&
+      (normalized.flexGrow ?? 0) === 0 && normalized.flexShrink === 0 && normalized.minHeight === 0 &&
+      normalized.maxHeight === undefined && (normalized.minWidth === undefined || normalized.minWidth === 0) && normalized.maxWidth === undefined &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined;
     const automaticTextCrossWidth = measuredCrossContext && child.type === Text &&
       (normalized.width === undefined || normalized.width === 'auto') &&
       (normalized.flexBasis === undefined || normalized.flexBasis === 'auto') &&
@@ -1248,7 +1257,7 @@ function resolveFlexPlacements(
     const measuredFlexCrossAuto = measuredAutoCross && child.type === Flex &&
       (normalized.flexDirection ?? 'row') === 'row' && normalized.flexWrap === 'wrap' &&
       (normalized.layoutDirection ?? options.layoutDirection) === 'ltr';
-    if (hasAutoCrossMargin && !measuredTextCrossAuto && !measuredColumnTextCross && !measuredColumnProviderCross && !measuredPrimitiveCrossAuto && !measuredFlexCrossAuto &&
+    if (hasAutoCrossMargin && !measuredTextCrossAuto && !measuredColumnTextCross && !measuredColumnProviderCross && !measuredColumnKnownCrossAuto && !measuredPrimitiveCrossAuto && !measuredFlexCrossAuto &&
         (typeof declaredCrossSize !== 'number' || !Number.isFinite(declaredCrossSize) || declaredCrossSize < 0 || aspectRatio !== undefined)) {
       throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child cross size without aspect sizing');
     }
@@ -1394,10 +1403,10 @@ function resolveFlexPlacements(
     if (intrinsicSizes) measured = intrinsicSizes.maxContent;
     if (!intrinsicSizes && !deferredIntrinsicColumn && (needsMeasuredMain || aspectRatio === undefined && (needsMeasuredCross || crossAuto))) {
       const constraints = {
-        minWidth: measuredColumnTextCross || measuredColumnProviderCross ? 0 : measuredColumnWrapText || measuredColumnProvider ? normalized.width as number : 0,
-        maxWidth: measuredColumnTextCross || measuredColumnProviderCross ? Number.POSITIVE_INFINITY : measuredColumnWrapText || measuredColumnProvider ? normalized.width as number : container.width,
-        minHeight: measuredColumnTextCross || measuredColumnProviderCross ? normalized.height as number : 0,
-        maxHeight: measuredColumnTextCross || measuredColumnProviderCross ? normalized.height as number : measuredColumnWrapText || measuredColumnProvider ? Number.POSITIVE_INFINITY : container.height,
+        minWidth: measuredColumnTextCross || measuredColumnProviderCross || measuredColumnKnownCrossAuto ? 0 : measuredColumnWrapText || measuredColumnProvider ? normalized.width as number : 0,
+        maxWidth: measuredColumnTextCross || measuredColumnProviderCross || measuredColumnKnownCrossAuto ? Number.POSITIVE_INFINITY : measuredColumnWrapText || measuredColumnProvider ? normalized.width as number : container.width,
+        minHeight: measuredColumnTextCross || measuredColumnProviderCross || measuredColumnKnownCrossAuto ? normalized.height as number : 0,
+        maxHeight: measuredColumnTextCross || measuredColumnProviderCross || measuredColumnKnownCrossAuto ? normalized.height as number : measuredColumnWrapText || measuredColumnProvider ? Number.POSITIVE_INFINITY : container.height,
       };
       const measurementChild = clonePibblElement(child);
       setPreNormalizedStyle(
@@ -1415,7 +1424,7 @@ function resolveFlexPlacements(
       );
       if (result.status === 'measured') {
         measured = result.size;
-      } else if (measuredFlexCrossAuto || measuredColumnProviderCross || needsMeasuredMain || (crossAuto && effectiveAlignment(
+      } else if (measuredFlexCrossAuto || measuredColumnProviderCross || measuredColumnKnownCrossAuto || needsMeasuredMain || (crossAuto && effectiveAlignment(
         alignment,
         options.alignItems,
       ) !== 'stretch')) {

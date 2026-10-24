@@ -1600,6 +1600,34 @@ resources and permits an explicit remount. No retained-screen rollback is promis
 Disposal detaches provider dependencies. Known-layout natural column widths and
 broader wrapped/Text profiles retain their current independent admission rules.
 
+### Known-layout column natural cross queries
+
+The same finite LTR nowrap column may request natural width from a known-layout
+root with declared numeric height, automatic basis, zero growth/shrink and
+minHeight0. A neutral minWidth0 is permitted; other bounds, responsive query and
+aspect sizing retain their admission boundaries. Direct and described roots use
+the existing known-family measurement dispatch with width0toInfinity/exact height,
+not a paired-provider operation or a separate solver. Normalized prepared root
+style is authoritative. Only successful queries reach placement; required failures
+diagnose even under stretch alignment.
+
+A row with fixed leaves40+20 measures60x40 and places at x140 in a200width column.
+Changing the first leaf to80 measures100 and moves the row to x100; the following
+item remains x0/y40. Numeric zero to auto margins and descendant updates preserve
+native identity and input ownership. Natural240 overflows at x0 with matching paint
+and targets. Fixed Grid tracks[40,20]/[40] likewise measure60x40; fractional Grid
+tracks retain their allocation-dependent intrinsic error before paint. This Grid
+composition evidence is not a Yoga Grid parity claim. Other known-family queries
+remain subject to their existing measurement contract.
+
+The numeric explicit-basis staged parent-main counterpart remains an open defect:
+with outer200, owner min100/max160, numeric A80/basis80/max25% and B80, native
+normal owner/C start160 and A40 differ from the current native130 contribution.
+The pure112.5 query is a separate result. Public bounded direct/described row and
+column regressions fail while matched no-bound controls pass; prior min/max
+completion evidence does not close this integration cell. No parity is promised
+for that experimental combination until its staged phases are corrected.
+
 ### Bounded experimental cross-axis auto margins
 
 Finite nowrap/wrapped/wrap-reverse rows and columns accept physical and logical

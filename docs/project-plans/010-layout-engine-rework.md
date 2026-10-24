@@ -1,6 +1,6 @@
 # 010 — Experimental layout engine rework
 
-## Current checkpoint and single next slice — 2026-10-23
+## Current checkpoint and single next slice — 2026-10-24
 
 Public lesson companion for142–144: physical percentage placement combines
 natural-height wrapping Text, a toggled static/relative card and an absolute
@@ -20,16 +20,18 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice175 (paired column natural width with side auto margins).
+Latest delivery is slice176 (known-layout natural column widths).
+Slice175 is `6adf0e2b` (paired column natural width with side auto margins).
 Slice174 is `fabe4508` (uniform intrinsic auto-margin normalization).
 Slice173 is `de0a5fe7` (intrinsic physical cross auto margins).
 Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is176: known Flex natural column cross sizing with auto margins.
-The frozen min/max exits are satisfied. Fixed33 is now10complete/12experimental/
-5partial/5missing/1excluded. All seven release gates remain open; independent
+Consolidation56 is `2fd34f0e` for166–168. Next is177: numeric staged contribution and authored zero/auto margins.
+Min/max was reopened by the fresh177public/native counterexample described below.
+The171completion claim was too broad. Fixed33 is now9complete/12experimental/
+6partial/5missing/1excluded. All seven release gates remain open; independent
 intrinsic graphs, automatic minima and other measurement work remain outstanding.
 Consolidation55 is `98bf8b8d` for163–165.
 Slice165 is `cc334a0a` (empty-Rectangle aspect automatic minimum).
@@ -6226,7 +6228,7 @@ open. Fixed33counts and all seven open gates are unchanged. Consolidation59 will
 cover175–177. Docs109mutation probes, public JSDoc, catalog174/12/33 and
 Studio metadata/routes/search pass; focused final review found no material issue.
 
-## [NEXT] Slice176: known Flex natural column cross sizing with auto margins
+## Slice176 delivered: known-layout natural column cross sizing with auto margins
 
 Compare public exact-height/natural-width measurement for a direct/described known
 Flex row with normal column side-auto placement. Start with numeric height40 and
@@ -6235,6 +6237,62 @@ The existing closure table also retains wrapped column Text and row-wrap Text
 natural-width cells: the former needs a Canvas wrapping policy; the latter lacks
 a main-basis/line-formation measurement contract even without auto margins. Do not
 count independent unsupported measurement as parity. Staged owner margins stay open.
+
+Two direct/described public cases failed the auto-cross admission before production.
+The new path dispatches to existing known-layout measurement with exact numeric
+height and unbounded natural width; it does not implement one sizing algorithm per
+family. Authoritative prepared root styles, receiver ownership and required-query
+failure semantics remain intact. Neutral cross minWidth0 is admitted.
+
+Twenty-three auto-owner tests pass: direct/described Flex pure60x40, numeric0 to
+auto placement x0to140, descendant width40to80 producing known100/x100 and hit130
+miss-to-A, stable nodes and exact cleanup; overflow240 remains paintable/targetable
+outside200. Fixed-track Grid60x40 succeeds through the same path. Fractional Grid
+returns its real allocation-dependent error and fails before paint/cleans up under
+stretch; it is not a made-up family exclusion. Four focused files162pass/1skip;
+ordinary40pass/23skip. Final types and changed lint pass.
+
+Source/built470-input checks and installed strict Bundler/NodeNext/no-alias246-input
+consumers pass. Tarball SHA256
+`4e24414d374aa86878977c3dd9ca19b98b308b84711bc03a686dc3f509419ee9`.
+At `http://127.0.0.1:5192/#/examples/layout/wasm-flex-text`, click Compare auto
+margins and cycle Column content through the provider and row60/100 modes.
+Visual inspection confirms readable controls and the moved row. The native probe
+preserves47earlier records and adds3known-row records, including overflow240;
+SHA256 `f43d1ba5025573f347289e665479efa7de196ebfafd909d39cbafd3c5499863a`.
+This proves Flex geometry; Grid evidence is a Pibbl composition contract. Kernel/ABI
+unchanged. Auto-margin stays partial; wrapped column/row Text, other independently
+unsupported measurement contexts and staged-owner authored margins stay explicit.
+
+Final catalog174/12/33, Studio metadata/routes/search,109documentation mutation
+probes and public JSDoc checks pass. Scoped review found no material issue in176.
+Recorded2026-10-24;176 is committed separately from the177failing regression.
+
+### Min/max reopened: a bounds-specific numeric contribution counterexample
+
+While preparing177's staged-margin probe, pinned Yoga exposed a mismatch without
+any authored margin. Outer main200, known auto owner min100/max160, numeric A80
+with basis80/max25%, B80, and following C20 must yield owner/C160 and A40. The
+current ABI9 numeric contribution is130. Four public row/column direct/described
+bounded cases freshly fail at A39 (green instead of native red). Four otherwise
+matched no-active-bound controls pass with pure160 and normal A80/B80/C160; this
+is a bounds-specific integration defect, not an unsupported numeric-basis or
+provider query. The bounded pure query112.5 remains a separate valid result.
+The earlier171closure did not cover this phase distinction and is superseded.
+`flex.min-max` is partial again, with this exact missing row; fixed33 is now
+9complete/12experimental/6partial/5missing/1excluded. All seven gates stay open.
+The177regression file is prepared separately from this independent176delivery.
+
+## [NEXT] Slice177: numeric staged contribution and authored zero/auto margins
+
+Correct the pinned numeric explicit-basis parent-main contribution while retaining
+the distinct paired-leaf and public full-query results. Then admit authored zero/
+auto margin contributions to the existing staged profile and preserve native final
+sharing: paired owner120/A30 moves A start0to10, while numeric owner160/A40 has
+native A start0to30. These are native phase receipts, not final-size fixed points
+or geometric-remainder guesses. Add focused native/public failing evidence first;
+keep resource and input ownership exact and one native solver. Consolidation59
+covers175–177 before further capability production.
 
 ## Scope and execution
 

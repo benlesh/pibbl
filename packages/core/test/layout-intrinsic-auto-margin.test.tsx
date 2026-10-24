@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, expect, it } from 'vitest';
-import { Flex, Rectangle, defineLayoutComponent, definePrimitive, measureElement, signal, useConst, type SystemStyle, type FlexStyle, type RectStyle, type PibblController } from '@pibbl/core';
+import { Flex, Grid, Rectangle, defineLayoutComponent, definePrimitive, measureElement, signal, useConst, type PibblResponsiveStyle, type SystemStyle, type FlexStyle, type RectStyle, type PibblController } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
@@ -490,6 +490,157 @@ it.runIf(experimentalLayout)('fails a required column provider cross query befor
     recovered.dispose();
     const disposed = snapshotWasmLayoutDiagnostics();
     expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+      baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+    ]);
+  } finally { window.removeEventListener('error', prevent); }
+});
+
+it.runIf(experimentalLayout).each([false, true])('measures a %s known row Flex at exact column height before side auto-margin placement', async described => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const childWidth = signal(40);
+  const autoMargin = signal<0 | 'auto'>(0);
+  const hits: string[] = [];
+  const innerStyle: PibblResponsiveStyle<FlexStyle> = {
+    width: 'auto', height: 40, minWidth: 0, minHeight: 0,
+    flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start',
+    flexBasis: 'auto', flexGrow: 0, flexShrink: 0, marginLeft: autoMargin,
+  };
+  const children = () => <>
+    <Rectangle key="A" onClick={() => hits.push('A')} style={{ width: childWidth, height: 40, minWidth: 0, minHeight: 0, flexBasis: 'auto', flexGrow: 0, flexShrink: 0, fill: '#8a3248', cursor: 'pointer' }} />
+    <Rectangle key="C" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexBasis: 20, flexGrow: 0, flexShrink: 0, fill: '#6e3e79' }} />
+  </>;
+  const Card = defineLayoutComponent((props: { readonly style: PibblResponsiveStyle<FlexStyle> }) => <Flex style={props.style}>{children()}</Flex>);
+  const known = () => described ? <Card key="known" style={innerStyle} /> : <Flex key="known" style={innerStyle}>{children()}</Flex>;
+  const service = { measureText: () => { throw new Error('No text.'); } };
+  const constraints = { minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: 40, maxHeight: 40 };
+  expect(measureElement(known(), constraints, service)).toEqual({ status: 'measured', size: { width: 60, height: 40 } });
+
+  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 140; document.body.append(canvas);
+  const controller = pibbl(canvas, <Flex style={{ width: 200, height: 120, flexDirection: 'column', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start' }}>
+    {known()}
+    <Rectangle key="B" style={{ width: 20, height: 80, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, fill: '#426b61' }} />
+  </Flex>);
+  controllers.push(controller); await frame();
+  const pixel = (x: number, y: number) => [...canvas.getContext('2d')!.getImageData(x, y, 1, 1).data];
+  expect(pixel(10, 10)).toEqual([138, 50, 72, 255]);
+  expect(pixel(59, 10)).toEqual([110, 62, 121, 255]);
+  expect(pixel(4, 44)).toEqual([66, 107, 97, 255]);
+  const numericMargin = snapshotWasmLayoutDiagnostics();
+  autoMargin.set('auto'); await frame();
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(numericMargin.nodeCreates);
+  expect(pixel(130, 10)).toEqual([0, 0, 0, 0]);
+  expect(pixel(140, 10)).toEqual([138, 50, 72, 255]);
+  const click = (x: number, y: number) => {
+    const rect = canvas.getBoundingClientRect();
+    for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: rect.left + x, clientY: rect.top + y }));
+  };
+  click(130, 10); await frame(); expect(hits).toEqual([]);
+  const initial = snapshotWasmLayoutDiagnostics();
+  childWidth.set(80); await frame();
+  expect(pixel(100, 10)).toEqual([138, 50, 72, 255]);
+  expect(pixel(180, 10)).toEqual([110, 62, 121, 255]);
+  expect(pixel(4, 44)).toEqual([66, 107, 97, 255]);
+  click(130, 10); await frame(); expect(hits).toEqual(['A']);
+  const resized = snapshotWasmLayoutDiagnostics();
+  expect(resized.nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+  ]);
+  const beforeDetached = snapshotWasmLayoutDiagnostics().solves;
+  childWidth.set(120); await frame();
+  expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforeDetached);
+});
+
+
+it.runIf(experimentalLayout)('keeps a side-auto known row mounted while its natural width overflows the finite column owner', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const width = signal(200);
+  const hits: string[] = [];
+  const canvas = document.createElement('canvas'); canvas.width = 280; canvas.height = 100; document.body.append(canvas);
+  const controller = pibbl(canvas, <Flex style={{ width: 200, height: 80, flexDirection: 'column', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start' }}>
+    <Flex style={{ width: 'auto', height: 40, minWidth: 0, minHeight: 0, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexBasis: 'auto', flexGrow: 0, flexShrink: 0, marginLeft: 'auto' }}>
+      <Rectangle key="A" style={{ width, height: 40, minWidth: 0, minHeight: 0, flexBasis: 'auto', flexGrow: 0, flexShrink: 0, fill: '#8a3248' }} />
+      <Rectangle key="C" onClick={() => { hits.push('C'); }} style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexBasis: 20, flexGrow: 0, flexShrink: 0, fill: '#6e3e79', cursor: 'pointer' }} />
+    </Flex>
+  </Flex>);
+  controllers.push(controller); await frame();
+  const pixel = (x: number) => [...canvas.getContext('2d')!.getImageData(x, 10, 1, 1).data];
+  expect(pixel(210)).toEqual([110, 62, 121, 255]);
+  expect(pixel(230)).toEqual([0, 0, 0, 0]);
+  const initial = snapshotWasmLayoutDiagnostics();
+  width.set(220); await frame();
+  expect(pixel(210)).toEqual([138, 50, 72, 255]);
+  expect(pixel(230)).toEqual([110, 62, 121, 255]);
+  const rect = canvas.getBoundingClientRect();
+  for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: rect.left + 230, clientY: rect.top + 10 }));
+  await frame(); expect(hits).toEqual(['C']);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+  ]);
+  const beforeDetached = snapshotWasmLayoutDiagnostics().solves;
+  width.set(240); await frame();
+  expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforeDetached);
+});
+
+
+it.runIf(experimentalLayout)('measures fixed Grid tracks before placing a side-auto known Grid root', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const hits: string[] = [];
+  const grid = () => <Grid style={{ width: 'auto', height: 40, minWidth: 0, minHeight: 0, flexBasis: 'auto', flexGrow: 0, flexShrink: 0, marginLeft: 'auto', gridTemplateColumns: [40, 20], gridTemplateRows: [40] }}>
+    <Rectangle key="A" onClick={() => { hits.push('A'); }} style={{ width: 40, height: 40, gridColumnStart: 1, gridRowStart: 1, fill: '#8a3248', cursor: 'pointer' }} />
+    <Rectangle key="C" style={{ width: 20, height: 20, gridColumnStart: 2, gridRowStart: 1, fill: '#6e3e79' }} />
+  </Grid>;
+  const service = { measureText: () => { throw new Error('No text.'); } };
+  expect(measureElement(grid(), { minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: 40, maxHeight: 40 }, service))
+    .toEqual({ status: 'measured', size: { width: 60, height: 40 } });
+  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 140; document.body.append(canvas);
+  const controller = pibbl(canvas, <Flex style={{ width: 200, height: 120, flexDirection: 'column', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'stretch' }}>
+    {grid()}
+    <Rectangle key="B" style={{ width: 20, height: 80, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, fill: '#426b61' }} />
+  </Flex>);
+  controllers.push(controller); await frame();
+  const pixel = (x: number, y: number) => [...canvas.getContext('2d')!.getImageData(x, y, 1, 1).data];
+  expect(pixel(139, 10)).toEqual([0, 0, 0, 0]);
+  expect(pixel(150, 10)).toEqual([138, 50, 72, 255]);
+  const rect = canvas.getBoundingClientRect();
+  for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: rect.left + 150, clientY: rect.top + 10 }));
+  await frame(); expect(hits).toEqual(['A']);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+  ]);
+});
+
+it.runIf(experimentalLayout)('fails a side-auto Grid with fractional intrinsic tracks before it paints', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const grid = <Grid style={{ width: 'auto', height: 40, minWidth: 0, minHeight: 0, flexBasis: 'auto', flexGrow: 0, flexShrink: 0, marginLeft: 'auto', gridTemplateColumns: ['1fr'], gridTemplateRows: [40] }}>
+    <Rectangle style={{ width: 40, height: 40, gridColumnStart: 1, gridRowStart: 1, fill: '#8a3248' }} />
+  </Grid>;
+  const service = { measureText: () => { throw new Error('No text.'); } };
+  expect(measureElement(grid, { minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: 40, maxHeight: 40 }, service))
+    .toEqual({ status: 'unsupported', reason: expect.stringMatching(/fractional intrinsic measurement/i) });
+  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 140; document.body.append(canvas);
+  const errors: unknown[] = [];
+  const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+  window.addEventListener('error', prevent);
+  try {
+    const failed = pibbl(canvas, <Flex style={{ width: 200, height: 120, flexDirection: 'column', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'stretch' }}>
+      {grid}
+      <Rectangle key="B" style={{ width: 20, height: 80, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, fill: '#426b61' }} />
+    </Flex>);
+    controllers.push(failed); await frame();
+    expect(errors).toHaveLength(1);
+    expect(String(errors[0])).toMatch(/fractional intrinsic measurement/i);
+    expect([...canvas.getContext('2d')!.getImageData(0, 0, 1, 1).data]).toEqual([0, 0, 0, 0]);
+    failed.dispose();
+    const released = snapshotWasmLayoutDiagnostics();
+    expect([released.activeNodes, released.activeArenas, released.cachedMeasurements, released.activeWasmInstances]).toEqual([
       baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
     ]);
   } finally { window.removeEventListener('error', prevent); }
