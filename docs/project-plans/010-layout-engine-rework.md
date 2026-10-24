@@ -7711,7 +7711,7 @@ lesson preserves default measured/aspect behavior; Measured height also changes
 the selected branch. Both final content allocation and real hit transfer are
 asserted before restoration. No native binary/ABI or public signature change.
 
-## [NEXT] Consolidation70: settled Text and responsive baseline composition
+## [DONE] Consolidation70: settled Text and responsive baseline composition
 
 Consolidate208–210before further production. Include permanent177and standalone
 Text origin regressions, all prior baseline/inset/margin cases, current responsive
@@ -7719,6 +7719,48 @@ ownership tests, source/built end-to-end drivers and installed consumer receipts
 After the checkpoint select coherent mixed alignSelf membership through existing
 ordinary cross placement, with measured hypothetical sizing for stretch if valid.
 No aggregate trust/full-program completion claim; seven release gates remain open.
+
+Fresh checkpoint so far (2026-10-24, macOS, Node24.15 for accumulated Chromium
+matrices; installed toolchain pnpm11.21; browser tooling Node26.9):
+
+- Experimental85files:1160passed/12normal-onlyskips of1172,83.25s.
+- Ordinary85files:352passed/820experimental-onlyskips of1172,6.44s.
+- Source5192/built5193full Text/intrinsic replay:errors[],cleanup000; built470dist
+  inputs. Generic paint-only cache hits preserve solve/measurement counts.
+- Source/built baseline replay includes208settled allocation/aspect,209custom fitted
+  Canvas baseline/glyph target,210current parent-query branch and all earlier
+  baseline controls; exact ownership checks pass. Screenshots inspected.
+- Types/lint,175lessons/12snapshots/33labs, discovery/Studio docs,109documentation
+  mutation probes and public JSDoc52entries/1486declarations/18inherited types/
+  3472members/6576links pass.
+- Installed208–210receipts pass: measured height20→30at exact main40, aspect2
+  restores40×20without ordinary measurement; fitted custom-family middleText uses
+  actual Canvas alphabetic metrics and glyph targeting; current-parent query
+  branch updates selected signals, geometry and stable A/B identities. Nested
+  browser assertions explicitly require each receipt.104marginfixtures,246installed
+  distinputs and strictBundler/NodeNext pass; tarballSHA
+  `0c6ec67c4a401e9490e168ad16ae9f986fb11d8b3a9b0226e2fad0f2331e79d2`.
+  Native artifact remains ABI15/81889bytes,
+  SHA`b427577af2687dfb1af29ddfd89fbc53b1248f3753a92d733473a2d225060a26`.
+  No kernel change in these three slices. Capability counts remain12complete/
+  12experimental/3partial/5missing/1excluded, all7release gates open.
+
+The final85-file matrices include the additive one-shot responsive owner-proof
+regression. Earlier1159/351results are superseded, not counted twice. The ordinary
+Canvas baseline service retains its zero-line diagnostic contract while fitted
+empty text adds its precise reason. No aggregate trust or final review claimed.
+
+## [NEXT] Slice211: mixed per-item baseline membership
+
+Use one native membership bit and the existing ordinary cross-placement algorithm
+for all existing explicit alignSelf values; inherited auto remains a baseline
+participant unless automatic cross margins opt it out. Final-width hypothetical
+measurement supplies automatic stretch's natural line contribution; then ordinary
+stretch resolves against the allocated line without another solver. Preserve
+padding in the native cross record, actual provider exclusion/dependency detach,
+physical baseline reversal and ordinary logical reversal. Establish public RED,
+then native semantic regressions and the required ABI/artifact update. No new
+public API or per-property exclusion queue.
 
 ## Scope and execution
 

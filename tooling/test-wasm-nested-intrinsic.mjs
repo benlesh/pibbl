@@ -221,6 +221,10 @@ try {
       assert.equal(receipt.rootPercentagePadding, true, 'Installed Absolute and Overlay roots must resolve percentage padding from their actual parent allocation, retain the missing-provider pure-measure boundary, preserve targets and identity, reuse paint, and clean up exactly');
       assert.equal(receipt.nestedPercentagePadding, true, 'Installed nested Flow children must resolve numeric and percentage padding from each Flow, Absolute, Overlay, or Grid allocation, preserve moved targets and identity, reuse paint, and clean up exactly');
       assert.equal(receipt.textFirstBaseline, true, 'Installed Text must use the public Canvas baseline service for mixed generic fonts, real Canvas alignment, moved glyph targets, paint reuse, and exact cleanup');
+      assert.equal(receipt.settledMeasuredAspectFinalBox, true, 'Installed settled baseline providers must receive the final aspect-constrained box, retain targets, reuse paint, and clean up');
+      assert.equal(receipt.customFittedMiddleText, true, 'Installed custom-family fitted middle Text must align using real Canvas alphabetic metrics and retain its glyph target');
+      assert.equal(receipt.currentParentQueryBranch, true, 'Installed direct responsive baseline leaves must select the current parent-width branch, preserve identity, update selected inputs, and clean up');
+
       assert.equal(receipt.wrappedTextFirstBaseline, true, 'Installed wrapped Text must align its first visible line from real Canvas baseline metrics, move the last-line target after content and line updates, reuse paint, and clean up');
       assert.equal(receipt.recursiveMeasuredOwner, true, 'Installed known owners must preserve both finite native passes, provider updates, overflow pixels, targets and cleanup');
       assert.equal(receipt.nativeMainContribution, true, 'Installed known main contributions must preserve provider phases, following-target placement, live updates and exact cleanup');

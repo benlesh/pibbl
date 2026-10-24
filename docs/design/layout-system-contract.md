@@ -2095,8 +2095,8 @@ B stays at x40and baseline y offsets remain18/0. Source paint and keyboard order
 remain A then B.
 
 The wrapped profile admits finite LTR/RTL `row` or `row-reverse` + `wrap`/`wrap-reverse`, all existing `alignContent` policies,
-resolved finite row/column gaps, and direct fixed numeric primitive providers or content-bottom
-fallback, plus the existing fixed generic Text profile. Main grow/shrink and
+resolved finite row/column gaps, and direct settled primitive providers or content-bottom
+fallback, plus the Text provider profile below. Main grow/shrink and
 resolved numeric and automatic main margins compose through native final main allocation before baseline
 measurement. Resolved finite signed numeric cross margins contribute to each line's
 ascent as before-margin plus first baseline, and descent as after-margin plus
