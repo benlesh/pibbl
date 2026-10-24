@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice216: native first-line structural baseline selection.
+Latest delivery is slice217: static structural baseline owner origins.
+Slice216 is `369bdd43`; consolidation72 is `15c98913`.
 Slice215 is `53558b31`.
 Slice214 is `2bcc09f9`.
 Slice213 is `b823b569`; consolidation71 is `7a4aa4bf`.
@@ -8030,22 +8031,64 @@ No aggregate trust or program-completion claim. Fixed33 remains12complete/
 Baseline still has the explicit finite closure classes listed under217; final
 independent whole-codebase review remains at program exit. Next217.
 
-## [NEXT] Slice217: static structural owner origin preparation
+## [DONE] Slice217: static structural owner origin preparation
 
-Resolve the remaining concrete static outer-owner gap without a fake containing
-origin or second solver. In-flow native allocation and baseline source are
-independent of absolute descendants; investigate reusing one staged flow plan and
-completing only absolute placement/preflight once the outer baseline origin is
-known. Preserve source indexes, receiver/slot ownership, key occurrences, source
-paint order and failure cleanup. Establish the public counterexample first:
-static inner source aligns at18 while its absolute badge stays anchored to the
-nearest containing owner's padding origin. Complete consolidation72before
-production edits.
+One native in-flow allocation now supplies a static Flex owner's baseline while
+transaction-local absolute descriptors wait for the outer containing origin.
+Direct, nested static chains and transparent descriptions of actual static Flex
+roots preserve current receiver/slot/query ownership and source indexes. Keyless
+occurrences count deferred source entries. Pending plans cannot transfer native
+ownership before finalization; no guessed origin or second flow solve is used.
+The existing static positioning bounds remain in force.
 
-Remaining baseline closure classes are static structural owner origin (this
-slice), Flow/Grid source policy, outer-column fallback/interpretation and
-last-baseline alignment. Unsupported diagnostics do not mark them complete.
-All7release gates and independent final whole-codebase review remain outstanding.
+Public RED receipts `/tmp/pibbl-slice217-red-absolute-order.txt` (three expected
+static admission failures) and `/tmp/pibbl-slice217-described-red.txt` (valid
+transparent static root) preceded their respective production changes. Five
+public tests cover signal changes, paint/hit relative offsets, absolute-first
+source order, direct/nested/described ownership, stable direct paint reuse, late
+absolute measurement failure after baseline preparation and fresh-mount recovery.
+The failure test proves no paint and exact cleanup of nodes, arenas, measurements
+and WASM instances. Stable direct unrelated paint adds zero native solves or
+nodes; regenerating the described Studio tree can add a native solve and is not
+claimed to be universally cacheable. Deferred plans never enter allocation caches.
+
+Fresh Node26.9.0/Chromium focused experimental checks: 197 pass/2 skip in9files;
+ordinary:51pass/148skip in the same9files. Types, changed-code lint, documentation
+mutation probes109, catalog175lessons/12snapshots/33labs, and Studio documentation
+checks pass. Source/built full baseline drivers pass with errors[], cleanup000,
+and built470inputs (`/tmp/pibbl-slice217-{source,built}.txt`); screenshot
+`/tmp/pibbl-slice217-studio.png` was inspected without overlap. The static panel
+is explicitly activated with “Run static test” near the bottom of
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-baseline`; earlier generic
+paint-cache assertions remain unchanged. Installed strict Bundler/NodeNext and
+nested browser receipts pass for direct/nested/described static owners,104margin
+fixtures and246installedinputs (`/tmp/pibbl-slice217-packed.txt`); tarball SHA256
+`9158b49c8a650b94be81de8c4706ead98f0c6959e654e275c1bb34c0b5426871`.
+The unpublished package build validates unchanged ABI17/84137-byte native artifact.
+Targeted helper runtime review found no remaining material issue after root fixes.
+No aggregate trust, baseline capability promotion or release-gate closure claimed.
+
+The committed `baseline-static-owner-probe.cpp` and raw output in its README
+confirm direct/nested badge origins and first-baseline changes against pinned
+Yoga3.2.1. Relative top10 deliberately differs: Yoga A10/B2/badge0 versus
+Pibbl A18/B0/badge0. Pibbl retains slice214's pre-relative contribution contract;
+no CSS agreement is claimed.
+
+## [NEXT] Slice218: prepared Flow first-source baseline
+
+Admit the smallest finite horizontal nowrap Flow root as an outer row baseline
+source through its existing prepared placement and actual primitive receiver.
+Select the first source child, add its unshifted content-y origin/inset once,
+and use content bottom for an empty Flow. Flow's existing rejection of positioned
+children remains unchanged. Establish public signal/relative-origin/empty-fallback
+RED before production. Reuse one staged Flow plan, without a second layout or
+new public selector. Keep Grid's explicit-cell source policy separate.
+
+Remaining finite baseline closure classes are Flow/Grid source policy,
+outer-column fallback/interpretation and last-baseline alignment. Unsupported
+diagnostics do not mark them complete. Consolidate217–219after219, before further
+production. Counts remain12complete/12experimental/3partial/5missing/1excluded;
+all7release gates and independent final whole-codebase review remain outstanding.
 
 ## Scope and execution
 

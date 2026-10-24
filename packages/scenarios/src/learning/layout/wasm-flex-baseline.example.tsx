@@ -4,7 +4,7 @@ import {
   type Signal, type SystemStyle, type LayoutBox, type PibblNode, type PibblResponsiveStyle, type BaselineMeasureInput, type BaselinesResult,
 } from "@pibbl/core";
 
-type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB" | "NC" | "FA" | "FB" | "KA" | "KB" | "KWA" | "KWB";
+type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB" | "NC" | "FA" | "FB" | "KA" | "KB" | "KWA" | "KWB" | "SA" | "SB" | "SBadge";
 type WrappedAlign = "flex-start" | "flex-end" | "center" | "space-between" | "space-around" | "space-evenly" | "stretch";
 type FinalBoxSelf = "auto" | "flex-end" | "center" | "flex-start" | "stretch";
 type KnownSource = "direct" | "described" | "nested" | "empty";
@@ -29,7 +29,7 @@ function createBaselineContent() {
   const crossTop = computed(() => crossMode.get() === "top" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossBottom = computed(() => crossMode.get() === "bottom" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossLabel = computed(() => crossMode.get() === "off" ? "Cross" : crossMode.get());
-  const measuredHeight = signal(20), aspectBox = signal(false), knownFirst = signal(12), knownRelative = signal<"off" | "top" | "bottom">("off"), knownSource = signal<KnownSource>("direct"), knownDirection = signal<KnownDirection>("row"), knownWrappedMode = signal<"nowrap" | "wrap" | "wrap-reverse">("nowrap");
+  const measuredHeight = signal(20), aspectBox = signal(false), knownFirst = signal(12), knownRelative = signal<"off" | "top" | "bottom">("off"), knownSource = signal<KnownSource>("direct"), knownDirection = signal<KnownDirection>("row"), knownWrappedMode = signal<"nowrap" | "wrap" | "wrap-reverse">("nowrap"), staticFirst = signal(12), staticRelative = signal(false), staticNested = signal(false), staticEnabled = signal(false);
   const finalBoxSelf = signal<FinalBoxSelf>("auto");
   const finalBoxSelfLabel = computed(() => `Self ${finalBoxSelf.get()}`);
   const queryMode = signal<"off" | "narrow" | "wide">("off");
@@ -46,6 +46,9 @@ function createBaselineContent() {
   const knownWrappedLabel = computed(() => `Tree ${knownWrappedMode.get()}`);
   const knownSourceLabel = computed(() => `Source ${knownSource.get()}`);
   const knownDirectionLabel = computed(() => `Inner ${knownDirection.get().replace("column", "col").replace("-reverse", " rev")}`);
+  const staticFirstLabel = computed(() => `Static first ${staticFirst.get()}`);
+  const staticRelativeLabel = computed(() => staticRelative.get() ? "Static top" : "Static off");
+  const staticNestedLabel = computed(() => staticNested.get() ? "Static nested" : "Static direct");
   const knownLeafStyle = computed<CardStyle>(() => ({ width: 40, height: 20, flexBasis: knownDirection.get() === "column" || knownDirection.get() === "column-reverse" ? 20 : 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248", position: knownRelative.get() === "off" ? "static" : "relative", top: knownRelative.get() === "top" ? 10 : undefined, bottom: knownRelative.get() === "bottom" ? 10 : undefined }));
   const aspectLabel = computed(() => aspectBox.get() ? "Aspect 2" : "Aspect off");
   const finalBoxStyle = computed<CardStyle>(() => ({
@@ -161,6 +164,20 @@ function createBaselineContent() {
     return <Flex key="known" style={{ width: 40, height: direction === "row" || direction === "row-reverse" ? 20 : 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: "nowrap", alignItems: "flex-start" }}>{renderKnownDecoration()}{renderKnownLeaf()}</Flex>;
   }
   const KnownRoot = defineLayoutComponent(() => renderKnownRoot());
+  const staticLeafStyle = computed<CardStyle>(() => ({ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, fill: "#8a3248", position: staticRelative.get() ? "relative" : "static", top: staticRelative.get() ? 10 : undefined }));
+  const staticLeaf = <BaselineCard key="static-leaf" id="SA" label={computed(() => String(staticFirst.get()))} font="12px monospace" first={staticFirst} style={staticLeafStyle} />;
+  const staticBadge = <BottomCard key="static-badge" id="SBadge" label="" font="10px sans-serif" first={0} style={{ position: "absolute", left: 0, top: 0, width: 8, height: 8, fill: "#d9a744" }} />;
+  function renderStaticOwner() {
+    return staticNested.get()
+      ? <Flex key="static-outer" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, position: "static", flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}><Flex key="static-inner" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, position: "static", flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}>{staticLeaf}{staticBadge}</Flex></Flex>
+      : <Flex key="static-owner" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, position: "static", flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}>{staticLeaf}{staticBadge}</Flex>;
+  }
+  const StaticRoot = defineLayoutComponent(() => <Flex style={{ left: 28, top: 780, width: 100, height: 80, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
+    {renderStaticOwner()}
+    <BaselineCard key="static-peer" id="SB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+  </Flex>);
+  const StaticPanel = () => staticEnabled.get() ? <StaticRoot /> : null;
+  const staticEnabledLabel = computed(() => staticEnabled.get() ? "Static live" : "Run static test");
   const KnownWrappedDescribedLeaf = defineLayoutComponent((props: { readonly style: Signal<CardStyle> }) => <BaselineCard key="known-wrap-leaf" id="KWA" label={knownNumber} font="12px monospace" first={knownFirst} style={props.style} />);
   function renderKnownWrappedRoot() {
     const direction = knownDirection.get(), source = knownSource.get(), mode = knownWrappedMode.get(), vertical = direction === "column" || direction === "column-reverse";
@@ -174,7 +191,7 @@ function createBaselineContent() {
   const KnownWrappedRoot = defineLayoutComponent(() => renderKnownWrappedRoot());
   function renderContent() {
     return <>
-      <Rectangle style={{ width: 760, height: 800, fill: "#f3f0e8" }} />
+      <Rectangle style={{ width: 760, height: 900, fill: "#f3f0e8" }} />
       <Text style={{ left: 28, top: 24, font: "bold 24px sans-serif", fill: "#19375b" }}>WASM · first baseline</Text>
       <Text style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}>Pure providers report baseline offsets from the final allocation.</Text>
       <Rectangle onClick={() => second.update(value => value === 30 ? 34 : 30)} style={{ left: 28, top: 96, width: 200, height: 36, fill: "#19375b", cursor: "pointer" }} />
@@ -256,6 +273,16 @@ function createBaselineContent() {
       </Flex>
       <Rectangle onClick={() => knownWrappedMode.update(value => value === "nowrap" ? "wrap" : value === "wrap" ? "wrap-reverse" : "nowrap")} style={{ left: 180, top: 680, width: 104, height: 28, fill: "#426b61", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 188, top: 689, font: "10px sans-serif", fill: "#ffffff" }}>{knownWrappedLabel}</Text>
+      <Text pointerEvents="none" style={{ left: 28, top: 760, font: "12px sans-serif", fill: "#475569" }}>Static owner keeps the baseline while its badge stays at the outer origin.</Text>
+      <StaticPanel />
+      <Rectangle onClick={() => staticEnabled.update(value => !value)} style={{ left: 150, top: 824, width: 110, height: 28, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 157, top: 832, font: "10px sans-serif", fill: "#ffffff" }}>{staticEnabledLabel}</Text>
+      <Rectangle onClick={() => staticFirst.update(value => value === 12 ? 22 : 12)} style={{ left: 150, top: 780, width: 100, height: 28, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 156, top: 788, font: "10px sans-serif", fill: "#ffffff" }}>{staticFirstLabel}</Text>
+      <Rectangle onClick={() => staticRelative.update(value => !value)} style={{ left: 260, top: 780, width: 100, height: 28, fill: "#6e3e79", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 267, top: 788, font: "10px sans-serif", fill: "#ffffff" }}>{staticRelativeLabel}</Text>
+      <Rectangle onClick={() => staticNested.update(value => !value)} style={{ left: 370, top: 780, width: 110, height: 28, fill: "#a63758", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 377, top: 788, font: "10px sans-serif", fill: "#ffffff" }}>{staticNestedLabel}</Text>
       <Flex style={{ left: 28, top: 530, width: 120, height: numericPanelHeight, flexWrap: wrappedWrap, alignItems: "first-baseline", alignContent: "stretch" }}>
         <BaselineCard key="NA" id="NA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, position: relativePosition, left: 6, top: 10, marginLeft: numericMainMargin, marginTop: numericTop, marginBottom: numericBottom, fill: "#426b61" }} />
         <BaselineCard key="NB" id="NB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
@@ -287,7 +314,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), describedRoot: true, knownFirst: knownFirst.get(), knownRelative: knownRelative.get(), knownSource: knownSource.get(), knownDirection: knownDirection.get(), knownWrappedMode: knownWrappedMode.get(), selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), describedRoot: true, knownFirst: knownFirst.get(), knownRelative: knownRelative.get(), knownSource: knownSource.get(), knownDirection: knownDirection.get(), knownWrappedMode: knownWrappedMode.get(), staticFirst: staticFirst.get(), staticRelative: staticRelative.get(), staticNested: staticNested.get(), staticEnabled: staticEnabled.get(), selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {

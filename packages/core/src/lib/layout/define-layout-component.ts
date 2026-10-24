@@ -89,6 +89,11 @@ export function placedLayoutComponentRoot(element: PibblElement<any>, style?: Pr
   // allocated placement, including explicit static/relative positioning, once.
   if (isPlacementConsumed(element)) setPlacementConsumed(placed);
   if (style) setPreNormalizedStyle(placed, style.style, root, getPrimitiveReceiverToken(root), style.query);
-  if (slot) setElementMetadata(placed, { ...getElementMetadata(placed), preparedLayoutSlot: slot });
+  const metadata = getElementMetadata(element);
+  if (slot || metadata?.absoluteContainingBlock) setElementMetadata(placed, {
+    ...getElementMetadata(placed),
+    ...(slot ? { preparedLayoutSlot: slot } : undefined),
+    ...(metadata?.absoluteContainingBlock ? { absoluteContainingBlock: metadata.absoluteContainingBlock } : undefined),
+  });
   return placed;
 }

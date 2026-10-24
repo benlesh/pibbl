@@ -12,14 +12,15 @@ import type { ResponsiveStylePreparation } from '../style/responsive.js';
 import type { LayoutBox } from './types.js';
 
 type PreparedStyle = Readonly<SystemStyle> | ResponsiveStylePreparation<Readonly<SystemStyle>>;
-type Preflight = (element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver: object, slot: PreparedLayoutSlot, parentMainAxis?: 'row' | 'column') => void;
+export interface KnownLayoutPreflightOptions { readonly deferStaticContainingDescendants?: boolean; }
+type Preflight = (element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver: object, slot: PreparedLayoutSlot, parentMainAxis?: 'row' | 'column', options?: KnownLayoutPreflightOptions) => void;
 const preflights = new WeakMap<Function, Preflight>();
 export function isKnownLayoutType(type: Function): boolean { return preflights.has(type); }
 const snapshots = new WeakMap<PibblRenderTransaction, WeakMap<object, { child: PibblElement<any>; width: number; height: number; prepared: PreparedStyle }>>();
 
 /** Registers only known declarative input preparation, never component evaluation. */
 export function registerKnownLayoutPreflight(type: Function, preflight: Preflight): void { preflights.set(type, preflight); }
-export function preflightKnownLayout(element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver?: object, occurrence = 0, parentSlot?: PreparedLayoutSlot, parentMainAxis?: 'row' | 'column'): PreparedLayoutSlot | undefined {
+export function preflightKnownLayout(element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver?: object, occurrence = 0, parentSlot?: PreparedLayoutSlot, parentMainAxis?: 'row' | 'column', options?: KnownLayoutPreflightOptions): PreparedLayoutSlot | undefined {
   const parent = GLOBAL_STATE.componentRefs, owner = GLOBAL_STATE.currentPibblInstance;
   if (!receiver || !parent || !owner || !GLOBAL_STATE.renderTransaction) return;
   const root = isLayoutComponent(element.type) ? prepareLayoutComponent(element, { receiverToken: receiver }) : element;
@@ -61,18 +62,21 @@ export function preflightKnownLayout(element: PibblElement<any>, style: Readonly
     });
     slot = created; entries.set(key, slot);
   }
-  preflight(root, style, content, rootReceiver, slot, parentMainAxis);
+  preflight(root, style, content, rootReceiver, slot, parentMainAxis, options);
   return slot;
   } finally { visiting.delete(source); }
 }
 export function attachPreparedLayoutSlot(element: PibblElement<any>, slot?: PreparedLayoutSlot): void {
   if (slot) setElementMetadata(element, { ...getElementMetadata(element), preparedLayoutSlot: slot });
 }
+export interface PreparedPlanPending { readonly kind: 'static-flex-containing-origin'; count: number; }
 export interface PreparedLayoutPlan {
   readonly region?: LayoutRegion;
   readonly content: Readonly<LayoutBox>;
   readonly children: readonly PibblElement<any>[];
   readonly placements: { box: LayoutBox; element: PibblElement<any> }[];
+  /** A staged plan cannot transfer ownership while a late containing origin is unresolved. */
+  pending?: PreparedPlanPending;
 }
 export interface PreparedFlexLayoutPlan extends PreparedLayoutPlan { readonly region: LayoutRegion; readonly cached: boolean; readonly revision: number; readonly placements: { box: LayoutBox; layoutY: number; usedWidth: number; usedHeight: number; element: PibblElement<any> }[]; }
 export class PreparedLayoutSlot {
@@ -122,6 +126,7 @@ export function claimPreparedLayoutPlan(element: PibblElement<any>, content: Rea
   if (!transaction || !slot) return;
   const entry = plans.get(transaction)?.get(slot);
   if (!entry || entry.claimed || entry.direction !== getLayoutDirection() || entry.plan.content.width !== content.width || entry.plan.content.height !== content.height) throw new Error('Prepared layout plan does not match its allocation.');
+  if (entry.plan.pending?.count) throw new Error('Prepared static Flex descendants did not receive a settled containing origin.');
   if (entry.plan.region) slot.claim(entry.plan.region); else slot.claimBoundary();
   entry.claimed = true;
   return entry.plan;

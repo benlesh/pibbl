@@ -4411,7 +4411,7 @@ const drafts = [
       "Experimental horizontal row/row-reverse in LTR/RTL with direct primitive leaves whose content boxes settle before baseline queries. A bounded wrap and wrap-reverse profile composes finite resolved gaps and align-content distribution with numeric primitive providers, bottom-edge fallback or settled Text; main grow/shrink and resolved numeric or automatic main margins compose, numeric cross margins contribute to per-line ascent/descent, while automatic cross margins opt out of baseline sharing and absorb their own line allocation. Text support uses nonempty resolved lines at final allocation with positive px fonts and existing Canvas baseline/fitting/overflow policies; application-owned fonts remain uncached, including wrapped first/last provider metrics; reverse wrapping preserves physical first baselines by reflecting line groups, matching the retained Chromium control rather than Yoga per-leaf reflection. Direct settled responsive styles retain the finite parent selection through baseline measurement. Explicit alignSelf opts out of baseline queries and reuses ordinary per-line placement, including measured automatic stretch. Last-baseline alignment remains outside this lesson.",
       "Offsets are finite and ordered, including values outside the content box. A missing provider uses its bottom edge; a declared unsupported provider diagnoses before paint. Canvas metrics determine the Text row; no native font-parity or performance claim.",
     ],
-    canvas: { width: 760, height: 800 },
+    canvas: { width: 760, height: 900 },
     related: ["wasm-flex-intrinsic-primitive", "wasm-flex-text", "flex"],
     exportName: "WasmFlexBaselineExample",
     load: () => import("./learning/layout/wasm-flex-baseline.example"),

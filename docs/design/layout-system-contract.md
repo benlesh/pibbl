@@ -2081,7 +2081,7 @@ the root receiver, and only successful transactions publish results. Responsive
 owner proofs attach to the actual root; query/non-generic Text cache bypasses stay
 in force.
 
-A settled finite non-static Flex root contributes its first source-order
+A settled finite Flex root contributes its first source-order
 in-flow child's baseline. Absolute decoration is skipped. This selection is
 independent of the inner main direction: row, row-reverse, column and
 column-reverse all use the selected child's physical content-y origin. Empty
@@ -2101,8 +2101,28 @@ its physical line origin without changing source selection. The proof survives
 unchanged cached allocation and is invalidated by count changes, ordinary solve,
 failed wrap solve or disposal. Empty wrapped roots prove zero members and use
 content bottom. The private ABI17 query is constant-time; it never infers lines
-from paint geometry or retains a second line graph. Static outer structural
-owners, Flow/Grid selection, outer-column baseline alignment and last-baseline placement
+from paint geometry or retains a second line graph.
+
+A static structural Flex owner uses the same baseline selection without becoming
+an absolute containing block. Its in-flow native allocation is prepared once;
+absolute source entries retain transaction-local descriptors until the nearest
+non-static ancestor supplies the final containing origin. Source indexes,
+keyless occurrences, receiver/query ownership and paint order are preserved.
+Nested static chains and transparent descriptions of actual Flex roots use the
+same prepared slots. No speculative zero origin or second native flow solve is
+used. Plans awaiting that origin cannot be claimed; late absolute measurement
+failure releases the pending resources, and a fresh mount can recover. Existing
+static positioning bounds still apply: a static root must be nowrap, and wrapped
+or non-row ancestor chains retain their fixed numeric direct-chain requirements.
+Stable direct trees reuse completed allocations on unrelated paint. Regenerating
+a described static tree may repeat its native allocation; unresolved plans are
+never cached. This bounded path makes no universal paint-cache claim.
+
+The pinned Yoga static-owner probe agrees on baseline changes and absolute badge
+anchoring. It includes a selected child's relative offset in the structural
+contribution, whereas Pibbl preserves the pre-relative contribution contract
+above. This is an explicit semantic difference, not a CSS agreement claim.
+Flow/Grid selection, outer-column baseline alignment and last-baseline placement
 remain distinct unsupported classes. An inner column contributing a vertical
 source baseline does not enable baseline alignment on an outer column.
 

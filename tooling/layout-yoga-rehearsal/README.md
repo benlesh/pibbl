@@ -571,3 +571,37 @@ bounds, and `CalculateLayout.cpp` derives aspect cross after main flexing. These
 records justify Pibbl's empty-content zero floor, not a CSS transferred-size
 minimum or automatic-minimum parity for Text/images/custom content. The larger
 aspect automatic-minimum category stays open.
+
+### Static structural owner probe (slice 217)
+
+`baseline-static-owner-probe.cpp` is a focused Yoga 3.2.1 control, not a
+capability or release-gate promotion. It uses the pinned reference commit
+`042f5013152eb81c1552dec945b88f7b95ca350f`, web defaults false, point scale zero,
+and no errata. Compile it with the same Yoga sources as the other probes.
+The 2026-10-24 raw output was:
+
+```text
+nested=0 absoluteFirst=0 step=0 A=18 B=0 badge=0
+nested=0 absoluteFirst=0 step=1 A=8 B=0 badge=0
+nested=0 absoluteFirst=0 step=2 A=10 B=2 badge=0
+nested=0 absoluteFirst=1 step=0 A=18 B=0 badge=0
+nested=0 absoluteFirst=1 step=1 A=8 B=0 badge=0
+nested=0 absoluteFirst=1 step=2 A=10 B=2 badge=0
+nested=1 absoluteFirst=0 step=0 A=18 B=0 badge=0
+nested=1 absoluteFirst=0 step=1 A=8 B=0 badge=0
+nested=1 absoluteFirst=0 step=2 A=10 B=2 badge=0
+nested=1 absoluteFirst=1 step=0 A=18 B=0 badge=0
+nested=1 absoluteFirst=1 step=1 A=8 B=0 badge=0
+nested=1 absoluteFirst=1 step=2 A=10 B=2 badge=0
+```
+
+Steps 0 and 1 report first baselines 12 and 22. Step 2 keeps 22 and adds a
+relative top of 10 to the selected child. The static badge remains at the
+nearest non-static ancestor's origin for both direct and nested static owners,
+regardless of the absolute child's source order.
+
+Step 2 is a semantic difference: Yoga includes the selected child's relative
+offset in the structural baseline contribution. Pibbl retains its existing
+slice-214 contract: structural contributions use pre-relative layout placement,
+while relative offsets move paint and hit geometry. Pibbl therefore expects
+A=18, B=0, badge=0 at step 2. No CSS agreement is claimed by this probe.

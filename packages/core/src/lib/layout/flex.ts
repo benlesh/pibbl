@@ -208,6 +208,25 @@ interface FlexPlacement extends CachedFlexPlacement {
   box: LayoutBox;
   element: PibblElement<any>;
 }
+interface DeferredStaticAbsolutePlacement {
+  readonly sourceIndex: number;
+  readonly child: PibblElement<any>;
+  readonly style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>;
+  readonly receiverToken: object;
+  readonly query: PreparedQuery | undefined;
+  readonly measurement: FlexMeasurementInput | undefined;
+  readonly measurementToken: object | undefined;
+}
+interface DeferredStaticPlacementState {
+  /** Source-indexed descriptors keep source ordering without scanning pending entries. */
+  readonly slots: Array<DeferredStaticAbsolutePlacement | undefined>;
+  readonly style: Readonly<ResolvedFlexStyle>;
+}
+const deferredStaticPlans = new WeakMap<PreparedFlexLayoutPlan, DeferredStaticPlacementState>();
+function deferredStaticPlacementSentinel(): FlexPlacement {
+  const fail = (): never => { throw new Error('Deferred static Flex absolute placement was read before finalization.'); };
+  return { get box() { return fail(); }, get layoutY() { return fail(); }, get usedWidth() { return fail(); }, get usedHeight() { return fail(); }, get element() { return fail(); } };
+}
 
 function renderFlex(
   props: FlexProps,
@@ -265,11 +284,11 @@ function renderFlex(
 function flexMeasurementService(ctx: RenderingContext2D): CanvasMeasurementService {
   return canvasMeasurementService(ctx);
 }
-function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexStyle>, localContent: Readonly<LayoutBox>, service: CanvasMeasurementService, region?: LayoutRegion, parentSlot?: PreparedLayoutSlot) {
+function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexStyle>, localContent: Readonly<LayoutBox>, service: CanvasMeasurementService, region?: LayoutRegion, parentSlot?: PreparedLayoutSlot, deferStaticAbsolute?: Array<DeferredStaticAbsolutePlacement | undefined>) {
   const revision = allocationInputRevision();
   // Decide before materializing or inspecting children; normal paint traversal
   // still visits them and resolves their current receiver-owned paint inputs.
-  const cached = style[FLEX_INHERITED_CONTAINING_BOX] ? undefined : region?.allocationCache?.read(props.children, revision, localContent, style);
+  const cached = deferStaticAbsolute || style[FLEX_INHERITED_CONTAINING_BOX] ? undefined : region?.allocationCache?.read(props.children, revision, localContent, style);
   const children = prepareLayoutChildren(props.children, 'Flex');
   let placements: FlexPlacement[];
   if (cached) {
@@ -302,7 +321,7 @@ function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexSty
     placements = resolveFlexPlacements(localContent, children, style, {
       service,
       measureElement: (element, constraints) => measureElement(element, constraints, service),
-    }, region, staged, parentSlot);
+    }, region, staged, parentSlot, deferStaticAbsolute);
   }
   return { children, placements, revision, content: localContent, cached: cached !== undefined };
 }
@@ -348,7 +367,7 @@ let allocatedIntrinsicMain: { receiver: object; main: number; rootMin?: number; 
 // through the immediate child measurement; ordinary public queries retain the
 // resolved outer size.
 let requestedIntrinsicContribution: { receiver: object; axis: 'row' | 'column'; normalOwner?: boolean } | undefined;
-if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, content, receiver, slot, parentMainAxis) => {
+if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, content, receiver, slot, parentMainAxis, preflightOptions) => {
   const options = normalizeFlexOptions(style as Readonly<FlexStyle>, content);
   const releaseLayout = pushLayoutBox(content, options);
   const previous = GLOBAL_STATE.primitiveReceiverToken;
@@ -402,14 +421,40 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
       overflow: (style as Readonly<FlexStyle>).overflow ?? 'visible',
       ...normalizeFlexOptions(style as Readonly<FlexStyle>, content),
     } as Readonly<ResolvedFlexStyle>;
-    const plan = prepareFlexAllocation(element.props as FlexProps, resolved, content, flexMeasurementService(ctx), region, slot);
-    prepareFlexDescendants(plan, resolved, slot);
-    stagePreparedLayoutPlan(slot, { ...plan, region });
+    const deferred = preflightOptions?.deferStaticContainingDescendants ? [] as Array<DeferredStaticAbsolutePlacement | undefined> : undefined;
+    const plan = prepareFlexAllocation(element.props as FlexProps, resolved, content, flexMeasurementService(ctx), region, slot, deferred);
+    const staged = { ...plan, region } as PreparedFlexLayoutPlan;
+    if (deferred) {
+      // Count represents the unresolved origin phase, even if this owner has no direct absolute child.
+      staged.pending = { kind: 'static-flex-containing-origin', count: 1 };
+      deferredStaticPlans.set(staged, { slots: deferred, style: resolved });
+      // Prepare in-flow known descendants now; static descendants inherit this pending origin.
+      prepareFlexDescendants(staged, resolved, slot, true);
+    } else prepareFlexDescendants(staged, resolved, slot);
+    stagePreparedLayoutPlan(slot, staged);
   } finally { GLOBAL_STATE.primitiveReceiverToken = previous; releaseLayout(); }
 });
 
+function deferredStaticState(plan: PreparedFlexLayoutPlan): DeferredStaticPlacementState | undefined {
+  return deferredStaticPlans.get(plan);
+}
+function finalizeDeferredStaticAbsolutePlacements(plan: PreparedFlexLayoutPlan, style: Readonly<ResolvedFlexStyle>): void {
+  const state = deferredStaticState(plan as PreparedFlexLayoutPlan);
+  if (!state) return;
+  let paddingBox: Readonly<LayoutBox> | undefined;
+  for (let sourceIndex = 0; sourceIndex < state.slots.length; sourceIndex++) {
+    const entry = state.slots[sourceIndex];
+    if (!entry) continue;
+    if (entry.sourceIndex !== sourceIndex || sourceIndex >= plan.placements.length) throw new Error('Deferred static absolute placement lost source ordering.');
+    plan.placements[sourceIndex] = resolveAbsoluteFlexPlacement(paddingBox ??= resolveFlexContainingBox(style, plan.content),
+      entry.child, entry.style, entry.receiverToken, entry.query, plan.content, style, entry.measurement, plan.region, entry.measurementToken);
+    state.slots[sourceIndex] = undefined;
+  }
+}
+
 /** Known descendants prepare only after this boundary's own allocation settles. */
-function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 'placements' | 'content'>, style: Readonly<ResolvedFlexStyle>, parentSlot?: PreparedLayoutSlot): void {
+function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 'placements' | 'content'> & { region?: LayoutRegion }, style: Readonly<ResolvedFlexStyle>, parentSlot?: PreparedLayoutSlot, unresolvedStaticOrigin = false): void {
+  if (!unresolvedStaticOrigin) finalizeDeferredStaticAbsolutePlacements(plan as PreparedFlexLayoutPlan, style);
   let containingBox: Readonly<LayoutBox> | undefined;
   let flexOccurrence = 0;
   let descriptionOccurrences: Map<Function, number> | undefined;
@@ -425,14 +470,21 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
           descriptionOccurrences.set(child.type, occurrence + 1);
         }
       }
+      // A static owner has not received its containing origin yet. Its direct
+      // absolute entries are descriptors, never settled placement objects.
+      if (deferredStaticState(plan as PreparedFlexLayoutPlan)?.slots[index]) continue;
       const placement = plan.placements[index];
       const prepared = peekPreNormalizedStyle(placement.element);
       if (!prepared) throw new Error('Known layout preparation requires settled receiver inputs.');
       const receiver = getPrimitiveReceiverToken(placement.element);
+      if (!receiver) throw new Error('Known layout preparation requires the current child receiver.');
+      const preparedRoot = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken: receiver }) : child;
+      const staticFlexRoot = preparedRoot.type === Flex && (prepared.style as FlexStyle).position === 'static';
       let preparationChild = child;
       // Declarative static Flex boxes pass the nearest owner's padding box through
       // existing placement metadata. Nothing is attached to authored props/styles.
-      if (child.type === Flex && (prepared.style as FlexStyle).position === 'static') {
+      const unresolvedStaticChild = unresolvedStaticOrigin && staticFlexRoot;
+      if (staticFlexRoot && !unresolvedStaticChild) {
         const childStyle = prepared.style as FlexStyle;
         const nonRowChain = style.flexDirection !== 'row' || (childStyle.flexDirection ?? 'row') !== 'row';
         if ((childStyle.flexWrap ?? 'nowrap') !== 'nowrap' ||
@@ -455,8 +507,25 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
       const staged = getElementMetadata(placement.element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
       // A baseline pass may have already staged this exact settled child. Retain
       // static containing-box metadata above, but never stage the slot twice.
-      if (staged && peekPreparedLayoutPlan(staged, content, (prepared.style as FlexStyle).layoutDirection ?? style.layoutDirection)) continue;
-      const nested = preflightKnownLayout(preparationChild, prepared.style, content, receiver, occurrence, parentSlot, isRowDirection(style.flexDirection) ? 'row' : 'column');
+      const current = staged && peekPreparedLayoutPlan(staged, content, (prepared.style as FlexStyle).layoutDirection ?? style.layoutDirection);
+      if (current) {
+        if (preparedRoot.type === Flex) {
+          const stagedFlex = current as PreparedFlexLayoutPlan;
+          const state = deferredStaticState(stagedFlex);
+          if (state && !unresolvedStaticOrigin) {
+            const inherited = getElementMetadata(placement.element)?.absoluteContainingBlock;
+            if (!inherited) throw new Error('Static structural descendants require the settled containing box before finalization.');
+            const nestedStyle = { ...state.style, [FLEX_INHERITED_CONTAINING_BOX]: inherited } as Readonly<ResolvedFlexStyle>;
+            finalizeDeferredStaticAbsolutePlacements(stagedFlex, nestedStyle);
+            prepareFlexDescendants(stagedFlex, nestedStyle, staged);
+            stagedFlex.pending!.count = 0;
+            deferredStaticPlans.delete(stagedFlex);
+          }
+        }
+        continue;
+      }
+      const nested = preflightKnownLayout(preparationChild, prepared.style, content, receiver, occurrence, parentSlot, isRowDirection(style.flexDirection) ? 'row' : 'column',
+        unresolvedStaticChild ? { deferStaticContainingDescendants: true } : undefined);
       attachPreparedLayoutSlot(placement.element, nested);
     }
 }
@@ -1110,6 +1179,7 @@ function resolveFlexPlacements(
   region?: LayoutRegion,
   stagedIntrinsic?: PreparedIntrinsicMainStage,
   parentSlot?: PreparedLayoutSlot,
+  deferStaticAbsolute?: Array<DeferredStaticAbsolutePlacement | undefined>,
 ): FlexPlacement[] {
   if (region) recordWasmAllocationPass();
   assertFiniteBox(container);
@@ -1185,17 +1255,14 @@ function resolveFlexPlacements(
       const measurementToken = naturalWidth || naturalHeight ? region?.absoluteMeasurementIdentity(child.type,
         child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`) : undefined;
       if (measurementToken) (absoluteMeasurementTokens ??= new Set()).add(measurementToken);
-      placementsBySource[sourceIndex] = resolveAbsoluteFlexPlacement(
-        absolutePaddingBox ??= resolveFlexContainingBox(style, container),
-        child,
-        normalized,
-        receiverToken,
-        preparedStyleQuery(prepared),
-        container,
-        options,
-        naturalWidth || naturalHeight ? measurement : undefined,
-        region,
-        measurementToken,
+      const absoluteMeasurement = naturalWidth || naturalHeight ? measurement : undefined;
+      if (deferStaticAbsolute) {
+        deferStaticAbsolute[sourceIndex] = { sourceIndex, child, style: normalized, receiverToken,
+          query: preparedStyleQuery(prepared), measurement: absoluteMeasurement, measurementToken };
+        placementsBySource[sourceIndex] = deferredStaticPlacementSentinel();
+      } else placementsBySource[sourceIndex] = resolveAbsoluteFlexPlacement(
+        absolutePaddingBox ??= resolveFlexContainingBox(style, container), child, normalized, receiverToken,
+        preparedStyleQuery(prepared), container, options, absoluteMeasurement, region, measurementToken,
       );
       continue;
     }
@@ -2476,12 +2543,10 @@ function prepareKnownFlexFirstBaseline(
 ): PreparedKnownFlexBaseline | undefined {
   if ((item.baselineRoot ?? item.child).type !== Flex) return;
   const style = item.normalized as Readonly<FlexStyle>;
-  if (style.position === 'static') {
-    throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
-      'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires a settled non-static Flex root');
-  }
+  const staticOwner = style.position === 'static';
   const content = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
-  const slot = preflightKnownLayout(item.child, item.normalized, content, item.receiverToken, item.layoutOccurrence, parentSlot, 'row');
+  const slot = preflightKnownLayout(item.child, item.normalized, content, item.receiverToken, item.layoutOccurrence, parentSlot, 'row',
+    staticOwner ? { deferStaticContainingDescendants: true } : undefined);
   if (!slot) throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
     'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the direct Flex child did not prepare a native allocation');
   const direction = style.layoutDirection ?? getLayoutDirection();
@@ -2500,7 +2565,9 @@ function readPreparedFlexFirstBaseline(
 ): { readonly first: number; readonly last: number } {
   const content = plan.content;
   const firstLineCount = wrapped ? plan.region.firstWrapLineCount() : undefined;
+  const pending = deferredStaticState(plan);
   for (let index = 0; index < plan.children.length; index++) {
+    if (pending?.slots[index]) continue;
     const source = plan.children[index];
     const placement = plan.placements[index];
     const prepared = peekPreNormalizedStyle(placement.element);
@@ -2564,10 +2631,9 @@ function assertSupportedFirstBaselineFlex(
       prepareLayoutComponent(item.child, { receiverToken: item.receiverToken }) : item.child;
     if (baselineRoot !== item.child) item.baselineRoot = baselineRoot;
     if (baselineRoot.type === Flex) {
-      const childStyle = style as Readonly<FlexStyle>;
-      if (childStyle.position === 'static' || item.crossAuto || !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
+      if (item.crossAuto || !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
         throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
-          'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires a settled non-static Flex root');
+          'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires settled finite Flex geometry');
       }
       continue;
     }
