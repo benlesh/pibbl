@@ -299,6 +299,38 @@ void runResolvedCross(float ownerHeight, ResolvedCrossProfile profile, bool auto
   YGNodeFreeRecursive(root); YGConfigFree(config);
 }
 
+
+// Slice 181: direct measured Text-width geometry in the remaining finite
+// column direction variants. The callback is deliberately synthetic, so this
+// reports Yoga's query envelope and physical placement without font parity.
+struct ColumnDirectionTextCall { int count = 0; float width = 0; float height = 0; YGMeasureMode widthMode = YGMeasureModeUndefined; YGMeasureMode heightMode = YGMeasureModeUndefined; } columnDirectionTextCall;
+YGSize measureColumnDirectionText(YGNodeConstRef, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+  columnDirectionTextCall = {columnDirectionTextCall.count + 1, width, height, widthMode, heightMode};
+  return {30, 40};
+}
+const char* directionName(YGFlexDirection direction) {
+  return direction == YGFlexDirectionColumnReverse ? "column-reverse" : "column";
+}
+void runColumnDirectionText(YGFlexDirection direction, YGDirection layoutDirection, bool autoLeft) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config); auto text = YGNodeNewWithConfig(config); auto peer = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, direction); YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+  YGNodeStyleSetWidth(root, 200); YGNodeStyleSetHeight(root, 120);
+  YGNodeStyleSetHeight(text, 40); YGNodeStyleSetFlexBasisAuto(text); YGNodeStyleSetFlexGrow(text, 0); YGNodeStyleSetFlexShrink(text, 0);
+  YGNodeStyleSetMinWidth(text, 0); YGNodeStyleSetMinHeight(text, 0);
+  if (autoLeft) YGNodeStyleSetMarginAuto(text, YGEdgeLeft); else YGNodeStyleSetMargin(text, YGEdgeLeft, 0);
+  YGNodeSetMeasureFunc(text, measureColumnDirectionText);
+  YGNodeStyleSetWidth(peer, 20); YGNodeStyleSetHeight(peer, 80); YGNodeStyleSetFlexBasis(peer, 80);
+  YGNodeStyleSetFlexGrow(peer, 0); YGNodeStyleSetFlexShrink(peer, 0); YGNodeStyleSetMinWidth(peer, 0); YGNodeStyleSetMinHeight(peer, 0);
+  columnDirectionTextCall = {};
+  YGNodeInsertChild(root, text, 0); YGNodeInsertChild(root, peer, 1);
+  YGNodeCalculateLayout(root, 200, 120, layoutDirection);
+  std::printf("intrinsic-auto-column-direction-text direction=%s layoutDirection=%s marginLeft=%s model=synthetic-not-font-parity root={width:%.17g,height:%.17g} Text={left:%.17g,top:%.17g,width:%.17g,height:%.17g} B={left:%.17g,top:%.17g,width:%.17g,height:%.17g} query={count:%d,width:%.17g,widthMode:%s,height:%.17g,heightMode:%s}\n",
+    directionName(direction), layoutDirection == YGDirectionRTL ? "rtl" : "ltr", autoLeft ? "auto" : "0", YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(text), YGNodeLayoutGetTop(text), YGNodeLayoutGetWidth(text), YGNodeLayoutGetHeight(text), YGNodeLayoutGetLeft(peer), YGNodeLayoutGetTop(peer), YGNodeLayoutGetWidth(peer), YGNodeLayoutGetHeight(peer), columnDirectionTextCall.count, columnDirectionTextCall.width, measureMode(columnDirectionTextCall.widthMode), columnDirectionTextCall.height, measureMode(columnDirectionTextCall.heightMode));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
+
 }
 int main() {
   for (bool column : { false, true }) for (bool bothAuto : { false, true }) {
@@ -317,5 +349,6 @@ int main() {
   runColumnText(160, 60, 1, false); runColumnText(200, 260, 1, false); runColumnText(160, 260, 1, false);
   runColumnText(200, 260, 1, true);
   for (auto width : {180.0f, 100.0f, 70.0f, 16.0f}) for (auto autoTop : {false, true}) runRowWrappedText(width, autoTop);
+  for (auto direction : { YGFlexDirectionColumn, YGFlexDirectionColumnReverse }) for (auto layoutDirection : { YGDirectionLTR, YGDirectionRTL }) for (auto autoLeft : {false, true}) runColumnDirectionText(direction, layoutDirection, autoLeft);
   for (auto ownerHeight : {100.0f, 80.0f}) for (auto profile : { ResolvedCrossProfile::Aspect, ResolvedCrossProfile::PercentSize, ResolvedCrossProfile::PercentMin }) for (auto autoTop : {false, true}) runResolvedCross(ownerHeight, profile, autoTop);
 }

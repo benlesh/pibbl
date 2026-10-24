@@ -20,8 +20,9 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice180 `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation60 freshly verifies178–180; next is181 natural-column directions.
+Latest delivery is slice181 (natural column cross sizing across parent directions).
+Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
+Consolidation60 is `f5083bcb` for178–180; the next slice is182.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -34,7 +35,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is181: finite natural-column direction gaps proven by matched public baselines.
+Consolidation56 is `2fd34f0e` for166–168. Next is182: remaining matched Text sizing/admission branches.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6521,14 +6522,54 @@ These are true margin-only direction gaps, unlike invalid companion fixtures
 whose sizing prerequisites still need correction. Preserve original remaining
 intrinsic/wrapping/staged numeric-margin targets and responsible gates.
 
-## [NEXT] Slice181: natural column cross sizing across parent directions
+## Slice181 delivered: natural column widths across parent directions
 
-Close the three proven unwrapped Text direction gaps using the shared existing
-exact-height/natural-width query and native placement. Extend paired/known and
-wrapped natural-column profiles only where identical valid numeric0/auto public
-pairs prove the same query works; retain query failures and resource ownership.
-Keep the finite exit table honest about independent unsupported intrinsic
-contexts, including staged percentage owners with opposite numeric margins.
+Delivered2026-10-24. Twelve actual public numeric0controls mounted first. Three
+LTR auto controls passed; nine RTL/reverse Text, paired-provider and described
+known-Flex auto transitions failed before paint. Three shared profile predicates
+now admit either nowrap column main direction and either parent reading direction.
+All child-specific measurement guards remain, including the known child's own
+supported intrinsic direction. Wrapped-column Text is unchanged. No API/ABI,
+new query/solver/cache or ordinary-mode change.
+
+The permanent12case matrix asserts exact x for0/left/both/right margins, main y0
+or80, provider40to80 and known owner60to100, browser Text metrics, explicit
+provider width0toInfinity/exact40 pure query, old/new targets, stable hook/native
+identities, paint measurement/solve reuse and exact four-counter teardown.
+Node24.15.0/Chromium focused9files pass112/skip1 in3.38s; ordinary49/skip64
+in2.86s. Five prior column-profile cases pass/skip423 in2.30s. Scoped review clean.
+
+Pinned native probe preserves77records and adds8, total85, source SHA256
+`af91a2815ae714ad50158b4240c7ce1b37b95d4c107ade84018e2cca027648df`.
+Synthetic30x40 Text: physical left auto x170 in both directions; y0/80 follows
+column/reverse; RTLzero already startsx170. Yoga's at-most200/exact40 query is
+recorded separately from Pibbl's natural unbounded-width/exact-height query;
+font/callback parity is not claimed. Kernel/ABI10 unchanged.
+
+Source/built dedicated Text/provider/known direction replays check pixels and
+transfer selection from the following sibling to each moved target; cleanup0000,
+built470inputs. The installed strict Bundler/NodeNext/no-alias246-input consumer
+passes paired direction geometry/targets/identity and104prior margin fixtures;
+tarball SHA256 `eaa6c4a25692c10810eba3b496a03e1d8181d084d4c2ca41f8e3d01195cd547c`.
+At `http://127.0.0.1:5192/#/examples/layout/wasm-flex-text`, click Compare auto
+margins, then LTR/RTL and Reverse beside the column. Column content cycles Text,
+provider40/80 and known rows60/100. Wrapped Text keeps its prior bounded direction.
+Visual inspection confirms readable direction controls; the existing natural-row
+button label now updates reactively. The complete source Flex/Text replay also
+passes, errors[]/cleanup000. Types/lint, public JSDoc, catalog174/12/33, Studio
+routes/search and109docs mutation probes pass. Fixed33stays10complete/12experimental/5partial/5missing/
+1excluded; auto margins and all7release gates remain open.
+
+## [NEXT] Slice182: remaining matched Text auto-cross admission branches
+
+Freeze one case per remaining predicate branch, comparing otherwise identical
+numeric0/auto public mounts. Initial real controls identify column Text with a
+numeric basis and automatic height as margin-only candidates; wrapped-column
+intrinsic width under parentwrap fails atzero too and remains an independent
+foundation. Audit the existing natural-row growth/shrink/bounds branches and
+wrapped Text under parentnowrap before selecting a shared-path implementation.
+Preserve original targets and responsible gates; no untested-profile parity or
+label-only removal. Consolidate181–183 before further capability production.
 
 ## Scope and execution
 

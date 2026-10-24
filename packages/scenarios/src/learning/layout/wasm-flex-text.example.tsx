@@ -155,6 +155,8 @@ function createWasmFlexTextContent() {
   const columnHits = signal(0);
   const columnProviderMode = signal<"text" | "wrappedText" | 40 | 80 | "known60" | "known100">("text");
   const columnProviderNatural = signal(40);
+  const columnDirection = signal<"column" | "column-reverse">("column");
+  const columnReadingDirection = signal<"ltr" | "rtl">("ltr");
   const columnKnownWidth = signal(40);
   type ColumnProviderStyle = FlexStyle & { readonly fill?: string };
   type ResolvedColumnProviderStyle = SystemStyle & { readonly width: number; readonly height: number; readonly fill?: string };
@@ -171,7 +173,7 @@ function createWasmFlexTextContent() {
     <Rectangle key="column-known-C" style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexBasis: 20, flexGrow: 0, flexShrink: 0, fill: "#6e3e79" }} />
   </Flex>);
   // Stable descriptors keep the pure-measurement cache conservative on paint.
-  const columnAutoPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch" }}>
+  const columnAutoPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: columnDirection, layoutDirection: columnReadingDirection, flexWrap: "nowrap", alignItems: "stretch" }}>
     <Text key="column-text" onClick={() => { columnHits.update(value => value + 1); selected.set("column auto text"); }} style={{ width: "auto", height: 20, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: "auto", wrap: false, font: "10px monospace", fill: "#19375b", cursor: "pointer" }}>{columnWords}</Text>
     <Rectangle key="column-sibling" onClick={() => selected.set("column auto sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
   </Flex>;
@@ -185,14 +187,23 @@ function createWasmFlexTextContent() {
     <Text key="column-wrapped-text" onClick={() => { columnHits.update(value => value + 1); selected.set("column wrapped text"); }} style={{ width: "auto", height: 40, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: "auto", wrap: true, font: "10px monospace", lineHeight: 10, fill: "#19375b", cursor: "pointer" }}>{columnWrappedWords}</Text>
     <Rectangle key="column-wrapped-sibling" onClick={() => selected.set("column wrapped sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
   </Flex>;
-  const columnProviderPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch" }}>
+  const columnProviderPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: columnDirection, layoutDirection: columnReadingDirection, flexWrap: "nowrap", alignItems: "stretch" }}>
     <ColumnProvider key="column-provider" natural={columnProviderNatural} style={{ width: "auto", height: 20, minHeight: 0, flexGrow: 0, flexShrink: 0, marginLeft: "auto", fill: "#8a3248" }} />
     <Rectangle key="column-provider-sibling" onClick={() => selected.set("column provider sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
   </Flex>;
-  const columnKnownPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch" }}>
+  const columnKnownPanel = <Flex style={{ left: 420, top: 280, width: 180, height: 80, flexDirection: columnDirection, layoutDirection: columnReadingDirection, flexWrap: "nowrap", alignItems: "stretch" }}>
     <ColumnKnown key="column-known" />
     <Rectangle key="column-known-sibling" onClick={() => selected.set("column known sibling")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }} />
   </Flex>;
+  function InactiveWidthButton() {
+    return <Button x={544} y={144} label={autoCrossProof.get() ? "Natural row width" : "Bump inactive"} onClick={() => {
+      if (autoCrossProof.get()) {
+        const next = !naturalRowWidth.get();
+        naturalRowWidth.set(next);
+        if (next) { autoCrossWrap.set(true); autoCrossWidth.set(140); }
+      } else (alternate.get() ? primaryWidth : alternateWidth).update(value => value + 40);
+    }} />;
+  }
   function ColumnAutoComparison() {
     const providerMode = columnProviderMode.get();
     const provider = providerMode === 40 || providerMode === 80;
@@ -203,6 +214,10 @@ function createWasmFlexTextContent() {
       <Text pointerEvents="none" style={{ left: 420, top: 258, font: "12px sans-serif", fill: "#475569" }}>{label}</Text>
       <Rectangle pointerEvents="none" style={{ left: 420, top: 278, width: 180, height: 82, stroke: "#a63758", strokeWidth: 1 }} />
       {provider ? columnProviderPanel : known ? columnKnownPanel : wrapped ? columnWrappedPanel : columnAutoPanel}
+      {!wrapped ? <>
+        <Button x={668} y={380} width={68} label={columnReadingDirection.get() === "ltr" ? "LTR" : "RTL"} onClick={() => columnReadingDirection.update(value => value === "ltr" ? "rtl" : "ltr")} />
+        <Button x={668} y={416} width={68} label="Reverse" onClick={() => columnDirection.update(value => value === "column" ? "column-reverse" : "column")} />
+      </> : null}
       <Button x={420} y={380} width={240} label="Change column text" onClick={() => columnWords.update(value => value === "jobs jobs jobs" ? "jobs jobs" : "jobs jobs jobs")} />
       <Button x={420} y={416} width={240} label={`Column content: ${providerMode === "text" ? "Text" : providerMode === "wrappedText" ? "wrapped Text" : providerMode === "known60" ? "row 60px" : providerMode === "known100" ? "row 100px" : `${providerMode}px`}`} onClick={() => {
         if (providerMode === "text") { columnProviderNatural.set(40); columnProviderMode.set(40); }
@@ -385,18 +400,6 @@ function createWasmFlexTextContent() {
           label: "Switch source",
           click: () => alternate.update((value) => !value),
         },
-        {
-          x: 544,
-          label: autoCrossProof.get() ? "Natural row width" : "Bump inactive",
-          click: () => {
-            if (autoCrossProof.get()) {
-              const next = !naturalRowWidth.get();
-              naturalRowWidth.set(next);
-              if (next) { autoCrossWrap.set(true); autoCrossWidth.set(140); }
-            }
-            else (alternate.get() ? primaryWidth : alternateWidth).update(value => value + 40);
-          },
-        },
       ].map((button) => (
         <Button
           key={button.label}
@@ -406,6 +409,7 @@ function createWasmFlexTextContent() {
           onClick={button.click}
         />
       ))}
+      <InactiveWidthButton />
       {[
         {
           x: 28,
@@ -446,7 +450,7 @@ function createWasmFlexTextContent() {
   return {
     node,
     readInputs: () =>
-      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · natural row width: ${naturalRowWidth.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · column provider: ${columnProviderMode.get()} · intrinsic logical: ${intrinsicLogical.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
+      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · natural row width: ${naturalRowWidth.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · column direction: ${columnDirection.get()} · column reading: ${columnReadingDirection.get()} · column provider: ${columnProviderMode.get()} · intrinsic logical: ${intrinsicLogical.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
   };
 }
 

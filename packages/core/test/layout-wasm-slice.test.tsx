@@ -5673,7 +5673,6 @@ it.runIf(experimentalLayout)('rejects unsupported column automatic-margin Text p
     ['custom font', { font: '10px CustomFont' }, {}],
     ['cross maximum', { maxWidth: 80 }, {}],
     ['automatic main size', { height: 'auto' }, {}],
-    ['RTL', {}, { layoutDirection: 'rtl' }],
     ['wrapped container', {}, { flexWrap: 'wrap' }],
   ];
   for (const [name, override, options] of profiles) {

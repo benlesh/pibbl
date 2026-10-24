@@ -1235,7 +1235,7 @@ function resolveFlexPlacements(
       (normalized.overflow === undefined || normalized.overflow === 'visible') &&
       !preparedStyleQuery(prepared) && aspectRatio === undefined && genericTextFont(normalized);
     const measuredColumnTextCross = hasAutoCrossMargin && experimentalLayout && !row &&
-      options.flexDirection === 'column' && options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' &&
+      options.flexWrap === 'nowrap' &&
       child.type === Text && (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
       typeof declared.height === 'number' && typeof normalized.height === 'number' &&
       Number.isFinite(normalized.height) && normalized.height >= 0 &&
@@ -1247,7 +1247,7 @@ function resolveFlexPlacements(
       (normalized.overflow === undefined || normalized.overflow === 'visible') &&
       !preparedStyleQuery(prepared) && aspectRatio === undefined && genericTextFont(normalized);
     const measuredColumnProviderCrossDefinition = hasAutoCrossMargin && experimentalLayout && !row &&
-      options.flexDirection === 'column' && options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' &&
+      options.flexWrap === 'nowrap' &&
       (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
       typeof declared.height === 'number' && typeof normalized.height === 'number' &&
       Number.isFinite(normalized.height) && normalized.height >= 0 &&
@@ -1259,7 +1259,7 @@ function resolveFlexPlacements(
     const measuredColumnProviderCross = !!measuredColumnProviderCrossDefinition?.measureIntrinsic &&
       !!measuredColumnProviderCrossDefinition.measure;
     const measuredColumnKnownCrossAuto = hasAutoCrossMargin && experimentalLayout && !row &&
-      options.flexDirection === 'column' && options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' &&
+      options.flexWrap === 'nowrap' &&
       isKnownLayoutType(layoutChild.type) && (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
       typeof declared.height === 'number' && typeof normalized.height === 'number' &&
       Number.isFinite(normalized.height) && normalized.height >= 0 &&

@@ -1585,7 +1585,8 @@ row at60 for three40px items in100px with10px gaps.
 ### Paired column natural cross queries
 
 Direct paired primitives may supply automatic width before effective side-auto
-placement in finite experimental LTR nowrap columns. Height is a declared finite
+placement in finite experimental nowrap columns, including reverse main order and
+LTR/RTL parent direction. Height is a declared finite
 nonnegative number, basis automatic, growth/shrink zero, minHeight0; width bounds,
 maxHeight, responsive query and aspect sizing remain outside this profile. Existing
 logical/shorthand edge precedence applies. Both provider operations are required.
@@ -1604,7 +1605,8 @@ broader wrapped/Text profiles retain their current independent admission rules.
 
 ### Known-layout column natural cross queries
 
-The same finite LTR nowrap column may request natural width from a known-layout
+The same finite nowrap column, including reverse main order and LTR/RTL parent
+direction, may request natural width from a known-layout
 root with declared numeric height, automatic basis, zero growth/shrink and
 minHeight0. A neutral minWidth0 is permitted; other bounds, responsive query and
 aspect sizing retain their admission boundaries. Direct and described roots use
@@ -1621,6 +1623,17 @@ and targets. Fixed Grid tracks[40,20]/[40] likewise measure60x40; fractional Gri
 tracks retain their allocation-dependent intrinsic error before paint. This Grid
 composition evidence is not a Yoga Grid parity claim. Other known-family queries
 remain subject to their existing measurement contract.
+
+For these paired/known cross queries and direct generic unwrapped Text with fixed
+numeric height, the outer column's reverse/RTL direction does not change the
+natural-width query. The existing native placement applies physical left, right
+and both auto slots after measurement. In a200x120owner with a40px-high item,
+main y is0for column and80for column-reverse; physical left-auto places x200−w,
+both-auto centers x(200−w)/2, and right-auto places x0 in either reading direction.
+Numeric0uses normal alignment. Child layouts retain their own measurement
+admission: an explicitly LTR known row may be measured under an RTL parent, but
+this does not grant unsupported intrinsic RTL child queries. The separately
+bounded wrapped-column Text policy remains LTR forward-column only.
 
 Finite normal same-axis placement of a direct numeric staged owner has a separate
 native operation from standalone and recursive pure queries. With outer200,

@@ -211,6 +211,7 @@ try {
       assert.equal(receipt.intrinsicAutoMainMargins, true, 'Installed intrinsic Flex must contribute physical main-axis auto margins as zero and distribute final positive free space while preserving native solve/node reuse and cleanup');
       assert.equal(receipt.intrinsicAutoCrossMargins, true, 'Installed intrinsic Flex must preserve automatic cross-axis margin placement, targets, paint reuse and cleanup');
       assert.equal(receipt.intrinsicAutoShorthandLogicalMargins, true, 'Installed paired providers must normalize shorthand and logical automatic margins for pure measurement, final placement, live updates and cleanup');
+      assert.equal(receipt.intrinsicAutoColumnDirections, true, 'Installed paired natural-column auto margins preserve directions and targets');
       assert.equal(receipt.intrinsicAutoColumnProvider, true, 'Installed paired column providers must use an exact-height/unbounded-width cross query before automatic margin placement, preserve moved targets and detach provider inputs');
       assert.equal(receipt.intrinsicAutoKnownColumn, true, 'Installed described known Flex owners must measure direct leaves, react to descendant width, resolve numeric-to-auto side margins, preserve identity and detach inputs');
       assert.equal(receipt.percentageOwnerBound, true, 'Installed own percentage bounds must use the original caller reference for provider limits and staged placement');
