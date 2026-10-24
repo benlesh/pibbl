@@ -2082,8 +2082,8 @@ composes with the same physical main placement: LTR gives A at x80, RTL at x0;
 B stays at x40and baseline y offsets remain18/0. Source paint and keyboard order
 remain A then B.
 
-The wrapped profile admits finite LTR/RTL `row` or `row-reverse` + `wrap`, `alignContent: "flex-start"`,
-zero row/column gaps, and direct fixed numeric primitive providers or content-bottom
+The wrapped profile admits finite LTR/RTL `row` or `row-reverse` + `wrap`, all existing `alignContent` policies,
+resolved finite row/column gaps, and direct fixed numeric primitive providers or content-bottom
 fallback. Grow/shrink must be zero; Text, automatic margins and the other leaf
 exclusions remain outside this wrapped profile. Native line membership is reused.
 Each line has its own maximum ascent and descent, so the next line begins after
@@ -2092,7 +2092,15 @@ the complete baseline extent. The common baseline never spans two lines. In a
 D40x30/b20 occupy y52/40. Changing D to26moves C to58while line one stays fixed. Horizontal reversal and
 writing direction affect only the existing native x slots; source line membership
 and baseline y offsets remain unchanged.
-The private ABI11 requires the line-local placement export; previous binaries
+Line distribution uses the complete ascent+descent extent, then the existing
+start/end/center/space distribution. Stretch adds positive free space to each
+line extent while fixed leaf sizes stay unchanged. Numeric and percentage gaps
+use the existing actual-owner resolution; changing only gap or alignment selects
+a distinct cross-cache mode. For110x120, mainGap10/crossGap8and the same leaves,
+B/D y origins are0/48(start),40/88(end),20/68(center),0/88(between),10/78(around),
+40/3and224/3(evenly),0/68(stretch). The kernel retains f64 arithmetic; Canvas
+translations and the pinned float32 reference have their documented precision.
+The private ABI12 requires the line-distribution signature; previous binaries
 are rejected before publication. This adds no public API or second scheduler.
 
 Provider reads use existing measurement-role receiver dependencies. Queries forbid

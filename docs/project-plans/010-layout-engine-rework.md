@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice199: wrapped horizontal direction composition.
+Latest delivery is slice200: wrapped line distribution and resolved gaps.
+Slice199 is `64984a64`: wrapped horizontal direction composition.
 Slice198 is `0bf60f32`: native line-local wrapped first baselines.
 Slice197 is `4244c3c3`: row-reverse first-baseline composition.
 Slice196 is `acbcc5fa`: finite RTL row first-baseline composition.
@@ -39,7 +40,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; consolidation65 is `6acd644c`; consolidation66 is `75c84dc3`; next is200.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; consolidation65 is `6acd644c`; consolidation66 is `75c84dc3`; next is201.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -52,7 +53,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Consolidation65 closes allocated padding; consolidation66 is `75c84dc3`; next is200: wrapped line distribution.
+Consolidation56 is `2fd34f0e` for166–168. Consolidation65 closes allocated padding; consolidation66 is `75c84dc3`; next is201: CSS-preserving cross-reversed baseline groups.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now12complete/12experimental/
 3partial/5missing/1excluded. All seven release gates remain open; independent
@@ -7314,18 +7315,47 @@ and ABI11artifact unchanged. No new per-direction solver, API, capability
 promotion or release claim. Consolidation66’s final amended receipt/HEAD is
 `75c84dc3`, replacing the earlier963b55c5snapshot.
 
-## [NEXT] Slice200: wrapped baseline line distribution and gaps
+## [DONE] Slice200: wrapped baseline line distribution and gaps
 
-Use existing alignContent vocabulary and numeric gaps with baseline-derived
-line extents. Fresh native controls support all seven normal-wrap distribution
-modes; include gap/alignment in the cross-cache key. Reuse shared native
-alignment distribution without new temporary per-line collections. A focused
-public fixture110x120with mainGap10/crossGap8proves line origins, stretch,
-policy-only updates, changed gap, actual targets and stable identity. First
-expose the complete normal-wrap slice, then harden. Wrap-reverse has a fresh
-native per-leaf reflection difference and needs an explicit separate disposition,
-not an assumed symmetry or an arbitrary direction variant. Keep current leaf
-exclusions. Consolidate199–201before more production after those three slices.
+Normal wrapping now composes all seven existing alignContent policies and existing
+resolved finite numeric/percentage gaps with baseline-derived line extents. Native
+distribution is reused without temporary line collections; stretch changes line
+extent/advance while fixed leaf dimensions stay fixed. Cross-cache keys include
+actual gap and alignment. ABI12rejects complete prior ABI11exports before the new
+five-argument native call; module/export names alone cannot validate its signature.
+
+Public RED1at the admitted gap/policy guard and native REDarity errors precede
+production. Native31tests pass; fresh Node24.15/Chromium focused5files39pass/1skip.
+The public110x120fixture proves all7policies, D20→26, rowGap8→12→10%(resolved12),
+mainGap10→0, real old/new targets, source focus, stable identity, paint reuse and
+four-counter cleanup. Canvas fractional translations use a narrow1e-5logical-unit
+tolerance; separate native f64 checks retain1e-9. ABI12artifact81410bytes SHA256
+`747edcb9ead7d70018c7b20eca24963c07167886f41caf9f9ef53769bdc33b88`matches generated
+source/external/embedded identity. Fresh retained Yoga3.2.1distribution probe prints
+full float32 geometry for all normal policies and the discovered reversal difference.
+
+The760x640lesson includes lower Profile/Align/Gap controls and all earlier Text,
+direction and automatic-margin demonstrations. Source5192and refreshed built5193
+pass errors[]/four-counter cleanup/470built inputs; screenshot inspected. Initial
+browser failures came from old focus-clearing clicks landing on the newly added
+Gap button; moving those clicks to empty canvas preserved all geometry assertions.
+Types, changed-code lint,175/12/33catalog/Studio, docs109mutation probes and scoped
+review pass. Installed full distribution follows at consolidation67.
+
+## [NEXT] Slice201: cross-reversed first-baseline groups
+
+Preserve the existing content-top baseline contract and Chromium line grouping,
+classifying Yoga3.2.1’s different per-leaf reflection. Narrow CSS forward control
+matches A18/B0/C60/D48. With wrap-reverse Chromium gives A98/B80/C52/D40,
+while Yoga gives A82/B80/C40/D42. Reverse placement must reflect line groups,
+not each leaf, so supplied physical first baselines still align. Stretch also
+uses intrinsic group extent for reverse origin while stretched extent advances
+the cursor; fresh CSS stretch is A98/B80/C32/D20. Present this recommendation
+before implementation (done in commentary), retain the focused CSS control and
+receipt, then establish public/native RED and implement one generic cross-reverse
+policy with the actual reverse bit in its cache key. No new public API or font
+subsystem. Keep remaining wrapped leaf exclusions and consolidate199–201before
+more production after this third slice.
 
 ## Scope and execution
 

@@ -84,7 +84,7 @@ try {
   await click(90,215); assert.equal((await state()).hits.length,hitCount);
   await click(110,215); assert.equal((await state()).hits.at(-1),'B');
   // Clear and settle the preceding card focus before isolating paint work.
-  await click(700,410);
+  await click(700,600);
   const beforePaint=await counters(), calls=(await state()).calls;
   await clearTextDraws();
   await click(480,110);
@@ -131,7 +131,7 @@ try {
   assert.ok(Math.abs(wrappedSmall[0].alpha.y - wrappedLarge.alpha.y) < 1e-9, 'reflowed first live Canvas baseline aligns');
   await click((wrappedSmall.at(-1).hitTopLeft.x + wrappedSmall.at(-1).hitBottomRight.x) / 2, (wrappedSmall.at(-1).hitTopLeft.y + wrappedSmall.at(-1).hitBottomRight.y) / 2);
   assert.deepEqual((await state()).textHits, ['text', 'text', 'text']);
-  await click(700,410);
+  await click(700,600);
   await page.waitForTimeout(180);
   const beforeTextPaint = await counters();
   await clearTextDraws();
@@ -212,6 +212,51 @@ try {
     for(const id of ['WA','WB','WC','WD']){const wide=id==='WA'||id==='WC',x=wide?(reversed?500:460):(reversed?460:520);const y=id==='WA'?478:id==='WB'?460:id==='WC'?518:500;assert.ok(Math.abs(directed.boxes[id].x-x)<1e-9&&Math.abs(directed.boxes[id].y-y)<1e-9,id+' wrap direction');assert.equal(directed.stamps[id],wrappedStamps[id]);}
     const before=directed.hits.length;await click(reversed?504:464,520);const hit=await state();assert.equal(hit.hits.length,before+1);assert.equal(hit.hits.at(-1),'WC');
   }
+  // The policy profile retains the ordinary zero-gap lower panel until enabled.
+  // It then exposes native line distribution, resolved cross gaps, and main-gap
+  // membership without changing the established direction checks above.
+  await click(700,318);
+  await click(700,276);
+  await click(700,446);
+  const policyStart=await state();
+  const policyStamps=Object.fromEntries(['WA','WB','WC','WD'].map(id=>[id,policyStart.stamps[id]]));
+  const policyExpected=[
+    ['flex-start',460,508],['flex-end',500,548],['center',480,528],
+    ['space-between',460,548],['space-around',470,538],
+    ['space-evenly',473.3333333333333,534.6666666666666],['stretch',460,528],
+  ];
+  for(let index=0;index<policyExpected.length;index++){
+    if(index)await click(700,362);
+    const [align,bY,dY]=policyExpected[index],policy=await state();
+    assert.equal(policy.reverse,false);assert.equal(policy.layoutDirection,'ltr');
+    assert.equal(policy.wrappedProfile,true);assert.equal(policy.wrappedGap,8);assert.equal(policy.wrappedAlign,align);
+    for(const [id,x,y,width,height] of [['WA',460,bY+18,60,20],['WB',530,bY,40,40],['WC',460,dY+12,60,20],['WD',530,dY,40,30]]){
+      const box=policy.boxes[id];assert.ok(Math.abs(box.x-x)<1e-9&&Math.abs(box.y-y)<1e-4,`policy ${align} ${id}`);assert.equal(box.width,width);assert.equal(box.height,height);
+    }
+    assert.deepEqual(Object.fromEntries(['WA','WB','WC','WD'].map(id=>[id,policy.stamps[id]])),policyStamps);
+  }
+  await click(700,362);
+  const policyReset=await state();assert.equal(policyReset.wrappedAlign,'flex-start');
+  const policyHits=(await state()).hits.length;await click(464,522);const policyHit=await state();assert.equal(policyHit.hits.length,policyHits+1);assert.equal(policyHit.hits.at(-1),'WC');
+  await click(700,318);
+  const raised=await state();assert.equal(raised.wrappedD,26);
+  assert.ok(Math.abs(raised.boxes.WA.y-478)<1e-9&&Math.abs(raised.boxes.WB.y-460)<1e-9);
+  assert.ok(Math.abs(raised.boxes.WC.y-526)<1e-9&&Math.abs(raised.boxes.WD.y-508)<1e-9);
+  const staleWrappedHits=raised.hits.length;await click(464,522);assert.equal((await state()).hits.length,staleWrappedHits);
+  await click(464,528);const raisedHit=await state();assert.equal(raisedHit.hits.length,staleWrappedHits+1);assert.equal(raisedHit.hits.at(-1),'WC');
+  await click(700,404);
+  const gapTwelve=await state();assert.equal(gapTwelve.wrappedGap,12);
+  assert.ok(Math.abs(gapTwelve.boxes.WC.y-530)<1e-9&&Math.abs(gapTwelve.boxes.WD.y-512)<1e-9,'numeric row gap');
+  await click(700,404);
+  const gapPercent=await state();assert.equal(gapPercent.wrappedGap,'10%');
+  assert.ok(Math.abs(gapPercent.boxes.WC.y-530)<1e-9&&Math.abs(gapPercent.boxes.WD.y-512)<1e-9,'resolved percentage row gap');
+  await click(700,446);
+  const zeroMainGap=await state();assert.equal(zeroMainGap.wrappedProfile,false);assert.equal(zeroMainGap.wrappedGap,'10%');
+  assert.ok(Math.abs(zeroMainGap.boxes.WB.x-520)<1e-9&&Math.abs(zeroMainGap.boxes.WD.x-520)<1e-9,'main gap removal');
+  assert.ok(Math.abs(zeroMainGap.boxes.WC.y-530)<1e-9&&Math.abs(zeroMainGap.boxes.WD.y-512)<1e-9,'main gap preserves cross membership');
+  assert.deepEqual(Object.fromEntries(['WA','WB','WC','WD'].map(id=>[id,zeroMainGap.stamps[id]])),policyStamps);
+  const policyBeforePaint=await counters();await click(480,110);const policyPainted=await counters();
+  assert.equal(policyPainted.solves,policyBeforePaint.solves);assert.equal(policyPainted.crossPlacements,policyBeforePaint.crossPlacements);assert.equal(policyPainted.nodeCreates,policyBeforePaint.nodeCreates);
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
