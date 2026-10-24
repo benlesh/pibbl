@@ -179,6 +179,7 @@ try {
       assert.equal(receipt.indefiniteBoundValidation, true, 'Installed indefinite percentage bounds must validate before admission without resource allocation');
       assert.equal(receipt.firstBaseline, true, 'Installed baseline providers must use final allocations, native baseline placement, source focus, paint reuse, detached inputs, and exact cleanup');
       assert.equal(receipt.textFirstBaseline, true, 'Installed Text must use the public Canvas baseline service for mixed generic fonts, real Canvas alignment, moved glyph targets, paint reuse, and exact cleanup');
+      assert.equal(receipt.wrappedTextFirstBaseline, true, 'Installed wrapped Text must align its first visible line from real Canvas baseline metrics, move the last-line target after content and line updates, reuse paint, and clean up');
       assert.ok(receipt.modules > 0 && receipt.instances > 0, 'Installed package must execute embedded WASM');
       assert.match(proof.sha256, /^[a-f0-9]{64}$/);
     }

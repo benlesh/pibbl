@@ -16,6 +16,13 @@ type ResolvedCardStyle = CardStyle & { width: number; height: number };
 function createBaselineContent() {
   const second = signal(30), owner = signal(180), paint = signal("#426b61");
   const textFont = signal("10px monospace");
+  const textWrap = signal(false), textReflow = signal(false);
+  const textWords = computed(() => textWrap.get() ? textReflow.get() ? "Ag Ag Ag" : "Ag Ag Ag Ag" : "Ag");
+  const textWidth = computed(() => textWrap.get() ? textReflow.get() ? 28 : 40 : 70);
+  const textLineHeight = computed(() => textWrap.get() ? textReflow.get() ? 14 : 10 : 13);
+  const textPanelHeight = computed(() => textWrap.get() ? textReflow.get() ? 48 : 36 : 36);
+  const textWrapLabel = computed(() => textWrap.get() ? textReflow.get() ? "Wrapped Text: three lines — click to restore" : "Wrapped Text: two lines — click to restore" : "Automatic Text first baseline — click to wrap");
+  const textReflowLabel = computed(() => textWrap.get() && !textReflow.get() ? "Reflow → three lines" : "Reflow after wrap");
   const textHits: string[] = [];
   const secondLabel = computed(() => String(second.get()));
   const guide = computed(() => 210 + Math.max(0,12,second.get(),24));
@@ -68,10 +75,11 @@ function createBaselineContent() {
       <Rectangle pointerEvents="none" style={{ left: 28, top: guide, width: owner, height: 1, fill: "#d16642", opacity: .6 }} />
       <Text pointerEvents="none" style={{ left: 28, top: 330, font: "14px sans-serif", fill: "#475569" }}>Click the cards at their new positions. Tab follows A → B → C.</Text>
       <Text pointerEvents="none" style={{ left: 28, top: 360, font: "14px sans-serif", fill: "#475569" }}>The Text panel uses live Canvas metrics; it makes no native font-metric claim.</Text>
-      <Text pointerEvents="none" style={{ left: 28, top: 386, font: "13px sans-serif", fill: "#475569" }}>Automatic Text first baseline</Text>
+      <Text onClick={() => { textFont.set("10px monospace"); textReflow.set(false); textWrap.update(value => !value); }} style={{ left: 28, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textWrapLabel}</Text>
+      <Text onClick={() => { if (textWrap.get()) textReflow.set(true); }} style={{ left: 340, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textReflowLabel}</Text>
       <Group onClick={(event) => { if (event.target !== event.currentTarget) textHits.push("text"); }}>
-        <Flex style={{ left: 28, top: 404, width: 180, height: 36, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
-          <Text key="text-small" style={{ width: 70, height: 32, flexBasis: 70, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: textFont, textBaseline: "top", wrap: false, fit: "visible", overflow: "visible", fill: "#426b61" }}>Ag</Text>
+        <Flex style={{ left: 28, top: 404, width: 180, height: textPanelHeight, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
+          <Text key="text-small" style={{ width: 100, height: textPanelHeight, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: textFont, lineHeight: textLineHeight, textBaseline: "top", wrap: textWrap, fit: "visible", overflow: "visible", fill: "#426b61" }}>{textWords}</Text>
           <Text key="text-large" style={{ width: 90, height: 32, flexBasis: 90, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: "20px sans-serif", textBaseline: "top", wrap: false, fit: "visible", overflow: "visible", fill: "#a63758" }}>Ag</Text>
         </Flex>
       </Group>
@@ -80,7 +88,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {

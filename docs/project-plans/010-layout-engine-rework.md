@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice158 (single-line Text baselines from live Canvas metrics).
+Latest delivery is slice159 (wrapped Text first/last baseline metrics).
+Slice158 is `40965850` (single-line Text baselines from live Canvas metrics).
 Slice157 is `72da2305`; its public Studio companion is `b725101c`.
 Consolidation52 is `8f65cb34` for154–156.
 Slice156 is `5e819d2f` (experimental first-baseline provider composition).
@@ -4894,16 +4895,60 @@ last-baseline placement and broader font lifecycle remain open. Fixed33 stays
 9complete/12experimental/6partial/5missing/1excluded; all7release gates remain open.
 No aggregate trust or native font-metric claim.
 
-## [NEXT] Slice159: wrapped Text first/last baseline metrics
+## Slice159 ready for feedback: wrapped Text baseline metrics
 
-Use the existing Canvas-aware service and paint line layout to measure first and
-last actual visible lines at final width. Prove public wrapped Text first-baseline
-placement, content/line-height reflow and final-line glyph targeting, with pure
-provider evidence for both offsets and explicit no-line failure. Retain the same
-font, top-baseline, visible-fit and outer Flex envelope; do not claim last-baseline
-alignment or font loading. Then consolidate157–159 before further behavior.
-Root remains sole repository writer; reused helpers propose temporary patches or
-review changed code.
+The public test first failed at the existing unwrapped-only admission. The runtime
+change only allows boolean wrapping inside the same fixed generic-font,
+top-baseline, visible-fit/overflow LTR row-nowrap profile. The Text provider already
+uses the shared paint line layout and final allocation; no second wrapping
+algorithm or sizing policy was added. First/last offsets come from the actual
+first/last visible line, while a zero-visible-line allocation is unsupported.
+Last-baseline alignment is not delivered by this slice.
+
+Fresh Node24.15/Chromium checks:96passed/2skipped experimental and92passed/6skipped
+ordinary across7files (98tests). The public test declares width100 but allocates
+basis40→28, proving actual final-width wrapping. It compares first-line baselines
+using independent live Canvas ascent measurements and clicks the changed last
+line. A supplemental pure service fixture reports first4/last24 for three lines
+and rejects a zero-line height; these synthetic values are not browser font data.
+Typecheck, changed-code lint and focused read-only review passed.
+
+Public source `http://127.0.0.1:5192/#/examples/layout/wasm-flex-baseline`
+(built5193same path): click the Text panel heading to wrap at40px, then **Reflow**
+to use28px, three words and14px line height. The heading resets the small font to
+10px. Source and built drivers passed two→three visible lines, first-baseline
+agreement, last-line movement/click, scalar-input Group bubbling, native identity,
+zero added measurement/solve/cross/node work on unrelated paint and exact cleanup
+`[0,0,0]` with no browser errors. Built used470dist inputs. Host observations:
+first baseline420.3125; two-line last430.3125→three-line last448.3125. No fixed
+host font values are used as runtime expectations.
+
+Installed offline strict Bundler/NodeNext and runtime proof passed246dist inputs,
+SHA256 `653bb1898560b34614df53ffa83d0bed264742a21df06a62ade00af658751425`.
+The installed fixture also declares width100 and changes its actual basis40→28,
+checks two→three lines, actual glyph bounds and logical target identity, paint
+reuse and exact resource cleanup. Early fixture failures were a duplicate driver
+variable, not recording the sibling's `S` glyph, and holding basis40 constant while
+changing declared width; all are corrected without changing runtime guards.
+
+The manifest now records the delivered baseline callback/visible multiline Text
+rather than listing them as absent. `flex.baselines` remains experimental for
+last-baseline alignment, nested propagation, broader directions/fitting and font
+lifecycle; `measurement.custom-leaf` remains partial for broader constraint modes,
+nested invalidation/feedback and consumer matrices. No fixed33 capability or gate
+was promoted. Statuses remain9complete/12experimental/6partial/5missing/1excluded,
+all7gates open. No aggregate trust or font-parity claim.
+
+## [NEXT] Consolidation53: slices157–159
+
+Run the bounded regression lane in experimental and ordinary modes, including
+percentage validity, Canvas service state, Text line layout and current baseline
+paths. Verify declarations/docs/editor/catalog and preserve all existing
+measurement, ownership and geometry rules. Then select a substantive existing
+gate prerequisite from the owned/prepared measurement/tree work or a genuinely
+closable capability, without shrinking accepted scope or adding more equivalent
+finite profiles. Root remains sole writer; helpers provide read-only notes or
+reviewable temporary patches.
 
 ### Finite positioning exit matrix after134
 

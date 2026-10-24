@@ -32,3 +32,25 @@ it('requires explicit finite Text baseline metrics and preserves service method 
   service.offset = Number.NaN;
   expect(measureBaselineElement(text, allocation, service)).toEqual({ status: 'unsupported', reason: expect.stringContaining('finite alphabeticBaseline') });
 });
+
+
+it('returns first and last service-reported Text baselines for wrapped lines and rejects a zero-line allocation', () => {
+  const metrics = (text: string): TextMetrics => ({
+    width: text.length * 6,
+    actualBoundingBoxLeft: 0,
+    actualBoundingBoxRight: text.length * 6,
+    actualBoundingBoxAscent: 8,
+    actualBoundingBoxDescent: 2,
+    alphabeticBaseline: -4,
+  } as TextMetrics);
+  const service: CanvasMeasurementService = {
+    measureText: metrics,
+    measureTextAtBaseline: text => metrics(text),
+  };
+  const text = createElement(Text, {
+    children: 'aa aa aa',
+    style: { width: 20, height: 30, font: '10px monospace', textBaseline: 'top', lineHeight: 10, wrap: true, fit: 'visible', overflow: 'visible' },
+  });
+  expect(measureBaselineElement(text, { x: 0, y: 0, width: 20, height: 30 }, service)).toEqual({ status: 'measured', first: 4, last: 24 });
+  expect(measureBaselineElement(text, { x: 0, y: 0, width: 20, height: 0 }, service)).toEqual({ status: 'unsupported', reason: expect.stringContaining('does not resolve a line') });
+});

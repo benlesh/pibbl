@@ -1585,7 +1585,7 @@ receive the final finite content width and height at local origin0,0. The native
 WASM cross-placement path computes the common ascent starting at zero and each
 offset as common ascent minus that leaf's first baseline. This matches pinned
 Yoga3.2.1 numeric-provider probes, including signed/out-of-box baselines. Last
-baseline placement, multiline/custom-font Text metrics, nested containers, wrapping,
+baseline placement, custom-font Text metrics, nested containers, outer Flex wrapping,
 reverse/RTL, automatic cross size and decorated/margin/position/query/aspect leaves
 remain outside this first admission. This adds no public operation selector.
 
@@ -1598,8 +1598,8 @@ measurement dependencies, invalidation uses existing allocation revisions, and
 removal/disposal releases the same owner. No second scheduler or persistent
 measurement observer system is introduced. Ordinary builds retain their diagnostic.
 
-Text has a bounded built-in baseline provider for nonempty unwrapped visible
-content, fixed allocated width/height, a finite positive generic pixel font and
+Text has a bounded built-in baseline provider for nonempty visible content,
+including wrapped lines at final allocated width/height, a finite positive generic pixel font and
 the default/top Canvas baseline. `CanvasMeasurementService.measureTextAtBaseline`
 is an optional pure method taking text and named font/baseline options. First-party
 layout services save and restore the exact Canvas state on success or failure;
@@ -1607,7 +1607,10 @@ the original `measureText(text, font)` contract is unchanged. Text reuses its pa
 line layout and obtains the alphabetic coordinate as draw-origin y minus the
 measured `alphabeticBaseline`. Missing capability or nonfinite metrics is explicit
 unsupported; there is no inferred font-size/bounding-box fallback. Single-line
-first and last offsets agree. Service method receivers are preserved.
+first and last offsets agree. Wrapped results use the first and last actual
+visible lines from the same space-wrapping/line-height/height-limit logic as paint;
+a zero-visible-line allocation is explicitly unsupported. A declared width is not
+a substitute for the final Flex allocation. Service method receivers are preserved.
 
 The public first-baseline lesson includes both explicitly supplied offsets and a
 live Canvas Text panel. Its different generic fonts use actual host metrics;

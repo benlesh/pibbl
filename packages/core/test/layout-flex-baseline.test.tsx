@@ -340,3 +340,76 @@ it.runIf(experimentalLayout)(
     expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
   },
 );
+
+
+it.runIf(experimentalLayout)(
+  'aligns direct wrapped Text leaves on their first live Canvas baseline while preserving visible last-line glyph hits',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const words = signal('Ag Ag Ag Ag');
+    const width = signal(40);
+    const lineHeight = signal(10);
+    const hits: string[] = [];
+    const canvas = document.createElement('canvas');
+    canvas.width = 180; canvas.height = 90; document.body.append(canvas);
+    const context = canvas.getContext('2d')!;
+    interface Draw { readonly text: string; readonly x: number; readonly y: number; readonly font: string; }
+    const draws: Draw[] = [];
+    const originalFillText = context.fillText.bind(context);
+    vi.spyOn(context, 'fillText').mockImplementation(((text: string, x: number, y: number, maxWidth?: number) => {
+      const transform = context.getTransform();
+      draws.push({ text, x: transform.e + x, y: transform.f + y, font: context.font });
+      originalFillText(text, x, y, maxWidth);
+    }) as typeof context.fillText);
+    const wrapped = createElement(Text, {
+      key: 'wrapped', children: words, onClick: () => hits.push('wrapped'),
+      style: { width: 100, height: 60, minWidth: 0, minHeight: 0, flexBasis: width, flexGrow: 0, flexShrink: 0, font: '10px monospace', lineHeight, wrap: true, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#19375b', cursor: 'pointer' },
+    });
+    const large = createElement(Text, {
+      key: 'large', children: 'Ag',
+      style: { width: 80, height: 40, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, font: '20px sans-serif', wrap: false, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#a63758' },
+    });
+    const controller = pibbl(canvas, <Flex style={{ width: 180, height: 90, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'first-baseline' }}>{[wrapped, large]}</Flex>);
+    controllers.push(controller);
+    await nextFrame();
+
+    const alphabeticOffset = (draw: Draw) => {
+      context.save();
+      try {
+        context.font = draw.font;
+        context.textBaseline = 'top';
+        const top = context.measureText(draw.text).actualBoundingBoxAscent;
+        context.textBaseline = 'alphabetic';
+        const alphabetic = context.measureText(draw.text).actualBoundingBoxAscent;
+        expect(Number.isFinite(top)).toBe(true);
+        expect(Number.isFinite(alphabetic)).toBe(true);
+        return alphabetic - top;
+      } finally { context.restore(); }
+    };
+    const first = (font: string) => draws.find(draw => draw.font === font)!;
+    const initialSmall = first('10px monospace');
+    const initialLarge = first('20px sans-serif');
+    const initialWrapped = draws.filter(draw => draw.font === '10px monospace');
+    expect(initialWrapped).toHaveLength(2);
+    expect(initialSmall.y + alphabeticOffset(initialSmall)).toBeCloseTo(initialLarge.y + alphabeticOffset(initialLarge), 5);
+
+    draws.splice(0);
+    width.set(28); lineHeight.set(14); words.set('Ag Ag Ag'); await nextFrame();
+    const changedSmall = first('10px monospace');
+    const changedLarge = first('20px sans-serif');
+    const changedWrapped = draws.filter(draw => draw.font === '10px monospace');
+    expect(changedWrapped).toHaveLength(3);
+    expect(changedWrapped.at(-1)!.y).toBeGreaterThan(initialWrapped.at(-1)!.y);
+    expect(changedSmall.y + alphabeticOffset(changedSmall)).toBeCloseTo(changedLarge.y + alphabeticOffset(changedLarge), 5);
+
+    const last = changedWrapped.at(-1)!;
+    context.save(); context.font = last.font; context.textBaseline = 'top';
+    const metrics = context.measureText(last.text); context.restore();
+    click(canvas, last.x - metrics.actualBoundingBoxLeft + 1, last.y - metrics.actualBoundingBoxAscent + 1);
+    expect(hits).toEqual(['wrapped']);
+
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+  },
+);

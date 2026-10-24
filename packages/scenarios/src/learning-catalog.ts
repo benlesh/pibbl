@@ -4404,11 +4404,11 @@ const drafts = [
       "Keep provider and live Canvas Text baseline placement synchronized with paint, input, identity and final-size queries.",
     ],
     prompts: {
-      gesture: "Move B baseline, resize the owner, and click the moved cards. Toggle Text to compare live Canvas font metrics. Paint only should reuse successful provider results. Tab follows A, B, C.",
+      gesture: "Move B baseline, resize the owner, and click the moved cards. Toggle Text to compare live Canvas font metrics; click the panel heading to wrap, then Reflow to change the last visible line. Paint only should reuse successful provider results. Tab follows A, B, C.",
       code: "BaselineCard declares measureBaselines; BottomCard omits it. The compact Text row uses the built-in pure Canvas baseline provider at final allocation.",
     },
     apiNotes: [
-      "Experimental finite LTR nowrap rows and direct fixed primitive leaves only. Text support is the single nonempty unwrapped visible-line profile with generic px fonts; multiline and last-baseline alignment remain outside this lesson.",
+      "Experimental finite LTR nowrap rows and direct fixed primitive leaves only. Text support uses nonempty visible lines at final allocation with generic px fonts, including wrapped first/last provider metrics; last-baseline alignment remains outside this lesson.",
       "Offsets are finite and ordered, including values outside the content box. A missing provider uses its bottom edge; a declared unsupported provider diagnoses before paint. Canvas metrics determine the Text row; no native font-parity or performance claim.",
     ],
     canvas: { width: 760, height: 460 },

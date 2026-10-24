@@ -31,4 +31,14 @@ remain application responsibilities.
 </Text>
 ```
 
+Experimental finite LTR nowrap Flex can align fixed Text leaves with
+`alignItems: "first-baseline"`. Nonempty visible content may wrap at its final
+allocated width; the provider reports its first and last actual visible lines.
+The bounded font form is a positive pixel size plus `sans-serif`, `serif`, or
+`monospace`, optionally preceded by `bold`, `italic`, or `normal`. This uses live
+Canvas metrics through the optional baseline-aware measurement service, without
+claiming native font parity or font-load invalidation. See the
+[first-baseline example](#/examples/layout/wasm-flex-baseline) and
+[measurement service](#/api/types/layout#canvasmeasurementservice).
+
 Try the [Text live example](#/examples/drawing/text).

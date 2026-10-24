@@ -195,10 +195,11 @@ The experimental `alignItems: "first-baseline"` aligns direct fixed primitive
 leaves in a finite LTR nowrap row after final allocation. See
 [BaselineMeasureInput](#/api/types/layout#baselinemeasureinput) and the
 [first-baseline example](#/examples/layout/wasm-flex-baseline). Other baseline
-modes remain outside this first subset. Direct nonempty single-line Text with
-fixed dimensions, generic pixel fonts, visible fit/overflow and the default top
-Canvas baseline supplies real host metrics through the optional measurement
-service. Multiline and custom-font lifecycle rules remain subsequent work.
+modes remain outside this first subset. Direct nonempty Text with fixed dimensions, generic pixel fonts, visible
+fit/overflow and the default top Canvas baseline supplies real host metrics
+through the optional measurement service. Wrapped Text measures its actual first
+and last visible lines at final allocation. Last-baseline alignment and custom-font
+lifecycle rules remain subsequent work.
 
 ## FlowProps
 

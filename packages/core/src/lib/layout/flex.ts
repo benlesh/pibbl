@@ -1849,7 +1849,7 @@ function assertSupportedFirstBaselineFlex(
       typeof (textStyle.lineHeight ?? 13) === 'number' &&
       Number.isFinite(textStyle.lineHeight ?? 13) &&
       (textStyle.lineHeight ?? 13) >= 0 &&
-      textStyle.wrap !== true &&
+      (textStyle.wrap === undefined || typeof textStyle.wrap === 'boolean') &&
       (textStyle.fit ?? 'visible') === 'visible' &&
       (textStyle.overflow ?? 'visible') === 'visible'
     );

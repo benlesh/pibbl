@@ -16,7 +16,7 @@ try {
     const canvas = document.querySelector('canvas'), context = canvas.getContext('2d'), original = context.fillText.bind(context);
     globalThis.__PIBBL_TEXT_BASELINE_DRAWS__ = [];
     context.fillText = (text, x, y, maxWidth) => {
-      if (text === 'Ag') globalThis.__PIBBL_TEXT_BASELINE_DRAWS__.push({ x, y, font: context.font, baseline: context.textBaseline, matrix: [...context.getTransform().toFloat64Array()] });
+      if (text === 'Ag' || text.startsWith('Ag ')) globalThis.__PIBBL_TEXT_BASELINE_DRAWS__.push({ text, x, y, font: context.font, baseline: context.textBaseline, matrix: [...context.getTransform().toFloat64Array()] });
       original(text, x, y, maxWidth);
     };
   });
@@ -28,16 +28,16 @@ try {
       try {
         context.font = draw.font;
         context.textBaseline = 'top';
-        const top = context.measureText('Ag').actualBoundingBoxAscent;
-        const left = context.measureText('Ag').actualBoundingBoxLeft;
-        const right = context.measureText('Ag').actualBoundingBoxRight;
-        const descent = context.measureText('Ag').actualBoundingBoxDescent;
+        const top = context.measureText(draw.text).actualBoundingBoxAscent;
+        const left = context.measureText(draw.text).actualBoundingBoxLeft;
+        const right = context.measureText(draw.text).actualBoundingBoxRight;
+        const descent = context.measureText(draw.text).actualBoundingBoxDescent;
         context.textBaseline = 'alphabetic';
-        const alphabetic = context.measureText('Ag').actualBoundingBoxAscent;
+        const alphabetic = context.measureText(draw.text).actualBoundingBoxAscent;
         const alpha = inverse.transformPoint(matrix.transformPoint({ x: draw.x, y: draw.y + alphabetic - top }));
         const hitTopLeft = inverse.transformPoint(matrix.transformPoint({ x: draw.x - left, y: draw.y - top }));
         const hitBottomRight = inverse.transformPoint(matrix.transformPoint({ x: draw.x + right, y: draw.y + descent }));
-        return { font: draw.font, origin, alpha, hitTopLeft, hitBottomRight };
+        return { text: draw.text, font: draw.font, origin, alpha, hitTopLeft, hitBottomRight };
       } finally { context.restore(); }
     });
   }, (await state()).basis);
@@ -95,7 +95,7 @@ try {
   assert.equal(initialText.length, 2);
   const initialSmall = initialText.find(value => value.font === '10px monospace'), initialLarge = initialText.find(value => value.font === '20px sans-serif');
   assert.ok(initialSmall && initialLarge);
-  assert.ok(Math.abs(initialSmall.alpha.y - initialLarge.alpha.y) < 0.01, 'initial live Canvas baselines align');
+  assert.ok(Math.abs(initialSmall.alpha.y - initialLarge.alpha.y) < 1e-9, 'initial live Canvas baselines align');
   await click((initialSmall.hitTopLeft.x + initialSmall.hitBottomRight.x) / 2, (initialSmall.hitTopLeft.y + initialSmall.hitBottomRight.y) / 2);
   assert.deepEqual((await state()).textHits, ['text']);
   await clearTextDraws();
@@ -105,9 +105,28 @@ try {
   const changedSmall = changedText.find(value => value.font === '16px monospace'), changedLarge = changedText.find(value => value.font === '20px sans-serif');
   assert.ok(changedSmall && changedLarge);
   assert.notEqual(changedSmall.origin.y, initialSmall.origin.y);
-  assert.ok(Math.abs(changedSmall.alpha.y - changedLarge.alpha.y) < 0.01, 'changed live Canvas baselines align');
+  assert.ok(Math.abs(changedSmall.alpha.y - changedLarge.alpha.y) < 1e-9, 'changed live Canvas baselines align');
   await click((changedSmall.hitTopLeft.x + changedSmall.hitBottomRight.x) / 2, (changedSmall.hitTopLeft.y + changedSmall.hitBottomRight.y) / 2);
   assert.deepEqual((await state()).textHits, ['text', 'text']);
+  await clearTextDraws();
+  await click(80,392);
+  const wrappedTextState = await state(), wrappedText = await textDraws();
+  assert.equal(wrappedTextState.textWrap, true); assert.equal(wrappedTextState.textReflow, false);
+  const twoLineSmall = wrappedText.filter(value => value.font === '10px monospace'), twoLineLarge = wrappedText.find(value => value.font === '20px sans-serif');
+  assert.equal(twoLineSmall.length, 2);
+  assert.ok(twoLineLarge);
+  assert.ok(Math.abs(twoLineSmall[0].alpha.y - twoLineLarge.alpha.y) < 1e-9, 'wrapped first live Canvas baseline aligns');
+  await clearTextDraws();
+  await click(400,392);
+  const reflowedTextState = await state(), reflowedText = await textDraws();
+  assert.equal(reflowedTextState.textReflow, true);
+  const wrappedSmall = reflowedText.filter(value => value.font === '10px monospace'), wrappedLarge = reflowedText.find(value => value.font === '20px sans-serif');
+  assert.equal(wrappedSmall.length, 3);
+  assert.ok(wrappedLarge);
+  assert.ok(wrappedSmall.at(-1).origin.y > twoLineSmall.at(-1).origin.y, 'wrapped last line moves below the two-line glyph');
+  assert.ok(Math.abs(wrappedSmall[0].alpha.y - wrappedLarge.alpha.y) < 1e-9, 'reflowed first live Canvas baseline aligns');
+  await click((wrappedSmall.at(-1).hitTopLeft.x + wrappedSmall.at(-1).hitBottomRight.x) / 2, (wrappedSmall.at(-1).hitTopLeft.y + wrappedSmall.at(-1).hitBottomRight.y) / 2);
+  assert.deepEqual((await state()).textHits, ['text', 'text', 'text']);
   await click(700,410);
   await page.waitForTimeout(180);
   const beforeTextPaint = await counters();
@@ -122,5 +141,5 @@ try {
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
   const disposed=await sandbox.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();});
   assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements],[0,0,0]);assert.equal(await frame.locator('pre').count(),0);assert.deepEqual(errors,[]);
-  console.warn(JSON.stringify({base,initial:initial.boxes,shifted:shifted.boxes,wider:wider.boxes,text:{initialSmall,initialLarge,changedSmall,changedLarge},builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
+  console.warn(JSON.stringify({base,initial:initial.boxes,shifted:shifted.boxes,wider:wider.boxes,text:{initialSmall,initialLarge,changedSmall,changedLarge,twoLineSmall,twoLineLarge,wrappedSmall,wrappedLarge},builtInputs:proof?.coreInputs.length??null,cleanup:[0,0,0],errors}));
 } finally { await browser.close(); }

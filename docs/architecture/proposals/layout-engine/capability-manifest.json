@@ -2617,9 +2617,9 @@
       "id": "flex.baselines",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR nowrap rows of direct fixed primitive leaves, including nonempty unwrapped visible Text with generic positive px fonts and top baseline measured through an explicit Canvas service capability; missing-provider content-bottom fallback and explicit failure diagnostics",
+      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR nowrap rows of direct fixed primitive leaves, including nonempty visible unwrapped/wrapped Text at final allocation with generic positive px fonts and top baseline measured through an explicit Canvas service capability; missing-provider content-bottom fallback and explicit failure diagnostics",
       "status": "experimental",
-      "unresolvedPolicy": "Multiline Text, font loading/shaping, nested baseline propagation, last-baseline alignment, wrapping, reverse/RTL and broader leaf admission remain open.",
+      "unresolvedPolicy": "Broader Text fitting/overflow, font loading/shaping, nested baseline propagation, last-baseline alignment, outer Flex wrapping, reverse/RTL and broader leaf admission remain open.",
       "evidence": {
         "positive": [
           "packages/core/test/layout-flex-baseline.test.tsx",
@@ -2639,7 +2639,7 @@
         ],
         "missing": [
           "font loading/shaping/custom-font lifecycle",
-          "multiline Text",
+          "broader Text fitting/overflow baseline policy",
           "nested containers",
           "last-baseline alignment",
           "wrapping/reverse/RTL"
@@ -2890,7 +2890,7 @@
       "group": "measurement-and-intrinsic",
       "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom providers with one exact declared and one unbounded natural axis across finite nowrap main directions; native column-width query differences labeled separately from deterministic geometry; bounded built-in wrapped height and unwrapped natural ink dimensions, including both-auto, use the same owned query with real Canvas metrics",
       "status": "partial",
-      "unresolvedPolicy": "Paired intrinsic callback is implemented for the bounded direct-leaf consumer; baselines and broader intrinsic consumers remain open.",
+      "unresolvedPolicy": "Paired intrinsic and first/last baseline callbacks are implemented for bounded direct-leaf consumers; broader constraint modes, nested intrinsic consumers and feedback remain open.",
       "evidenceRefs": [
         "packages/core/src/lib/layout/layout-jsx.test.tsx",
         "packages/core/src/lib/define-primitive.test.tsx",
@@ -2956,7 +2956,7 @@
         "missing": [
           "broader exact/at-most/unbounded constraint matrix beyond finite row/column admissions",
           "broader nested invalidation and owner feedback",
-          "baselines",
+          "broader baseline consumers (tracked by flex.baselines)",
           "broader callback-count and constraint matrix"
         ]
       }
