@@ -2084,8 +2084,10 @@ remain A then B.
 
 The wrapped profile admits finite LTR/RTL `row` or `row-reverse` + `wrap`/`wrap-reverse`, all existing `alignContent` policies,
 resolved finite row/column gaps, and direct fixed numeric primitive providers or content-bottom
-fallback. Grow/shrink must be zero; Text, automatic margins and the other leaf
-exclusions remain outside this wrapped profile. Native line membership is reused.
+fallback, plus the existing fixed generic Text profile. Main grow/shrink and
+automatic main margins compose through native final main allocation before baseline
+measurement. Automatic cross margins and the other leaf exclusions remain outside
+this wrapped profile. Native line membership is reused.
 Each line has its own maximum ascent and descent, so the next line begins after
 the complete baseline extent. The common baseline never spans two lines. In a
 100px-wide row, A60x20/b12 and B40x40/b30 occupy y18/0; C60x20/b8 and

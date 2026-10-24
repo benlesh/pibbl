@@ -7389,13 +7389,33 @@ JSDoc pass. Native32tests and81500byte ABI13 fingerprint are recorded in201.
 No aggregate trust or final whole-codebase review claimed; baseline remains
 experimental and all seven release gates remain open.
 
-## [NEXT] Slice202: fixed wrapped Text and main allocation composition
+## [DONE] Slice202: fixed wrapped Text and main allocation composition
 
 Establish a public failing control for existing explicit numeric width/height,
 basis and min0 Text with main grow/shrink and automatic main margins. Main solving
 already precedes final-size baseline measurement; verify this composition before
 removing only the mechanical admission fence. Keep cross-auto, intrinsic sizing
 and decorated/nested profiles separately constrained.
+
+Public RED first reproduced the wrapped-baseline admission diagnostic. Removing
+only Text/grow/shrink/main-auto exclusions preserves fixed cross, generic font,
+query/decorated/nested and automatic cross-margin guards. Native main solving
+already precedes baseline queries; no ABI or placement algorithm changed. Public
+Text growth settles two40px bases to50px, then auto margin places40px leaves at
+20/60with matching live Canvas baselines and glyph hits. A separate oversized
+provider records final allocation100with shrink1, then120with shrink0, preserving
+identity and expanded targets. Focused3files15pass/1skip; types and lint pass.
+The main growth and Canvas Text lesson panels now run through wrapped Flex.
+Source5192/refreshed built5193 pass errors[] and cleanup000/470built inputs after
+freezing catalog changes; earlier runs were invalidated by catalog hot reload.
+Catalog175/12/33, Studio, docs109mutation probes and scoped review pass.
+
+## [NEXT] Slice203: resolved numeric main margins and baseline placement
+
+Define a public failing control for resolved numeric horizontal main margins,
+then remove only that mechanical fence if native final-width/main placement and
+physical baseline evidence agree. Retain cross-margin exclusions. Consolidate
+202–204before further production.
 
 ## Scope and execution
 

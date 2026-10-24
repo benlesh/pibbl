@@ -2436,9 +2436,8 @@ function assertSupportedFirstBaselineFlex(
   }
   for (const item of items) {
     const style = item.normalized;
-    if (wrapped && (item.child.type === Text || item.grow !== 0 || item.shrink !== 0 ||
-        item.autoMainBefore || item.autoMainAfter || item.autoCrossBefore || item.autoCrossAfter)) {
-      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: wrapped first-baseline requires fixed numeric primitive leaves without automatic margins');
+    if (wrapped && (item.autoCrossBefore || item.autoCrossAfter)) {
+      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: wrapped first-baseline requires fixed cross sizes without automatic cross margins');
     }
     const textLeaf = item.child.type === Text;
     const textStyle = style as Readonly<TextStyle>;
