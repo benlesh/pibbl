@@ -7369,12 +7369,33 @@ covers all14 wrap/distribution combinations and classifies the Yoga difference.
 ABI13 artifact81500bytes SHA256
 `e10082fcef7ff365ebef2251a44c73a2df403638023b0f8f6eaf9423cb4afa52`.
 
-## [NEXT] Consolidation67: installed distribution and cross reversal
+## [DONE] Consolidation67: installed distribution and cross reversal
 
 Consolidate199–201 before further production: accumulated experimental and ordinary
 checks, installed ABI13 distribution/reversal receipts, source/built replay,
 package identity, types, catalog and documentation checks. Baselines remain
 experimental; all seven release gates remain open.
+
+Fresh Node24.15 accumulated experimental checks:79files,1087pass/12skip of1099,
+82.81s. Ordinary lane:304pass/795skip,8.00s. Full source5192/built5193 replay
+passes errors[] and cleanup000; built470inputs. Installed ABI13 browser receipts
+explicitly assert all seven normal/reversed distribution policies, numeric and
+percentage gaps, final baseline updates, old/new targets, identity and four-counter
+teardown, preserving earlier receipts. Packed246inputs and104margin fixtures,
+strict Bundler/NodeNext consumers pass; tarball SHA256
+`001542841c1627cda5343e8cdedac9b95c39cc1e148a7f1abcfd5840ca753379`.
+Types, scoped lint/review, catalog/Studio/discovery, docs109mutations and public
+JSDoc pass. Native32tests and81500byte ABI13 fingerprint are recorded in201.
+No aggregate trust or final whole-codebase review claimed; baseline remains
+experimental and all seven release gates remain open.
+
+## [NEXT] Slice202: fixed wrapped Text and main allocation composition
+
+Establish a public failing control for existing explicit numeric width/height,
+basis and min0 Text with main grow/shrink and automatic main margins. Main solving
+already precedes final-size baseline measurement; verify this composition before
+removing only the mechanical admission fence. Keep cross-auto, intrinsic sizing
+and decorated/nested profiles separately constrained.
 
 ## Scope and execution
 

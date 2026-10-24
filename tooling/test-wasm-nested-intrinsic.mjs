@@ -205,6 +205,8 @@ try {
       assert.equal(receipt.indefiniteBoundValidation, true, 'Installed indefinite percentage bounds must validate before admission without resource allocation');
       assert.equal(receipt.firstBaselineDirections, true, 'Installed first-baseline placement must compose horizontal directions with stable identity and real targets');
       assert.equal(receipt.firstBaselineWrappedLines, true, 'Installed ABI11 must place baselines per native line, move only the affected line and clean up exactly');
+      assert.equal(receipt.firstBaselineLineDistribution, true, 'Installed ABI13 must distribute wrapped first-baseline lines across align-content and resolved numeric or percentage gaps');
+      assert.equal(receipt.firstBaselineWrapReverse, true, 'Installed ABI13 must reflect first-baseline line distribution for wrap-reverse while retaining identity and targets');
       assert.equal(receipt.firstBaseline, true, 'Installed baseline providers must use final allocations, native baseline placement, source focus, paint reuse, detached inputs, and exact cleanup');
       assert.equal(receipt.firstBaselineAutoMain, true, 'Installed baseline leaves must distribute positive main-axis automatic margins after baseline alignment while preserving targets, identities, and cleanup');
       assert.equal(receipt.firstBaselineAutoCross, true, 'Installed baseline leaves must let automatic cross margins replace shared baseline alignment, consume positive cross space, preserve targets and identities, and clean up exactly');
