@@ -4467,6 +4467,28 @@ const drafts = [
     load: () => import("./learning/layout/wasm-flex-percentage-owner.example"),
   },
   {
+    slug: "wasm-flex-measured-percentage-owner",
+    title: "Experimental WASM measured percentage stages",
+    shortTitle: "WASM measured owner",
+    section: "layout",
+    order: 174,
+    summary: "A paired measurement callback supplies natural width between native query preparation and final percentage allocation.",
+    api: ["Flex", "Rectangle", "definePrimitive", "useSignal"],
+    objectives: ["Observe a finite callback envelope before the later native percentage cap.", "Change a natural measurement input and verify moved paint and click targets."],
+    prompts: {
+      gesture: "Cycle external availability and natural width, then click near the red/green edge. The inspector records callback maxima and hit history.",
+      code: "The direct paired primitive returns natural width even above its query maximum. Native sizing constrains that result before the later cap; the existing region owns final placement.",
+    },
+    apiNotes: [
+      "Experimental undecorated LTR nowrap automatic-main owners with direct childless paired primitives and numeric cross sizes. Zero growth/shrink and explicit numeric sibling bases keep the staged contract finite.",
+      "Native temporary arenas are released before callbacks. Text/font compatibility, child-bearing providers, general decoration, wrapping and reverse/RTL stay outside this admission.",
+    ],
+    canvas: { width: 760, height: 540 },
+    related: ["wasm-flex-percentage-owner", "wasm-flex-intrinsic-primitive", "flex"],
+    exportName: "WasmFlexMeasuredPercentageOwnerExample",
+    load: () => import("./learning/layout/wasm-flex-measured-percentage-owner.example"),
+  },
+  {
     slug: "wasm-flex-intrinsic-primitive",
     title: "Experimental WASM custom intrinsic leaves",
     shortTitle: "WASM intrinsic leaves",

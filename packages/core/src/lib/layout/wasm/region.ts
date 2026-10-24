@@ -56,6 +56,7 @@ interface Kernel {
   place_main_auto(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
   place_main(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
   resize_intrinsic_main(handle: number, generation: number, count: number): number;
+  prepare_intrinsic_main_queries(handle: number, generation: number, externalOwner: number, initialAvailable: number, rootMin: number, rootMax: number, mode: number, gap: number): number;
   resolve_intrinsic_main(handle: number, generation: number, externalOwner: number, initialAvailable: number, rootMin: number, rootMax: number, mode: number, gap: number): number;
   intrinsic_main_result(handle: number, generation: number): number;
   dispose(): void;
@@ -144,6 +145,10 @@ export interface NumericIntrinsicMainItem {
   readonly base: number;
   readonly min: IntrinsicMainLength;
   readonly max: IntrinsicMainLength;
+  /** Private two-phase marker for a direct constrained provider. */
+  readonly measured?: boolean;
+  /** Native envelope copied before invoking application measurement code. */
+  readonly queryMaximum?: number;
 }
 export interface NumericIntrinsicMainQuery {
   readonly externalOwner?: number;
@@ -159,6 +164,7 @@ export interface NumericIntrinsicMainResult {
   readonly effectiveMins: readonly number[];
   readonly effectiveMaxes: readonly number[];
 }
+export interface NumericIntrinsicMainQueries { readonly maximums: readonly number[]; }
 const intrinsicUnitCode: Record<IntrinsicMainUnit, number> = { none: 0, point: 1, percent: 2 };
 const intrinsicModeCode: Record<NumericIntrinsicMainQuery['mode'], number> = {
   exact: 0, 'fit-content': 1, 'max-content': 2,
@@ -179,6 +185,63 @@ function writeIntrinsicLength(records: Float64Array, offset: number, length: Int
   }
   records[offset] = length.value; records[offset + 1] = code;
 }
+function writeIntrinsicMainRecord(records: Float64Array, offset: number, item: NumericIntrinsicMainItem, preparing: boolean): void {
+  if (!Number.isFinite(item.base) || item.base < 0) throw new RangeError('Intrinsic Flex bases must be finite and nonnegative.');
+  records[offset] = item.base;
+  writeIntrinsicLength(records, offset + 1, item.min, 'minimum');
+  writeIntrinsicLength(records, offset + 3, item.max, 'maximum');
+  if (!item.measured) {
+    if (item.queryMaximum !== undefined) throw new RangeError('Unmeasured intrinsic Flex items cannot retain a query maximum.');
+    records[offset + 8] = 0; records[offset + 9] = 0; return;
+  }
+  if (preparing) { records[offset + 8] = 1; records[offset + 9] = 0; return; }
+  if (item.queryMaximum === undefined || !(Number.isFinite(item.queryMaximum) || item.queryMaximum === Infinity) || item.queryMaximum < 0) throw new RangeError('Measured intrinsic Flex items require a nonnegative query maximum.');
+  records[offset + 8] = 2; records[offset + 9] = item.queryMaximum;
+}
+function validateIntrinsicQuery(query: NumericIntrinsicMainQuery): { externalOwner: number; initialAvailable: number; rootMin: number; rootMax: number } {
+  if (!Number.isFinite(query.gap) || query.gap !== 0) throw new RangeError('Staged intrinsic Flex currently requires a zero numeric gap.');
+  if (query.mode === 'max-content' ? query.initialAvailable !== undefined : query.initialAvailable === undefined) throw new RangeError('Intrinsic main query mode and availability do not agree.');
+  const externalOwner = intrinsicScalar(query.externalOwner, 'external owner');
+  const initialAvailable = intrinsicScalar(query.initialAvailable, 'initial availability');
+  const rootMin = intrinsicScalar(query.rootMin, 'root minimum');
+  const rootMax = intrinsicScalar(query.rootMax, 'root maximum');
+  if (!Number.isNaN(rootMin) && !Number.isNaN(rootMax) && rootMin > rootMax) throw new RangeError('Intrinsic root minimum must not exceed its maximum.');
+  return { externalOwner, initialAvailable, rootMin, rootMax };
+}
+function intrinsicStatus(status: number, operation: string): void {
+  if (status === 2) throw new RangeError('Intrinsic minimum must not exceed maximum.');
+  if (status !== 0) throw new Error(`Experimental staged intrinsic Flex ${operation} failed (${status}).`);
+}
+
+/** Copies finite native envelopes before evaluating paired measurement callbacks. */
+export function prepareTransientIntrinsicMainQueries(items: readonly NumericIntrinsicMainItem[], query: NumericIntrinsicMainQuery): NumericIntrinsicMainQueries {
+  const { externalOwner, initialAvailable, rootMin, rootMax } = validateIntrinsicQuery(query);
+  const owner = acquireRootOwner(measurementOwner); const standalone = measurementOwner === undefined;
+  let handle = 0, generation = 0;
+  try {
+    ({ handle, generation } = owner.create());
+    const pointer = owner.kernel.resize_intrinsic_main(handle, generation, items.length);
+    if (!pointer && items.length) throw new Error('Intrinsic Flex measurement storage allocation failed.');
+    const records = new Float64Array(owner.kernel.memory.buffer, pointer, items.length * 10);
+    for (let index = 0; index < items.length; index++) writeIntrinsicMainRecord(records, index * 10, items[index], true);
+    intrinsicStatus(owner.kernel.prepare_intrinsic_main_queries(handle, generation, externalOwner, initialAvailable, rootMin, rootMax, intrinsicModeCode[query.mode], query.gap), 'query preparation');
+    const output = new Float64Array(owner.kernel.memory.buffer, pointer, items.length * 10);
+    const maximums = new Array<number>(items.length);
+    for (let index = 0; index < items.length; index++) {
+      const maximum = output[index * 10 + 9];
+      if (items[index].measured) {
+        if (!(Number.isFinite(maximum) || maximum === Infinity) || maximum < 0) throw new Error('Experimental staged intrinsic Flex query produced an invalid provider maximum.');
+        maximums[index] = maximum;
+      } else {
+        if (maximum !== 0) throw new Error('Experimental staged intrinsic Flex query wrote a numeric item envelope.');
+        maximums[index] = 0;
+      }
+    }
+    counters.solves++; counters.measurementSolves++;
+    return { maximums };
+  } catch (error) { if (error instanceof WebAssembly.RuntimeError) owner.dispose(true); throw error; }
+  finally { try { if (handle) owner.release(handle, generation); } finally { if (standalone) owner.dispose(); } }
+}
 
 /**
  * Runs the native staged intrinsic-main query in a disposable arena.
@@ -186,17 +249,7 @@ function writeIntrinsicLength(records: Float64Array, offset: number, length: Int
  * Flex placement; authored percentage styles are never rewritten.
  */
 export function resolveTransientIntrinsicMain(items: readonly NumericIntrinsicMainItem[], query: NumericIntrinsicMainQuery): NumericIntrinsicMainResult {
-  if (!Number.isFinite(query.gap) || query.gap !== 0) throw new RangeError('Staged intrinsic Flex currently requires a zero numeric gap.');
-  if (query.mode === 'max-content' ? query.initialAvailable !== undefined : query.initialAvailable === undefined) {
-    throw new RangeError('Intrinsic main query mode and availability do not agree.');
-  }
-  const externalOwner = intrinsicScalar(query.externalOwner, 'external owner');
-  const initialAvailable = intrinsicScalar(query.initialAvailable, 'initial availability');
-  const rootMin = intrinsicScalar(query.rootMin, 'root minimum');
-  const rootMax = intrinsicScalar(query.rootMax, 'root maximum');
-  if (!Number.isNaN(rootMin) && !Number.isNaN(rootMax) && rootMin > rootMax) {
-    throw new RangeError('Intrinsic root minimum must not exceed its maximum.');
-  }
+  const { externalOwner, initialAvailable, rootMin, rootMax } = validateIntrinsicQuery(query);
   const owner = acquireRootOwner(measurementOwner);
   const standalone = measurementOwner === undefined;
   let handle = 0, generation = 0;
@@ -204,29 +257,25 @@ export function resolveTransientIntrinsicMain(items: readonly NumericIntrinsicMa
     ({ handle, generation } = owner.create());
     const pointer = owner.kernel.resize_intrinsic_main(handle, generation, items.length);
     if (!pointer && items.length) throw new Error('Intrinsic Flex measurement storage allocation failed.');
-    const records = new Float64Array(owner.kernel.memory.buffer, pointer, items.length * 8);
+    const records = new Float64Array(owner.kernel.memory.buffer, pointer, items.length * 10);
     for (let index = 0; index < items.length; index++) {
-      const item = items[index], offset = index * 8;
-      if (!Number.isFinite(item.base) || item.base < 0) throw new RangeError('Intrinsic Flex bases must be finite and nonnegative.');
-      records[offset] = item.base;
-      writeIntrinsicLength(records, offset + 1, item.min, 'minimum');
-      writeIntrinsicLength(records, offset + 3, item.max, 'maximum');
+      const item = items[index], offset = index * 10;
+      writeIntrinsicMainRecord(records, offset, item, false);
     }
     const status = owner.kernel.resolve_intrinsic_main(
       handle, generation, externalOwner, initialAvailable, rootMin, rootMax,
       intrinsicModeCode[query.mode], query.gap,
     );
-    if (status === 2) throw new RangeError('Intrinsic minimum must not exceed maximum.');
-    if (status !== 0) throw new Error(`Experimental staged intrinsic Flex query failed (${status}).`);
+    intrinsicStatus(status, 'resolution');
     const main = owner.kernel.intrinsic_main_result(handle, generation);
     if (!Number.isFinite(main) || main < 0) throw new Error('Experimental staged intrinsic Flex query produced an invalid owner size.');
     // Native may grow its memory while resolving. Copy all outputs before release.
-    const output = new Float64Array(owner.kernel.memory.buffer, pointer, items.length * 8);
+    const output = new Float64Array(owner.kernel.memory.buffer, pointer, items.length * 10);
     const targets = new Array<number>(items.length);
     const effectiveMins = new Array<number>(items.length);
     const effectiveMaxes = new Array<number>(items.length);
     for (let index = 0; index < items.length; index++) {
-      const offset = index * 8;
+      const offset = index * 10;
       const target = output[offset + 5], minimum = output[offset + 6], maximum = output[offset + 7];
       if (!Number.isFinite(target) || target < 0 || !Number.isFinite(minimum) || minimum < 0 ||
           !(Number.isFinite(maximum) || maximum === Infinity) || maximum < minimum) {

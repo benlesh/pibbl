@@ -1326,6 +1326,43 @@ Both widgets use one Owner control, owned geometry/stamp inspection and the same
 finite measurement operation. Affine-inverse inspection coordinates tolerate only
 1e-9 logical-unit roundoff; allocated extents and identities remain exact.
 
+### Experimental staged paired-leaf main bounds
+
+The same automatic-main row/column profile also admits direct childless custom
+primitives with both `measureIntrinsic` and `measure`, an automatic main dimension
+and basis, zero growth/shrink, a numeric cross dimension and no active cross
+bound beyond zero minimum. Known layout primitives, Text, decoration, responsive
+styles, whole-style callbacks, child-bearing providers, wrap and reverse/RTL
+retain their existing admission rules. The paired intrinsic callback is an
+admission capability; this path does not execute it to substitute for finite
+main-axis measurement.
+
+Native query preparation computes a main-axis maximum from the initial envelope
+and declared maximum. The temporary arena is released before each pure callback.
+The callback receives main minimum0 and that finite/unbounded maximum, with its
+own declared cross dimension exact on the other axis. A fresh native continuation
+constrains the returned natural main size to the prepared query maximum before
+applying the external-owner and later line-bound phases. Finite provider results
+may exceed the query envelope; native code owns the constraint. A query maximum0
+is valid. Bounds already known to conflict diagnose before any callback.
+
+For natural main80/cross20, root max160, cap25% and a fixed80 sibling, the
+callback gets main max40; external200 or160 yields A30/B80/root110, while
+external80 yields20/80/100. The numeric declared leaf in the preceding profile
+has a different initial basis at external200 and yields A32.5. An unbounded
+callback receives an unbounded main maximum. Natural20/floor50% stays20 under
+unbounded/min-only owners but becomes80 under the earlier max160 envelope.
+Rows and columns transpose; the cross query uses the leaf's numeric dimension,
+which may differ from the root cross size.
+
+Only successful current-transaction results may stage measured targets/bounds
+for normal allocation. The region places those already-measured targets without
+repeating the intrinsic or finite callback. Measurement-only signal reads retain
+current receiver ownership; natural-input changes move final paint/hit geometry.
+Callback exceptions, unsupported results, invalid dimensions and cycles publish
+no stage and leave no temporary arena/instance. This bounded provider profile
+adds no public operation or persistent measurement cache.
+
 ### Experimental finite wrapped-row intrinsic height
 
 A Flex with a finite numeric content width, `flexDirection: "row"`, LTR

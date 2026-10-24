@@ -233,7 +233,7 @@ export interface PreparedIntrinsicMainStage {
   readonly axis: 'row' | 'column';
   readonly contentMain: number;
   readonly revision: number;
-  readonly items: readonly Readonly<{ sourceIndex: number; target: number; min: number; max: number }>[];
+  readonly items: readonly Readonly<{ sourceIndex: number; target: number; min: number; max: number; measured?: boolean }>[];
 }
 const intrinsicMainStages = new WeakMap<PibblRenderTransaction, WeakMap<object, PreparedIntrinsicMainStage>>();
 export function stagePreparedIntrinsicMain(receiver: object | undefined, stage: PreparedIntrinsicMainStage): void {

@@ -4,7 +4,14 @@ const STRIDE: usize = 10; // basis, min, max, padding, grow, shrink, result, fro
 // base, min value/unit, max value/unit, target, effective min, effective max.
 // The ordinary allocator still owns grow/shrink; this staged query admits only
 // callers that have already restricted those factors to zero.
-const INTRINSIC_MAIN_STRIDE: usize = 8;
+const INTRINSIC_MAIN_STRIDE: usize = 10;
+// Slots 0..7 retain the v7 owner-phase protocol. Slot 8 distinguishes a
+// host-side measurement request from a continuation-ready measurement result;
+// slot 9 carries its prepared main-axis maximum across arena recreation.
+const INTRINSIC_MEASURED_FLAG: usize = 8;
+const INTRINSIC_MEASURED_REQUEST: f64 = 1.0;
+const INTRINSIC_MEASURED_READY: f64 = 2.0;
+const INTRINSIC_QUERY_MAX: usize = 9;
 const INTRINSIC_NONE: u32 = 0;
 const INTRINSIC_POINT: u32 = 1;
 const INTRINSIC_PERCENT: u32 = 2;
@@ -94,7 +101,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v7() -> u32 { 7 }
+pub extern "C" fn layout_abi_v8() -> u32 { 8 }
 #[no_mangle]
 pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
@@ -461,6 +468,23 @@ pub extern "C" fn resize_intrinsic_main(handle: u32, generation: u32, count: usi
     })
 }
 
+/// Computes callback main-axis envelopes without retaining native storage
+/// while application measurement code executes.
+#[no_mangle]
+pub extern "C" fn prepare_intrinsic_main_queries(
+    handle: u32, generation: u32,
+    external_owner: f64, initial_available: f64,
+    root_min: f64, root_max: f64, root_mode: u32, gap: f64,
+) -> u32 {
+    with_arena(handle, generation, 1, |arena| {
+        arena.intrinsic_main_result = f64::NAN;
+        match prepare_intrinsic_main_queries_records(
+            &mut arena.intrinsic_main, external_owner, initial_available,
+            root_min, root_max, root_mode, gap,
+        ) { Ok(()) => 0, Err(status) => status }
+    })
+}
+
 #[no_mangle]
 pub extern "C" fn resolve_intrinsic_main(
     handle: u32, generation: u32,
@@ -519,10 +543,10 @@ fn clamp_bounds(value: f64, minimum: Option<f64>, maximum: Option<f64>) -> Resul
     Ok(if let Some(minimum) = minimum { value.max(minimum) } else { value })
 }
 
-fn resolve_intrinsic_main_fixed_leaves(
-    records: &mut [f64], external_owner: f64, initial_available: f64,
+fn validate_intrinsic_main_envelope(
+    records: &[f64], external_owner: f64, initial_available: f64,
     root_min: f64, root_max: f64, root_mode: u32, gap: f64,
-) -> Result<f64, u32> {
+) -> Result<(Option<f64>, Option<f64>), u32> {
     if records.len() % INTRINSIC_MAIN_STRIDE != 0 || !gap.is_finite() || gap != 0.0 { return Err(1); }
     if !external_owner.is_nan() && (!external_owner.is_finite() || external_owner < 0.0) { return Err(1); }
     if root_mode != INTRINSIC_EXACT && root_mode != INTRINSIC_FIT_CONTENT && root_mode != INTRINSIC_MAX_CONTENT { return Err(1); }
@@ -532,14 +556,69 @@ fn resolve_intrinsic_main_fixed_leaves(
     let root_min = resolve_root_bound(root_min)?;
     let root_max = resolve_root_bound(root_max)?;
     checked_bounds(root_min, root_max)?;
+    Ok((root_min, root_max))
+}
+
+fn prepare_intrinsic_main_queries_records(
+    records: &mut [f64], external_owner: f64, initial_available: f64,
+    root_min: f64, root_max: f64, root_mode: u32, gap: f64,
+) -> Result<(), u32> {
+    let _ = validate_intrinsic_main_envelope(
+        records, external_owner, initial_available, root_min, root_max, root_mode, gap,
+    )?;
+    for record in records.chunks_exact_mut(INTRINSIC_MAIN_STRIDE) {
+        if record[INTRINSIC_MEASURED_FLAG] != 0.0 && record[INTRINSIC_MEASURED_FLAG] != INTRINSIC_MEASURED_REQUEST { return Err(1); }
+        if record[2] == record[4] && record[2] != INTRINSIC_NONE as f64 && record[1] > record[3] { return Err(2); }
+        // These bounds are already decidable before application code runs.
+        // Rejecting their contradiction here guarantees no provider callback is
+        // admitted for an impossible continuation.
+        let external_min = resolve_intrinsic_length(record[1], record[2], external_owner)?;
+        let external_max = resolve_intrinsic_length(record[3], record[4], external_owner)?;
+        let initial_min = resolve_intrinsic_length(record[1], record[2], initial_available)?;
+        let initial_max = resolve_intrinsic_length(record[3], record[4], initial_available)?;
+        checked_bounds(maximum(external_min, initial_min), minimum(external_max, initial_max))?;
+        if record[INTRINSIC_MEASURED_FLAG] == 0.0 {
+            if record[INTRINSIC_QUERY_MAX] != 0.0 { return Err(1); }
+            continue;
+        }
+        let declared_max = initial_max;
+        let query_max = match declared_max {
+            Some(value) if initial_available.is_nan() => value,
+            Some(value) => value.min(initial_available),
+            None if initial_available.is_nan() => f64::INFINITY,
+            None => initial_available,
+        };
+        if query_max.is_nan() || query_max < 0.0 { return Err(1); }
+        record[INTRINSIC_QUERY_MAX] = query_max;
+        record[INTRINSIC_MEASURED_FLAG] = INTRINSIC_MEASURED_READY;
+    }
+    Ok(())
+}
+
+fn resolve_intrinsic_main_fixed_leaves(
+    records: &mut [f64], external_owner: f64, initial_available: f64,
+    root_min: f64, root_max: f64, root_mode: u32, gap: f64,
+) -> Result<f64, u32> {
+    let (root_min, root_max) = validate_intrinsic_main_envelope(
+        records, external_owner, initial_available, root_min, root_max, root_mode, gap,
+    )?;
 
     // Basis binding sees the external owner reference. Retain these bounds: a
     // later phase may tighten, never erase, a valid early bound.
     let mut consumed = 0.0;
     for record in records.chunks_exact_mut(INTRINSIC_MAIN_STRIDE) {
-        let base = record[0];
+        let mut base = record[0];
         if !base.is_finite() || base < 0.0 { return Err(1); }
+        if record[INTRINSIC_MEASURED_FLAG] != 0.0 && record[INTRINSIC_MEASURED_FLAG] != INTRINSIC_MEASURED_READY { return Err(1); }
         if record[2] == record[4] && record[2] != INTRINSIC_NONE as f64 && record[1] > record[3] { return Err(2); }
+        if record[INTRINSIC_MEASURED_FLAG] == INTRINSIC_MEASURED_READY {
+            let query_max = record[INTRINSIC_QUERY_MAX];
+            if query_max.is_nan() || query_max < 0.0 { return Err(1); }
+            base = base.min(query_max);
+            // Later owner phases intentionally consume the clamped callback
+            // result rather than an untrusted public provider result.
+            record[0] = base;
+        } else if record[INTRINSIC_QUERY_MAX] != 0.0 { return Err(1); }
         let initial_min = resolve_intrinsic_length(record[1], record[2], external_owner)?;
         let initial_max = resolve_intrinsic_length(record[3], record[4], external_owner)?;
         record[5] = clamp_bounds(base, initial_min, initial_max)?;
@@ -634,7 +713,7 @@ fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
 #[cfg(test)]
 mod tests {
     fn intrinsic_record(base: f64, min_value: f64, min_unit: f64, max_value: f64, max_unit: f64) -> [f64; INTRINSIC_MAIN_STRIDE] {
-        [base, min_value, min_unit, max_value, max_unit, 0.0, 0.0, 0.0]
+        [base, min_value, min_unit, max_value, max_unit, 0.0, 0.0, 0.0, 0.0, 0.0]
     }
     fn cap_records() -> Vec<f64> {
         let mut records = Vec::new();
@@ -649,13 +728,61 @@ mod tests {
         records
     }
 
+    fn measured_cap_records(natural_main: f64, query_max: f64, flag: f64) -> Vec<f64> {
+        let mut records = cap_records();
+        records[0] = natural_main;
+        records[INTRINSIC_MEASURED_FLAG] = flag;
+        records[INTRINSIC_QUERY_MAX] = query_max;
+        records
+    }
+
+    #[test] fn intrinsic_main_prepares_measured_query_and_clamps_untrusted_natural_result() {
+        let mut prepared = measured_cap_records(0., 0., INTRINSIC_MEASURED_REQUEST);
+        assert_eq!(prepare_intrinsic_main_queries_records(&mut prepared, f64::NAN,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.), Ok(()));
+        assert_eq!((prepared[INTRINSIC_MEASURED_FLAG], prepared[INTRINSIC_QUERY_MAX], prepared[INTRINSIC_MAIN_STRIDE + INTRINSIC_QUERY_MAX]), (INTRINSIC_MEASURED_READY,40.,0.));
+
+        // A public provider need return only finite dimensions. Native code,
+        // rather than provider discipline, owns the at-most clamp.
+        let mut continued = measured_cap_records(10_000., prepared[INTRINSIC_QUERY_MAX], INTRINSIC_MEASURED_READY);
+        assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut continued,f64::NAN,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.), Ok(110.));
+        assert_eq!((continued[0], continued[5], continued[7], continued[INTRINSIC_MAIN_STRIDE + 5]), (40.,30.,30.,80.));
+    }
+
+
+    #[test] fn intrinsic_main_preparation_rejects_resolved_bound_contradictions_before_callback() {
+        let mut records = measured_cap_records(0., 0., INTRINSIC_MEASURED_REQUEST);
+        records[1] = 100.;
+        records[2] = INTRINSIC_POINT as f64;
+        assert_eq!(prepare_intrinsic_main_queries_records(
+            &mut records, f64::NAN, 160., f64::NAN, 160., INTRINSIC_FIT_CONTENT, 0.,
+        ), Err(2));
+
+        // A zero at-most envelope is valid and becomes a ready continuation;
+        // it must not be confused with an absent prepared query.
+        let mut zero = measured_cap_records(0., 0., INTRINSIC_MEASURED_REQUEST);
+        zero[3] = 0.;
+        zero[4] = INTRINSIC_POINT as f64;
+        assert_eq!(prepare_intrinsic_main_queries_records(
+            &mut zero, f64::NAN, 160., f64::NAN, 160., INTRINSIC_FIT_CONTENT, 0.,
+        ), Ok(()));
+        assert_eq!((zero[INTRINSIC_MEASURED_FLAG], zero[INTRINSIC_QUERY_MAX]), (INTRINSIC_MEASURED_READY, 0.));
+    }
+
+    #[test] fn intrinsic_main_rejects_unprepared_measured_or_nonzero_numeric_query_slot() {
+        let mut unprepared = measured_cap_records(80., 40., INTRINSIC_MEASURED_REQUEST);
+        assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut unprepared,f64::NAN,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.), Err(1));
+        let mut numeric = cap_records();
+        numeric[INTRINSIC_QUERY_MAX] = 40.;
+        assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut numeric,f64::NAN,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.), Err(1));
+    }
+
     #[test] fn intrinsic_main_preserves_yoga_percentage_owner_phases() {
-        let mut finite_cap=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut finite_cap,200.,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(112.5)); assert_eq!((finite_cap[5],finite_cap[6],finite_cap[7],finite_cap[13]),(32.5,0.,32.5,80.));
-        let mut owner_160=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut owner_160,160.,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(110.)); assert_eq!((owner_160[5],owner_160[7],owner_160[13]),(30.,30.,80.));
-        let mut undefined_max=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut undefined_max,f64::NAN,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(120.)); assert_eq!((undefined_max[5],undefined_max[7],undefined_max[13]),(40.,40.,80.));
-        let mut unbounded_cap=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut unbounded_cap,f64::NAN,f64::NAN,f64::NAN,f64::NAN,INTRINSIC_MAX_CONTENT,0.),Ok(120.)); assert_eq!((unbounded_cap[5],unbounded_cap[7],unbounded_cap[13]),(40.,40.,80.));
-        let mut unbounded_floor=floor_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut unbounded_floor,f64::NAN,f64::NAN,f64::NAN,f64::NAN,INTRINSIC_MAX_CONTENT,0.),Ok(100.)); assert_eq!((unbounded_floor[5],unbounded_floor[6],unbounded_floor[13]),(20.,0.,80.));
-        let mut max_floor=floor_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut max_floor,f64::NAN,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(160.)); assert_eq!((max_floor[5],max_floor[6],max_floor[13]),(80.,80.,80.));
+        let mut finite_cap=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut finite_cap,200.,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(112.5)); assert_eq!((finite_cap[5],finite_cap[6],finite_cap[7],finite_cap[15]),(32.5,0.,32.5,80.));
+        let mut owner_160=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut owner_160,160.,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(110.)); assert_eq!((owner_160[5],owner_160[7],owner_160[15]),(30.,30.,80.));
+        let mut undefined_max=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut undefined_max,f64::NAN,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(120.)); assert_eq!((undefined_max[5],undefined_max[7],undefined_max[15]),(40.,40.,80.));
+        let mut unbounded_cap=cap_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut unbounded_cap,f64::NAN,f64::NAN,f64::NAN,f64::NAN,INTRINSIC_MAX_CONTENT,0.),Ok(120.)); assert_eq!((unbounded_cap[5],unbounded_cap[7],unbounded_cap[15]),(40.,40.,80.));
+        let mut unbounded_floor=floor_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut unbounded_floor,f64::NAN,f64::NAN,f64::NAN,f64::NAN,INTRINSIC_MAX_CONTENT,0.),Ok(100.)); assert_eq!((unbounded_floor[5],unbounded_floor[6],unbounded_floor[15]),(20.,0.,80.));
+        let mut max_floor=floor_records(); assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut max_floor,f64::NAN,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.),Ok(160.)); assert_eq!((max_floor[5],max_floor[6],max_floor[15]),(80.,80.,80.));
     }
 
     // These lock the three distinct references Yoga applies: external owner for
@@ -664,19 +791,19 @@ mod tests {
     #[test] fn intrinsic_main_keeps_external_and_own_bound_phases_distinct() {
         let mut external_cap = cap_records();
         assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut external_cap,80.,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.), Ok(100.));
-        assert_eq!((external_cap[5], external_cap[7], external_cap[13]), (20.,20.,80.));
+        assert_eq!((external_cap[5], external_cap[7], external_cap[15]), (20.,20.,80.));
 
         let mut external_floor = floor_records();
         assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut external_floor,80.,160.,f64::NAN,160.,INTRINSIC_FIT_CONTENT,0.), Ok(160.));
-        assert_eq!((external_floor[5], external_floor[6], external_floor[13]), (80.,80.,80.));
+        assert_eq!((external_floor[5], external_floor[6], external_floor[15]), (80.,80.,80.));
 
         let mut own_min_cap = cap_records();
         assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut own_min_cap,f64::NAN,160.,160.,f64::NAN,INTRINSIC_FIT_CONTENT,0.), Ok(160.));
-        assert_eq!((own_min_cap[5], own_min_cap[7], own_min_cap[13]), (40.,40.,80.));
+        assert_eq!((own_min_cap[5], own_min_cap[7], own_min_cap[15]), (40.,40.,80.));
 
         let mut minmax_floor = floor_records();
         assert_eq!(resolve_intrinsic_main_fixed_leaves(&mut minmax_floor,f64::NAN,160.,160.,160.,INTRINSIC_FIT_CONTENT,0.), Ok(160.));
-        assert_eq!((minmax_floor[5], minmax_floor[6], minmax_floor[13]), (80.,80.,80.));
+        assert_eq!((minmax_floor[5], minmax_floor[6], minmax_floor[15]), (80.,80.,80.));
     }
 
     #[test] fn intrinsic_main_rejects_unsupported_or_contradictory_inputs() {

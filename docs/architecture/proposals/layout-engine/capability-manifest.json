@@ -1935,7 +1935,7 @@
       "id": "flex.min-max",
       "target": "parity",
       "group": "flex-core",
-      "current": "numeric bounds, definite-owner percentage main-axis caps/floors and wrapped stretched cross bounds in row/column, including owner resize; an acyclic exact caller width/height supplies an omitted LTR nowrap row/column main reference for direct percentage bounds; bounded undecorated zero-factor numeric Rectangle owners use native staged percentage references for max-only, min-only and unbounded measurement; general intrinsic percentage providers remain unsupported; bounded direct nested row Flex cross minimum resolves from a definite wrapped outer owner; decorated border-box row-reverse/wrap nested cross minima use the final content owner",
+      "current": "numeric bounds, definite-owner percentage main-axis caps/floors and wrapped stretched cross bounds in row/column, including owner resize; an acyclic exact caller width/height supplies an omitted LTR nowrap row/column main reference for direct percentage bounds; bounded undecorated zero-factor numeric Rectangle owners use native staged percentage references for max-only, min-only and unbounded measurement; direct childless paired custom leaves use released native query preparation and constrained natural-result continuation; broader intrinsic profiles retain explicit admission boundaries; bounded direct nested row Flex cross minimum resolves from a definite wrapped outer owner; decorated border-box row-reverse/wrap nested cross minima use the final content owner",
       "status": "partial",
       "evidenceRefs": [
         "packages/core/src/lib/layout/flex.test.ts",
@@ -1947,6 +1947,9 @@
         "packages/core/test/layout-exact-column-measurement.test.tsx",
         "packages/core/test/layout-indefinite-bound-validation.test.tsx",
         "packages/core/test/layout-measured-percent-owner.test.tsx",
+        "packages/core/test/layout-measured-leaf-percent-owner.test.tsx",
+        "packages/scenarios/src/learning/layout/wasm-flex-measured-percentage-owner.example.tsx",
+        "tooling/test-wasm-measured-percentage-owner.mjs",
         "tooling/layout-yoga-rehearsal/percentage-phase-probe.cpp",
         "packages/scenarios/src/learning/layout/wasm-flex-percentage-owner.example.tsx",
         "tooling/test-wasm-percentage-owner.mjs",
@@ -1975,8 +1978,8 @@
           "opposing limits rejection",
           "negative/nonfinite/malformed percentages rejected",
           "resolved opposing percent bounds rejected",
-          "General percentage-dependent intrinsic measurement outside the staged numeric profile remains unsupported without resource allocation",
-          "Maximum-only and unbounded availability are not exact/final owners; the bounded numeric profile carries distinct native phase references while general providers remain unsupported; conflicting bounds diagnose before provider evaluation",
+          "General percentage-dependent intrinsic measurement outside the staged numeric/paired-leaf profiles remains unsupported without resource allocation",
+          "Maximum-only and unbounded availability are not exact/final owners; the bounded numeric profile carries distinct native phase references while out-of-profile providers remain unsupported; conflicting bounds diagnose before provider evaluation",
           "Malformed, negative and nonfinite percentage bounds diagnose before indefinite-owner rejection, provider evaluation or resource allocation"
         ],
         "interaction": [

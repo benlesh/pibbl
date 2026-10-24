@@ -202,6 +202,7 @@ try {
       assert.equal(receipt.firstBaseline, true, 'Installed baseline providers must use final allocations, native baseline placement, source focus, paint reuse, detached inputs, and exact cleanup');
       assert.equal(receipt.textFirstBaseline, true, 'Installed Text must use the public Canvas baseline service for mixed generic fonts, real Canvas alignment, moved glyph targets, paint reuse, and exact cleanup');
       assert.equal(receipt.wrappedTextFirstBaseline, true, 'Installed wrapped Text must align its first visible line from real Canvas baseline metrics, move the last-line target after content and line updates, reuse paint, and clean up');
+      assert.equal(receipt.measuredStagedPercentageOwner, true, 'Installed measured leaves must preserve callback envelopes, provider-only signal geometry, targeting and exact cleanup');
       assert.equal(receipt.stagedPercentageOwner, true, 'Installed staged percentage query and normal placement must agree through resize, targeting, identity and cleanup');
       assert.equal(receipt.emptyAspectMinimum, true, 'Installed empty aspect rows/columns preserve zero content minima and explicit floors');
       assert.equal(receipt.nestedStructuralAggregateReuse, true, 'Installed wrapped leaf must reuse aggregate measurement and retain provider signals');

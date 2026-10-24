@@ -20,8 +20,9 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice166 (native staged percentage bounds for numeric owners;
-separate commit). Next is167: the remaining measured-leaf phase matrix.
+Latest delivery is slice167 (native measured-leaf query/continuation phases;
+separate commit). Slice166 is `fcc06741`. Next is168: described measured-owner
+composition and the remaining indefinite/cyclic-owner exit policy.
 Consolidation55 is `98bf8b8d` for163–165.
 Slice165 is `cc334a0a` (empty-Rectangle aspect automatic minimum).
 Slice164 is `ff72e0ab` (wrapped-leaf aggregate measurement reuse).
@@ -5319,7 +5320,7 @@ Cycle200→160→80 and click at the red/green edge. Numeric phase references an
 source paint order are visible; inspector counters are observed diagnostics,
 while the prose sizes are explicitly expected values.
 
-## [NEXT] Slice167: measured-leaf percentage-owner phase matrix
+## Slice167 delivered: measured-leaf percentage-owner phase matrix
 
 The remaining `flex.min-max` row still requires the direct measured-provider
 callback/query clauses and supported described/provider composition across the
@@ -5331,6 +5332,61 @@ through the existing paired measurement and prepared-root lifetime. Release
 native temporary storage before callbacks and preserve cycle/failure/receipt
 cleanup. No new public selector, JavaScript fixed point or persistent graph.
 Promote only after the remaining agreed matrix is implemented and verified.
+
+Delivered2026-10-23. The direct childless paired-provider branch now completes
+all28row/column cap/floor owner cases above. Main callback maxima are copied from
+a native preparation arena and that arena is released before application code.
+A fresh native continuation clamps natural results, including returns above the
+query maximum, before the existing external/initial/later/final phases. Private
+request/ready metadata distinguishes a valid zero maximum from an unprepared
+record. Current-transaction measured targets suppress duplicate intrinsic/finite
+queries during normal region placement; numeric authored bases retain166behavior.
+
+The first public test was RED before production; final mounted row/column tests
+prove one callback per update, exact pixel boundaries, old-target transfer,
+provider-only natural80→20 signals, native node reuse and exact disposal. A leaf
+cross30 under root cross50 receives exact30, not root50. Thrown/unsupported/NaN/
+cyclic callbacks leave no live temporary resources. Known resolved bound conflicts
+are rejected before providers, including cross-unit point100/max25% at envelope160;
+that native assertion was observed RED before its production fix. Active cross
+bounds, query styles, known/Text/child-bearing leaves and nonzero factors remain
+outside this bounded provider admission.
+
+Fresh Node24.15.0/Chromium focused six-file run504passed/8skipped512tests81.76s;
+ordinary lane96passed/416skipped. Native21tests pass. ABI8 matching assets75199bytes,
+SHA256`f13e9bb62e79e26b082abe111ecdbc252fa2575bde85865f4ab6cbab76975419`.
+Source5192 and built5193 measured-provider replay pass, built470inputs; installed
+offline consumer passes246dist inputs, Bundler/NodeNext and
+measuredStagedPercentageOwner receipt, tarball SHA256
+`3bf955f11a32021e2fe553bb44856234d7f3a6b23ff4d9b503b00f572fb79a4e`.
+Typecheck, changed-code lint,174lesson catalog/Studio,109documentation mutations
+and public JSDoc pass. The expanded independent full-precision pinned phase probe
+source SHA256`96fbf2070b11f12c3a9c6457ffc6da50865f28d4656620aa571ff2a0e848582d`
+separates natural80 cap/floor from natural20 floor controls and records both
+main/cross modes.721corpus unchanged, no visual baseline rewritten, no capability
+promotion, full trust claim or release gate closure.
+
+Runnable: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-measured-percentage-owner`.
+Toggle natural80/20, cycle external200/160/80 and click the red/green edge.
+Inspector maxima are actual callback records; shown sizes are labeled expected.
+
+## [NEXT] Slice168: described measured-owner composition and owner-policy exit
+
+The remaining min/max row needs the described known-owner and paired-provider
+composition branches exercised through these phases with actual final paint,
+not just a standalone query or160–164foundation evidence. First discriminate a
+described Flex containing the measured leaf at max160/unbounded external
+availability (root110/A30/B80), and an explicit paired owner delegating to that
+known description while rendering its result. Establish current receiver/identity
+handoff and reject arbitrary opaque discovery; no new wrapper API or persistent
+query graph is authorized. Reuse the same finite owner matrix where it adds
+material evidence, not a new numbered cap/direction variant.
+
+Audit the remaining indefinite/cyclic-owner clause against the actual native
+phase policy and supported public profile. State finite rejection/validation for
+unresolved or recursive sources explicitly, with native and public evidence;
+do not claim unsupported behavior as parity or invent a JavaScript fixed point.
+Only promote min/max after its complete accepted missing row is evidenced.
 
 The automatic-minimum ledger still has five categories (general Text/font rules,
 images, remaining intrinsic aspect interactions, overflow/fitting, pinned-native

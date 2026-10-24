@@ -7,7 +7,7 @@ import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyl
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
-import { experimentalLayout, LayoutRegion, mountedLayoutRegion, solveTransientFlexMain, resolveTransientIntrinsicMain, type NumericFlexMainInput, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
+import { experimentalLayout, LayoutRegion, mountedLayoutRegion, solveTransientFlexMain, prepareTransientIntrinsicMainQueries, resolveTransientIntrinsicMain, type NumericFlexMainInput, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
 import { Rectangle } from '../components/rect.js';
 import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth, measureLayoutTextNaturalRun } from '../components/text.js';
 
@@ -799,10 +799,14 @@ function measureStagedNonexactMain(
   const externalOwner = Number.isFinite(available) ? available : undefined;
   const initialAvailable = mode === 'fit-content' ? rootMax as number : undefined;
   let hasPercentageBound = false;
-  const items: { base: number; min: { value?: number; unit: 'none' | 'point' | 'percent' }; max: { value?: number; unit: 'none' | 'point' | 'percent' } }[] = [];
+  const items: { base: number; min: { value?: number; unit: 'none' | 'point' | 'percent' }; max: { value?: number; unit: 'none' | 'point' | 'percent' }; measured?: boolean; queryMaximum?: number }[] = [];
+  const measuredLeaves: { readonly sourceIndex: number; readonly child: PibblElement<any>; readonly normalized: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>; readonly receiver: object; readonly query: PreparedQuery | undefined }[] = [];
   for (let sourceIndex = 0; sourceIndex < children.length; sourceIndex++) {
     const child = children[sourceIndex];
-    if (child.type !== Rectangle || Object.hasOwn(child.props, 'children') ||
+    const definition = getPrimitiveDefinition(child.type);
+    const pairedMeasuredLeaf = child.type !== Rectangle && child.type !== Text && !isKnownLayoutType(child.type) &&
+      !Object.hasOwn(child.props, 'children') && !!definition?.measureIntrinsic && !!definition.measure;
+    if ((!pairedMeasuredLeaf && (child.type !== Rectangle || Object.hasOwn(child.props, 'children'))) ||
         !child.props.style || typeof child.props.style !== 'object' || isSignal(child.props.style)) return;
     const receiver = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, sourceIndex);
     const prepared = prepareDirectChildStyle(child, receiver, diagnosticBox, true);
@@ -816,32 +820,53 @@ function measureStagedNonexactMain(
     const childCross = row ? style.height : style.width;
     const min = row ? style.minWidth : style.minHeight;
     const max = row ? style.maxWidth : style.maxHeight;
+    const automaticMeasuredMain = main === undefined || main === 'auto';
     if (preparedStyleQuery(prepared) || style.position !== undefined || style.aspectRatio !== undefined ||
-        typeof main !== 'number' || !Number.isFinite(main) || main < 0 ||
-        typeof basis !== 'number' || !Number.isFinite(basis) || basis < 0 || main !== basis ||
+        (pairedMeasuredLeaf && (row ? style.minHeight !== undefined && style.minHeight !== 0 || style.maxHeight !== undefined : style.minWidth !== undefined && style.minWidth !== 0 || style.maxWidth !== undefined)) ||
         typeof childCross !== 'number' || !Number.isFinite(childCross) || childCross < 0 ||
         (style.flexGrow ?? 0) !== 0 || (style.flexShrink ?? 1) !== 0 ||
         style.margin !== undefined || style.marginTop !== undefined || style.marginRight !== undefined || style.marginBottom !== undefined || style.marginLeft !== undefined ||
         style.marginStart !== undefined || style.marginEnd !== undefined ||
         style.padding !== undefined || style.paddingStart !== undefined || style.paddingEnd !== undefined ||
-        style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined) return;
+        style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined ||
+        (pairedMeasuredLeaf ? !automaticMeasuredMain || basis !== 'auto' :
+          typeof main !== 'number' || !Number.isFinite(main) || main < 0 ||
+          typeof basis !== 'number' || !Number.isFinite(basis) || basis < 0 || main !== basis)) return;
     const intrinsicMin = intrinsicMainLength(min, row ? 'minWidth' : 'minHeight', child, diagnosticBox);
     const intrinsicMax = intrinsicMainLength(max, row ? 'maxWidth' : 'maxHeight', child, diagnosticBox);
     if (!intrinsicMin || !intrinsicMax) return;
     if (intrinsicMin.unit === 'percent' || intrinsicMax.unit === 'percent') hasPercentageBound = true;
-    items.push({ base: basis, min: intrinsicMin, max: intrinsicMax });
+    items.push({ base: pairedMeasuredLeaf ? 0 : basis as number, min: intrinsicMin, max: intrinsicMax, measured: pairedMeasuredLeaf || undefined });
+    if (pairedMeasuredLeaf) measuredLeaves.push({ sourceIndex, child, normalized: style, receiver, query: preparedStyleQuery(prepared) });
   }
   if (!items.length || !hasPercentageBound) return;
-  const resolved = resolveTransientIntrinsicMain(items, {
-    externalOwner, initialAvailable, rootMin: rootMin as number | undefined,
-    rootMax: rootMax as number | undefined, mode, gap: 0,
-  });
+  const intrinsicQuery = { externalOwner, initialAvailable, rootMin: rootMin as number | undefined,
+    rootMax: rootMax as number | undefined, mode, gap: 0 };
+  if (measuredLeaves.length) {
+    const preparedQueries = prepareTransientIntrinsicMainQueries(items, intrinsicQuery);
+    for (let index = 0; index < measuredLeaves.length; index++) {
+      const leaf = measuredLeaves[index];
+      const queryMaximum = preparedQueries.maximums[leaf.sourceIndex];
+      const measurementChild = clonePibblElement(leaf.child);
+      setPreNormalizedStyle(measurementChild, leaf.normalized, leaf.child, leaf.receiver, leaf.query);
+      const leafCross = (row ? leaf.normalized.height : leaf.normalized.width) as number;
+      const constraints = row ? { minWidth: 0, maxWidth: queryMaximum, minHeight: leafCross, maxHeight: leafCross } :
+        { minWidth: leafCross, maxWidth: leafCross, minHeight: 0, maxHeight: queryMaximum };
+      const result = measureConstrainedLayoutChild(measurementChild, constraints);
+      if (result.status === 'unsupported') return result;
+      const natural = row ? result.size.width : result.size.height;
+      if (!Number.isFinite(natural) || natural < 0) throw new Error('Experimental staged intrinsic Flex provider returned an invalid main size.');
+      items[leaf.sourceIndex] = { ...items[leaf.sourceIndex], base: natural, measured: true, queryMaximum };
+    }
+  }
+  const resolved = resolveTransientIntrinsicMain(items, intrinsicQuery);
   const receiver = GLOBAL_STATE.primitiveReceiverToken;
   stagePreparedIntrinsicMain(receiver, {
     elements: children, axis: row ? 'row' : 'column', contentMain: resolved.main,
     revision: allocationInputRevision(),
     items: resolved.targets.map((target, sourceIndex) => ({
       sourceIndex, target, min: resolved.effectiveMins[sourceIndex], max: resolved.effectiveMaxes[sourceIndex],
+      measured: items[sourceIndex].measured,
     })),
   });
   return { status: 'measured', size: row ? { width: resolved.main, height: cross } : { width: cross, height: resolved.main } };
@@ -985,6 +1010,9 @@ function resolveFlexPlacements(
     let normalized = declared;
     if (experimentalLayout) normalized = resolveAllocatedInsets(normalized, { width: container.width, layoutDirection: options.layoutDirection, context: childContext(child, container) });
     if (normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized, { width: container.width, height: container.height, mainAxis: row ? 'width' : 'height', context: childContext(child, container) });
+    const stagedItem = stagedIntrinsic?.items[sourceIndex];
+    if (stagedItem && stagedItem.sourceIndex !== sourceIndex) throw new Error('Staged intrinsic Flex children are out of source order.');
+    const stagedMeasured = stagedItem?.measured === true;
     const aspectRatio = normalized.aspectRatio;
     if (aspectRatio !== undefined && (typeof aspectRatio !== 'number' || !Number.isFinite(aspectRatio) || aspectRatio <= 0)) {
       throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'must be a positive finite outer width/height ratio');
@@ -1156,7 +1184,7 @@ function resolveFlexPlacements(
         typeof aspectCross === 'number' && Number.isFinite(aspectCross) && aspectCross >= 0);
     const automaticRectangleMinimum = automaticAspectRectangleMinimum ||
       hasEmptyRectangleMinimum(child, normalized, preparedStyleQuery(prepared), true);
-    const customIntrinsic = experimentalLayout && row && options.flexWrap === 'nowrap' &&
+    const customIntrinsic = !stagedMeasured && experimentalLayout && row && options.flexWrap === 'nowrap' &&
       !preparedStyleQuery(prepared) && !!pairedLayoutDefinition?.measureIntrinsic &&
       (!isLayoutComponent(child.type) || options.flexDirection === 'row' && options.layoutDirection === 'ltr' && aspectRatio === undefined && !!pairedLayoutDefinition.measure) &&
       (basisValue === 'auto' && (normalized.width === undefined || normalized.width === 'auto') || shrink > 0 && normalized.minWidth === undefined);
@@ -1195,7 +1223,7 @@ function resolveFlexPlacements(
       columnMinimumSize = result.size;
     }
 
-    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum && !intrinsicSizes && !columnMinimumSize) {
+    if (!stagedMeasured && (shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum && !intrinsicSizes && !columnMinimumSize) {
       throw childDiagnostic(
         child,
         minimumProperty,
@@ -1212,7 +1240,7 @@ function resolveFlexPlacements(
     let measured: { width: number; height: number } | undefined = columnMinimumSize;
     const specifiedMain = normalized[mainProperty];
     const specifiedCross = normalized[crossProperty];
-    const needsMeasuredMain = basisValue === 'auto' &&
+    const needsMeasuredMain = !stagedMeasured && basisValue === 'auto' &&
       (specifiedMain === undefined || specifiedMain === 'auto');
     if (aspectRatio !== undefined && needsMeasuredMain) throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'requires a definite main dimension or flexBasis; intrinsic aspect sizing is unsupported');
     const crossAuto = specifiedCross === undefined || specifiedCross === 'auto';
@@ -1283,10 +1311,6 @@ function resolveFlexPlacements(
     const padding = normalizeBoxInsets(normalized, childContext(child, container));
     const paddingMain = row ? padding.left + padding.right : padding.top + padding.bottom;
     const paddingCross = row ? padding.top + padding.bottom : padding.left + padding.right;
-    const stagedItem = stagedIntrinsic?.items[sourceIndex];
-    if (stagedItem && stagedItem.sourceIndex !== sourceIndex) {
-      throw new Error('Staged intrinsic Flex children are out of source order.');
-    }
     let minMain = stagedItem ? stagedItem.min : resolveOptionalBound(
       normalized[minimumProperty],
       mainReference,
@@ -1392,7 +1416,7 @@ function resolveFlexPlacements(
         region?.writeTextMaximum(token, content, font, naturalTextMain);
       }
     }
-    const baseMain = naturalTextMain ?? resolveBasis(
+    const baseMain = stagedMeasured ? stagedItem!.target : naturalTextMain ?? resolveBasis(
       basisValue,
       specifiedMain,
       measured?.[mainProperty],
