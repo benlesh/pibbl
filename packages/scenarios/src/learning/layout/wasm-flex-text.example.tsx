@@ -1,5 +1,7 @@
 import {
   Flex,
+  Flow,
+  Grid,
   Rectangle,
   Text,
   useConst,
@@ -11,6 +13,7 @@ import {
   definePrimitive,
   defineLayoutComponent,
   type FlexStyle,
+  type PibblResponsiveStyle,
   type SystemStyle,
 } from "@pibbl/core";
 
@@ -152,22 +155,23 @@ function createWasmFlexTextContent() {
   const frozenPanel = <Flex style={{ left: 28, top: 260, width, height: 200, gap: 20, alignItems: "flex-start" }}>{frozenChildren}</Flex>;
   const frozenPanelStyle = (frozenPanel.props as Readonly<{ style: object }>).style;
   Object.freeze(frozenPanelStyle); Object.freeze(frozenPanel.props); Object.freeze(frozenPanel);
-  type RowContent = "wrappedText" | "unwrappedText" | "provider" | "known" | "font" | "ellipsis" | "fitClip" | "squish" | "overflowClip";
+  type RowContent = "wrappedText" | "unwrappedText" | "provider" | "known" | "font" | "ellipsis" | "fitClip" | "squish" | "overflowClip" | "flow" | "grid";
   const rowContent = signal<RowContent>("wrappedText");
-  const nextRowContent: Readonly<Record<RowContent, RowContent>> = { wrappedText: "unwrappedText", unwrappedText: "provider", provider: "known", known: "font", font: "ellipsis", ellipsis: "fitClip", fitClip: "squish", squish: "overflowClip", overflowClip: "wrappedText" };
-  const rowContentLabel: Readonly<Record<RowContent, string>> = { wrappedText: "wrapped Text", unwrappedText: "one-line Text", provider: "provider", known: "Flex", font: "Canvas font", ellipsis: "ellipsis", fitClip: "clip fit", squish: "squish fit", overflowClip: "clip overflow" };
+  const nextRowContent: Readonly<Record<RowContent, RowContent>> = { wrappedText: "unwrappedText", unwrappedText: "provider", provider: "known", known: "font", font: "ellipsis", ellipsis: "fitClip", fitClip: "squish", squish: "overflowClip", overflowClip: "flow", flow: "grid", grid: "wrappedText" };
+  const rowContentLabel: Readonly<Record<RowContent, string>> = { wrappedText: "wrapped Text", unwrappedText: "one-line Text", provider: "provider", known: "Flex", font: "Canvas font", ellipsis: "ellipsis", fitClip: "clip fit", squish: "squish fit", overflowClip: "clip overflow", flow: "Flow", grid: "Grid" };
   const RowProvider = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { readonly width: number; readonly height: number }>((_props, style) =>
     <Rectangle onClick={() => selected.set("auto cross provider")} style={{ width: style.width, height: style.height, fill: "#8a3248", cursor: "pointer" }} />, {
     resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
     measureIntrinsic: () => ({ status: "measured", minContent: { width: 40, height: 20 }, maxContent: { width: 80, height: 20 } }),
     measure: ({ constraints }) => ({ status: "measured", size: { width: constraints.maxWidth, height: constraints.maxWidth <= 40 ? 40 : 20 } }),
   });
+  const RowProviderLayout = defineLayoutComponent((props: { readonly style: PibblResponsiveStyle<FlexStyle> }) => <RowProvider style={props.style} />);
   function RowSourceButton() {
     const comparison = autoCrossProof.get();
     return <Button x={372} y={144} label={comparison ? `Row: ${rowContentLabel[rowContent.get()]}` : "Switch source"} onClick={() => {
       if (!comparison) { alternate.update(value => !value); return; }
       const next = nextRowContent[rowContent.get()];
-      rowContent.set(next); autoCrossWrap.set(next === "provider" || next === "known"); naturalRowWidth.set(false); autoTextGrow.set(false);
+      rowContent.set(next); autoCrossWrap.set(next === "provider" || next === "known" || next === "flow" || next === "grid"); naturalRowWidth.set(false); autoTextGrow.set(false);
     }} />;
   }
   const columnWords = signal("jobs jobs jobs");
@@ -299,13 +303,13 @@ function createWasmFlexTextContent() {
     autoCrossTransform = { a: transform.a, b: transform.b, c: transform.c, d: transform.d, e: transform.e, f: transform.f };
     return <>
       <Text pointerEvents="none" style={{ left: 28, top: 238, font: "12px sans-serif", fill: "#475569" }}>
-        {textPolicy ? "Canvas fonts and fitting settle Text height before top auto." : content === "known" ? "Flex content keeps its measured height; top auto uses the space in its line." : content === "provider" ? "The provider measures at its final width; top auto follows each line." : content === "unwrappedText" ? "One-line Text uses its measured ink height before top auto is placed." : autoTextGrow.get() ? "Text flexes first; top auto uses its final height." : natural ? "Natural Text width; wrapping and top margins follow each line." : wrapped ? "Wrapped rows settle Text height before the automatic top margin is placed." : "Text starts at its natural width. Narrowing adds a line and reduces the top margin."}
+        {(content === "flow" || content === "grid") ? "Measured layout height settles before the margin in each row." : textPolicy ? "Canvas fonts and fitting settle Text height before top auto." : content === "known" ? "Flex content keeps its measured height; top auto uses the space in its line." : content === "provider" ? "The provider measures at its final width; top auto follows each line." : content === "unwrappedText" ? "One-line Text uses its measured ink height before top auto is placed." : autoTextGrow.get() ? "Text flexes first; top auto uses its final height." : natural ? "Natural Text width; wrapping and top margins follow each line." : wrapped ? "Wrapped rows settle Text height before the automatic top margin is placed." : "Text starts at its natural width. Narrowing adds a line and reduces the top margin."}
       </Text>
       <ColumnAutoComparison />
       <IntrinsicAutoMarginComparison />
       <Rectangle pointerEvents="none" style={{ left: 28, top: 258, width: rowWidth, height: wrapped ? 122 : 102, stroke: "#a63758", strokeWidth: 1 }} />
       <Flex style={{ left: 28, top: 260, width: rowWidth, height: wrapped ? 120 : 100, flexWrap: wrapped ? "wrap" : undefined, gap: wrapped ? 10 : undefined, alignItems: wrapped ? "flex-start" : undefined, alignContent: wrapped ? "flex-start" : undefined }}>
-        {content === "known" ? <Flex style={{ width: textWidth, height: "auto", minWidth: 0, minHeight: 0, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, marginTop: "auto", alignItems: "flex-start" }}><Rectangle onClick={() => selected.set("auto cross known")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: "#8a3248", cursor: "pointer" }} /></Flex> : content === "provider" ? <RowProvider style={{ width: textWidth, height: "auto", minWidth: 0, minHeight: 0, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, marginTop: "auto" }} /> : <Text
+        {content === "flow" ? <Flow style={{ width: textWidth, height: "auto", minWidth: 0, minHeight: 0, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, marginTop: "auto", direction: "horizontal", wrap: false }}><Rectangle onClick={() => selected.set("auto cross Flow")} style={{ width: 20, height: 20, fill: "#8a3248", cursor: "pointer" }} /><Rectangle style={{ width: 20, height: 20, fill: "#6e3e79" }} /></Flow> : content === "grid" ? <Grid style={{ width: textWidth, height: "auto", minWidth: 0, minHeight: 0, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, marginTop: "auto", gridTemplateColumns: [20, 20], gridTemplateRows: [20] }}><Rectangle onClick={() => selected.set("auto cross Grid")} style={{ width: 20, height: 20, gridColumnStart: 1, gridRowStart: 1, fill: "#8a3248", cursor: "pointer" }} /><Rectangle style={{ width: 20, height: 20, gridColumnStart: 2, gridRowStart: 1, fill: "#6e3e79" }} /></Grid> : content === "known" ? <Flex style={{ width: textWidth, height: "auto", minWidth: 0, minHeight: 0, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, marginTop: "auto", alignItems: "flex-start" }}><Rectangle onClick={() => selected.set("auto cross known")} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: "#8a3248", cursor: "pointer" }} /></Flex> : content === "provider" ? <RowProviderLayout style={{ width: textWidth, height: "auto", minWidth: 0, minHeight: 0, flexBasis: textWidth, flexGrow: 0, flexShrink: 0, marginTop: "auto" }} /> : <Text
           onClick={() => { autoCrossHits.update(value => value + 1); selected.set("auto cross text"); }}
           style={{ width: (content === "unwrappedText" || textPolicy) ? textWidth : natural ? "auto" : wrapped ? textWidth : undefined, minWidth: (content === "unwrappedText" || textPolicy) ? 0 : natural ? undefined : wrapped ? 0 : undefined, flexGrow: autoTextGrow.get() ? 1 : undefined, flexShrink: (content === "unwrappedText" || textPolicy) ? 0 : natural ? 1 : wrapped ? 0 : undefined, wrap: content !== "unwrappedText" && !textPolicy, font: content === "font" ? "10px CustomFont" : "10px monospace", fit: content === "ellipsis" ? "ellipsis" : content === "fitClip" ? "clip" : content === "squish" ? "squish" : "visible", overflow: content === "overflowClip" ? "clip" : "visible", lineHeight: 10, marginTop: "auto", fill: "#19375b", cursor: "pointer" }}
         >

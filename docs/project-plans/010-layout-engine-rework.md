@@ -20,13 +20,14 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice185 (one existing Text resolver for final cross measurement).
+Latest delivery is slice186 (existing measurable-family and described-provider dispatch).
+Slice185 is `1b196156` (existing Text policy in final cross measurement).
 Slice184 is `7c62b066` (shared row measurement across wrapping modes).
 Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; next is186: measured known Grid/Flow cross placement.
+Consolidation61 is `8162fea2` for181–183; next is consolidation62 for184–186.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -39,7 +40,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is186: one measured known-family cross-placement dispatch.
+Consolidation56 is `2fd34f0e` for166–168. Next is consolidation62 for184–186.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6767,14 +6768,50 @@ remain recursively unsupported by the existing pure-query contract; wrapped-colu
 intrinsic cross and staged nonzero-margin prerequisites remain independent.
 Fixed33 stays10complete/12experimental/5partial/5missing/1excluded, all7gates open.
 
-## [NEXT] Slice186: measured known-family cross placement
+## Slice186 delivered: existing measurable-family dispatch
 
-Record focused public zero/auto failures for fixed-track Grid and Flow in row
-nowrap/wrap. Reuse their already successful pure exact-final-width measurement
-before native line cross placement. Preserve each family's own unsupported query
-and track/child contracts, paint/hit order, receiver/cache ownership and exact
-cleanup; do not admit opaque components. Consolidate184–186 next, with a single
-finite family/policy receipt and an explicit original auto-margin exit decision.
+Six failing public Flow/Grid cases establish pure numeric geometry and visible
+numeric0controls before auto rejection: row-nowrap/wrap height20at settled width80,
+and nowrap column natural width80at final main40. The pure natural height remains
+20; it does not override the parent's40basis. Two additional described paired-
+provider zero/auto failures identified a definition lookup using the wrapper type
+instead of its prepared primitive. All eight positive cases now share existing
+measurement and native placement; two negative Absolute/Overlay cases establish
+missing pure providers, zero/auto prepaint diagnostics and exact cleanup.
+
+Fresh Node24.15.0/Chromium10focused files pass103tests in4.36s; ordinary mode
+passes49/skip10 in2.15s. Tests assert pure results, actual marker boxes, native/hook
+identity, moved targets, row split/column resize, paint solve/query reuse and
+four-counter cleanup. Source/built dedicated replays pass Flow/Grid modes and the
+now-described provider alongside all prior row/column/Text-policy cases; built470
+inputs, cleanup0000. Visual inspection confirms the Grid presentation. The strict
+installed246-input consumer covers direct/described providers, Flex/Flow/Grid
+wrapped rows, Flow/Grid columns, all10Text policy combinations and104prior margin
+fixtures; geometry, identity and cleanup pass. Tarball SHA256
+`02fce551773adb12bed61faed8290ecc5936e401833c9f01f9c685e6b259ee0c`.
+Types, lint and catalog/Studio checks pass. Scoped review is clean, including the
+prepared definition lookup retaining the authored wrapper/token. Native118probe,
+kernel and ABI10are unchanged; Flow/Grid add no fabricated Yoga equivalence.
+
+The finite built-in inventory is explicit: Flex/Flow/Grid have supported pure
+measurement envelopes; Absolute/Overlay do not provide measurement and their
+non-stretch numeric0automatic cross already fails. Opaque queries are not added.
+The remaining ordinary-measure capability class and wrapped Text profiles are
+recorded as actual auto-only gaps, not renamed dependencies. Fixed33 remains
+10complete/12experimental/5partial/5missing/1excluded, all7release gates open.
+
+## [NEXT] Consolidation62: slices184–186 and precise remaining exit
+
+Run accumulated ordinary/experimental tests, full source/built replays, installed
+consumer, pinned native reference and static consistency checks before further
+production. Keep177native normal-owner regressions in the matrix. The next bounded
+measurement fix should combine the remaining ordinary cross-measurement class:
+measure-only primitives without an intrinsic callback, and wrapped Text children
+inside a nowrap column outside the narrow natural-width profile. Do not confuse
+that child wrapping with a wrapped column parent, whose natural cross query
+already fails at numeric0. Keep the original auto-margin target partial until
+actual remaining zero/auto pairs are resolved and the finite guard inventory is
+reconciled. No font subsystem, query protocol or extra implementation owner.
 
 ## Scope and execution
 

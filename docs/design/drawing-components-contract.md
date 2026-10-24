@@ -161,8 +161,8 @@ supplied; omitted height uses the Canvas allocation. Interaction paths union
 actual metrics for every rendered line. Paint and pure measurement share this
 resolver, so measured wrapping and eventual rendering agree.
 
-Experimental Flex final cross measurement uses this same resolver for already
-supported main allocations, including non-generic Canvas fonts and all Text fit
+Experimental Flex row and unwrapped-column final cross measurement uses this
+same resolver for already supported main allocations, including non-generic Canvas fonts and all Text fit
 modes. It does not introduce font loading or new intrinsic-size policies. The
 application owns font readiness and fallback; non-generic font measurements do
 not enter Flex's reusable generic-font cache. Text glyph clipping remains

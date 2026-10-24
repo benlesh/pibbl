@@ -1934,10 +1934,29 @@ unchanged. Receiver roles, revisions and measurement-cache ownership are shared.
 
 In rows, paired primitives and prepared Flex roots similarly use the real final
 allocated width before automatic height and cross-auto placement. The ordinary
-main-sizing and pure-query restrictions still apply. Flow/Grid do not acquire
-new main profiles from this continuation; their previously supported fixed-height
-column measurement remains separate. No new API, ABI, native solver or scheduler
+main-sizing and pure-query restrictions still apply. Otherwise measurable Flex, Flow and fixed-track Grid roots share this continuation.
+Their own intrinsic/track/child query restrictions remain authoritative; this does
+not introduce an opaque component query. Absolute and Overlay have no pure
+measurement provider, so automatic natural cross sizing already fails with a
+numeric0margin; auto margins do not add those providers. No new API, ABI, native solver or scheduler
 is introduced.
+
+### Measurable known-family dispatch
+
+Direct or described Flex, Flow and fixed-track Grid roots may use automatic
+cross sizes with auto margins after a successful existing pure query. Row
+queries receive the settled width; nowrap column natural queries receive exact
+settled height and unbounded width. Main allocation remains authoritative even
+when the natural query returns a different height. Native line membership and
+line-local placement are unchanged; every required query can still reject its
+own unsupported descendants or track modes before paint.
+
+A described paired primitive uses its prepared root definition to choose the
+same existing provider operation as a direct child. The authored wrapper remains
+the source/receiver identity. No registry-wide opaque measurement, new cache or
+resource lifetime is introduced. Absolute/Overlay remain independent missing-pure-
+measurement cases; ordinary measure-only primitives and wrapped-column Text
+profiles outside the natural-width envelope remain separately tracked.
 
 ### Wrapped natural-width Text in finite columns
 

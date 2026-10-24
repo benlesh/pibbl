@@ -148,6 +148,12 @@ try {
     if(policy==='fitClip'){await click(75,policyDraw.y+ink);assert.match(await state(),/selected: auto cross sibling/);}
     await click(32,policyDraw.y+ink);assert.match(await state(),/selected: auto cross text/);
   }
+  for(const family of ['flow','grid']){
+    await click(450,160);assert.match(await state(),new RegExp(`row content: ${family}`));
+    assert.deepEqual(await pixel(32,284),[138,50,72,255]);
+    await click(82,264);assert.match(await state(),/selected: auto cross sibling/);
+    await click(32,284);assert.match(await state(),new RegExp(`selected: auto cross ${family==='flow'?'Flow':'Grid'}`));
+  }
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if (built) {
     assert.equal(proof.mode, 'layout-wasm-built');
@@ -160,5 +166,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements,disposed.activeWasmInstances],[0,0,0,0]);
   assert.deepEqual(errors, []);
-  console.warn(`${built ? 'Built' : 'Source'} shared Text auto sizing: growing row and width reflow, column basis/auto-height allocations, wrapped reverse/RTL short/long targets, unwrapped row Text, wrapped provider/Flex targets and Canvas font/fitting policies; cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
+  console.warn(`${built ? 'Built' : 'Source'} shared Text auto sizing: growing row and width reflow, column basis/auto-height allocations, wrapped reverse/RTL short/long targets, unwrapped row Text, wrapped provider/Flex targets and Canvas font/fitting policies and measured Flow/Grid rows; cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
 } finally { await browser.close(); }

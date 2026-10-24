@@ -208,7 +208,7 @@ export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40
   await writeFile(
     join(consumer, "entry.ts"),
     `import { WasmFlexNestedIntrinsicExample } from './example';
-import { createElement, Absolute, Flex, Grid, Group, Layer, Rectangle, Text, FocusManagement, definePrimitive, defineLayoutComponent, measureElement, signal, computed, useConst, useCanvasContext, useLayoutBox, type SystemStyle, type FlexStyle, type FlexItemStyle, type BoxStyle, type GridItemStyle, type RectStyle, type PibblResponsiveStyle, type BaselineMeasureInput, type BaselinesResult, type CanvasMeasurementService } from '@pibbl/core';
+import { createElement, Absolute, Flex, Flow, Grid, Group, Layer, Rectangle, Text, FocusManagement, definePrimitive, defineLayoutComponent, measureElement, signal, computed, useConst, useCanvasContext, useLayoutBox, type SystemStyle, type FlexStyle, type FlexItemStyle, type BoxStyle, type GridItemStyle, type RectStyle, type PibblResponsiveStyle, type BaselineMeasureInput, type BaselinesResult, type CanvasMeasurementService } from '@pibbl/core';
 import { opacity } from '@pibbl/core/filters';
 import { pibblSync } from '@pibbl/core/sync';
 const receipt = globalThis.__PIBBL_PACKED_PROOF__;
@@ -1225,9 +1225,12 @@ try {
     measureIntrinsic:()=>({status:'measured',minContent:{width:80,height:20},maxContent:{width:80,height:20}}),
     measure:({constraints})=>{if(constraints.minWidth===constraints.maxWidth)rowQueries.push(constraints.maxWidth);return{status:'measured',size:{width:80,height:20}};},
   });
-  for(const known of [false,true]){
+  const DescribedRowProvider=defineLayoutComponent((props:{readonly style:PibblResponsiveStyle<FlexStyle>})=>createElement(WrappedRowProvider,{style:props.style}));
+  for(const family of ['provider','described-provider','Flex','Flow','Grid'] as const){
+    const known=family!=='provider'&&family!=='described-provider';
     const margin=signal<0|'auto'>(0),width=signal(180),style={width:80,height:'auto' as const,minWidth:0,minHeight:0,flexBasis:80,flexGrow:0,flexShrink:0,marginTop:margin};
-    const leaf=known?createElement(Flex,{style:{...style,alignItems:'flex-start'},children:[createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,fill:'#8a3248'}}),createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,fill:'#8a3248'}})]}):createElement(WrappedRowProvider,{style});
+    const numericChildren=[createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,gridColumnStart:1,gridRowStart:1,fill:'#8a3248'}}),createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,gridColumnStart:2,gridRowStart:1,fill:'#8a3248'}})];
+    const leaf=family==='Grid'?createElement(Grid,{style:{...style,gridTemplateColumns:[40,40],gridTemplateRows:[20]},children:numericChildren}):family==='Flow'?createElement(Flow,{style:{...style,direction:'horizontal',wrap:false},children:numericChildren}):known?createElement(Flex,{style:{...style,alignItems:'flex-start'},children:numericChildren}):family==='described-provider'?createElement(DescribedRowProvider,{style}):createElement(WrappedRowProvider,{style});
     sharedTextController=pibblSync(sharedTextCanvas,createElement(Flex,{style:{width,height:100,flexWrap:'wrap',alignItems:'flex-start',alignContent:'flex-start'},children:[leaf,createElement(Rectangle,{style:{width:60,height:40,minWidth:0,minHeight:0,flexShrink:0,fill:'#426b61'}})]}));await frame();
     if(pixel(4,4)!=='[138,50,72,255]'||pixel(84,4)!=='[66,107,97,255]')throw Error('installed wrapped row zero geometry');
     const nodes=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates;margin.set('auto');await frame();
@@ -1245,6 +1248,15 @@ try {
     if(automatic.text!==zero.text||Math.abs(automatic.x-(column?Math.max(0,180-natural.size.width):0))>1e-6||Math.abs(automatic.y-(column?0:100-natural.size.height))>1e-6)throw Error('installed Text policy cross placement '+JSON.stringify({column,policy,natural,zero,automatic}));
     if((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==nodes)throw Error('installed Text policy identity');sharedTextController.dispose();
   }
+  for(const family of ['Flow','Grid'] as const){
+    const margin=signal<0|'auto'>(0),style={width:'auto' as const,height:'auto' as const,minWidth:0,minHeight:0,flexBasis:40,flexGrow:0,flexShrink:0,marginLeft:margin};
+    const numericChildren=[createElement(Rectangle,{style:{width:40,height:20,gridColumnStart:1,gridRowStart:1,fill:'#8a3248'}}),createElement(Rectangle,{style:{width:40,height:20,gridColumnStart:2,gridRowStart:1,fill:'#8a3248'}})];
+    const child=family==='Flow'?createElement(Flow,{style:{...style,direction:'horizontal',wrap:false},children:numericChildren}):createElement(Grid,{style:{...style,gridTemplateColumns:[40,40],gridTemplateRows:[20]},children:numericChildren});
+    sharedTextController=pibblSync(sharedTextCanvas,createElement(Flex,{style:{width:180,height:100,flexDirection:'column',alignItems:'flex-start'},children:[child,createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,fill:'#426b61'}})]}));await frame();const nodes=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates;
+    if(pixel(4,4)!=='[138,50,72,255]'||pixel(4,44)!=='[66,107,97,255]')throw Error('installed known column zero');margin.set('auto');await frame();
+    if(pixel(104,4)!=='[138,50,72,255]'||pixel(4,44)!=='[66,107,97,255]'||(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==nodes)throw Error('installed known column settled-height cross');sharedTextController.dispose();
+  }
+  receipt.knownFamilyCrossMeasurement=true;
   receipt.textCrossPolicies=true;
   receipt.rowSharedMeasurement=true;
   receipt.finalMainCrossMeasurement=true;
