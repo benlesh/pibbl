@@ -39,6 +39,7 @@ function createWasmFlexTextContent() {
   const naturalBasis = signal(false);
   const autoCrossProof = signal(false);
   const autoCrossWrap = signal(false);
+  const intrinsicLogical = signal(false);
   let autoCrossTransform = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
   const autoCrossWidth = signal(140);
   const autoCrossHits = signal(0);
@@ -161,12 +162,13 @@ function createWasmFlexTextContent() {
     </>;
   }
   function IntrinsicAutoMarginComparison() {
+    const logical = intrinsicLogical.get();
     return <>
-      <Text pointerEvents="none" style={{ left: 28, top: 388, font: "12px sans-serif", fill: "#475569" }}>40 + 80 content; the 200px owner adds an 80px auto margin.</Text>
+      <Text pointerEvents="none" style={{ left: 28, top: 388, font: "12px sans-serif", fill: "#475569" }}>{logical ? "Shorthand + logical: A has 40px on each main edge." : "40 + 80 content; the 200px owner adds an 80px auto margin."}</Text>
       <Rectangle pointerEvents="none" style={{ left: 28, top: 404, width: 200, height: 24, stroke: "#a63758", strokeWidth: 1 }} />
       <Flex style={{ left: 28, top: 406, width: 200, height: 20, alignItems: "flex-start" }}>
         <Flex style={{ width: "auto", height: 20, minWidth: 200, flexGrow: 0, flexShrink: 0, flexWrap: "nowrap", layoutDirection: "ltr", alignItems: "flex-start" }}>
-          <Rectangle style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginLeft: "auto", fill: "#8a3248" }} />
+          <Rectangle style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, margin: logical ? "auto" : undefined, marginLeft: logical ? 0 : "auto", marginStart: logical ? "auto" : undefined, fill: "#8a3248" }} />
           <Rectangle style={{ width: 80, height: 20, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, fill: "#426b61" }} />
         </Flex>
       </Flex>
@@ -177,6 +179,8 @@ function createWasmFlexTextContent() {
           <Rectangle style={{ width: 80, height: 10, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, fill: "#426b61" }} />
         </Flex>
       </Flex>
+      <Rectangle onClick={() => intrinsicLogical.update(value => !value)} style={{ left: 28, top: 434, width: 200, height: 20, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 38, top: 437, font: "12px sans-serif", fill: "#ffffff" }}>Toggle shorthand + logical</Text>
       <Text pointerEvents="none" style={{ left: 280, top: 432, font: "12px sans-serif", fill: "#475569" }}>Cross auto: A sinks by 10px</Text>
     </>;
   }
@@ -383,7 +387,7 @@ function createWasmFlexTextContent() {
   return {
     node,
     readInputs: () =>
-      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
+      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · wrapped: ${autoCrossWrap.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · column words: ${columnWords.get()} · column hits: ${columnHits.get()} · intrinsic logical: ${intrinsicLogical.get()} · intrinsic auto contribution: 120 · final owner: 200 · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
   };
 }
 

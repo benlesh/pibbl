@@ -85,6 +85,15 @@ try {
   assert.deepEqual(await autoCrossPixel(290, 420), [138, 50, 72, 255], 'cross-auto A sinks by the final 10px free space');
   assert.deepEqual(await autoCrossPixel(325, 410), [66, 107, 97, 255], 'B remains at the cross start');
   await click(290, 420); await selected('intrinsic cross A');
+  const beforeIntrinsicLogical = await read();
+  await click(80, 444);
+  assert.match(await frame.locator('pre').innerText(), /intrinsic logical: true/);
+  assert.deepEqual(await autoCrossPixel(70, 416), [138, 50, 72, 255]);
+  assert.deepEqual(await autoCrossPixel(110, 416), [243, 240, 232, 255]);
+  assert.deepEqual(await autoCrossPixel(150, 416), [66, 107, 97, 255]);
+  assert.equal((await read()).nodeCreates, beforeIntrinsicLogical.nodeCreates);
+  await click(80, 444);
+  assert.match(await frame.locator('pre').innerText(), /intrinsic logical: false/);
   if (process.env.PIBBL_LAYOUT_AUTO_MARGIN_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_AUTO_MARGIN_SCREENSHOT });
   const naturalWidth = await sandbox.evaluate(() => {
     const context = document.querySelector('canvas').getContext('2d');

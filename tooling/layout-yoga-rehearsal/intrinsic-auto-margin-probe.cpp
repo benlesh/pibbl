@@ -103,6 +103,48 @@ void runCrossAuto(bool column, CrossProfile profile) {
     column ? "column" : "row", crossName(profile), main(root, column), column ? YGNodeLayoutGetWidth(root) : YGNodeLayoutGetHeight(root), main(a, column), aCrossStart, column ? YGNodeLayoutGetWidth(a) : YGNodeLayoutGetHeight(a), main(b, column), bCrossStart, column ? YGNodeLayoutGetWidth(b) : YGNodeLayoutGetHeight(b));
   YGNodeFreeRecursive(root); YGConfigFree(config);
 }
+enum class ShorthandProfile { AllAuto, PhysicalLeft0, LogicalStartAuto };
+const char* shorthandName(ShorthandProfile value) {
+  switch (value) {
+    case ShorthandProfile::AllAuto: return "all-auto";
+    case ShorthandProfile::PhysicalLeft0: return "all-auto-left0";
+    case ShorthandProfile::LogicalStartAuto: return "all-auto-left0-start-auto";
+  }
+  return "invalid";
+}
+// This nested owner has its own 200px main minimum under an exact 200px
+// parent. The A/B contribution remains 120; margin auto is resolved only by
+// the final owner placement. Physical left and logical start are deliberately
+// written after the shorthand to make precedence observable.
+void runShorthand(bool column, YGDirection direction, ShorthandProfile profile) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false);
+  YGConfigSetPointScaleFactor(config, 0);
+  YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config);
+  auto owner = YGNodeNewWithConfig(config);
+  auto a = YGNodeNewWithConfig(config);
+  auto b = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, column ? YGFlexDirectionRow : YGFlexDirectionColumn);
+  YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+  if (column) { YGNodeStyleSetWidth(root, 200); YGNodeStyleSetHeight(root, 200); }
+  else { YGNodeStyleSetWidth(root, 200); YGNodeStyleSetHeight(root, 200); }
+  YGNodeStyleSetFlexDirection(owner, column ? YGFlexDirectionColumn : YGFlexDirectionRow);
+  YGNodeStyleSetAlignItems(owner, YGAlignFlexStart);
+  YGNodeStyleSetFlexGrow(owner, 0); YGNodeStyleSetFlexShrink(owner, 0);
+  setMinMain(owner, column, 200); setCross(owner, column, 200);
+  for (auto child : {a, b}) { YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 0); setMinMain(child, column, 0); }
+  setMain(a, column, 40); YGNodeStyleSetFlexBasis(a, 40); setCross(a, column, 40);
+  setMain(b, column, 80); YGNodeStyleSetFlexBasis(b, 80); setCross(b, column, 20);
+  YGNodeStyleSetMarginAuto(a, YGEdgeAll);
+  if (profile == ShorthandProfile::PhysicalLeft0 || profile == ShorthandProfile::LogicalStartAuto) YGNodeStyleSetMargin(a, YGEdgeLeft, 0);
+  if (profile == ShorthandProfile::LogicalStartAuto) YGNodeStyleSetMarginAuto(a, YGEdgeStart);
+  YGNodeInsertChild(owner, a, 0); YGNodeInsertChild(owner, b, 1); YGNodeInsertChild(root, owner, 0);
+  YGNodeCalculateLayout(root, 200, 200, direction);
+  std::printf("intrinsic-auto-shorthand axis=%s direction=%s profile=%s owner={main:%.17g,cross:%.17g} A={left:%.17g,top:%.17g,main:%.17g,cross:%.17g} B={left:%.17g,top:%.17g,main:%.17g,cross:%.17g}\n",
+    column ? "column" : "row", direction == YGDirectionRTL ? "rtl" : "ltr", shorthandName(profile), main(owner, column), column ? YGNodeLayoutGetWidth(owner) : YGNodeLayoutGetHeight(owner), YGNodeLayoutGetLeft(a), YGNodeLayoutGetTop(a), main(a, column), column ? YGNodeLayoutGetWidth(a) : YGNodeLayoutGetHeight(a), YGNodeLayoutGetLeft(b), YGNodeLayoutGetTop(b), main(b, column), column ? YGNodeLayoutGetWidth(b) : YGNodeLayoutGetHeight(b));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
 }
 int main() {
   for (bool column : { false, true }) for (bool bothAuto : { false, true }) {
@@ -114,4 +156,5 @@ int main() {
     run(column, false, OwnerBound::Min200, bothAuto);
   }
   for (bool column : { false, true }) for (auto profile : { CrossProfile::Start, CrossProfile::Both, CrossProfile::Overflow, CrossProfile::Opposite10 }) runCrossAuto(column, profile);
+  for (bool column : { false, true }) for (auto direction : { YGDirectionLTR, YGDirectionRTL }) for (auto profile : { ShorthandProfile::AllAuto, ShorthandProfile::PhysicalLeft0, ShorthandProfile::LogicalStartAuto }) runShorthand(column, direction, profile);
 }

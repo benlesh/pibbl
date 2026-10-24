@@ -206,6 +206,7 @@ try {
       assert.equal(receipt.nativeMainContribution, true, 'Installed known main contributions must preserve provider phases, following-target placement, live updates and exact cleanup');
       assert.equal(receipt.intrinsicAutoMainMargins, true, 'Installed intrinsic Flex must contribute physical main-axis auto margins as zero and distribute final positive free space while preserving native solve/node reuse and cleanup');
       assert.equal(receipt.intrinsicAutoCrossMargins, true, 'Installed intrinsic Flex must preserve automatic cross-axis margin placement, targets, paint reuse and cleanup');
+      assert.equal(receipt.intrinsicAutoShorthandLogicalMargins, true, 'Installed paired providers must normalize shorthand and logical automatic margins for pure measurement, final placement, live updates and cleanup');
       assert.equal(receipt.percentageOwnerBound, true, 'Installed own percentage bounds must use the original caller reference for provider limits and staged placement');
       assert.equal(receipt.measuredStagedPercentageOwner, true, 'Installed measured leaves must preserve callback envelopes, provider-only signal geometry, targeting and exact cleanup');
       assert.equal(receipt.stagedPercentageOwner, true, 'Installed staged percentage query and normal placement must agree through resize, targeting, identity and cleanup');

@@ -625,13 +625,12 @@ function measureFlex(
     if ((!hasLogicalMargin && isPercentage(style.margin)) || isPercentage(topValue) || isPercentage(rightValue) || isPercentage(bottomValue) || isPercentage(leftValue)) return unsupportedIntrinsic('does not support percentage margins without an actual finite Flex allocation');
     const autoTop = topValue === 'auto', autoRight = rightValue === 'auto';
     const autoBottom = bottomValue === 'auto', autoLeft = leftValue === 'auto';
-    const pureAutoMainMargin = row ? autoLeft || autoRight : autoTop || autoBottom;
-    const pureAutoCrossMargin = row ? autoTop || autoBottom : autoLeft || autoRight;
+    if (!experimentalLayout && (autoTop || autoRight || autoBottom || autoLeft)) return unsupportedIntrinsic('automatic margins require the experimental layout engine');
     // Physical-only paths retain their existing shorthand validation.
-    if (!hasLogicalMargin) numericMargin(style.margin, 'margin', child, diagnosticBox);
+    if (!hasLogicalMargin) numericMargin(experimentalLayout && style.margin === 'auto' ? 0 : style.margin, 'margin', child, diagnosticBox);
     // Final allocation already represents automatic margins as zero until the
     // native placement pass divides free space. The intrinsic contribution uses
-    // the same zero contribution only for the bounded physical-margin path.
+    // the same zero contribution; each measurement path retains its sizing guards.
     const marginTop = numericMargin(autoTop ? 0 : topValue, 'marginTop', child, diagnosticBox);
     const marginRight = numericMargin(autoRight ? 0 : rightValue, logicalRight !== undefined ? marginDirection === 'rtl' ? 'marginStart' : 'marginEnd' : 'marginRight', child, diagnosticBox);
     const marginBottom = numericMargin(autoBottom ? 0 : bottomValue, 'marginBottom', child, diagnosticBox);
@@ -670,14 +669,6 @@ function measureFlex(
     }
     const mainValue = basis === 'auto' ? style[mainProperty] : basis;
     const crossValue = style[crossProperty];
-    if ((pureAutoMainMargin || pureAutoCrossMargin) && (!experimentalLayout || options.flexWrap !== 'nowrap' || options.layoutDirection !== 'ltr' ||
-      (options.flexDirection !== 'row' && options.flexDirection !== 'column') || hasLogicalMargin || style.margin !== undefined ||
-      child.type !== Rectangle || Object.hasOwn(child.props, 'children') || layoutChild !== child ||
-      typeof mainValue !== 'number' || !Number.isFinite(mainValue) || mainValue < 0 ||
-      typeof crossValue !== 'number' || !Number.isFinite(crossValue) || crossValue < 0 ||
-      grow !== 0 || shrink !== 0)) {
-      return unsupportedIntrinsic('supports automatic physical margins only for direct fixed numeric Rectangles in forward LTR nowrap Flex measurement');
-    }
     if (isPercentage(mainValue) || isPercentage(crossValue) ||
       hasPercentageBounds(style)) {
       return unsupportedIntrinsic('does not support percentage child sizes or bounds');

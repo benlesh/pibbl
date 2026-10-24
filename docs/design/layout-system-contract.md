@@ -1518,26 +1518,37 @@ edges; top/bottom are column main edges. Inline start/end map through the receiv
 direction (including a child Flex's explicit override) before main/cross
 admission. Logical edges override physical edges/shorthand; numeric zero can
 suppress a physical auto edge. Cross-axis support is bounded below; intrinsic auto
-margin support is limited to the direct numeric main-axis profile below. The ordinary build retains its experimental-margin
+margin normalization follows each independently supported intrinsic sizing path below. The ordinary build retains its experimental-margin
 diagnostic. Numeric/percentage margin behavior is unchanged.
 
-Pure intrinsic measurement supports physical main/cross-axis auto margins on direct
-childless fixed numeric Rectangles with zero grow/shrink in forward LTR nowrap
-experimental Flex rows/columns. Each auto edge contributes zero to content size;
-final native placement distributes positive space after owner bounds. A40+B80
-has pure content120 even with own min200; normal allocation applies that minimum
-and gives a single leading auto edge80, or both edges40 each. Numeric max160 and
-finite200/unbounded availability leave the contribution120. This preserves the
-existing distinction between pure content measurement and final owner bounds;
-it does not claim that the pure result is Yoga's final bounded root size.
-Cross-auto edges likewise contribute zero: a40cross item under200cross receives
-160leading or80on each edge; overflow under20cross keeps auto edges0; opposite
-numeric10 leaves150for the leading auto edge. Final cross-auto placement overrides
-alignment. Owner cross200to160 moves paint and targets without changing native
-identities. Logical/shorthand auto, other directions/wrapping and provider or known
-container children retain their existing intrinsic admission boundaries. Signal
-paint keeps native solves/nodes reusable; conservative owner content measurement
-may repeat once per owner during preparation. Exact cleanup remains required.
+Pure experimental intrinsic measurement treats each effective auto edge as zero,
+including shorthand and logical edges after ordinary override precedence. It then
+uses the existing direct numeric, paired-provider, known-container or wrapped
+numeric measurement path with that path's unchanged sizing and ownership guards.
+An auto edge does not authorize an otherwise unsupported query, font, aspect,
+percentage dependency, opaque component or recursive graph. Ordinary JavaScript
+measurement retains its experimental-margin rejection. Authored margins still
+exclude the separate staged nonexact percentage-bound profile; this normalization
+does not admit that combination or claim its final geometry.
+
+A40+B80 has pure content120 even with own min200; normal allocation applies that
+minimum and gives a single leading auto edge80, or both edges40 each. Numeric
+max160 and finite200/unbounded availability leave the contribution120. This
+preserves the distinction between pure content and final bounded root size.
+A40cross item under200cross receives160leading or80on each edge; overflow under20
+keeps auto edges0; opposite numeric10 leaves150for the leading edge. Final native
+cross-auto placement overrides alignment. Cross-owner200to160 moves targets while
+native identities persist. Effective logical/shorthand margins and numeric zero
+overrides retain the same normal placement rules.
+
+A paired fixed-width40 provider with natural height20to40 in a200width row returns
+pure200x20to200x40 when the row height is automatic. In a finite200x80 owner with
+leading logical-main and physical-cross auto edges, A remains at x80 and moves
+y60to40, expanding into a formerly empty target. Provider receipts and native
+identity persist; disposal detaches provider signals. Paint keeps native solves
+and nodes reusable; conservative content measurement may repeat once per owner
+per preparation. No implicit query-to-render association or cache equivalence for
+zero/auto style changes is promised.
 
 Auto edges contribute zero while flexible lengths resolve. After sizing, each
 auto slot receives an equal share of remaining positive main space and consumes

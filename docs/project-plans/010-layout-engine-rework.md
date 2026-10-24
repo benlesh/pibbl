@@ -20,12 +20,13 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice173 (intrinsic physical cross auto margins).
+Latest delivery is slice174 (uniform intrinsic auto-margin normalization).
+Slice173 is `de0a5fe7` (intrinsic physical cross auto margins).
 Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is174: intrinsic auto margins across supported composition.
+Consolidation56 is `2fd34f0e` for166–168. Next is175: paired column automatic cross sizing with auto margins.
 The frozen min/max exits are satisfied. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
 intrinsic graphs, automatic minima and other measurement work remain outstanding.
@@ -6115,7 +6116,7 @@ as is the original other automatic/custom/layout cross-sizing clause. Unsupporte
 independent measurement contexts do not count as parity. Fixed33counts and all
 seven open gates are unchanged. Consolidation58 remains172–174.
 
-## [NEXT] Slice174: intrinsic auto margins across supported composition
+## Slice174 delivered: intrinsic auto margins across supported composition
 
 Apply the zero intrinsic-contribution rule consistently to effective shorthand,
 physical and logical auto edges across already-supported Flex measurement paths.
@@ -6124,6 +6125,57 @@ not add another solver or broaden unrelated font, graph, direction or wrap sizin
 Freeze representative public/native composition exits, preserve numeric override
 precedence, normal allocation, input receipts, cache conservatism and teardown.
 Start with public failing evidence for the remaining margin-specific restrictions.
+
+The focused shorthand query failed numeric validation before production. Effective
+auto edges now normalize uniformly to zero; shorthand validates as zero in the
+experimental lane and ordinary measurement retains rejection. The artificial
+Rectangle/physical-only auto gate is removed. Every measurement path keeps its
+existing independent sizing, provider, query, cycle and resource guards.
+Sixteen auto-owner tests pass: zero/auto equivalence covers direct shorthand with
+physical override, logical edges, paired provider cross queries, known Flex
+children and wrapped numeric sizing. The live provider returns pure200x20to200x40;
+normal200x80 A stays x80 and moves y60to40, admitting a formerly empty target with
+one stable hook identity and no new native nodes. Disposal detaches signals.
+
+The original intrinsic-auto missing clause is reconciled explicitly:
+
+| Existing supported path                                               | Evidence / remaining outcome                                                                                                    |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Direct numeric physical main/cross margins                            | 172/173 row/column geometry, signals and ownership                                                                              |
+| Effective shorthand, physical override and logical edges              | 174 public equivalence, native12record precedence matrix and Studio toggle                                                      |
+| Paired provider with fixed-width/automatic-height query               | 174 live public and installed pure-query, final-placement, target and cleanup proof                                             |
+| Known Flex child and layout description                               | 174 logical zero/auto140x20 content equivalence through the existing prepared context                                           |
+| Wrapped direct numeric intrinsic profile                              | 174 shorthand zero contribution in existing160x20 profile                                                                       |
+| Staged nonexact percentage-bound owner with authored zero/auto margin | Still excluded by the staged helper before normalization; generic exact-reference diagnostic remains. This is open, not parity. |
+
+The other original clause (automatic/custom/layout cross sizing and broader
+wrapping/column Text) is still open. The next concrete candidate is the normal
+column paired-provider automatic-width admission; public provider queries and
+margin-specific placement guards must be assessed separately. No font/unknown
+graph exclusion is used to close a margin-specific defect. Fixed33counts remain
+10complete/12experimental/5partial/5missing/1excluded, all seven gates open.
+
+Source/built470-input checks pass with no browser errors and zero cleanup. The
+existing lesson's Compare auto margins mode now includes Toggle shorthand +
+logical; A's leading margin changes80to40 while B stays fixed. Visual inspection
+confirms readable controls and geometry. Strict installed Bundler/NodeNext/no-alias
+consumer passes246inputs including provider signal/hit/ownership checks; tarball
+SHA256 `95b5d6d1ccd957cc77b6f60bf2bdd9e791dc859dcddad16dc0b57682c544e456`.
+Pinned probe preserves172/173 cases and adds12shorthand/logical records; source
+SHA256 `5599329b0ca534e8c367dde4554cc4a346ff8f17e3f24f2bb44202eb177e66ef`.
+No kernel/ABI change. Final typecheck, changed-code lint, docs109mutation probes,
+public JSDoc, catalog174/12/33 and Studio metadata/routes/search pass. Focused
+independent review found no material issue. Consolidation58 records the fresh
+broader final verification.
+
+## [NEXT] Slice175: paired column automatic cross sizing with auto margins
+
+Check a direct paired provider with numeric height40, automatic width and left
+auto margin in a finite200x120 column beside a20x80 leaf. Establish its standalone
+public measurement result independently of auto placement. If the provider query
+is supported, remove the margin-specific admission obstacle with exact native
+geometry, a failing public regression, live target movement and resource evidence.
+Keep staged percentage-owner margins and other original cells explicitly open.
 
 ## Scope and execution
 

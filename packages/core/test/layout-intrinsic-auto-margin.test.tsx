@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, expect, it } from 'vitest';
-import { Flex, Rectangle, measureElement, signal, type RectStyle, type PibblController } from '@pibbl/core';
+import { Flex, Rectangle, defineLayoutComponent, definePrimitive, measureElement, signal, useConst, type SystemStyle, type FlexStyle, type RectStyle, type PibblController } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
@@ -92,10 +92,10 @@ it.runIf(experimentalLayout)('keeps automatic physical main margins out of pure 
     });
   }
   const crossAuto = <Flex style={{ width: 'auto', height: 20, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr' }}>
-    <Rectangle style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginTop: 'auto', marginStart: 0 }} />
+    <Rectangle style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginTop: 'auto', marginStart: '5%' }} />
   </Flex>;
   expect(measureElement(crossAuto, { minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: 20, maxHeight: 20 }, { measureText: () => { throw new Error('No text.'); } }))
-    .toEqual({ status: 'unsupported', reason: expect.stringMatching(/automatic physical margin/i) });
+    .toEqual({ status: 'unsupported', reason: expect.stringMatching(/percentage margin/i) });
 });
 
 it.runIf(experimentalLayout)('reuses direct automatic-margin targets while an owner minimum changes final free space', async () => {
@@ -260,3 +260,115 @@ for (const axis of ['row', 'column'] as const) for (const profile of [
     ]);
   });
 }
+
+
+it.runIf(experimentalLayout)('normalizes shorthand, paired-provider cross, logical known-owner, and wrapped numeric auto margins after their existing admissions succeed', () => {
+  const service = { measureText: () => { throw new Error('No text.'); } };
+  const rowConstraints = { minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: 20, maxHeight: 20 };
+  const direct = (edge: Partial<RectStyle>) => <Flex style={{ width: 'auto', height: 20, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0 }}>
+    <Rectangle style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, ...edge }} />
+    <Rectangle style={{ width: 80, height: 20, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0 }} />
+  </Flex>;
+  const directExpected = { status: 'measured' as const, size: { width: 120, height: 20 } };
+  expect(measureElement(direct({ marginLeft: 0 }), rowConstraints, service)).toEqual(directExpected);
+  expect(measureElement(direct({ margin: 'auto', marginLeft: 0 }), rowConstraints, service)).toEqual(directExpected);
+
+  type ProviderStyle = FlexStyle;
+  type ResolvedProviderStyle = SystemStyle & { readonly width: number; readonly height: number };
+  const measured = (calls: number[]) => definePrimitive<{}, ProviderStyle, ProviderStyle, ResolvedProviderStyle>(() => null, {
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: 'measured' as const, minContent: { width: 40, height: 20 }, maxContent: { width: 40, height: 20 } }),
+    measure: ({ constraints }) => {
+      calls.push(constraints.maxWidth);
+      return { status: 'measured' as const, size: { width: 40, height: 20 } };
+    },
+  });
+  const providerCalls: number[] = [], autoProviderCalls: number[] = [];
+  const Fixed = measured(providerCalls), AutoCross = measured(autoProviderCalls);
+  const providerOwner = (Leaf: typeof Fixed, marginTop: 0 | 'auto') => <Flex style={{ width: 200, height: 'auto', flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0 }}>
+    <Leaf style={{ width: 40, height: 'auto', minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginTop }} />
+    <Rectangle style={{ width: 80, height: 20, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0 }} />
+  </Flex>;
+  const providerConstraints = { minWidth: 200, maxWidth: 200, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY };
+  expect(measureElement(providerOwner(Fixed, 0), providerConstraints, service)).toEqual({ status: 'measured', size: { width: 200, height: 20 } });
+  expect(measureElement(providerOwner(AutoCross, 'auto'), providerConstraints, service)).toEqual({ status: 'measured', size: { width: 200, height: 20 } });
+  expect(providerCalls.length).toBeGreaterThan(0); expect(autoProviderCalls.length).toBeGreaterThan(0);
+
+  const Card = defineLayoutComponent((props: { readonly style: FlexStyle }) => <Flex style={props.style}>
+    <Rectangle key="A" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+    <Rectangle key="B" style={{ width: 80, height: 20, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0 }} />
+  </Flex>);
+  const knownOwner = (marginStart: 0 | 'auto') => <Flex style={{ width: 'auto', height: 20, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0 }}>
+    <Card style={{ width: 'auto', height: 20, minWidth: 0, minHeight: 0, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0, marginStart }} />
+    <Rectangle style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexBasis: 20, flexGrow: 0, flexShrink: 0 }} />
+  </Flex>;
+  const knownExpected = { status: 'measured' as const, size: { width: 140, height: 20 } };
+  expect(measureElement(knownOwner(0), rowConstraints, service)).toEqual(knownExpected);
+  expect(measureElement(knownOwner('auto'), rowConstraints, service)).toEqual(knownExpected);
+
+  const wrapped = <Flex style={{ width: 160, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+    <Rectangle style={{ width: 70, height: 20, minWidth: 0, minHeight: 0, flexBasis: 'auto', flexGrow: 0, flexShrink: 0, margin: 'auto', marginLeft: 0 }} />
+  </Flex>;
+  expect(measureElement(wrapped, { minWidth: 0, maxWidth: 200, minHeight: 0, maxHeight: 300 }, service)).toEqual({ status: 'measured', size: { width: 160, height: 20 } });
+});
+
+
+it.runIf(experimentalLayout)('keeps a paired provider’s pure cross query and final logical/main plus physical/cross auto placement coherent', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const natural = signal(20);
+  const calls: number[] = [];
+  const hits: string[] = [];
+  let stamps = 0;
+  type ProviderStyle = FlexStyle & { readonly fill?: string };
+  type ResolvedProviderStyle = SystemStyle & { readonly width: number; readonly height: number; readonly fill?: string };
+  const Leaf = definePrimitive<{ readonly natural: typeof natural }, ProviderStyle, ProviderStyle, ResolvedProviderStyle>((_props, style) => {
+    const stamp = useConst(() => ++stamps);
+    return <Rectangle onClick={() => hits.push(`A:${stamp}`)} style={{ width: style.width, height: style.height, fill: style.fill, cursor: 'pointer' }} />;
+  }, {
+    preserveSignalProps: ['natural'],
+    resolveStyle: (style, context) => ({ width: context.allocation.width, height: context.allocation.height, fill: style.fill }),
+    measureIntrinsic: ({ props }) => ({ status: 'measured' as const, minContent: { width: 40, height: props.natural.get() }, maxContent: { width: 40, height: props.natural.get() } }),
+    measure: ({ props, constraints }) => {
+      calls.push(constraints.maxWidth);
+      return { status: 'measured' as const, size: { width: 40, height: props.natural.get() } };
+    },
+  });
+  const owner = (height: number | 'auto' = 'auto') => <Flex style={{ width: 200, height, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0 }}>
+    <Leaf key="A" natural={natural} style={{ width: 40, height: 'auto', minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginStart: 'auto', marginTop: 'auto', fill: '#8a3248' }} />
+    <Rectangle key="B" style={{ width: 80, height: 20, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, fill: '#426b61' }} />
+  </Flex>;
+  const service = { measureText: () => { throw new Error('No text.'); } };
+  const constraints = { minWidth: 200, maxWidth: 200, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY };
+  expect(measureElement(owner(), constraints, service)).toEqual({ status: 'measured', size: { width: 200, height: 20 } });
+  natural.set(40);
+  expect(measureElement(owner(), constraints, service)).toEqual({ status: 'measured', size: { width: 200, height: 40 } });
+  natural.set(20);
+
+  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 100; document.body.append(canvas);
+  const controller = pibbl(canvas, owner(80));
+  controllers.push(controller); await frame();
+  const pixel = (x: number, y: number) => [...canvas.getContext('2d')!.getImageData(x, y, 1, 1).data];
+  expect(pixel(90, 50)).toEqual([0, 0, 0, 0]);
+  expect(pixel(90, 64)).toEqual([138, 50, 72, 255]);
+  expect(pixel(124, 10)).toEqual([66, 107, 97, 255]);
+  const click = (x: number, y: number) => {
+    const rect = canvas.getBoundingClientRect();
+    for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: rect.left + x, clientY: rect.top + y }));
+  };
+  click(90, 50); await frame(); expect(hits).toEqual([]);
+  const initial = snapshotWasmLayoutDiagnostics();
+  natural.set(40); await frame();
+  expect(pixel(90, 50)).toEqual([138, 50, 72, 255]);
+  click(90, 50); await frame(); expect(hits).toEqual(['A:1']);
+  const moved = snapshotWasmLayoutDiagnostics();
+  expect(moved.nodeCreates).toBe(initial.nodeCreates);
+  expect(stamps).toBe(1);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+  ]);
+  const afterDispose = calls.length;
+  natural.set(60); await frame();
+  expect(calls.length).toBe(afterDispose);
+});
