@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice198: native line-local wrapped first baselines.
+Latest delivery is slice199: wrapped horizontal direction composition.
+Slice198 is `0bf60f32`: native line-local wrapped first baselines.
 Slice197 is `4244c3c3`: row-reverse first-baseline composition.
 Slice196 is `acbcc5fa`: finite RTL row first-baseline composition.
 Slice195 is `729b6bc0`: installed nested percentage-padding proof.
@@ -38,7 +39,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; consolidation65 is `6acd644c`; consolidation66 passes; next is199.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; consolidation65 is `6acd644c`; consolidation66 is `75c84dc3`; next is200.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -51,7 +52,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Consolidation65 closes allocated padding; consolidation66 passes; next is199: wrapped horizontal direction composition.
+Consolidation56 is `2fd34f0e` for166–168. Consolidation65 closes allocated padding; consolidation66 is `75c84dc3`; next is200: wrapped line distribution.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now12complete/12experimental/
 3partial/5missing/1excluded. All seven release gates remain open; independent
@@ -7295,17 +7296,36 @@ changed-code lint,175/12/33catalog/Studio, docs109mutation probes and JSDoc52ent
 full-program review is claimed. Fixed33stays12complete/12experimental/3partial/
 5missing/1excluded; all7release gates remain open.
 
-## [NEXT] Slice199: wrapped horizontal direction composition
+## [DONE] Slice199: wrapped horizontal direction composition
 
-Use fresh pinned and public controls for row/row-reverse×LTR/RTL with the same
-start-aligned zero-gap fixed numeric line contract. Reuse native main line
-membership/placement; first-baseline y offsets remain line-local. Remove only
-unsupported direction fences when these controls pass. Preserve198as the LTR
-control, changed-line updates, source keyboard order, targets, identity and
-disposal. Do not invent another per-direction solver or arbitrary single-variant
-slice. Remaining wrapped line distribution/auto-cross policy is a distinct
-semantic exit, followed by nested/last/column/leaf admission work in the finite
-baseline inventory.
+Removed only the wrapped row/LTR direction fence; existing main placement owns
+row/row-reverse×LTR/RTL physical x. Native line membership and first-baseline y
+remain source-line-local. Fresh public RED1/1control precedes implementation;
+GREEN14pass/1skip across3baseline files. Fresh retained pinned Yoga probe runs
+all4directions×D20/26in independent exact-config cases: A/C x0or40, B/D x60or0;
+all modes keep y18/0/52/40and C52→58on baseline change. Source Tab, real moved
+hits, unchanged first line, stable stamps and exact cleanup pass.
+
+The lower lesson shares existing direction/reverse controls. Source5192and
+refreshed built5193pass all earlier baseline proofs and all four wrapped direction
+states, errors[]/four-counter cleanup/470built inputs. Types, changed-code lint,
+175/12/33catalog/Studio, docs109mutation probes and scoped review pass. Kernel
+and ABI11artifact unchanged. No new per-direction solver, API, capability
+promotion or release claim. Consolidation66’s final amended receipt/HEAD is
+`75c84dc3`, replacing the earlier963b55c5snapshot.
+
+## [NEXT] Slice200: wrapped baseline line distribution and gaps
+
+Use existing alignContent vocabulary and numeric gaps with baseline-derived
+line extents. Fresh native controls support all seven normal-wrap distribution
+modes; include gap/alignment in the cross-cache key. Reuse shared native
+alignment distribution without new temporary per-line collections. A focused
+public fixture110x120with mainGap10/crossGap8proves line origins, stretch,
+policy-only updates, changed gap, actual targets and stable identity. First
+expose the complete normal-wrap slice, then harden. Wrap-reverse has a fresh
+native per-leaf reflection difference and needs an explicit separate disposition,
+not an assumed symmetry or an arbitrary direction variant. Keep current leaf
+exclusions. Consolidate199–201before more production after those three slices.
 
 ## Scope and execution
 

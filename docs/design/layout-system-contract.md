@@ -2082,14 +2082,16 @@ composes with the same physical main placement: LTR gives A at x80, RTL at x0;
 B stays at x40and baseline y offsets remain18/0. Source paint and keyboard order
 remain A then B.
 
-A first wrapped profile admits finite LTR `row` + `wrap`, `alignContent: "flex-start"`,
+The wrapped profile admits finite LTR/RTL `row` or `row-reverse` + `wrap`, `alignContent: "flex-start"`,
 zero row/column gaps, and direct fixed numeric primitive providers or content-bottom
 fallback. Grow/shrink must be zero; Text, automatic margins and the other leaf
 exclusions remain outside this wrapped profile. Native line membership is reused.
 Each line has its own maximum ascent and descent, so the next line begins after
 the complete baseline extent. The common baseline never spans two lines. In a
 100px-wide row, A60x20/b12 and B40x40/b30 occupy y18/0; C60x20/b8 and
-D40x30/b20 occupy y52/40. Changing D to26moves C to58while line one stays fixed.
+D40x30/b20 occupy y52/40. Changing D to26moves C to58while line one stays fixed. Horizontal reversal and
+writing direction affect only the existing native x slots; source line membership
+and baseline y offsets remain unchanged.
 The private ABI11 requires the line-local placement export; previous binaries
 are rejected before publication. This adds no public API or second scheduler.
 

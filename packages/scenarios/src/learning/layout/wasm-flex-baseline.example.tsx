@@ -102,7 +102,7 @@ function createBaselineContent() {
       </Flex>
       <Text pointerEvents="none" style={{ left: 28, top: 330, font: "14px sans-serif", fill: "#475569" }}>Click the cards at their new positions. Tab follows A → B → C.</Text>
       <Text pointerEvents="none" style={{ left: 460, top: 440, font: "12px sans-serif", fill: "#475569" }}>Wrapped rows share baselines line by line.</Text>
-      <Flex style={{ left: 460, top: 460, width: 100, height: 80, flexDirection: "row", flexWrap: "wrap", alignItems: "first-baseline", alignContent: "flex-start" }}>
+      <Flex style={{ left: 460, top: 460, width: 100, height: 80, flexDirection, layoutDirection, flexWrap: "wrap", alignItems: "first-baseline", alignContent: "flex-start" }}>
         <BaselineCard key="WA" id="WA" label="12" font="12px monospace" first={12} style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248" }} />
         <BaselineCard key="WB" id="WB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
         <BaselineCard key="WC" id="WC" label="8" font="12px monospace" first={8} style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248" }} />

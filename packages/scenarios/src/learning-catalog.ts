@@ -4404,11 +4404,11 @@ const drafts = [
       "Keep provider and live Canvas Text baseline placement synchronized with paint, input, identity and final-size queries.",
     ],
     prompts: {
-      gesture: "Move B baseline, resize the owner, and click the moved cards. Toggle Text to compare live Canvas font metrics; click the panel heading to wrap, then Reflow to change the last visible line. Toggle LTR/RTL and Row/Reverse for the right-hand cards. D 20/D 26 moves the lower wrapped panel’s C while line one stays fixed. Paint only reuses provider results; Tab follows A, B, C.",
+      gesture: "Move B baseline, resize the owner, and click the moved cards. Toggle Text to compare live Canvas font metrics; click the panel heading to wrap, then Reflow to change the last visible line. Toggle LTR/RTL and Row/Reverse for the right-hand and lower wrapped cards. D 20/D 26 moves the lower wrapped panel’s C while line one stays fixed. Paint only reuses provider results; Tab follows A, B, C.",
       code: "BaselineCard declares measureBaselines; BottomCard omits it. The compact Text row uses the built-in Canvas provider. The lower fixed row-wrap panel uses native per-line ascent and descent.",
     },
     apiNotes: [
-      "Experimental horizontal row/row-reverse in LTR/RTL with direct fixed primitive leaves. A bounded LTR row-wrap profile uses start-aligned lines, zero gaps, zero grow/shrink, numeric primitive providers/fallback and no automatic margins. Text support uses nonempty visible lines at final allocation with generic px fonts, including wrapped first/last provider metrics; last-baseline alignment remains outside this lesson.",
+      "Experimental horizontal row/row-reverse in LTR/RTL with direct fixed primitive leaves. A bounded horizontal LTR/RTL row/row-reverse wrapped profile uses start-aligned lines, zero gaps, zero grow/shrink, numeric primitive providers/fallback and no automatic margins. Text support uses nonempty visible lines at final allocation with generic px fonts, including wrapped first/last provider metrics; last-baseline alignment remains outside this lesson.",
       "Offsets are finite and ordered, including values outside the content box. A missing provider uses its bottom edge; a declared unsupported provider diagnoses before paint. Canvas metrics determine the Text row; no native font-parity or performance claim.",
     ],
     canvas: { width: 760, height: 540 },

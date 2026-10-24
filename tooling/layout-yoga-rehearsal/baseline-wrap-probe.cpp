@@ -11,11 +11,12 @@ static void print(const char* name, YGNodeRef node) {
     YGNodeLayoutGetLeft(node), YGNodeLayoutGetTop(node),
     YGNodeLayoutGetWidth(node), YGNodeLayoutGetHeight(node));
 }
-static void run(float d) {
+struct Direction { YGFlexDirection axis; YGDirection writing; const char* name; };
+static void run(float d, Direction mode) {
   YGConfigRef config=YGConfigNew();YGConfigSetUseWebDefaults(config,false);YGConfigSetPointScaleFactor(config,0);YGConfigSetErrata(config,YGErrataNone);
   YGNodeRef root=YGNodeNewWithConfig(config);
   YGNodeStyleSetWidth(root,100); YGNodeStyleSetHeight(root,100);
-  YGNodeStyleSetFlexDirection(root,YGFlexDirectionRow);
+  YGNodeStyleSetFlexDirection(root,mode.axis);
   YGNodeStyleSetFlexWrap(root,YGWrapWrap);
   YGNodeStyleSetAlignItems(root,YGAlignBaseline);
   YGNodeStyleSetAlignContent(root,YGAlignFlexStart);
@@ -31,9 +32,12 @@ static void run(float d) {
     YGNodeStyleSetFlexBasis(leaves[i],widths[i]); YGNodeStyleSetFlexGrow(leaves[i],0); YGNodeStyleSetFlexShrink(leaves[i],0);
     YGNodeInsertChild(root,leaves[i],i);
   }
-  YGNodeCalculateLayout(root,100,100,YGDirectionLTR);
-  std::puts(d==20?"initial":"d26"); for(int i=0;i<4;i++) print(names[i],leaves[i]);
+  YGNodeCalculateLayout(root,100,100,mode.writing);
+  std::printf("%s %s\n",mode.name,d==20?"initial":"d26"); for(int i=0;i<4;i++) print(names[i],leaves[i]);
   YGNodeFreeRecursive(root);YGConfigFree(config);
 }
 
-int main(){run(20);run(26);}
+int main(){
+  const Direction modes[]={{YGFlexDirectionRow,YGDirectionLTR,"row-ltr"},{YGFlexDirectionRow,YGDirectionRTL,"row-rtl"},{YGFlexDirectionRowReverse,YGDirectionLTR,"reverse-ltr"},{YGFlexDirectionRowReverse,YGDirectionRTL,"reverse-rtl"}};
+  for (const auto& mode:modes){run(20,mode);run(26,mode);}
+}

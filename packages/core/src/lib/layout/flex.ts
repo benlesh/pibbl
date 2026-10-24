@@ -2432,9 +2432,9 @@ function assertSupportedFirstBaselineFlex(
 ): void {
   const wrapped = options.flexWrap !== 'nowrap';
   if (!mounted || !experimentalLayout || !isRowDirection(options.flexDirection) ||
-      wrapped && (options.flexDirection !== 'row' || options.layoutDirection !== 'ltr' || options.flexWrap !== 'wrap' ||
+      wrapped && (options.flexWrap !== 'wrap' ||
         options.alignContent !== 'flex-start' || options.rowGap !== 0 || options.columnGap !== 0)) {
-    throw optionDiagnostic('alignItems', 'first-baseline', container, 'requires mounted experimental horizontal nowrap Flex, or LTR row-wrap with start-aligned lines and zero gaps');
+    throw optionDiagnostic('alignItems', 'first-baseline', container, 'requires mounted experimental horizontal nowrap Flex, or horizontal row-wrap with start-aligned lines and zero gaps');
   }
   for (const item of items) {
     const style = item.normalized;
