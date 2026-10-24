@@ -49,7 +49,7 @@ it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])('rejects older or incomplete lay
 });
 
 
-const abiV9Exports: WebAssembly.ModuleExportDescriptor[] = [
+const abiV10Exports: WebAssembly.ModuleExportDescriptor[] = [
   { name: 'memory', kind: 'memory' }, { name: 'solve', kind: 'function' }, { name: 'dispose', kind: 'function' },
   { name: 'arena_create', kind: 'function' }, { name: 'arena_generation', kind: 'function' }, { name: 'arena_dispose', kind: 'function' },
   { name: 'resize_grid', kind: 'function' }, { name: 'resolve_grid_tracks', kind: 'function' },
@@ -58,15 +58,16 @@ const abiV9Exports: WebAssembly.ModuleExportDescriptor[] = [
   { name: 'resize_main_auto', kind: 'function' }, { name: 'place_main_auto', kind: 'function' }, { name: 'place_wrap_main_auto', kind: 'function' },
   { name: 'prepare_intrinsic_main_queries', kind: 'function' },
   { name: 'resize_intrinsic_main', kind: 'function' }, { name: 'resolve_intrinsic_main', kind: 'function' }, { name: 'intrinsic_main_result', kind: 'function' }, { name: 'intrinsic_main_contribution', kind: 'function' },
-  { name: 'place_first_baseline', kind: 'function' }, { name: 'layout_abi_v9', kind: 'function' },
+  { name: 'resolve_intrinsic_main_known_owner', kind: 'function' }, { name: 'intrinsic_main_auto_free', kind: 'function' }, { name: 'place_main_auto_staged', kind: 'function' },
+  { name: 'place_first_baseline', kind: 'function' }, { name: 'layout_abi_v10', kind: 'function' },
 ];
 
-it.each(['prepare_intrinsic_main_queries', 'resize_intrinsic_main', 'resolve_intrinsic_main', 'intrinsic_main_result', 'intrinsic_main_contribution'])(
-  'rejects ABI v9 when %s is absent',
+it.each(['prepare_intrinsic_main_queries', 'resize_intrinsic_main', 'resolve_intrinsic_main', 'intrinsic_main_result', 'intrinsic_main_contribution', 'resolve_intrinsic_main_known_owner', 'intrinsic_main_auto_free', 'place_main_auto_staged'])(
+  'rejects ABI v10 when %s is absent',
   async absent => {
     vi.resetModules();
     const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
-    vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(abiV9Exports.filter(entry => entry.name !== absent));
+    vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(abiV10Exports.filter(entry => entry.name !== absent));
     expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
     expect(hasReadyLayoutModule()).toBe(false);
   },
@@ -76,8 +77,8 @@ it.each(['prepare_intrinsic_main_queries', 'resize_intrinsic_main', 'resolve_int
 it('rejects the complete previous ABI before accepting main contribution results', async () => {
   vi.resetModules();
   const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
-  const prior = abiV9Exports.filter(entry => entry.name !== 'prepare_intrinsic_main_queries')
-    .map(entry => entry.name === 'layout_abi_v9' ? { ...entry, name: 'layout_abi_v8' } : entry);
+  const prior = abiV10Exports.filter(entry => entry.name !== 'resolve_intrinsic_main_known_owner' && entry.name !== 'intrinsic_main_auto_free' && entry.name !== 'place_main_auto_staged')
+    .map(entry => entry.name === 'layout_abi_v10' ? { ...entry, name: 'layout_abi_v9' } : entry);
   vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(prior);
   expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
   expect(hasReadyLayoutModule()).toBe(false);

@@ -235,6 +235,10 @@ export interface PreparedIntrinsicMainStage {
   readonly rootMin?: number;
   readonly rootMax?: number;
   readonly contentMain: number;
+  /** Normal numeric-owner phases already include the final recursive bounds. */
+  readonly normalOwner?: boolean;
+  /** Native phase residual, distinct from final geometric remainder. */
+  readonly autoMarginFreeMain?: number;
   readonly revision: number;
   readonly items: readonly Readonly<{ sourceIndex: number; target: number; min: number; max: number; measured?: boolean }>[];
 }

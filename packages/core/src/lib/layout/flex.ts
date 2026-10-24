@@ -7,7 +7,7 @@ import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyl
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
-import { experimentalLayout, LayoutRegion, mountedLayoutRegion, solveTransientFlexMain, prepareTransientIntrinsicMainQueries, resolveTransientIntrinsicMain, type NumericFlexMainInput, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
+import { experimentalLayout, LayoutRegion, mountedLayoutRegion, solveTransientFlexMain, prepareTransientIntrinsicMainQueries, resolveTransientIntrinsicMain, resolveTransientKnownOwnerMain, type NumericFlexMainInput, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
 import { Rectangle } from '../components/rect.js';
 import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth, measureLayoutTextNaturalRun } from '../components/text.js';
 
@@ -328,7 +328,7 @@ let allocatedIntrinsicMain: { receiver: object; main: number; rootMin?: number; 
 // measuring the same main axis. The scope is receiver-bound and only exists
 // through the immediate child measurement; ordinary public queries retain the
 // resolved outer size.
-let requestedIntrinsicContribution: { receiver: object; axis: 'row' | 'column' } | undefined;
+let requestedIntrinsicContribution: { receiver: object; axis: 'row' | 'column'; normalOwner?: boolean } | undefined;
 if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, content, receiver, slot, parentMainAxis) => {
   const options = normalizeFlexOptions(style as Readonly<FlexStyle>, content);
   const releaseLayout = pushLayoutBox(content, options);
@@ -341,7 +341,7 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
     const contribution = parentMainAxis === axis ? peekPreparedIntrinsicMain(
       receiver, children, axis, main, allocationInputRevision(),
     ) : undefined;
-    if (contribution) {
+    if (contribution && !contribution.normalOwner) {
       // A main-axis contribution sizes this owner, not its final descendants.
       // Rebind those descendants through native exact mode at the allocated main.
       const ctx = GLOBAL_STATE.renderContext;
@@ -903,8 +903,9 @@ function measureStagedNonexactMain(
         (pairedMeasuredLeaf && (row ? style.minHeight !== undefined && style.minHeight !== 0 || style.maxHeight !== undefined : style.minWidth !== undefined && style.minWidth !== 0 || style.maxWidth !== undefined)) ||
         typeof childCross !== 'number' || !Number.isFinite(childCross) || childCross < 0 ||
         (style.flexGrow ?? 0) !== 0 || (style.flexShrink ?? 1) !== 0 ||
-        style.margin !== undefined || style.marginTop !== undefined || style.marginRight !== undefined || style.marginBottom !== undefined || style.marginLeft !== undefined ||
-        style.marginStart !== undefined || style.marginEnd !== undefined ||
+        !zeroIntrinsicMargin(style.margin) || !zeroIntrinsicMargin(style.marginTop) || !zeroIntrinsicMargin(style.marginRight) ||
+        !zeroIntrinsicMargin(style.marginBottom) || !zeroIntrinsicMargin(style.marginLeft) ||
+        !zeroIntrinsicMargin(style.marginStart) || !zeroIntrinsicMargin(style.marginEnd) ||
         style.padding !== undefined || style.paddingStart !== undefined || style.paddingEnd !== undefined ||
         style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined ||
         (pairedMeasuredLeaf ? !automaticMeasuredMain || basis !== 'auto' :
@@ -937,7 +938,6 @@ function measureStagedNonexactMain(
       items[leaf.sourceIndex] = { ...items[leaf.sourceIndex], base: natural, measured: true, queryMaximum };
     }
   }
-  const resolved = resolveTransientIntrinsicMain(items, intrinsicQuery);
   const receiver = GLOBAL_STATE.primitiveReceiverToken;
   const axis = row ? 'row' : 'column';
   // A same-axis known Flex is contributing to a parent's intrinsic line. Its
@@ -945,9 +945,13 @@ function measureStagedNonexactMain(
   // deliberately continue to report the full resolved size.
   const contribution = allocated === undefined && requestedIntrinsicContribution !== undefined && requestedIntrinsicContribution.receiver === receiver &&
     requestedIntrinsicContribution.axis === axis;
+  const normalOwner = contribution && requestedIntrinsicContribution?.normalOwner === true && !measuredLeaves.length &&
+    externalOwner !== undefined && Number.isFinite(externalOwner) && initialAvailable !== undefined && Number.isFinite(initialAvailable);
+  const resolved = normalOwner ? resolveTransientKnownOwnerMain(items, intrinsicQuery) : resolveTransientIntrinsicMain(items, intrinsicQuery);
   const stagedMain = allocated?.main ?? (contribution ? resolved.contributionMain : resolved.main);
   stagePreparedIntrinsicMain(receiver, {
     elements: children, axis, style: input.style, rootMin, rootMax, contentMain: stagedMain,
+    normalOwner, autoMarginFreeMain: resolved.autoMarginFreeMain,
     revision: allocationInputRevision(),
     items: resolved.targets.map((target, sourceIndex) => ({
       sourceIndex, target, min: resolved.effectiveMins[sourceIndex], max: resolved.effectiveMaxes[sourceIndex],
@@ -956,6 +960,11 @@ function measureStagedNonexactMain(
   });
   const reportedMain = contribution ? resolved.contributionMain : resolved.main;
   return { status: 'measured', size: row ? { width: reportedMain, height: cross } : { width: cross, height: reportedMain } };
+}
+
+/** Auto edges contribute zero; positive numeric edges need a separate phase profile. */
+function zeroIntrinsicMargin(value: FlexItemStyle['margin']): boolean {
+  return value === undefined || value === 0 || value === 'auto';
 }
 
 /** Own bounds use the caller reference, never the eventual auto-owner size. */
@@ -1665,7 +1674,7 @@ function resolveFlexPlacements(
     wrap: wrappedRegion ? { gap: crossGap, alignContent: options.alignContent } : undefined,
     baseline: options[FLEX_FIRST_BASELINE],
   });
-  const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent, reverse, hasAutoMainMargins ? items : undefined);
+  const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent, reverse, hasAutoMainMargins ? items : undefined, stagedIntrinsic?.autoMarginFreeMain);
   let mainIndex = 0;
   let crossIndex = 0;
   for (const line of lines) {
@@ -2098,7 +2107,7 @@ function measureFlexChild(
   // contribution has a distinct native result contract and must bypass it.
   if (contributionReceiver) {
     const previousContribution = requestedIntrinsicContribution;
-    requestedIntrinsicContribution = { receiver: contributionReceiver, axis: parentMainAxis! };
+    requestedIntrinsicContribution = { receiver: contributionReceiver, axis: parentMainAxis!, normalOwner: true };
     try {
       if (region) recordWasmMeasurement();
       return measurement.measureElement(child, constraints);

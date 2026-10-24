@@ -243,6 +243,80 @@ void runSameAxisContribution(bool column, bool percentMax) {
   YGNodeFreeRecursive(outer); YGConfigFree(config);
 }
 
+// Automatic main margins must contribute zero during the same staged owner
+// query, then absorb only final positive free space. These are diagnostic
+// probes, not reference.json fixtures.
+void runStagedAutoMargin(bool column, bool paired, bool sameAxis, int marginMode) {
+  currentColumn = column; currentNaturalMain = 80; calls = {};
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto outer = YGNodeNewWithConfig(config), owner = YGNodeNewWithConfig(config);
+  auto a = YGNodeNewWithConfig(config), b = YGNodeNewWithConfig(config), c = YGNodeNewWithConfig(config);
+  const auto direction = column ? YGFlexDirectionColumn : YGFlexDirectionRow;
+  YGNodeStyleSetFlexDirection(owner, direction); YGNodeStyleSetAlignItems(owner, YGAlignFlexStart);
+  YGNodeStyleSetFlexGrow(owner, 0); YGNodeStyleSetFlexShrink(owner, 0); setCross(owner, column, 20);
+  YGNodeStyleSetFlexGrow(a, 0); YGNodeStyleSetFlexShrink(a, 0); setCross(a, column, 20);
+  if (column) YGNodeStyleSetMinHeight(a, 0); else YGNodeStyleSetMinWidth(a, 0);
+  setMaxPct(a, column, 25);
+  if (paired) { YGNodeStyleSetFlexBasisAuto(a); YGNodeSetMeasureFunc(a, measure); }
+  else { setMain(a, column, 80); setBasis(a, column, 80); }
+  if (marginMode == 1) YGNodeStyleSetMargin(a, column ? YGEdgeTop : YGEdgeLeft, 0);
+  else if (marginMode == 2) YGNodeStyleSetMarginAuto(a, column ? YGEdgeTop : YGEdgeLeft);
+  YGNodeStyleSetFlexGrow(b, 0); YGNodeStyleSetFlexShrink(b, 0); setCross(b, column, 20); setMain(b, column, 80); setBasis(b, column, 80);
+  if (column) YGNodeStyleSetMinHeight(b, 0); else YGNodeStyleSetMinWidth(b, 0);
+  YGNodeInsertChild(owner, a, 0); YGNodeInsertChild(owner, b, 1);
+  if (sameAxis) {
+    YGNodeStyleSetFlexDirection(outer, direction); YGNodeStyleSetAlignItems(outer, YGAlignFlexStart);
+    setMain(outer, column, 200); setCross(outer, column, 20);
+    if (column) { YGNodeStyleSetMinHeight(owner, 100); YGNodeStyleSetMaxHeight(owner, 160); }
+    else { YGNodeStyleSetMinWidth(owner, 100); YGNodeStyleSetMaxWidth(owner, 160); }
+    YGNodeStyleSetFlexGrow(c, 0); YGNodeStyleSetFlexShrink(c, 0); setMain(c, column, 20); setBasis(c, column, 20); setCross(c, column, 20);
+    if (column) YGNodeStyleSetMinHeight(c, 0); else YGNodeStyleSetMinWidth(c, 0);
+    YGNodeInsertChild(outer, owner, 0); YGNodeInsertChild(outer, c, 1);
+    YGNodeCalculateLayout(outer, column ? 20 : 200, column ? 200 : 20, YGDirectionLTR);
+  } else {
+    YGNodeStyleSetFlexDirection(outer, column ? YGFlexDirectionRow : YGFlexDirectionColumn); YGNodeStyleSetAlignItems(outer, YGAlignFlexStart);
+    if (column) { YGNodeStyleSetWidth(outer, 100); YGNodeStyleSetHeight(outer, 200); YGNodeStyleSetMaxHeight(owner, 160); }
+    else { YGNodeStyleSetWidth(outer, 200); YGNodeStyleSetHeight(outer, 100); YGNodeStyleSetMaxWidth(owner, 160); }
+    YGNodeInsertChild(outer, owner, 0);
+    YGNodeCalculateLayout(outer, column ? 100 : 200, column ? 200 : 100, YGDirectionLTR);
+  }
+  const float ownerMain = column ? YGNodeLayoutGetHeight(owner) : YGNodeLayoutGetWidth(owner);
+  const float aMain = column ? YGNodeLayoutGetHeight(a) : YGNodeLayoutGetWidth(a);
+  const float bMain = column ? YGNodeLayoutGetHeight(b) : YGNodeLayoutGetWidth(b);
+  const float aStart = column ? YGNodeLayoutGetTop(a) : YGNodeLayoutGetLeft(a);
+  const float cStart = sameAxis ? (column ? YGNodeLayoutGetTop(c) : YGNodeLayoutGetLeft(c)) : NAN;
+  std::printf("staged-auto-margin axis=%s profile=%s owner=%s margin=%s ownerMain=%.17g aMain=%.17g bMain=%.17g aStart=%.17g cStart=%.17g calls=%d",
+    column ? "column" : "row", sameAxis ? "same-axis-min100-max160" : "opposite-axis-max160", paired ? "paired-natural80" : "direct80", marginMode == 2 ? "auto" : marginMode == 1 ? "explicit0" : "unset", ownerMain, aMain, bMain, aStart, cStart, calls.calls);
+  if (calls.calls) std::printf(" query={main:%.17g,%s,cross:%.17g,%s}", column ? calls.h : calls.w, mode(column ? calls.hm : calls.wm), column ? calls.w : calls.h, mode(column ? calls.wm : calls.hm));
+  std::puts("");
+  YGNodeFreeRecursive(outer); YGConfigFree(config);
+}
+
+// Numeric same-axis owner allocation matrix. This isolates the parent-facing
+// normal layout phase from provider continuation and from automatic margins.
+void runKnownNumericOwnerPhase(bool column, Owner ownerBound, float external, bool floor) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto outer = YGNodeNewWithConfig(config), owner = YGNodeNewWithConfig(config);
+  auto a = YGNodeNewWithConfig(config), b = YGNodeNewWithConfig(config), c = YGNodeNewWithConfig(config);
+  const auto direction = column ? YGFlexDirectionColumn : YGFlexDirectionRow;
+  YGNodeStyleSetFlexDirection(outer, direction); YGNodeStyleSetAlignItems(outer, YGAlignFlexStart); setMain(outer, column, external); setCross(outer, column, 20);
+  YGNodeStyleSetFlexDirection(owner, direction); YGNodeStyleSetAlignItems(owner, YGAlignFlexStart); YGNodeStyleSetFlexGrow(owner, 0); YGNodeStyleSetFlexShrink(owner, 0); setCross(owner, column, 20);
+  if (ownerBound == RootMax || ownerBound == RootMinMax) { if (column) YGNodeStyleSetMaxHeight(owner, 160); else YGNodeStyleSetMaxWidth(owner, 160); }
+  if (ownerBound == RootMin || ownerBound == RootMinMax) { if (column) YGNodeStyleSetMinHeight(owner, 160); else YGNodeStyleSetMinWidth(owner, 160); }
+  for (auto child : {a, b, c}) { YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 0); setCross(child, column, 20); if (column) YGNodeStyleSetMinHeight(child, 0); else YGNodeStyleSetMinWidth(child, 0); }
+  setMain(a, column, floor ? 20 : 80); setBasis(a, column, floor ? 20 : 80); if (floor) setMinPct(a, column, 50); else setMaxPct(a, column, 25);
+  setMain(b, column, 80); setBasis(b, column, 80);
+  setMain(c, column, 20); setBasis(c, column, 20);
+  YGNodeInsertChild(owner, a, 0); YGNodeInsertChild(owner, b, 1); YGNodeInsertChild(outer, owner, 0); YGNodeInsertChild(outer, c, 1);
+  YGNodeCalculateLayout(outer, column ? 20 : external, column ? external : 20, YGDirectionLTR);
+  const auto main = [column](YGNodeRef node) { return column ? YGNodeLayoutGetHeight(node) : YGNodeLayoutGetWidth(node); };
+  const auto start = [column](YGNodeRef node) { return column ? YGNodeLayoutGetTop(node) : YGNodeLayoutGetLeft(node); };
+  std::printf("known-numeric-owner-phase axis=%s bound=%s external=%.17g child=%s owner=%.17g a=%.17g b=%.17g cStart=%.17g\n", column ? "column" : "row", ownerName(ownerBound), external, floor ? "floor50" : "cap25", main(owner), main(a), main(b), start(c));
+  YGNodeFreeRecursive(outer); YGConfigFree(config);
+}
+
 void run(bool column, Owner owner, bool floor, bool measured, float supplied = YGUndefined, float naturalMain = 80) {
   currentColumn = column; currentNaturalMain = naturalMain;
   auto config=YGConfigNew(); YGConfigSetUseWebDefaults(config,false); YGConfigSetPointScaleFactor(config,0); YGConfigSetErrata(config,YGErrataNone);
@@ -294,5 +368,7 @@ int main() {
     }
     runSameAxisContribution(column, false);
     runSameAxisContribution(column, true);
+    for (bool paired : {false, true}) for (bool sameAxis : {false, true}) for (int marginMode : {0, 1, 2}) runStagedAutoMargin(column, paired, sameAxis, marginMode);
+    for (auto ownerBound : {RootMax, RootMin, RootMinMax}) for (float external : {80.f, 160.f, 200.f}) { runKnownNumericOwnerPhase(column, ownerBound, external, false); runKnownNumericOwnerPhase(column, ownerBound, external, true); }
   }
 }

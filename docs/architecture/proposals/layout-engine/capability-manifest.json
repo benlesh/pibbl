@@ -1936,7 +1936,7 @@
       "target": "parity",
       "group": "flex-core",
       "current": "numeric bounds, definite-owner percentage main-axis caps/floors and wrapped stretched cross bounds in row/column, including owner resize; an acyclic exact caller width/height supplies an omitted LTR nowrap row/column main reference for direct percentage bounds; bounded undecorated zero-factor numeric Rectangle owners use native staged percentage references for max-only, min-only and unbounded measurement; direct childless paired custom leaves use released native query preparation and constrained natural-result continuation; broader intrinsic profiles retain explicit admission boundaries; bounded direct nested row Flex cross minimum resolves from a definite wrapped outer owner; decorated border-box row-reverse/wrap nested cross minima use the final content owner; described known owners cover the same staged numeric/paired matrix, with finite native exact continuation through deeper and branching same-axis known Flex trees; receiving-owner percentage min/max resolve once against the original external reference, remain unresolved under unbounded availability and retain scalar bounds through allocated continuation; native parent-main contribution is distinct from final intrinsic content, with receiver-scoped roles and exact allocated remeasurement",
-      "status": "partial",
+      "status": "complete",
       "evidenceRefs": [
         "packages/core/src/lib/layout/flex.test.ts",
         "tooling/layout-yoga-rehearsal/reference.json",
@@ -1958,10 +1958,12 @@
         "tooling/test-wasm-intrinsic-primitive.mjs",
         "packages/core/test/layout-measured-leaf-composition.test.tsx",
         "packages/core/test/layout-percent-owner-bound.test.tsx",
-        "packages/core/test/layout-main-contribution.test.tsx"
+        "packages/core/test/layout-main-contribution.test.tsx",
+        "packages/core/test/layout-staged-auto-margin.test.tsx"
       ],
       "evidence": {
         "positive": [
+          "slice177: finite normal numeric known-owner placement keeps owner160/A40/B80/C160 distinct from pure112.5; cap/floor across external80/160/200 and rootmax/min/minmax matches pinned native phases; direct/described row/column regressions and no-bound controls pass",
           "Same-axis paired-leaf owners with numeric160 and percentage75% maxima allocate native contributions120 and117.5, requery paired leaves at30 and29.375, preserve full queries110 and109.375, and move the following target with exact teardown",
           "cap",
           "shrink",
@@ -2041,9 +2043,7 @@
           "decorated-main-cap-column-reverse",
           "decorated-main-cap-column-reverse-resized"
         ],
-        "missing": [
-          "numeric explicit-basis same-axis staged owner: outer200, auto owner min100/max160, A80/basis80/max25% plus B80 and following C20; native final owner/C start160 and A40, while current native contribution is130 and four public row/column direct/described bounds cases fail; matched no-bound controls pass at owner160/A80/C160"
-        ]
+        "missing": []
       }
     },
     {
@@ -2205,6 +2205,7 @@
       "unresolvedPolicy": "Finite explicit-cross main/cross directions, shorthand and numeric bounds are evidenced. Direct generic Text and paired pure-provider custom primitive automatic height are supported in finite nowrap rows at declared width. Natural-width Text also supports auto basis/zero grow/positive shrink/no main bounds in finite nowrap rows. Numeric-width Text also supports bounded LTR wrapped rows with auto basis and zero grow/shrink. Unwrapped generic column Text and direct paired primitives with numeric height and zero grow/shrink have bounded natural-width support; required provider failures diagnose even under stretch alignment. Other automatic/layout cross sizing beyond these bounded owners, broader wrapping/column Text and other pure intrinsic owner profiles remain outstanding; broader percentage/intrinsic feedback follows separate sizing gates.",
       "evidence": {
         "positive": [
+          "slice177: numeric staged owner160/A40/B80 carries native auto share30; paired owner120/A30/B80 carries share10; authored zero and auto preserve pure112.5/110, following targets, identities and cleanup across direct/described rows/columns",
           "slice176: direct/described known Flex content60 to100 moves x140 to100 with a fixed following item; numeric0 toauto preserves nodes; natural240 overflow stays targetable; fixed Grid60 uses the same dispatch while fractional intrinsic Grid fails before paint",
           "slice175: paired column natural40/80 gives A x160/120 at height40, sibling unchanged; returned natural240 overflows at x0 and remains targetable beyond the200 owner, matching pinned geometry",
           "slice174: zero/auto equivalence for shorthand with physical override, logical edges, paired-provider cross measurement, known Flex children and wrapped numeric intrinsic sizing; live paired natural20 to40 preserves pure200x20 to200x40 and final A x80/y60 to40",
@@ -2362,11 +2363,14 @@
         ],
         "missing": [
           "other automatic/custom/layout cross sizing and broader wrapping/column Text",
-          "staged nonexact percentage-bound intrinsic owners with authored margins, including zero/auto, still bypass the native staged path and retain the exact-reference diagnostic; no final placement parity is claimed"
+          "staged percentage-bound intrinsic owners with nonzero numeric margin contributions remain outside the admitted zero/auto profile"
         ]
       },
       "evidenceRefs": [
         "packages/core/test/layout-intrinsic-auto-margin.test.tsx",
+        "packages/core/test/layout-staged-auto-margin.test.tsx",
+        "tooling/layout-yoga-rehearsal/percentage-phase-probe.cpp",
+        "tooling/test-wasm-measured-percentage-owner.mjs",
         "tooling/layout-yoga-rehearsal/intrinsic-auto-margin-probe.cpp",
         "tooling/test-wasm-column-text-auto-margin.mjs",
         "packages/core/test/layout-wasm-slice.test.tsx",

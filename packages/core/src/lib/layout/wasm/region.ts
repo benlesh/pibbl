@@ -58,6 +58,9 @@ interface Kernel {
   resize_intrinsic_main(handle: number, generation: number, count: number): number;
   prepare_intrinsic_main_queries(handle: number, generation: number, externalOwner: number, initialAvailable: number, rootMin: number, rootMax: number, mode: number, gap: number): number;
   resolve_intrinsic_main(handle: number, generation: number, externalOwner: number, initialAvailable: number, rootMin: number, rootMax: number, mode: number, gap: number): number;
+  resolve_intrinsic_main_known_owner(handle: number, generation: number, externalOwner: number, initialAvailable: number, rootMin: number, rootMax: number, mode: number, gap: number): number;
+  intrinsic_main_auto_free(handle: number, generation: number): number;
+  place_main_auto_staged(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number, autoFree: number): number;
   intrinsic_main_result(handle: number, generation: number): number;
   intrinsic_main_contribution(handle: number, generation: number): number;
   dispose(): void;
@@ -163,6 +166,7 @@ export interface NumericIntrinsicMainResult {
   readonly main: number;
   /** Native root-bound line contribution for a same-axis parent continuation. */
   readonly contributionMain: number;
+  readonly autoMarginFreeMain: number;
   readonly targets: readonly number[];
   readonly effectiveMins: readonly number[];
   readonly effectiveMaxes: readonly number[];
@@ -252,6 +256,13 @@ export function prepareTransientIntrinsicMainQueries(items: readonly NumericIntr
  * Flex placement; authored percentage styles are never rewritten.
  */
 export function resolveTransientIntrinsicMain(items: readonly NumericIntrinsicMainItem[], query: NumericIntrinsicMainQuery): NumericIntrinsicMainResult {
+  return resolveIntrinsicMain(items, query, false);
+}
+/** Native normal-placement phase for a direct, unmeasured known owner. */
+export function resolveTransientKnownOwnerMain(items: readonly NumericIntrinsicMainItem[], query: NumericIntrinsicMainQuery): NumericIntrinsicMainResult {
+  return resolveIntrinsicMain(items, query, true);
+}
+function resolveIntrinsicMain(items: readonly NumericIntrinsicMainItem[], query: NumericIntrinsicMainQuery, normalOwner: boolean): NumericIntrinsicMainResult {
   const { externalOwner, initialAvailable, rootMin, rootMax } = validateIntrinsicQuery(query);
   const owner = acquireRootOwner(measurementOwner);
   const standalone = measurementOwner === undefined;
@@ -265,14 +276,14 @@ export function resolveTransientIntrinsicMain(items: readonly NumericIntrinsicMa
       const item = items[index], offset = index * 10;
       writeIntrinsicMainRecord(records, offset, item, false);
     }
-    const status = owner.kernel.resolve_intrinsic_main(
-      handle, generation, externalOwner, initialAvailable, rootMin, rootMax,
-      intrinsicModeCode[query.mode], query.gap,
-    );
+    const resolve = normalOwner ? owner.kernel.resolve_intrinsic_main_known_owner : owner.kernel.resolve_intrinsic_main;
+    const status = resolve(handle, generation, externalOwner, initialAvailable, rootMin, rootMax,
+      intrinsicModeCode[query.mode], query.gap);
     intrinsicStatus(status, 'resolution');
     const main = owner.kernel.intrinsic_main_result(handle, generation);
     const contributionMain = owner.kernel.intrinsic_main_contribution(handle, generation);
-    if (!Number.isFinite(main) || main < 0 || !Number.isFinite(contributionMain) || contributionMain < 0) {
+    const autoMarginFreeMain = owner.kernel.intrinsic_main_auto_free(handle, generation);
+    if (!Number.isFinite(main) || main < 0 || !Number.isFinite(contributionMain) || contributionMain < 0 || !Number.isFinite(autoMarginFreeMain) || autoMarginFreeMain < 0) {
       throw new Error('Experimental staged intrinsic Flex query produced invalid native owner phases.');
     }
     // Native may grow its memory while resolving. Copy all outputs before release.
@@ -290,7 +301,7 @@ export function resolveTransientIntrinsicMain(items: readonly NumericIntrinsicMa
       targets[index] = target; effectiveMins[index] = minimum; effectiveMaxes[index] = maximum;
     }
     counters.solves++; counters.measurementSolves++;
-    return { main, contributionMain, targets, effectiveMins, effectiveMaxes };
+    return { main, contributionMain, autoMarginFreeMain, targets, effectiveMins, effectiveMaxes };
   } catch (error) {
     if (error instanceof WebAssembly.RuntimeError) owner.dispose(true);
     throw error;
@@ -656,7 +667,7 @@ export class LayoutRegion {
   }
   private mainAutoFlags: boolean[] | undefined;
   private mainAutoRevision = 0;
-  placeMain(main: number, gap: number, alignment: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly', reverse = false, autoMargins?: readonly NumericFlexItem[]): readonly number[] {
+  placeMain(main: number, gap: number, alignment: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly', reverse = false, autoMargins?: readonly NumericFlexItem[], autoMarginFreeMain?: number): readonly number[] {
     if (!this.layoutOwner?.has(this.handle, this.generation)) throw new Error('Experimental Flex main placement requires a solved region.');
     const kernel = this.layoutOwner.kernel;
     const code = ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'].indexOf(alignment);
@@ -674,7 +685,7 @@ export class LayoutRegion {
     } else if (this.mainAutoFlags?.length) {
       this.mainAutoFlags.length = 0; this.mainAutoRevision++;
     }
-    const key = `${this.allocationRevision}:${main}:${gap}:${code}:${reverse ? 1 : 0}:${this.mainAutoRevision}`;
+    const key = `${this.allocationRevision}:${main}:${gap}:${code}:${reverse ? 1 : 0}:${this.mainAutoRevision}:${autoMarginFreeMain ?? "geometric"}`;
     if (key !== this.mainPlacementKey) {
       try {
         if (autoMargins) {
@@ -688,7 +699,10 @@ export class LayoutRegion {
         }
         const pointer = kernel.resize(this.handle, this.generation, this.order.length);
         let status: number;
-        if (autoMargins) {
+        if (autoMargins && autoMarginFreeMain !== undefined) {
+          if (this.wrap) throw new Error('Staged intrinsic margins require a single line.');
+          status = kernel.place_main_auto_staged(this.handle, this.generation, main, gap, code, reverse ? 1 : 0, autoMarginFreeMain);
+        } else if (autoMargins) {
           status = this.wrap ? kernel.place_wrap_main_auto(this.handle, this.generation, main, gap, code, reverse ? 1 : 0) : kernel.place_main_auto(this.handle, this.generation, main, gap, code, reverse ? 1 : 0);
         } else {
           status = this.wrap ? kernel.place_wrap_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0) : kernel.place_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0);

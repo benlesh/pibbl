@@ -1387,7 +1387,7 @@ a fit-content envelope. An authored maximum keeps its own initial envelope,
 even when external availability differs. Neither becomes an exact final size.
 
 A same-axis parent contribution and the child's allocated main are separate
-native phases. Native ABI9 returns final intrinsic main and parent-main contribution
+native phases. Native ABI10 retains distinct final intrinsic main and parent-main contribution
 in one fixed result, cleared together on failure and copied before arena release.
 Only a matching receiver/axis parent query uses the contribution; public full,
 cross-axis and opaque size-only queries retain final content. The contribution
@@ -1397,9 +1397,11 @@ the full query is110; exact allocated continuation queries30 and paints30. With
 own max75% under external200 these values are117.5,109.375 and29.375.
 A matching transaction-local stage records the original normalized
 root style, receiver, source children, axis, final main and input revision. Known
-preparation at the allocated main remeasures through the existing pure provider
-context with native exact mode, replacing the contribution stage before normal
-placement consumes it. Cross-axis contribution stages retain their original
+preparation at the allocated main remeasures paired providers through the existing
+pure provider context with native exact mode, replacing their contribution stage
+before normal placement consumes it. A finite direct numeric normal-owner role
+instead receives its final native bounds and targets together and retains that
+receiver-bound stage without overwriting it through another exact query. Cross-axis contribution stages retain their original
 handoff. No persistent graph, implicit opaque association or iterative solver is
 created; public exact-size measurement still takes its normal fast path.
 
@@ -1620,13 +1622,21 @@ tracks retain their allocation-dependent intrinsic error before paint. This Grid
 composition evidence is not a Yoga Grid parity claim. Other known-family queries
 remain subject to their existing measurement contract.
 
-The numeric explicit-basis staged parent-main counterpart remains an open defect:
-with outer200, owner min100/max160, numeric A80/basis80/max25% and B80, native
-normal owner/C start160 and A40 differ from the current native130 contribution.
-The pure112.5 query is a separate result. Public bounded direct/described row and
-column regressions fail while matched no-bound controls pass; prior min/max
-completion evidence does not close this integration cell. No parity is promised
-for that experimental combination until its staged phases are corrected.
+Finite normal same-axis placement of a direct numeric staged owner has a separate
+native operation from standalone and recursive pure queries. With outer200,
+owner min100/max160, numeric A80/basis80/max25% and B80, normal owner/C start160
+and A40 are preserved while the standalone full query remains112.5. Direct and
+described row/column cases share this operation. Unbounded/undefined owner
+references retain the earlier pure continuation; availability is never made exact.
+
+In the admitted staged numeric/paired profiles, authored zero and auto margins
+contribute zero. Native normal placement carries a phase residual separately from
+final geometric remainder: numeric owner160/A40/B80 shares30 with a leading auto
+margin, leaving A at30/B at70 and C at160. The paired counterpart keeps owner120,
+A30/B80 and native auto share10, leaving A10/B40 and C120. The phase scalar is
+cleared with other native outputs on failure, copied before arena release, retained
+only in the matching transaction/receiver stage, and included in placement cache
+identity. Nonzero numeric margin contributions remain outside this staged profile.
 
 ### Bounded experimental cross-axis auto margins
 

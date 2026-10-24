@@ -19,7 +19,7 @@ const INTRINSIC_EXACT: u32 = 0;
 const INTRINSIC_FIT_CONTENT: u32 = 1;
 const INTRINSIC_MAX_CONTENT: u32 = 2;
 #[derive(Default)]
-struct Arena { nodes: Vec<f64>, main_auto: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64>, flow: Vec<f64>, intrinsic_main: Vec<f64>, intrinsic_main_result: f64, intrinsic_main_contribution: f64 }
+struct Arena { nodes: Vec<f64>, main_auto: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64>, flow: Vec<f64>, intrinsic_main: Vec<f64>, intrinsic_main_result: f64, intrinsic_main_contribution: f64, intrinsic_main_auto_free: f64 }
 struct ArenaSlot { generation: u32, arena: Option<Arena> }
 struct ArenaPool { slots: Vec<ArenaSlot>, closed: bool }
 thread_local! {
@@ -101,7 +101,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v9() -> u32 { 9 }
+pub extern "C" fn layout_abi_v10() -> u32 { 10 }
 #[no_mangle]
 pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
@@ -298,7 +298,21 @@ pub extern "C" fn resize_main_auto(handle: u32, generation: u32, count: usize) -
 pub extern "C" fn place_main_auto(handle: u32, generation: u32, main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_main_auto(&mut arena.nodes, &arena.main_auto, main, gap, alignment, reverse))
 }
+/// Places automatic margins from a previously solved normal-owner phase.
+/// The supplied free space is an authoritative native phase result, not a
+/// JavaScript reconstruction from final target widths.
+#[no_mangle]
+pub extern "C" fn place_main_auto_staged(handle: u32, generation: u32, main: f64, gap: f64, alignment: u32, reverse: u32, auto_free: f64) -> u32 {
+    with_arena(handle, generation, 1, |arena| align_main_auto_staged(&mut arena.nodes, &arena.main_auto, main, gap, alignment, reverse, auto_free))
+}
 fn align_main_auto(nodes: &mut [f64], flags: &[f64], main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
+    align_main_auto_with_free(nodes, flags, main, gap, alignment, reverse, None)
+}
+fn align_main_auto_staged(nodes: &mut [f64], flags: &[f64], main: f64, gap: f64, alignment: u32, reverse: u32, auto_free: f64) -> u32 {
+    if !auto_free.is_finite() || auto_free < 0.0 { return 1; }
+    align_main_auto_with_free(nodes, flags, main, gap, alignment, reverse, Some(auto_free))
+}
+fn align_main_auto_with_free(nodes: &mut [f64], flags: &[f64], main: f64, gap: f64, alignment: u32, reverse: u32, staged_free: Option<f64>) -> u32 {
     if !main.is_finite() || main < 0.0 || !gap.is_finite() || gap < 0.0 || alignment > 5 || reverse > 1 { return 1; }
     let count = nodes.len() / STRIDE;
     if flags.len() != count * 2 { return 1; }
@@ -311,11 +325,15 @@ fn align_main_auto(nodes: &mut [f64], flags: &[f64], main: f64, gap: f64, alignm
         let n = &nodes[index * STRIDE..(index + 1) * STRIDE];
         occupied += n[6] + n[3] + n[8] + n[9];
     }
-    let free = main - occupied;
-    if !free.is_finite() { return 1; }
+    let computed_free = main - occupied;
+    if !computed_free.is_finite() { return 1; }
+    let free = staged_free.unwrap_or(computed_free);
     let consumes_free = free > 0.0 && slots > 0;
     let share = if consumes_free { free / slots as f64 } else { 0.0 };
-    let (mut cursor, between) = distribution(free, count, if consumes_free { 0 } else { alignment }, reverse == 1);
+    // A staged normal-owner result owns auto-margin sharing. Any later
+    // leftover final geometry remains trailing space rather than alignment.
+    let distribution_free = if staged_free.is_some() && consumes_free { 0.0 } else { free };
+    let (mut cursor, between) = distribution(distribution_free, count, if consumes_free { 0 } else { alignment }, reverse == 1);
     for index in 0..count {
         let n = &mut nodes[index * STRIDE..(index + 1) * STRIDE];
         let before = n[8] + flags[index * 2] * share;
@@ -465,6 +483,7 @@ pub extern "C" fn resize_intrinsic_main(handle: u32, generation: u32, count: usi
         arena.intrinsic_main.resize(length, 0.0);
         arena.intrinsic_main_result = f64::NAN;
         arena.intrinsic_main_contribution = f64::NAN;
+        arena.intrinsic_main_auto_free = f64::NAN;
         arena.intrinsic_main.as_mut_ptr()
     })
 }
@@ -480,6 +499,7 @@ pub extern "C" fn prepare_intrinsic_main_queries(
     with_arena(handle, generation, 1, |arena| {
         arena.intrinsic_main_result = f64::NAN;
         arena.intrinsic_main_contribution = f64::NAN;
+        arena.intrinsic_main_auto_free = f64::NAN;
         match prepare_intrinsic_main_queries_records(
             &mut arena.intrinsic_main, external_owner, initial_available,
             root_min, root_max, root_mode, gap,
@@ -496,6 +516,7 @@ pub extern "C" fn resolve_intrinsic_main(
     with_arena(handle, generation, 1, |arena| {
         arena.intrinsic_main_result = f64::NAN;
         arena.intrinsic_main_contribution = f64::NAN;
+        arena.intrinsic_main_auto_free = f64::NAN;
         match resolve_intrinsic_main_fixed_leaves_result(
             &mut arena.intrinsic_main, external_owner, initial_available,
             root_min, root_max, root_mode, gap,
@@ -503,11 +524,42 @@ pub extern "C" fn resolve_intrinsic_main(
             Ok(result) => {
                 arena.intrinsic_main_result = result.main;
                 arena.intrinsic_main_contribution = result.contribution_main;
+                arena.intrinsic_main_auto_free = result.auto_margin_free;
                 0
             }
             Err(status) => status,
         }
     })
+}
+
+#[no_mangle]
+pub extern "C" fn resolve_intrinsic_main_known_owner(
+    handle: u32, generation: u32,
+    external_owner: f64, initial_available: f64,
+    root_min: f64, root_max: f64, root_mode: u32, gap: f64,
+) -> u32 {
+    with_arena(handle, generation, 1, |arena| {
+        arena.intrinsic_main_result = f64::NAN;
+        arena.intrinsic_main_contribution = f64::NAN;
+        arena.intrinsic_main_auto_free = f64::NAN;
+        match resolve_intrinsic_main_known_owner_normal_records(
+            &mut arena.intrinsic_main, external_owner, initial_available,
+            root_min, root_max, root_mode, gap,
+        ) {
+            Ok(result) => {
+                arena.intrinsic_main_result = result.owner_main;
+                arena.intrinsic_main_contribution = result.owner_main;
+                arena.intrinsic_main_auto_free = result.auto_margin_free;
+                0
+            }
+            Err(status) => status,
+        }
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn intrinsic_main_auto_free(handle: u32, generation: u32) -> f64 {
+    with_arena(handle, generation, f64::NAN, |arena| arena.intrinsic_main_auto_free)
 }
 
 #[no_mangle]
@@ -611,7 +663,7 @@ fn prepare_intrinsic_main_queries_records(
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-struct IntrinsicMainResolution { main: f64, contribution_main: f64 }
+struct IntrinsicMainResolution { main: f64, contribution_main: f64, auto_margin_free: f64 }
 
 fn resolve_intrinsic_main_fixed_leaves_result(
     records: &mut [f64], external_owner: f64, initial_available: f64,
@@ -668,7 +720,67 @@ fn resolve_intrinsic_main_fixed_leaves_result(
     }
     if !final_sum.is_finite() { return Err(1); }
     let main = if root_mode == INTRINSIC_EXACT { initial_available } else { clamp_bounds(final_sum, root_min, root_max)? };
-    Ok(IntrinsicMainResolution { main, contribution_main: adjusted_line })
+    Ok(IntrinsicMainResolution {
+        main,
+        contribution_main: adjusted_line,
+        // The exact continuation consumes the final callback targets for its
+        // auto-margin phase. Pure callers expose the scalar but never place it.
+        auto_margin_free: (adjusted_line - final_sum).max(0.0),
+    })
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct KnownOwnerNormalResolution { owner_main: f64, auto_margin_free: f64 }
+
+/// The normal known-owner role is deliberately separate from the public/pure
+/// intrinsic continuation above. Yoga uses the owner's raw bases to allocate
+/// its normal box, then evaluates percentage minimums and maximums against
+/// opposite owner phases. The pure fit-content query instead reports its final
+/// content sum and contribution for recursive measurement.
+fn resolve_intrinsic_main_known_owner_normal_records(
+    records: &mut [f64], external_owner: f64, initial_available: f64,
+    root_min: f64, root_max: f64, root_mode: u32, gap: f64,
+) -> Result<KnownOwnerNormalResolution, u32> {
+    let (root_min, root_max) = validate_intrinsic_main_envelope(
+        records, external_owner, initial_available, root_min, root_max, root_mode, gap,
+    )?;
+    if !external_owner.is_finite() || external_owner < 0.0 || !initial_available.is_finite() || initial_available < 0.0 { return Err(1); }
+
+    let mut measured = false;
+    for record in records.chunks_exact(INTRINSIC_MAIN_STRIDE) {
+        if record[INTRINSIC_MEASURED_FLAG] != 0.0 { measured = true; }
+    }
+    // The normal known-owner operation is intentionally direct-numeric only.
+    // Measured records retain the ordinary exact continuation, whose
+    // `intrinsic_main_auto_free` accessor is populated by the old resolver.
+    if measured { return Err(1); }
+
+    // Direct numeric children use the normal owner's raw declared bases for its
+    // allocation. Their percent bounds see the external and allocated owners
+    // on opposite sides of the phase, matching Yoga's normal layout role.
+    let mut raw_sum = 0.0;
+    let mut initially_consumed = 0.0;
+    for record in records.chunks_exact_mut(INTRINSIC_MAIN_STRIDE) {
+        if record[INTRINSIC_QUERY_MAX] != 0.0 || !record[0].is_finite() || record[0] < 0.0 { return Err(1); }
+        if record[2] == record[4] && record[2] != INTRINSIC_NONE as f64 && record[1] > record[3] { return Err(2); }
+        raw_sum += record[0];
+        let min = resolve_intrinsic_length(record[1], record[2], external_owner)?;
+        let max = resolve_intrinsic_length(record[3], record[4], external_owner)?;
+        initially_consumed += clamp_bounds(record[0], min, max)?;
+    }
+    if !raw_sum.is_finite() || !initially_consumed.is_finite() { return Err(1); }
+    let owner_main = if root_mode == INTRINSIC_EXACT { initial_available } else { clamp_bounds(raw_sum, root_min, root_max)? };
+    let min_reference = external_owner.max(owner_main);
+    let max_reference = external_owner.min(owner_main);
+    for record in records.chunks_exact_mut(INTRINSIC_MAIN_STRIDE) {
+        let minimum = resolve_intrinsic_length(record[1], record[2], min_reference)?;
+        let maximum = resolve_intrinsic_length(record[3], record[4], max_reference)?;
+        checked_bounds(minimum, maximum)?;
+        record[5] = clamp_bounds(record[0], minimum, maximum)?;
+        record[6] = minimum.unwrap_or(0.0);
+        record[7] = maximum.unwrap_or(f64::INFINITY);
+    }
+    Ok(KnownOwnerNormalResolution { owner_main, auto_margin_free: (owner_main - initially_consumed).max(0.0) })
 }
 
 // Scalar assertion helper for existing phase fixtures; production uses both results.
@@ -849,25 +961,108 @@ mod tests {
         let resolution = resolve_intrinsic_main_fixed_leaves_result(
             &mut numeric, 200., 160., f64::NAN, 160., INTRINSIC_FIT_CONTENT, 0.,
         ).unwrap();
-        assert_eq!(resolution, IntrinsicMainResolution { main: 112.5, contribution_main: 130. });
+        assert_eq!(resolution, IntrinsicMainResolution { main: 112.5, contribution_main: 130., auto_margin_free: 17.5 });
 
         let mut max_160 = measured_cap_records(80., 40., INTRINSIC_MEASURED_READY);
         let resolution = resolve_intrinsic_main_fixed_leaves_result(
             &mut max_160, 200., 160., f64::NAN, 160., INTRINSIC_FIT_CONTENT, 0.,
         ).unwrap();
-        assert_eq!(resolution, IntrinsicMainResolution { main: 110., contribution_main: 120. });
+        assert_eq!(resolution, IntrinsicMainResolution { main: 110., contribution_main: 120., auto_margin_free: 10. });
 
         let mut max_150 = measured_cap_records(80., 37.5, INTRINSIC_MEASURED_READY);
         let resolution = resolve_intrinsic_main_fixed_leaves_result(
             &mut max_150, 200., 150., f64::NAN, 150., INTRINSIC_FIT_CONTENT, 0.,
         ).unwrap();
-        assert_eq!(resolution, IntrinsicMainResolution { main: 109.375, contribution_main: 117.5 });
+        assert_eq!(resolution, IntrinsicMainResolution { main: 109.375, contribution_main: 117.5, auto_margin_free: 8.125 });
 
         let mut exact = measured_cap_records(80., 40., INTRINSIC_MEASURED_READY);
         let resolution = resolve_intrinsic_main_fixed_leaves_result(
             &mut exact, 200., 160., f64::NAN, 160., INTRINSIC_EXACT, 0.,
         ).unwrap();
-        assert_eq!(resolution, IntrinsicMainResolution { main: 160., contribution_main: 160. });
+        assert_eq!(resolution, IntrinsicMainResolution { main: 160., contribution_main: 160., auto_margin_free: 40. });
+    }
+
+    // RED: normal placement of a direct known owner under an exact same-axis
+    // parent differs from the standalone fit-content query result.
+    #[test] fn known_numeric_owner_normal_phase_differs_from_pure_contribution() {
+        let mut numeric = cap_records();
+        let pure = resolve_intrinsic_main_fixed_leaves_result(
+            &mut numeric, 200., 160., 100., 160., INTRINSIC_FIT_CONTENT, 0.,
+        ).unwrap();
+        assert_eq!(pure, IntrinsicMainResolution { main: 112.5, contribution_main: 130., auto_margin_free: 17.5 });
+
+        let mut normal_records = cap_records();
+        let normal = resolve_intrinsic_main_known_owner_normal_records(
+            &mut normal_records, 200., 160., 100., 160., INTRINSIC_FIT_CONTENT, 0.,
+        ).unwrap();
+        assert_eq!(
+            (normal.owner_main, normal_records[5], normal_records[15], normal.auto_margin_free),
+            (160., 40., 80., 30.),
+        );
+
+        let mut paired = measured_cap_records(80., 40., INTRINSIC_MEASURED_READY);
+        let paired = resolve_intrinsic_main_fixed_leaves_result(
+            &mut paired, 200., 160., 100., 160., INTRINSIC_FIT_CONTENT, 0.,
+        ).unwrap();
+        assert_eq!(paired.auto_margin_free, 10.);
+    }
+
+    #[test] fn known_numeric_owner_normal_preserves_direct_cap_and_floor_phases() {
+        let externals = [80., 160., 200.];
+        let cap_targets = [20., 40., 40.];
+        let cap_auto = [60., 40., 30.];
+        for bounds in [(f64::NAN, 160.), (160., f64::NAN), (160., 160.)] {
+            for index in 0..externals.len() {
+                let mut records = cap_records();
+                let result = resolve_intrinsic_main_known_owner_normal_records(
+                    &mut records, externals[index], 160., bounds.0, bounds.1, INTRINSIC_FIT_CONTENT, 0.,
+                ).unwrap();
+                assert_eq!((result.owner_main, records[5], records[15], result.auto_margin_free),
+                    (160., cap_targets[index], 80., cap_auto[index]));
+            }
+        }
+
+        let floor_targets_max = [50., 80., 100.];
+        let floor_targets_min = [80., 80., 100.];
+        for (bounds, expected_targets, expected_auto) in [
+            ((f64::NAN, 160.), floor_targets_max, [0., 0., 0.]),
+            ((160., f64::NAN), floor_targets_min, [40., 0., 0.]),
+            ((160., 160.), floor_targets_min, [40., 0., 0.]),
+        ] {
+            for index in 0..externals.len() {
+                let mut records = floor_records();
+                let result = resolve_intrinsic_main_known_owner_normal_records(
+                    &mut records, externals[index], 160., bounds.0, bounds.1, INTRINSIC_FIT_CONTENT, 0.,
+                ).unwrap();
+                let owner = if bounds.0.is_nan() { 100. } else { 160. };
+                assert_eq!((result.owner_main, records[5], records[15], result.auto_margin_free),
+                    (owner, expected_targets[index], 80., expected_auto[index]));
+            }
+        }
+    }
+
+    #[test] fn intrinsic_auto_free_clears_on_failed_known_owner_and_stale_handles() {
+        let handle = arena_create(); let generation = arena_generation(handle);
+        let pointer = resize_intrinsic_main(handle, generation, 2);
+        assert!(!pointer.is_null());
+        unsafe { std::slice::from_raw_parts_mut(pointer, INTRINSIC_MAIN_STRIDE * 2).copy_from_slice(&cap_records()); }
+        assert_eq!(resolve_intrinsic_main_known_owner(handle, generation, 200., 160., 100., 160., INTRINSIC_FIT_CONTENT, 0.), 0);
+        assert_eq!(intrinsic_main_auto_free(handle, generation), 30.);
+        assert_eq!(resolve_intrinsic_main_known_owner(handle, generation, 200., 160., 100., 160., INTRINSIC_FIT_CONTENT, 1.), 1);
+        assert!(intrinsic_main_auto_free(handle, generation).is_nan());
+        let stale = generation;
+        assert_eq!(arena_dispose(handle, generation), 0);
+        assert!(intrinsic_main_auto_free(handle, stale).is_nan());
+    }
+
+    #[test] fn staged_main_auto_uses_native_phase_free_space() {
+        let mut nodes = vec![0.; STRIDE * 2];
+        nodes[6] = 40.;
+        nodes[STRIDE + 6] = 80.;
+        let flags = [1., 0., 0., 0.];
+        assert_eq!(align_main_auto_staged(&mut nodes, &flags, 160., 0., 0, 0, 30.), 0);
+        assert_eq!((nodes[7], nodes[STRIDE + 7]), (30., 70.));
+        assert_eq!(align_main_auto_staged(&mut nodes, &flags, 160., 0., 0, 0, -1.), 1);
     }
 
     #[test] fn intrinsic_main_stale_handles_cannot_return_or_mutate_results() {

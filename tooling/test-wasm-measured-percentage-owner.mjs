@@ -62,6 +62,35 @@ try {
   const following = await click(485, 480);
   assert.deepEqual(following.hits, [...percentage.hits, 'next']);
   assert.deepEqual((await click(475, 480)).hits, following.hits);
+
+  // The optional proof leaves the default percentage-owner view unchanged.
+  let staged = await click(676, 182);
+  assert.deepEqual(staged.stagedAutoMargin, { enabled: true, margin: 0 });
+  assert.deepEqual(await pixel(35, 238), red);
+  assert.deepEqual(await pixel(75, 238), green);
+  assert.deepEqual(await pixel(195, 238), [110, 62, 121, 255]);
+  assert.deepEqual(await pixel(35, 334), red);
+  assert.deepEqual(await pixel(65, 334), green);
+  assert.deepEqual(await pixel(155, 334), [110, 62, 121, 255]);
+  staged = await click(118, 138);
+  assert.deepEqual(staged.stagedAutoMargin, { enabled: true, margin: 'auto' });
+  assert.deepEqual(await pixel(35, 238), [243, 240, 232, 255]);
+  assert.deepEqual(await pixel(65, 238), red);
+  assert.deepEqual(await pixel(105, 238), green);
+  assert.deepEqual(await pixel(195, 238), [110, 62, 121, 255]);
+  assert.deepEqual(await pixel(35, 334), [243, 240, 232, 255]);
+  assert.deepEqual(await pixel(45, 334), red);
+  assert.deepEqual(await pixel(75, 334), green);
+  assert.deepEqual(await pixel(155, 334), [110, 62, 121, 255]);
+  staged = await click(65, 238); assert.equal(staged.hits.at(-1), 'numeric-A');
+  staged = await click(105, 238); assert.equal(staged.hits.at(-1), 'numeric-B');
+  staged = await click(195, 238); assert.equal(staged.hits.at(-1), 'numeric-C');
+  staged = await click(45, 334); assert.equal(staged.hits.at(-1), 'paired-A');
+  staged = await click(75, 334); assert.equal(staged.hits.at(-1), 'paired-B');
+  staged = await click(155, 334); assert.equal(staged.hits.at(-1), 'paired-C');
+  if (process.env.PIBBL_LAYOUT_STAGED_MARGIN_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_STAGED_MARGIN_SCREENSHOT });
+  staged = await click(676, 138);
+  assert.equal(staged.stagedAutoMargin.enabled, false);
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
   const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);

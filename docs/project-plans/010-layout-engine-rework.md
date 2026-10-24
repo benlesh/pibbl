@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice176 (known-layout natural column widths).
+Latest delivery is slice177 (native normal-owner phases and staged zero/auto margins).
+Slice176 is `3d4fcfee` (known-layout natural column widths).
 Slice175 is `6adf0e2b` (paired column natural width with side auto margins).
 Slice174 is `fabe4508` (uniform intrinsic auto-margin normalization).
 Slice173 is `de0a5fe7` (intrinsic physical cross auto margins).
@@ -28,10 +29,10 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is177: numeric staged contribution and authored zero/auto margins.
-Min/max was reopened by the fresh177public/native counterexample described below.
-The171completion claim was too broad. Fixed33 is now9complete/12experimental/
-6partial/5missing/1excluded. All seven release gates remain open; independent
+Consolidation56 is `2fd34f0e` for166–168. Next is178: wrapped-column Text cross sizing.
+Slice177 repaired the bounds-specific counterexample and reverified the prior
+owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
+5partial/5missing/1excluded. All seven release gates remain open; independent
 intrinsic graphs, automatic minima and other measurement work remain outstanding.
 Consolidation55 is `98bf8b8d` for163–165.
 Slice165 is `cc334a0a` (empty-Rectangle aspect automatic minimum).
@@ -6283,16 +6284,61 @@ The earlier171closure did not cover this phase distinction and is superseded.
 9complete/12experimental/6partial/5missing/1excluded. All seven gates stay open.
 The177regression file is prepared separately from this independent176delivery.
 
-## [NEXT] Slice177: numeric staged contribution and authored zero/auto margins
+## Slice177 delivered: native normal-owner phases and staged zero/auto margins
 
-Correct the pinned numeric explicit-basis parent-main contribution while retaining
-the distinct paired-leaf and public full-query results. Then admit authored zero/
-auto margin contributions to the existing staged profile and preserve native final
-sharing: paired owner120/A30 moves A start0to10, while numeric owner160/A40 has
-native A start0to30. These are native phase receipts, not final-size fixed points
-or geometric-remainder guesses. Add focused native/public failing evidence first;
-keep resource and input ownership exact and one native solver. Consolidation59
-covers175–177 before further capability production.
+Delivered2026-10-24. Four permanent bounded direct/described row/column cases
+first failed semantic click targets; four matched no-bound controls passed.
+Eight additional numeric/paired zero-to-auto cases failed pure measurement before
+production changes. A native compile-RED established the missing normal role.
+
+ABI10 preserves standalone and recursive pure results while adding a private
+finite direct-numeric normal-owner operation and native staged auto placement.
+The normal result carries owner allocation, final targets and phase residual;
+receiver/source/axis/revision staging retains them without an exact remeasurement
+that would erase the original phase. Finite-envelope guards retain previous
+undefined/unbounded continuation behavior. Paired providers retain their exact
+native continuation. No public API, retained graph, JS solver or extra scheduler.
+
+Native26tests cover the cap/floor × external80/160/200 × ownmax/min/minmax matrix,
+shared placement, failure clearing and stale handles. The pinned independent
+percentage probe preserves previous records and appends both authored-margin and
+normal-owner matrix receipts;216records, source SHA256
+`0ca6a827630939e9eac95253faea19f0bf810afb3b3317856d78636c84bae472`.
+Kernel78814bytes, SHA256
+`cac5fbeff2df01dd6d70d747c72eb54769f813b018883930edfdcfc95a604bc1`.
+
+Public numeric owner160/A40/B80 keeps C at160; auto A moves0to30 rather than the
+incorrect geometric remainder40. Paired owner120/A30/B80 keeps C120 and moves A
+0to10. Pure queries remain112.5 and110. All16new public tests pass, including
+signal transitions, paint/targets, stable native nodes, exact teardown and detached
+signals. Nine focused prior/current files pass242tests. The complete final
+owner/min-max suite is included in the62-file consolidation59 run.
+
+Final source and built470-input checks pass with no browser errors and cleanup0000.
+Installed strict Bundler/NodeNext/no-alias246-input consumers pass with the new
+numeric/paired proof. Tarball SHA256
+`c4a0007b221d0315b13580cd2151f6c9e9d0141d32d4e88b8ef7c495a59cb482`.
+At `http://127.0.0.1:5192/#/examples/layout/wasm-flex-measured-percentage-owner`,
+click Margins, then toggle Margin and click red/green/purple. Visual inspection
+confirms readable controls and both stable continuations. Final types/lint and
+scoped changed-code review pass after the finite-envelope guard. Catalog174/12/33,
+Studio metadata/routes/search, public JSDoc and109documentation mutation probes
+also pass.
+
+The numeric min/max counterexample is closed and the prior closure matrix remains
+green. Fixed33 returns to10complete/12experimental/5partial/5missing/1excluded.
+Auto margins remain partial: broader wrapped Text/independent sizing profiles and
+staged nonzero numeric margin contributions remain explicit. All7gates stay open.
+Consolidation59 follows as a separate evidence commit before further production.
+
+## [NEXT] Slice178: wrapped-column Text cross sizing before side-auto placement
+
+Define the smallest finite generic wrapped-Text column natural-width contract,
+using the existing pure Canvas measurement surface. Establish its semantic query,
+paint and moved-target contract before changing admission; distinguish available
+width from an exact final width and preserve overflow, fixed height and line
+metrics. Keep row-wrap natural basis and staged nonzero numeric margins visible
+as separate remaining cells. No new font cross-product or silent target exclusion.
 
 ## Scope and execution
 

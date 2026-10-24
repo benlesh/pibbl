@@ -17,9 +17,10 @@ for (const source of sources)
 const sourceHash = hash.digest("hex");
 const destination = new URL("src/lib/layout/wasm/bytes.ts", root);
 const requiredLayoutAbiExports = [
-  ['layout_abi_v9', 'function'],
+  ['layout_abi_v10', 'function'],
   ['prepare_intrinsic_main_queries', 'function'],
   ['resize_intrinsic_main', 'function'], ['resolve_intrinsic_main', 'function'], ['intrinsic_main_result', 'function'], ['intrinsic_main_contribution', 'function'],
+  ['resolve_intrinsic_main_known_owner', 'function'], ['intrinsic_main_auto_free', 'function'], ['place_main_auto_staged', 'function'],
   ['place_first_baseline', 'function'], ['resize_main_auto', 'function'], ['place_main_auto', 'function'], ['place_wrap_main_auto', 'function'],
   ['memory', 'memory'], ['solve', 'function'], ['dispose', 'function'],
   ['resize_flow', 'function'], ['place_flow', 'function'],
@@ -33,7 +34,7 @@ function assertLayoutArtifact(bytes) {
   const exports = WebAssembly.Module.exports(module);
   for (const [name, kind] of requiredLayoutAbiExports) {
     if (!exports.some(entry => entry.name === name && entry.kind === kind))
-      throw new Error(`Layout WASM ABI v8 is missing ${kind} export ${name}.`);
+      throw new Error(`Layout WASM ABI v10 is missing ${kind} export ${name}.`);
   }
 }
 if (process.argv.includes("--check")) {
