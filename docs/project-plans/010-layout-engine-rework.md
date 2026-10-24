@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice215: finite nowrap structural baseline closure.
+Latest delivery is slice216: native first-line structural baseline selection.
+Slice215 is `53558b31`.
 Slice214 is `2bcc09f9`.
 Slice213 is `b823b569`; consolidation71 is `7a4aa4bf`.
 Slice212 is `beec926f`; slice211 is `7fdb88f8`; consolidation70 is `4439928d`.
@@ -7956,7 +7957,7 @@ unchanged. Static outer structural owners remain concrete: absolute descendants
 need the final owner origin not available before baseline grouping; do not
 silently preflight them at an assumed origin.
 
-## [NEXT] Slice216: native first-line structural baseline selection
+## [DONE] Slice216: native first-line structural baseline selection
 
 Extend the same source-first prepared-tree contract to wrapped Flex through an
 explicit current native first-source-line proof. Read native line membership,
@@ -7970,6 +7971,55 @@ owner origin/preparation; wrapped first-line membership (this slice); Flow/Grid
 source policy; outer-column baseline fallback/interpretation; and last-baseline
 alignment. None is closed merely by an unsupported diagnostic. Final whole-codebase
 review and all7release gates remain at program exit.
+
+Public RED1fail and loader RED1fail/24pass precede production. Private ABI17
+adds constant-time first_wrap_line_count from the current successful native wrap
+allocation. Native ranges are validated at formation; the read checks current
+flag, first/final endpoints, handle and generation. Same-count resize preserves
+cached membership; changed count, ordinary/failed solve and disposal invalidate
+it. Empty success proves0. A scratch control removing only the flag invalidation
+fails the empty-success→failed-wrap NaN assertion after the test was strengthened;
+receipt `/tmp/pibbl-slice216-first-wrap-control-current-red.txt`.
+
+Structural selection consumes that proof, then source record0 and its existing
+physical layoutY. Wrap reversal relocates its line without changing source
+selection. Recursive/transparent roots and empty content-bottom fallback remain
+one coherent operation. No JS line solver or second retained graph. Focused4files
+32pass include cached paint with unchanged solves/lineFormations/nodeCreates,
+all four inner directions, RTL, reverse wrapping, identity, hits and cleanup.
+Fresh Rust1.99native46tests pass; ABI17rejects complete16before publication.
+Artifact84137bytes/SHA
+`3e0ca845cb92a34f3d59dae6f77d583236f677501398a3aeb2770ae946b363e6`.
+
+Types/lint,175lesson/12snapshot/33lab catalog, Studio docs,109documentation probes
+and scoped review pass. Catalog verification also repaired the recent tree
+lesson's built-in style aliases to required inline objects; source-contract checks
+were preserved. The lower independent Tree panel extends the surface to800high.
+Final source5192/built5193baseline drivers pass errors[],cleanup000/all four
+ownership assertions, built470inputs; inspected `/tmp/pibbl-slice216-studio.png`.
+Installed wrappedKnownFlexBaseline proves normal/reverse/column-reverse geometry,
+moved targets, identity, paint-only native reuse, empty count0/fallback and cleanup;
+104marginfixtures/246inputs/strictBundler/NodeNext/nestedbrowser pass. FinalSHA
+`420f2f8cd952685581a357a5997476f3f081986139bb6177e47f21c04b0f0a09`.
+Earlier empty-fixture failure was missing fixed CSS surface sizing, not an
+acceptance receipt. Counts/all7release gates unchanged. Consolidate214–216now.
+
+## [NEXT] Slice217: static structural owner origin preparation
+
+Resolve the remaining concrete static outer-owner gap without a fake containing
+origin or second solver. In-flow native allocation and baseline source are
+independent of absolute descendants; investigate reusing one staged flow plan and
+completing only absolute placement/preflight once the outer baseline origin is
+known. Preserve source indexes, receiver/slot ownership, key occurrences, source
+paint order and failure cleanup. Establish the public counterexample first:
+static inner source aligns at18 while its absolute badge stays anchored to the
+nearest containing owner's padding origin. Complete consolidation72before
+production edits.
+
+Remaining baseline closure classes are static structural owner origin (this
+slice), Flow/Grid source policy, outer-column fallback/interpretation and
+last-baseline alignment. Unsupported diagnostics do not mark them complete.
+All7release gates and independent final whole-codebase review remain outstanding.
 
 ## Scope and execution
 

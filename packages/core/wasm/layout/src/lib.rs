@@ -19,7 +19,7 @@ const INTRINSIC_EXACT: u32 = 0;
 const INTRINSIC_FIT_CONTENT: u32 = 1;
 const INTRINSIC_MAX_CONTENT: u32 = 2;
 #[derive(Default)]
-struct Arena { nodes: Vec<f64>, main_auto: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64>, flow: Vec<f64>, intrinsic_main: Vec<f64>, intrinsic_main_result: f64, intrinsic_main_contribution: f64, intrinsic_main_auto_free: f64 }
+struct Arena { nodes: Vec<f64>, main_auto: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64>, flow: Vec<f64>, intrinsic_main: Vec<f64>, intrinsic_main_result: f64, intrinsic_main_contribution: f64, intrinsic_main_auto_free: f64, wrap_lines_current: bool }
 struct ArenaSlot { generation: u32, arena: Option<Arena> }
 struct ArenaPool { slots: Vec<ArenaSlot>, closed: bool }
 thread_local! {
@@ -78,6 +78,7 @@ pub extern "C" fn arena_dispose(handle: u32, generation: u32) -> u32 {
 pub extern "C" fn resize(handle: u32, generation: u32, count: usize) -> *mut f64 {
     with_arena(handle, generation, std::ptr::null_mut(), |arena| {
         let Some(length) = count.checked_mul(STRIDE) else { return std::ptr::null_mut(); };
+        if arena.nodes.len() != length { arena.wrap_lines_current = false; }
         arena.nodes.resize(length, 0.0);
         arena.nodes.as_mut_ptr()
     })
@@ -101,7 +102,27 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v16() -> u32 { 16 }
+pub extern "C" fn layout_abi_v17() -> u32 { 17 }
+
+/// Returns the source-record count in the current native first wrap line.
+/// `NaN` means no current wrapped membership is available; a successful empty
+/// wrapped allocation returns zero. This never derives lines from geometry.
+#[no_mangle]
+pub extern "C" fn first_wrap_line_count(handle: u32, generation: u32) -> f64 {
+    with_arena(handle, generation, f64::NAN, |arena| {
+        if !arena.wrap_lines_current { return f64::NAN; }
+        let count = arena.nodes.len() / STRIDE;
+        if count == 0 { return if arena.lines.is_empty() { 0.0 } else { f64::NAN }; }
+        let Some(&(first_start, first_end)) = arena.lines.first() else { return f64::NAN; };
+        if first_start != 0 || first_end == 0 || first_end > count { return f64::NAN; }
+        // Successful formation already validated every contiguous range. Read
+        // only the first and final endpoints on this per-render query path.
+        if arena.lines.last().map(|line| line.1) != Some(count) { return f64::NAN; }
+        let members = first_end - first_start;
+        let value = members as f64;
+        if value.is_finite() && value > 0.0 { value } else { f64::NAN }
+    })
+}
 #[no_mangle]
 pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
@@ -528,12 +549,15 @@ fn distribution(free: f64, count: usize, alignment: u32, reverse: bool) -> (f64,
 #[no_mangle]
 pub extern "C" fn solve_wrap(handle: u32, generation: u32, main: f64, gap: f64) -> u32 {
     with_arena(handle, generation, 1, |arena| {
+        arena.wrap_lines_current = false;
+        arena.lines.clear();
         let lines = match form_lines(&arena.nodes, main, gap) { Ok(lines) => lines, Err(status) => return status };
         for &(start, end) in &lines {
             let status = allocate(&mut arena.nodes[start*STRIDE..end*STRIDE], main, gap);
             if status != 0 { return status; }
         }
         arena.lines = lines;
+        arena.wrap_lines_current = true;
         0
     })
 }
@@ -943,7 +967,11 @@ fn resolve_intrinsic_main_fixed_leaves(
 
 #[no_mangle]
 pub extern "C" fn solve(handle: u32, generation: u32, main: f64, gap: f64) -> u32 {
-    with_arena(handle, generation, 1, |arena| allocate(&mut arena.nodes, main, gap))
+    with_arena(handle, generation, 1, |arena| {
+        arena.wrap_lines_current = false;
+        arena.lines.clear();
+        allocate(&mut arena.nodes, main, gap)
+    })
 }
 fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
     if !main.is_finite() || main < 0.0 || !gap.is_finite() || gap < 0.0 { return 1; }
@@ -1389,6 +1417,45 @@ mod tests {
         dispose(); dispose();
         assert_eq!(arena_create(),0);
         assert_eq!(arena_dispose(b,gb),1);
+    }
+
+    #[test] fn first_wrap_line_count_tracks_only_current_wrapped_membership() {
+        let handle = arena_create(); let generation = arena_generation(handle);
+        let records = resize(handle, generation, 3);
+        unsafe { std::slice::from_raw_parts_mut(records, 30).copy_from_slice(&[
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+        ]); }
+        assert!(first_wrap_line_count(handle, generation).is_nan());
+        assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
+        assert_eq!(first_wrap_line_count(handle, generation), 2.);
+        // Region cache hits call resize with the same count before deciding no solve.
+        assert!(!resize(handle, generation, 3).is_null());
+        assert_eq!(first_wrap_line_count(handle, generation), 2.);
+        assert!(!resize(handle, generation, 2).is_null());
+        assert!(first_wrap_line_count(handle, generation).is_nan());
+        let records = resize(handle, generation, 3);
+        unsafe { std::slice::from_raw_parts_mut(records, 30).copy_from_slice(&[
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+        ]); }
+        assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
+        assert_eq!(solve(handle, generation, 80., 0.), 0);
+        assert!(first_wrap_line_count(handle, generation).is_nan());
+        assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
+        assert_eq!(first_wrap_line_count(handle, generation), 2.);
+        assert_eq!(solve_wrap(handle, generation, f64::NAN, 0.), 1);
+        assert!(first_wrap_line_count(handle, generation).is_nan());
+        assert!(!resize(handle, generation, 0).is_null());
+        assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
+        assert_eq!(first_wrap_line_count(handle, generation), 0.);
+        assert_eq!(solve_wrap(handle, generation, f64::NAN, 0.), 1);
+        assert!(first_wrap_line_count(handle, generation).is_nan());
+        assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
+        assert_eq!(arena_dispose(handle, generation), 0);
+        assert!(first_wrap_line_count(handle, generation).is_nan());
     }
 
     #[test] fn first_baseline_keeps_signed_offsets_and_uses_max_ascent() {

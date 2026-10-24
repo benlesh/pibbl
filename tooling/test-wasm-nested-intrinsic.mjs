@@ -228,6 +228,7 @@ try {
       assert.equal(receipt.knownFlexDescendantBaseline, true, 'Installed known Flex roots must forward their first in-flow baseline leaf while skipping absolute decorations and retaining moved targets and identity');
       assert.equal(receipt.relativeKnownFlexBaseline, true, 'Installed selected known Flex leaves must preserve the structural baseline while relative physical offsets move only their final targets');
       assert.equal(receipt.knownFlexTreeBaseline, true, 'Installed finite nowrap known Flex trees must preserve source-first baseline selection through direct, described, nested, directional, and empty structures');
+      assert.equal(receipt.wrappedKnownFlexBaseline, true, 'Installed wrapped known Flex roots must use current native first-line membership across wrap reversal, column reversal, paint reuse, and empty fallback cleanup');
       assert.equal(receipt.currentParentQueryBranch, true, 'Installed direct responsive baseline leaves must select the current parent-width branch, preserve identity, update selected inputs, and clean up');
 
       assert.equal(receipt.wrappedTextFirstBaseline, true, 'Installed wrapped Text must align its first visible line from real Canvas baseline metrics, move the last-line target after content and line updates, reuse paint, and clean up');

@@ -2081,7 +2081,7 @@ the root receiver, and only successful transactions publish results. Responsive
 owner proofs attach to the actual root; query/non-generic Text cache bypasses stay
 in force.
 
-A settled finite non-static nowrap Flex root contributes its first source-order
+A settled finite non-static Flex root contributes its first source-order
 in-flow child's baseline. Absolute decoration is skipped. This selection is
 independent of the inner main direction: row, row-reverse, column and
 column-reverse all use the selected child's physical content-y origin. Empty
@@ -2095,8 +2095,14 @@ that contribution. Explicit inner writing directions are checked against the
 selected owner's prepared plan, while normal traversal remains its sole claimant.
 Structural traversal and provider reads use current root receivers and retain no
 aggregate baseline graph. There is no public reference-child marker or separate
-line solver. Static outer structural owners, wrapped structural selection,
-Flow/Grid selection, outer-column baseline alignment and last-baseline placement
+line solver. Wrapped roots use a current native first-source-line membership
+proof before selecting their first in-flow source record. Wrap reversal changes
+its physical line origin without changing source selection. The proof survives
+unchanged cached allocation and is invalidated by count changes, ordinary solve,
+failed wrap solve or disposal. Empty wrapped roots prove zero members and use
+content bottom. The private ABI17 query is constant-time; it never infers lines
+from paint geometry or retains a second line graph. Static outer structural
+owners, Flow/Grid selection, outer-column baseline alignment and last-baseline placement
 remain distinct unsupported classes. An inner column contributing a vertical
 source baseline does not enable baseline alignment on an outer column.
 

@@ -445,6 +445,11 @@ try {
   assert.equal(knownEmpty.knownSource,'empty');assert.equal(knownEmpty.stamps.KB,knownStatic.stamps.KB);const knownEmptyHits=knownEmpty.hits.length;await click(464,354);assert.equal((await state()).hits.length,knownEmptyHits);
   await click(620,415);const knownDirect=await state();
   assert.equal(knownDirect.knownSource,'direct');assertSelfBox(knownDirect.boxes.KA,{x:460,y:348,width:40,height:20});assert.deepEqual(knownDirect.boxes.KB,knownStatic.boxes.KB);
+  await click(620,354);const knownWrapBase=await state();assert.equal(knownWrapBase.knownFirst,12);assert.equal(knownWrapBase.knownWrappedMode,'nowrap');assertSelfBox(knownWrapBase.boxes.KWA,{x:28,y:698,width:40,height:20});assertSelfBox(knownWrapBase.boxes.KWB,{x:68,y:680,width:40,height:40});
+  const knownWrapStamp=knownWrapBase.stamps.KWA,knownWrapHits=knownWrapBase.hits.length;await click(32,704);assert.equal((await state()).hits.at(-1),'KWA');
+  await click(232,694);const knownWrap=await state();assert.equal(knownWrap.knownWrappedMode,'wrap');assertSelfBox(knownWrap.boxes.KWA,{x:28,y:698,width:40,height:20});assertSelfBox(knownWrap.boxes.KWB,{x:108,y:680,width:40,height:40});assert.equal(knownWrap.stamps.KWA,knownWrapStamp);
+  await click(232,694);const knownReverseWrap=await state();assert.equal(knownReverseWrap.knownWrappedMode,'wrap-reverse');assertSelfBox(knownReverseWrap.boxes.KWA,{x:28,y:740,width:40,height:20});assertSelfBox(knownReverseWrap.boxes.KWB,{x:108,y:722,width:40,height:40});assert.equal(knownReverseWrap.stamps.KWA,knownWrapStamp);await click(32,704);assert.equal((await state()).hits.length,knownWrapHits+1);await click(32,746);assert.equal((await state()).hits.at(-1),'KWA');
+  await click(232,694);const knownWrapRestored=await state();assert.equal(knownWrapRestored.knownWrappedMode,'nowrap');assertSelfBox(knownWrapRestored.boxes.KWA,{x:28,y:698,width:40,height:20});assertSelfBox(knownWrapRestored.boxes.KWB,{x:68,y:680,width:40,height:40});
 
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);

@@ -2476,9 +2476,9 @@ function prepareKnownFlexFirstBaseline(
 ): PreparedKnownFlexBaseline | undefined {
   if ((item.baselineRoot ?? item.child).type !== Flex) return;
   const style = item.normalized as Readonly<FlexStyle>;
-  if ((style.flexWrap ?? 'nowrap') !== 'nowrap' || style.position === 'static') {
+  if (style.position === 'static') {
     throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
-      'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires a settled non-static nowrap Flex root');
+      'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires a settled non-static Flex root');
   }
   const content = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
   const slot = preflightKnownLayout(item.child, item.normalized, content, item.receiverToken, item.layoutOccurrence, parentSlot, 'row');
@@ -2488,7 +2488,7 @@ function prepareKnownFlexFirstBaseline(
   const plan = peekPreparedFlexPlan(slot, content, direction);
   if (!plan) throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
     'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the direct Flex child has no current settled allocation');
-  return { slot, ...readPreparedFlexFirstBaseline(plan, measurement, direction) };
+  return { slot, ...readPreparedFlexFirstBaseline(plan, measurement, direction, (style.flexWrap ?? 'nowrap') !== 'nowrap') };
 }
 
 /** Reads only this transaction's settled native placements and receiver roots. */
@@ -2496,8 +2496,10 @@ function readPreparedFlexFirstBaseline(
   plan: PreparedFlexLayoutPlan,
   measurement: FlexMeasurementInput,
   direction: 'ltr' | 'rtl',
+  wrapped: boolean,
 ): { readonly first: number; readonly last: number } {
   const content = plan.content;
+  const firstLineCount = wrapped ? plan.region.firstWrapLineCount() : undefined;
   for (let index = 0; index < plan.children.length; index++) {
     const source = plan.children[index];
     const placement = plan.placements[index];
@@ -2505,26 +2507,27 @@ function readPreparedFlexFirstBaseline(
     if (!prepared) throw new Error('Known Flex baseline selection requires settled child inputs.');
     const selectedStyle = prepared.style as Readonly<FlexStyle>;
     if (selectedStyle.position === 'absolute') continue;
+    // Native records preserve in-flow source order, so this first candidate is
+    // record zero and must belong to the proven native first source line.
+    if (firstLineCount === 0) throw new Error('Structural baseline source has no native first-line membership.');
     const receiver = getPrimitiveReceiverToken(placement.element);
     const root = isLayoutComponent(source.type) ? prepareLayoutComponent(source, { receiverToken: receiver }) : placement.element;
     const allocation = { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight };
     const insets = normalizeBoxInsets(selectedStyle, childContext(source, content));
     let first = allocation.height, last = allocation.height;
     if (root.type === Flex) {
-      if ((selectedStyle.flexWrap ?? 'nowrap') !== 'nowrap') throw childDiagnostic(source, 'flexWrap', selectedStyle.flexWrap, content,
-        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected structural Flex roots require nowrap');
       const slot = getElementMetadata(placement.element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
       const childDirection = selectedStyle.layoutDirection ?? direction;
       const nested = slot && peekPreparedFlexPlan(slot, allocation, childDirection);
       if (!nested) throw childDiagnostic(source, 'alignItems', 'first-baseline', content,
         'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected Flex root requires its current prepared allocation');
-      const result = readPreparedFlexFirstBaseline(nested, measurement, childDirection);
+      const result = readPreparedFlexFirstBaseline(nested, measurement, childDirection, (selectedStyle.flexWrap ?? 'nowrap') !== 'nowrap');
       first = result.first;
       last = result.last;
     } else {
       const definition = getPrimitiveDefinition(root.type);
       if (!definition || isKnownLayoutType(root.type)) throw childDiagnostic(source, 'alignItems', 'first-baseline', content,
-        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected structural source must resolve to a primitive or nowrap Flex root');
+        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected structural source must resolve to a primitive or prepared Flex root');
       if (definition.measureBaselines) {
         const measurementChild = clonePibblElement(root);
         setPreNormalizedStyle(measurementChild, selectedStyle, root, getPrimitiveReceiverToken(root) ?? receiver, prepared.query);
@@ -2542,6 +2545,7 @@ function readPreparedFlexFirstBaseline(
       last: placement.layoutY + insets.top + last,
     };
   }
+  if (firstLineCount !== undefined && firstLineCount !== 0) throw new Error('Empty structural baseline source disagrees with native first-line membership.');
   return { first: content.height, last: content.height };
 }
 
@@ -2561,9 +2565,9 @@ function assertSupportedFirstBaselineFlex(
     if (baselineRoot !== item.child) item.baselineRoot = baselineRoot;
     if (baselineRoot.type === Flex) {
       const childStyle = style as Readonly<FlexStyle>;
-      if ((childStyle.flexWrap ?? 'nowrap') !== 'nowrap' || childStyle.position === 'static' || item.crossAuto || !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
+      if (childStyle.position === 'static' || item.crossAuto || !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
         throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
-          'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires a settled non-static nowrap Flex root');
+          'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires a settled non-static Flex root');
       }
       continue;
     }
