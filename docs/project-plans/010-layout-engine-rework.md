@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice197: row-reverse first-baseline composition.
+Latest delivery is slice198: native line-local wrapped first baselines.
+Slice197 is `4244c3c3`: row-reverse first-baseline composition.
 Slice196 is `acbcc5fa`: finite RTL row first-baseline composition.
 Slice195 is `729b6bc0`: installed nested percentage-padding proof.
 Slice194 is `3df57566`: logical raw-child ownership and described dispatch.
@@ -37,7 +38,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; consolidation65 is `6acd644c`; next is198.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; consolidation65 is `6acd644c`; next is consolidation66.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -50,7 +51,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Consolidation65 closes allocated padding; next is198: line-local wrapped first baselines.
+Consolidation56 is `2fd34f0e` for166–168. Consolidation65 closes allocated padding; next is consolidation66: baseline direction/wrap evidence.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now12complete/12experimental/
 3partial/5missing/1excluded. All seven release gates remain open; independent
@@ -7241,17 +7242,47 @@ wrapping, nested/reference-child propagation, last-baseline placement, explicit
 column interpretation and the remaining declared leaf allocation profiles.
 No capability promotion or release claim; installed directions follow at66.
 
-## [NEXT] Slice198: line-local wrapped first baselines
+## [DONE] Slice198: line-local wrapped first baselines
 
-First supported wrapped profile: finite LTR row+wrap, alignContentflex-start,
-zero gaps, existing direct fixed numeric primitive providers/fallback, no new
-public API. Native solve_wrap already owns source line ranges; add one native
-line-local baseline placement operation. For100x100with A60x20/b12,B40x40/b30,
-C60x20/b8,D40x30/b20: A(0,18),B(60,0),C(0,52),D(60,40).
-D baseline20→26moves only C to58. Establish public/native RED before production,
-preserve ownership/cache semantics, then expose a runnable lesson. Other wrapped
-profiles remain explicit until this vertical slice is observed. Consolidate66
-for196–198before more production, including installed direction/wrap evidence.
+First wrapped profile: finite LTR row+wrap, alignContentflex-start, zero gaps,
+fixed numeric primitive providers/fallback with zero grow/shrink and no auto
+margins. Existing native solve_wrap line ranges own membership; a new native
+placement operation computes each line’s ascent+descent and physical offsets.
+No JS geometry override, retained line tree, second scheduler or public API.
+Cross cache distinguishes wrapped baseline mode and allocation revisions.
+
+Fresh public RED1at admission precedes production. Focused Rust tests first fail
+compilation without the operation, then native30tests pass after implementation,
+including three-line ascent/descent propagation, invalid ranges/nonfinite data
+and actual Arena.lines/export/disposal. ABI11rejects prior and incomplete binaries.
+Artifact81092bytes SHA256
+`5bcc59cc9b3b8a01e5c57cfa148e171d1885cf613449e9e14e076195bcda7eaa`, external/embedded
+fingerprints match. Fresh Node24.15/Chromium public/loader4files37pass/1skip.
+Pinned retained Yoga3.2.1`baseline-wrap-probe.cpp` freshly confirms100x100initial
+A(0,18)/B(60,0)/C(0,52)/D(60,40), then D20→26moves Cto58without changing line1.
+It runs independent exact config cases, avoiding unsupported native dirty calls.
+
+The lower Studio panel at460,460fits the760x540catalog surface: same four cards,
+D20/26button, actual old/new C targets, stable stamps and unchanged first line.
+Source5192and refreshed built5193pass errors[]/four-counter cleanup/470built inputs;
+screenshot inspected. Types, changed-code lint,175/12/33catalog/Studio, docs109
+mutation probes and scoped review pass. Catalog rejected a typeof-signal type
+query under its direct-binding rule; using the public Signal type corrected the
+lesson without runtime changes. Metadata now includes direction and wrapped limits.
+Capability ledger stays12complete/12experimental/3partial/5missing/1excluded;
+all7release gates remain open. Installed direction/wrap proof and accumulated
+regressions follow immediately in consolidation66.
+
+## [NEXT] Consolidation66: baseline direction/wrap, slices196–198
+
+Run accumulated experimental/ordinary matrices, preserve177and completed
+padding/auto-margin regressions, full source/built composition and installed
+ABI11direction/wrap receipts. Verify types/docs/catalog/artifacts proportionally,
+then select the next existing baseline exit from fresh controls. Reuse generic
+native line membership and direction where sound; do not create arbitrary
+per-direction fences. Wrapped cross-auto/line distribution need exact policy
+rather than silently borrowing nowrap owner height. Final whole-codebase review
+remains at full program exit.
 
 ## Scope and execution
 

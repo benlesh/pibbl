@@ -2057,7 +2057,7 @@ receive the final finite content width and height at local origin0,0. The native
 WASM cross-placement path computes the common ascent starting at zero and each
 offset as common ascent minus that leaf's first baseline. This matches pinned
 Yoga3.2.1 numeric-provider probes, including signed/out-of-box baselines. Last
-baseline placement, custom-font Text metrics, nested containers, outer Flex wrapping,
+baseline placement, custom-font Text metrics, nested containers, broader outer wrapping,
 automatic cross size and decorated/numeric-margin/position/query/aspect
 leaves remain outside this first admission. Main-axis automatic margins are
 resolved by the existing native main allocator before baseline alignment; they
@@ -2081,6 +2081,17 @@ the paired LTR control places A at x0with the same y offsets. Row-reverse
 composes with the same physical main placement: LTR gives A at x80, RTL at x0;
 B stays at x40and baseline y offsets remain18/0. Source paint and keyboard order
 remain A then B.
+
+A first wrapped profile admits finite LTR `row` + `wrap`, `alignContent: "flex-start"`,
+zero row/column gaps, and direct fixed numeric primitive providers or content-bottom
+fallback. Grow/shrink must be zero; Text, automatic margins and the other leaf
+exclusions remain outside this wrapped profile. Native line membership is reused.
+Each line has its own maximum ascent and descent, so the next line begins after
+the complete baseline extent. The common baseline never spans two lines. In a
+100px-wide row, A60x20/b12 and B40x40/b30 occupy y18/0; C60x20/b8 and
+D40x30/b20 occupy y52/40. Changing D to26moves C to58while line one stays fixed.
+The private ABI11 requires the line-local placement export; previous binaries
+are rejected before publication. This adds no public API or second scheduler.
 
 Provider reads use existing measurement-role receiver dependencies. Queries forbid
 hooks, writes and rendering work through the existing isolated pure boundary;

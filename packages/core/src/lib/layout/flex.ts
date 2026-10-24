@@ -2430,11 +2430,18 @@ function assertSupportedFirstBaselineFlex(
   container: Readonly<LayoutBox>,
   mounted: boolean,
 ): void {
-  if (!mounted || !experimentalLayout || !isRowDirection(options.flexDirection) || options.flexWrap !== 'nowrap') {
-    throw optionDiagnostic('alignItems', 'first-baseline', container, 'requires a mounted experimental finite horizontal nowrap Flex');
+  const wrapped = options.flexWrap !== 'nowrap';
+  if (!mounted || !experimentalLayout || !isRowDirection(options.flexDirection) ||
+      wrapped && (options.flexDirection !== 'row' || options.layoutDirection !== 'ltr' || options.flexWrap !== 'wrap' ||
+        options.alignContent !== 'flex-start' || options.rowGap !== 0 || options.columnGap !== 0)) {
+    throw optionDiagnostic('alignItems', 'first-baseline', container, 'requires mounted experimental horizontal nowrap Flex, or LTR row-wrap with start-aligned lines and zero gaps');
   }
   for (const item of items) {
     const style = item.normalized;
+    if (wrapped && (item.child.type === Text || item.grow !== 0 || item.shrink !== 0 ||
+        item.autoMainBefore || item.autoMainAfter || item.autoCrossBefore || item.autoCrossAfter)) {
+      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: wrapped first-baseline requires fixed numeric primitive leaves without automatic margins');
+    }
     const textLeaf = item.child.type === Text;
     const textStyle = style as Readonly<TextStyle>;
     const fontSize = textLeaf ? /(?:^| )(\d+(?:\.\d+)?)px /.exec(String(textStyle.font ?? '13px sans-serif')) : null;

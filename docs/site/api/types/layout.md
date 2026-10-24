@@ -198,7 +198,10 @@ The experimental `alignItems: "first-baseline"` aligns direct fixed primitive
 leaves in a finite LTR or RTL nowrap row or row-reverse after final allocation. See
 [BaselineMeasureInput](#/api/types/layout#baselinemeasureinput) and the
 [first-baseline example](#/examples/layout/wasm-flex-baseline). Other baseline
-modes remain outside this first subset. Direct nonempty Text with fixed dimensions, generic pixel fonts, visible
+modes remain outside this first subset. A bounded wrapped profile also admits
+LTR row-wrap with start-aligned lines, zero gaps, and fixed numeric primitive
+providers or bottom-edge fallback with zero grow/shrink and no automatic margins.
+Each line shares its own first baseline. Direct nonempty Text with fixed dimensions, generic pixel fonts, visible
 fit/overflow and the default top Canvas baseline supplies real host metrics
 through the optional measurement service. Wrapped Text measures its actual first
 and last visible lines at final allocation. Last-baseline alignment and custom-font

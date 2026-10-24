@@ -191,6 +191,21 @@ try {
   assert.deepEqual(Object.fromEntries([['MA',reverseLtr.stamps.MA],['MB',reverseLtr.stamps.MB]]),mainStamps);
   await click(590,232);let reverseHit=await state();assert.equal(reverseHit.hits.length,reverseLtr.hits.length+1);assert.equal(reverseHit.hits.at(-1),'MA');
   const reverseHits=reverseHit.hits.length;await click(470,214);reverseHit=await state();assert.equal(reverseHit.hits.length,reverseHits+1);assert.equal(reverseHit.hits.at(-1),'MB');
+  // The lower companion makes the two source-ordered wrap lines concrete.
+  const wrappedStart=await state();
+  assert.equal(wrappedStart.wrappedD,20);
+  const wrapExpected={WA:[460,478,60,20],WB:[520,460,40,40],WC:[460,512,60,20],WD:[520,500,40,30]};
+  for(const id of ['WA','WB','WC','WD']){const b=wrappedStart.boxes[id],e=wrapExpected[id];assert.ok(Math.abs(b.x-e[0])<1e-9&&Math.abs(b.y-e[1])<1e-9,id);assert.equal(b.width,e[2]);assert.equal(b.height,e[3]);}
+  const wrappedStamps=Object.fromEntries(['WA','WB','WC','WD'].map(id=>[id,wrappedStart.stamps[id]]));
+  await click(464,514);assert.equal((await state()).hits.at(-1),'WC');
+  await click(700,318);
+  const wrappedMoved=await state();assert.equal(wrappedMoved.wrappedD,26);
+  assert.ok(Math.abs(wrappedMoved.boxes.WC.x-460)<1e-9&&Math.abs(wrappedMoved.boxes.WC.y-518)<1e-9);
+  assert.ok(Math.abs(wrappedMoved.boxes.WD.x-520)<1e-9&&Math.abs(wrappedMoved.boxes.WD.y-500)<1e-9);
+  assert.deepEqual(wrappedMoved.boxes.WA,wrappedStart.boxes.WA);assert.deepEqual(wrappedMoved.boxes.WB,wrappedStart.boxes.WB);
+  assert.deepEqual(Object.fromEntries(['WA','WB','WC','WD'].map(id=>[id,wrappedMoved.stamps[id]])),wrappedStamps);
+  const wrappedHits=wrappedMoved.hits.length;await click(464,514);assert.equal((await state()).hits.length,wrappedHits);
+  await click(464,520);const wrapHit=await state();assert.equal(wrapHit.hits.length,wrappedHits+1);assert.equal(wrapHit.hits.at(-1),'WC');
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}

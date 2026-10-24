@@ -1,11 +1,11 @@
 import {
   Flex, Group, Rectangle, Text, FocusManagement, definePrimitive, signal, computed,
   useCanvasContext, useLayoutBox, useConst, useReaction, untracked,
-  type SystemStyle, type LayoutBox, type PibblNode, type BaselineMeasureInput, type BaselinesResult,
+  type Signal, type SystemStyle, type LayoutBox, type PibblNode, type BaselineMeasureInput, type BaselinesResult,
 } from "@pibbl/core";
 
-type Name = "A" | "B" | "C" | "MA" | "MB";
-interface CardProps { id: Name; label: string; font: string; first: number }
+type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD";
+interface CardProps { id: Name; label: string; font: string; first: number | Signal<number> }
 interface CardStyle extends SystemStyle {
   width?: number; height?: number; fill?: string;
   flexBasis?: number; flexGrow?: number; flexShrink?: number;
@@ -25,6 +25,7 @@ function createBaselineContent() {
   const crossBottom = computed(() => crossMode.get() === "bottom" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossLabel = computed(() => crossMode.get() === "off" ? "Cross" : crossMode.get());
   const textFont = signal("10px monospace");
+  const wrappedD = signal(20), wrappedDLabel = computed(() => `D ${wrappedD.get()}`);
   const textWrap = signal(false), textReflow = signal(false);
   const textWords = computed(() => textWrap.get() ? textReflow.get() ? "Ag Ag Ag" : "Ag Ag Ag Ag" : "Ag");
   const textWidth = computed(() => textWrap.get() ? textReflow.get() ? 28 : 40 : 70);
@@ -42,13 +43,14 @@ function createBaselineContent() {
   const CanvasBasis = definePrimitive<{ children: PibblNode }>((props, _style, context) => { basis = context.getTransform(); return props.children; });
   function renderCard(props: CardProps, style: Readonly<ResolvedCardStyle>) {
     const box = useLayoutBox(), matrix = useCanvasContext().getTransform();
+    const first = typeof props.first === "number" ? props.first : props.first.get();
     const point = basis.inverse().transformPoint({ x: matrix.e, y: matrix.f });
     const stamp = useConst(() => ++serial);
     boxes.set(props.id, { x: point.x, y: point.y, width: box.width, height: box.height });
     stamps.set(props.id, stamp);
     return <>
       <Rectangle keyboardFocusable onFocus={() => focused.push(props.id)} onClick={() => hits.push(props.id)} style={{ width: box.width, height: box.height, fill: style.fill, cursor: "pointer" }} />
-      <Text pointerEvents="none" style={{ left: 4, top: props.first, textBaseline: "alphabetic", font: props.font, fill: "#ffffff" }}>{props.label}</Text>
+      <Text pointerEvents="none" style={{ left: 4, top: first, textBaseline: "alphabetic", font: props.font, fill: "#ffffff" }}>{props.label}</Text>
     </>;
   }
   const resolveStyle = (style: Readonly<CardStyle>, context: { allocation: Readonly<LayoutBox> }): ResolvedCardStyle => ({ ...style, marginLeft: undefined, marginTop: undefined, marginBottom: undefined, width: context.allocation.width, height: context.allocation.height });
@@ -57,13 +59,14 @@ function createBaselineContent() {
     measureBaselines(input: BaselineMeasureInput<CardProps, CardStyle>): BaselinesResult {
       if (input.props.id === "A" || input.props.id === "B") calls[input.props.id]++;
       allocations.set(input.props.id, { ...input.allocation });
-      return { status: "measured", first: input.props.first, last: input.props.first };
+      const first = typeof input.props.first === "number" ? input.props.first : input.props.first.get();
+      return { status: "measured", first, last: first };
     },
   });
   const BottomCard = definePrimitive<CardProps, CardStyle, CardStyle, ResolvedCardStyle>(renderCard, { resolveStyle });
   function renderContent() {
     return <>
-      <Rectangle style={{ width: 760, height: 460, fill: "#f3f0e8" }} />
+      <Rectangle style={{ width: 760, height: 540, fill: "#f3f0e8" }} />
       <Text style={{ left: 28, top: 24, font: "bold 24px sans-serif", fill: "#19375b" }}>WASM · first baseline</Text>
       <Text style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}>Pure providers report baseline offsets from the final allocation.</Text>
       <Rectangle onClick={() => second.update(value => value === 30 ? 34 : 30)} style={{ left: 28, top: 96, width: 200, height: 36, fill: "#19375b", cursor: "pointer" }} />
@@ -83,6 +86,8 @@ function createBaselineContent() {
       <Text pointerEvents="none" style={{ left: 682, top: 234, font: "10px sans-serif", fill: "#ffffff" }}>{directionLabel}</Text>
       <Rectangle onClick={() => reverse.update(value => !value)} style={{ left: 676, top: 262, width: 56, height: 28, fill: "#19375b", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 679, top: 270, font: "10px sans-serif", fill: "#ffffff" }}>{reverseLabel}</Text>
+      <Rectangle onClick={() => wrappedD.update(value => value === 20 ? 26 : 20)} style={{ left: 676, top: 300, width: 56, height: 36, fill: "#a63758", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 682, top: 310, font: "10px sans-serif", fill: "#ffffff" }}>{wrappedDLabel}</Text>
       <Text pointerEvents="none" style={{ left: 28, top: 160, font: "14px sans-serif", fill: "#475569" }}>A/B supply offsets. C has no provider and uses its bottom edge.</Text>
       <FocusManagement><Flex style={{ left: 28, top: 210, width: owner, height: 80, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
         <BaselineCard key="A" id="A" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#426b61" }} />
@@ -96,6 +101,13 @@ function createBaselineContent() {
         <BaselineCard key="MB" id="MB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
       </Flex>
       <Text pointerEvents="none" style={{ left: 28, top: 330, font: "14px sans-serif", fill: "#475569" }}>Click the cards at their new positions. Tab follows A → B → C.</Text>
+      <Text pointerEvents="none" style={{ left: 460, top: 440, font: "12px sans-serif", fill: "#475569" }}>Wrapped rows share baselines line by line.</Text>
+      <Flex style={{ left: 460, top: 460, width: 100, height: 80, flexDirection: "row", flexWrap: "wrap", alignItems: "first-baseline", alignContent: "flex-start" }}>
+        <BaselineCard key="WA" id="WA" label="12" font="12px monospace" first={12} style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248" }} />
+        <BaselineCard key="WB" id="WB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+        <BaselineCard key="WC" id="WC" label="8" font="12px monospace" first={8} style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248" }} />
+        <BaselineCard key="WD" id="WD" label={wrappedDLabel} font="14px sans-serif" first={wrappedD} style={{ width: 40, height: 30, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#426b61" }} />
+      </Flex>
       <Text pointerEvents="none" style={{ left: 28, top: 360, font: "14px sans-serif", fill: "#475569" }}>The Text panel uses live Canvas metrics; it makes no native font-metric claim.</Text>
       <Text onClick={() => { textFont.set("10px monospace"); textReflow.set(false); textWrap.update(value => !value); }} style={{ left: 28, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textWrapLabel}</Text>
       <Text onClick={() => { if (textWrap.get()) textReflow.set(true); }} style={{ left: 340, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textReflowLabel}</Text>
@@ -110,7 +122,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), textHits, calls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {
