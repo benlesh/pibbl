@@ -20,7 +20,7 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice171 (native main contribution versus final content).
+Latest delivery is slice171 `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
 Consolidation56 is `2fd34f0e` for166–168. Next is172: intrinsic main auto margins.
@@ -6021,6 +6021,20 @@ The original166 acceptance matrix is closed without changing its target:
 empty. General percentage-dependent intrinsic graphs remain explicitly unsupported
 under their own open capabilities; the pure auto-parent percentage-bound rejection
 is not recorded as Yoga parity. No aggregate trust or group-gate closure is claimed.
+
+## Consolidation57 completed for separately committed slices169–171
+
+Commits `f0d087a1`, `7ea267ea` and `e4fc8815` remain separate deliveries.
+Fresh Node24.15.0/pnpm11.21.0/Playwright Chromium runs cover60files/960tests:
+experimental948passed/12skipped in83.94s; ordinary299passed/661skipped in5.92s.
+Both passed without another production correction. These are bounded consolidation
+runs, not the aggregate trust command. Native22tests, source/built/installed-package
+receipts, strict Bundler/NodeNext consumers, typecheck and changed-code lint pass.
+Documentation109mutation probes, public JSDoc, catalog174/12/33 and Studio
+metadata/routes/search pass. Scoped independent ledger review found no material
+weakening of the frozen min/max exits. Corpus721 and its classifications remain
+unchanged. Fixed33 is10complete/12experimental/5partial/5missing/1excluded;
+all seven group/release gates remain open. Exactly one next slice follows.
 
 ## [NEXT] Slice172: intrinsic main auto margins
 
