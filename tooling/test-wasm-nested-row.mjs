@@ -2,6 +2,7 @@ import { strict as assert } from 'node:assert';
 import { chromium } from 'playwright';
 const base = process.argv.slice(2).find(value => !value.startsWith('--')) ?? 'http://127.0.0.1:5192';
 const source = process.argv.includes('--source');
+const wrapped = process.argv.includes('--wrapped');
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
@@ -20,7 +21,9 @@ try {
     await page.waitForTimeout(180);
     return state();
   };
-  const initial = await click(672, 166);
+  await click(672, 166);
+  const initial = wrapped ? await click(672, 222) : await state();
+  assert.equal(initial.wrappedNestedLeaf, wrapped);
   assert.equal(initial.nestedMeasurement, true);
   assert.deepEqual(initial.badgeBox, { x: 28, y: 148, width: 60, height: 20, stamp: initial.badgeBox.stamp });
   assert.equal(initial.badgeFollowerBox.y, 168);
@@ -38,9 +41,12 @@ try {
   assert.equal((await click(33, 218)).badgeTarget, 'follower');
   const beforePaint = await state();
   const cachedPaint = await click(432, 110);
-  assert.equal(cachedPaint.badgeCalls, beforePaint.badgeCalls);
-  assert.equal(cachedPaint.layout.measurementSolves, beforePaint.layout.measurementSolves);
-  assert.equal(cachedPaint.layout.solves, beforePaint.layout.solves);
+  if (wrapped) assert.ok(cachedPaint.layout.measurementSolves > beforePaint.layout.measurementSolves);
+  else {
+    assert.equal(cachedPaint.badgeCalls, beforePaint.badgeCalls);
+    assert.equal(cachedPaint.layout.measurementSolves, beforePaint.layout.measurementSolves);
+  }
+  if (!wrapped) assert.equal(cachedPaint.layout.solves, beforePaint.layout.solves);
   const raised = await click(432, 426);
   assert.equal(raised.badgeMinimum, 70);
   assert.equal(raised.badgeBox.height, 70);
@@ -51,9 +57,12 @@ try {
   assert.equal((await click(33, 228)).badgeTarget, 'follower');
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
   const painted = await click(432, 110);
-  assert.equal(painted.badgeCalls, raised.badgeCalls);
-  assert.equal(painted.layout.measurementSolves, raised.layout.measurementSolves);
-  assert.equal(painted.layout.solves, raised.layout.solves);
+  if (wrapped) assert.ok(painted.layout.measurementSolves > raised.layout.measurementSolves);
+  else {
+    assert.equal(painted.badgeCalls, raised.badgeCalls);
+    assert.equal(painted.layout.measurementSolves, raised.layout.measurementSolves);
+  }
+  if (!wrapped) assert.equal(painted.layout.solves, raised.layout.solves);
   assert.equal(painted.layout.nodeCreates, raised.layout.nodeCreates);
   assert.equal(painted.layout.activeArenas, raised.layout.activeArenas);
   const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
@@ -68,5 +77,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances], [0, 0, 0, 0]);
   assert.deepEqual(errors, []);
-  console.warn(`${source ? 'Source' : 'Built'} recursive row: width60→40, height20→60→70, footer168→208→218, distinct moved targets, keyed identity, one root WASM instance, native measurement arenas released, cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs. Paint-only updates reuse aggregate measurement; provider signals still invalidate after reuse.`);
+  console.warn(`${source ? 'Source' : 'Built'} recursive row: width60→40, height20→60→70, footer168→208→218, distinct moved targets, keyed identity, one root WASM instance, native measurement arenas released, cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs. ${wrapped ? 'Wrapped leaf uses its own receiver and conservatively remeasures aggregate height.' : 'Paint-only updates reuse aggregate measurement; provider signals still invalidate after reuse.'}`);
 } finally { await browser.close(); }

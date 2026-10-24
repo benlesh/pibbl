@@ -1171,6 +1171,14 @@ const installedStructuralRowLeaf = createElement(InstalledStructuralRowLeaf, {
   key: 'leaf', contentHeight: structuralRowContentHeight,
   style: { flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' },
 });
+const structuralRowWrapped = signal(false);
+const InstalledStructuralBadge = defineLayoutComponent((props: {
+  contentHeight: typeof structuralRowContentHeight; style: InstalledStructuralRowStyle;
+}) => createElement(InstalledStructuralRowLeaf, { key: 'leaf', contentHeight: props.contentHeight, style: props.style }));
+const installedStructuralBadge = createElement(InstalledStructuralBadge, {
+  key: 'badge', contentHeight: structuralRowContentHeight,
+  style: { flexBasis: 100, flexShrink: 1, minWidth: 0, height: 'auto', fill: '#19375b' },
+});
 const installedStructuralRowFixed = createElement(Rectangle, {
   key: 'row-sibling',
   style: { width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#6e3e79' },
@@ -1187,7 +1195,7 @@ const InstalledStructuralRowCard = defineLayoutComponent((props: {
     layoutDirection: 'ltr',
     alignItems: 'flex-start',
   },
-  children: [installedStructuralRowLeaf, installedStructuralRowFixed],
+  children: [structuralRowWrapped.get() ? installedStructuralBadge : installedStructuralRowLeaf, installedStructuralRowFixed],
 }));
 const structuralRowCard = createElement(InstalledStructuralRowCard, {
   key: 'card', contentHeight: structuralRowContentHeight,
@@ -1243,6 +1251,15 @@ try {
     throw Error('installed structural row content update '+JSON.stringify({tallLeaf,tallFooter,calls:structuralRowCalls}));
   receipt.structuralFinalWidthProvider = true;
   receipt.structuralAggregatePaintReuse = true;
+  structuralRowWrapped.set(true); await frame();
+  const wrappedLeaf = structuralRowBoxes.get('leaf');
+  if (JSON.stringify(wrappedLeaf) !== JSON.stringify({ x: 0, y: 0, width: 40, height: 50, stamp: 3 }))
+    throw Error('installed nested described leaf '+JSON.stringify(wrappedLeaf));
+  structuralRowContentHeight.set(60); await frame();
+  const wrappedUpdated = structuralRowBoxes.get('leaf'), wrappedFooter = structuralRowBoxes.get('footer');
+  if (wrappedUpdated?.height !== 60 || wrappedUpdated?.stamp !== 3 || wrappedFooter?.y !== 60 || wrappedFooter?.stamp !== 2)
+    throw Error('installed nested described provider signal '+JSON.stringify({wrappedUpdated,wrappedFooter}));
+  receipt.nestedStructuralPairedLeaf = true;
 } finally {
   structuralRowController.dispose(); structuralRowCanvas.remove();
   const disposed = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();

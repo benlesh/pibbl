@@ -2096,7 +2096,8 @@
           "known child percentage cross widths/bounds resolve once against explicit numeric column content width before intrinsic height",
           "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components",
           "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks",
-          "slice162: parent-owned bounded aggregate reuse replays direct-child receiver receipts after sibling paint; content invalidation, live-parent removal and conservative nested-query fallback"
+          "slice162: parent-owned bounded aggregate reuse replays direct-child receiver receipts after sibling paint; content invalidation, live-parent removal and conservative nested-query fallback",
+          "slice163: a direct pure described paired leaf inside a measured known row receives native final widths under its prepared root receiver; signals, keyed geometry, removal and source-cycle cleanup"
         ],
         "negative": [
           "ordinary opaque providers, wrapped intrinsic shapes beyond direct numeric row leaves, indefinite Grid fraction/percentage rows and unresolved feedback remain unsupported",
@@ -2924,7 +2925,8 @@
           "slices137/138: built-in Text width-driven wrapped height and unwrapped natural ink width, conservative interactive callbacks versus stable plain cache reuse, font/content/dimension changes, bounds/precedence and exact teardown",
           "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components",
           "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks",
-          "slice162: parent-owned bounded aggregate reuse replays direct-child receiver receipts after sibling paint; content invalidation, live-parent removal and conservative nested-query fallback"
+          "slice162: parent-owned bounded aggregate reuse replays direct-child receiver receipts after sibling paint; content invalidation, live-parent removal and conservative nested-query fallback",
+          "slice163: a direct pure described paired leaf inside a measured known row receives native final widths under its prepared root receiver; signals, keyed geometry, removal and source-cycle cleanup"
         ],
         "negative": [
           "opaque component measurement unsupported",

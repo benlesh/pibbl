@@ -904,7 +904,7 @@ retain conservative remeasurement. Ordinary components are never evaluated to
 obtain a measurement.
 
 A described known Flex row may also derive automatic height from direct paired
-custom leaves at a definite numeric width (or an exact finite caller width). This
+custom leaves or direct pure descriptions returning one paired primitive at a definite numeric width (or an exact finite caller width). This
 experimental forward LTR nowrap path requires numeric child main bases, explicit
 main minima, zero grow, and finite declared cross sizes for nonmeasured siblings.
 Percentage/query/aspect feedback, automatic child main bases and wrapped or
@@ -913,10 +913,13 @@ paired leaves then receive exact solved content widths and unbounded height,
 using the existing measurement context and receiver-owned resolved inputs. The
 resulting cross contributions determine the owner's height and following target.
 There is no guessed finite cross constraint or JavaScript main-solver fallback.
-Aggregate measurement may still rerun during sibling paint.
+A described leaf is queried through its prepared root receiver while retaining
+the original wrapper as style source; cycle metadata survives the clone.
+Bounded direct-leaf aggregate reuse follows the prepared-row cache contract below;
+other shapes may still remeasure during sibling paint.
 
-General structural intrinsic composition and aggregate Card
-measurement reuse remain unimplemented; unsupported cases stay diagnostic. See
+General structural intrinsic composition and aggregate reuse beyond the bounded
+prepared-row profile remain unimplemented; unsupported cases stay diagnostic. See
 [the API page](../site/api/functions/define-layout-component.md) and
 [Plan 010](../project-plans/010-layout-engine-rework.md).
 

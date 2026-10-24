@@ -404,6 +404,8 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
 interface IntrinsicRowItem extends NumericFlexMainInput {
   readonly sourceIndex: number;
   readonly child: PibblElement<any>;
+  /** Prepared direct paired root when the source child is a layout description. */
+  readonly measuredChild: PibblElement<any>;
   readonly style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>>;
   readonly receiverToken: object;
   readonly measureCross: boolean;
@@ -480,7 +482,15 @@ function measureFlex(
     resolveMeasuredContainerLength(measuredWidth, input.constraints.maxWidth, 'width', input.constraints) : undefined;
   let rowItems: IntrinsicRowItem[] | undefined;
   if (measuredRowWidth !== undefined) for (let index = 0; index < children.length; index++) {
-    const definition = getPrimitiveDefinition(children[index].type);
+    const candidate = children[index];
+    // A layout description is inspectable only through its prepared root. Keep
+    // the same receiver that the item pass will use, so description ownership
+    // and cycle metadata stay on the source wrapper.
+    const root = isLayoutComponent(candidate.type) ?
+      prepareLayoutComponent(candidate, { receiverToken: getChildPrimitiveReceiverToken(
+        GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, index,
+      ) }) : candidate;
+    const definition = getPrimitiveDefinition(root.type);
     if (definition?.measureIntrinsic && definition.measure) { rowItems = []; break; }
   }
   let requiresSolvedCross = false;
@@ -512,6 +522,7 @@ function measureFlex(
     if (style.position === 'absolute') return unsupportedIntrinsic('does not support absolute children during intrinsic Flex measurement');
     if (experimentalLayout && (style.paddingStart !== undefined || style.paddingEnd !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined)) style = resolveAllocatedInsets(style, { width: diagnosticBox.width, layoutDirection: options.layoutDirection, context: childContext(child, diagnosticBox) });
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
+    const layoutReceiverToken = getPrimitiveReceiverToken(layoutChild) ?? receiverToken;
     const settledColumnChild = experimentalLayout && !row && typeof input.style.width === 'number' && !heightDefinite &&
       (child.type === Text || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap');
     if (settledColumnChild && (isPercentage(style.width) || isPercentage(style.minWidth) || isPercentage(style.maxWidth))) {
@@ -610,7 +621,7 @@ function measureFlex(
     }
     let baseMain: number;
     let baseCross: number;
-    const provider = rowItems ? getPrimitiveDefinition(child.type) : undefined;
+    const provider = rowItems ? getPrimitiveDefinition(layoutChild.type) : undefined;
     const measureCross = !!rowItems && !!provider?.measureIntrinsic && !!provider.measure &&
       (crossValue === undefined || crossValue === 'auto');
     if (rowItems && preparedStyleQuery(prepared)) return unsupportedIntrinsic('does not support responsive child queries during solved row measurement');
@@ -684,7 +695,7 @@ function measureFlex(
       lineItems++;
     }
     if (rowItems) {
-      rowItems.push({ sourceIndex, child, style, receiverToken, measureCross, baseMain, minMain, maxMain,
+      rowItems.push({ sourceIndex, child, measuredChild: layoutChild, style, receiverToken: layoutReceiverToken, measureCross, baseMain, minMain, maxMain,
         paddingMain, grow, shrink, marginMainBefore: marginLeft, marginMainAfter: marginRight,
         baseCross, minCross, maxCross, paddingCross, marginCross });
       if (measureCross) requiresSolvedCross = true;
@@ -702,8 +713,11 @@ function measureFlex(
       const main = targets ? targets[index] : clamp(item.baseMain, item.minMain, item.maxMain);
       let cross = item.baseCross;
       if (item.measureCross) {
-        const measuredChild = clonePibblElement(item.child);
+        const measuredChild = clonePibblElement(item.measuredChild);
         const measuredStyle = { ...item.style, width: main };
+        // The root clone keeps its layout-description source metadata, while
+        // the style handoff still names the authored wrapper and uses the
+        // prepared leaf receiver for provider input ownership.
         setPreNormalizedStyle(measuredChild, measuredStyle, item.child, item.receiverToken);
         const result = measureConstrainedLayoutChild(measuredChild, {
           minWidth: main, maxWidth: main, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
