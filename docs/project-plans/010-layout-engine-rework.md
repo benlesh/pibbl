@@ -27,7 +27,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; next is consolidation62 for184–186.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; next is187: ordinary cross measurement.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -40,7 +40,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is consolidation62 for184–186.
+Consolidation56 is `2fd34f0e` for166–168. Next is187: ordinary measurement capability and wrapped-child Text.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6800,18 +6800,58 @@ The remaining ordinary-measure capability class and wrapped Text profiles are
 recorded as actual auto-only gaps, not renamed dependencies. Fixed33 remains
 10complete/12experimental/5partial/5missing/1excluded, all7release gates open.
 
-## [NEXT] Consolidation62: slices184–186 and precise remaining exit
+## Consolidation62: slices184–186
 
-Run accumulated ordinary/experimental tests, full source/built replays, installed
-consumer, pinned native reference and static consistency checks before further
-production. Keep177native normal-owner regressions in the matrix. The next bounded
-measurement fix should combine the remaining ordinary cross-measurement class:
-measure-only primitives without an intrinsic callback, and wrapped Text children
-inside a nowrap column outside the narrow natural-width profile. Do not confuse
-that child wrapping with a wrapped column parent, whose natural cross query
-already fails at numeric0. Keep the original auto-margin target partial until
-actual remaining zero/auto pairs are resolved and the finite guard inventory is
-reconciled. No font subsystem, query protocol or extra implementation owner.
+Fresh Node24.15.0/Chromium70-file matrix passes1057/skip12 of1069in84.81s;
+ordinary mode passes302/skip767 in9.49s. No runtime/test repair was needed in this
+consolidation. Permanent177numeric normal-owner phase and pure-query regressions
+remain in the accumulated matrix. Full source/built Flex/Text replays pass
+errors[]/cleanup000with470built inputs. Current strict installed246-input consumer
+passes104prior margin fixtures, direct/described provider/known families, row/column
+Text policies, geometry, identity and cleanup; unchanged tarball SHA256
+`02fce551773adb12bed61faed8290ecc5936e401833c9f01f9c685e6b259ee0c`.
+Pinned native118records pass; source SHA256
+`b906c32eb8f1969e917b645e2b79e05ab6ec65d997ec367d7dcd1620eed5b9bc`.
+Docs and109mutation probes plus public JSDoc pass. Types/lint and current
+174/12/33catalog/Studio checks are recorded with186. Kernel/ABI10unchanged.
+This is proportional consolidation, not aggregate trust or final program review.
+
+The original auto-margin exit remains partial for two proven capability classes:
+
+- **Ordinary measure-only primitive:** `definePrimitive` supplies `measure` but no
+  `measureIntrinsic`; width80/height:auto/basis80/minWidth0/zero factors in finite
+  row-nowrap/wrap, or width:auto/height40/basis40/minHeight0 in column-nowrap.
+  Each numeric0control renders; only the effective cross margin becoming auto
+  rejects. An intrinsic callback is not used by the otherwise successful ordinary
+  cross query, so this is an admission gap rather than an automatic-main minimum.
+- **Wrapped Text CHILD in a nowrap column:** owner100x80, Text width:auto,
+  height40/minHeight0/shrink0/wrap:true plus either a non-generic font with auto
+  basis/grow0, generic font with numeric basis40, or generic font with grow1.
+  The fixed20x20follower and glyphs render at numeric0; only marginLeft:auto
+  diagnoses before paint. This is distinct from a wrapped column PARENT. The
+  zero control uses its existing finite-availability measurement; do not silently
+  replace it with the narrow capped-natural policy when admitting auto margins.
+
+For a column PARENT with flexWrap:wrap, automatic natural cross sizing already
+fails in the non-stretch zero control; that intrinsic prerequisite is separate.
+Likewise staged intrinsic owners with authored nonzero numeric margins fail both
+zero and auto before margin normalization. Absolute/Overlay lack pure providers;
+prepared responsive queries are rejected by recursive measurement. The finite
+built-in dispatch inventory is resolved through186, but the baseline/margin
+interaction guard also requires explicit classification rather than a blanket
+completion claim. Fixed33 remains10complete/12experimental/5partial/5missing/
+1excluded and all7release gates remain open.
+
+## [NEXT] Slice187: one ordinary cross-measurement continuation
+
+First record public failing tests for the ordinary measure-only capability and
+wrapped-child Text predicates together. Reuse the existing pure ordinary query,
+final-main allocation, native placement and exact ownership; preserve existing
+paired natural-query contracts and the already shipped capped-natural Text
+profile. Normal main-basis/minimum rules remain authoritative. Classify every
+remaining guard by capability/query versus alignment/placement, with actual
+numeric0controls where needed. No new solver, font system, intrinsic callback
+requirement or opaque measurement. The next consolidation is after187–189.
 
 ## Scope and execution
 
