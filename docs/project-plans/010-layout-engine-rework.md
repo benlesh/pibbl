@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice194: logical raw-child ownership and described dispatch.
+Latest delivery is slice195: installed nested percentage-padding proof.
+Slice194 is `3df57566`: logical raw-child ownership and described dispatch.
 Slice193 is `e804c084`: actual direct-child percentage padding; slice192 is `57e0de5f`.
 Slice191 is `13f53057`: allocated Grid percentage padding.
 Slice190 is `dd5b47f0`: allocated Flow percentage padding.
@@ -34,7 +35,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; next is195.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; next is consolidation65.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -47,7 +48,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is195: installed nested padding composition.
+Consolidation56 is `2fd34f0e` for166–168. Next is consolidation65: close the bounded padding inventory.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now11complete/12experimental/
 4partial/5missing/1excluded. All seven release gates remain open; independent
@@ -7139,15 +7140,32 @@ No production change or expanded opaque-wrapper introspection was needed. This i
 evidence for supported described preparation, not every parent/wrapper product.
 Capability ledger and7open release gates remain unchanged pending installed proof.
 
-## [NEXT] Slice195: installed nested padding composition
+## [DONE] Slice195: installed nested padding composition
 
-Add the bounded installed-package receipt for actual non-Flex parent and Grid
-cell ownership, preserving earlier own-style proofs. Then consolidate193–195and
-close the padding inventory only if its declared bounded completion rule is met.
-Unallocated intrinsic percentage feedback remains deliberately unsupported and
-must be accounted for in the separate intrinsic sizing work, not silently solved
-from query constraints. Select the next existing capability/release gate from
-concrete evidence after this checkpoint.
+The installed tarball now separately asserts `nestedPercentagePadding` for all
+four actual non-Flex parent paths. Structural content uses parent200→160for
+Flow/Absolute/Overlay, and Grid’s fixed160cell within200parent. Numeric controls,
+raw pure-query rejection, actual moved hits, stable keyed stamps, changed pixels
+without another solve, and per-family/aggregate four-counter cleanup all pass.
+The existing own-style and all earlier packed receipts remain asserted.
+
+Fresh `node tooling/packed-layout-consumer.mjs --check` passes strict Bundler and
+NodeNext consumers,246installed dist inputs,104auto-margin fixtures and the full
+nested browser receipt; tarball SHA256
+`737e46e9dbedb3f740b165ec2e9bc66fa498c5c32ac24316510bc899d30e8a89`.
+The initial proof failed parsing because the embedded fixture lacked an object
+brace; the fixture was corrected before this fresh pass, with no runtime repair.
+Changed-proof lint and scoped review pass. No new public API or production code.
+
+## [NEXT] Consolidation65: allocated padding exit, slices193–195
+
+Record the fresh accumulated experimental/ordinary matrices and source/built
+browser replay, reconcile stale logical-padding prose and delivered missing
+markers, and apply the explicit bounded padding completion rule. Independent
+exit audit finds no remaining allocated-padding behavior after195passes;
+unallocated intrinsic feedback belongs to separate measurement ownership work.
+Keep7release gates open and select the next concrete existing gap. Final
+whole-codebase review stays at the full program exit.
 
 ## Scope and execution
 
