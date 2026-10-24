@@ -4,7 +4,7 @@ import {
   type Signal, type SystemStyle, type LayoutBox, type PibblNode, type BaselineMeasureInput, type BaselinesResult,
 } from "@pibbl/core";
 
-type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB";
+type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB" | "NC";
 type WrappedAlign = "flex-start" | "flex-end" | "center" | "space-between" | "space-around" | "space-evenly" | "stretch";
 interface CardProps { id: Name; label: string; font: string; first: number | Signal<number> }
 interface CardStyle extends SystemStyle {
@@ -27,6 +27,10 @@ function createBaselineContent() {
   const crossLabel = computed(() => crossMode.get() === "off" ? "Cross" : crossMode.get());
   const textFont = signal("10px monospace");
   const numericMainMargin = signal(10);
+  const numericCrossMode = signal<"off" | "top" | "bottom">("off");
+  const numericTop = computed(() => numericCrossMode.get() === "top" ? 30 : 0);
+  const numericBottom = computed(() => numericCrossMode.get() === "bottom" ? 10 : 0);
+  const numericCrossLabel = computed(() => `Cross ${numericCrossMode.get()}`);
   const numericMainLabel = computed(() => `Main margin ${numericMainMargin.get()}`);
   const wrappedD = signal(20), wrappedDLabel = computed(() => `D ${wrappedD.get()}`);
   const wrappedProfile = signal(false), wrappedRowGap = signal<number | "10%">(0), wrappedAlign = signal<WrappedAlign>("flex-start"), wrappedReverse = signal(false);
@@ -135,11 +139,14 @@ function createBaselineContent() {
         <BaselineCard key="WD" id="WD" label={wrappedDLabel} font="14px sans-serif" first={wrappedD} style={{ width: 40, height: 30, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#426b61" }} />
       </Flex>
       <Flex style={{ left: 28, top: 530, width: 120, height: 60, flexWrap: "wrap", alignItems: "first-baseline", alignContent: "flex-start" }}>
-        <BaselineCard key="NA" id="NA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: numericMainMargin, fill: "#426b61" }} />
+        <BaselineCard key="NA" id="NA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: numericMainMargin, marginTop: numericTop, marginBottom: numericBottom, fill: "#426b61" }} />
         <BaselineCard key="NB" id="NB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+        <BaselineCard key="NC" id="NC" label="8" font="12px monospace" first={8} style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#a63758" }} />
       </Flex>
       <Rectangle onClick={() => numericMainMargin.update(value => value === 10 ? 20 : 10)} style={{ left: 180, top: 540, width: 150, height: 34, fill: "#426b61", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 188, top: 549, font: "12px sans-serif", fill: "#ffffff" }}>{numericMainLabel}</Text>
+      <Rectangle onClick={() => numericCrossMode.update(value => value === "off" ? "top" : value === "top" ? "bottom" : "off")} style={{ left: 350, top: 540, width: 100, height: 34, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 356, top: 549, font: "11px sans-serif", fill: "#ffffff" }}>{numericCrossLabel}</Text>
       <Text pointerEvents="none" style={{ left: 28, top: 360, font: "14px sans-serif", fill: "#475569" }}>The Text panel uses live Canvas metrics; it makes no native font-metric claim.</Text>
       <Text onClick={() => { textFont.set("10px monospace"); textReflow.set(false); textWrap.update(value => !value); }} style={{ left: 28, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textWrapLabel}</Text>
       <Text onClick={() => { if (textWrap.get()) textReflow.set(true); }} style={{ left: 340, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textReflowLabel}</Text>

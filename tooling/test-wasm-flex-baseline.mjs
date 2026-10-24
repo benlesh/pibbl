@@ -305,6 +305,18 @@ try {
   assert.equal(numericAfter.stamps.NA,numericBefore.stamps.NA);assert.equal(numericAfter.stamps.NB,numericBefore.stamps.NB);
   const numericHits=numericAfter.hits.length;await click(42,552);assert.equal((await state()).hits.length,numericHits);
   await click(52,552);assert.equal((await state()).hits.at(-1),'NA');
+  const crossNumericBefore=await state();assert.ok(Math.abs(crossNumericBefore.boxes.NC.y-570)<1e-9);
+  await click(400,556);const crossNumericTop=await state();
+  assert.ok(Math.abs(crossNumericTop.boxes.NA.y-560)<1e-9&&Math.abs(crossNumericTop.boxes.NB.y-542)<1e-9&&Math.abs(crossNumericTop.boxes.NC.y-582)<1e-9);
+  const crossNumericHits=crossNumericTop.hits.length;await click(92,534);assert.equal((await state()).hits.length,crossNumericHits);
+  await click(92,546);assert.equal((await state()).hits.at(-1),'NB');
+  await click(400,556);const crossNumericBottom=await state();
+  assert.ok(Math.abs(crossNumericBottom.boxes.NA.y-548)<1e-9&&Math.abs(crossNumericBottom.boxes.NB.y-530)<1e-9&&Math.abs(crossNumericBottom.boxes.NC.y-578)<1e-9);
+  const crossBottomHits=crossNumericBottom.hits.length;await click(32,572);assert.equal((await state()).hits.length,crossBottomHits);
+  await click(32,582);assert.equal((await state()).hits.at(-1),'NC');
+  await click(400,556);const crossNumericRestored=await state();
+  for(const id of ['NA','NB','NC'])assert.equal(crossNumericRestored.stamps[id],crossNumericBefore.stamps[id]);
+  assert.ok(Math.abs(crossNumericRestored.boxes.NC.y-570)<1e-9);
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}

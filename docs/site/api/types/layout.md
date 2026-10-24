@@ -200,7 +200,7 @@ leaves in a finite LTR or RTL nowrap row or row-reverse after final allocation. 
 [first-baseline example](#/examples/layout/wasm-flex-baseline). Other baseline
 modes remain outside this first subset. A bounded wrapped profile also admits
 horizontal row/row-reverse in LTR/RTL with wrap or wrap-reverse, all existing line-distribution policies, finite resolved gaps, and fixed numeric primitive
-providers or bottom-edge fallback, fixed generic Text, main grow/shrink and resolved numeric or automatic main margins. Automatic cross margins remain excluded from wrapped baseline alignment.
+providers or bottom-edge fallback, fixed generic Text, main grow/shrink and resolved numeric or automatic main margins. Finite signed numeric cross margins contribute to line ascent/descent without changing provider content size. Automatic cross margins remain excluded from wrapped baseline alignment.
 Each line shares its own physical first baseline; cross reversal repositions line groups and preserves that alignment. Direct nonempty Text with fixed dimensions, generic pixel fonts, visible
 fit/overflow and the default top Canvas baseline supplies real host metrics
 through the optional measurement service. Wrapped Text measures its actual first

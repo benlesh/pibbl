@@ -428,3 +428,84 @@ it.runIf(experimentalLayout)(
     }
   },
 );
+
+it.runIf(experimentalLayout)(
+  'accounts for numeric first-baseline cross margins in the physical line ascent and descent without changing provider content height',
+  async () => {
+    for (const edge of ['marginTop', 'marginBottom'] as const) {
+      const baseline = snapshotWasmLayoutDiagnostics();
+      const margin = signal(0);
+      const boxes = new Map<string, LayoutBox>();
+      const stamps = new Map<string, number>();
+      const queriedHeights: number[] = [];
+      const hits: string[] = [];
+      const errors: unknown[] = [];
+      let serial = 0;
+      interface MarginStyle extends BaselineStyle {
+        readonly marginTop?: number | ReturnType<typeof signal<number>>;
+        readonly marginBottom?: number | ReturnType<typeof signal<number>>;
+      }
+      const Leaf = definePrimitive<{ readonly name: string; readonly first: number }, MarginStyle, MarginStyle, MarginStyle & { readonly width: number; readonly height: number }>((props) => {
+        const box = useLayoutBox();
+        const matrix = useCanvasContext().getTransform();
+        boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+        stamps.set(props.name, useConst(() => ++serial));
+        return <Rectangle onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: '#8a3248', cursor: 'pointer' }} />;
+      }, {
+        resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+        measureBaselines: ({ props, allocation }) => {
+          if (props.name === 'A') queriedHeights.push(allocation.height);
+          return { status: 'measured' as const, first: props.first, last: props.first };
+        },
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = 100; canvas.height = 90; document.body.append(canvas);
+      const receive = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+      window.addEventListener('error', receive);
+      try {
+        const controller = pibbl(canvas, <Flex style={{ width: 100, height: 90, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'first-baseline', alignContent: 'flex-start' }}>
+          <Leaf key="A" name="A" first={12} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, [edge]: margin }} />
+          <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+          <Leaf key="C" name="C" first={8} style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0 }} />
+        </Flex>);
+        controllers.push(controller);
+        await nextFrame();
+
+        expect(errors, edge).toEqual([]);
+        expect(boxes.get('A'), edge).toEqual({ x: 0, y: 18, width: 40, height: 20 });
+        expect(boxes.get('B'), edge).toEqual({ x: 40, y: 0, width: 40, height: 40 });
+        expect(boxes.get('C'), edge).toEqual({ x: 0, y: 40, width: 60, height: 20 });
+        expect(queriedHeights, edge).toContain(20);
+        const mounted = snapshotWasmLayoutDiagnostics();
+        const initialStamps = Object.fromEntries(stamps);
+        const oldTarget = edge === 'marginTop' ? [44, 4] as const : [4, 42] as const;
+        click(canvas, oldTarget[0], oldTarget[1]);
+        expect(hits, edge).toEqual([edge === 'marginTop' ? 'B' : 'C']);
+
+        margin.set(edge === 'marginTop' ? 30 : 10);
+        await nextFrame();
+        expect(errors, edge).toEqual([]);
+        expect(boxes.get('A'), edge).toEqual({ x: 0, y: edge === 'marginTop' ? 30 : 18, width: 40, height: 20 });
+        expect(boxes.get('B'), edge).toEqual({ x: 40, y: edge === 'marginTop' ? 12 : 0, width: 40, height: 40 });
+        expect(boxes.get('C'), edge).toEqual({ x: 0, y: edge === 'marginTop' ? 52 : 48, width: 60, height: 20 });
+        expect(queriedHeights.every(height => height === 20), edge).toBe(true);
+        expect(Object.fromEntries(stamps), edge).toEqual(initialStamps);
+        expect(snapshotWasmLayoutDiagnostics().nodeCreates, edge).toBe(mounted.nodeCreates);
+        const beforeOldTarget = hits.length;
+        click(canvas, oldTarget[0], oldTarget[1]);
+        expect(hits, edge).toHaveLength(beforeOldTarget);
+        const newTarget = edge === 'marginTop' ? [44, 14] as const : [4, 52] as const;
+        click(canvas, newTarget[0], newTarget[1]);
+        expect(hits.at(-1), edge).toBe(edge === 'marginTop' ? 'B' : 'C');
+
+        controller.dispose();
+        const disposed = snapshotWasmLayoutDiagnostics();
+        expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances], edge).toEqual([
+          baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+        ]);
+      } finally {
+        window.removeEventListener('error', receive);
+      }
+    }
+  },
+);

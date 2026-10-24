@@ -7427,13 +7427,42 @@ exposes the same fixed wrapped pair through the public lesson and browser driver
 Source5192/refreshed built5193 pass errors[]/cleanup000/470built inputs; the new
 lower-row screenshot was inspected. Catalog/Studio175/12/33 and scoped review pass.
 
-## [NEXT] Slice204: remaining baseline placement profile
+## [DONE] Slice204: numeric cross-margin baseline geometry
 
 Close numeric cross margins with reference and public/native RED: shared physical
 baseline ascent includes before margin, descent includes after margin, with content
 height retained for provider queries. Apply one generic nowrap/wrapped placement
 algorithm and preserve automatic cross-margin policy separately. Consolidate
 202–204before further production; baseline remains experimental.
+
+Public RED1fail/5pass and native RED4fail/32pass precede production. ABI14 uses
+transient cross-record inputs6/7for signed physical margins, then publishes the
+existing outer-size/offset outputs. Separate JS input snapshots preserve exact
+cache invalidation. Native ascent=max(before+first,0), descent=max(after+height-first,0)
+produce physical content baseline placement; provider content allocations stay
+unchanged. Nowrap automatic cross margins still opt out, subtracting opposite
+numeric edges before free-space absorption. Complete ABI13is rejected. Native
+preflight validates finite margins/results before output publication.
+
+Fresh retained Yoga3.2.1probe gives nowrapA18/B0and wrappedA18/B0/C54/D42for its
+recorded asymmetric margins. Public top30moves A/B/Cto30/12/52; bottom10moves Cto48
+without moving A/B. Real stale/new targets, identity and content-height20queries
+pass. Native36tests; focused5files43pass/1skip, types and lint pass. ABI14artifact
+81623bytes SHA256
+`a139180a31581a91cc2b8291e36d8c55d51500d9ddd21d006cad28ddf75bb91d`.
+The lower public NA/NB/NCpanel includes Cross off/top/bottom; main controls remain.
+Source5192/refreshed built5193 pass errors[]/cleanup000/470built inputs; screenshot
+inspected. Catalog/Studio175/12/33, docs109mutation probes and scoped runtime review
+pass. No baseline release promotion or aggregate trust claim.
+
+## [NEXT] Consolidation68: baseline main composition and numeric margins
+
+Consolidate202–204before further production: accumulated experimental/ordinary
+checks, installed ABI14 Text/main-flex/shrink/numeric-margin receipts, source/built
+replay, package identity, types, catalog and documentation checks. Baselines remain
+experimental and all seven release gates remain open. Next finite baseline exits
+include remaining leaf profiles, automatic wrapped cross margins, nested/reference
+propagation, explicit column interpretation and last-baseline placement.
 
 ## Scope and execution
 
