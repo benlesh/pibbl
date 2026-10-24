@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice193: actual direct-child percentage padding; slice192 is `57e0de5f`.
+Latest delivery is slice194: logical raw-child ownership and described dispatch.
+Slice193 is `e804c084`: actual direct-child percentage padding; slice192 is `57e0de5f`.
 Slice191 is `13f53057`: allocated Grid percentage padding.
 Slice190 is `dd5b47f0`: allocated Flow percentage padding.
 Slice189 is `233311da`: baseline cross-auto participant handling.
@@ -33,7 +34,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; next is194.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; consolidation64 is `3894b90a`; next is195.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -46,7 +47,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is194: logical/direct-child dispatch evidence.
+Consolidation56 is `2fd34f0e` for166–168. Next is195: installed nested padding composition.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now11complete/12experimental/
 4partial/5missing/1excluded. All seven release gates remain open; independent
@@ -7122,14 +7123,31 @@ to fit its allotted footer. ABI10kernel unchanged78986bytes. Installed nested
 composition and logical raw-child evidence follow; no aggregate trust or release
 claim. Capability ledger remains11complete/12experimental/4partial/5missing/1excluded.
 
-## [NEXT] Slice194: logical raw-child ownership and described dispatch
+## [DONE] Slice194: logical raw-child ownership and described dispatch
 
-Prove the same allocated path for logical zero/percentage conflicts with explicit
-RTL direction and one representative inherited-direction/described layout root.
-Reuse existing supported preparation; no new wrapper introspection or public API.
-After this, supply the installed nested composition receipt and consolidate193–195.
-Unallocated intrinsic percentage feedback stays explicitly unsupported; decide
-padding completion against its bounded admission rule, not hypothetical CSS scope.
+Two public cases prove RTL logical precedence through actual Flow allocation:
+a direct child with explicit direction, and a described Flow under an outer RTL
+Flex with inherited child direction. Logical start0overrides physical right50%;
+logical end10%overrides physical left0. Owner200→160moves content x20→16and
+width140→144, preserving keyed identity, moved real targets, paint-only solve reuse
+and four-counter cleanup. Pure raw-child measurement remains unsupported.
+
+Fresh Node24.15/Chromium6tests/2files pass, including193physical cases; typecheck
+and changed-test lint pass. An initial described fixture omitted the already
+required main minimum and correctly diagnosed; adding minWidth0fixed the fixture.
+No production change or expanded opaque-wrapper introspection was needed. This is
+evidence for supported described preparation, not every parent/wrapper product.
+Capability ledger and7open release gates remain unchanged pending installed proof.
+
+## [NEXT] Slice195: installed nested padding composition
+
+Add the bounded installed-package receipt for actual non-Flex parent and Grid
+cell ownership, preserving earlier own-style proofs. Then consolidate193–195and
+close the padding inventory only if its declared bounded completion rule is met.
+Unallocated intrinsic percentage feedback remains deliberately unsupported and
+must be accounted for in the separate intrinsic sizing work, not silently solved
+from query constraints. Select the next existing capability/release gate from
+concrete evidence after this checkpoint.
 
 ## Scope and execution
 

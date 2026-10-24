@@ -2503,7 +2503,7 @@
       "group": "box-and-direction",
       "current": "numeric padding, allocated experimental Flex percentage padding and mounted Flow/Grid/Absolute/Overlay own-style and actual direct-child percentage padding from the established containing-owner basis, receiver-aware logical paddingStart/paddingEnd, and receiver-aware numeric borderStartWidth/borderEndWidth over physical layout borderWidth; painted stroke remains separate",
       "status": "partial",
-      "unresolvedPolicy": "Mounted own-style and actual direct-child boundaries use the established containing content width; Grid direct children use their final cell area width. Unallocated intrinsic feedback remains separate and unsupported. Layer intentionally strips padding/border/box-sizing inputs and preserves explicit raster dimensions and zero child origin. Logical/invalid direct-child edge combinations and installed nested composition still need focused evidence before this capability is closed.",
+      "unresolvedPolicy": "Mounted own-style and actual direct-child boundaries use the established containing content width; Grid direct children use their final cell area width. Unallocated intrinsic feedback remains separate and unsupported. Layer intentionally strips padding/border/box-sizing inputs and preserves explicit raster dimensions and zero child origin. Logical raw-child precedence and explicit/inherited RTL described dispatch are covered; installed nested composition remains the bounded evidence prerequisite.",
       "evidenceRefs": [
         "docs/design/layout-system-contract.md#flex",
         "docs/architecture/proposals/layout-engine/design.md#boxes-and-units",
@@ -2517,7 +2517,8 @@
         "packages/core/test/layout-wasm-slice.test.tsx",
         "packages/core/src/lib/layout/absolute.ts",
         "packages/core/src/lib/layout/overlay.ts",
-        "packages/core/test/layout-raw-child-percentage-padding.test.tsx"
+        "packages/core/test/layout-raw-child-percentage-padding.test.tsx",
+        "packages/core/test/layout-raw-child-logical-percentage-padding.test.tsx"
       ],
       "evidence": {
         "positive": [
@@ -2533,7 +2534,8 @@
           "slice191: finite explicit-track Grid numeric0/numeric20/percentage10% shares the containing-owner width200 reference across own-width200to160, preserving keyed cell targets, native track/area reuse and exact disposal; pure measurement remains unsupported; public/source/built/installed evidence passes",
           "slice192: direct Absolute/Overlay roots match numeric20 and10% against owner200 while own boxes narrow200to160; distinct placement/start alignment, real moved targets, hook identity, paint reuse and four-counter cleanup pass in public/source/built/installed consumers; both pure0/percentage queries retain missing-provider diagnostics",
           "Layer source/contract audit and existing fresh consolidated raster regression preserve ignored padding/border inputs, including logical15%, explicit bitmap dimensions and zero child origin; no Layer padding implementation is required",
-          "slice193: actual Flow/Absolute/Overlay child owner200 resolves10%to20; owner160 resolves16; Grid fixed160cell uses16 within200parent; numeric controls, structural content geometry, targets, keyed identity, paint reuse and exact disposal"
+          "slice193: actual Flow/Absolute/Overlay child owner200 resolves10%to20; owner160 resolves16; Grid fixed160cell uses16 within200parent; numeric controls, structural content geometry, targets, keyed identity, paint reuse and exact disposal",
+          "slice194: raw logical child precedence preserves zero winners under explicit RTL and described Flow inherited RTL, using actual parent width across resize, moved targets, stable identity, paint reuse and exact disposal"
         ],
         "negative": [
           "paint stroke is not a layout border",
