@@ -20,8 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice168 (described measured-owner composition and native
-allocated-owner continuation; separate commit). Slice167 is `91470858`; slice166
+Latest delivery is slice168 `de3945c1` (described measured-owner composition and
+native allocated-owner continuation; separate commit). Slice167 is `91470858`; slice166
 is `fcc06741`. Next is169: finish the indefinite-owner/measured-owner closure
 audit against the complete accepted matrix, preserving all remaining targets.
 Consolidation55 is `98bf8b8d` for163–165.
@@ -5857,6 +5857,26 @@ The separate pinned percentage-phase probe source SHA256 is
 Kernel ABI8/75199bytes is unchanged; the721corpus is unchanged. No min/max
 promotion, fixed33 reclassification, release-gate closure or full trust claim.
 
+## Consolidation56: slices166–168
+
+Fresh Node24.15/Playwright Chromium: experimental841passed/12skipped across58files
+(853tests),82.90s; ordinary298passed/555skipped,5.86s. The first experimental run
+had839passes and two stale negative diagnostic expectations. Both cases still
+reject percentage-gap feedback; known-owner descent now reaches the precise
+percentage-gap diagnostic instead of stopping at the former missing child-basis
+path. Only those expectations changed. The subsequent complete run passed.
+
+This lane combines the staged numeric and paired percentage-owner matrices,
+receiver-scoped Card/opaque distinction, same-axis native allocated-owner phases,
+provider-only signal updates, failure cleanup/remount and earlier lifecycle,
+positioning, measurement-purity and ownership evidence. Source/built/installed
+receipts, pinned independent probe, typecheck, changed-code lint, catalog174,
+Studio and docs109mutation/public-JSDoc checks pass. Visual inspection of the
+updated measured-owner lesson confirms the160px lower strip and readable labels.
+No unchanged broad release checks were repeated. Kernel ABI8/75199bytes and
+721corpus remain unchanged; no aggregate trust or release-gate closure claim.
+The fixed33 counts remain9complete/12experimental/6partial/5missing/1excluded.
+
 ## [NEXT] Slice169: min/max owner-policy matrix closure audit
 
 Reconcile each clause of166's accepted matrix with actual query, normal layout,
@@ -5865,7 +5885,7 @@ specific known-owner counterexample, not arbitrary recursive intrinsic sizing.
 Retain the opaque size-only distinction; identify unresolved percentage dimension
 or basis references and recursive descriptor cases explicitly. Do not promote
 `flex.min-max` while the indefinite-owner/measured-owner missing row still has
-an unevidenced accepted branch. Consolidation56 for166–168 is separate.
+an unevidenced accepted branch. Consolidation56 for166–168 is recorded below as a separate evidence commit.
 
 ## Scope and execution
 
