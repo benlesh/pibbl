@@ -20,10 +20,11 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice179 (wrapped-row Text natural basis and final-width sizing).
+Latest delivery is slice180 (resolved percentage/aspect cross size before auto margins).
+Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
-Consolidation59 is `750fb588` for175–177; the next production slice is180.
+Consolidation59 is `750fb588` for175–177; consolidation60 covers178–180 before further production.
 Slice176 is `3d4fcfee` (known-layout natural column widths).
 Slice175 is `6adf0e2b` (paired column natural width with side auto margins).
 Slice174 is `fabe4508` (uniform intrinsic auto-margin normalization).
@@ -32,7 +33,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is180: remaining finite natural-cross direction gaps and matched prerequisite classification.
+Consolidation56 is `2fd34f0e` for166–168. Next is consolidation60 for178–180, then the finite auto-margin exit matrix.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6457,16 +6458,50 @@ and all7gates remain open. Consolidation60 covers178–180 before further capabi
 production. The next slice must distinguish true auto-only failures from matched
 numeric0 failures belonging to independent intrinsic sizing prerequisites.
 
-## [NEXT] Slice180: remaining natural-cross directions and prerequisite evidence
+## Slice180 delivered: settled percentage/aspect cross sizes before auto placement
 
-Use matched numeric0/auto public cases to close remaining finite direction gaps
-where the underlying natural-cross query already works. Cover nowrap columns,
-reverse and RTL for Text/paired/known roots as supported by their pure query;
-preserve existing query and placement ownership instead of duplicating algorithms.
-Classify wrapped intrinsic contexts and staged nonzero numeric-margin contribution
-using identical zero/auto baselines and exact failure evidence; retain their
-original capability targets and responsible sizing gates. No label-only gap
-removal or circular auto prerequisite. Rerun178–180 in consolidation60 afterward.
+Delivered2026-10-24. Actual public numeric0/auto pairs first reproduced two
+margin-only failures: aspect-derived height and percentage height painted at0,
+then rejectedauto. Percentage min-height already passed both. The shared admission
+check now permits definite cross lengths and the existing aspect path; downstream
+length validation, main sizing, ratio derivation/clamping and native auto placement
+remain the sole owners. Omitted/auto cross sizes still require supported measurement.
+No API/ABI, new solver/cache or ordinary-mode change.
+
+Three public regressions pass underNode24.15.0/Chromium, including owner100to80,
+exact pixels, moved hit targets, stable nodes and four teardown counters. Focused
+compatibility run passes21/skips410 in2.23s. Old aspect-only negative expectations
+were migrated to the now-supported existing aspect calculation. Scoped guard
+review finds no material hole; invalid sizes retain downstream diagnostics.
+
+Pinned Yoga preserves65records and adds12, total77. Probe source SHA256
+`94c144ef230a91c0d1edb0bac4a90f1de583b6bbe9221b4d81bd6fee8cb883c6`.
+At owner100to80, ratio2/width40 keeps height20 and auto y80to60;
+height50% and height20/min-height50% yield height50to40 and auto y50to40.
+All zero-margin pairs retain identical sizes at y0. Kernel/ABI10 unchanged.
+
+Source/built aspect example passes old shrink/floor checks plus Sideauto toggle,
+percentage pixels, moved click targets and exact cleanup0000; built470inputs.
+The installed strict Bundler/NodeNext/no-alias246-input consumer passes all three
+zero/auto pairs, ownership and104prior margin fixtures. Tarball SHA256
+`a1e7afd12260dc5317b24f4de91a03b6e6cc21d2bf89ca632865721123ca3aea`.
+Inspect `http://127.0.0.1:5192/#/examples/layout/wasm-flex-aspect-minimum` and
+click Sideauto: the ratio boxes keep their dimensions and move to the side;
+the50%height box moves down. Fixed33counts stay10complete/12experimental/
+5partial/5missing/1excluded; auto margins and all7release gates stay open.
+Visual inspection confirms readable controls and the moved ratio/percentage boxes.
+Types/lint, public JSDoc, catalog174/12/33, Studio routes/search and109docs
+mutation probes pass. Remaining direction/intrinsic cases require actual paired
+baseline evidence.
+
+## [NEXT] Consolidation60: slices178–180
+
+Run the consolidated prior matrix plus wrapped column/row Text and settled-cross
+regressions before further capability production. Preserve the finite auto-margin
+exit audit: prove numeric0andauto through the same public configuration before
+classifying a true margin gap or an independent intrinsic sizing prerequisite.
+Keep original targets and responsible gates; no label-only removal or circular
+prerequisite. Then select the next bounded natural-cross direction slice.
 
 ## Scope and execution
 

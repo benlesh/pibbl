@@ -268,6 +268,37 @@ void runRowWrappedText(float ownerWidth, bool autoTop) {
     ownerWidth, autoTop ? "true" : "false", YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(text), YGNodeLayoutGetTop(text), YGNodeLayoutGetWidth(text), YGNodeLayoutGetHeight(text), YGNodeLayoutGetLeft(peer), YGNodeLayoutGetTop(peer), YGNodeLayoutGetWidth(peer), YGNodeLayoutGetHeight(peer), YGNodeLayoutGetLeft(following), YGNodeLayoutGetTop(following), YGNodeLayoutGetWidth(following), YGNodeLayoutGetHeight(following), rowWrappedTextCall.count, rowWrappedTextCall.width, measureMode(rowWrappedTextCall.widthMode), rowWrappedTextCall.height, measureMode(rowWrappedTextCall.heightMode));
   YGNodeFreeRecursive(root); YGConfigFree(config);
 }
+
+// These cases cover the finite cross sizes newly admitted by Slice 180. They
+// deliberately compare margin-top:0 to auto: sizing must be identical and
+// only the final cross placement may move.
+enum class ResolvedCrossProfile { Aspect, PercentSize, PercentMin };
+const char* resolvedCrossName(ResolvedCrossProfile value) {
+  switch (value) {
+    case ResolvedCrossProfile::Aspect: return "aspect";
+    case ResolvedCrossProfile::PercentSize: return "height-50pct";
+    case ResolvedCrossProfile::PercentMin: return "min-height-50pct";
+  }
+  return "invalid";
+}
+void runResolvedCross(float ownerHeight, ResolvedCrossProfile profile, bool autoTop) {
+  auto config = YGConfigNew();
+  YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+  auto root = YGNodeNewWithConfig(config); auto a = YGNodeNewWithConfig(config);
+  YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow); YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+  YGNodeStyleSetWidth(root, 100); YGNodeStyleSetHeight(root, ownerHeight);
+  YGNodeStyleSetWidth(a, 40); YGNodeStyleSetFlexBasis(a, 40); YGNodeStyleSetFlexGrow(a, 0); YGNodeStyleSetFlexShrink(a, 0);
+  YGNodeStyleSetMinWidth(a, 0); YGNodeStyleSetMinHeight(a, 0);
+  if (profile == ResolvedCrossProfile::Aspect) YGNodeStyleSetAspectRatio(a, 2);
+  if (profile == ResolvedCrossProfile::PercentSize) YGNodeStyleSetHeightPercent(a, 50);
+  if (profile == ResolvedCrossProfile::PercentMin) { YGNodeStyleSetHeight(a, 20); YGNodeStyleSetMinHeightPercent(a, 50); }
+  if (autoTop) YGNodeStyleSetMarginAuto(a, YGEdgeTop); else YGNodeStyleSetMargin(a, YGEdgeTop, 0);
+  YGNodeInsertChild(root, a, 0); YGNodeCalculateLayout(root, 100, ownerHeight, YGDirectionLTR);
+  std::printf("intrinsic-auto-resolved-cross ownerHeight=%.17g profile=%s marginTop=%s root={width:%.17g,height:%.17g} A={left:%.17g,top:%.17g,width:%.17g,height:%.17g}\n",
+    ownerHeight, resolvedCrossName(profile), autoTop ? "auto" : "0", YGNodeLayoutGetWidth(root), YGNodeLayoutGetHeight(root), YGNodeLayoutGetLeft(a), YGNodeLayoutGetTop(a), YGNodeLayoutGetWidth(a), YGNodeLayoutGetHeight(a));
+  YGNodeFreeRecursive(root); YGConfigFree(config);
+}
+
 }
 int main() {
   for (bool column : { false, true }) for (bool bothAuto : { false, true }) {
@@ -286,4 +317,5 @@ int main() {
   runColumnText(160, 60, 1, false); runColumnText(200, 260, 1, false); runColumnText(160, 260, 1, false);
   runColumnText(200, 260, 1, true);
   for (auto width : {180.0f, 100.0f, 70.0f, 16.0f}) for (auto autoTop : {false, true}) runRowWrappedText(width, autoTop);
+  for (auto ownerHeight : {100.0f, 80.0f}) for (auto profile : { ResolvedCrossProfile::Aspect, ResolvedCrossProfile::PercentSize, ResolvedCrossProfile::PercentMin }) for (auto autoTop : {false, true}) runResolvedCross(ownerHeight, profile, autoTop);
 }

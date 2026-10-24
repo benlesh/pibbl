@@ -1132,6 +1132,26 @@ try {
   await frame();
   if (JSON.stringify(pixel(149,59)) !== '[255,0,0,255]' || JSON.stringify(pixel(150,59)) !== '[0,0,0,0]' || JSON.stringify(pixel(10,60)) !== '[0,0,255,255]') throw Error('installed aspect column derived cross cap');
   receipt.emptyAspectMinimum = true;
+  emptyAspectController.dispose();
+  for (const profile of [
+    { style: { height: 'auto' as const, aspectRatio: 2 }, size: 20 },
+    { style: { height: '50%' as const }, size: 50 },
+    { style: { height: 20, minHeight: '50%' as const }, size: 50 },
+  ]) {
+    const margin = signal<0 | 'auto'>(0);
+    emptyAspectController = pibblSync(emptyAspectCanvas, createElement(Flex, {
+      style: { width: 100, height: 100, alignItems: 'flex-start' },
+      children: createElement(Rectangle, { style: { width: 40, minWidth: 0, minHeight: 0, flexShrink: 0,
+        ...profile.style, marginTop: margin, fill: 'red' } }),
+    })); await frame();
+    if (JSON.stringify(pixel(4,0)) !== '[255,0,0,255]' || JSON.stringify(pixel(4,profile.size)) !== '[0,0,0,0]') throw Error('installed resolved cross numeric zero baseline');
+    const mounted = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+    margin.set('auto'); await frame();
+    if (JSON.stringify(pixel(4,0)) !== '[0,0,0,0]' || JSON.stringify(pixel(4,100-profile.size)) !== '[255,0,0,255]' || JSON.stringify(pixel(4,99)) !== '[255,0,0,255]') throw Error('installed resolved cross auto placement');
+    if ((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates !== mounted.nodeCreates) throw Error('installed resolved cross identity');
+    emptyAspectController.dispose();
+  }
+  receipt.resolvedCrossAuto = true;
 } finally {
   emptyAspectController.dispose(); emptyAspectCanvas.remove();
   const after = (globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();

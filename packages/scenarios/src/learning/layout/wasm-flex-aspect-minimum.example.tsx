@@ -25,6 +25,7 @@ export function WasmFlexAspectMinimumExample() {
   const canvas = context.canvas as HTMLCanvasElement;
   const owner = useSignal(240);
   const minimum = useSignal<Minimum>(undefined);
+  const crossAuto = useSignal(false);
   const hits = useSignal<readonly string[]>([]);
   const panel = useConst(() => document.createElement("pre"));
 
@@ -38,6 +39,7 @@ export function WasmFlexAspectMinimumExample() {
       panel.textContent = JSON.stringify({
         owner: owner.get(),
         min: minimumLabel(floor),
+        crossAuto: crossAuto.get(),
         hits: hits.get(),
         layout: read(),
         expected: {
@@ -55,6 +57,7 @@ export function WasmFlexAspectMinimumExample() {
 
   const currentOwner = owner.get();
   const currentMinimum = minimum.get();
+  const margin = crossAuto.get() ? "auto" as const : 0;
   const recordHit = (name: string) => hits.update(values => [...values, name]);
   const cycleMinimum = () => minimum.update(value => value === undefined ? 0 : value === 0 ? 240 : undefined);
 
@@ -69,6 +72,8 @@ export function WasmFlexAspectMinimumExample() {
     <Text pointerEvents="none" style={{ left: 236, top: 106, font: "14px sans-serif", fill: "#ffffff" }}>Minimum: {minimumLabel(currentMinimum)}</Text>
     <Rectangle onClick={() => hits.set([])} style={{ left: 420, top: 96, width: 180, height: 36, fill: "#6e3e79", cursor: "pointer" }} />
     <Text pointerEvents="none" style={{ left: 432, top: 106, font: "14px sans-serif", fill: "#ffffff" }}>Clear hits</Text>
+    <Rectangle onClick={() => crossAuto.update(value => !value)} style={{ left: 616, top: 96, width: 128, height: 36, fill: "#19375b", cursor: "pointer" }} />
+    <Text pointerEvents="none" style={{ left: 628, top: 106, font: "14px sans-serif", fill: "#ffffff" }}>Side auto: {crossAuto.get() ? "on" : "off"}</Text>
 
     <Text pointerEvents="none" style={{ left: 28, top: 146, font: "bold 14px sans-serif", fill: "#19375b" }}>Row: main width → cross height</Text>
     <Rectangle pointerEvents="none" style={{ left: 28, top: 170, width: currentOwner, height: 160, fill: "#e7e5df" }} />
@@ -82,6 +87,7 @@ export function WasmFlexAspectMinimumExample() {
     minWidth: currentMinimum,
     minHeight: 0,
     aspectRatio: 1.5,
+    marginTop: margin,
     fill: "#19375b",
     cursor: "pointer",
   }} />
@@ -110,6 +116,7 @@ export function WasmFlexAspectMinimumExample() {
     minWidth: 0,
     minHeight: currentMinimum,
     aspectRatio: 1.5,
+    marginLeft: margin,
     fill: "#19375b",
     cursor: "pointer",
   }} />
@@ -126,6 +133,10 @@ export function WasmFlexAspectMinimumExample() {
   }} />
     </Flex>
 
+    <Text pointerEvents="none" style={{ left: 28, top: 430, font: "13px sans-serif", fill: "#475569" }}>50% height; side auto moves the settled box.</Text>
+    <Flex style={{ left: 28, top: 452, width: 300, height: 40, alignItems: "flex-start" }}>
+      <Rectangle onClick={() => recordHit("percentage")} style={{ width: 80, height: "50%", minWidth: 0, flexShrink: 0, marginTop: margin, fill: "#6e3e79", cursor: "pointer" }} />
+    </Flex>
     <Text pointerEvents="none" style={{ left: 28, top: 510, width: 700, wrap: true, font: "13px sans-serif", fill: "#475569" }}>Cycle the minimum: omitted → 0 → 240. At owner 240, 240 is an explicit floor; owner 300 reaches that same size through ordinary shrink. Click blue A or green B and inspect the JSON below.</Text>
   </>;
 }

@@ -46,6 +46,16 @@ try {
   assert.deepEqual(await pixel(208, 180), green);
   assert.deepEqual(await pixel(394, 350), green);
   assert.equal(restored.layout.nodeCreates, initial.layout.nodeCreates);
+  const auto = await click(660, 110); assert.equal(auto.crossAuto, true);
+  assert.deepEqual(await pixel(40, 180), [231, 229, 223, 255]);
+  assert.deepEqual(await pixel(40, 215), blue);
+  assert.deepEqual(await pixel(390, 180), [231, 229, 223, 255]);
+  assert.deepEqual(await pixel(480, 180), blue);
+  assert.deepEqual(await pixel(40, 453), [243, 240, 232, 255]);
+  assert.deepEqual(await pixel(40, 475), [110, 62, 121, 255]);
+  assert.deepEqual((await click(40, 475)).hits.at(-1), 'percentage');
+  assert.deepEqual((await click(480, 180)).hits.at(-1), 'column A');
+  assert.equal((await state()).layout.nodeCreates, initial.layout.nodeCreates);
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
   const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
@@ -59,5 +69,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances], [0, 0, 0, 0]);
   assert.deepEqual(errors, []);
-  console.warn(`${source ? 'Source' : 'Built'} empty aspect minimum: omitted=0, floor240 and owner240→300→240 preserve native nodes; row/column exact paint boundaries and old-target transfer agree; disposal0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
+  console.warn(`${source ? 'Source' : 'Built'} empty aspect minimum: omitted=0, floor240 and owner240→300→240 preserve native nodes; row/column exact paint boundaries, aspect/percentage side-auto placement and old-target transfer agree; disposal0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
 } finally { await browser.close(); }

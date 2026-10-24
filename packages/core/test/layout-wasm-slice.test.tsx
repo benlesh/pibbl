@@ -4340,7 +4340,6 @@ it.runIf(experimentalLayout)('allocates finite wrapped row cross-axis auto margi
 
 it.runIf(experimentalLayout).each([
   { label: 'automatic row cross height', options: {}, style: { height: 'auto', marginTop: 'auto' } },
-  { label: 'row aspect cross axis', options: {}, style: { aspectRatio: 2, marginTop: 'auto' } },
   { label: 'automatic column cross width', options: { flexDirection: 'column' as const }, style: { width: 'auto', marginLeft: 'auto' } },
   { label: 'automatic logical column cross width', options: { flexDirection: 'column' as const }, style: { width: 'auto', marginStart: 'auto' } },
   { label: 'automatic shorthand cross size', options: {}, style: { height: 'auto', margin: 'auto' } },
@@ -4634,7 +4633,6 @@ it.runIf(experimentalLayout).each([
   { label: 'custom font', options: {}, style: { font: '10px UnknownFont' } },
   { label: 'clipped overflow', options: {}, style: { overflow: 'clip' } },
   { label: 'fitted text', options: {}, style: { fit: 'ellipsis' } },
-  { label: 'aspect sizing', options: {}, style: { aspectRatio: 2 } },
   { label: 'unwrapped text', options: {}, style: { wrap: false } },
   { label: 'automatic column width', options: { flexDirection: 'column' as const }, style: { width: 'auto', height: 20, marginTop: 0, marginLeft: 'auto' } },
 ])('keeps unsupported automatic Text cross-margin shapes explicit: $label', ({ options, style }) => {
@@ -4760,7 +4758,8 @@ it.runIf(experimentalLayout)('keeps automatic cross-margin custom primitive admi
   expectRejected(createElement(MeasureOnly, { style: automaticCross }));
   expectRejected(createElement(Both, { style: automaticCross }), { flexWrap: 'wrap' });
   expectRejected(createElement(Both, { style: { ...automaticCross, width: 'auto' } }));
-  expectRejected(createElement(Both, { style: { ...automaticCross, aspectRatio: 2 } }));
+  expect(layoutFlex(row, [createElement(Both, { style: { ...automaticCross, minWidth: 0, aspectRatio: 2 } })], {}, measurement))
+    .toEqual([{ x: 0, y: 60, width: 80, height: 40 }]);
   expectRejected(createElement(Both, { style: { height: 80, flexShrink: 1, marginLeft: 'auto' } }), { flexDirection: 'column' });
 });
 

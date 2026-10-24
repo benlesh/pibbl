@@ -216,6 +216,7 @@ try {
       assert.equal(receipt.percentageOwnerBound, true, 'Installed own percentage bounds must use the original caller reference for provider limits and staged placement');
       assert.equal(receipt.measuredStagedPercentageOwner, true, 'Installed measured leaves must preserve callback envelopes, provider-only signal geometry, targeting and exact cleanup');
       assert.equal(receipt.stagedPercentageOwner, true, 'Installed staged percentage query and normal placement must agree through resize, targeting, identity and cleanup');
+      assert.equal(receipt.resolvedCrossAuto, true, 'Installed aspect/percentage cross sizes settle before optional auto placement');
       assert.equal(receipt.emptyAspectMinimum, true, 'Installed empty aspect rows/columns preserve zero content minima and explicit floors');
       assert.equal(receipt.nestedStructuralAggregateReuse, true, 'Installed wrapped leaf must reuse aggregate measurement and retain provider signals');
       assert.equal(receipt.nestedStructuralPairedLeaf, true, 'Installed nested described leaf must retain receiver signals and final-width geometry');

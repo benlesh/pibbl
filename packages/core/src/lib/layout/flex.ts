@@ -1287,8 +1287,8 @@ function resolveFlexPlacements(
       (normalized.flexDirection ?? 'row') === 'row' && normalized.flexWrap === 'wrap' &&
       (normalized.layoutDirection ?? options.layoutDirection) === 'ltr';
     if (hasAutoCrossMargin && !measuredTextCrossAuto && !measuredColumnTextCross && !columnNaturalWrappedTextCross && !measuredColumnProviderCross && !measuredColumnKnownCrossAuto && !measuredPrimitiveCrossAuto && !measuredFlexCrossAuto &&
-        (typeof declaredCrossSize !== 'number' || !Number.isFinite(declaredCrossSize) || declaredCrossSize < 0 || aspectRatio !== undefined)) {
-      throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child cross size without aspect sizing');
+        aspectRatio === undefined && (declaredCrossSize === undefined || declaredCrossSize === 'auto')) {
+      throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child cross size or supported measurement');
     }
     const autoCrossBefore = row ? wrapReverse ? autoBottom : autoTop : wrapReverse ? autoRight : autoLeft;
     const autoCrossAfter = row ? wrapReverse ? autoTop : autoBottom : wrapReverse ? autoLeft : autoRight;

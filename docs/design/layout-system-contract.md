@@ -1685,8 +1685,12 @@ logical inline edges override their resolved physical edge. Numeric zero therefo
 removes one slot without affecting the others. It uses the same sizing and native
 main/cross placement paths; no kernel or ABI changes are needed for shorthand.
 Cross-auto requirements apply after overrides: an auto cross edge still requires
-finite numeric child cross size without aspect sizing, except the supported direct
-Text measurement path below. Normal builds and pure
+a cross size resolved against the finite owner, derived from the supported aspect
+ratio path after main sizing, or supplied by the supported measurement paths below.
+Percentage cross sizes and bounds use the same definite owner reference as numeric
+zero margins. Sizing and clamping finish before auto absorption; changing zero to
+auto changes placement rather than the settled dimensions. Aspect sizing retains
+its definite-main requirement and existing validation. Normal builds and pure
 intrinsic auto-margin measurement retain their existing diagnostics. Source,
 built and installed shorthand fixtures cover all/left-zero/top-zero/start-zero in
 LTR/RTL. Mounted overrides preserve keyed focus, geometry/hits and paint reuse.
