@@ -4,14 +4,14 @@ import {
   type Signal, type SystemStyle, type LayoutBox, type PibblNode, type PibblResponsiveStyle, type BaselineMeasureInput, type BaselinesResult,
 } from "@pibbl/core";
 
-type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB" | "NC" | "FA" | "FB";
+type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB" | "NC" | "FA" | "FB" | "KA" | "KB";
 type WrappedAlign = "flex-start" | "flex-end" | "center" | "space-between" | "space-around" | "space-evenly" | "stretch";
 type FinalBoxSelf = "auto" | "flex-end" | "center" | "flex-start" | "stretch";
 interface CardProps { id: Name; label: string; font: string; first: number | Signal<number> }
 interface CardStyle extends SystemStyle {
   width?: number; height?: number | "auto"; aspectRatio?: number; fill?: string;
   flexBasis?: number; flexGrow?: number; flexShrink?: number;
-  position?: "static" | "relative"; left?: number; top?: number;
+  position?: "static" | "relative" | "absolute"; left?: number; top?: number;
   minWidth?: number; minHeight?: number; marginLeft?: number | "auto"; marginTop?: number | "auto"; marginBottom?: number | "auto"; alignSelf?: FinalBoxSelf;
 }
 type ResolvedCardStyle = CardStyle & { width: number; height: number };
@@ -27,7 +27,7 @@ function createBaselineContent() {
   const crossTop = computed(() => crossMode.get() === "top" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossBottom = computed(() => crossMode.get() === "bottom" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossLabel = computed(() => crossMode.get() === "off" ? "Cross" : crossMode.get());
-  const measuredHeight = signal(20), aspectBox = signal(false);
+  const measuredHeight = signal(20), aspectBox = signal(false), knownFirst = signal(12);
   const finalBoxSelf = signal<FinalBoxSelf>("auto");
   const finalBoxSelfLabel = computed(() => `Self ${finalBoxSelf.get()}`);
   const queryMode = signal<"off" | "narrow" | "wide">("off");
@@ -38,6 +38,8 @@ function createBaselineContent() {
   const measuredFirst = computed(() => (queryMode.get() === "wide" ? queryHeight.get() : queryMode.get() === "narrow" || aspectBox.get() ? 20 : measuredHeight.get()) - 8);
   const measuredFirstLabel = computed(() => String(measuredFirst.get()));
   const measuredHeightLabel = computed(() => `Measured height ${measuredHeight.get()}`);
+  const knownLabel = computed(() => `Known leaf ${knownFirst.get()}`);
+  const knownNumber = computed(() => String(knownFirst.get()));
   const aspectLabel = computed(() => aspectBox.get() ? "Aspect 2" : "Aspect off");
   const finalBoxStyle = computed<CardStyle>(() => ({
     width:40,height:finalBoxHeight.get(),minWidth:0,minHeight:0,flexGrow:0,flexShrink:0,
@@ -192,6 +194,16 @@ function createBaselineContent() {
       <Text pointerEvents="none" style={{left:470,top:308,font:"11px sans-serif",fill:"#ffffff"}}>{queryLabel}</Text>
       <Rectangle onClick={() => finalBoxSelf.update(value => value === "auto" ? "flex-end" : value === "flex-end" ? "center" : value === "center" ? "flex-start" : value === "flex-start" ? "stretch" : "auto")} style={{left:180,top:310,width:150,height:18,fill:"#6e3e79",cursor:"pointer"}} />
       <Text pointerEvents="none" style={{left:188,top:313,font:"10px sans-serif",fill:"#ffffff"}}>{finalBoxSelfLabel}</Text>
+      <Flex style={{ left: 460, top: 340, width: 100, height: 40, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
+        <Flex key="known" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}>
+          <Rectangle key="known-decoration" pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, width: 40, height: 20, fill: "#e7e5df" }} />
+          <BaselineCard key="known-leaf" id="KA" label={knownNumber} font="12px monospace" first={knownFirst} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248" }} />
+        </Flex>
+        <BaselineCard key="known-peer" id="KB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+      </Flex>
+      <Rectangle onClick={() => knownFirst.update(value => value === 12 ? 22 : 12)} style={{ left: 576, top: 340, width: 84, height: 28, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 582, top: 348, font: "10px sans-serif", fill: "#ffffff" }}>{knownLabel}</Text>
+      <Text pointerEvents="none" style={{ left: 460, top: 388, font: "11px sans-serif", fill: "#475569" }}>Known leaf ignores its decorative overlay.</Text>
       <Text pointerEvents="none" style={{ left: 460, top: 185, font: "12px sans-serif", fill: "#475569" }}>Cross auto takes over alignment.</Text>
       <Flex style={{ left: 460, top: 210, width: 160, height: 80, flexDirection, flexWrap: "nowrap", layoutDirection, alignItems: "first-baseline" }}>
         <BaselineCard key="MA" id="MA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: mainMargin, marginTop: crossTop, marginBottom: crossBottom, fill: "#426b61" }} />
@@ -218,7 +230,7 @@ function createBaselineContent() {
       <Text pointerEvents="none" style={{ left: 188, top: 593, font: "12px sans-serif", fill: "#ffffff" }}>{wrappedAutoLabel}</Text>
       <Rectangle onClick={() => relativeShift.update(value => !value)} style={{ left: 350, top: 584, width: 100, height: 32, fill: "#426b61", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 360, top: 593, font: "12px sans-serif", fill: "#ffffff" }}>{relativeLabel}</Text>
-      <Text pointerEvents="none" style={{ left: 28, top: 360, font: "14px sans-serif", fill: "#475569" }}>The Text panel uses live Canvas metrics; it makes no native font-metric claim.</Text>
+      <Text pointerEvents="none" style={{ left: 28, top: 360, font: "14px sans-serif", fill: "#475569" }}>Text uses live Canvas metrics.</Text>
       <Text onClick={() => { textFont.set("10px monospace"); textReflow.set(false); textWrap.update(value => !value); }} style={{ left: 28, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textWrapLabel}</Text>
       <Rectangle onClick={() => textFitPolicy.update(value => !value)} style={{ left: 220, top: 414, width: 104, height: 28, fill: "#a63758", cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 228, top: 422, font: "11px sans-serif", fill: "#ffffff" }}>{textFitPolicyLabel}</Text>
@@ -236,7 +248,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), describedRoot: true, selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), describedRoot: true, knownFirst: knownFirst.get(), selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {

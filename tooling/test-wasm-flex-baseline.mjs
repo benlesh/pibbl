@@ -426,6 +426,11 @@ try {
   await click(32,274);assert.equal((await state()).hits.at(-1),'FA');
   await click(255,319);const selfAuto=await state();
   assert.equal(selfAuto.selfMode,'auto');assert.deepEqual(selfAuto.boxes.FA,queryRestored.boxes.FA);assert.equal(selfAuto.stamps.FA,selfStamp);assert.ok(selfAuto.finalBoxBaselineCalls>selfBaselineCalls);
+  assert.equal(selfAuto.knownFirst,12);assertSelfBox(selfAuto.boxes.KA,{x:460,y:358,width:40,height:20});assertSelfBox(selfAuto.boxes.KB,{x:500,y:340,width:40,height:40});
+  const knownStamp=selfAuto.stamps.KA,knownHits=selfAuto.hits.length;await click(464,374);assert.equal((await state()).hits.at(-1),'KA');
+  await click(620,354);const knownMoved=await state();
+  assert.equal(knownMoved.knownFirst,22);assertSelfBox(knownMoved.boxes.KA,{x:460,y:348,width:40,height:20});assert.deepEqual(knownMoved.boxes.KB,selfAuto.boxes.KB);assert.equal(knownMoved.stamps.KA,knownStamp);
+  await click(464,374);assert.equal((await state()).hits.length,knownHits+1);await click(464,354);assert.equal((await state()).hits.at(-1),'KA');
 
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);

@@ -3,7 +3,7 @@ import { canvasMeasurementService } from './canvas-measurement.js';
 import { Grid } from './grid.js';
 import { Flow } from './flow.js';
 import type { PreparedFlexLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
-import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedIntrinsicMain, peekPreparedIntrinsicMain, takePreparedIntrinsicMain, type PreparedIntrinsicMainStage } from './prepared-root.js';
+import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, peekPreparedLayoutPlan, peekPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedIntrinsicMain, peekPreparedIntrinsicMain, takePreparedIntrinsicMain, type PreparedIntrinsicMainStage } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
@@ -181,6 +181,10 @@ interface FlexItem {
   firstBaseline?: number;
   /** Current transaction root of a transparent layout description. */
   baselineRoot?: PibblElement<any>;
+  /** Existing known-Flex slot prepared before this outer baseline pass. */
+  structuralBaselineSlot?: PreparedLayoutSlot;
+  /** Unkeyed direct-Flex occurrence, shared with known descendant preparation. */
+  knownFlexOccurrence: number;
   /** Column natural cross size is measured only after native main allocation. */
   deferredColumnAutoCross: boolean;
   ordinaryColumnAutoCross: boolean;
@@ -191,6 +195,13 @@ interface FlexLine {
   items: FlexItem[];
   crossSize: number;
   crossOffset: number;
+}
+
+/** One current known-Flex baseline result, without claiming its staged region. */
+interface PreparedKnownFlexBaseline {
+  readonly slot: PreparedLayoutSlot;
+  readonly first: number;
+  readonly last: number;
 }
 
 interface FlexPlacement extends CachedFlexPlacement {
@@ -253,7 +264,7 @@ function renderFlex(
 function flexMeasurementService(ctx: RenderingContext2D): CanvasMeasurementService {
   return canvasMeasurementService(ctx);
 }
-function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexStyle>, localContent: Readonly<LayoutBox>, service: CanvasMeasurementService, region?: LayoutRegion) {
+function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexStyle>, localContent: Readonly<LayoutBox>, service: CanvasMeasurementService, region?: LayoutRegion, parentSlot?: PreparedLayoutSlot) {
   const revision = allocationInputRevision();
   // Decide before materializing or inspecting children; normal paint traversal
   // still visits them and resolves their current receiver-owned paint inputs.
@@ -289,7 +300,7 @@ function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexSty
     placements = resolveFlexPlacements(localContent, children, style, {
       service,
       measureElement: (element, constraints) => measureElement(element, constraints, service),
-    }, region, staged);
+    }, region, staged, parentSlot);
   }
   return { children, placements, revision, content: localContent, cached: cached !== undefined };
 }
@@ -389,7 +400,7 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
       overflow: (style as Readonly<FlexStyle>).overflow ?? 'visible',
       ...normalizeFlexOptions(style as Readonly<FlexStyle>, content),
     } as Readonly<ResolvedFlexStyle>;
-    const plan = prepareFlexAllocation(element.props as FlexProps, resolved, content, flexMeasurementService(ctx), region);
+    const plan = prepareFlexAllocation(element.props as FlexProps, resolved, content, flexMeasurementService(ctx), region, slot);
     prepareFlexDescendants(plan, resolved, slot);
     stagePreparedLayoutPlan(slot, { ...plan, region });
   } finally { GLOBAL_STATE.primitiveReceiverToken = previous; releaseLayout(); }
@@ -438,7 +449,12 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
         });
         preparationChild = placement.element;
       }
-      const nested = preflightKnownLayout(preparationChild, prepared.style, { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight }, receiver, occurrence, parentSlot, isRowDirection(style.flexDirection) ? 'row' : 'column');
+      const content = { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight };
+      const staged = getElementMetadata(placement.element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
+      // A baseline pass may have already staged this exact settled child. Retain
+      // static containing-box metadata above, but never stage the slot twice.
+      if (staged && peekPreparedLayoutPlan(staged, content)) continue;
+      const nested = preflightKnownLayout(preparationChild, prepared.style, content, receiver, occurrence, parentSlot, isRowDirection(style.flexDirection) ? 'row' : 'column');
       attachPreparedLayoutSlot(placement.element, nested);
     }
 }
@@ -1091,6 +1107,7 @@ function resolveFlexPlacements(
   measurement: FlexMeasurementInput,
   region?: LayoutRegion,
   stagedIntrinsic?: PreparedIntrinsicMainStage,
+  parentSlot?: PreparedLayoutSlot,
 ): FlexPlacement[] {
   if (region) recordWasmAllocationPass();
   assertFiniteBox(container);
@@ -1112,6 +1129,7 @@ function resolveFlexPlacements(
   let absoluteMeasurementTokens: Set<object> | undefined;
 
   const occurrences = new Map<object, number>();
+  let knownFlexOccurrence = 0;
   for (let sourceIndex = 0; sourceIndex < children.length; sourceIndex++) {
     const child = children[sourceIndex];
     if (region) recordWasmAllocationItem();
@@ -1666,6 +1684,7 @@ function resolveFlexPlacements(
       deferredColumnAutoCross,
       ordinaryColumnAutoCross: !row && ordinaryCrossAuto && !deferredColumnAutoCross && !naturalColumnWrappedTextCross,
       sourceIndex,
+      knownFlexOccurrence: child.type === Flex && child.key === undefined ? knownFlexOccurrence++ : 0,
     });
   }
 
@@ -1745,6 +1764,12 @@ function resolveFlexPlacements(
       // Automatic cross margins replace alignment, so this leaf neither supplies
       // nor consumes a shared baseline. Native placement resolves its free space.
       if (item.alignSelf !== 'auto' || item.autoCrossBefore || item.autoCrossAfter) { item.firstBaseline = 0; continue; }
+      const structural = prepareKnownFlexFirstBaseline(item, container, measurement, parentSlot);
+      if (structural !== undefined) {
+        item.structuralBaselineSlot = structural.slot;
+        item.firstBaseline = item.paddingCrossBefore + structural.first;
+        continue;
+      }
       const allocation = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
       const baselineRoot = item.baselineRoot ?? item.child;
       const definition = getPrimitiveDefinition(baselineRoot.type);
@@ -1832,18 +1857,20 @@ function resolveFlexPlacements(
         width: row ? item.targetMain : Math.max(0, outerCross - item.paddingCross),
         height: row ? Math.max(0, outerCross - item.paddingCross) : item.targetMain,
       };
+      const element = childWithUsedSize(
+        item.child,
+        usedStyle,
+        usedStyle.width,
+        usedStyle.height,
+        item.receiverToken,
+        item.query,
+      );
+      attachPreparedLayoutSlot(element, item.structuralBaselineSlot);
       placementsBySource[item.sourceIndex] = {
         usedWidth: usedStyle.width,
         usedHeight: usedStyle.height,
         box,
-        element: childWithUsedSize(
-          item.child,
-          usedStyle,
-          usedStyle.width,
-          usedStyle.height,
-          item.receiverToken,
-          item.query,
-        ),
+        element,
       };
       mainCursor += outerMain + mainGap + distribution.between;
     }
@@ -2437,6 +2464,65 @@ function distributeAlignment(
   return { start: 0, between: 0 };
 }
 
+function prepareKnownFlexFirstBaseline(
+  item: FlexItem,
+  container: Readonly<LayoutBox>,
+  measurement: FlexMeasurementInput,
+  parentSlot?: PreparedLayoutSlot,
+): PreparedKnownFlexBaseline | undefined {
+  if (item.child.type !== Flex) return;
+  const style = item.normalized as Readonly<FlexStyle>;
+  if ((style.flexDirection ?? 'row') !== 'row' || (style.flexWrap ?? 'nowrap') !== 'nowrap' || style.position === 'static') {
+    throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
+      'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline currently requires a direct row nowrap Flex child');
+  }
+  const content = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
+  const slot = preflightKnownLayout(item.child, item.normalized, content, item.receiverToken, item.knownFlexOccurrence, parentSlot, 'row');
+  if (!slot) throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
+    'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the direct Flex child did not prepare a native allocation');
+  const plan = peekPreparedFlexPlan(slot, content);
+  if (!plan) throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
+    'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the direct Flex child has no current settled allocation');
+  for (let index = 0; index < plan.children.length; index++) {
+    const source = plan.children[index];
+    const placement = plan.placements[index];
+    const prepared = peekPreNormalizedStyle(placement.element);
+    if (!prepared) throw new Error('Known Flex baseline selection requires settled child inputs.');
+    const selectedStyle = prepared.style as Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>;
+    if (selectedStyle.position === 'absolute') continue;
+    if (selectedStyle.position === 'relative') throw childDiagnostic(source, 'position', 'relative', content,
+      'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a selected structural baseline child cannot have a relative offset');
+    if (isKnownLayoutType(source.type) || isLayoutComponent(source.type) || !getPrimitiveDefinition(placement.element.type)) {
+      throw childDiagnostic(source, 'alignItems', 'first-baseline', content,
+        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the first in-flow structural child must be a direct primitive');
+    }
+    const allocation = { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight };
+    const insets = normalizeBoxInsets(selectedStyle, childContext(source, content));
+    const definition = getPrimitiveDefinition(placement.element.type)!;
+    let first = allocation.height, last = allocation.height;
+    if (definition.measureBaselines) {
+      const measurementChild = clonePibblElement(placement.element);
+      const receiver = getPrimitiveReceiverToken(placement.element);
+      setPreNormalizedStyle(measurementChild, selectedStyle, placement.element, receiver, prepared.query);
+      if (prepared.query) setPreparedBaselineOwner(measurementChild, content);
+      // Structural baseline reads belong to the selected current receiver. This
+      // initial profile keeps no retained provider result or transient token.
+      const result = measureBaselineElement(measurementChild, allocation, measurement.service);
+      if (result.status === 'unsupported') throw childDiagnostic(source, 'measureBaselines', 'unsupported', content,
+        `first-baseline alignment requires a baseline result: ${result.reason}`);
+      first = result.first;
+      last = result.last;
+    }
+    return {
+      slot,
+      first: placement.box.y + insets.top + first,
+      last: placement.box.y + insets.top + last,
+    };
+  }
+  throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
+    'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires one in-flow direct primitive child');
+}
+
 function assertSupportedFirstBaselineFlex(
   options: Readonly<ReturnType<typeof normalizeFlexOptions>>,
   items: readonly FlexItem[],
@@ -2451,6 +2537,14 @@ function assertSupportedFirstBaselineFlex(
     const baselineRoot = isLayoutComponent(item.child.type) ?
       prepareLayoutComponent(item.child, { receiverToken: item.receiverToken }) : item.child;
     if (baselineRoot !== item.child) item.baselineRoot = baselineRoot;
+    if (item.child.type === Flex) {
+      const childStyle = style as Readonly<FlexStyle>;
+      if ((childStyle.flexDirection ?? 'row') !== 'row' || (childStyle.flexWrap ?? 'nowrap') !== 'nowrap' || childStyle.position === 'static' || item.crossAuto || !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
+        throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
+          'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline currently requires a direct row nowrap Flex child');
+      }
+      continue;
+    }
     const textLeaf = baselineRoot.type === Text;
     const textStyle = style as Readonly<TextStyle>;
     const fontSize = textLeaf ? /(?:^| )(\d+(?:\.\d+)?)px(?:\s*\/\s*(?:normal|\d+(?:\.\d+)?(?:px|%)?))?\s+\S/.exec(String(textStyle.font ?? '13px sans-serif')) : null;

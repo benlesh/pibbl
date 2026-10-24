@@ -2079,7 +2079,17 @@ reuse an equal snapshot; mutable/function inputs decline caching rather than
 admission. Description evaluation stays current-transaction work, removal detaches
 the root receiver, and only successful transactions publish results. Responsive
 owner proofs attach to the actual root; query/non-generic Text cache bypasses stay
-in force. This does not choose a child baseline for Flex/Flow/Grid containers.
+in force.
+
+A direct known nowrap row Flex with a settled finite content allocation can
+forward its first source-order in-flow direct primitive child's baseline. Absolute
+decoration is skipped. The container adds the selected child's physical content-y
+origin to its content-local baseline; a child without a provider uses its content
+bottom. This reads the existing current-transaction prepared native placement plan;
+normal traversal remains its sole claimant. There is no public reference-child
+marker or separate line solver. Static inner owners, selected relative-position children, empty containers, inner columns, wrapping inner
+containers, selected nested layout roots, and Flow/Grid selection remain outside
+this structural profile.
 
 Inherited `alignSelf: auto` joins the baseline group. Existing explicit
 `alignSelf` values opt out, skip baseline queries and use ordinary per-line cross

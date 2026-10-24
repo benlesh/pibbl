@@ -20,7 +20,10 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice200: wrapped line distribution and resolved gaps.
+Latest delivery is slice213: known nowrap row descendant baseline selection.
+Slice212 is `beec926f`; slice211 is `7fdb88f8`; consolidation70 is `4439928d`.
+The older numbered checkpoint notes below are historical; the single NEXT heading
+selects current work. Slice200 delivered wrapped line distribution and resolved gaps.
 Slice199 is `64984a64`: wrapped horizontal direction composition.
 Slice198 is `0bf60f32`: native line-local wrapped first baselines.
 Slice197 is `4244c3c3`: row-reverse first-baseline composition.
@@ -7824,7 +7827,7 @@ nested browser all pass. Tarball SHA
 ABI16and native artifact are unchanged. Capability counts and all7release gates
 remain unchanged.
 
-## [NEXT] Slice213: known Flex descendant baseline selection
+## [DONE] Slice213: known Flex descendant baseline selection
 
 Use the existing prepared native plan for a direct finite nowrap row Flex.
 Select the first source-order in-flow primitive child, skipping absolute decoration;
@@ -7833,6 +7836,39 @@ or content-bottom fallback. Preserve exact receiver/slot ownership and prove liv
 movement, targeting, focus, identity and teardown through the public API. Column,
 wrapped and other structural selection remain explicit exits. Consolidate211–213
 before further production; no reference-marker API or JavaScript line inference.
+
+Delivered using a non-consuming current-transaction prepared-plan lookup and the
+same nested slot later claimed by ordinary traversal. The selected primitive's
+physical y plus top content inset lifts its provider/fallback; the outer owner's
+top inset is added once. Public RED failed the original known-root admission;
+focused final9files pass56tests/1normal-only skip, including outer padding6,
+selected fallback padding3/2, signal12→22 geometry18→8, source focus, moved targets,
+identity and exact four-counter cleanup. Static inner owners, selected relative
+children, empty/column/wrapped owners and selected nested layout roots remain
+explicit exits. Selected provider queries use the actual receiver without retained
+transient cache tokens. No new public API, kernel, ABI or second solver.
+
+Scoped review, typecheck, lint, catalog/Studio and documentation checks pass.
+Final stable source5192and built5193baseline replays pass all prior margin checks
+and new known-leaf assertions: errors[],cleanup000,all four ownership assertions;
+built470inputs. Inspected `/tmp/pibbl-slice213-studio-reviewed.png` after shortening
+overlapping labels. Earlier source margin failure and built frame detachment were
+not acceptance receipts; stable reruns preserved those assertions. The later new
+panel strict357.99999999999994vs358comparison now uses the existing1e-4transformed
+geometry tolerance; target/identity assertions remain exact. Installed consumer
+explicitly gates knownFlexDescendantBaseline,104marginfixtures,246inputs,
+strictBundler/NodeNext and nested browser; SHA
+`1d0fed582d97e2fe3409fdfd7ce9f08ac88b01b2ca7353d89988c9524f43a7d3`.
+Capability counts and all7release gates remain unchanged.
+
+## [NEXT] Slice214: relative selected structural baseline children
+
+Preserve the existing pre-relative physical layout-y origin as one scalar in the
+prepared placement. Selected child relative offsets move paint/hit/focus only;
+container contribution remains anchored to layout. Prove top10 and bottom-only10
+with fixed provider allocation, peer, identity and exact cleanup. Reuse existing
+relative resolution; no extra per-item box allocation or public API. Complete the
+211–213consolidation record before changing production.
 
 ## Scope and execution
 

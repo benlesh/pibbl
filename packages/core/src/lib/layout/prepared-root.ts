@@ -132,6 +132,26 @@ export function claimPreparedFlexPlan(element: PibblElement<any>, content: Reado
   if (!plan.region || !('cached' in plan) || typeof plan.cached !== 'boolean' || !('revision' in plan) || typeof plan.revision !== 'number') throw new Error('Prepared Flex plan is incompatible with this boundary.');
   return plan as PreparedFlexLayoutPlan;
 }
+
+/** @internal Reads a current staged plan without transferring its region. */
+export function peekPreparedLayoutPlan(slot: PreparedLayoutSlot, content: Readonly<LayoutBox>): PreparedLayoutPlan | undefined {
+  const transaction = GLOBAL_STATE.renderTransaction;
+  const entry = transaction ? plans.get(transaction)?.get(slot) : undefined;
+  if (!entry || entry.claimed || entry.direction !== getLayoutDirection() ||
+      entry.plan.content.width !== content.width || entry.plan.content.height !== content.height) return;
+  return entry.plan;
+}
+
+/** @internal Reads a current staged Flex plan without transferring its region. */
+export function peekPreparedFlexPlan(slot: PreparedLayoutSlot, content: Readonly<LayoutBox>): PreparedFlexLayoutPlan | undefined {
+  const plan = peekPreparedLayoutPlan(slot, content);
+  if (!plan) return;
+  if (!plan.region || !('cached' in plan) || typeof plan.cached !== 'boolean' ||
+      !('revision' in plan) || typeof plan.revision !== 'number') {
+    throw new Error('Prepared Flex plan is incompatible with this baseline allocation.');
+  }
+  return plan as PreparedFlexLayoutPlan;
+}
 export function stagePreparedChildStyle(child: PibblElement<any>, receiver: object, content: Readonly<LayoutBox>, prepared: PreparedStyle): void {
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) return;
