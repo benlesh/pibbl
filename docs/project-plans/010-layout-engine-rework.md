@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice190: allocated Flow percentage padding.
+Latest delivery is slice191: allocated Grid percentage padding.
+Slice190 is `dd5b47f0`: allocated Flow percentage padding.
 Slice189 is `233311da`: baseline cross-auto participant handling.
 Slice188 is `bb30e361`: baseline main-axis automatic margins.
 Slice187 is `abc5df83`: ordinary finite cross measurement.
@@ -31,7 +32,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; next is191.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; next is192.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -44,7 +45,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is191: allocated Grid percentage padding.
+Consolidation56 is `2fd34f0e` for166–168. Next is192: allocated Absolute/Overlay percentage padding.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now11complete/12experimental/
 4partial/5missing/1excluded. All seven release gates remain open; independent
@@ -7006,14 +7007,43 @@ where constraints are not an allocation owner. These are distinct existing owner
 contracts, not additional automatic-margin work or arbitrary profile expansion.
 Consolidate190–192before further production.
 
-## [NEXT] Slice191: allocated Grid percentage padding
+## Slice191 delivered: allocated Grid percentage padding
 
-Use one finite explicit-track Grid public numeric0/numeric20control, percentage10%
-and a containing-owner200/own-width200to160distinction. Reuse the existing inset
-resolver only at actual Grid own-style allocation, preserving track/area placement,
-identity, hits, pure measurement rejection and cleanup. Do not add advanced tracks,
-implicit placement or a new percentage reference. Remaining parent-child inset
-preparation and other owner families stay separately recorded.
+The public numeric0/numeric20controls precede percentage10%rejection at Grid own
+style dispatch. Experimental Grid now uses the same existing containing-owner
+resolver there before its box and supported track options. Width200to160does not
+change the actual parent200basis or20px inset. Pure raw-percentage measurement
+remains unsupported; no advanced track, implicit placement or new reference.
+
+Fresh Node24.15.0/Chromium6focused files pass45tests, including190, existing Grid
+unit/study behavior, known-family auto margins and177owner staging. The new test
+also locks native track and cell reuse on paint-only updates. Source/built shared
+Flow/Grid example replays pass geometry, actual targets, own-container identity,
+paint reuse and four-counter cleanup, errors[]. Switching container type may
+remount; identity evidence applies to padding/width updates within each type.
+Visual inspection confirms the Grid scene. Strict installed246-input
+Bundler/NodeNext consumer passes Grid ownership, pure rejection, pixels/hits,
+identity and cleanup; SHA256
+`9cc22d6dda05ff7c13bb0aeb9f27101761dfda833db7a5d27f7b19f6a65333c3`.
+Types, changed-file lint,175/12/33catalog/Studio, docs109mutation probes and scoped
+review pass. Kernel78986bytes/ABI10and pinned native references are unchanged;
+no fabricated Yoga Grid equivalence or box-padding capability promotion.
+
+Try `http://127.0.0.1:5192/#/examples/layout/wasm-flow-padding`: choose Grid, then
+compare numeric20and10%padding and narrow width. Built equivalent uses5193.
+Remaining finite classes are Absolute/Overlay own allocation, upstream raw-child
+inset preparation in non-Flex parents, and Layer's separate raster semantics.
+Unallocated intrinsic feedback remains a separate existing measurement policy.
+Fixed33and all7release gates remain unchanged; consolidation190–192is next.
+
+## [NEXT] Slice192: allocated Absolute/Overlay percentage padding
+
+Use actual root allocations with numeric0/numeric20controls, percentage10%and
+containing-owner200/own-width200to160geometry. Reuse the inset resolver at each
+own-style dispatch while preserving their distinct placement/alignment and exact
+resource behavior. Their existing missing pure measurement providers stay missing;
+this slice does not add an opaque query, Flex positioning mode or Layer policy.
+Consolidate190–192before further production.
 
 ## Scope and execution
 

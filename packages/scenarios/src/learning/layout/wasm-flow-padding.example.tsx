@@ -1,13 +1,14 @@
-import { Flow, Group, Rectangle, Text, computed, definePrimitive, signal, untracked, useCanvasContext, useConst, useLayoutBox, useReaction, type BoxStyle, type PibblNode, type Signal, type SystemStyle } from '@pibbl/core';
+import { Flow, Grid, Group, Rectangle, Text, computed, definePrimitive, signal, untracked, useCanvasContext, useConst, useLayoutBox, useReaction, type BoxStyle, type GridItemStyle, type PibblNode, type Signal, type SystemStyle } from '@pibbl/core';
 
 function createFlowPaddingContent() {
-  const flowWidth = signal(200), padding = signal<0 | 20 | '10%'>(0), ink = signal('#a63758');
+  const containerWidth = signal(200), padding = signal<0 | 20 | '10%'>(0), container = signal<'flow' | 'grid'>('flow'), ink = signal('#a63758');
   const paddingLabel = computed(() => padding.get() === 0 ? 'Pad 20' : padding.get() === 20 ? 'Pad 10%' : 'Pad 0');
-  const widthLabel = computed(() => flowWidth.get() === 200 ? 'Width 160' : 'Width 200');
+  const widthLabel = computed(() => containerWidth.get() === 200 ? 'Width 160' : 'Width 200');
+  const containerLabel = computed(() => container.get() === 'flow' ? 'Grid' : 'Flow');
   let serial = 0, hits = 0, basis = new DOMMatrix(), box = { x: 0, y: 0, width: 0, height: 0, stamp: 0 };
   const diagnostics = (globalThis as typeof globalThis & { __PIBBL_LAYOUT_DIAGNOSTICS__?: () => Record<string, number> }).__PIBBL_LAYOUT_DIAGNOSTICS__;
   const CanvasBasis = definePrimitive<{ children: PibblNode }>((props, _style, context) => { basis = context.getTransform(); return props.children; });
-  const Content = definePrimitive<{}, BoxStyle, BoxStyle, SystemStyle & { width: number; height: number }>((_props, style) => {
+  const Content = definePrimitive<{}, BoxStyle & GridItemStyle, BoxStyle & GridItemStyle, SystemStyle & { width: number; height: number }>((_props, style) => {
     const allocation = useLayoutBox(), transform = useCanvasContext().getTransform(), stamp = useConst(() => ++serial);
     const point = basis.inverse().transformPoint({ x: transform.e, y: transform.f });
     box = { x: point.x, y: point.y, width: allocation.width, height: allocation.height, stamp };
@@ -16,18 +17,28 @@ function createFlowPaddingContent() {
   function Button({ x, label, onClick }: { readonly x: number; readonly label: string | Signal<string>; onClick(): void }) {
     return <><Rectangle onClick={onClick} style={{ left: x, top: 104, width: 56, height: 28, fill: '#19375b', cursor: 'pointer' }} /><Text pointerEvents="none" style={{ left: x + 5, top: 113, font: '9px sans-serif', fill: '#ffffff' }}>{label}</Text></>;
   }
+  function ContainerButton() {
+    return <><Rectangle onClick={() => container.update(value => value === 'flow' ? 'grid' : 'flow')} style={{ left: 136, top: 76, width: 56, height: 24, fill: '#19375b', cursor: 'pointer' }} /><Text pointerEvents="none" style={{ left: 145, top: 83, font: '9px sans-serif', fill: '#ffffff' }}>{containerLabel}</Text></>;
+  }
+  function PaddingContainer() {
+    const child = container.get() === 'grid'
+      ? <Content key="content" style={{ width: 100, height: 40, gridColumnStart: 1, gridRowStart: 1 }} />
+      : <Content key="content" style={{ width: 100, height: 40 }} />;
+    return container.get() === 'grid'
+      ? <Grid style={{ width: containerWidth, height: 80, boxSizing: 'border-box', padding, gridTemplateColumns: [100], gridTemplateRows: [40] }}>{child}</Grid>
+      : <Flow style={{ width: containerWidth, height: 80, boxSizing: 'border-box', padding, direction: 'horizontal', wrap: false, alignItems: 'start' }}>{child}</Flow>;
+  }
   const node = <CanvasBasis><Group>
     <Rectangle pointerEvents="none" style={{ width: 200, height: 160, fill: '#f3f0e8' }} />
-    <Text pointerEvents="none" style={{ left: 8, top: 138, width: 184, wrap: true, lineHeight: 10, font: '9px sans-serif', fill: '#475569' }}>The 200px surface owns padding. Narrowing Flow keeps the 20px inset.</Text>
-    <Rectangle pointerEvents="none" style={{ width: flowWidth, height: 80, stroke: '#a0aab8', strokeWidth: 1 }} />
-    <Flow style={{ width: flowWidth, height: 80, boxSizing: 'border-box', padding, direction: 'horizontal', wrap: false, alignItems: 'start' }}>
-      <Content key="content" style={{ width: 100, height: 40 }} />
-    </Flow>
+    <Text pointerEvents="none" style={{ left: 8, top: 138, width: 184, wrap: true, lineHeight: 10, font: '9px sans-serif', fill: '#475569' }}>The 200px surface owns padding. Narrowing Flow or Grid keeps the 20px inset.</Text>
+    <Rectangle pointerEvents="none" style={{ width: containerWidth, height: 80, stroke: '#a0aab8', strokeWidth: 1 }} />
+    <PaddingContainer />
+    <ContainerButton />
     <Button x={8} label={paddingLabel} onClick={() => padding.update(value => value === 0 ? 20 : value === 20 ? '10%' : 0)} />
-    <Button x={72} label={widthLabel} onClick={() => flowWidth.update(value => value === 200 ? 160 : 200)} />
+    <Button x={72} label={widthLabel} onClick={() => containerWidth.update(value => value === 200 ? 160 : 200)} />
     <Button x={136} label="Paint" onClick={() => ink.update(value => value === '#a63758' ? '#426b61' : '#a63758')} />
   </Group></CanvasBasis>;
-  return { node, read: () => JSON.stringify({ allocationWidth: 200, flowWidth: flowWidth.get(), padding: padding.get(), box, hits, basis, layout: diagnostics?.() ?? {} }) };
+  return { node, read: () => JSON.stringify({ allocationWidth: 200, container: container.get(), containerWidth: containerWidth.get(), padding: padding.get(), box, hits, basis, layout: diagnostics?.() ?? {} }) };
 }
 
 export function WasmFlowPaddingExample() {

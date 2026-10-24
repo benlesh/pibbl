@@ -13,7 +13,7 @@ import {
   type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
-import { normalizeBoxInsets } from './box-insets.js';
+import { normalizeBoxInsets, hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
 import { resolveLength } from '../style/resolve-length.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
@@ -183,11 +183,17 @@ export const Grid = definePrimitive<
   ResolvedGridStyle
 >(renderGrid, {
   childInput: 'structural',
-  resolveStyle: (style, context) => ({
-    box: resolveContainerBox(style, context, 'Grid', 'grid'),
-    overflow: style.overflow ?? 'visible',
-    ...normalizeGridOptions(style, context.allocation),
-  }),
+  resolveStyle: (style, context) => {
+    if (experimentalLayout && hasPercentageBoxPadding(style)) {
+      style = resolveAllocatedInsets(style, { width: context.percentageBasis.width,
+        context: { ...context, component: 'Grid', algorithm: 'grid' } });
+    }
+    return {
+      box: resolveContainerBox(style, context, 'Grid', 'grid'),
+      overflow: style.overflow ?? 'visible',
+      ...normalizeGridOptions(style, context.allocation),
+    };
+  },
   measure: (input) => measureGrid(input),
 });
 
