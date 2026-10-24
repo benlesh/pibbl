@@ -4648,7 +4648,7 @@ it.runIf(experimentalLayout).each([
   } else if (label === 'custom font' || label === 'clipped overflow' || label === 'fitted text') {
     expect(layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toEqual([{ x: 0, y: 70, width: 80, height: 30 }]);
   } else if (label === 'unwrapped text') expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/measured dimensions must be finite/);
-  else expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/auto cross-axis margins/);
+  else expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/explicit main-axis minimum/);
 });
 
 it.runIf(experimentalLayout)('measures a finite custom primitive before allocating an automatic cross-axis margin', async () => {
@@ -4743,7 +4743,7 @@ it.runIf(experimentalLayout)('measures a finite custom primitive before allocati
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('keeps automatic cross-margin custom primitive admission finite and direct', () => {
+it.runIf(experimentalLayout)('requires finite measurement and supported main sizing before automatic cross-margin placement', () => {
   type Style = import('@pibbl/core').SystemStyle & {
     width?: number | 'auto';
     height?: number | 'auto';
@@ -4766,7 +4766,8 @@ it.runIf(experimentalLayout)('keeps automatic cross-margin custom primitive admi
     expect(() => layoutFlex(row, [child], options, measurement)).toThrow(/auto cross-axis margins/);
   };
   expectRejected(createElement(IntrinsicOnly, { style: automaticCross }));
-  expectRejected(createElement(MeasureOnly, { style: automaticCross }));
+  expect(() => layoutFlex(row, [createElement(MeasureOnly, { style: automaticCross })], {}, measurement)).toThrow(/explicit main-axis minimum/);
+  expect(layoutFlex(row, [createElement(MeasureOnly, { style: { ...automaticCross, minWidth: 0 } })], {}, measurement)).toEqual([{ x: 0, y: 80, width: 80, height: 20 }]);
   expect(() => layoutFlex(row, [createElement(Both, { style: automaticCross })], { flexWrap: 'wrap' }, measurement)).toThrow(/explicit main-axis minimum/);
   expect(layoutFlex(row, [createElement(Both, { style: { ...automaticCross, minWidth: 0 } })], { flexWrap: 'wrap', alignContent: 'flex-start' }, measurement)).toEqual([{ x: 0, y: 0, width: 80, height: 20 }]);
   expect(layoutFlex(row, [createElement(Both, { style: { ...automaticCross, width: 'auto' } })], {}, measurement)).toEqual([{ x: 0, y: 80, width: 100, height: 20 }]);

@@ -30,7 +30,7 @@ Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; next is187: ordinary cross measurement.
+Consolidation61 is `8162fea2` for181–183; consolidation62 verifies184–186; consolidation63 closes the bounded auto-margin inventory; next is190.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -43,10 +43,10 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is187: ordinary measurement capability and wrapped-child Text.
+Consolidation56 is `2fd34f0e` for166–168. Next is190: definite-owner percentage padding measurement.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
-owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
-5partial/5missing/1excluded. All seven release gates remain open; independent
+owner/min-max closure matrix. Fixed33 is now11complete/12experimental/
+4partial/5missing/1excluded. All seven release gates remain open; independent
 intrinsic graphs, automatic minima and other measurement work remain outstanding.
 Consolidation55 is `98bf8b8d` for163–165.
 Slice165 is `cc334a0a` (empty-Rectangle aspect automatic minimum).
@@ -6936,15 +6936,52 @@ cycles top/bottom/both while the companion's other card retains its baseline.
 Built equivalent uses5193. This resolves the final recorded auto-only guard;
 consolidation63 and the original bounded exit decision remain required.
 
-## [NEXT] Consolidation63 and original automatic-margin exit decision
+## Consolidation63: slices187–189 and bounded automatic-margin exit
 
-Consolidate187–189 before any next production slice. The first accumulated run
-passed1068/skip12 and failed two obsolete diagnostics; both inputs still require
-an explicit main minimum. Update only those expectations and add a positive
-measure-only minimum0control, then rerun the72-file matrix. Assess the finite
-main/cross baseline exit cells and existing independent pure-query boundaries.
-Do not add speculative profiles or promote a release gate. Fixed33 remains
-10complete/12experimental/5partial/5missing/1excluded pending that assessment.
+Fresh Node24.15.0/Chromium72-file matrix passes1070/skip12 of1082in86.55s;
+ordinary mode passes302/skip780in8.93s. The first accumulated run found two stale
+admission diagnostics after187. Both inputs still reject their missing main-axis
+minimum; the repaired tests assert that exact requirement and a measure-only
+minWidth0positive control. Focused repaired selection passes8/skip420, then the
+entire matrix passes. No additional production repair was required.
+
+Full source/built Flex/Text replays pass errors[]/cleanup000with470built inputs.
+Current installed246-input strict Bundler/NodeNext consumer passes104prior margin
+fixtures plus ordinary providers and baseline main/cross targets, callback
+exclusion, identity and cleanup; SHA256
+`4fe82c70ffdb5fef84653598ecc48a1e711b0bb4ef01a74fd15e31320f08d1ab`.
+Pinned native118records retain source SHA256
+`b906c32eb8f1969e917b645e2b79e05ab6ec65d997ec367d7dcd1620eed5b9bc`.
+Kernel78986bytes/fingerprint/ABI10check and public JSDoc pass. Docs109mutation
+probes, types, lint and174/12/33catalog/Studio pass for189and final records.
+
+The bounded audit finds no remaining auto-only guard: ordinary measure-only and
+wrapped Text classes are187, baseline main is188, cross-auto participant handling
+is189. Remaining normal-build rejection is the experimental boundary; unsupported
+pure queries, staged nonzero numeric margins and absolute margin placement also
+fail numeric-zero controls, so remain their independent capability work. The
+native/CSS baseline cross placement difference is explicitly retained.
+`flex.auto-margin` moves from partial to complete for its stated bounded
+experimental-Flex contract. The manifest's completion rule is capability-level:
+pinned reference, public semantics, negative inputs, interaction and classified
+divergences are present. It does not enable the engine or close release gates.
+There is no concrete remaining auto-margin profile to justify an invented blocker.
+Fixed33 is now11complete/12experimental/4partial/5missing/1excluded. All7release
+gates remain open. Aggregate Node24trust and final whole-codebase review are not
+claimed; that independent review remains mandatory at program exit.
+
+## [NEXT] Slice190: allocated Flow percentage padding
+
+Resume the existing `box.padding-and-layout-border` debt rather than adding more
+automatic-margin profiles. Establish public numeric0/numeric20padding controls and a percentage-padding
+failure for an already allocated Flow outside the actual Flex ownership path.
+Use an equal200px Canvas/Flow width first, avoiding any new percentage basis;
+reuse existing containing-owner normalization. Pure measurement constraints do
+not establish allocation ownership, so keep that query's current unsupported
+result. Distinguish unavailable intrinsic-width feedback from the actual finite-
+owner render gap. No new public sizing syntax or solver.
+The broader constraint/feedback and Grid/overflow targets remain in the fixed
+ledger; this slice does not promise to close them all.
 
 ## Scope and execution
 

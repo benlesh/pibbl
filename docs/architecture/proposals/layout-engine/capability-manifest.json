@@ -2201,10 +2201,11 @@
       "target": "parity",
       "group": "box-and-direction",
       "current": "experimental finite native main/cross auto margins across main directions, nowrap/wrap/wrap-reverse and LTR/RTL, physical/logical edges and uniform precedence; declared numeric/percentage and supported aspect cross sizes settle before absorption; final Text row and unwrapped-column measurement preserves existing Canvas font/fitting/overflow policy, with generic-only reusable caching; the separate fixed-height generic wrapped-column natural-advance policy remains bounded; direct/described paired providers and measurable Flex/Flow/fixed-track Grid roots use existing final-main pure measurement before native cross placement; intrinsic auto margins contribute zero in otherwise admitted native owner queries; source targets, keyed identity, receiver/cache ownership and teardown are evidenced; ordinary measure-only direct/described providers and finite wrapped-column Text profiles retain ordinary finite measurement; fixed LTR baseline leaves admit main and cross automatic margins, excluding cross-auto leaves from shared baseline queries and ascent",
-      "status": "partial",
-      "unresolvedPolicy": "All recorded auto-only admission classes are now implemented through slices187–189; consolidation63 and the bounded capability exit decision are pending. Existing pure-query or numeric-zero failures remain independent prerequisites: wrapped column natural sizing, staged intrinsic owners with nonzero numeric margins, prepared responsive recursive queries and Absolute/Overlay pure providers. Pibbl keeps its documented CSS line-local cross-auto policy; pinned Yoga baseline cross-auto is an explicitly recorded divergence, not an unconditional parity claim.",
+      "status": "complete",
+      "unresolvedPolicy": "The stated bounded experimental-Flex auto-margin contract is complete after consolidation63: every recorded auto-only admission class has public, interaction, negative, lifecycle and pinned-reference evidence, with native/CSS divergences classified. This capability-level completion does not enable the experimental engine or close any release gate. Normal-build migration, aggregate trust and whole-program conformance remain separate gates. Unavailable pure queries and failing numeric-zero measurements remain their existing independent capability prerequisites.",
       "evidence": {
         "positive": [
+          "consolidation63: fresh Node24.15/Chromium72-file matrix1070pass12skip; ordinary302pass780skip; full source/built replay errors[] cleanup000 with470built inputs; installed246-input strict consumer passes all current fixtures; pinned native118records and matching78986-byte ABI10artifacts; bounded guard audit finds no remaining auto-only admission guard",
           "slice189: public and installed before/after/both baseline cross-auto placement excludes the leaf baseline callback/ascent; detached provider signals do not schedule new solves; native27tests, source/built companion targets, stable identities and exact teardown pass; pinned Yoga top-auto18 differs from existing Pibbl full-line60 policy",
           "slice188: main left/right auto margins resolve before fixed LTR baseline alignment, preserving final provider allocation, targets and identities in public/source/built/installed consumers",
           "slice187: ordinary measure-only direct/described providers and five wrapped Text policies retain finite cross measurement and live signal ownership without an intrinsic callback; public/source/built/installed ordinary-provider evidence passes",
@@ -2375,10 +2376,7 @@
           "owner-cross-auto-top-stretch-wide",
           "owner-cross-auto-top-stretch-narrow"
         ],
-        "missing": [
-          "consolidation63 and original bounded auto-margin exit assessment pending",
-          "independently unsupported pure queries and staged nonzero numeric margin contributions retain numeric-zero diagnostics"
-        ]
+        "missing": []
       },
       "evidenceRefs": [
         "packages/core/test/layout-intrinsic-auto-margin.test.tsx",
