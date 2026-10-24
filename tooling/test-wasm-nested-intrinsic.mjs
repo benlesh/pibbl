@@ -203,6 +203,8 @@ try {
       assert.equal(receipt.reverseDecoratedMainSymmetricBounds, true, 'Installed decorated reverse main-axis percentage floors and caps must complete the finite row/column matrix with target transfer, identity, paint reuse, and exact cleanup');
       assert.equal(receipt.textCrossHits, 1, 'Measured auto-cross target must agree with installed placement');
       assert.equal(receipt.indefiniteBoundValidation, true, 'Installed indefinite percentage bounds must validate before admission without resource allocation');
+      assert.equal(receipt.firstBaselineDirections, true, 'Installed first-baseline placement must compose horizontal directions with stable identity and real targets');
+      assert.equal(receipt.firstBaselineWrappedLines, true, 'Installed ABI11 must place baselines per native line, move only the affected line and clean up exactly');
       assert.equal(receipt.firstBaseline, true, 'Installed baseline providers must use final allocations, native baseline placement, source focus, paint reuse, detached inputs, and exact cleanup');
       assert.equal(receipt.firstBaselineAutoMain, true, 'Installed baseline leaves must distribute positive main-axis automatic margins after baseline alignment while preserving targets, identities, and cleanup');
       assert.equal(receipt.firstBaselineAutoCross, true, 'Installed baseline leaves must let automatic cross margins replace shared baseline alignment, consume positive cross space, preserve targets and identities, and clean up exactly');
