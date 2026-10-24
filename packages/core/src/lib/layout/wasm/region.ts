@@ -726,14 +726,15 @@ export class LayoutRegion {
     const records = items.map(item => {
       // Ordinary cross placement reflects logical edges. Baseline groups retain
       // physical content-top offsets, including reversed line allocations.
-      const physicalEdges = baseline && reverse;
+      const participant = baseline && item.alignSelf === 'auto' && !item.autoCrossBefore && !item.autoCrossAfter;
+      const physicalEdges = baseline && reverse && (participant || item.autoCrossBefore || item.autoCrossAfter);
       const beforeAuto = physicalEdges ? item.autoCrossAfter : item.autoCrossBefore;
       const afterAuto = physicalEdges ? item.autoCrossBefore : item.autoCrossAfter;
       const before = physicalEdges ? item.marginCrossAfter : item.marginCrossBefore;
       const after = physicalEdges ? item.marginCrossBefore : item.marginCrossAfter;
       // Baseline inputs are fully resolved outer boxes and outer-relative offsets.
-      return [item.preferredCross, baseline ? 0 : item.paddingCross, item.minCross, item.maxCross,
-        item.crossAuto ? 1 : 0, alignmentCodes[item.alignSelf === 'auto' ? alignment : item.alignSelf] + (beforeAuto ? 4 : 0) + (afterAuto ? 8 : 0),
+      return [item.preferredCross, item.paddingCross, item.minCross, item.maxCross,
+        item.crossAuto ? 1 : 0, alignmentCodes[item.alignSelf === 'auto' ? alignment : item.alignSelf] + (beforeAuto ? 4 : 0) + (afterAuto ? 8 : 0) + (participant ? 16 : 0),
         baseline ? before ?? 0 : 0, baseline ? after ?? 0 : 0,
         baseline ? item.firstBaseline ?? Number.NaN : before ?? 0, baseline ? 0 : after ?? 0];
     });

@@ -2070,8 +2070,16 @@ measurement consumes the selected style without resolving rules again against it
 own content allocation. Query results bypass retained baseline entries; selected
 signal dependencies stay with the existing preparation receiver and detach when
 unselected. Unprepared, recursive or intrinsic query resolution remains rejected.
-Last-baseline placement, nested providers, per-item alignment membership and
-absolute participation remain outside this admission. Main-axis automatic margins are
+Inherited `alignSelf: auto` joins the baseline group. Existing explicit
+`alignSelf` values opt out, skip baseline queries and use ordinary per-line cross
+placement. Their hypothetical outer sizes and numeric margins still contribute
+to line extent. Automatic stretch uses its final-width measured natural size for
+that contribution, then the ordinary padding/bounds-aware stretch rule consumes
+the allocated line extent. Automatic cross margins continue to override alignment.
+Wrap reversal preserves physical baseline group offsets while explicit self
+alignment follows ordinary logical reversal, including its numeric margins.
+Last-baseline placement, nested providers and absolute participation remain
+outside this admission. Main-axis automatic margins are
 resolved by the existing native main allocator before baseline alignment; they
 do not change membership in the baseline-sharing group. Cross-axis automatic
 margins instead exclude that leaf from the baseline-sharing group and its pure

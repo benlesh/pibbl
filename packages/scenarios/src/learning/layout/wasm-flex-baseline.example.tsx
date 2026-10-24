@@ -6,12 +6,13 @@ import {
 
 type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB" | "NC" | "FA" | "FB";
 type WrappedAlign = "flex-start" | "flex-end" | "center" | "space-between" | "space-around" | "space-evenly" | "stretch";
+type FinalBoxSelf = "auto" | "flex-end" | "center" | "flex-start" | "stretch";
 interface CardProps { id: Name; label: string; font: string; first: number | Signal<number> }
 interface CardStyle extends SystemStyle {
   width?: number; height?: number | "auto"; aspectRatio?: number; fill?: string;
   flexBasis?: number; flexGrow?: number; flexShrink?: number;
   position?: "static" | "relative"; left?: number; top?: number;
-  minWidth?: number; minHeight?: number; marginLeft?: number | "auto"; marginTop?: number | "auto"; marginBottom?: number | "auto";
+  minWidth?: number; minHeight?: number; marginLeft?: number | "auto"; marginTop?: number | "auto"; marginBottom?: number | "auto"; alignSelf?: FinalBoxSelf;
 }
 type ResolvedCardStyle = CardStyle & { width: number; height: number };
 
@@ -27,6 +28,8 @@ function createBaselineContent() {
   const crossBottom = computed(() => crossMode.get() === "bottom" || crossMode.get() === "both" ? "auto" as const : 0);
   const crossLabel = computed(() => crossMode.get() === "off" ? "Cross" : crossMode.get());
   const measuredHeight = signal(20), aspectBox = signal(false);
+  const finalBoxSelf = signal<FinalBoxSelf>("auto");
+  const finalBoxSelfLabel = computed(() => `Self ${finalBoxSelf.get()}`);
   const queryMode = signal<"off" | "narrow" | "wide">("off");
   const queryHeight = computed(() => measuredHeight.get() + 10);
   const finalBoxWidth = computed(() => queryMode.get() === "wide" ? 160 : 120);
@@ -38,11 +41,11 @@ function createBaselineContent() {
   const aspectLabel = computed(() => aspectBox.get() ? "Aspect 2" : "Aspect off");
   const finalBoxStyle = computed<CardStyle>(() => ({
     width:40,height:finalBoxHeight.get(),minWidth:0,minHeight:0,flexGrow:0,flexShrink:0,
-    aspectRatio:aspectValue.get(),fill:"#426b61",
+    aspectRatio:aspectValue.get(),fill:"#426b61",alignSelf:finalBoxSelf.get(),
     when:queryMode.get() === "off" ? undefined : [{query:{minWidth:140},style:{height:queryHeight}}],
   }));
   const queryLabel = computed(() => queryMode.get() === "off" ? "Query off" : queryMode.get() === "narrow" ? "Query narrow" : "Query wide");
-  let finalBoxMeasureCalls = 0;
+  let finalBoxMeasureCalls = 0, finalBoxBaselineCalls = 0;
   const textFont = signal("10px monospace");
   const textFitPolicy = signal(false);
   const textInsets = signal(false);
@@ -113,7 +116,7 @@ function createBaselineContent() {
       <Text pointerEvents="none" style={{ left: 4, top: first, textBaseline: "alphabetic", font: props.font, fill: "#ffffff" }}>{props.label}</Text>
     </>;
   }
-  const resolveStyle = (style: Readonly<CardStyle>, context: { allocation: Readonly<LayoutBox> }): ResolvedCardStyle => ({ ...style, marginLeft: undefined, marginTop: undefined, marginBottom: undefined, width: context.allocation.width, height: context.allocation.height });
+  const resolveStyle = (style: Readonly<CardStyle>, context: { allocation: Readonly<LayoutBox> }): ResolvedCardStyle => ({ ...style, alignSelf: undefined, marginLeft: undefined, marginTop: undefined, marginBottom: undefined, width: context.allocation.width, height: context.allocation.height });
   const BaselineCard = definePrimitive<CardProps, CardStyle, CardStyle, ResolvedCardStyle>(renderCard, {
     resolveStyle,
     measureBaselines(input: BaselineMeasureInput<CardProps, CardStyle>): BaselinesResult {
@@ -127,6 +130,8 @@ function createBaselineContent() {
     resolveStyle,
     measure: () => { finalBoxMeasureCalls++; return {status:"measured",size:{width:40,height:measuredHeight.get()}}; },
     measureBaselines: ({allocation}) => {
+      if (finalBoxSelf.get() !== "auto") throw new Error("explicit alignSelf must not query the final-box baseline");
+      finalBoxBaselineCalls++;
       allocations.set("FA", {...allocation});
       const first = allocation.height - 8;
       return {status:"measured",first,last:first};
@@ -182,6 +187,8 @@ function createBaselineContent() {
       <Text pointerEvents="none" style={{left:358,top:287,font:"11px sans-serif",fill:"#ffffff"}}>{aspectLabel}</Text>
       <Rectangle onClick={() => queryMode.update(value => value === "off" ? "narrow" : value === "narrow" ? "wide" : "off")} style={{left:460,top:300,width:160,height:28,fill:"#a63758",cursor:"pointer"}} />
       <Text pointerEvents="none" style={{left:470,top:308,font:"11px sans-serif",fill:"#ffffff"}}>{queryLabel}</Text>
+      <Rectangle onClick={() => finalBoxSelf.update(value => value === "auto" ? "flex-end" : value === "flex-end" ? "center" : value === "center" ? "flex-start" : value === "flex-start" ? "stretch" : "auto")} style={{left:180,top:310,width:150,height:18,fill:"#6e3e79",cursor:"pointer"}} />
+      <Text pointerEvents="none" style={{left:188,top:313,font:"10px sans-serif",fill:"#ffffff"}}>{finalBoxSelfLabel}</Text>
       <Text pointerEvents="none" style={{ left: 460, top: 185, font: "12px sans-serif", fill: "#475569" }}>Cross auto takes over alignment.</Text>
       <Flex style={{ left: 460, top: 210, width: 160, height: 80, flexDirection, flexWrap: "nowrap", layoutDirection, alignItems: "first-baseline" }}>
         <BaselineCard key="MA" id="MA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: mainMargin, marginTop: crossTop, marginBottom: crossBottom, fill: "#426b61" }} />
@@ -226,7 +233,7 @@ function createBaselineContent() {
   const children = renderContent();
   return {
     node: <CanvasBasis>{children}</CanvasBasis>,
-    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
   };
 }
 export function WasmFlexBaselineExample() {

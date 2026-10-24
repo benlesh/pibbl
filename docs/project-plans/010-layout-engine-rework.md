@@ -7750,7 +7750,7 @@ regression. Earlier1159/351results are superseded, not counted twice. The ordina
 Canvas baseline service retains its zero-line diagnostic contract while fitted
 empty text adds its precise reason. No aggregate trust or final review claimed.
 
-## [NEXT] Slice211: mixed per-item baseline membership
+## [DONE] Slice211: mixed per-item baseline membership
 
 Use one native membership bit and the existing ordinary cross-placement algorithm
 for all existing explicit alignSelf values; inherited auto remains a baseline
@@ -7761,6 +7761,50 @@ padding in the native cross record, actual provider exclusion/dependency detach,
 physical baseline reversal and ordinary logical reversal. Establish public RED,
 then native semantic regressions and the required ABI/artifact update. No new
 public API or per-property exclusion queue.
+
+Public RED precedes production for mixed explicit alignment and padded automatic
+stretch. An initial fixture leaked authored alignSelf:auto into its resolved style;
+that fixture was corrected and restoring the previous guard then produces a
+controlled RED. All existing explicit values now opt out and skip provider queries;
+auto rejoins and rebinds dependencies. Source order, focus order, keyed stamps,
+three-line continuation and real target transfers remain intact. A padded natural
+content20/outer30stretches to outer66in its allocated line, then flex-start restores
+outer30while its peer and following line stay fixed. Reverse controls include
+physical top5/bottom10: ordinary flex-end y85→flex-start90while the inherited
+baseline peer remains y80. Zero margins separately produce80→100.
+
+Native policy bit16marks membership while low alignment/auto-edge bits retain
+ordinary meaning. Slot1preserves padding. Both nowrap and wrapped baseline paths
+reuse the ordinary per-record cross calculation; no JS line solver, new public
+API or retained graph. Scoped review passes. Review caught finite-offset/free-space
+overflow preservation; focused native RED confirms the old weakened preflight
+incorrectly returned0instead of1before the guard was restored. Every result is
+preflighted before output writes. FreshRust1.99native45tests and Node26.9/Chromium11focused files
+120pass/2normal-onlyskips, typecheck/lint, catalog/Studio checks and109documentation
+mutation probes pass. New private ABI16rejects complete15before publication.
+
+Final artifact83603bytes, SHA
+`d3be3dc538a62456c2fa6ef07e849bf1be036e8395b9b7774a11690f88af3c97`.
+Source5192and built5193full baseline drivers pass against that rebuilt artifact:
+errors[],cleanup000and all four ownership assertions; built470distinputs. Inspected
+`/tmp/pibbl-slice211-studio-final.png`; Self cycles existing alignSelf values,
+including automatic stretch, with provider-query exclusion and rejoin. Installed
+consumer explicitly gates `mixedSelfBaselineMembership`: ordinary stretch66→20,
+unchanged baseline-peer geometry, stable identity, old-target removal, no baseline
+query for the opt-out and exact cleanup.104marginfixtures/246installed inputs and
+strictBundler/NodeNext pass; tarballSHA
+`2845d26140569968c0fb6d9b712f11cdcbff28538ff0bb905386b74d3085ce42`.
+The earlier generic packed check alone is not this new receipt. Capability counts
+and all7open release gates are unchanged. Consolidate211–213before further production.
+
+## [NEXT] Slice212: transparent described-root baseline propagation
+
+A defineLayoutComponent with one already-prepared primitive root forwards that
+root's final content-local baseline without another origin. Reuse the current
+prepared root, actual root receiver, transaction and successful-cache receipt
+ownership. Prove signal movement, paint reuse, removal and exact cleanup through
+the public API. Keep general Flex/Flow/Grid child/reference selection as a distinct
+structural contract; no speculative reference-child flag or second solver.
 
 ## Scope and execution
 

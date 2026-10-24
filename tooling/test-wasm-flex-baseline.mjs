@@ -410,6 +410,22 @@ try {
   await click(240,292);await click(540,314);const queryRestored=await state();
   assert.equal(queryRestored.queryMode,'off');assert.equal(queryRestored.queryWidth,120);
   assert.deepEqual(queryRestored.boxes.FA,finalBoxBefore.boxes.FA);assert.equal(queryRestored.stamps.FA,queryStamp);
+  const assertSelfBox=(actual,expected)=>{for(const key of ['x','y','width','height'])assert.ok(Math.abs(actual[key]-expected[key])<1e-4,`self ${key}: ${actual[key]} versus ${expected[key]}`);};
+  const selfBaselineCalls=queryRestored.finalBoxBaselineCalls,selfStamp=queryRestored.stamps.FA,selfHits=queryRestored.hits.length;
+  await click(255,319);const selfEnd=await state();
+  assert.equal(selfEnd.selfMode,'flex-end');assertSelfBox(selfEnd.boxes.FA,{...queryRestored.boxes.FA,y:290});assert.deepEqual(selfEnd.boxes.FB,queryRestored.boxes.FB);assert.equal(selfEnd.stamps.FA,selfStamp);assert.equal(selfEnd.finalBoxBaselineCalls,selfBaselineCalls);
+  await click(32,274);assert.equal((await state()).hits.length,selfHits);
+  await click(255,319);const selfCenter=await state();
+  assert.equal(selfCenter.selfMode,'center');assertSelfBox(selfCenter.boxes.FA,{...queryRestored.boxes.FA,y:280});assert.equal(selfCenter.stamps.FA,selfStamp);assert.equal(selfCenter.finalBoxBaselineCalls,selfBaselineCalls);
+  await click(255,319);const selfStart=await state();
+  assert.equal(selfStart.selfMode,'flex-start');assertSelfBox(selfStart.boxes.FA,{...queryRestored.boxes.FA,y:270});assert.deepEqual(selfStart.boxes.FB,queryRestored.boxes.FB);assert.equal(selfStart.stamps.FA,selfStamp);assert.equal(selfStart.finalBoxBaselineCalls,selfBaselineCalls);
+  await click(32,274);assert.equal((await state()).hits.at(-1),'FA');
+  await click(255,319);const selfStretch=await state();
+  assert.equal(selfStretch.selfMode,'stretch');assertSelfBox(selfStretch.boxes.FA,{...queryRestored.boxes.FA,y:270,height:40});assert.deepEqual(selfStretch.boxes.FB,queryRestored.boxes.FB);assert.equal(selfStretch.stamps.FA,selfStamp);assert.equal(selfStretch.finalBoxBaselineCalls,selfBaselineCalls);
+  await click(32,274);assert.equal((await state()).hits.at(-1),'FA');
+  await click(255,319);const selfAuto=await state();
+  assert.equal(selfAuto.selfMode,'auto');assert.deepEqual(selfAuto.boxes.FA,queryRestored.boxes.FA);assert.equal(selfAuto.stamps.FA,selfStamp);assert.ok(selfAuto.finalBoxBaselineCalls>selfBaselineCalls);
+
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}

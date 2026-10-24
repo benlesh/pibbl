@@ -1706,7 +1706,7 @@ function resolveFlexPlacements(
         item.preferredCross = clamp(result.size.height, item.minCross, item.maxCross) + item.paddingCross;
         // Baseline grouping consumes this final measured box rather than stretching
         // an authored automatic cross size after the provider has been queried.
-        if (options[FLEX_FIRST_BASELINE]) item.crossAuto = false;
+        if (options[FLEX_FIRST_BASELINE] && (item.alignSelf !== 'stretch' || item.autoCrossBefore || item.autoCrossAfter)) item.crossAuto = false;
       } else if (constrainedProvider || ordinaryProvider || requiredKnownCross || options[FLEX_FIRST_BASELINE] || experimentalLayout && item.child.type === Text && (item.autoCrossBefore || item.autoCrossAfter)) throw childDiagnostic(item.child, 'height', 'auto', container, `final-width measurement is required but unsupported: ${result.reason}`);
     }
   }
@@ -1742,7 +1742,7 @@ function resolveFlexPlacements(
     for (const item of items) {
       // Automatic cross margins replace alignment, so this leaf neither supplies
       // nor consumes a shared baseline. Native placement resolves its free space.
-      if (item.autoCrossBefore || item.autoCrossAfter) { item.firstBaseline = 0; continue; }
+      if (item.alignSelf !== 'auto' || item.autoCrossBefore || item.autoCrossAfter) { item.firstBaseline = 0; continue; }
       const allocation = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
       const definition = getPrimitiveDefinition(item.child.type);
       if (!definition?.measureBaselines) {
@@ -2453,10 +2453,11 @@ function assertSupportedFirstBaselineFlex(
       (textStyle.lineHeight ?? 13) >= 0 &&
       (textStyle.wrap === undefined || typeof textStyle.wrap === 'boolean')
     );
-    if (!getPrimitiveDefinition(item.child.type) || isKnownLayoutType(item.child.type) || isLayoutComponent(item.child.type) || !supportedTextLeaf || item.alignSelf !== 'auto' ||
-        (style.position !== undefined && style.position !== 'static' && style.position !== 'relative') || item.crossAuto ||
+    const sharesBaseline = item.alignSelf === 'auto' && !item.autoCrossBefore && !item.autoCrossAfter;
+    if (!getPrimitiveDefinition(item.child.type) || isKnownLayoutType(item.child.type) || isLayoutComponent(item.child.type) || (!supportedTextLeaf && sharesBaseline) ||
+        (style.position !== undefined && style.position !== 'static' && style.position !== 'relative') || (item.crossAuto && item.alignSelf !== 'stretch') ||
         !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
-      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct primitive leaves with settled finite content boxes and no absolute position or alignSelf override');
+      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires direct primitive leaves with settled finite content boxes and no absolute position');
     }
   }
 }

@@ -49,7 +49,7 @@ it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])('rejects older or incomplete lay
 });
 
 
-const abiV15Exports: WebAssembly.ModuleExportDescriptor[] = [
+const abiV16Exports: WebAssembly.ModuleExportDescriptor[] = [
   { name: 'memory', kind: 'memory' }, { name: 'solve', kind: 'function' }, { name: 'dispose', kind: 'function' },
   { name: 'arena_create', kind: 'function' }, { name: 'arena_generation', kind: 'function' }, { name: 'arena_dispose', kind: 'function' },
   { name: 'resize_grid', kind: 'function' }, { name: 'resolve_grid_tracks', kind: 'function' },
@@ -59,25 +59,25 @@ const abiV15Exports: WebAssembly.ModuleExportDescriptor[] = [
   { name: 'prepare_intrinsic_main_queries', kind: 'function' },
   { name: 'resize_intrinsic_main', kind: 'function' }, { name: 'resolve_intrinsic_main', kind: 'function' }, { name: 'intrinsic_main_result', kind: 'function' }, { name: 'intrinsic_main_contribution', kind: 'function' },
   { name: 'resolve_intrinsic_main_known_owner', kind: 'function' }, { name: 'intrinsic_main_auto_free', kind: 'function' }, { name: 'place_main_auto_staged', kind: 'function' },
-  { name: 'place_wrap_first_baseline', kind: 'function' }, { name: 'place_first_baseline', kind: 'function' }, { name: 'layout_abi_v15', kind: 'function' },
+  { name: 'place_wrap_first_baseline', kind: 'function' }, { name: 'place_first_baseline', kind: 'function' }, { name: 'layout_abi_v16', kind: 'function' },
 ];
 
 it.each(['place_wrap_first_baseline', 'place_first_baseline', 'prepare_intrinsic_main_queries', 'resize_intrinsic_main', 'resolve_intrinsic_main', 'intrinsic_main_result', 'intrinsic_main_contribution', 'resolve_intrinsic_main_known_owner', 'intrinsic_main_auto_free', 'place_main_auto_staged'])(
-  'rejects ABI v15 when %s is absent',
+  'rejects ABI v16 when %s is absent',
   async absent => {
     vi.resetModules();
     const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
-    vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(abiV15Exports.filter(entry => entry.name !== absent));
+    vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(abiV16Exports.filter(entry => entry.name !== absent));
     expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
     expect(hasReadyLayoutModule()).toBe(false);
   },
 );
 
 
-it('rejects the complete previous ABI before accepting wrapped baseline automatic cross margins', async () => {
+it('rejects the complete previous ABI before accepting mixed baseline membership and ordinary cross placement', async () => {
   vi.resetModules();
   const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
-  const prior = abiV15Exports.map(entry => entry.name === 'layout_abi_v15' ? { ...entry, name: 'layout_abi_v14' } : entry);
+  const prior = abiV16Exports.map(entry => entry.name === 'layout_abi_v16' ? { ...entry, name: 'layout_abi_v15' } : entry);
   vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(prior);
   expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
   expect(hasReadyLayoutModule()).toBe(false);
