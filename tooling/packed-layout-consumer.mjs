@@ -1235,6 +1235,17 @@ try {
     width.set(100);await frame();if(pixel(4,4)!=='[138,50,72,255]'||pixel(4,24)!=='[66,107,97,255]'||(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==nodes)throw Error('installed wrapped row membership/identity');sharedTextController.dispose();
   }
   if(!rowQueries.includes(80))throw Error('installed wrapped provider exact-width query');
+  const textPolicies=[{font:'10px CustomFont'},{font:'10px monospace',fit:'ellipsis' as const},{font:'10px monospace',fit:'clip' as const},{font:'10px monospace',fit:'squish' as const},{font:'10px monospace',overflow:'clip' as const}];
+  for(const column of [false,true])for(const policy of textPolicies){
+    const margin=signal<0|'auto'>(0),content='alphabetalphabetalphabet';
+    const text=createElement(Text,{style:{width:column?'auto':80,height:column?40:'auto',minWidth:0,minHeight:0,flexBasis:column?40:80,flexGrow:0,flexShrink:0,wrap:false,marginTop:column?0:margin,marginLeft:column?margin:0,fill:'#19375b',...policy},children:content});
+    const natural=measureElement(text,{minWidth:0,maxWidth:column?Infinity:80,minHeight:column?40:0,maxHeight:column?40:100},{measureText:(value:string,font:string)=>{context.save();context.font=font;const result=context.measureText(value);context.restore();return result;}});
+    if(natural.status!=='measured')throw Error('installed Text policy pure query');
+    draws.length=0;sharedTextController=pibblSync(sharedTextCanvas,createElement(Flex,{style:{width:180,height:100,flexDirection:column?'column':'row',alignItems:'flex-start'},children:[text,createElement(Rectangle,{style:{width:40,height:40,minWidth:0,minHeight:0,flexShrink:0,fill:'#426b61'}})]}));await frame();const zero=draws.at(-1)!;const nodes=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates;draws.length=0;margin.set('auto');await frame();const automatic=draws.at(-1)!;
+    if(automatic.text!==zero.text||Math.abs(automatic.x-(column?Math.max(0,180-natural.size.width):0))>1e-6||Math.abs(automatic.y-(column?0:100-natural.size.height))>1e-6)throw Error('installed Text policy cross placement '+JSON.stringify({column,policy,natural,zero,automatic}));
+    if((globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__().nodeCreates!==nodes)throw Error('installed Text policy identity');sharedTextController.dispose();
+  }
+  receipt.textCrossPolicies=true;
   receipt.rowSharedMeasurement=true;
   receipt.finalMainCrossMeasurement=true;
   receipt.sharedTextAutoSizing=true;

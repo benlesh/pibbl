@@ -1789,12 +1789,21 @@ to the existing column/Text snapshot cache; broader owner caching remains open.
 
 ### Shared row Text and Flex cross measurement
 
-Generic unwrapped as well as wrapped Text may use its real measured automatic
+Unwrapped as well as wrapped Text may use its real measured automatic
 height before cross-auto placement in a finite row. Unwrapped Text uses Canvas
 ink-height measurement, not the authored wrapped line height. Existing normal
 main sizing remains authoritative and auto cross margins suppress stretch.
-Generic px font, visible/default fit/overflow and existing query/aspect fences
-remain explicit; this extension does not define broader font or fitting policy.
+The final measurement uses the existing Text resolver for Canvas font strings,
+visible/ellipsis/clip/squish fitting and overflow styles. Prepared-query and aspect
+fences remain. Font readiness/fallback belongs to the application and Canvas;
+this adds no font-loading, font-parity or font-change invalidation subsystem.
+
+Only existing generic-font content can use the reusable Text measurement cache.
+Non-generic fonts use ordinary receiver-owned transactional measurement. Main
+natural-basis/automatic-minimum policies and wrapped-column natural-advance sizing
+retain their separate generic/visible restrictions. Final cross permission does
+not change those independent intrinsic policies. `fit: "clip"` controls Text glyph
+clipping; container overflow retains its existing distinct meaning.
 
 Paired pure providers and otherwise measurable direct/described Flex roots also
 use their real settled-width height in wrapped rows. Native line membership is
@@ -1883,12 +1892,13 @@ main policy.
 
 ### Natural-width Text cross-auto sizing in columns
 
-A direct generic unwrapped Text child in an experimental finite nowrap column
+A direct unwrapped Text child in an experimental finite nowrap column
 may use automatic width with an automatic side margin in either main or reading
 direction. Height may be numeric or automatic; basis may be numeric or automatic.
 Existing main factors, basis and bounds remain authoritative. Cross bounds clamp
-the measured natural width. No prepared query/aspect and visible/default
-fit/overflow remain required. Wrapped containers and fitting modes retain their
+the measured natural width. No prepared query/aspect is admitted. Existing Text font/fitting/overflow
+measurement semantics determine the natural cross width; non-generic fonts remain
+uncached. Wrapped containers and fitting modes retain their
 own admission.
 
 The existing Text measurement receives unbounded width and exact numeric height

@@ -33,10 +33,10 @@ try {
     const original = context.fillText;
     globalThis.__PIBBL_TEXT_SIZE_DRAWS__ = [];
     context.fillText = function(text,x,y,maxWidth) {
-      if (text.startsWith('aaaa') || text.startsWith('jobs')) {
+      if (text.startsWith('aaaa') || text.startsWith('jobs') || text.startsWith('alp')) {
         const basis = JSON.parse(document.querySelector('pre').textContent.split('auto cross transform: ')[1]);
         const point = new DOMMatrix([basis.a,basis.b,basis.c,basis.d,basis.e,basis.f]).inverse().transformPoint(this.getTransform().transformPoint({x,y}));
-        globalThis.__PIBBL_TEXT_SIZE_DRAWS__.push({text,x:point.x,y:point.y});
+        globalThis.__PIBBL_TEXT_SIZE_DRAWS__.push({text,x:point.x,y:point.y,maximum:maxWidth,font:this.font});
       }
       return original.call(this,text,x,y,maxWidth);
     };
@@ -138,6 +138,16 @@ try {
   assert.deepEqual(await pixel(32,284),[138,50,72,255]);
   await click(82,264);assert.match(await state(),/selected: auto cross sibling/);
   await click(32,284);assert.match(await state(),/selected: auto cross known/);
+  for(const policy of ['font','ellipsis','fitClip','squish','overflowClip']) {
+    await clearDraws();await click(450,160);assert.match(await state(),new RegExp(`row content: ${policy}`));
+    const policyDraw=(await draws('alp')).at(-1);assert.ok(policyDraw&&policyDraw.y>348&&policyDraw.y<360);
+    if(policy==='ellipsis')assert.ok(policyDraw.text.endsWith('...'));
+    if(policy==='squish')assert.equal(policyDraw.maximum,40);
+    const ink=await sandbox.evaluate(({text,font})=>{const context=document.querySelector('canvas').getContext('2d');context.save();context.font=font;context.textBaseline='top';const metric=context.measureText(text);context.restore();return(metric.actualBoundingBoxDescent-metric.actualBoundingBoxAscent)/2;},policyDraw);
+    await click(72,264);assert.match(await state(),/selected: auto cross sibling/);
+    if(policy==='fitClip'){await click(75,policyDraw.y+ink);assert.match(await state(),/selected: auto cross sibling/);}
+    await click(32,policyDraw.y+ink);assert.match(await state(),/selected: auto cross text/);
+  }
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if (built) {
     assert.equal(proof.mode, 'layout-wasm-built');
@@ -150,5 +160,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements,disposed.activeWasmInstances],[0,0,0,0]);
   assert.deepEqual(errors, []);
-  console.warn(`${built ? 'Built' : 'Source'} shared Text auto sizing: growing row and width reflow, column basis/auto-height allocations, wrapped reverse/RTL short/long targets, unwrapped row Text and wrapped provider/Flex targets; cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
+  console.warn(`${built ? 'Built' : 'Source'} shared Text auto sizing: growing row and width reflow, column basis/auto-height allocations, wrapped reverse/RTL short/long targets, unwrapped row Text, wrapped provider/Flex targets and Canvas font/fitting policies; cleanup0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
 } finally { await browser.close(); }

@@ -1236,9 +1236,7 @@ function resolveFlexPlacements(
       (normalized.flexGrow ?? 0) === 0 && normalized.flexShrink === 0 && normalized.minHeight === 0 &&
       normalized.maxHeight === undefined && normalized.minWidth === undefined && normalized.maxWidth === undefined &&
       (normalized.wrap === undefined || normalized.wrap === false) &&
-      (normalized.fit === undefined || normalized.fit === 'visible') &&
-      (normalized.overflow === undefined || normalized.overflow === 'visible') &&
-      !preparedStyleQuery(prepared) && aspectRatio === undefined && genericTextFont(normalized);
+      !preparedStyleQuery(prepared) && aspectRatio === undefined;
     const measuredColumnProviderCrossDefinition = hasAutoCrossMargin && experimentalLayout && !row &&
       options.flexWrap === 'nowrap' &&
       (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
@@ -1268,19 +1266,15 @@ function resolveFlexPlacements(
       (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
       !preparedStyleQuery(prepared) && aspectRatio === undefined && (
         child.type === Text &&
-          (normalized.wrap === undefined || normalized.wrap === false) &&
-          (normalized.fit === undefined || normalized.fit === 'visible') &&
-          (normalized.overflow === undefined || normalized.overflow === 'visible') && genericTextFont(normalized) ||
+          (normalized.wrap === undefined || normalized.wrap === false) ||
         !!pairedLayoutDefinition?.measureIntrinsic && !!pairedLayoutDefinition.measure ||
         layoutChild.type === Flex
       );
-    // Main sizing remains authoritative. A supported generic Text query uses
+    // Main sizing remains authoritative. The existing Text resolver uses
     // the shared settled-width pass before a row cross-auto margin is placed.
     const measuredTextCrossAuto = hasAutoCrossMargin && experimentalLayout && row &&
       child.type === Text && (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
-      !preparedStyleQuery(prepared) && aspectRatio === undefined &&
-      (normalized.fit === undefined || normalized.fit === 'visible') &&
-      (normalized.overflow === undefined || normalized.overflow === 'visible') && genericTextFont(normalized);
+      !preparedStyleQuery(prepared) && aspectRatio === undefined;
     const autoCrossDefinition = measuredCrossContext && !measuredTextCrossAuto ? getPrimitiveDefinition(child.type) : undefined;
     const measuredPrimitiveCrossAuto = !!autoCrossDefinition?.measureIntrinsic && !!autoCrossDefinition.measure;
     const measuredFlexCrossAuto = measuredCrossContext && layoutChild.type === Flex;

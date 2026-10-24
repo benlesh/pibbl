@@ -20,12 +20,13 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice184 (shared row measurement before line-local auto-cross placement).
+Latest delivery is slice185 (one existing Text resolver for final cross measurement).
+Slice184 is `7c62b066` (shared row measurement across wrapping modes).
 Slice183 is `5d29c54d` (real settled-main cross measurement).
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation61 is `8162fea2` for181–183; next is185: classify the remaining Text measurement envelope.
+Consolidation61 is `8162fea2` for181–183; next is186: measured known Grid/Flow cross placement.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -38,7 +39,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is185: one consistent Text cross-measurement contract.
+Consolidation56 is `2fd34f0e` for166–168. Next is186: one measured known-family cross-placement dispatch.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6732,16 +6733,48 @@ classifying the original auto-margin target. Staged intrinsic nonzero numeric
 margins remain an independent zero/auto prerequisite. Fixed33 stays10complete/
 12experimental/5partial/5missing/1excluded and all7release gates open.
 
-## [NEXT] Slice185: classify and unify the Text cross-measurement envelope
+## Slice185 delivered: existing Text policy in final cross measurement
 
-Use three representative matched public zero/auto probes for non-generic fonts,
-fitting and clipped overflow, with non-stretch zero alignment so a valid natural
-measurement is actually required. Distinguish real auto-only failures from an
-independently unsupported pure query. Read the existing Text measurement contract
-and make one consistent receiver-owned final-width policy, rather than adding
-another direction/selector whitelist. Preserve the original auto-margin and
-measurement targets. No completion promotion without executable geometry/query
-and ownership evidence; consolidate184–186 before further production.
+Eight matched public tests fail at the committed auto guard after visible numeric0
+paint, then pass using the existing Text resolver. Five row policies cover a
+non-generic Canvas font, active ellipsis, fit clip, squish and overflow style;
+three unwrapped-column counterparts cover font/ellipsis/overflow. Pure measurement
+defines the actual width/ink height. Fitted strings are captured as drawn rather
+than assumed to equal source; glyph hit probes use real metrics inside clipping
+bounds. Content changes, moved targets, peer/native identity and four-counter
+cleanup pass. Generic profiles retain paint-only measurement reuse; non-generic
+fonts remain uncached. No font subsystem, query/aspect expansion, natural-basis
+minimum or wrapped-column natural-advance policy change is introduced.
+
+Node24.15.0/Chromium nine focused files pass93tests in3.76s;46prior margin cases
+pass/382skip in2.84s after replacing superseded font/fitting rejection checks with
+exact80x30/y70wrapped geometry. Ordinary mode passes49/skip8 in2.71s. Source/built
+replays pass all existing cases plus the five visible policy modes, fitted draw
+and squish width checks, glyph clipping/inside hits and cleanup0000; built470inputs.
+Container overflow remains distinct from Text glyph fit clipping. Scoped review
+finds no cache/ownership issue. Installed strict Bundler/NodeNext246-input consumer
+passes all10axis/policy combinations and104prior fixtures, identity and cleanup;
+tarball SHA256
+`9744f6614431c6871e31230370540bafc237fc3d24709e80841f536c76543079`.
+Native118-record probe/kernel/ABI10are unchanged; actual Canvas metrics establish
+font outcomes and no synthetic font parity is claimed.
+
+The finite known-family audit now has actual row-nowrap/wrap Grid and Flow probes:
+exact80x20pure query and numeric0red paint pass, then only auto rejects at the
+known-Flex admission guard. These four public pairs justify one coherent known
+measurement dispatch slice, not a new intrinsic graph. Prepared responsive queries
+remain recursively unsupported by the existing pure-query contract; wrapped-column
+intrinsic cross and staged nonzero-margin prerequisites remain independent.
+Fixed33 stays10complete/12experimental/5partial/5missing/1excluded, all7gates open.
+
+## [NEXT] Slice186: measured known-family cross placement
+
+Record focused public zero/auto failures for fixed-track Grid and Flow in row
+nowrap/wrap. Reuse their already successful pure exact-final-width measurement
+before native line cross placement. Preserve each family's own unsupported query
+and track/child contracts, paint/hit order, receiver/cache ownership and exact
+cleanup; do not admit opaque components. Consolidate184–186 next, with a single
+finite family/policy receipt and an explicit original auto-margin exit decision.
 
 ## Scope and execution
 

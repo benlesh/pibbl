@@ -4645,6 +4645,8 @@ it.runIf(experimentalLayout).each([
     expect(placement.width).toBe(before.width);
     expect(placement.height).toBe(before.height);
     expect(placement.y + placement.height).toBe(100);
+  } else if (label === 'custom font' || label === 'clipped overflow' || label === 'fitted text') {
+    expect(layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toEqual([{ x: 0, y: 70, width: 80, height: 30 }]);
   } else if (label === 'unwrapped text') expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/measured dimensions must be finite/);
   else expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/auto cross-axis margins/);
 });
@@ -5690,7 +5692,6 @@ it.runIf(experimentalLayout)('rejects unsupported column automatic-margin Text p
     marginLeft: 'auto', wrap: false, overflow: 'visible', font: '10px monospace',
   };
   const profiles: readonly [string, TextStyle & FlexItemStyle, { readonly layoutDirection?: 'rtl'; readonly flexWrap?: 'wrap' }][] = [
-    ['custom font', { font: '10px CustomFont' }, {}],
     ['wrapped container', {}, { flexWrap: 'wrap' }],
   ];
   for (const [name, override, options] of profiles) {
