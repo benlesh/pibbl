@@ -24,7 +24,7 @@ Latest delivery is slice183 (real settled-main measurement before auto-cross pla
 Slice182 is `9b43ae43` (shared Text sizing and measurement).
 Slice181 is `f21ce9dd` (natural column widths across parent directions).
 Slice180 is `767ad9e2` (resolved percentage/aspect cross size before auto margins).
-Consolidation60 is `f5083bcb` for178–180; next is consolidation61 for181–183.
+Consolidation61 verifies181–183; next is184: two proven auto-only row measurement gaps.
 Slice179 is `8384334d` (wrapped-row Text natural basis and final-width sizing).
 Slice178 is `1368b962` (wrapped column Text natural cross sizing).
 Slice177 is `2173ccfb` (native normal-owner phases and staged zero/auto margins).
@@ -37,7 +37,7 @@ Slice172 is `20bb1bc8` (intrinsic physical main auto margins).
 Slice171 is `e4fc8815` (native main contribution versus final content).
 Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
-Consolidation56 is `2fd34f0e` for166–168. Next is consolidation61 for181–183.
+Consolidation56 is `2fd34f0e` for166–168. Next is184: unwrapped row Text and wrapped-row paired providers.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
 owner/min-max closure matrix. Fixed33 is now10complete/12experimental/
 5partial/5missing/1excluded. All seven release gates remain open; independent
@@ -6652,19 +6652,55 @@ Types, changed-code lint,174/12/33catalog, Studio and109docs mutation probes pas
 Fixed33 remains10complete/12experimental/5partial/5missing/1excluded, all7release
 gates open. This is a bounded measurement continuation, not feature completion.
 
-## [NEXT] Consolidation61: slices181–183
+## Consolidation61: slices181–183
 
-Run the accumulated focused matrix in experimental and ordinary modes, full
-source/built lesson replays, current installed consumer, pinned native probe and
-static consistency checks. Reconcile the stale checkout wording below with the
-actual isolated sole-writer worktree. Do not start another production capability
-before consolidation; retain the original finite capability/release-gate targets.
+Fresh Node24.15.0/Chromium accumulated67-file matrix passes1036/skip12 of1048
+in91.07s; ordinary mode passes302/skip746 in12.83s. The first experimental run
+found two obsolete assertions: automatic row Text now uses its140px natural basis
+rather than the old160px availability box, and automatic-width paired providers
+are supported at100px. The repaired tests assert exact geometry, compare a
+non-stretch zero control, retain default-stretch auto suppression (10px natural
+height rather than100px stretched height), and preserve independent main-minimum
+failure. The focused8cases and complete rerun pass; no runtime repair was needed.
+
+Full source/built Flex/Text replays pass errors[]/cleanup000, built470inputs.
+The installed246-input Bundler/NodeNext consumer passes104margin fixtures and
+settled-main query proof, identity and exact cleanup; unchanged tarball SHA256
+`9976979b84786446e035307ba1a84efbaced8a11da9ba2847831d6a9c049f023`.
+Pinned native103-record probe passes with source SHA256
+`c9190d03b265d02ef463afaba92207d5a26b6eb21c6e8e34cdc711fbe3bce9f5`.
+Types, changed-test lint,109docs mutation probes, public JSDoc and prior current
+catalog/Studio checks pass. The Scope paragraph now records the actual isolated
+sole-writer checkout and separate-slice commits. No aggregate trust/program-exit
+review, capability promotion or release-gate closure is claimed.
+
+The finite auto-margin exit remains open for actual auto-only public pairs:
+row-nowrap generic unwrapped Text and row-wrap paired providers each mount with
+numeric0cross margin, then reject when only that margin becomes auto. These are
+not missing zero-baseline measurement prerequisites. Independently, automatic
+Text cross sizing in wrapped column parents and staged intrinsic owners with
+nonzero numeric margins still fail zero and auto; their original prerequisites
+remain separately tracked. Fixed33 remains10complete/12experimental/5partial/
+5missing/1excluded, all7release gates open.
+
+## [NEXT] Slice184: the two remaining proven row measurement guards
+
+First record focused public failing tests for numeric-width unwrapped generic
+row Text and paired-provider automatic-height content in wrapped rows. Reuse the
+existing real settled-width query and native line-local cross placement. Assert
+matched zero/auto main geometry, final measured height, moved targets, identity,
+reuse and exact cleanup. Preserve independent main/intrinsic guards; no new
+query protocol or margin solver. Keep the original finite auto-margin exit open
+until this exact evidence is implemented and checked.
 
 ## Scope and execution
 
-Single implementation owner; preserve existing unrelated edits. Work stays in
-this checkout because no repository instruction requires isolation and the local
-proposal is untracked. No publication or external deployment.
+One implementation owner writes only the isolated worktree
+`/Users/benlesh/.codex/worktrees/layout-conformance/crc`, branch
+`codex/layout-integration-20261022`. Preserve the primary checkout and its unrelated
+changes. Helpers supply independent read-only reviews or temporary proposals; the
+implementation owner applies and verifies them. Each slice is committed separately.
+No publication or external deployment.
 
 Exactly one next slice is selected. Continue independent, reversible extensions
 while gathering feedback; pause only dependent consequential choices. Consolidate

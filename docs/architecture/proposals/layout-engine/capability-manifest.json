@@ -2370,6 +2370,7 @@
           "owner-cross-auto-top-stretch-narrow"
         ],
         "missing": [
+          "proven auto-only gaps: numeric-width unwrapped generic row Text and paired-provider automatic cross height in wrapped rows mount at numeric0 then reject auto; slice184 targets the existing settled-width and line-local placement paths",
           "automatic-width Text in wrapped column containers, reverse/RTL natural cross sizing and wrapped natural-basis contexts, both-auto dimensions and other independently unsupported measurement contexts",
           "staged percentage-bound intrinsic owners with nonzero numeric margin contributions remain outside the admitted zero/auto profile"
         ]
@@ -2380,6 +2381,7 @@
         "packages/core/test/layout-auto-cross-resolved-size.test.tsx",
         "packages/core/test/layout-column-auto-margin-directions.test.tsx",
         "packages/core/test/layout-auto-margin-measured-text.test.tsx",
+        "packages/core/test/layout-column-auto-margin-final-cross.test.tsx",
         "packages/core/test/layout-staged-auto-margin.test.tsx",
         "tooling/layout-yoga-rehearsal/percentage-phase-probe.cpp",
         "tooling/test-wasm-measured-percentage-owner.mjs",

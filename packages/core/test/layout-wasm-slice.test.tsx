@@ -4639,7 +4639,11 @@ it.runIf(experimentalLayout).each([
   const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 80, minWidth: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', ...style } as import('@pibbl/core').TextStyle });
   if (label === 'wrapped automatic width' || label === 'automatic width') {
     const placement = layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)[0]!;
-    expect(placement.width).toBe(160);
+    expect(placement.width).toBe(label === 'automatic width' ? 140 : 160);
+    const zero = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 'auto', minWidth: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 0 } });
+    const before = layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [zero], { ...options, alignItems: 'flex-start' }, measurement)[0]!;
+    expect(placement.width).toBe(before.width);
+    expect(placement.height).toBe(before.height);
     expect(placement.y + placement.height).toBe(100);
   } else expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/auto cross-axis margins/);
 });
@@ -4761,10 +4765,10 @@ it.runIf(experimentalLayout)('keeps automatic cross-margin custom primitive admi
   expectRejected(createElement(IntrinsicOnly, { style: automaticCross }));
   expectRejected(createElement(MeasureOnly, { style: automaticCross }));
   expectRejected(createElement(Both, { style: automaticCross }), { flexWrap: 'wrap' });
-  expectRejected(createElement(Both, { style: { ...automaticCross, width: 'auto' } }));
+  expect(layoutFlex(row, [createElement(Both, { style: { ...automaticCross, width: 'auto' } })], {}, measurement)).toEqual([{ x: 0, y: 80, width: 100, height: 20 }]);
   expect(layoutFlex(row, [createElement(Both, { style: { ...automaticCross, minWidth: 0, aspectRatio: 2 } })], {}, measurement))
     .toEqual([{ x: 0, y: 60, width: 80, height: 40 }]);
-  expectRejected(createElement(Both, { style: { height: 80, flexShrink: 1, marginLeft: 'auto' } }), { flexDirection: 'column' });
+  expect(() => layoutFlex(row, [createElement(Both, { style: { height: 80, flexShrink: 1, marginLeft: 'auto' } })], { flexDirection: 'column' }, measurement)).toThrow(/explicit main-axis minimum/);
 });
 
 it.runIf(experimentalLayout)('fails an automatic cross-margin custom final-width measurement before earlier paint and remounts cleanly', async () => {
