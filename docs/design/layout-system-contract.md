@@ -2058,7 +2058,7 @@ WASM cross-placement path computes the common ascent starting at zero and each
 offset as common ascent minus that leaf's first baseline. This matches pinned
 Yoga3.2.1 numeric-provider probes, including signed/out-of-box baselines. Last
 baseline placement, custom-font Text metrics, nested containers, broader outer wrapping,
-automatic cross size and decorated/position/query/aspect
+automatic cross size and decorated/absolute-position/query/aspect
 leaves remain outside this first admission. Main-axis automatic margins are
 resolved by the existing native main allocator before baseline alignment; they
 do not change membership in the baseline-sharing group. Cross-axis automatic
@@ -2100,7 +2100,11 @@ intrinsic physical origin for baseline participants. This retains Pibbl's accept
 per-line automatic-margin policy and matches the retained Chromium control; pinned
 Yoga's baseline-sharing/reflection differences are classified, not parity claims.
 Provider dependencies detach while excluded and read current values when rejoining.
-The other leaf exclusions remain; native line membership is reused.
+The other leaf exclusions remain; native line membership is reused. Static and relative
+position reuse the existing final physical placement. Relative offsets move the
+paint/hit box after baseline-group allocation; they do not alter provider content
+size, the shared baseline calculation, or subsequent line origins. Static insets
+remain inert. Absolute baseline children remain outside this profile.
 Each line has its own maximum ascent and descent, so the next line begins after
 the complete baseline extent. The common baseline never spans two lines. In a
 100px-wide row, A60x20/b12 and B40x40/b30 occupy y18/0; C60x20/b8 and

@@ -7516,7 +7516,7 @@ including forward/reverse automatic-margin cycles in the lower lesson. Screensho
 inspected. Types, lint, catalog/Studio175/12/33, docs109mutations and changed-code
 re-review pass. No baseline release promotion or aggregate trust claim.
 
-## [NEXT] Slice206: relative and static baseline placement
+## [DONE] Slice206: relative and static baseline placement
 
 Admit existing resolved static/relative placement after baseline-group allocation;
 assert unchanged provider size and following-line geometry with moved paint/input.
@@ -7524,6 +7524,23 @@ No new kernel or public API. Remaining
 classes are final cross sizing, decorated content offsets, existing query/aspect/
 relative/alignSelf composition, nested/reference propagation, column interpretation
 and last-baseline placement. Consolidate205–207before more production.
+
+Public RED1fail/3pass reproduces the position admission guard. Existing static/
+relative placement runs after baseline-group allocation, so admitting only those
+position values and resolved relative offsets needs no native algorithm/ABI change.
+Public static insets are inert; relative6/10then12/4moves A while B/Cand provider
+40×20allocations stay fixed. Old/new targets, identity, unchanged main solves and
+cleanup pass. Focused4files22pass/1skip; types/lint/scoped review pass. The existing
+lower lesson exposes Static/Relative beside numeric/automatic margin controls.
+Source5192/refreshed built5193 pass errors[]/cleanup000/470built inputs; screenshot
+inspected. Catalog/Studio175/12/33, docs109mutations and scoped review pass.
+
+## [NEXT] Slice207: fixed decorated baseline content mapping
+
+Define content-relative provider allocation and content-top padding/border offset
+within each fixed outer line box. Reuse existing content/outer sizing and native
+line metrics rather than adding another solver. Establish public/reference/native
+RED as needed, then consolidate205–207before further production.
 
 ## Scope and execution
 

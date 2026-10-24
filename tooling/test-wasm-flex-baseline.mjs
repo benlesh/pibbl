@@ -330,6 +330,14 @@ try {
     for(const id of ['NA','NB','NC'])assert.equal(lineAutoReverse.stamps[id],autoCrossStamps[id]);
   }
   await click(700,484);assert.ok(Math.abs((await state()).boxes.NC.y-570)<1e-9);
+  const relativeBefore=await state();
+  await click(400,600);const relativeMoved=await state();
+  assert.ok(Math.abs(relativeMoved.boxes.NA.x-relativeBefore.boxes.NA.x-6)<1e-9&&Math.abs(relativeMoved.boxes.NA.y-relativeBefore.boxes.NA.y-10)<1e-9);
+  assert.deepEqual(relativeMoved.boxes.NB,relativeBefore.boxes.NB);assert.deepEqual(relativeMoved.boxes.NC,relativeBefore.boxes.NC);
+  assert.equal(relativeMoved.stamps.NA,relativeBefore.stamps.NA);
+  const relativeHits=relativeMoved.hits.length;await click(52,552);assert.equal((await state()).hits.length,relativeHits);
+  await click(58,562);assert.equal((await state()).hits.at(-1),'NA');
+  await click(400,600);assert.deepEqual((await state()).boxes.NA,relativeBefore.boxes.NA);
   if(process.env.PIBBL_LAYOUT_SCREENSHOT)await frame.locator('canvas').screenshot({path:process.env.PIBBL_LAYOUT_SCREENSHOT});
   const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if(built){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}
