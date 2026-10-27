@@ -1,6 +1,6 @@
 # 010 — Experimental layout engine rework
 
-## Current checkpoint and single next slice — 2026-10-24
+## Current checkpoint and single next slice — 2026-10-27
 
 Public lesson companion for142–144: physical percentage placement combines
 natural-height wrapping Text, a toggled static/relative card and an absolute
@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice217: static structural baseline owner origins.
+Latest delivery is slice218: prepared Flow first-source baselines.
+Slice217 is `84a89825`: static structural baseline owner origins.
 Slice216 is `369bdd43`; consolidation72 is `15c98913`.
 Slice215 is `53558b31`.
 Slice214 is `2bcc09f9`.
@@ -8074,21 +8075,70 @@ Yoga3.2.1. Relative top10 deliberately differs: Yoga A10/B2/badge0 versus
 Pibbl A18/B0/badge0. Pibbl retains slice214's pre-relative contribution contract;
 no CSS agreement is claimed.
 
-## [NEXT] Slice218: prepared Flow first-source baseline
+## [DONE] Slice218: prepared Flow first-source baseline
 
-Admit the smallest finite horizontal nowrap Flow root as an outer row baseline
-source through its existing prepared placement and actual primitive receiver.
-Select the first source child, add its unshifted content-y origin/inset once,
-and use content bottom for an empty Flow. Flow's existing rejection of positioned
-children remains unchanged. Establish public signal/relative-origin/empty-fallback
-RED before production. Reuse one staged Flow plan, without a second layout or
-new public selector. Keep Grid's explicit-cell source policy separate.
+Finite Flow roots now contribute their first source child's baseline to an outer
+row first-baseline Flex. The existing successful native Flow plan retains source
+record order and starts its first line at record zero, for both directions and
+both wrapping policies. This uses the actual prepared root receiver/query,
+finite content allocation and physical y; it does not run Flow layout again.
+Transparent descriptions recurse through the same prepared slots. Empty Flow
+uses content bottom. Existing Flow rejection of positioned children remains
+unchanged, while an outer Flow item's relative offset moves paint and targeting
+after baseline allocation. This is Pibbl's source policy, not Yoga/CSS parity.
 
-Remaining finite baseline closure classes are Flow/Grid source policy,
-outer-column fallback/interpretation and last-baseline alignment. Unsupported
-diagnostics do not mark them complete. Consolidate217–219after219, before further
-production. Counts remain12complete/12experimental/3partial/5missing/1excluded;
-all7release gates and independent final whole-codebase review remain outstanding.
+Two public RED cases failed the previous unsupported-root gate before production
+(`/tmp/pibbl-slice218-red.txt`). Three final public tests cover signal/hit/identity,
+empty fallback, horizontal/vertical with real wrapping, transparent descriptions,
+actual typed padding and exclusion of later providers. The padded first source
+has outer y15/height25 while its baseline provider receives content40×20; its top
+inset3 lifts first12 to shared baseline30. The next wrapped source is at y40.
+Allocation receipts reset between cases. No ignored padding aliases are used.
+
+Fresh Node24.15/Chromium baseline-family verification passes 63 tests / 1 skip
+in 13 files; ordinary mode passes 2 tests / 62 skips in the same family
+(`/tmp/pibbl-slice218-baselines-{wasm,ordinary}.txt`). Typecheck and changed-code
+lint pass. The dedicated public lesson is
+`http://127.0.0.1:5192/#/examples/layout/wasm-flow-baseline`; source and built
+browser checks pass with the same real mouse gestures, geometry/hit/identity
+assertions, errors[] and cleanup0000; built proof contains470dist inputs
+(`/tmp/pibbl-slice218-{source,built}.txt`). The labeled screenshot
+`/tmp/pibbl-slice218-studio.png` was inspected without overlap.
+
+Browser-driver hardening preserves all behavior assertions. It waits for the
+scroll-induced surface resize before reading the current basis, reads the public
+inspector through the captured Frame, and sends real mouse move/click gestures.
+This resolves observed stale coordinates and iframe-locator stalls; it does not
+force clicks or mutate private application state. Failure-only diagnostics retain
+frame/page events. Earlier stalled attempts are not acceptance receipts.
+
+The unpublished package validates the unchanged ABI17/84137-byte native artifact.
+Installed Bundler/NodeNext consumers and the nested browser pass the Flow source,
+relative-origin, empty-fallback and cleanup receipt plus all earlier assertions,
+104margin fixtures and246installed dist inputs. Tarball SHA256:
+`9e4111409ce04c39574f998da6e01c8d93d66bb0283116ab29fb35995d868fbb`
+(`/tmp/pibbl-slice218-packed.txt`). Targeted helper review found no remaining
+material runtime issue. Catalog176lessons/12snapshots/33labs and public Studio
+metadata remain consistent. No aggregate trust, capability promotion or release
+gate closure is claimed.
+
+## [NEXT] Slice219: prepared Grid declared-source baseline
+
+Use Grid's first declared child as its baseline source, even when explicit cells
+put a later source in an earlier visual row. Its actual prepared cell placement
+supplies the physical y and content allocation; an empty Grid uses content bottom.
+This source-first policy was presented before implementation and is not a CSS
+row-major baseline promise. The focused RED places source A in row2 while a later
+row1 provider must never be queried. Preserve source paint/focus order, current
+receiver/query ownership, spans and exact teardown. Reuse the existing prepared
+Grid plan, without another solver, ABI extension or public selector.
+
+Remaining finite baseline closure classes are Grid source policy (the last part
+of Flow/Grid selection), outer-column fallback/interpretation and last-baseline
+alignment. Unsupported diagnostics do not mark them complete. Consolidate217–219
+after219 before further production. Counts remain12complete/12experimental/
+3partial/5missing/1excluded; all7release gates and independent final whole-codebase
+review remain outstanding.
 
 ## Scope and execution
 

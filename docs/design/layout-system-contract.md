@@ -2081,13 +2081,13 @@ the root receiver, and only successful transactions publish results. Responsive
 owner proofs attach to the actual root; query/non-generic Text cache bypasses stay
 in force.
 
-A settled finite Flex root contributes its first source-order
+A settled finite Flex or Flow root contributes its first source-order
 in-flow child's baseline. Absolute decoration is skipped. This selection is
 independent of the inner main direction: row, row-reverse, column and
 column-reverse all use the selected child's physical content-y origin. Empty
 containers use their content bottom. Transparent descriptions forward their
-actual primitive or Flex roots; their placed roots inherit the consumed-placement
-marker so explicit positioning applies once. Selected Flex children recurse through already
+actual primitive, Flex or Flow roots; their placed roots inherit the consumed-placement
+marker so explicit positioning applies once. Selected Flex/Flow children recurse through already
 prepared slots. Each boundary adds the selected child's unshifted physical
 layout-y origin and top content inset exactly once. Selected relative offsets
 move paint, hit and focus geometry after baseline allocation without changing
@@ -2095,7 +2095,7 @@ that contribution. Explicit inner writing directions are checked against the
 selected owner's prepared plan, while normal traversal remains its sole claimant.
 Structural traversal and provider reads use current root receivers and retain no
 aggregate baseline graph. There is no public reference-child marker or separate
-line solver. Wrapped roots use a current native first-source-line membership
+line solver. Wrapped Flex roots use a current native first-source-line membership
 proof before selecting their first in-flow source record. Wrap reversal changes
 its physical line origin without changing source selection. The proof survives
 unchanged cached allocation and is invalidated by count changes, ordinary solve,
@@ -2122,7 +2122,17 @@ The pinned Yoga static-owner probe agrees on baseline changes and absolute badge
 anchoring. It includes a selected child's relative offset in the structural
 contribution, whereas Pibbl preserves the pre-relative contribution contract
 above. This is an explicit semantic difference, not a CSS agreement claim.
-Flow/Grid selection, outer-column baseline alignment and last-baseline placement
+Flow selection uses its current successful native source-order placement plan.
+Native Flow starts its first line at source index zero and writes source records
+without reordering, for horizontal/vertical and nowrap/wrapped Flow. Its first
+child therefore supplies the first baseline from the settled physical y and
+actual content allocation, including padding and stretch. No final-pixel line
+inference, new line graph or second layout is involved. Transparent descriptions
+preserve the actual root receiver and query; an empty Flow uses content bottom.
+Flow's existing rejection of declared positions on direct children is unchanged.
+An outer Flow item's relative offset moves paint/hit geometry after baseline
+placement. Flow is Pibbl-specific; this source policy is not a Yoga or CSS parity
+claim. Grid selection, outer-column baseline alignment and last-baseline placement
 remain distinct unsupported classes. An inner column contributing a vertical
 source baseline does not enable baseline alignment on an outer column.
 

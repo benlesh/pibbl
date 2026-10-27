@@ -4417,6 +4417,31 @@ const drafts = [
     load: () => import("./learning/layout/wasm-flex-baseline.example"),
   },
   {
+    slug: "wasm-flow-baseline",
+    title: "Experimental WASM Flow baseline",
+    shortTitle: "WASM Flow baseline",
+    section: "layout",
+    order: 149,
+    summary: "A finite Flow contributes its first in-flow baseline to an outer first-baseline Flex row, with a content-bottom fallback when empty.",
+    api: ["Flex", "Flow", "definePrimitive", "signal", "useLayoutBox"],
+    objectives: [
+      "See a Flow root select its first settled in-flow primitive baseline.",
+      "Compare source-baseline movement, relative paint movement, and the empty Flow fallback.",
+    ],
+    prompts: {
+      gesture: "Move the Flow leaf baseline, toggle its relative offset, and switch the Flow empty. Click the leaf before and after it moves; the peer shows the shared outer baseline.",
+      code: "The Flow is a finite horizontal nowrap root. Its direct provider leaf is the selected source; an empty Flow falls back to its settled content bottom.",
+    },
+    apiNotes: [
+      "Horizontal and vertical Flow layouts select the first declared child as their baseline source, including when content wraps. This example uses one horizontal line.",
+      "The relative offset moves only paint and targeting after baseline placement. Missing Flow content uses the Flow content bottom, without a synthetic child provider.",
+    ],
+    canvas: { width: 240, height: 180 },
+    related: ["wasm-flex-baseline", "flow", "flex"],
+    exportName: "WasmFlowBaselineExample",
+    load: () => import("./learning/layout/wasm-flow-baseline.example"),
+  },
+  {
     slug: "wasm-flex-aspect-minimum",
     title: "Experimental WASM aspect-ratio minimum",
     shortTitle: "WASM aspect minimum",
