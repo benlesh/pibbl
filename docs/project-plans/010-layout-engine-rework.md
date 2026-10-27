@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice218: prepared Flow first-source baselines.
+Latest delivery is slice219: prepared Grid declared-source baselines.
+Slice218 is `1ddf4b34`: prepared Flow first-source baselines.
 Slice217 is `84a89825`: static structural baseline owner origins.
 Slice216 is `369bdd43`; consolidation72 is `15c98913`.
 Slice215 is `53558b31`.
@@ -8122,23 +8123,38 @@ material runtime issue. Catalog176lessons/12snapshots/33labs and public Studio
 metadata remain consistent. No aggregate trust, capability promotion or release
 gate closure is claimed.
 
-## [NEXT] Slice219: prepared Grid declared-source baseline
+## [DONE] Slice219: prepared Grid declared-source baseline
 
-Use Grid's first declared child as its baseline source, even when explicit cells
-put a later source in an earlier visual row. Its actual prepared cell placement
-supplies the physical y and content allocation; an empty Grid uses content bottom.
-This source-first policy was presented before implementation and is not a CSS
-row-major baseline promise. The focused RED places source A in row2 while a later
-row1 provider must never be queried. Preserve source paint/focus order, current
-receiver/query ownership, spans and exact teardown. Reuse the existing prepared
-Grid plan, without another solver, ABI extension or public selector.
+Grid selects its first declared child even when explicit cells place a later
+source above it. Prepared cells supply physical y and actual content allocation,
+including spanning cells and padding. Empty Grid uses content bottom. Described
+roots preserve receiver/query ownership, source focus order and teardown. No new
+solver, ABI or CSS Grid baseline parity promise is added.
 
-Remaining finite baseline closure classes are Grid source policy (the last part
-of Flow/Grid selection), outer-column fallback/interpretation and last-baseline
-alignment. Unsupported diagnostics do not mark them complete. Consolidate217–219
-after219 before further production. Counts remain12complete/12experimental/
-3partial/5missing/1excluded; all7release gates and independent final whole-codebase
-review remain outstanding.
+Two public RED cases failed before implementation. Fresh Node24.15/Chromium
+checks pass11tests across Grid, Flow and static baseline files
+(`/tmp/pibbl-slice219-focused-node24.txt`). Three Grid tests cover signals,
+targets, focus, identity, empty fallback, described spanning allocation, padding,
+skipped later providers and detached cleanup. Types and changed-code lint pass.
+Source/built drivers pass with errors[] and cleanup0000; built uses470inputs
+(`/tmp/pibbl-slice219-{source,built}.txt`). Screenshot inspected. Catalog passes
+177lessons/12snapshots/33labs. Installed Bundler/NodeNext and nested browser pass,
+including the Grid receipt and104margin cases, with246installed inputs.
+Tarball SHA256 `c98e51848e68457116e59b892e963394ea187c8cc89d265d7189e10dbf588bf1`
+(`/tmp/pibbl-slice219-packed.txt`). Scoped independent review found no material
+issue. Native ABI17 and84137-byte artifact are unchanged.
+
+Try `http://127.0.0.1:5192/#/examples/layout/wasm-grid-baseline`:
+change A's baseline in row2 and observe the peer follow A. Empty Grid shows the
+content-bottom fallback.
+
+## [NEXT] Consolidation73: verify slices217–219 before further production
+
+Run accumulated experimental/ordinary checks and source/built Text replays before
+slice220. Remaining finite baseline classes are outer-column interpretation and
+last-baseline alignment; unsupported diagnostics do not complete them. Counts
+remain12complete/12experimental/3partial/5missing/1excluded. All7release gates and
+independent final whole-codebase review remain open. No aggregate trust claim.
 
 ## Scope and execution
 

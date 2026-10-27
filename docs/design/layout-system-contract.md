@@ -2081,13 +2081,13 @@ the root receiver, and only successful transactions publish results. Responsive
 owner proofs attach to the actual root; query/non-generic Text cache bypasses stay
 in force.
 
-A settled finite Flex or Flow root contributes its first source-order
+A settled finite Flex, Flow or Grid root contributes its first source-order
 in-flow child's baseline. Absolute decoration is skipped. This selection is
 independent of the inner main direction: row, row-reverse, column and
 column-reverse all use the selected child's physical content-y origin. Empty
 containers use their content bottom. Transparent descriptions forward their
-actual primitive, Flex or Flow roots; their placed roots inherit the consumed-placement
-marker so explicit positioning applies once. Selected Flex/Flow children recurse through already
+actual primitive, Flex, Flow or Grid roots; their placed roots inherit the consumed-placement
+marker so explicit positioning applies once. Selected Flex/Flow/Grid children recurse through already
 prepared slots. Each boundary adds the selected child's unshifted physical
 layout-y origin and top content inset exactly once. Selected relative offsets
 move paint, hit and focus geometry after baseline allocation without changing
@@ -2132,8 +2132,11 @@ preserve the actual root receiver and query; an empty Flow uses content bottom.
 Flow's existing rejection of declared positions on direct children is unchanged.
 An outer Flow item's relative offset moves paint/hit geometry after baseline
 placement. Flow is Pibbl-specific; this source policy is not a Yoga or CSS parity
-claim. Grid selection, outer-column baseline alignment and last-baseline placement
-remain distinct unsupported classes. An inner column contributing a vertical
+claim. Grid selects its first declared child even when a later child occupies an
+earlier visual row. The prepared cell supplies physical y and actual content
+allocation, including spans and padding; empty Grid uses content bottom. This
+source-order policy does not promise CSS Grid baseline parity. Outer-column
+baseline alignment and last-baseline placement remain unsupported classes. An inner column contributing a vertical
 source baseline does not enable baseline alignment on an outer column.
 
 Inherited `alignSelf: auto` joins the baseline group. Existing explicit

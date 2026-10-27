@@ -2542,7 +2542,7 @@ function prepareKnownStructuralFirstBaseline(
   parentSlot?: PreparedLayoutSlot,
 ): PreparedKnownBaseline | undefined {
   const root = item.baselineRoot ?? item.child;
-  if (root.type !== Flex && root.type !== Flow) return;
+  if (root.type !== Flex && root.type !== Flow && root.type !== Grid) return;
   const style = item.normalized as Readonly<FlexStyle>;
   const staticOwner = root.type === Flex && style.position === 'static';
   const content = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
@@ -2556,22 +2556,23 @@ function prepareKnownStructuralFirstBaseline(
     peekPreparedLayoutPlan(slot, content, direction);
   if (!plan) throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
     'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the selected known layout root has no current settled allocation');
-  return { slot, ...readPreparedKnownFirstBaseline(plan, root.type === Flex ? 'flex' : 'flow', measurement, direction,
+  return { slot, ...readPreparedKnownFirstBaseline(plan, root.type === Flex ? 'flex' : root.type === Flow ? 'flow' : 'grid', measurement, direction,
     root.type === Flex && (style.flexWrap ?? 'nowrap') !== 'nowrap') };
 }
 
 /** Reads current prepared source-order placements without a second layout pass. */
 function readPreparedKnownFirstBaseline(
   plan: PreparedLayoutPlan,
-  kind: 'flex' | 'flow',
+  kind: 'flex' | 'flow' | 'grid',
   measurement: FlexMeasurementInput,
   direction: 'ltr' | 'rtl',
   wrapped: boolean,
 ): { readonly first: number; readonly last: number } {
   const content = plan.content;
-  // Native Flow writes source records in order and starts its first line at
-  // record zero, including wrapped/vertical Flow. Its prepared first source
-  // therefore needs no inferred line graph or second native query.
+  // Flow retains its native source-record-zero invariant even when it wraps.
+  // Grid likewise preserves declared cell order; its first candidate uses its
+  // current physical cell y, not visual row order. Flex alone consults the
+  // ABI17 first-line proof for wrapped source membership.
   const flexPlan = kind === 'flex' ? plan as PreparedFlexLayoutPlan : undefined;
   const firstLineCount = wrapped ? flexPlan!.region.firstWrapLineCount() : undefined;
   const pending = flexPlan ? deferredStaticState(flexPlan) : undefined;
@@ -2597,7 +2598,7 @@ function readPreparedKnownFirstBaseline(
     const allocation = { x: 0, y: 0, width: usedWidth, height: usedHeight };
     const insets = normalizeBoxInsets(selectedStyle, childContext(source, content));
     let first = allocation.height, last = allocation.height;
-    if (root.type === Flex || root.type === Flow) {
+    if (root.type === Flex || root.type === Flow || root.type === Grid) {
       const slot = getElementMetadata(placement.element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
       const childDirection = selectedStyle.layoutDirection ?? direction;
       const nested = root.type === Flex ?
@@ -2605,14 +2606,14 @@ function readPreparedKnownFirstBaseline(
         slot && peekPreparedLayoutPlan(slot, allocation, childDirection);
       if (!nested) throw childDiagnostic(source, 'alignItems', 'first-baseline', content,
         'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected known layout root requires its current prepared allocation');
-      const result = readPreparedKnownFirstBaseline(nested, root.type === Flex ? 'flex' : 'flow', measurement, childDirection,
+      const result = readPreparedKnownFirstBaseline(nested, root.type === Flex ? 'flex' : root.type === Flow ? 'flow' : 'grid', measurement, childDirection,
         root.type === Flex && (selectedStyle.flexWrap ?? 'nowrap') !== 'nowrap');
       first = result.first;
       last = result.last;
     } else {
       const definition = getPrimitiveDefinition(root.type);
       if (!definition || isKnownLayoutType(root.type)) throw childDiagnostic(source, 'alignItems', 'first-baseline', content,
-        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected structural source must resolve to a primitive or prepared Flex root');
+        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected structural source must resolve to a primitive or prepared known layout root');
       if (definition.measureBaselines) {
         const measurementChild = clonePibblElement(root);
         setPreNormalizedStyle(measurementChild, selectedStyle, root, getPrimitiveReceiverToken(root) ?? receiver, prepared.query);
@@ -2650,7 +2651,7 @@ function assertSupportedFirstBaselineFlex(
     const baselineRoot = isLayoutComponent(item.child.type) ?
       prepareLayoutComponent(item.child, { receiverToken: item.receiverToken }) : item.child;
     if (baselineRoot !== item.child) item.baselineRoot = baselineRoot;
-    if (baselineRoot.type === Flex || baselineRoot.type === Flow) {
+    if (baselineRoot.type === Flex || baselineRoot.type === Flow || baselineRoot.type === Grid) {
       if (item.crossAuto || !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
         throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
           'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires settled finite known-layout geometry');

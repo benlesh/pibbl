@@ -4442,6 +4442,31 @@ const drafts = [
     load: () => import("./learning/layout/wasm-flow-baseline.example"),
   },
   {
+    slug: "wasm-grid-baseline",
+    title: "Experimental WASM Grid source baseline",
+    shortTitle: "WASM Grid baseline",
+    section: "layout",
+    order: 151,
+    summary: "A finite Grid contributes its first declared cell’s baseline, even when another cell is visually earlier.",
+    api: ["Flex", "Grid", "definePrimitive", "signal", "useLayoutBox"],
+    objectives: [
+      "Distinguish declared Grid source order from visual cell order for an outer first baseline.",
+      "See the empty Grid use its settled content bottom without creating a synthetic source cell.",
+    ],
+    prompts: {
+      gesture: "Move red A’s baseline and click the red source and blue peer. Toggle Empty Grid to compare the content-bottom fallback.",
+      code: "Grid retains its prepared placement order. The first declared in-flow cell is the selected source; visual row order and spans do not reorder it.",
+    },
+    apiNotes: [
+      "Experimental finite explicit Grid tracks under first-baseline Flex. This is Pibbl source-order behavior, not a CSS Grid baseline-parity claim.",
+      "Intrinsic/fractional track sizing, multi-cell baseline sharing, last baselines and outer column baseline alignment remain separate policies.",
+    ],
+    canvas: { width: 280, height: 200 },
+    related: ["wasm-flex-baseline", "grid", "flex"],
+    exportName: "WasmGridBaselineExample",
+    load: () => import("./learning/layout/wasm-grid-baseline.example"),
+  },
+  {
     slug: "wasm-flex-aspect-minimum",
     title: "Experimental WASM aspect-ratio minimum",
     shortTitle: "WASM aspect minimum",
