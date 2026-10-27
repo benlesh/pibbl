@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice219: prepared Grid declared-source baselines.
+Latest delivery is slice219 (`666348da`): prepared Grid declared-source baselines.
+Consolidation73 verifies217–219 below.
 Slice218 is `1ddf4b34`: prepared Flow first-source baselines.
 Slice217 is `84a89825`: static structural baseline owner origins.
 Slice216 is `369bdd43`; consolidation72 is `15c98913`.
@@ -8148,13 +8149,33 @@ Try `http://127.0.0.1:5192/#/examples/layout/wasm-grid-baseline`:
 change A's baseline in row2 and observe the peer follow A. Empty Grid shows the
 content-bottom fallback.
 
-## [NEXT] Consolidation73: verify slices217–219 before further production
+## [DONE] Consolidation73: slices217–219
 
-Run accumulated experimental/ordinary checks and source/built Text replays before
-slice220. Remaining finite baseline classes are outer-column interpretation and
-last-baseline alignment; unsupported diagnostics do not complete them. Counts
+Fresh Node24.15.0/Chromium accumulated checks pass94files: experimental1186pass/
+12skip of1198, ordinary353pass/845skip of1198. Commands were
+`node node_modules/vitest/vitest.mjs run --mode layout-wasm` and the same selector
+set without the mode, extending consolidation72 with the three new public test
+files. Logs: `/tmp/pibbl-consolidation73-{wasm,ordinary}.txt`.
+Source/built Text replay commands
+`node tooling/test-wasm-text-intrinsics.mjs http://127.0.0.1:5192 --source` and
+its5193`--built` equivalent pass errors[], cleanup000 and unchanged solve/node
+counts on unrelated paint; built470inputs
+(`/tmp/pibbl-consolidation73-{source,built}.txt`). Public JSDoc verification passes
+52entries/1486declarations/18inherited types/3472members/6576links. Slice219's
+packed consumer, typecheck, lint, catalog and109documentation mutation checks are
+fresh above. No native changes or aggregate trust claim.
+
+## [NEXT] Slice220: settle outer-column baseline policy
+
+Pinned Yoga source research distinguishes nowrap columns, where baseline
+providers are inert and ordinary placement falls through to logical cross end,
+from wrapped columns' separate branch. The user has been asked whether to adopt
+that bounded nowrap fallback or retain the current unsupported boundary. Do not
+silently invent vertical baseline groups or treat rejection as feature closure.
+Continue the pinned diagnostic while that material behavior choice is pending.
+Last-baseline alignment is the other remaining finite baseline class. Counts
 remain12complete/12experimental/3partial/5missing/1excluded. All7release gates and
-independent final whole-codebase review remain open. No aggregate trust claim.
+independent final whole-codebase review remain open.
 
 ## Scope and execution
 
