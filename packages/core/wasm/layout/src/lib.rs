@@ -102,7 +102,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v17() -> u32 { 17 }
+pub extern "C" fn layout_abi_v18() -> u32 { 18 }
 
 /// Returns the source-record count in the current native first wrap line.
 /// `NaN` means no current wrapped membership is available; a successful empty
@@ -142,6 +142,17 @@ pub extern "C" fn place_wrap_first_baseline(handle: u32, generation: u32, size: 
     with_arena(handle, generation, 1, |arena| {
         align_wrapped_first_baseline(&mut arena.cross, &arena.lines, size, gap, alignment, reverse == 1)
     })
+}
+
+/// Last-baseline groups share the existing records but anchor at safe cross end.
+#[no_mangle]
+pub extern "C" fn place_last_baseline(handle: u32, generation: u32, size: f64) -> u32 {
+    with_arena(handle, generation, 1, |arena| align_baseline(&mut arena.cross, size, true))
+}
+#[no_mangle]
+pub extern "C" fn place_wrap_last_baseline(handle: u32, generation: u32, size: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
+    if reverse > 1 { return 1; }
+    with_arena(handle, generation, 1, |arena| align_wrapped_baseline(&mut arena.cross, &arena.lines, size, gap, alignment, reverse == 1, true))
 }
 
 const BASELINE_PARTICIPANT: u32 = 16;
@@ -232,6 +243,10 @@ fn wrapped_first_baseline_line_metrics(records: &[f64], start: usize, end: usize
 }
 
 fn align_wrapped_first_baseline(records: &mut [f64], lines: &[(usize, usize)], size: f64, gap: f64, alignment: u32, reverse: bool) -> u32 {
+    align_wrapped_baseline(records, lines, size, gap, alignment, reverse, false)
+}
+
+fn align_wrapped_baseline(records: &mut [f64], lines: &[(usize, usize)], size: f64, gap: f64, alignment: u32, reverse: bool, last: bool) -> u32 {
     if records.len() % STRIDE != 0 || !size.is_finite() || size < 0.0 || !gap.is_finite() || gap < 0.0 || alignment > 6 { return 1; }
     let count = records.len() / STRIDE;
     if count == 0 { return if lines.is_empty() { 0 } else { 1 }; }
@@ -256,7 +271,9 @@ fn align_wrapped_first_baseline(records: &mut [f64], lines: &[(usize, usize)], s
     for (line_index, &(line_start, line_end)) in lines.iter().enumerate() {
         let (ascent, cross) = match wrapped_first_baseline_line_metrics(records, line_start, line_end) { Ok(metrics) => metrics, Err(status) => return status };
         let extent = cross + stretch;
-        let baseline_origin = if reverse { size - cursor - cross } else { cursor };
+        let baseline_origin = if last {
+            if reverse { size - cursor - extent } else { cursor + (extent - cross).max(0.0) }
+        } else if reverse { size - cursor - cross } else { cursor };
         let ordinary_origin = if reverse { size - cursor - extent } else { cursor };
         if !extent.is_finite() || extent < 0.0 || !baseline_origin.is_finite() || !ordinary_origin.is_finite() { return 1; }
         for n in records[line_start * STRIDE..line_end * STRIDE].chunks_exact(STRIDE) {
@@ -276,7 +293,9 @@ fn align_wrapped_first_baseline(records: &mut [f64], lines: &[(usize, usize)], s
     for (line_index, &(line_start, line_end)) in lines.iter().enumerate() {
         let (ascent, cross) = match wrapped_first_baseline_line_metrics(records, line_start, line_end) { Ok(metrics) => metrics, Err(status) => return status };
         let extent = cross + stretch;
-        let baseline_origin = if reverse { size - cursor - cross } else { cursor };
+        let baseline_origin = if last {
+            if reverse { size - cursor - extent } else { cursor + (extent - cross).max(0.0) }
+        } else if reverse { size - cursor - cross } else { cursor };
         let ordinary_origin = if reverse { size - cursor - extent } else { cursor };
         for n in records[line_start * STRIDE..line_end * STRIDE].chunks_exact_mut(STRIDE) {
             let (policy, participant) = validate_baseline_record(n).unwrap();
@@ -292,13 +311,27 @@ fn align_wrapped_first_baseline(records: &mut [f64], lines: &[(usize, usize)], s
 }
 
 fn align_first_baseline(records: &mut [f64], size: f64) -> u32 {
+    align_baseline(records, size, false)
+}
+
+fn align_baseline(records: &mut [f64], size: f64, last: bool) -> u32 {
     if records.len() % STRIDE != 0 || !size.is_finite() || size < 0.0 { return 1; }
     let mut max_ascent = 0.0_f64;
+    let mut max_descent = 0.0_f64;
     for n in records.chunks_exact(STRIDE) {
         let (_, participant) = match validate_baseline_record(n) { Ok(value) => value, Err(status) => return status };
-        if participant { max_ascent = max_ascent.max(n[6] + n[8]); }
+        if participant {
+            max_ascent = max_ascent.max(n[6] + n[8]);
+            if last { max_descent = max_descent.max(n[0] - n[8] + n[7]); }
+        }
     }
     if !max_ascent.is_finite() { return 1; }
+    if last {
+        let extent = max_ascent + max_descent;
+        if !max_descent.is_finite() || !extent.is_finite() { return 1; }
+        max_ascent += (size - extent).max(0.0);
+        if !max_ascent.is_finite() { return 1; }
+    }
     for n in records.chunks_exact(STRIDE) {
         let (policy, participant) = match validate_baseline_record(n) { Ok(value) => value, Err(status) => return status };
         if baseline_free_space(n, size).is_err() { return 1; }
@@ -1456,6 +1489,37 @@ mod tests {
         assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
         assert_eq!(arena_dispose(handle, generation), 0);
         assert!(first_wrap_line_count(handle, generation).is_nan());
+    }
+
+    #[test] fn last_baseline_anchors_shared_offsets_at_safe_end() {
+        let mut records = [40.,0.,0.,f64::INFINITY,0.,17.,0.,0.,30.,0.,60.,0.,0.,f64::INFINITY,0.,17.,0.,0.,50.,0.];
+        assert_eq!(align_baseline(&mut records,80.,true),0);
+        assert_eq!((records[7],records[17]),(40.,20.));
+        records[6]=0.;records[7]=0.;records[16]=0.;records[17]=0.;records[8]=20.;
+        assert_eq!(align_baseline(&mut records,80.,true),0);
+        assert_eq!((records[7],records[17]),(40.,10.));
+        records[6]=0.;records[7]=0.;records[16]=0.;records[17]=0.;records[8]=30.;
+        assert_eq!(align_baseline(&mut records,50.,true),0);
+        assert_eq!((records[7],records[17]),(20.,0.));
+    }
+    #[test] fn wrapped_last_baseline_matches_stretched_css_line_origins_and_physical_margins() {
+        let original = [40.,0.,0.,f64::INFINITY,0.,17.,5.,10.,30.,0.,60.,0.,0.,f64::INFINITY,0.,17.,0.,0.,50.,0.,30.,0.,0.,f64::INFINITY,0.,17.,0.,0.,20.,0.,20.,0.,0.,f64::INFINITY,0.,17.,0.,0.,10.,0.];
+        let mut records=original;
+        assert_eq!(align_wrapped_baseline(&mut records,&[(0,2),(2,4)],120.,8.,6,false,true),0);
+        assert_eq!((records[7],records[17],records[27],records[37]),(26.,6.,90.,100.));
+        records=original;
+        assert_eq!(align_wrapped_baseline(&mut records,&[(0,2),(2,4)],120.,8.,6,true,true),0);
+        assert_eq!((records[7],records[17],records[27],records[37]),(64.,44.,0.,10.));
+    }
+    #[test] fn last_baseline_rejects_nonfinite_metrics_before_any_output_write() {
+        let mut records=[40.,0.,0.,f64::INFINITY,0.,17.,0.,0.,30.,0.,60.,0.,0.,f64::INFINITY,0.,17.,0.,0.,f64::MAX,0.];
+        records[16]=f64::MAX;
+        let before=records;
+        assert_eq!(align_baseline(&mut records,80.,true),1);
+        assert_eq!(records,before);
+        records=before;records[16]=0.;records[18]=f64::NAN;
+        assert_eq!(align_wrapped_baseline(&mut records,&[(0,1),(1,2)],80.,0.,6,false,true),1);
+        assert_eq!((records[6],records[7],records[16],records[17]),(0.,0.,0.,0.));
     }
 
     #[test] fn first_baseline_keeps_signed_offsets_and_uses_max_ascent() {

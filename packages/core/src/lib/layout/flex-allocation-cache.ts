@@ -1,3 +1,4 @@
+import { FLEX_BASELINE_GROUP, FLEX_LAST_BASELINE } from './flex-baseline-mode.js';
 import { hasPercentagePadding } from './box-insets.js';
 import { Rectangle } from '../components/rect.js';
 import { Text } from '../components/text.js';
@@ -6,6 +7,8 @@ import { isSignal, untracked } from '../signals/graph.js';
 import type { LayoutBox } from './types.js';
 
 export interface AllocationSettings {
+  [FLEX_BASELINE_GROUP]?: boolean;
+  [FLEX_LAST_BASELINE]?: boolean;
   layoutDirection: 'ltr' | 'rtl';
   flexDirection: string;
   flexWrap: string;
@@ -38,6 +41,7 @@ export class FlexAllocationCache {
         box.width !== this.width || box.height !== this.height ||
         previous.layoutDirection !== settings.layoutDirection || previous.flexDirection !== settings.flexDirection || previous.flexWrap !== settings.flexWrap ||
         previous.justifyContent !== settings.justifyContent || previous.alignItems !== settings.alignItems ||
+        previous[FLEX_BASELINE_GROUP] !== settings[FLEX_BASELINE_GROUP] || previous[FLEX_LAST_BASELINE] !== settings[FLEX_LAST_BASELINE] ||
         previous.alignContent !== settings.alignContent || previous.rowGap !== settings.rowGap ||
         previous.columnGap !== settings.columnGap) return;
     return this.placements;
@@ -49,6 +53,8 @@ export class FlexAllocationCache {
     this.width = box.width;
     this.height = box.height;
     this.settings = {
+      [FLEX_BASELINE_GROUP]: settings[FLEX_BASELINE_GROUP],
+      [FLEX_LAST_BASELINE]: settings[FLEX_LAST_BASELINE],
       layoutDirection: settings.layoutDirection,
       flexDirection: settings.flexDirection, flexWrap: settings.flexWrap,
       justifyContent: settings.justifyContent, alignItems: settings.alignItems,

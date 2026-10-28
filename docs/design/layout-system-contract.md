@@ -2314,3 +2314,31 @@ siblings remain mounted. Failure and disposal retain exact existing teardown.
 A cache hit through that one-wrapper path still replays the leaf measurement
 reads into current ownership before content changes. Stable leaf descriptors also allow their separate direct-provider caches to reuse
 results; freshly recreated descriptors may still repeat those direct queries.
+
+### Experimental last-baseline primitive composition
+
+Experimental mounted horizontal Flex accepts `alignItems: 'last-baseline'` for
+direct finite primitive leaves, including described primitive roots and settled
+Text. It uses the existing `measureBaselines` result's `last` offset at the final
+content allocation, adding content insets once. Missing providers use content
+bottom. Explicit `alignSelf` and automatic cross margins retain the same ordinary
+placement opt-out as first-baseline; excluded leaves are not queried.
+
+Native placement computes the participant group's maximum physical ascent and
+descent, including numeric cross margins. It anchors the group at its safe cross
+end: positive remaining line space precedes the group, while an overflowing group
+uses its start position. Each wrapped line forms its own group; normal and
+reversed line distribution retain existing `alignContent`, stretch and gap rules.
+Reversed lines use the matching physical line origin rather than reflecting a
+provider's content-top offset. Signed/out-of-box finite provider values retain
+their existing validation. All native metrics and offsets validate before output
+publication. An explicit first/last mode participates in both native and frozen
+allocation cache keys, including paint-scheduled changes to mutable parent style.
+
+Outer columns resolve last-baseline to ordinary logical flex-end without provider
+queries or vertical baseline groups. This is distinct from first-baseline's
+logical flex-start column fallback. Prepared structural last-source selection is
+not yet admitted. Yoga3.2.1 has one baseline callback and cannot validate distinct
+first/last offsets. The asserting Chromium control at
+`tooling/layout-yoga-rehearsal/baseline-last-css-control.mjs` verifies the selected
+safe-end line-origin and margin policy; it is not a full CSS compatibility claim.

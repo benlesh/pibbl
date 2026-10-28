@@ -616,3 +616,11 @@ column baseline to FlexStart before placement. This corrects the earlier local
 research note that incorrectly inferred a flex-end fallthrough. The probe stays
 outside the fixed reference corpus. Pibbl adopts this fallback without defining
 vertical baseline groups.
+
+## Distinct last-baseline CSS control (slice221)
+
+`node tooling/layout-yoga-rehearsal/baseline-last-css-control.mjs` runs headless
+Chromium and asserts synthetic baseline markers, physical margins, safe-end
+placement and stretched normal/reversed wrapped line origins. It uses ordinary
+CSS, not Yoga, because Yoga3.2.1 has only one provider offset. This selected
+mechanics control does not claim full CSS baseline compatibility.

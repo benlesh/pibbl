@@ -6,6 +6,7 @@ import type { PreparedFlexLayoutPlan, PreparedLayoutPlan, PreparedLayoutSlot } f
 import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, peekPreparedLayoutPlan, peekPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedIntrinsicMain, peekPreparedIntrinsicMain, takePreparedIntrinsicMain, type PreparedIntrinsicMainStage } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
+import { FLEX_BASELINE_GROUP, FLEX_LAST_BASELINE } from './flex-baseline-mode.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
 import { experimentalLayout, LayoutRegion, mountedLayoutRegion, solveTransientFlexMain, prepareTransientIntrinsicMainQueries, resolveTransientIntrinsicMain, resolveTransientKnownOwnerMain, type NumericFlexMainInput, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
 import { Rectangle } from '../components/rect.js';
@@ -71,7 +72,7 @@ type MainAlignment =
   | 'space-around'
   | 'space-evenly';
 type CrossAlignment = 'stretch' | 'flex-start' | 'flex-end' | 'center';
-type ItemCrossAlignment = CrossAlignment | 'first-baseline';
+type ItemCrossAlignment = CrossAlignment | 'first-baseline' | 'last-baseline';
 
 /**
  * Supported geometry and presentation properties for Flex.
@@ -126,7 +127,6 @@ export interface FlexMeasurementInput {
 // Parent input is private metadata, not a recursively validated resolved value.
 const FLEX_ABSOLUTE_BOX_STYLE = Symbol('pibbl.flex-absolute-box-style');
 const FLEX_INHERITED_CONTAINING_BOX = Symbol('pibbl.flex-inherited-containing-box');
-const FLEX_FIRST_BASELINE = Symbol('pibbl.flex-first-baseline');
 
 interface ResolvedFlexStyle extends SystemStyle {
   layoutDirection: 'ltr' | 'rtl';
@@ -136,8 +136,9 @@ interface ResolvedFlexStyle extends SystemStyle {
   flexWrap: FlexWrap;
   justifyContent: MainAlignment;
   alignItems: CrossAlignment;
-  /** True when first-baseline requires a horizontal measured baseline group. */
-  [FLEX_FIRST_BASELINE]: boolean;
+  /** True when first/last baseline requires a horizontal measured group. */
+  [FLEX_BASELINE_GROUP]: boolean;
+  [FLEX_LAST_BASELINE]: boolean;
   alignContent: CrossAlignment | MainAlignment;
   rowGap: number;
   columnGap: number;
@@ -177,7 +178,7 @@ interface FlexItem {
   query?: PreparedQuery;
   relativeX: number;
   relativeY: number;
-  /** Signed first-baseline offset resolved after final main allocation. */
+  /** Signed selected baseline offset resolved after final main allocation. */
   firstBaseline?: number;
   /** Current transaction root of a transparent layout description. */
   baselineRoot?: PibblElement<any>;
@@ -1227,7 +1228,7 @@ function resolveFlexPlacements(
     }
     assertSupportedChildPosition('Flex', child, normalized, true);
     rejectUnsupportedItemFields(child, normalized, container);
-    if (options[FLEX_FIRST_BASELINE] && normalized.position === 'absolute') {
+    if (options[FLEX_BASELINE_GROUP] && normalized.position === 'absolute') {
       throw childDiagnostic(child, 'position', 'absolute', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: absolute children are outside first-baseline composition');
     }
     if (normalized.position === 'absolute') {
@@ -1775,12 +1776,12 @@ function resolveFlexPlacements(
     // Width-dependent content uses the settled content allocation.
     if (row) for (const item of line.items) {
       let measuredRoot = item.child;
-      if (item.crossAuto && experimentalLayout && (options.flexWrap === 'nowrap' && options.flexDirection === 'row' && options.layoutDirection === 'ltr' || item.autoCrossBefore || item.autoCrossAfter || options[FLEX_FIRST_BASELINE]) && !item.query && item.aspectRatio === undefined && isLayoutComponent(item.child.type)) {
+      if (item.crossAuto && experimentalLayout && (options.flexWrap === 'nowrap' && options.flexDirection === 'row' && options.layoutDirection === 'ltr' || item.autoCrossBefore || item.autoCrossAfter || options[FLEX_BASELINE_GROUP]) && !item.query && item.aspectRatio === undefined && isLayoutComponent(item.child.type)) {
         measuredRoot = prepareLayoutComponent(item.child, { receiverToken: item.receiverToken });
       }
-      const definition = experimentalLayout && (options.flexWrap === 'nowrap' || item.autoCrossBefore || item.autoCrossAfter || options[FLEX_FIRST_BASELINE]) && !item.query && item.aspectRatio === undefined ? getPrimitiveDefinition(measuredRoot.type) : undefined;
+      const definition = experimentalLayout && (options.flexWrap === 'nowrap' || item.autoCrossBefore || item.autoCrossAfter || options[FLEX_BASELINE_GROUP]) && !item.query && item.aspectRatio === undefined ? getPrimitiveDefinition(measuredRoot.type) : undefined;
       const constrainedProvider = !!definition?.measureIntrinsic && !!definition.measure;
-      const ordinaryProvider = !!definition?.measure && (item.autoCrossBefore || item.autoCrossAfter || options[FLEX_FIRST_BASELINE]);
+      const ordinaryProvider = !!definition?.measure && (item.autoCrossBefore || item.autoCrossAfter || options[FLEX_BASELINE_GROUP]);
       const requiredKnownCross = experimentalLayout && (item.autoCrossBefore || item.autoCrossAfter) && (measuredRoot.type === Flex || measuredRoot.type === Flow || measuredRoot.type === Grid);
       if (!item.crossAuto || (item.child.type !== Text && !(experimentalLayout && item.child.type === Flex) && !constrainedProvider && !ordinaryProvider && !requiredKnownCross)) continue;
       if (item.child.type === Flex && item.normalized.width === item.targetMain) continue;
@@ -1795,8 +1796,8 @@ function resolveFlexPlacements(
         item.preferredCross = clamp(result.size.height, item.minCross, item.maxCross) + item.paddingCross;
         // Baseline grouping consumes this final measured box rather than stretching
         // an authored automatic cross size after the provider has been queried.
-        if (options[FLEX_FIRST_BASELINE] && (item.alignSelf !== 'stretch' || item.autoCrossBefore || item.autoCrossAfter)) item.crossAuto = false;
-      } else if (constrainedProvider || ordinaryProvider || requiredKnownCross || options[FLEX_FIRST_BASELINE] || experimentalLayout && item.child.type === Text && (item.autoCrossBefore || item.autoCrossAfter)) throw childDiagnostic(item.child, 'height', 'auto', container, `final-width measurement is required but unsupported: ${result.reason}`);
+        if (options[FLEX_BASELINE_GROUP] && (item.alignSelf !== 'stretch' || item.autoCrossBefore || item.autoCrossAfter)) item.crossAuto = false;
+      } else if (constrainedProvider || ordinaryProvider || requiredKnownCross || options[FLEX_BASELINE_GROUP] || experimentalLayout && item.child.type === Text && (item.autoCrossBefore || item.autoCrossAfter)) throw childDiagnostic(item.child, 'height', 'auto', container, `final-width measurement is required but unsupported: ${result.reason}`);
     }
   }
   // Defer column natural cross measurement until the kernel has resolved each
@@ -1826,7 +1827,7 @@ function resolveFlexPlacements(
     }
     item.preferredCross = clamp(result.size.width, item.minCross, item.maxCross) + item.paddingCross;
   }
-  if (options[FLEX_FIRST_BASELINE]) {
+  if (options[FLEX_BASELINE_GROUP]) {
     assertSupportedFirstBaselineFlex(options, items, container, region !== undefined);
     for (const item of items) {
       // Automatic cross margins replace alignment, so this leaf neither supplies
@@ -1862,7 +1863,7 @@ function resolveFlexPlacements(
       if (result.status === 'unsupported') {
         throw childDiagnostic(item.child, 'measureBaselines', 'unsupported', container, `first-baseline alignment requires a baseline result: ${result.reason}`);
       }
-      item.firstBaseline = item.paddingCrossBefore + result.first;
+      item.firstBaseline = item.paddingCrossBefore + (options[FLEX_LAST_BASELINE] ? result.last : result.first);
     }
   }
   if (region) {
@@ -1875,7 +1876,8 @@ function resolveFlexPlacements(
   const crossPlacements = region?.placeCross(items, crossSize, options.alignItems, {
     reverse: wrapReverse,
     wrap: wrappedRegion ? { gap: crossGap, alignContent: options.alignContent } : undefined,
-    baseline: options[FLEX_FIRST_BASELINE],
+    baseline: options[FLEX_BASELINE_GROUP],
+    lastBaseline: options[FLEX_LAST_BASELINE],
   });
   const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent, reverse, hasAutoMainMargins ? items : undefined, stagedIntrinsic?.autoMarginFreeMain);
   let mainIndex = 0;
@@ -2643,8 +2645,9 @@ function assertSupportedFirstBaselineFlex(
   container: Readonly<LayoutBox>,
   mounted: boolean,
 ): void {
+  const alignment = options[FLEX_LAST_BASELINE] ? 'last-baseline' : 'first-baseline';
   if (!mounted || !experimentalLayout || !isRowDirection(options.flexDirection)) {
-    throw optionDiagnostic('alignItems', 'first-baseline', container, 'requires mounted experimental horizontal Flex');
+    throw optionDiagnostic('alignItems', alignment, container, 'requires mounted experimental horizontal Flex');
   }
   for (const item of items) {
     const style = item.normalized;
@@ -2652,8 +2655,10 @@ function assertSupportedFirstBaselineFlex(
       prepareLayoutComponent(item.child, { receiverToken: item.receiverToken }) : item.child;
     if (baselineRoot !== item.child) item.baselineRoot = baselineRoot;
     if (baselineRoot.type === Flex || baselineRoot.type === Flow || baselineRoot.type === Grid) {
+      if (options[FLEX_LAST_BASELINE]) throw childDiagnostic(item.child, 'alignItems', alignment, container,
+        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: structural last-baseline source selection is not implemented');
       if (item.crossAuto || !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
-        throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container,
+        throw childDiagnostic(item.child, 'alignItems', alignment, container,
           'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural first baseline requires settled finite known-layout geometry');
       }
       continue;
@@ -2672,7 +2677,7 @@ function assertSupportedFirstBaselineFlex(
     if (!getPrimitiveDefinition(baselineRoot.type) || isKnownLayoutType(baselineRoot.type) || isLayoutComponent(baselineRoot.type) || (!supportedTextLeaf && sharesBaseline) ||
         (style.position !== undefined && style.position !== 'static' && style.position !== 'relative') || (item.crossAuto && item.alignSelf !== 'stretch') ||
         !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
-      throw childDiagnostic(item.child, 'alignItems', 'first-baseline', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires primitive roots with settled finite content boxes and no absolute position');
+      throw childDiagnostic(item.child, 'alignItems', alignment, container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires primitive roots with settled finite content boxes and no absolute position');
     }
   }
 }
@@ -2707,10 +2712,10 @@ function normalizeFlexOptions(
     'justifyContent',
     container,
   );
-  const requestedAlignItems = normalizeLogicalAlignment((style as Readonly<Partial<ResolvedFlexStyle>>)[FLEX_FIRST_BASELINE] ? 'first-baseline' : style.alignItems ?? 'stretch', flexWrap === 'wrap-reverse');
+  const requestedAlignItems = normalizeLogicalAlignment((style as Readonly<Partial<ResolvedFlexStyle>>)[FLEX_LAST_BASELINE] ? 'last-baseline' : (style as Readonly<Partial<ResolvedFlexStyle>>)[FLEX_BASELINE_GROUP] ? 'first-baseline' : style.alignItems ?? 'stretch', flexWrap === 'wrap-reverse');
   const alignItems = supported(
     requestedAlignItems,
-    experimentalLayout ? ['stretch', 'flex-start', 'flex-end', 'center', 'first-baseline'] : ['stretch', 'flex-start', 'flex-end', 'center'],
+    experimentalLayout ? ['stretch', 'flex-start', 'flex-end', 'center', 'first-baseline', 'last-baseline'] : ['stretch', 'flex-start', 'flex-end', 'center'],
     'alignItems',
     container,
   );
@@ -2730,8 +2735,9 @@ function normalizeFlexOptions(
     justifyContent: justifyContent as MainAlignment,
     // Yoga resolves baseline alignment on column axes to logical flex-start
     // before placement. It neither measures nor forms a vertical baseline group.
-    alignItems: alignItems === 'first-baseline' ? 'flex-start' : alignItems as CrossAlignment,
-    [FLEX_FIRST_BASELINE]: alignItems === 'first-baseline' && isRowDirection(flexDirection),
+    alignItems: alignItems === 'first-baseline' ? 'flex-start' : alignItems === 'last-baseline' ? (isRowDirection(flexDirection) ? 'flex-start' : 'flex-end') : alignItems as CrossAlignment,
+    [FLEX_BASELINE_GROUP]: (alignItems === 'first-baseline' || alignItems === 'last-baseline') && isRowDirection(flexDirection),
+    [FLEX_LAST_BASELINE]: alignItems === 'last-baseline' && isRowDirection(flexDirection),
     alignContent: alignContent as CrossAlignment | MainAlignment,
     rowGap: style.rowGap === undefined ? rowGap : nonnegativeGap(style.rowGap, 'rowGap', container, container.height),
     columnGap: style.columnGap === undefined ? columnGap : nonnegativeGap(style.columnGap, 'columnGap', container, container.width),

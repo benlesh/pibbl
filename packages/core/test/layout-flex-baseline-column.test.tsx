@@ -17,7 +17,8 @@ const cases = [
   ['column-reverse','ltr','wrap',0,40,40,40], ['column-reverse','ltr','wrap-reverse',60,40,0,40],
   ['column-reverse','rtl','wrap',60,40,0,40], ['column-reverse','rtl','wrap-reverse',0,40,40,40],
 ] as const;
-it.runIf(experimentalLayout).each(cases)('column baseline falls back to logical start: %s %s %s', async (flexDirection,layoutDirection,flexWrap,ax,ay,bx,by) => {
+const baselineCases = [...cases.map(value => ['first-baseline', ...value] as const), ...cases.map(value => ['last-baseline', ...value] as const)];
+it.runIf(experimentalLayout).each(baselineCases)('column %s falls back to ordinary cross placement: %s %s %s', async (alignment,flexDirection,layoutDirection,flexWrap,ax,ay,bx,by) => {
   const before = snapshotWasmLayoutDiagnostics(), width = signal(40), boxes = new Map<string, {x:number;y:number;width:number;height:number;stamp:number}>(), hits:string[]=[];
   let serial=0, calls=0;
   const Leaf = definePrimitive<{name:string},LeafStyle,LeafStyle,SystemStyle & {width:number;height:number}>((props) => {
@@ -26,13 +27,15 @@ it.runIf(experimentalLayout).each(cases)('column baseline falls back to logical 
     return <Rectangle onClick={()=>hits.push(props.name)} style={{width:box.width,height:box.height,fill:'#b45'}} />;
   }, {resolveStyle:(_style,context)=>({width:context.allocation.width,height:context.allocation.height}),measureBaselines:()=>{calls++;throw new Error('Column baseline callbacks must remain inert');}});
   const canvas=document.createElement('canvas');canvas.width=100;canvas.height=100;document.body.append(canvas);
-  const style:FlexStyle={width:100,height:100,flexDirection,layoutDirection,flexWrap,alignItems:'first-baseline',alignContent:'flex-start'};
+  const style:FlexStyle={width:100,height:100,flexDirection,layoutDirection,flexWrap,alignItems:alignment,alignContent:'flex-start'};
   const controller=pibbl(canvas,<Flex style={style}>
     <Leaf name="A" style={{width,height:flexWrap==='nowrap'?20:60,minWidth:0,minHeight:0,flexShrink:0}} />
     <Leaf name="B" style={{width:60,height:flexWrap==='nowrap'?40:60,minWidth:0,minHeight:0,flexShrink:0}} />
   </Flex>);controllers.push(controller);await frame();
-  expect(boxes.get('A')).toEqual({x:ax,y:ay,width:40,height:flexWrap==='nowrap'?20:60,stamp:1});
-  expect(boxes.get('B')).toEqual({x:bx,y:by,width:60,height:flexWrap==='nowrap'?40:60,stamp:2});
+  const expectedAX = alignment === 'last-baseline' && flexWrap === 'nowrap' ? layoutDirection === 'ltr' ? 60 : 0 : ax;
+  const expectedBX = alignment === 'last-baseline' && flexWrap === 'nowrap' ? layoutDirection === 'ltr' ? 40 : 0 : bx;
+  expect(boxes.get('A')).toEqual({x:expectedAX,y:ay,width:40,height:flexWrap==='nowrap'?20:60,stamp:1});
+  expect(boxes.get('B')).toEqual({x:expectedBX,y:by,width:60,height:flexWrap==='nowrap'?40:60,stamp:2});
   expect(calls).toBe(0);
   width.set(30);await frame();expect(boxes.get('A')!.width).toBe(30);expect(boxes.get('A')!.stamp).toBe(1);expect(calls).toBe(0);
   const a=boxes.get('A')!, rect=canvas.getBoundingClientRect();

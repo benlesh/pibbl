@@ -52,6 +52,8 @@ interface Kernel {
   place_grid_cells(handle: number, generation: number): number;
   resize_cross(handle: number, generation: number, count: number): number;
   place_cross(handle: number, generation: number, size: number, reverse: number): number;
+  place_last_baseline(handle: number, generation: number, size: number): number;
+  place_wrap_last_baseline(handle: number, generation: number, size: number, gap: number, alignment: number, reverse: number): number;
   place_first_baseline(handle: number, generation: number, size: number): number;
   place_wrap_first_baseline(handle: number, generation: number, size: number, gap: number, alignment: number, reverse: number): number;
   resize_main_auto(handle: number, generation: number, count: number): number;
@@ -728,10 +730,11 @@ export class LayoutRegion {
     }
     return this.mainOffsets;
   }
-  placeCross(items: readonly NumericFlexCrossItem[], size: number, alignment: CrossAlignment, options?: { reverse?: boolean; wrap?: { gap: number; alignContent: string }; baseline?: boolean }) {
+  placeCross(items: readonly NumericFlexCrossItem[], size: number, alignment: CrossAlignment, options?: { reverse?: boolean; wrap?: { gap: number; alignContent: string }; baseline?: boolean; lastBaseline?: boolean }) {
     const wrap = options?.wrap;
     const reverse = options?.reverse === true;
     const baseline = options?.baseline === true;
+    const lastBaseline = baseline && options?.lastBaseline === true;
     if (baseline && reverse && !wrap) throw new Error('Experimental Flex baseline cross reversal requires wrapped line membership.');
     if (!this.layoutOwner?.has(this.handle, this.generation)) throw new Error('Experimental Flex cross placement requires a solved region.');
     const kernel = this.layoutOwner.kernel;
@@ -751,7 +754,7 @@ export class LayoutRegion {
         baseline ? item.firstBaseline ?? Number.NaN : before ?? 0, baseline ? 0 : after ?? 0];
     });
     const code = wrap ? ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly', 'stretch'].indexOf(wrap.alignContent) : -1;
-    const modeKey = baseline ? `baseline:${this.allocationRevision}:${wrap ? `wrap:${wrap.gap}:${code}:${reverse ? 1 : 0}` : 'nowrap'}` : wrap ? `${this.allocationRevision}:${wrap.gap}:${code}:${reverse ? 1 : 0}` : `nowrap:${reverse ? 1 : 0}`;
+    const modeKey = baseline ? `baseline:${lastBaseline ? "last" : "first"}:${this.allocationRevision}:${wrap ? `wrap:${wrap.gap}:${code}:${reverse ? 1 : 0}` : 'nowrap'}` : wrap ? `${this.allocationRevision}:${wrap.gap}:${code}:${reverse ? 1 : 0}` : `nowrap:${reverse ? 1 : 0}`;
     const changed = modeKey !== this.crossModeKey || size !== this.crossSize || records.length !== this.crossRecords.length ||
       records.some((record, i) => record.some((value, j) => value !== this.crossRecords[i]?.[j]));
     if (changed) {
@@ -759,7 +762,7 @@ export class LayoutRegion {
         const pointer = kernel.resize_cross(this.handle, this.generation, records.length);
         const input = new Float64Array(kernel.memory.buffer, pointer, records.length * 10);
         records.forEach((record, i) => input.set(record, i * 10));
-        const status = baseline ? (wrap ? kernel.place_wrap_first_baseline(this.handle, this.generation, size, wrap.gap, code, reverse ? 1 : 0) : kernel.place_first_baseline(this.handle, this.generation, size)) : wrap ? kernel.place_wrap_cross(this.handle, this.generation, size, wrap.gap, code, reverse ? 1 : 0) : kernel.place_cross(this.handle, this.generation, size, reverse ? 1 : 0);
+        const status = baseline ? (wrap ? (lastBaseline ? kernel.place_wrap_last_baseline(this.handle, this.generation, size, wrap.gap, code, reverse ? 1 : 0) : kernel.place_wrap_first_baseline(this.handle, this.generation, size, wrap.gap, code, reverse ? 1 : 0)) : lastBaseline ? kernel.place_last_baseline(this.handle, this.generation, size) : kernel.place_first_baseline(this.handle, this.generation, size)) : wrap ? kernel.place_wrap_cross(this.handle, this.generation, size, wrap.gap, code, reverse ? 1 : 0) : kernel.place_cross(this.handle, this.generation, size, reverse ? 1 : 0);
         if (status !== 0) throw new Error(`Experimental Flex WASM cross placement failed (${status}); invalid or nonfinite geometry.`);
         const output = new Float64Array(kernel.memory.buffer, pointer, records.length * 10);
         this.crossResults = records.map((_, i) => ({ outerCross: output[i * 10 + 6], offset: output[i * 10 + 7] }));

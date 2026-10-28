@@ -224,6 +224,7 @@ try {
       assert.equal(receipt.staticKnownFlexBaseline, true, 'Installed static known Flex baseline ownership must keep absolute descendants anchored to the nearest non-static owner while baseline and relative leaf placement update');
       assert.equal(receipt.describedStaticKnownFlexBaseline, true, 'Installed transparent static known Flex roots must preserve their current receiver baseline and absolute containing-block origin');
       assert.equal(receipt.flowSourceBaseline, true, 'Installed Flow source baseline, relative origin, empty fallback and teardown must hold');
+      assert.equal(receipt.lastBaselinePlacement, true, 'Installed last-baseline safe-end geometry, updates, targets and cleanup must hold');
       assert.equal(receipt.columnBaselineFallback, true, 'Installed column fallback geometry, provider skipping, resize and teardown must hold');
       assert.equal(receipt.gridSourceBaseline, true, 'Installed Grid declared-source selection, moved targets, empty fallback and teardown must hold');
       assert.equal(receipt.settledMeasuredAspectFinalBox, true, 'Installed settled baseline providers must receive the final aspect-constrained box, retain targets, reuse paint, and clean up');

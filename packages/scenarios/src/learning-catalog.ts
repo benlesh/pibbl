@@ -4442,6 +4442,31 @@ const drafts = [
     load: () => import("./learning/layout/wasm-flow-baseline.example"),
   },
   {
+    slug: "wasm-flex-last-baseline",
+    title: "Experimental WASM Flex last baseline",
+    shortTitle: "WASM last baseline",
+    section: "layout",
+    order: 153,
+    summary: "Direct finite leaves align by their last baseline, with safe-end fallback for a single row and separate wrapped rows.",
+    api: ["Flex", "definePrimitive", "signal", "useLayoutBox"],
+    objectives: [
+      "See a last-offset update change the shared final baseline and its safe-end placement.",
+      "Compare row directions and a direct wrapped last-baseline group.",
+    ],
+    prompts: {
+      gesture: "Move A’s last baseline, cycle Direction, then enable Wrap. Click the colored leaves and inspect their physical boxes.",
+      code: "Each direct primitive returns its first and last offsets through the existing baseline capability. No new provider API is required.",
+    },
+    apiNotes: [
+      "Experimental finite direct horizontal leaves. A single group uses safe-end fallback; wrapped lines form their own last-baseline groups.",
+      "Structural last-source selection remains separate. Outer columns use ordinary logical flex-end without baseline queries.",
+    ],
+    canvas: { width: 280, height: 190 },
+    related: ["wasm-flex-baseline", "flex"],
+    exportName: "WasmFlexLastBaselineExample",
+    load: () => import("./learning/layout/wasm-flex-last-baseline.example"),
+  },
+  {
     slug: "wasm-grid-baseline",
     title: "Experimental WASM Grid source baseline",
     shortTitle: "WASM Grid baseline",

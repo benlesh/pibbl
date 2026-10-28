@@ -29,7 +29,7 @@ export function hasReadyLayoutModule(): boolean { return compiled !== undefined;
 export function publishLayoutModule(module: WebAssembly.Module): void {
   if (compiled) return;
   const exports = WebAssembly.Module.exports(module);
-  if (!exports.some(entry => entry.name === 'layout_abi_v17' && entry.kind === 'function') ||
+  if (!exports.some(entry => entry.name === 'layout_abi_v18' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'first_wrap_line_count' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'prepare_intrinsic_main_queries' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'resize_intrinsic_main' && entry.kind === 'function') ||
@@ -40,6 +40,8 @@ export function publishLayoutModule(module: WebAssembly.Module): void {
       !exports.some(entry => entry.name === 'intrinsic_main_auto_free' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'place_main_auto_staged' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'place_wrap_first_baseline' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'place_last_baseline' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'place_wrap_last_baseline' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'place_first_baseline' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'resize_main_auto' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'place_main_auto' && entry.kind === 'function') ||

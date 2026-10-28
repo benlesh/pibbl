@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice220: Yoga-compatible outer-column baseline fallback.
+Latest delivery is slice221: native safe-end last-baseline groups.
+Slice220 is `77436ad0`: Yoga-compatible outer-column baseline fallback.
 Slice219 is `666348da`: prepared Grid declared-source baselines.
 Consolidation73 verifies217–219 below.
 Slice218 is `1ddf4b34`: prepared Flow first-source baselines.
@@ -8195,18 +8196,50 @@ The capability ledger now includes217–219's static, Flow and Grid source evide
 and220's column fallback, removing stale missing-work descriptions without a
 status promotion. Baseline closure still requires last-baseline placement.
 
-## [NEXT] Slice221: horizontal last-baseline placement
+## [DONE] Slice221: safe-end last-baseline primitive groups
 
-Use the existing provider's last offset through the ordinary baseline group
-scalar; add the explicit parent alignment value rather than a new provider API.
-Define structural source/line selection before broadening beyond direct leaves.
-No Yoga last-baseline parity claim: its one-offset callback cannot distinguish
-first from last. The finite release closure audit identifies real work in
-intrinsic sizing, containing ancestry/participation, general transactional
-publication, implicit/intrinsic Grid, and migration/conformance; historical
-per-profile queues are not new scope. Counts remain12complete/12experimental/
-3partial/5missing/1excluded; all7release gates and final independent whole-codebase
-review remain open. Consolidate220–222 before further production.
+The existing provider result supplies `last`; the sole public addition is
+`alignItems: 'last-baseline'`. Direct finite horizontal leaves, described
+primitive roots and settled Text use native safe-end groups. Each wrapped line
+retains its own metrics, opt-outs and normal/reversed line allocation. Columns
+use ordinary logical flex-end with inert providers. Structural source selection
+is reserved for222 rather than incorrectly reusing the first source.
+
+Two public RED cases failed before implementation. Native49tests pass, including
+new safe-end/descent updates, overflow fallback, CSS-controlled stretched normal/
+reversed margins and preflight failure before output writes. ABI18 requires both
+last-baseline exports; binary85549bytes, SHA256
+`d3013dbf891b8e87ccd2fd14e7dfdf81115d5ef5d05774fdcb26098aedcc7a03`.
+The asserting Chromium CSS control passes; Yoga's single-offset callback is not
+claimed as a distinct last-baseline oracle.
+
+Scoped review found a real frozen-allocation collision: resolved first/last
+styles both used flex-start. A public paint-only mutable-parent regression failed
+before the fix and passed afterward. Shared private baseline symbols now enter
+both cache snapshots and native placement keys. No extra per-frame key object.
+Final focused Node24.15/Chromium checks pass125with1skip across18files; ordinary
+30pass/96skip (`/tmp/pibbl-slice221-{focused,ordinary}.txt`). Typecheck passes.
+Source/built lesson drivers pass geometry, real targets, stable identity,
+cleanup0000 and errors[]; built471inputs. Studio's explicit editor declarations
+were migrated with the new style value. Installed Bundler/NodeNext and nested
+browser pass last-offset updates and moved targets across four horizontal modes,
+all prior column receipts and104margin cases,247installed inputs; tarball SHA256
+`8683a6a8722271919203ff07ae068497b07b17b08382c27d8cf22386b58e556a`
+(`/tmp/pibbl-slice221-packed.txt`). Scoped review is clean after the cache fix.
+
+Try `http://127.0.0.1:5192/#/examples/layout/wasm-flex-last-baseline`.
+
+## [NEXT] Slice222: structural last-source and final-line proof
+
+Select the last declared in-flow source from each current prepared Flex/Flow/Grid
+plan, regardless of reverse placement or Grid visual row. Preserve actual root
+receivers, final content allocation, padding once, relative paint-only offsets,
+static deferred absolute ownership, and empty content-bottom fallback. Wrapped
+Flex selection needs a current native final-line membership proof; no JS line
+inference or second solve. Finish this finite baseline class before returning to
+the major remaining gates, then consolidate220–222. Counts remain12complete/
+12experimental/3partial/5missing/1excluded; all7release gates and final independent
+whole-codebase review remain open.
 
 ## Scope and execution
 
