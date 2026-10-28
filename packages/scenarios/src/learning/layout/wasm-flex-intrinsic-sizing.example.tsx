@@ -19,7 +19,7 @@ import {
   type SystemStyle,
 } from '@pibbl/core';
 
-type Name = 'min' | 'fit' | 'tail' | 'text-tail';
+type Name = 'min' | 'fit' | 'tail' | 'text-tail' | 'boxed' | 'boxed-tail';
 type Direction = Readonly<{ flexDirection: 'row' | 'row-reverse'; layoutDirection: 'ltr' | 'rtl'; label: string }>;
 type LeafStyle = SystemStyle & BoxStyle & FlexItemStyle;
 type ResolvedLeafStyle = SystemStyle & Readonly<{ width: number; height: number }>;
@@ -33,14 +33,16 @@ const directions: readonly Direction[] = [
 ];
 
 function createIntrinsicSizingContent() {
-  const minimum = signal(40), maximum = signal(120), direction = signal(0), paint = signal('#426b61'), textWords = signal('alpha beta gamma');
+  const minimum = signal(40), maximum = signal(120), direction = signal(0), paint = signal('#426b61'), textWords = signal('alpha beta gamma'), boxedLimit = signal<60 | 80>(80);
   const boxes = new Map<Name, Box>(), hits: Name[] = [];
-  let serial = 0, basis = new DOMMatrix(), intrinsicCalls = 0;
+  let serial = 0, basis = new DOMMatrix(), intrinsicCalls = 0, boxedIntrinsicCalls = 0;
   const ContentLabel = computed(() => minimum.get() === 40 ? 'Content 40 / 120' : 'Content 60 / 140');
   const DirectionLabel = computed(() => directions[direction.get()]!.label);
   const TextLabel = computed(() => textWords.get() === 'alpha beta gamma' ? 'Text 3 words' : 'Text 2 words');
+  const boxedBasis = computed(() => fitContent(boxedLimit.get()));
+  const BoxedLabel = computed(() => boxedLimit.get() === 80 ? 'Inset limit 60' : 'Inset limit 80');
   const CanvasBasis = definePrimitive<{ readonly children: PibblNode }>((props, _style, context) => { basis = context.getTransform(); return props.children; });
-  const IntrinsicLeaf = definePrimitive<{ readonly name: 'min' | 'fit'; readonly minimum: Signal<number>; readonly maximum: Signal<number> }, LeafStyle, LeafStyle, ResolvedLeafStyle>((props, _style) => {
+  const IntrinsicLeaf = definePrimitive<{ readonly name: 'min' | 'fit' | 'boxed'; readonly minimum: Signal<number>; readonly maximum: Signal<number> }, LeafStyle, LeafStyle, ResolvedLeafStyle>((props, _style) => {
     const box = useLayoutBox(), matrix = useCanvasContext().getTransform(), stamp = useConst(() => ++serial);
     const point = basis.inverse().transformPoint({ x: matrix.e, y: matrix.f });
     boxes.set(props.name, { x: point.x, y: point.y, width: box.width, height: box.height, stamp });
@@ -50,11 +52,11 @@ function createIntrinsicSizingContent() {
     resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
     measure: ({ constraints }) => ({ status: 'measured' as const, size: { width: constraints.maxWidth, height: 20 } }),
     measureIntrinsic: ({ props }) => {
-      intrinsicCalls++;
+      if (props.name === 'boxed') boxedIntrinsicCalls++; else intrinsicCalls++;
       return { status: 'measured' as const, minContent: { width: props.minimum.get(), height: 20 }, maxContent: { width: props.maximum.get(), height: 20 } };
     },
   });
-  const Tail = definePrimitive<{ readonly name: 'tail' | 'text-tail'; readonly fill: Signal<string> }, LeafStyle, LeafStyle, ResolvedLeafStyle>((props, _style) => {
+  const Tail = definePrimitive<{ readonly name: 'tail' | 'text-tail' | 'boxed-tail'; readonly fill: Signal<string> }, LeafStyle, LeafStyle, ResolvedLeafStyle>((props, _style) => {
     const box = useLayoutBox(), matrix = useCanvasContext().getTransform(), stamp = useConst(() => ++serial);
     const point = basis.inverse().transformPoint({ x: matrix.e, y: matrix.f });
     boxes.set(props.name, { x: point.x, y: point.y, width: box.width, height: box.height, stamp });
@@ -84,8 +86,15 @@ function createIntrinsicSizingContent() {
     const current = directions[direction.get()]!;
     return <Flex style={{ left: 16, top: 264, width: 220, height: 34, gap: 8, flexDirection: current.flexDirection, layoutDirection: current.layoutDirection, flexWrap: 'nowrap', alignItems: 'flex-start' }} children={textChildren} />;
   }
+  const boxedChildren = [
+    <IntrinsicLeaf key="boxed" name="boxed" minimum={minimum} maximum={maximum} style={{ boxSizing: 'border-box', flexBasis: boxedBasis, height: 'auto', maxWidth: 90, padding: { left: 5, right: 7, top: 4, bottom: 6 }, borderWidth: 2, flexGrow: 0, flexShrink: 0 }} />,
+    <Tail key="boxed-tail" name="boxed-tail" fill={paint} style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 }} />,
+  ];
+  function BorderBoxRow() {
+    return <Flex style={{ left: 16, top: 346, width: 220, height: 34, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start' }} children={boxedChildren} />;
+  }
   const root = <CanvasBasis><Group>
-    <Rectangle pointerEvents="none" style={{ width: 260, height: 340, fill: '#f3f0e8' }} />
+    <Rectangle pointerEvents="none" style={{ width: 260, height: 430, fill: '#f3f0e8' }} />
     <Text pointerEvents="none" style={{ left: 16, top: 14, font: 'bold 16px sans-serif', fill: '#19375b' }}>Intrinsic sizing</Text>
     <Text pointerEvents="none" style={{ left: 16, top: 36, width: 228, wrap: true, lineHeight: 11, font: '10px sans-serif', fill: '#475569' }}>Red uses min-content. Teal uses fitContent(80), capped between the same measured contributions. Green follows the resolved allocation.</Text>
     <SizingRow />
@@ -98,10 +107,13 @@ function createIntrinsicSizingContent() {
     <Button x={128} y={208} label={TextLabel} click={() => textWords.update(value => value === 'alpha beta gamma' ? 'omega zeta' : 'alpha beta gamma')} fill="#426b61" />
     <Text pointerEvents="none" style={{ left: 16, top: 238, font: '10px sans-serif', fill: '#475569' }}>Canvas Text: word floor to natural run.</Text>
     <TextSizingRow />
+    <Text pointerEvents="none" style={{ left: 16, top: 316, width: 228, wrap: true, lineHeight: 10, font: '9px sans-serif', fill: '#475569' }}>Inset fit-content keeps its content contribution. The numeric outer cap subtracts the 16px padding and border once.</Text>
+    <BorderBoxRow />
+    <Button x={16} y={390} label={BoxedLabel} click={() => boxedLimit.update(value => value === 80 ? 60 : 80)} fill="#6e3e79" />
   </Group></CanvasBasis>;
   return {
     root,
-    read: () => JSON.stringify({ minimum: minimum.get(), maximum: maximum.get(), direction: directions[direction.get()]!.label, text: textWords.get(), boxes: Object.fromEntries(boxes), hits, intrinsicCalls, basis }),
+    read: () => JSON.stringify({ minimum: minimum.get(), maximum: maximum.get(), direction: directions[direction.get()]!.label, text: textWords.get(), boxedLimit: boxedLimit.get(), boxedInsets: 16, boxes: Object.fromEntries(boxes), hits, intrinsicCalls, boxedIntrinsicCalls, basis }),
   };
 }
 

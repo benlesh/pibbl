@@ -34,3 +34,10 @@ Intrinsic values require an admitted measuring owner. Other owners, vertical
 intrinsic sizing, `stretch`, and intrinsic min/max bounds are not implemented by
 the current owner and raise structured layout diagnostics. Padding, positions and
 gaps still use scalar [`Length`](#/api/types/layout#length).
+
+Border-box intrinsic requests retain the same content limit. Padding and layout
+borders are added once after the content contribution is selected; numeric
+`minWidth`/`maxWidth` still describe outer bounds. For example, limit80 with16px
+of horizontal insets and `maxWidth: 90` yields74px content and90px outer width.
+Limit60 yields60px content and76px outer width. A limit below min-content cannot
+remove the content floor. Intrinsic height and intrinsic bounds remain unsupported.

@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice224: real Canvas Text intrinsic widths.
+Latest delivery is slice225: shared border-box intrinsic main normalization.
+Slice224 is `bd7dc967`: real Canvas Text intrinsic widths.
 Slice223 is `65b7a7b7`: public intrinsic sizing through paired Flex owners.
 Slice222 is `e6b42f37`: prepared structural last-source baselines.
 Consolidation74 verifies220–222 and closes the stated finite baseline capability.
@@ -8354,14 +8355,44 @@ The existing intrinsic-sizing lesson now includes a lower Text row and Text
 No capability promotion; fixed33 remains13complete/11experimental/3partial/
 5missing/1excluded. All7release gates remain open.
 
-## [NEXT] Slice225: shared border-box intrinsic normalization
+## [DONE] Slice225: shared border-box intrinsic normalization
 
-Preserve intrinsic width/basis requests through box canonicalization until the
-existing finite owner selects a numeric content contribution. Add layout insets
-once; numeric authored bounds retain their outer-box meaning. The published
-fitContent limit remains a content-width limit. Verify paired primitives and
-real Text through public geometry, targeting, reactive limits and cleanup.
-Do not claim general intrinsic-height/aspect or cyclic-owner completion.
+Horizontal Flex canonicalization now preserves intrinsic width/basis tags until
+the existing owner selects content geometry. Numeric outer dimensions and bounds
+convert once; combined padding/border is added once. The published fitContent
+limit remains content-based. Other axes/owners retain the scalar diagnostic.
+A scoped review caught and corrected an overly broad initial tag exception;
+both preservation guards now explicitly require mainAxis width.
+
+Public RED preceded production edits. Fresh Node24.15/Chromium20tests in4files
+pass, including decorated Text x7 origin, provider final content queries74→60→40,
+outer90→76→56, min-content floor, live limit, old/new target movement, stable
+stamp and four-counter cleanup. `useLayoutBox` exposes outer geometry while pure
+queries receive content. Types, changed-code lint and109documentation probes
+pass. Source/built intrinsic lesson drivers pass errors[]/cleanup0000, built472
+inputs; screenshot inspected. The expanded driver viewport keeps its lower
+control visible. Original two-leaf measurement reuse remains exact; the decorated
+padding-record path keeps conservative object-style cache admission and reports
+its own diagnostic counter rather than falsely claiming zero callback work.
+
+Final installed Bundler/NodeNext and nested browser pass decorated origin,
+queries/bounds/floor, target movement, stamps/native solve reuse/cleanup, prior
+receipts and104margin cases.248inputs; tarball SHA256
+`15793153535ea546d56a06b23c61a639ae58a7a20ca68999b45da14ad80e5a9f`.
+Scoped changed-guard review is clean; native ABI19/86015bytes is unchanged.
+No capability promotion; fixed33 remains13complete/11experimental/3partial/
+5missing/1excluded and all7release gates open.
+
+Try the lower Inset limit control at
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-intrinsic-sizing`.
+
+## [NEXT] Consolidation75: intrinsic sizing223–225 checkpoint
+
+Run the durable accumulated selector list in Node24 experimental and ordinary
+modes, then source/built full Text integration replays, current packed receipt,
+JSDoc/documentation and catalog checks. Record actual counts before selecting the
+next production change. Reconcile stale auto-margin prose as completed separately;
+negative/overflow margin closure still requires its pinned comparison.
 
 ## Scope and execution
 

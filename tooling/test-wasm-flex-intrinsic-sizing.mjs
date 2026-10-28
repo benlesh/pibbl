@@ -4,7 +4,7 @@ const base = process.argv[2] ?? 'http://127.0.0.1:5192';
 const built = process.argv.includes('--built');
 const browser = await chromium.launch({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 1200, height: 900 } }), errors = [];
+  const page = await browser.newPage({ viewport: { width: 1200, height: 1500 } }), errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(`${base}/#/examples/layout/wasm-flex-intrinsic-sizing`, { waitUntil: 'domcontentloaded' });
   await page.getByText('Jump to Live Canvas', { exact: true }).click();
@@ -53,6 +53,19 @@ try {
   const hitsBeforeMovedTarget = current.hits.length;
   await click(oldTextTailX + 4, current.boxes['text-tail'].y + 4); current = await state(); assert.equal(current.hits.length, hitsBeforeMovedTarget, 'old Text tail target is cleared');
   await click(current.boxes['text-tail'].x + 4, current.boxes['text-tail'].y + 4); current = await state(); assert.equal(current.hits.length, hitsBeforeMovedTarget + 1); assert.equal(current.hits.at(-1), 'text-tail');
+  const boxed = current.boxes.boxed, boxedTail = current.boxes['boxed-tail'];
+  assert.ok(boxed && boxedTail, 'border-box intrinsic row exposes the selected item and following target');
+  same(boxed, { width: 90, height: 34 }, 'border-box outer allocation');
+  same(boxedTail, { width: 20, height: 20 }, 'border-box following target');
+  assert.equal(current.boxedLimit, 80); assert.equal(current.boxedInsets, 16);
+  const boxedStamp = boxed.stamp, boxedTailStamp = boxedTail.stamp, oldBoxedTailX = boxedTail.x;
+  await click(50, 404); current = await state();
+  assert.equal(current.boxedLimit, 60); same(current.boxes.boxed, { width: 76, height: 34 }, 'border-box outer allocation after content fit limit');
+  assert.equal(current.boxes.boxed.stamp, boxedStamp); assert.equal(current.boxes['boxed-tail'].stamp, boxedTailStamp);
+  assert.ok(current.boxes['boxed-tail'].x < oldBoxedTailX, 'border-box fit limit moves the following target');
+  const hitsBeforeBorderTarget = current.hits.length;
+  await click(oldBoxedTailX + 15, current.boxes['boxed-tail'].y + 4); current = await state(); assert.equal(current.hits.length, hitsBeforeBorderTarget, 'old border-box tail target is cleared');
+  await click(current.boxes['boxed-tail'].x + 4, current.boxes['boxed-tail'].y + 4); current = await state(); assert.equal(current.hits.at(-1), 'boxed-tail');
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await sandbox.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if (built) { assert.equal(proof?.mode, 'layout-wasm-built'); assert.ok(proof.coreInputs.length && proof.coreInputs.every(value => value.includes('packages/core/.layout-wasm-package/dist/') && !value.includes('packages/core/src/'))); }

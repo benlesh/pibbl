@@ -1,5 +1,5 @@
 import type { BoxStyle } from '../style/types.js';
-import { resolveScalarSizingLength, type SizingLength } from '../style/sizing-length.js';
+import { isIntrinsicSizingValue, resolveScalarSizingLength, type SizingLength } from '../style/sizing-length.js';
 import { normalizeBoxInsets } from './box-insets.js';
 import { layoutDiagnostic, type LayoutDiagnosticContext } from '../style/diagnostics.js';
 
@@ -22,7 +22,11 @@ export function contentBoxStyle<S extends BoxStyle & { flexBasis?: SizingLength 
   if (style.boxSizing !== 'border-box') return style;
   const padding = normalizeBoxInsets(style, options.context);
   const horizontal = padding.left + padding.right, vertical = padding.top + padding.bottom;
-  const width = nonnegativeLength(style.width, options.width, 'width', options.context);
+  // Main-axis intrinsic values are content contributions, not authored outer
+  // lengths. Preserve them until the owning Flex resolves the contribution;
+  // scalar outer bounds still canonicalize once below.
+  const width = options.mainAxis === 'width' && isIntrinsicSizingValue(style.width) ? undefined :
+    nonnegativeLength(style.width, options.width, 'width', options.context);
   const height = nonnegativeLength(style.height, options.height, 'height', options.context);
   const minWidth = nonnegativeLength(style.minWidth, options.width, 'minWidth', options.context);
   const maxWidth = nonnegativeLength(style.maxWidth, options.width, 'maxWidth', options.context);
@@ -39,8 +43,12 @@ export function contentBoxStyle<S extends BoxStyle & { flexBasis?: SizingLength 
     maxHeight: maxHeight === undefined ? undefined : Math.max(0, maxHeight-vertical),
   };
   if (options.mainAxis && style.flexBasis !== undefined && style.flexBasis !== 'auto') {
-    const basis = nonnegativeLength(style.flexBasis, options.mainAxis === 'width' ? options.width : options.height, 'flexBasis', options.context)!;
-    result.flexBasis = Math.max(0, basis-(options.mainAxis === 'width' ? horizontal : vertical));
+    if (options.mainAxis === 'width' && isIntrinsicSizingValue(style.flexBasis)) {
+      result.flexBasis = style.flexBasis;
+    } else {
+      const basis = nonnegativeLength(style.flexBasis, options.mainAxis === 'width' ? options.width : options.height, 'flexBasis', options.context)!;
+      result.flexBasis = Math.max(0, basis-(options.mainAxis === 'width' ? horizontal : vertical));
+    }
   }
   return result as Readonly<S>;
 }

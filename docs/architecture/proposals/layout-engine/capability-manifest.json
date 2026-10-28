@@ -2570,7 +2570,7 @@
       "id": "box.box-sizing",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "content-box default preserved; explicit border-box dimensions, bounds, Flex basis and percentage-before-combined-padding/border conversion",
+      "current": "content-box default preserved; explicit border-box dimensions, bounds, Flex basis and percentage-before-combined-padding/border conversion; slice225 preserves intrinsic width/basis through finite horizontal Flex border-box canonicalization, retains content-based fit limits and scalar outer bounds, and proves decorated Text/provider query widths without a general vertical or cyclic-owner claim",
       "status": "experimental",
       "unresolvedPolicy": "Opt-in policy selected with pinned Yoga padding floor; broad intrinsic/aspect/border interactions remain outside this slice.",
       "evidence": {
@@ -2596,7 +2596,10 @@
           "complete percentage/intrinsic and aspect interactions",
           "broader layout-border intrinsic interactions"
         ]
-      }
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-intrinsic-border-box-sizing.test.tsx"
+      ]
     },
     {
       "id": "box.aspect-ratio",

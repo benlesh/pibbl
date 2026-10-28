@@ -132,6 +132,7 @@ try {
       assert.equal(receipt.logicalBorders, true, 'Installed logical borders must preserve logical-edge precedence, receiver direction, pixels, targets and identity');
       assert.equal(receipt.intrinsicProvider, true, 'Installed custom intrinsic providers must query finite bounds, move targets, reuse paint and dispose exactly');
       assert.equal(receipt.intrinsicSizing, true, 'Installed intrinsic min-content and fit-content bases must use paired contributions, move real targets, reuse paint and clean up exactly');
+      assert.equal(receipt.intrinsicBorderBoxSizing, true, 'Installed border-box intrinsic sizing must preserve content contributions, convert scalar outer bounds once, move targets, reuse paint and clean up exactly');
       assert.equal(receipt.intrinsicTextSizing, true, 'Installed Text must resolve explicit min-content and fit-content from Canvas word/natural contributions, reflow and retarget safely');
       assert.equal(receipt.intrinsicWrappedHeight, true, 'Installed nested row wrapping must settle auto height before placing the following column target');
       assert.equal(receipt.finalWidthIntrinsicProvider, true, 'Installed custom intrinsic leaves must remeasure at their settled finite width and update hit geometry');

@@ -4637,7 +4637,7 @@ const drafts = [
       "Experimental direct paired primitive sizing in a finite horizontal Flex owner. The supported path resolves min-content, max-content and a numeric fit-content cap before normal placement.",
       "This example does not imply arbitrary nested intrinsic graphs, percentage feedback, or CSS sizing parity. Text remains bounded to its established Canvas font, fitting and wrapping measurement contract.",
     ],
-    canvas: { width: 260, height: 340 },
+    canvas: { width: 260, height: 430 },
     related: ["wasm-flex-intrinsic-primitive", "wasm-flex-text", "flex"],
     exportName: "WasmFlexIntrinsicSizingExample",
     load: () => import("./learning/layout/wasm-flex-intrinsic-sizing.example"),

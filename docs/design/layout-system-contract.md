@@ -2382,7 +2382,7 @@ and stretch are not yet admitted public values.
 
 The initial runtime owner is finite horizontal nowrap Flex with a direct paired
 primitive supporting both intrinsic and constrained measurement, no responsive
-selection or aspect ratio, and content-box sizing. All existing horizontal main
+selection or aspect ratio, using the current box-sizing policy. All existing horizontal main
 and writing directions, numeric grow/shrink and bounds consume the selected
 numeric basis through the established allocation path. A non-auto flex basis
 wins over width. Fit-content uses `min(max-content, max(min-content, limit))`;
@@ -2418,3 +2418,22 @@ Text measurement determines cross height and line rendering afterward. Four
 horizontal direction combinations, live content replacement, centered vertical
 geometry, glyph/following-target routing and exact teardown have public evidence.
 Column/intrinsic-height and structural graph sizing remain separate work.
+
+### Border-box intrinsic main handoff
+
+Border-box canonicalization preserves intrinsic width/flex-basis requests until
+the admitted horizontal Flex owner selects a numeric content contribution. It
+converts scalar dimensions and bounds once, retaining the private canonical
+marker. The established allocation path adds combined padding and layout borders
+once around that content. Intrinsic height and intrinsic min/max bounds retain
+their existing diagnostics rather than receiving a guessed vertical meaning.
+
+The published fitContent limit remains a content-width limit regardless of
+boxSizing. Numeric border-box min/max values remain outer bounds: 16 horizontal
+insets and maxWidth90 give a final content query74; fit limits60 then20 give
+outer76 then56 for a40px min-content floor. Public and installed evidence cover
+decorated Text content origin, constrained query widths, moved targets, stable
+identity and teardown. `useLayoutBox()` exposes the placed outer allocation;
+pure provider queries receive the content allocation. Arbitrary object-valued
+styles such as an asymmetric padding record remain conservatively uncacheable;
+this handoff does not broaden their measurement-cache admission.
