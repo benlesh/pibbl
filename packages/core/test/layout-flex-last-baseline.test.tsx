@@ -1,7 +1,8 @@
-import { afterEach, beforeAll, expect, it } from 'vitest';
+import { afterEach, beforeAll, expect, it, vi } from 'vitest';
 import {
   Flex,
   Rectangle,
+  Text,
   definePrimitive,
   signal,
   type LayoutBox,
@@ -19,6 +20,7 @@ const controllers: { dispose(): void }[] = [];
 beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
 afterEach(() => {
   for (const controller of controllers.splice(0)) controller.dispose();
+  vi.restoreAllMocks();
   document.body.replaceChildren();
 });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -204,3 +206,117 @@ it.runIf(experimentalLayout)('invalidates frozen placements when first and last 
   style.alignItems = 'first-baseline'; fill.set('#a63758'); await nextFrame();
   expect(pixel(4,24)).toEqual([166,55,88,255]); expect(pixel(4,64)[3]).toBe(0);
 });
+
+it.runIf(experimentalLayout)(
+  'aligns the actual last visible wrapped Text line at the safe end through reflow and preserves its glyph target',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const width = signal(40), words = signal('Ag Ag Ag Ag'), hits: string[] = [];
+    const canvas = document.createElement('canvas'); canvas.width = 140; canvas.height = 100; document.body.append(canvas);
+    const context = canvas.getContext('2d')!;
+    const draws: Array<{ readonly text: string; readonly x: number; readonly y: number; readonly font: string }> = [];
+    const original = context.fillText.bind(context);
+    vi.spyOn(context, 'fillText').mockImplementation(((text: string, x: number, y: number, maxWidth?: number) => {
+      const matrix = context.getTransform(); draws.push({ text, x: matrix.e + x, y: matrix.f + y, font: context.font });
+      return maxWidth === undefined ? original(text, x, y) : original(text, x, y, maxWidth);
+    }) as typeof context.fillText);
+    const controller = pibbl(canvas, <Flex style={{ width: 140, height: 100, flexDirection: 'row', alignItems: 'last-baseline' }}>
+      <Text key="wrapped" onClick={() => hits.push('wrapped')} style={{ width: 100, height: 60, minWidth: 0, minHeight: 0, flexBasis: width, flexGrow: 0, flexShrink: 0, font: '10px monospace', lineHeight: 10, wrap: true, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#19375b', cursor: 'pointer' }}>{words}</Text>
+      <Text key="peer" style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, font: '20px sans-serif', wrap: false, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#a63758' }}>Ag</Text>
+    </Flex>);
+    controllers.push(controller); await nextFrame();
+    const alphabetic = (draw: { readonly text: string; readonly y: number; readonly font: string }) => {
+      context.save();
+      try {
+        context.font = draw.font; context.textBaseline = 'top'; const top = context.measureText(draw.text).actualBoundingBoxAscent;
+        context.textBaseline = 'alphabetic'; const alpha = context.measureText(draw.text).actualBoundingBoxAscent;
+        return draw.y + alpha - top;
+      } finally { context.restore(); }
+    };
+    const wrapped = () => draws.filter(draw => draw.font === '10px monospace');
+    const peer = () => draws.find(draw => draw.font === '20px sans-serif')!;
+    expect(wrapped()).toHaveLength(2);
+    expect(alphabetic(wrapped().at(-1)!)).toBeCloseTo(alphabetic(peer()), 5);
+    const hitLast = (draw: { readonly text: string; readonly x: number; readonly y: number; readonly font: string }) => {
+      context.save(); context.font = draw.font; context.textBaseline = 'top'; const metrics = context.measureText(draw.text); context.restore();
+      click(canvas, draw.x - metrics.actualBoundingBoxLeft + 1, draw.y - metrics.actualBoundingBoxAscent + 1);
+    };
+    hitLast(wrapped().at(-1)!); expect(hits).toEqual(['wrapped']);
+    const mounted = snapshotWasmLayoutDiagnostics(); draws.splice(0);
+    width.set(28); words.set('Ag Ag Ag'); await nextFrame();
+    expect(wrapped()).toHaveLength(3);
+    expect(alphabetic(wrapped().at(-1)!)).toBeCloseTo(alphabetic(peer()), 5);
+    hitLast(wrapped().at(-1)!); expect(hits).toEqual(['wrapped', 'wrapped']);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+    controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances]);
+  },
+);
+
+it.runIf(experimentalLayout)(
+  'uses the current finite responsive selection for a direct provider last baseline',
+  async () => {
+    const ownerWidth = signal(100), selectedHeight = signal(30), boxes = new Map<string, LayoutBox>(), allocations: LayoutBox[] = [], hits: string[] = [];
+    const Leaf = definePrimitive<{ readonly name: 'A' | 'B' }, LeafStyle, LeafStyle, SystemStyle & { readonly width: number; readonly height: number }>((props) => {
+      const box = useLayoutBox(), matrix = useCanvasContext().getTransform(); boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      return <Rectangle onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: props.name === 'A' ? '#8a3248' : '#426b61', cursor: 'pointer' }} />;
+    }, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: ({ props, allocation }) => {
+        if (props.name === 'A') allocations.push({ ...allocation });
+        const last = props.name === 'A' ? allocation.height - 8 : 30;
+        return { status: 'measured' as const, first: 0, last };
+      },
+    });
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 80; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: ownerWidth, height: 80, flexDirection: 'row', alignItems: 'last-baseline' }}>
+      <Leaf key="A" name="A" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, fill: '#8a3248', when: [{ query: { minWidth: 90 }, style: { height: selectedHeight } }] }} />
+      <Leaf key="B" name="B" style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, fill: '#426b61' }} />
+    </Flex>);
+    controllers.push(controller); await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 48, width: 40, height: 30 });
+    expect(boxes.get('B')).toEqual({ x: 40, y: 40, width: 40, height: 40 });
+    expect(allocations).toContainEqual({ x: 0, y: 0, width: 40, height: 30 });
+    click(canvas, 4, 44); click(canvas, 4, 54); expect(hits).toEqual(['A']);
+    selectedHeight.set(34); await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 44, width: 40, height: 34 });
+    expect(allocations.at(-1)).toEqual({ x: 0, y: 0, width: 40, height: 34 });
+    ownerWidth.set(80); await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 58, width: 40, height: 20 });
+    expect(allocations.at(-1)).toEqual({ x: 0, y: 0, width: 40, height: 20 });
+    controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances]);
+  },
+);
+
+it.runIf(experimentalLayout)(
+  'keeps wrap-reverse last baseline groups physical and falls back to a missing provider bottom edge',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics(), boxes = new Map<string, LayoutBox>(), hits: string[] = [];
+    const Missing = definePrimitive<{ readonly name: 'A' }, LeafStyle, LeafStyle, SystemStyle & { readonly width: number; readonly height: number }>((props) => {
+      const box = useLayoutBox(), matrix = useCanvasContext().getTransform(); boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      return <Rectangle onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: '#8a3248', cursor: 'pointer' }} />;
+    }, { resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }) });
+    const Leaf = definePrimitive<{ readonly name: 'B' | 'C' | 'D'; readonly last: number }, LeafStyle, LeafStyle, SystemStyle & { readonly width: number; readonly height: number }>((props) => {
+      const box = useLayoutBox(), matrix = useCanvasContext().getTransform(); boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      return <Rectangle style={{ width: box.width, height: box.height, fill: '#426b61' }} />;
+    }, { resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }), measureBaselines: ({ props }) => ({ status: 'measured' as const, first: 0, last: props.last }) });
+    const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: 100, height: 100, flexDirection: 'row', flexWrap: 'wrap-reverse', alignItems: 'last-baseline', alignContent: 'stretch' }}>
+      <Missing key="A" name="A" style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0 }} />
+      <Leaf key="B" name="B" last={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+      <Leaf key="C" name="C" last={5} style={{ width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0 }} />
+      <Leaf key="D" name="D" last={20} style={{ width: 40, height: 30, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+    </Flex>);
+    controllers.push(controller); await nextFrame();
+    const a = boxes.get('A')!, b = boxes.get('B')!, c = boxes.get('C')!, d = boxes.get('D')!;
+    expect([a.y,b.y,c.y,d.y]).toEqual([57.5,47.5,15,0]);
+    expect(a.y + a.height).toBe(b.y + 30);
+    expect(c.y + 5).toBe(d.y + 20);
+    expect(Math.min(a.y, b.y)).toBeGreaterThan(Math.max(c.y, d.y));
+    click(canvas, a.x + 4, a.y + 4); expect(hits).toEqual(['A']);
+    controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances]);
+  },
+);

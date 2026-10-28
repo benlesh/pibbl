@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice222: prepared structural last-source baselines.
+Latest delivery is slice222 (`e6b42f37`): prepared structural last-source baselines.
+Consolidation74 verifies220–222 and closes the stated finite baseline capability.
 Slice221 is `7d7ca544`: native safe-end last-baseline groups.
 Slice220 is `77436ad0`: Yoga-compatible outer-column baseline fallback.
 Slice219 is `666348da`: prepared Grid declared-source baselines.
@@ -68,7 +69,7 @@ Slice170 is `7ea267ea`; slice169 is `f0d087a1`.
 Slice168 is `de3945c1`; slice167 is `91470858`; slice166 is `fcc06741`.
 Consolidation56 is `2fd34f0e` for166–168. Consolidation65 closes allocated padding; consolidation66 is `75c84dc3`; next is201: CSS-preserving cross-reversed baseline groups.
 Slice177 repaired the bounds-specific counterexample and reverified the prior
-owner/min-max closure matrix. Fixed33 is now12complete/12experimental/
+owner/min-max closure matrix. Fixed33 is now13complete/11experimental/
 3partial/5missing/1excluded. All seven release gates remain open; independent
 intrinsic graphs, automatic minima and other measurement work remain outstanding.
 Consolidation55 is `98bf8b8d` for163–165.
@@ -8263,17 +8264,44 @@ issue in selection, final-line proof or resource ownership.
 Try `http://127.0.0.1:5192/#/examples/layout/wasm-flex-last-baseline` and select
 Source: Flex root, then change A's last offset and click the moved peer.
 
-## [NEXT] Consolidation74: baseline closure evidence and220–222 checkpoint
+## [DONE] Consolidation74: baseline closure and220–222 checkpoint
 
-Before intrinsic sizing, batch the remaining concrete baseline evidence:
-real Canvas Text last-visible-line reflow/targeting, responsive selected-owner
-last queries, Pibbl wrap-reverse last groups and direct missing-provider fallback.
-Explicitly classify Yoga reference-child flags as a versioned migration input;
-Pibbl's declared-source policy must not silently erase that distinction. Then
-run accumulated Node24 experimental/ordinary and source/built/packed checks.
-Keep the baseline capability experimental until those receipts and mapping are
-recorded. Counts remain12complete/12experimental/3partial/5missing/1excluded;
-all7release gates and final independent whole-codebase review remain open.
+Fresh 2026-10-28 macOS Node24.15/Chromium accumulated evidence:97files,
+1224passed/12skipped (1236total) experimental; ordinary356passed/880skipped,
+34files passed/63skipped. The durable selector list is
+`tooling/layout-checkpoint-tests.json` (88 selectors, including the intentional
+loading-suite substring selector). Run it through Vitest with `--mode layout-wasm`
+or ordinary mode. Logs `/tmp/pibbl-consolidation74-{wasm,ordinary}.txt`.
+
+Public hardening covers actual Canvas Text last-visible-line reflow and glyph
+hits, responsive last-baseline owner selection, reversed stretched groups and
+missing-provider fallback. Source/built Text replay passes errors[]/cleanup000,
+built471inputs. Installed Bundler/NodeNext and nested browser pass including
+last-baseline hardening and104margin cases,247installed inputs; package SHA256
+`7b7d6e9043e1e2faf4272b98cdc1a861a60ded36e2aae65e3e7713c22c64208a`.
+JSDoc resolves6576links; documentation checks and109mutation probes pass.
+
+The pinned Yoga3.2.1 reference-child probe explicitly uses non-web defaults,
+zero point scale and no errata. Its later reference child changes the enclosing
+baseline origin25→5; Pibbl's declared-source policy is deliberately distinct.
+Migration must diagnose/reject that flag or supply an explicitly designed
+translation; it must never silently drop it or reinterpret it as last-baseline.
+The executable probe and raw output are recorded in the rehearsal README.
+Independent scoped review found no material baseline closure issue.
+
+Only `flex.baselines` graduates for its stated finite contract. Fixed33:
+13complete/11experimental/3partial/5missing/1excluded. All seven release gates,
+aggregate trust and final independent whole-codebase review remain open.
+
+## [NEXT] Slice223: intrinsic sizing through the public Flex owner
+
+Add sizing-only min-content/max-content and named `fitContent(limit)` values,
+reusing paired intrinsic measurement and existing numeric allocation. Preserve
+scalar Length for padding, positions and gaps. Start with a mounted public RED,
+then a runnable signal-driven lesson and installed consumer evidence. Reuse all
+currently admitted horizontal paired-provider direction/grow/shrink/bounds paths
+rather than adding arbitrary one-direction fences. Text, recursive owners,
+automatic minima and Grid contribution sizing remain explicit follow-up work.
 
 ## Scope and execution
 

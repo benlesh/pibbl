@@ -624,3 +624,28 @@ Chromium and asserts synthetic baseline markers, physical margins, safe-end
 placement and stretched normal/reversed wrapped line origins. It uses ordinary
 CSS, not Yoga, because Yoga3.2.1 has only one provider offset. This selected
 mechanics control does not claim full CSS baseline compatibility.
+
+## Reference-child migration classification (consolidation74)
+
+`baseline-reference-child-probe.cpp` uses pinned Yoga3.2.1 commit
+`042f5013152eb81c1552dec945b88f7b95ca350f`, web defaults false, point scale0 and
+ErrataNone. Fresh native output:
+
+```text
+default-source-order reference=false inner=0,25 A=0,0 R=40,0 P=80,0 calls=A:3,R:0,P:3
+reference-overrides-source-order reference=true inner=0,5 A=0,0 R=40,0 P=80,0 calls=A:0,R:3,P:3
+```
+
+The outer200x100row baseline-aligns an80x40inner row with A baseline5 and later
+R baseline25 against peer P baseline30. A/R coordinates are inner-local. Yoga's
+explicit reference flag selects R instead of A; it is a separate input, not a
+request for the last baseline. Pibbl's declared first-source policy matches the
+no-flag case. Pibbl deliberately exposes no reference-child marker; explicit Yoga
+reference flags are unsupported versioned migration inputs. A converter must
+report/reject them or use a separately designed explicit conversion, never drop
+them or silently substitute declared order or last-baseline. This classification
+does not close the migration gate or claim general Yoga baseline parity.
+
+The probe stays outside the fixed corpus. Compile it against the same pinned
+checkout and source list as the other C++ probes above. Source SHA256:
+`a480debfe4f9c9349d1ef7f68163e511e0c5cebb98434357752b2b14411eebaf`.

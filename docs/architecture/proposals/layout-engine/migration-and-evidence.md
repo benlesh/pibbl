@@ -370,3 +370,19 @@ Until those artifacts exist, use “designed to,” “target,” and “propose
 make narrow claims such as “zero layout work for paint-only signal updates in these
 scenarios” or “lower p95 update latency on this workload and hardware.” The ambition
 can be broad; the evidence must remain specific.
+
+## Implemented baseline profile and reference-child boundary — 2026-10-28
+
+The current implemented baseline contract is in
+[the layout contract](../../../design/layout-system-contract.md). Pibbl selects
+declared first/last in-flow sources for prepared known roots and supports the
+finite first/last provider/Canvas Text profile; this does not import Yoga node
+flags. The version-bound reference-child probe and exact output are recorded in
+[the rehearsal](../../../../tooling/layout-yoga-rehearsal/README.md#reference-child-migration-classification-consolidation74).
+Yoga3.2.1's explicit `isReferenceBaseline` flag overrides default source selection.
+It is currently an unsupported migration input: a future versioned converter
+must diagnose/reject it or supply an explicitly designed translation. Silently
+ignoring it or mapping it to last-baseline would alter geometry. The original
+reference-child migration target remains classified here; the migration gate and
+conversion API work stay open. The current Pibbl baseline profile must not be
+advertised as general Yoga/CSS baseline compatibility.

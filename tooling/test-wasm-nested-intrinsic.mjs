@@ -226,6 +226,7 @@ try {
       assert.equal(receipt.flowSourceBaseline, true, 'Installed Flow source baseline, relative origin, empty fallback and teardown must hold');
       assert.equal(receipt.structuralLastBaseline, true, 'Installed final-source, wrapped membership, empty fallback and teardown must hold');
       assert.equal(receipt.lastBaselinePlacement, true, 'Installed last-baseline safe-end geometry, updates, targets and cleanup must hold');
+      assert.equal(receipt.lastBaselineHardening, true, 'Installed Text last-line reflow, responsive last selection and wrap-reverse missing-provider fallback must hold');
       assert.equal(receipt.columnBaselineFallback, true, 'Installed column fallback geometry, provider skipping, resize and teardown must hold');
       assert.equal(receipt.gridSourceBaseline, true, 'Installed Grid declared-source selection, moved targets, empty fallback and teardown must hold');
       assert.equal(receipt.settledMeasuredAspectFinalBox, true, 'Installed settled baseline providers must receive the final aspect-constrained box, retain targets, reuse paint, and clean up');
