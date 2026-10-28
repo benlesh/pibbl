@@ -2398,3 +2398,23 @@ Source/built Studio and installed package receipts prove signal-driven geometry,
 click targeting, keyed identity, stable-descriptor paint reuse and exact cleanup.
 This initial owner does not complete general intrinsic Text, structural sizing,
 vertical intrinsic contributions, Grid tracks, or the measurement release gate.
+
+### Explicit Canvas Text intrinsic width requests
+
+Finite horizontal nowrap Flex also resolves explicit min-content/max-content or
+fitContent width/basis requests for direct Text. This owner-specific branch does
+not add a general `measureIntrinsic` capability to Text and does not change its
+existing automatic/numeric sizing paths. Wrapped min-content is the longest run
+under Text's existing ASCII-space wrapping policy; max-content is the natural
+Canvas advance width with the same leading-space behavior as wrapping. Unwrapped
+Text preserves leading spaces and uses its whole run for both contributions.
+Empty content contributes zero. All returned run widths must be finite and
+nonnegative. Font loading and custom font ownership remain application concerns.
+
+The selected numeric contribution enters existing grow/shrink/bounds allocation.
+When no explicit minimum exists and shrink is enabled, the real word/run floor
+supplies that minimum, bounded by an explicit maximum. The existing settled-width
+Text measurement determines cross height and line rendering afterward. Four
+horizontal direction combinations, live content replacement, centered vertical
+geometry, glyph/following-target routing and exact teardown have public evidence.
+Column/intrinsic-height and structural graph sizing remain separate work.

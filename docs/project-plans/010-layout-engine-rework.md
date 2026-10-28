@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice223: public intrinsic sizing through paired Flex owners.
+Latest delivery is slice224: real Canvas Text intrinsic widths.
+Slice223 is `65b7a7b7`: public intrinsic sizing through paired Flex owners.
 Slice222 is `e6b42f37`: prepared structural last-source baselines.
 Consolidation74 verifies220–222 and closes the stated finite baseline capability.
 Slice221 is `7d7ca544`: native safe-end last-baseline groups.
@@ -8324,12 +8325,43 @@ Try `http://127.0.0.1:5192/#/examples/layout/wasm-flex-intrinsic-sizing`: Conten
 moves the allocations, Direction cycles horizontal orientations, and the colored
 boxes receive clicks. Each delivered slice is committed independently.
 
-## [NEXT] Slice224: real Canvas Text intrinsic width contributions
+## [DONE] Slice224: real Canvas Text intrinsic width contributions
 
-Adapt existing Canvas run/word measurement into honest min/max-content widths
-for the same sizing owner. Preserve final-width line layout and actual metrics;
-never synthesize intrinsic values by calling constrained measurement at zero.
-Add public RED, a runnable lesson composition and source/built/packed evidence.
+Explicit intrinsic requests now use actual Canvas natural runs and Text's
+existing ASCII-space word floor, or whole unwrapped runs preserving leading
+spaces. Empty runs contribute zero. The owner-specific Flex branch leaves
+ordinary numeric/automatic Text and generic primitive capabilities unchanged.
+The selected number passes through existing numeric bounds/grow/shrink; final
+allocated width determines cross height through established Text measurement.
+
+Public RED failed unsupported intrinsic Text sizing before production edits.
+Fresh Node24.15/Chromium30tests in7files pass. The new public test iterates
+four horizontal direction combinations and min/max-content requests, with
+fitContent(80), actual line strings, centered y geometry proving final height,
+live words, cleared old target, stable stamp and exact cleanup. Unwrapped
+leading spaces and an empty run also pass. Ordinary2pass/4skip across2files.
+Types, changed-code lint,109documentation probes and Studio catalog checks pass.
+Source/built lesson drivers pass errors[]/cleanup0000, built472inputs; updated
+screenshot inspected with separated Text allocations. Installed Bundler/NodeNext
+and nested browser pass actual glyph clicks, word reflow, following target move,
+identity/cleanup, prior receipts and104margin cases;248installed inputs, SHA256
+`b1afa05a7f20e5007d6063d1300bf8f65d6d7bae9672dcf06cd5649154cff0f8`.
+Scoped independent review found no material issue. Native ABI19 is unchanged.
+
+The existing intrinsic-sizing lesson now includes a lower Text row and Text
+3words/2words control at
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-intrinsic-sizing`.
+No capability promotion; fixed33 remains13complete/11experimental/3partial/
+5missing/1excluded. All7release gates remain open.
+
+## [NEXT] Slice225: shared border-box intrinsic normalization
+
+Preserve intrinsic width/basis requests through box canonicalization until the
+existing finite owner selects a numeric content contribution. Add layout insets
+once; numeric authored bounds retain their outer-box meaning. The published
+fitContent limit remains a content-width limit. Verify paired primitives and
+real Text through public geometry, targeting, reactive limits and cleanup.
+Do not claim general intrinsic-height/aspect or cyclic-owner completion.
 
 ## Scope and execution
 

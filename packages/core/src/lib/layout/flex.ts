@@ -1447,6 +1447,9 @@ function resolveFlexPlacements(
     const intrinsicMainValue = basisValue === undefined || basisValue === 'auto'
       ? normalized.width
       : basisValue;
+    const directIntrinsicTextMain = isIntrinsicSizingValue(intrinsicMainValue) &&
+      !stagedMeasured && experimentalLayout && row && options.flexWrap === 'nowrap' &&
+      child.type === Text && !preparedStyleQuery(prepared) && aspectRatio === undefined;
     const directIntrinsicMain = isIntrinsicSizingValue(intrinsicMainValue) &&
       !stagedMeasured && experimentalLayout &&
       row && options.flexWrap === 'nowrap' && !preparedStyleQuery(prepared) &&
@@ -1457,11 +1460,29 @@ function resolveFlexPlacements(
       (!isLayoutComponent(child.type) || options.flexDirection === 'row' && options.layoutDirection === 'ltr' && aspectRatio === undefined && !!pairedLayoutDefinition.measure) &&
       (directIntrinsicMain || basisValue === 'auto' && (normalized.width === undefined || normalized.width === 'auto') || shrink > 0 && normalized.minWidth === undefined);
     let intrinsicMainRequest: NormalizedSizingLength | undefined;
-    if (directIntrinsicMain) {
+    if (directIntrinsicMain || directIntrinsicTextMain) {
       intrinsicMainRequest = normalizeSizingLength(intrinsicMainValue, {
         reference: mainSize, property: basisValue === undefined || basisValue === 'auto' ? 'width' : 'flexBasis',
         context: childContext(child, container), allowAuto: false, allowIntrinsic: true,
       });
+    }
+    let intrinsicTextMinimum: number | undefined;
+    let intrinsicTextBasis: number | undefined;
+    if (directIntrinsicTextMain) {
+      const font = normalized.font as string ?? '13px sans-serif';
+      const content = prepareLayoutTextContent(child.props, { receiverToken });
+      if (region) recordWasmMeasurement();
+      const maximum = normalized.wrap === true
+        ? measureLayoutTextNaturalRun(content, { font, service: measurement.service })
+        : measurement.service.measureText(content, font).width;
+      if (!Number.isFinite(maximum) || maximum < 0) {
+        throw childDiagnostic(child, 'width', intrinsicMainValue, container, 'Text intrinsic run width must be finite and nonnegative');
+      }
+      // An unwrapped run has no soft break opportunities in Text's public policy.
+      intrinsicTextMinimum = normalized.wrap === true
+        ? measureLayoutTextMinimumWidth(child.props, { font, service: measurement.service, receiverToken })
+        : maximum;
+      intrinsicTextBasis = resolveIntrinsicMainBasis(intrinsicMainRequest!, intrinsicTextMinimum, maximum, child, container);
     }
     let intrinsicSizes: Extract<import('../types.js').IntrinsicSizesResult, { status: 'measured' }> | undefined;
     if (customIntrinsic) {
@@ -1498,7 +1519,7 @@ function resolveFlexPlacements(
       columnMinimumSize = result.size;
     }
 
-    if (!stagedMeasured && (shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum && !intrinsicSizes && !columnMinimumSize) {
+    if (!stagedMeasured && (shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum && !intrinsicSizes && intrinsicTextMinimum === undefined && !columnMinimumSize) {
       throw childDiagnostic(
         child,
         minimumProperty,
@@ -1553,7 +1574,7 @@ function resolveFlexPlacements(
     const deferredIntrinsicColumn = aspectRatio === undefined && experimentalLayout && !row && knownIntrinsicLayout &&
       needsMeasuredMain && crossAuto && effectiveAlignment(alignment, options.alignItems) === 'stretch';
     if (intrinsicSizes) measured = intrinsicSizes.maxContent;
-    if (!intrinsicSizes && !deferredIntrinsicColumn && !naturalColumnWrappedTextCross && (!deferredColumnAutoCross || needsMeasuredMain) && (needsMeasuredMain || aspectRatio === undefined && (needsMeasuredCross || crossAuto))) {
+    if (!directIntrinsicTextMain && !intrinsicSizes && !deferredIntrinsicColumn && !naturalColumnWrappedTextCross && (!deferredColumnAutoCross || needsMeasuredMain) && (needsMeasuredMain || aspectRatio === undefined && (needsMeasuredCross || crossAuto))) {
       // A deferred auto-cross child may still need an initial main-size query.
       // That provisional query must not borrow the container width: the later
       // exact-height query is the only cross-size authority.
@@ -1623,9 +1644,12 @@ function resolveFlexPlacements(
       minMain = Math.min(columnMinimumSize.height, maxMain,
         typeof specifiedMain === 'number' ? specifiedMain : Number.POSITIVE_INFINITY);
     }
-    const intrinsicMainBasis = intrinsicMainRequest && intrinsicSizes
-      ? resolveIntrinsicMainBasis(intrinsicMainRequest, intrinsicSizes, child, container)
-      : undefined;
+    if (intrinsicTextMinimum !== undefined && normalized.minWidth === undefined && shrink > 0) {
+      minMain = Math.min(intrinsicTextMinimum, maxMain);
+    }
+    const intrinsicMainBasis = intrinsicTextBasis ?? (intrinsicMainRequest && intrinsicSizes
+      ? resolveIntrinsicMainBasis(intrinsicMainRequest, intrinsicSizes.minContent.width, intrinsicSizes.maxContent.width, child, container)
+      : undefined);
     if (automaticTextMinimum) {
       if (region) recordWasmMeasurement();
       const contentMinimum = measureLayoutTextMinimumWidth(child.props, {
@@ -2807,12 +2831,11 @@ function nonnegativeFactor(
 
 function resolveIntrinsicMainBasis(
   request: NormalizedSizingLength,
-  result: Extract<import('../types.js').IntrinsicSizesResult, { status: 'measured' }>,
+  minimum: number,
+  maximum: number,
   child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): number {
-  const minimum = result.minContent.width;
-  const maximum = result.maxContent.width;
   if (request.kind === 'min-content') return minimum;
   if (request.kind === 'max-content') return maximum;
   if (request.kind === 'fit-content') return Math.min(maximum, Math.max(minimum, request.limit));
