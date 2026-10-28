@@ -136,7 +136,7 @@ interface ResolvedFlexStyle extends SystemStyle {
   flexWrap: FlexWrap;
   justifyContent: MainAlignment;
   alignItems: CrossAlignment;
-  /** True only when the authored item alignment was first-baseline. */
+  /** True when first-baseline requires a horizontal measured baseline group. */
   [FLEX_FIRST_BASELINE]: boolean;
   alignContent: CrossAlignment | MainAlignment;
   rowGap: number;
@@ -2728,8 +2728,10 @@ function normalizeFlexOptions(
     flexDirection: flexDirection as FlexDirection,
     flexWrap: flexWrap as FlexWrap,
     justifyContent: justifyContent as MainAlignment,
+    // Yoga resolves baseline alignment on column axes to logical flex-start
+    // before placement. It neither measures nor forms a vertical baseline group.
     alignItems: alignItems === 'first-baseline' ? 'flex-start' : alignItems as CrossAlignment,
-    [FLEX_FIRST_BASELINE]: alignItems === 'first-baseline',
+    [FLEX_FIRST_BASELINE]: alignItems === 'first-baseline' && isRowDirection(flexDirection),
     alignContent: alignContent as CrossAlignment | MainAlignment,
     rowGap: style.rowGap === undefined ? rowGap : nonnegativeGap(style.rowGap, 'rowGap', container, container.height),
     columnGap: style.columnGap === undefined ? columnGap : nonnegativeGap(style.columnGap, 'columnGap', container, container.width),

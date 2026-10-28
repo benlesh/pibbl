@@ -1757,7 +1757,7 @@
           "direction-relative flex-start/flex-end/center",
           "wrap-reverse row/column cross alignment with asymmetric physical margins",
           "combined main/cross reversal across LTR/RTL",
-          "twenty-four pinned row/column forward/reverse × wrap/wrap-reverse × LTR/RTL fixtures with classified native differences"
+          "twenty-four pinned row/column forward/reverse \u00d7 wrap/wrap-reverse \u00d7 LTR/RTL fixtures with classified native differences"
         ],
         "negative": [
           "normal JavaScript reverse direction/wrap diagnostics",
@@ -1975,8 +1975,8 @@
           "Definite decorated reverse nested height60 capped by maxHeight25% gives25\u219240; 100% leaf heights consume that allocation once",
           "Decorated column-reverse definite width60/maxWidth25% and 100%-width children resolve25\u219240 from content cross100\u2192160",
           "Decorated column-reverse definite width20/minWidth60% gives nested width60\u219296 and C x94\u2192130 from content cross100\u2192160",
-          "Decorated row-reverse maxWidth25% under content width100→140 freezes A at25→35 while column-reverse minHeight70% under content height100→140 floors A70→98 with negative free space",
-          "Symmetric decorated row-reverse minWidth70% floors A70→98 and column-reverse maxHeight25% caps A25→35 across content main100→140; both complementary sibling extents match pinned native output",
+          "Decorated row-reverse maxWidth25% under content width100\u2192140 freezes A at25\u219235 while column-reverse minHeight70% under content height100\u2192140 floors A70\u219298 with negative free space",
+          "Symmetric decorated row-reverse minWidth70% floors A70\u219298 and column-reverse maxHeight25% caps A25\u219235 across content main100\u2192140; both complementary sibling extents match pinned native output",
           "Omitted-width LTR nowrap row measurement resolves direct percentage main bounds from finite equal min/max width constraints, including exact zero, and preserves natural cross size",
           "Omitted-height LTR nowrap column measurement resolves direct percentage main bounds from finite equal min/max height constraints, including exact zero, and preserves natural cross size",
           "Known Card numeric/paired row/column queries cover all seven accepted owner states; 24 finite normal-layout cases preserve staged extents, pixels, targets and teardown; deeper and branching finite known trees match native provider envelopes",
@@ -2000,8 +2000,8 @@
           "Column leaf expansion admits formerly empty52,136; width-only updates preserve keys/main solves/lines, and paint uses zero pure measures",
           "Point100,136 transfers from C to expanded A1 while new C remains targetable; keys/main solves/lines reuse, zero paint measurement",
           "Source/built four-case replay and installed public mounts verify exact native world boxes, formerly empty point transfers to B, stable keys/nodes, paint solve reuse and exact teardown",
-          "Paired provider composes nested exact-width measurement with rendered row: owner80→40 caps A20→10, moves B hit target, preserves keys and paint reuse, and disposes measurement ownership",
-          "A one-auto absolute paired provider receives unbounded width plus exact height, composes an omitted-height column: owner80→40 caps A20→10, moves B target, preserves keys and paint reuse, and disposes measurement ownership"
+          "Paired provider composes nested exact-width measurement with rendered row: owner80\u219240 caps A20\u219210, moves B hit target, preserves keys and paint reuse, and disposes measurement ownership",
+          "A one-auto absolute paired provider receives unbounded width plus exact height, composes an omitted-height column: owner80\u219240 caps A20\u219210, moves B target, preserves keys and paint reuse, and disposes measurement ownership"
         ],
         "yogaCases": [
           "cap",
@@ -2076,7 +2076,7 @@
         "interaction": [
           "resized sibling hit geometry in public example",
           "public Rectangle 50/50 paint and click boundary",
-          "structural badge minimum60→70 moves the following target with stable keyed identity and unrelated-paint measurement reuse"
+          "structural badge minimum60\u219270 moves the following target with stable keyed identity and unrelated-paint measurement reuse"
         ],
         "yogaCases": ["rectangle-shrink", "rectangle-percent-content-box"],
         "missing": [
@@ -2120,8 +2120,8 @@
         ],
         "interaction": [
           "text width, keyed restore, moved footer target",
-          "structural badge minimum60→70 moves the following target with stable keyed identity and unrelated-paint measurement reuse",
-          "nested row width80→60 gives leaf60×20→40×40, then resolved content signal height50 moves following target with stable identity; temporary native arena released before callback"
+          "structural badge minimum60\u219270 moves the following target with stable keyed identity and unrelated-paint measurement reuse",
+          "nested row width80\u219260 gives leaf60\u00d720\u219240\u00d740, then resolved content signal height50 moves following target with stable identity; temporary native arena released before callback"
         ],
         "yogaCases": [],
         "missing": [
@@ -2232,7 +2232,7 @@
           "growth consumes space before auto slots; nonpositive free space preserves center alignment",
           "numeric-to-auto-to-numeric toggles update main placement only without re-solving or recreating nodes",
           "public FlexMargin and editor declarations expose six edge fields plus uniform margin auto; finite main/cross admission remains contextual",
-          "slice98: four main directions × LTR/RTL physical auto, logical row start/end and exact source-order geometry; axis/direction signals preserve keyed focus",
+          "slice98: four main directions \u00d7 LTR/RTL physical auto, logical row start/end and exact source-order geometry; axis/direction signals preserve keyed focus",
           "slice99: each wrapped line counts its own auto slots; a line without auto slots retains justification; 16 CSS-line-local differences explicitly classified against pinned Yoga",
           "slice100: per-line top/bottom/both cross-auto override alignment; finite explicit-height rows, reverse main/RTL, nowrap and wrap; zero/negative space overflows at start and numeric opposite margin is retained",
           "slice101: 36 additional physical cross-auto directions; effective cross reversal maps flags through the existing native conversion; logical column inline start/end and LTR/RTL oversized-item overflow remain coherent",
@@ -2262,7 +2262,7 @@
           "source/built seven-case semantic boxes, stable keyed stamps, moved A/B targets and zero disposal ownership",
           "fresh installed seven-case public geometry/targets, per-controller node/arena/cache cleanup and strict Bundler/NodeNext type consumers",
           "public mounted resize preserves stamps; paint-only preserves solves and node identity",
-          "slice98: seventeen exact native/source/built/installed auto cases; public row→column→RTL signal movement preserves focus/stamps/nodes, old target misses and new target hits",
+          "slice98: seventeen exact native/source/built/installed auto cases; public row\u2192column\u2192RTL signal movement preserves focus/stamps/nodes, old target misses and new target hits",
           "slice99: source/built 17 wrapped cases plus installed 34-case auto family; line merge preserves keyed focus and moves targets; paint reuse and exact disposal",
           "slice100: source/built 12 cross-auto cases, 8 CSS cross-auto precedence differences plus4 native matches; installed46auto cases; cross-only flag changes preserve sizing/main placement/node identity, focus/hits and disposal",
           "slice101: all36 expected boxes independently match Chromium CSS; public mounted matrix plus source/built replay and installed82auto cases; wrap reversal and row-to-RTL-column signals preserve keyed focus and moved targets",
@@ -2699,9 +2699,9 @@
       "id": "flex.baselines",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR/RTL nowrap row/row-reverse of direct primitive leaves with settled finite content boxes, including nonempty resolved unwrapped/wrapped Text at final allocation with positive px fonts, existing Canvas baselines/fitting/overflow and generic-only retained caching measured through an explicit Canvas service capability; missing-provider content-bottom fallback and explicit failure diagnostics; bounded finite horizontal LTR/RTL row/row-reverse wrapped first baselines use native line-local ascent/descent with all existing wrap/wrap-reverse alignContent policies and resolved finite gaps for fixed numeric primitive providers/fallback and settled Text, main grow/shrink, resolved numeric or automatic main margins and signed numeric cross-margin line extents and line-local automatic cross-margin absorption with provider exclusion, plus final static/relative paint and hit placement and resolved decorated content-to-outer baseline mapping and acyclic ordinary/paired-provider or aspect-derived final cross sizing independent of authored numeric basis/height, plus direct settled responsive selections with current finite-owner/transaction/receiver proof and uncached baseline queries; explicit alignSelf opts out through shared ordinary cross placement with measured hypothetical automatic stretch, padding/bounds and logical reverse margins; transparent described primitive roots forward final content baselines through actual root receivers and complete scalar source/root cache snapshots; finite non-static prepared Flex trees select their first in-flow source across all four inner main directions and explicit writing directions, with empty content-bottom fallback, transparent primitive/Flex roots and recursive prepared Flex selection, skipping absolute decoration, including wrapped roots with current native first-source-line proof and physical wrap-reversed origin, cached membership reuse and empty fallback; selected relative offsets compose after baseline allocation using the unshifted physical layout-y origin",
+      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR/RTL nowrap row/row-reverse of direct primitive leaves with settled finite content boxes, including nonempty resolved unwrapped/wrapped Text at final allocation with positive px fonts, existing Canvas baselines/fitting/overflow and generic-only retained caching measured through an explicit Canvas service capability; missing-provider content-bottom fallback and explicit failure diagnostics; bounded finite horizontal LTR/RTL row/row-reverse wrapped first baselines use native line-local ascent/descent with all existing wrap/wrap-reverse alignContent policies and resolved finite gaps for fixed numeric primitive providers/fallback and settled Text, main grow/shrink, resolved numeric or automatic main margins and signed numeric cross-margin line extents and line-local automatic cross-margin absorption with provider exclusion, plus final static/relative paint and hit placement and resolved decorated content-to-outer baseline mapping and acyclic ordinary/paired-provider or aspect-derived final cross sizing independent of authored numeric basis/height, plus direct settled responsive selections with current finite-owner/transaction/receiver proof and uncached baseline queries; explicit alignSelf opts out through shared ordinary cross placement with measured hypothetical automatic stretch, padding/bounds and logical reverse margins; transparent described primitive roots forward final content baselines through actual root receivers and complete scalar source/root cache snapshots; finite non-static prepared Flex trees select their first in-flow source across all four inner main directions and explicit writing directions, with empty content-bottom fallback, transparent primitive/Flex roots and recursive prepared Flex selection, skipping absolute decoration, including wrapped roots with current native first-source-line proof and physical wrap-reversed origin, cached membership reuse and empty fallback; selected relative offsets compose after baseline allocation using the unshifted physical layout-y origin; static structural Flex roots preserve inherited containing origins; prepared Flow and Grid use declared first-source physical y and final content allocations, with described roots and empty fallback; outer columns normalize first-baseline to logical flex-start without baseline callbacks across existing directions and wraps",
       "status": "experimental",
-      "unresolvedPolicy": "remaining structural/reference selection (static outer owners and Flow/Grid), last-baseline alignment, remaining wrapped profiles, outer-column baseline interpretation and broader leaf allocation profiles remain open. No separate font-loading/shaping subsystem is required.",
+      "unresolvedPolicy": "Last-baseline alignment and its structural source/line selection remain open. General leaf allocation constraints are tracked by measurement.custom-leaf; no separate font-loading/shaping subsystem is required.",
       "evidence": {
         "positive": [
           "packages/core/test/layout-flex-baseline.test.tsx",
@@ -2724,7 +2724,13 @@
           "tooling/layout-yoga-rehearsal/baseline-cross-margin-probe.cpp",
           "tooling/layout-yoga-rehearsal/baseline-wrap-auto-margin-probe.cpp",
           "tooling/layout-yoga-rehearsal/baseline-wrap-auto-margin-css-control.mjs",
-          "tooling/layout-yoga-rehearsal/baseline-decorated-content-probe.cpp"
+          "tooling/layout-yoga-rehearsal/baseline-decorated-content-probe.cpp",
+          "packages/core/test/layout-flex-baseline-static-known.test.tsx",
+          "packages/core/test/layout-flex-baseline-flow-source.test.tsx",
+          "packages/core/test/layout-flex-baseline-grid-source.test.tsx",
+          "packages/core/test/layout-flex-baseline-column.test.tsx",
+          "tooling/layout-yoga-rehearsal/baseline-static-owner-probe.cpp",
+          "tooling/layout-yoga-rehearsal/baseline-column-probe.cpp"
         ],
         "negative": [
           "packages/core/test/layout-flex-baseline.test.tsx",
@@ -2738,10 +2744,7 @@
           "baseline-provider-overheight-a"
         ],
         "missing": [
-          "static outer structural owners and Flow/Grid selection",
-          "outer-column baseline interpretation",
-          "last-baseline alignment",
-          "remaining wrapped leaf profiles"
+          "last-baseline alignment and structural source/line selection"
         ]
       }
     },
@@ -3023,8 +3026,8 @@
         ],
         "interaction": [
           "reactive intrinsic minimum moves the public target; unrelated sibling paint reuses snapshot; exact disposal",
-          "structural badge minimum60→70 moves the following target with stable keyed identity and unrelated-paint measurement reuse",
-          "nested row width80→60 gives leaf60×20→40×40, then resolved content signal height50 moves following target with stable identity; temporary native arena released before callback"
+          "structural badge minimum60\u219270 moves the following target with stable keyed identity and unrelated-paint measurement reuse",
+          "nested row width80\u219260 gives leaf60\u00d720\u219240\u00d740, then resolved content signal height50 moves following target with stable identity; temporary native arena released before callback"
         ],
         "yogaCases": [
           "custom-column-measure",
@@ -3291,7 +3294,7 @@
       "evidence": {
         "positive": [
           "existing Grid",
-          "slice155: public border-box owner560→700 with numeric/25%/1fr tracks and a two-column/two-row span resolves B236→376 by160 while C/D retain their finite row-two areas",
+          "slice155: public border-box owner560\u2192700 with numeric/25%/1fr tracks and a two-column/two-row span resolves B236\u2192376 by160 while C/D retain their finite row-two areas",
           "native mixed tracks resize200\u2192260 with unchanged-axis reuse",
           "native spanning areas170\u00d745\u2192230\u00d745 and one-pixel spans after huge leading tracks"
         ],

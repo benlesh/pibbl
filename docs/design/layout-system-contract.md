@@ -2135,9 +2135,10 @@ placement. Flow is Pibbl-specific; this source policy is not a Yoga or CSS parit
 claim. Grid selects its first declared child even when a later child occupies an
 earlier visual row. The prepared cell supplies physical y and actual content
 allocation, including spans and padding; empty Grid uses content bottom. This
-source-order policy does not promise CSS Grid baseline parity. Outer-column
-baseline alignment and last-baseline placement remain unsupported classes. An inner column contributing a vertical
-source baseline does not enable baseline alignment on an outer column.
+source-order policy does not promise CSS Grid baseline parity. Outer columns resolve first-baseline to ordinary logical flex-start across
+existing directions and wrapping modes, without baseline queries or vertical
+baseline groups. Last-baseline placement remains unsupported. An inner column may still contribute its selected physical-y source baseline to
+an outer horizontal group; this is distinct from the outer-column fallback.
 
 Inherited `alignSelf: auto` joins the baseline group. Existing explicit
 `alignSelf` values opt out, skip baseline queries and use ordinary per-line cross

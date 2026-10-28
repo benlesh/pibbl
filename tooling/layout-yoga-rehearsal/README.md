@@ -605,3 +605,14 @@ offset in the structural baseline contribution. Pibbl retains its existing
 slice-214 contract: structural contributions use pre-relative layout placement,
 while relative offsets move paint and hit geometry. Pibbl therefore expects
 A=18, B=0, badge=0 at step 2. No CSS agreement is claimed by this probe.
+
+## Column baseline fallback diagnostic (slice220)
+
+`baseline-column-probe.cpp` runs the pinned Yoga3.2.1 source with identical
+100x100 baseline and flex-start roots. All12column/column-reverse, LTR/RTL and
+nowrap/wrap/wrap-reverse combinations have identical boxes and zero baseline
+callbacks. `yoga/algorithm/Align.h::resolveChildAlignment` explicitly normalizes
+column baseline to FlexStart before placement. This corrects the earlier local
+research note that incorrectly inferred a flex-end fallthrough. The probe stays
+outside the fixed reference corpus. Pibbl adopts this fallback without defining
+vertical baseline groups.

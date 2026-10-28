@@ -4467,6 +4467,31 @@ const drafts = [
     load: () => import("./learning/layout/wasm-grid-baseline.example"),
   },
   {
+    slug: "wasm-column-baseline-fallback",
+    title: "Experimental WASM column baseline fallback",
+    shortTitle: "WASM column baseline",
+    section: "layout",
+    order: 152,
+    summary: "Outer column Flex directions normalize first-baseline to logical flex-start without querying child baseline providers.",
+    api: ["Flex", "definePrimitive", "signal", "useLayoutBox"],
+    objectives: [
+      "Compare column, column-reverse, LTR and RTL physical placement.",
+      "See wrapping follow ordinary column cross placement without creating a vertical baseline group.",
+    ],
+    prompts: {
+      gesture: "Cycle Direction and Wrap, then click the red and blue leaves. The inspector reports their physical boxes and confirms no baseline provider was queried.",
+      code: "The same first-baseline style is accepted on a finite outer column, where it follows the existing logical flex-start path rather than a horizontal baseline-sharing algorithm.",
+    },
+    apiNotes: [
+      "Experimental finite column fallback. It is ordinary logical flex-start placement, not vertical-baseline support; nested row baselines do not propagate into an outer column.",
+      "The example covers the retained Yoga 3.2.1 finite direction and wrap reference cases with direct primitive leaves.",
+    ],
+    canvas: { width: 260, height: 185 },
+    related: ["wasm-flex-baseline", "flex"],
+    exportName: "WasmColumnBaselineFallbackExample",
+    load: () => import("./learning/layout/wasm-column-baseline-fallback.example"),
+  },
+  {
     slug: "wasm-flex-aspect-minimum",
     title: "Experimental WASM aspect-ratio minimum",
     shortTitle: "WASM aspect minimum",

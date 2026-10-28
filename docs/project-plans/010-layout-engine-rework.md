@@ -1,6 +1,6 @@
 # 010 — Experimental layout engine rework
 
-## Current checkpoint and single next slice — 2026-10-27
+## Current checkpoint and single next slice — 2026-10-28
 
 Public lesson companion for142–144: physical percentage placement combines
 natural-height wrapping Text, a toggled static/relative card and an absolute
@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice219 (`666348da`): prepared Grid declared-source baselines.
+Latest delivery is slice220: Yoga-compatible outer-column baseline fallback.
+Slice219 is `666348da`: prepared Grid declared-source baselines.
 Consolidation73 verifies217–219 below.
 Slice218 is `1ddf4b34`: prepared Flow first-source baselines.
 Slice217 is `84a89825`: static structural baseline owner origins.
@@ -8165,17 +8166,47 @@ counts on unrelated paint; built470inputs
 packed consumer, typecheck, lint, catalog and109documentation mutation checks are
 fresh above. No native changes or aggregate trust claim.
 
-## [NEXT] Slice220: settle outer-column baseline policy
+## [DONE] Slice220: outer-column baseline fallback
 
-Pinned Yoga source research distinguishes nowrap columns, where baseline
-providers are inert and ordinary placement falls through to logical cross end,
-from wrapped columns' separate branch. The user has been asked whether to adopt
-that bounded nowrap fallback or retain the current unsupported boundary. Do not
-silently invent vertical baseline groups or treat rejection as feature closure.
-Continue the pinned diagnostic while that material behavior choice is pending.
-Last-baseline alignment is the other remaining finite baseline class. Counts
-remain12complete/12experimental/3partial/5missing/1excluded. All7release gates and
-independent final whole-codebase review remain open.
+Pinned Yoga3.2.1 `Align.h::resolveChildAlignment` explicitly maps column baseline
+to logical flex-start before placement. The earlier local research claiming
+flex-end fallthrough was wrong: direct baseline/flex-start probes agree in all12
+column/reversed-column, LTR/RTL and wrap modes, with zero baseline callbacks.
+`tooling/layout-yoga-rehearsal/baseline-column-probe.cpp` retains the probe.
+Pibbl now resolves column first-baseline through the existing ordinary alignment
+path, with no vertical group or provider query. Horizontal grouping is unchanged.
+
+Public RED12failed before runtime changes. Initial Node24.15/Chromium focused
+checks pass32with1skip across3files. Source/built lesson drivers cover all12
+modes, real clicks, identity and four-counter cleanup with errors[]
+(`/tmp/pibbl-slice220-{source,built}.txt`); screenshot inspected. Types and catalog
+pass (178lessons/12snapshots/33labs). Installed Bundler/NodeNext and nested browser
+pass all12modes, reactive resize/identity, clicks, skipped providers, teardown,
+and104margin fixtures with246installed inputs. Tarball SHA256
+`3095078582d8a308bc3369f7948925ad0c5fbe31e7070290f41a93e4249db61c`
+(`/tmp/pibbl-slice220-packed.txt`). ABI17/84137bytes unchanged. Final baseline-family checks pass78with1skip
+across15files; ordinary2pass/77skip. The additional pure-measurement guard passes
+with all12mounted cases (13tests), confirming column providers remain inert
+outside mounted grouping too. Changed-code lint,109documentation mutations and
+scoped independent review pass.
+
+Try `http://127.0.0.1:5192/#/examples/layout/wasm-column-baseline-fallback`.
+The capability ledger now includes217–219's static, Flow and Grid source evidence
+and220's column fallback, removing stale missing-work descriptions without a
+status promotion. Baseline closure still requires last-baseline placement.
+
+## [NEXT] Slice221: horizontal last-baseline placement
+
+Use the existing provider's last offset through the ordinary baseline group
+scalar; add the explicit parent alignment value rather than a new provider API.
+Define structural source/line selection before broadening beyond direct leaves.
+No Yoga last-baseline parity claim: its one-offset callback cannot distinguish
+first from last. The finite release closure audit identifies real work in
+intrinsic sizing, containing ancestry/participation, general transactional
+publication, implicit/intrinsic Grid, and migration/conformance; historical
+per-profile queues are not new scope. Counts remain12complete/12experimental/
+3partial/5missing/1excluded; all7release gates and final independent whole-codebase
+review remain open. Consolidate220–222 before further production.
 
 ## Scope and execution
 
