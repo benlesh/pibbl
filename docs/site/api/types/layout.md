@@ -16,6 +16,7 @@ symbols:
     Constraints,
     Edges,
     EdgeValues,
+    FitContent,
     FlexItemStyle,
     FlexMargin,
     FlexProps,
@@ -41,6 +42,8 @@ symbols:
     Percentage,
     ResolvedBoxStyle,
     Size,
+    SizingKeyword,
+    SizingLength,
   ]
 keywords: [layout, box, flex, grid, measurement]
 ---
@@ -112,6 +115,12 @@ conversion. Unallocated pure measurement and upstream child preparation without
 that owner remain unsupported. Layer’s own raster sizing ignores layout padding and borders, keeping
 its explicit dimensions and child origin. `borderWidth` and `normalizeEdges` keep
 numeric defaults. Compare [allocated padding](#/examples/layout/wasm-flow-padding).
+
+## FitContent
+
+Immutable sizing bound returned by [`fitContent`](#/api/functions/fit-content).
+Its `limit` is a nonnegative finite number or parent-axis percentage; its private
+brand prevents ordinary records from impersonating the value.
 
 ## FlexItemStyle
 
@@ -475,3 +484,15 @@ before content-box/border-box conversion and inset floors. These widths reserve
 layout space; painted strokes remain independent. Layer’s own raster dimensions
 and child origin retain their existing physical-border behavior. Raw logical
 border inputs remain ineligible for frozen allocation caching.
+
+## SizingKeyword
+
+Sizing-only `min-content` and `max-content` vocabulary. The first experimental
+owner supports horizontal min/max-content contributions.
+
+## SizingLength
+
+[`Length`](#length), [`SizingKeyword`](#sizingkeyword), or
+[`FitContent`](#fitcontent). Used for width, height and flex basis; it does not
+widen padding, positions, gaps or radii. See [`fitContent`](#/api/functions/fit-content)
+for the current experimental owner boundary.

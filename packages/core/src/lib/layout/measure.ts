@@ -1,3 +1,4 @@
+import { isFitContent } from '../style/sizing-length.js';
 import { captureReceiverInputProvision, replayReceiverInputProvision, withReceiverInputProvision, type ReceiverInputProvisionReceipt } from '../signals/input-provision.js';
 import type { BoxStyle } from '../style/types.js';
 import { hasPercentageBoxPadding } from './box-insets.js';
@@ -103,6 +104,12 @@ function intrinsicInputSnapshot(element: PibblElement<any>): unknown[] | undefin
   }
   if (style) for (const key of Object.keys(style)) {
     const value = style[key];
+    // This module-branded sizing record is immutable; snapshot its semantic limit
+    // rather than its per-render identity. Other object-valued styles stay conservative.
+    if (isFitContent(value) && Object.isFrozen(value)) {
+      snapshot.push(key, isFitContent, value.limit);
+      continue;
+    }
     if (value !== null && (typeof value === 'object' || typeof value === 'function')) return;
     snapshot.push(key, value);
   }

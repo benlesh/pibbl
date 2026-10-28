@@ -4618,6 +4618,31 @@ const drafts = [
     load: () => import("./learning/layout/wasm-flex-intrinsic-primitive.example"),
   },
   {
+    slug: "wasm-flex-intrinsic-sizing",
+    title: "Experimental WASM intrinsic sizing",
+    shortTitle: "WASM intrinsic sizing",
+    section: "layout",
+    order: 229,
+    summary: "Direct paired primitives resolve min-content and fitContent caps from live intrinsic contributions while preserving paint and targets.",
+    api: ["Flex", "definePrimitive", "fitContent", "signal", "useLayoutBox"],
+    objectives: [
+      "Compare a min-content width with a fitContent(80) basis from the same provider.",
+      "Update min/max contributions and retain keyed targets through every horizontal direction.",
+    ],
+    prompts: {
+      gesture: "Toggle Content from 40 / 120 to 60 / 140, cycle Direction through row and reverse LTR/RTL, and click each colored allocation. Paint green changes only the trailing target.",
+      code: "The two direct paired primitives return min- and max-content widths. One requests min-content; the other sets flexBasis to fitContent(80).",
+    },
+    apiNotes: [
+      "Experimental direct paired primitive sizing in a finite horizontal Flex owner. The supported path resolves min-content, max-content and a numeric fit-content cap before normal placement.",
+      "This example does not imply arbitrary nested intrinsic graphs, Text/font compatibility, wrapping, percentage feedback, or CSS sizing parity.",
+    ],
+    canvas: { width: 260, height: 250 },
+    related: ["wasm-flex-intrinsic-primitive", "wasm-flex-text", "flex"],
+    exportName: "WasmFlexIntrinsicSizingExample",
+    load: () => import("./learning/layout/wasm-flex-intrinsic-sizing.example"),
+  },
+  {
     slug: "wasm-flow-padding",
     title: "Experimental WASM layout percentage padding",
     shortTitle: "WASM box padding",

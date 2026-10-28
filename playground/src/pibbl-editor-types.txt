@@ -443,6 +443,11 @@ export interface MeshTransformOptions {
 
   export type Percentage = `${number}%`;
   export type Length = number | Percentage | 'auto';
+  declare const fitContentBrand: unique symbol;
+  export interface FitContent { readonly limit: number | Percentage; readonly [fitContentBrand]: true }
+  export type SizingKeyword = 'min-content' | 'max-content';
+  export type SizingLength = Length | SizingKeyword | FitContent;
+  export function fitContent(limit: number | Percentage): FitContent;
   export interface RoundedCornerStyle { cornerRadius?: Exclude<Length, 'auto'>; cornerRadii?: readonly (Exclude<Length, 'auto'> | null | undefined)[] }
   export interface RoundedCornerPathOptions { cornerRadius?: number; cornerRadii?: readonly (number | null | undefined)[] }
   export type EdgeValues<T extends number | Percentage = number> = T | Readonly<{ top?: T; right?: T; bottom?: T; left?: T }>;
@@ -453,7 +458,7 @@ export interface MeshTransformOptions {
   export interface StyleResolutionContext { allocation: Readonly<LayoutBox>; percentageBasis: Readonly<LayoutBox>; constraints: Readonly<Constraints>; component: string; algorithm: 'render-dispatch' }
   export interface BoxStyle extends SystemStyle {
     boxSizing?: 'content-box' | 'border-box';
-    width?: Length; height?: Length;
+    width?: SizingLength; height?: SizingLength;
     minWidth?: Exclude<Length, 'auto'>; maxWidth?: Exclude<Length, 'auto'>;
     minHeight?: Exclude<Length, 'auto'>; maxHeight?: Exclude<Length, 'auto'>;
     padding?: EdgeValues<number | Percentage>;
@@ -470,7 +475,7 @@ export interface MeshTransformOptions {
     alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
     justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
     margin?: FlexMargin; marginTop?: FlexMargin; marginRight?: FlexMargin; marginBottom?: FlexMargin; marginLeft?: FlexMargin; marginStart?: FlexMargin; marginEnd?: FlexMargin;
-    flexBasis?: Length; flexGrow?: number; flexShrink?: number;
+    flexBasis?: SizingLength; flexGrow?: number; flexShrink?: number;
     gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
   }
   export type FlexMargin = number | Percentage | 'auto';
@@ -483,7 +488,7 @@ export interface MeshTransformOptions {
   export interface PaintStyle extends SystemStyle { fill?: FillStyle; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number }
   export interface CursorStyle extends SystemStyle { cursor?: string }
   export interface PathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: Path2D | PathGeometry; lineInteractionWidth?: number }
-  export interface RectStyle extends RoundedCornerStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { width: Length; height: Length; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
+  export interface RectStyle extends RoundedCornerStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { width: SizingLength; height: SizingLength; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export interface CircleStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; lineInteractionWidth?: number }
   export interface EllipseStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radiusX: Exclude<Length, 'auto'>; radiusY: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; rotation?: number; lineInteractionWidth?: number }
   export interface ArcStyle extends Omit<PaintStyle, 'fill'>, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; startAngle: number; endAngle: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; counterclockwise?: boolean; lineInteractionWidth?: number }

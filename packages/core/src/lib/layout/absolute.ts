@@ -16,7 +16,7 @@ import { resolvePrimitiveStyleInput } from '../element/resolve-primitive-inputs.
 import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { normalizeBoxInsets, hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
-import { resolveLength } from '../style/resolve-length.js';
+import { resolveScalarSizingLength } from '../style/sizing-length.js';
 import {
   extractSystemFilter,
   setPreNormalizedStyle, setAllocatedContentSize,
@@ -196,8 +196,8 @@ function resolveAbsoluteChildPlacement(
   assertSupportedChildPosition('Absolute', child, style, false, false);
   const resolved = resolveDirectChildBox(container, child, 'absolute', style);
   const context = childDiagnosticContext(child, container, 'absolute');
-  const left = resolveLength(style.left ?? 0, container.width, 'left', context)!;
-  const top = resolveLength(style.top ?? 0, container.height, 'top', context)!;
+  const left = resolveScalarSizingLength(style.left ?? 0, container.width, 'left', context)!;
+  const top = resolveScalarSizingLength(style.top ?? 0, container.height, 'top', context)!;
   const box = {
     x: finitePlacement(container.x + left, 'left', left, context),
     y: finitePlacement(container.y + top, 'top', top, context),
@@ -486,10 +486,10 @@ function resolveOptionalAllocationLength(
   value: BoxStyle['width'],
   reference: number,
   property: string,
-  context: Parameters<typeof resolveLength>[3],
+  context: Parameters<typeof resolveScalarSizingLength>[3],
 ): number | undefined {
   if (value === undefined) return undefined;
-  return resolveLength(value, reference, property, context);
+  return resolveScalarSizingLength(value, reference, property, context);
 }
 
 function allocationCeiling(
@@ -497,7 +497,7 @@ function allocationCeiling(
   values: readonly (number | undefined)[],
   padding: number,
   property: string,
-  context: Parameters<typeof resolveLength>[3],
+  context: Parameters<typeof resolveScalarSizingLength>[3],
 ): number {
   const ceiling = Math.max(allocation, ...values.filter(
     (value): value is number => value !== undefined,

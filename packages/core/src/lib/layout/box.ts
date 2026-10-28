@@ -4,8 +4,9 @@ import {
   type LayoutDiagnosticContext,
 } from '../style/diagnostics.js';
 import { normalizeBoxInsets } from './box-insets.js';
-import { resolveLength } from '../style/resolve-length.js';
+import { resolveScalarSizingLength } from '../style/sizing-length.js';
 import type { BoxStyle, Length, ResolvedBoxStyle } from '../style/types.js';
+import type { SizingLength } from '../style/sizing-length.js';
 import type { Constraints } from './types.js';
 
 /**
@@ -81,7 +82,7 @@ export function resolveBox(
 
 function resolveAxis(
   axis: 'width' | 'height',
-  specified: Length | undefined,
+  specified: SizingLength | undefined,
   specifiedMinimum: Exclude<Length, 'auto'> | undefined,
   specifiedMaximum: Exclude<Length, 'auto'> | undefined,
   constraintMinimum: number,
@@ -129,7 +130,7 @@ function resolveAxis(
   const resolved =
     specified === undefined
       ? undefined
-      : resolveLength(specified, constraintMaximum, axis, context);
+      : resolveScalarSizingLength(specified, constraintMaximum, axis, context);
   let content: number;
   if (resolved === undefined) {
     if (!Number.isFinite(constraintMaximum)) {
@@ -198,7 +199,7 @@ function resolveAllocationLength(
   property: string,
   context: Readonly<LayoutDiagnosticContext>,
 ): number {
-  const resolved = resolveLength(value, reference, property, context)!;
+  const resolved = resolveScalarSizingLength(value, reference, property, context)!;
   if (resolved < 0) {
     throw layoutDiagnostic({
       ...context,

@@ -2372,3 +2372,29 @@ declared Grid source order can legitimately put the last contribution physically
 above the first. The leaf provider's finite ordered-pair contract is unchanged.
 Query failure preserves existing teardown/remount behavior; this adds no retained
 screen rollback or new font ownership contract.
+
+### Experimental intrinsic sizing values
+
+`SizingLength` adds sizing-only `min-content`, `max-content`, and immutable branded
+`fitContent(limit)` alongside scalar `Length`. Width, height and flex basis use
+the sizing type; padding, insets, gaps and radii remain scalar. Intrinsic bounds
+and stretch are not yet admitted public values.
+
+The initial runtime owner is finite horizontal nowrap Flex with a direct paired
+primitive supporting both intrinsic and constrained measurement, no responsive
+selection or aspect ratio, and content-box sizing. All existing horizontal main
+and writing directions, numeric grow/shrink and bounds consume the selected
+numeric basis through the established allocation path. A non-auto flex basis
+wins over width. Fit-content uses `min(max-content, max(min-content, limit))`;
+percentage limits use the actual finite parent main axis. Paired heights are not
+independent vertical minima: final cross measurement uses the selected allocated
+width. Other owners raise a structured diagnostic rather than passing keywords
+to native allocation or primitive rendering.
+
+The existing receiver/revision/dependency and props-identity cache contract is
+retained. A module-branded frozen FitContent style value snapshots its semantic
+limit; arbitrary object-valued style inputs still decline measurement reuse.
+Source/built Studio and installed package receipts prove signal-driven geometry,
+click targeting, keyed identity, stable-descriptor paint reuse and exact cleanup.
+This initial owner does not complete general intrinsic Text, structural sizing,
+vertical intrinsic contributions, Grid tracks, or the measurement release gate.

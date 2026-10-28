@@ -21,7 +21,7 @@ import {
 import type { Constraints } from '../layout/types.js';
 import type { PibblRenderTransaction, PibblTextInput } from '../types.js';
 import type { PibblPhysics2DPropExtension } from '../types.js';
-import { resolveLength } from '../style/resolve-length.js';
+import { resolveScalarSizingLength } from '../style/sizing-length.js';
 import { normalizeBoxInsets } from '../layout/box-insets.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
@@ -262,9 +262,9 @@ function measureTextStyle(
     constraints,
   };
   const specifiedWidth = style.width === undefined ? undefined :
-    resolveLength(style.width, constraints.maxWidth, 'width', context);
+    resolveScalarSizingLength(style.width, constraints.maxWidth, 'width', context);
   const specifiedHeight = style.height === undefined ? undefined :
-    resolveLength(style.height, constraints.maxHeight, 'height', context);
+    resolveScalarSizingLength(style.height, constraints.maxHeight, 'height', context);
   const layoutWidth = specifiedWidth ?? (
     style.wrap && Number.isFinite(constraints.maxWidth) ?
       constraints.maxWidth :

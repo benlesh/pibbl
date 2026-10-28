@@ -14,7 +14,7 @@ import {
   wireStructuralEvents,
 } from '../components/structural-events.js';
 import { normalizeBoxInsets, hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
-import { resolveLength } from '../style/resolve-length.js';
+import { resolveScalarSizingLength } from '../style/sizing-length.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
   BoxStyle,
@@ -613,7 +613,7 @@ function measuredLength(
   property: string,
   constraints: Readonly<Constraints>,
 ): number {
-  const resolved = resolveLength(value, reference, property, {
+  const resolved = resolveScalarSizingLength(value, reference, property, {
     component: 'Grid',
     algorithm: 'measurement',
     constraints,

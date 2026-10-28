@@ -1,7 +1,8 @@
+import type { Length } from './types.js';
 import type { StyleResolutionContext, SystemStyle } from '../types.js';
 import { layoutDiagnostic } from './diagnostics.js';
-import { resolveLength } from './resolve-length.js';
-import type { Length } from './types.js';
+import { resolveScalarSizingLength } from './sizing-length.js';
+import type { SizingLength } from './sizing-length.js';
 
 const LAYOUT_PARTICIPATION_KEYS = new Set([
   'width',
@@ -50,12 +51,12 @@ export function stripLayoutParticipation<S extends SystemStyle>(
 }
 
 export function resolveRequiredLength(
-  value: Length,
+  value: SizingLength,
   reference: number,
   property: string,
   context: Readonly<StyleResolutionContext>,
 ): number {
-  const resolved = resolveLength(value, reference, property, context);
+  const resolved = resolveScalarSizingLength(value, reference, property, context);
   if (resolved === undefined) {
     throw layoutDiagnostic({
       component: context.component,
@@ -70,13 +71,13 @@ export function resolveRequiredLength(
 }
 
 export function resolveOptionalLength(
-  value: Length | undefined,
+  value: SizingLength | undefined,
   reference: number,
   property: string,
   context: Readonly<StyleResolutionContext>,
 ): number | undefined {
   if (value === undefined) return undefined;
-  return resolveLength(value, reference, property, context);
+  return resolveScalarSizingLength(value, reference, property, context);
 }
 
 export function resolveLocalOffset(

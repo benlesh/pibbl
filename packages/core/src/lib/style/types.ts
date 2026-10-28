@@ -15,6 +15,7 @@ import type {
 } from '../types.js';
 import type { LayoutBox } from '../layout/types.js';
 import type { PositioningStyle } from './positioning.js';
+import type { SizingLength } from './sizing-length.js';
 
 /**
  * A percentage string resolved against the relevant parent layout dimension.
@@ -84,10 +85,10 @@ export interface BoxStyle extends SystemStyle {
    * Painted stroke widths remain independent. See {@link ResolvedBoxStyle}.
    */
   boxSizing?: 'content-box' | 'border-box';
-  /** Horizontal extent in the units of the containing geometry or surface. See {@link Length}. */
-  width?: Length;
-  /** Vertical extent in the units of the containing geometry or surface. See {@link Length}. */
-  height?: Length;
+  /** Horizontal extent in the units of the containing geometry or surface. See {@link SizingLength}. */
+  width?: SizingLength;
+  /** Vertical extent in the units of the containing geometry or surface. See {@link SizingLength}. */
+  height?: SizingLength;
   /** Minimum permitted width. See {@link Length}. */
   minWidth?: Exclude<Length, 'auto'>;
   /** Maximum permitted width. See {@link Length}. */
@@ -157,8 +158,8 @@ export interface LayoutItemStyle extends PositioningStyle {
   alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
   /** This child's inline-axis alignment override. See {@link LayoutItemStyle}. */
   justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
-  /** Initial main-axis size before flex growth or shrinkage. See {@link Length}. */
-  flexBasis?: Length;
+  /** Initial main-axis size before flex growth or shrinkage. See {@link SizingLength}. */
+  flexBasis?: SizingLength;
   /** Relative share of positive free space assigned to this child. See {@link LayoutItemStyle}. */
   flexGrow?: number;
   /** Relative factor used when reducing main-axis size. See {@link LayoutItemStyle}. */
@@ -292,10 +293,10 @@ export interface RectStyle
     CursorStyle,
     BoxStyle,
     LayoutItemStyle {
-  /** Horizontal extent in the units of the containing geometry or surface. See {@link Length}. */
-  width: Length;
-  /** Vertical extent in the units of the containing geometry or surface. See {@link Length}. */
-  height: Length;
+  /** Horizontal extent in the units of the containing geometry or surface. See {@link SizingLength}. */
+  width: SizingLength;
+  /** Vertical extent in the units of the containing geometry or surface. See {@link SizingLength}. */
+  height: SizingLength;
   /**
    * Pixel-grid alignment policy applied to the resolved geometry. See {@link PixelGridAlignment}.
    */

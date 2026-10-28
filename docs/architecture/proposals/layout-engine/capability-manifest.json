@@ -2997,7 +2997,7 @@
       "id": "measurement.custom-leaf",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom providers with one exact declared and one unbounded natural axis across finite nowrap main directions; native column-width query differences labeled separately from deterministic geometry; bounded built-in wrapped height and unwrapped natural ink dimensions, including both-auto, use the same owned query with real Canvas metrics; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows; finite forward LTR nowrap row height derives from native final-width paired leaf queries",
+      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom providers with one exact declared and one unbounded natural axis across finite nowrap main directions; native column-width query differences labeled separately from deterministic geometry; bounded built-in wrapped height and unwrapped natural ink dimensions, including both-auto, use the same owned query with real Canvas metrics; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows; finite forward LTR nowrap row height derives from native final-width paired leaf queries; slice223 adds sizing-only min-content/max-content and immutable fitContent limits through direct paired finite horizontal nowrap content-box Flex, preserving four horizontal directions, numeric grow/shrink/bounds, signal targets/identity and immutable-value cache snapshots",
       "status": "partial",
       "unresolvedPolicy": "Paired intrinsic and first/last baseline callbacks are implemented for bounded direct-leaf consumers; broader constraint modes, nested intrinsic consumers and feedback remain open.",
       "evidenceRefs": [
@@ -3008,7 +3008,10 @@
         "tooling/test-wasm-yoga-migration.mjs",
         "tooling/packed-layout-consumer.mjs",
         "docs/design/layout-system-contract.md",
-        "packages/core/test/layout-structural-intrinsic.test.tsx"
+        "packages/core/test/layout-structural-intrinsic.test.tsx",
+        "packages/core/test/layout-intrinsic-sizing.test.tsx",
+        "packages/scenarios/src/learning/layout/wasm-flex-intrinsic-sizing.example.tsx",
+        "tooling/test-wasm-flex-intrinsic-sizing.mjs"
       ],
       "evidence": {
         "positive": [

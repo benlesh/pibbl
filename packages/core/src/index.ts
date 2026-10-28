@@ -284,6 +284,7 @@ export type {
   Percentage,
   RoundedCornerStyle,
 } from './lib/style/types.js';
+export { fitContent, type FitContent, type SizingKeyword, type SizingLength } from './lib/style/sizing-length.js';
 export {
   LayoutDiagnostic,
   layoutDiagnostic,

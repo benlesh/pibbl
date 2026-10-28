@@ -26,7 +26,9 @@ import {
   wireStructuralEvents,
 } from '../components/structural-events.js';
 import { normalizeBoxInsets, hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
-import { resolveLength, parsePercentage } from '../style/resolve-length.js';
+import { resolveScalarSizingLength } from '../style/sizing-length.js';
+import { parsePercentage } from '../style/resolve-length.js';
+import { isIntrinsicSizingValue, normalizeSizingLength, type NormalizedSizingLength } from '../style/sizing-length.js';
 import { setPreNormalizedStyle, peekPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
   BoxStyle,
@@ -673,9 +675,9 @@ function measureFlex(
       // Resolve only against an explicit owner, before converting outer box inputs.
       // Keep numeric hot paths allocation-free and leave indefinite owners unsupported.
       style = { ...style,
-        width: isPercentage(style.width) ? resolveLength(style.width!, reference, 'width', context) : style.width,
-        minWidth: isPercentage(style.minWidth) ? resolveLength(style.minWidth!, reference, 'minWidth', context) : style.minWidth,
-        maxWidth: isPercentage(style.maxWidth) ? resolveLength(style.maxWidth!, reference, 'maxWidth', context) : style.maxWidth,
+        width: isPercentage(style.width) ? resolveScalarSizingLength(style.width!, reference, 'width', context) : style.width,
+        minWidth: isPercentage(style.minWidth) ? resolveScalarSizingLength(style.minWidth!, reference, 'minWidth', context) : style.minWidth,
+        maxWidth: isPercentage(style.maxWidth) ? resolveScalarSizingLength(style.maxWidth!, reference, 'maxWidth', context) : style.maxWidth,
       };
     }
     if (experimentalLayout && automaticWidth && options.flexDirection === 'row' &&
@@ -684,8 +686,8 @@ function measureFlex(
       if (exactRowWidth === undefined) return unsupportedIntrinsic('requires an exact finite row width to resolve percentage main bounds');
       const context = childContext(child, diagnosticBox);
       style = { ...style,
-        minWidth: isPercentage(style.minWidth) ? resolveLength(style.minWidth!, exactRowWidth, 'minWidth', context) : style.minWidth,
-        maxWidth: isPercentage(style.maxWidth) ? resolveLength(style.maxWidth!, exactRowWidth, 'maxWidth', context) : style.maxWidth,
+        minWidth: isPercentage(style.minWidth) ? resolveScalarSizingLength(style.minWidth!, exactRowWidth, 'minWidth', context) : style.minWidth,
+        maxWidth: isPercentage(style.maxWidth) ? resolveScalarSizingLength(style.maxWidth!, exactRowWidth, 'maxWidth', context) : style.maxWidth,
       };
       if (typeof style.minWidth === 'number' && typeof style.maxWidth === 'number' && style.minWidth > style.maxWidth) {
         throw childDiagnostic(child, 'minWidth', style.minWidth, diagnosticBox, 'minimum must not exceed maximum');
@@ -697,8 +699,8 @@ function measureFlex(
       if (exactColumnHeight === undefined) return unsupportedIntrinsic('requires an exact finite column height to resolve percentage main bounds');
       const context = childContext(child, diagnosticBox);
       style = { ...style,
-        minHeight: isPercentage(style.minHeight) ? resolveLength(style.minHeight!, exactColumnHeight, 'minHeight', context) : style.minHeight,
-        maxHeight: isPercentage(style.maxHeight) ? resolveLength(style.maxHeight!, exactColumnHeight, 'maxHeight', context) : style.maxHeight,
+        minHeight: isPercentage(style.minHeight) ? resolveScalarSizingLength(style.minHeight!, exactColumnHeight, 'minHeight', context) : style.minHeight,
+        maxHeight: isPercentage(style.maxHeight) ? resolveScalarSizingLength(style.maxHeight!, exactColumnHeight, 'maxHeight', context) : style.maxHeight,
       };
       if (typeof style.minHeight === 'number' && typeof style.maxHeight === 'number' && style.minHeight > style.maxHeight) {
         throw childDiagnostic(child, 'minHeight', style.minHeight, diagnosticBox, 'minimum must not exceed maximum');
@@ -1084,7 +1086,7 @@ function resolveMeasuredContainerLength(
   property: string,
   constraints: Readonly<Constraints>,
 ): number {
-  const resolved = resolveLength(value, reference, property, {
+  const resolved = resolveScalarSizingLength(value, reference, property, {
     component: 'Flex',
     algorithm: 'measurement',
     constraints,
@@ -1439,10 +1441,28 @@ function resolveFlexPlacements(
         typeof aspectCross === 'number' && Number.isFinite(aspectCross) && aspectCross >= 0);
     const automaticRectangleMinimum = automaticAspectRectangleMinimum ||
       hasEmptyRectangleMinimum(child, normalized, preparedStyleQuery(prepared), true);
+    // A selected intrinsic main value reuses the existing direct paired-provider
+    // transaction. The established numeric grow/shrink/bounds path remains the
+    // authority after this contribution becomes a number.
+    const intrinsicMainValue = basisValue === undefined || basisValue === 'auto'
+      ? normalized.width
+      : basisValue;
+    const directIntrinsicMain = isIntrinsicSizingValue(intrinsicMainValue) &&
+      !stagedMeasured && experimentalLayout &&
+      row && options.flexWrap === 'nowrap' && !preparedStyleQuery(prepared) &&
+      !isLayoutComponent(child.type) && aspectRatio === undefined &&
+      !!pairedLayoutDefinition?.measureIntrinsic && !!pairedLayoutDefinition.measure;
     const customIntrinsic = !stagedMeasured && experimentalLayout && row && options.flexWrap === 'nowrap' &&
       !preparedStyleQuery(prepared) && !!pairedLayoutDefinition?.measureIntrinsic &&
       (!isLayoutComponent(child.type) || options.flexDirection === 'row' && options.layoutDirection === 'ltr' && aspectRatio === undefined && !!pairedLayoutDefinition.measure) &&
-      (basisValue === 'auto' && (normalized.width === undefined || normalized.width === 'auto') || shrink > 0 && normalized.minWidth === undefined);
+      (directIntrinsicMain || basisValue === 'auto' && (normalized.width === undefined || normalized.width === 'auto') || shrink > 0 && normalized.minWidth === undefined);
+    let intrinsicMainRequest: NormalizedSizingLength | undefined;
+    if (directIntrinsicMain) {
+      intrinsicMainRequest = normalizeSizingLength(intrinsicMainValue, {
+        reference: mainSize, property: basisValue === undefined || basisValue === 'auto' ? 'width' : 'flexBasis',
+        context: childContext(child, container), allowAuto: false, allowIntrinsic: true,
+      });
+    }
     let intrinsicSizes: Extract<import('../types.js').IntrinsicSizesResult, { status: 'measured' }> | undefined;
     if (customIntrinsic) {
       const measurementChild = clonePibblElement(child);
@@ -1603,6 +1623,9 @@ function resolveFlexPlacements(
       minMain = Math.min(columnMinimumSize.height, maxMain,
         typeof specifiedMain === 'number' ? specifiedMain : Number.POSITIVE_INFINITY);
     }
+    const intrinsicMainBasis = intrinsicMainRequest && intrinsicSizes
+      ? resolveIntrinsicMainBasis(intrinsicMainRequest, intrinsicSizes, child, container)
+      : undefined;
     if (automaticTextMinimum) {
       if (region) recordWasmMeasurement();
       const contentMinimum = measureLayoutTextMinimumWidth(child.props, {
@@ -1707,7 +1730,7 @@ function resolveFlexPlacements(
         region?.writeTextMaximum(token, content, font, naturalTextMain);
       }
     }
-    const baseMain = stagedMeasured ? stagedItem!.target : naturalTextMain ?? resolveBasis(
+    const baseMain = stagedMeasured ? stagedItem!.target : intrinsicMainBasis ?? naturalTextMain ?? resolveBasis(
       basisValue,
       specifiedMain,
       measured?.[mainProperty],
@@ -2756,7 +2779,7 @@ function nonnegativeGap(
   reference: number,
 ): number {
   const resolved = experimentalLayout && isPercentage(value)
-    ? resolveLength(value as Percentage, reference, property, { component: 'Flex', algorithm: 'flex', constraints: constraintsFor(container) })
+    ? resolveScalarSizingLength(value as Percentage, reference, property, { component: 'Flex', algorithm: 'flex', constraints: constraintsFor(container) })
     : value;
   if (typeof resolved !== 'number' || !Number.isFinite(resolved) || resolved < 0) {
     throw optionDiagnostic(property, value, container);
@@ -2780,6 +2803,20 @@ function nonnegativeFactor(
     );
   }
   return value;
+}
+
+function resolveIntrinsicMainBasis(
+  request: NormalizedSizingLength,
+  result: Extract<import('../types.js').IntrinsicSizesResult, { status: 'measured' }>,
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): number {
+  const minimum = result.minContent.width;
+  const maximum = result.maxContent.width;
+  if (request.kind === 'min-content') return minimum;
+  if (request.kind === 'max-content') return maximum;
+  if (request.kind === 'fit-content') return Math.min(maximum, Math.max(minimum, request.limit));
+  throw childDiagnostic(child, 'flexBasis', request, container, 'requires min-content, max-content or fit-content');
 }
 
 function resolveBasis(
@@ -2814,7 +2851,7 @@ function resolveItemLength(
   child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): number {
-  const resolved = resolveLength(value, reference, property, childContext(child, container));
+  const resolved = resolveScalarSizingLength(value, reference, property, childContext(child, container));
   if (resolved === undefined || resolved < 0) {
     throw childDiagnostic(
       child,
@@ -2962,7 +2999,7 @@ function resolveAbsoluteSize(
   container: Readonly<LayoutBox>,
 ): number | 'auto' | undefined {
   if (!isPercentage(value)) return value as number | 'auto' | undefined;
-  const resolved = resolveLength(value as Percentage, reference, property, childContext(child, container))!;
+  const resolved = resolveScalarSizingLength(value as Percentage, reference, property, childContext(child, container))!;
   if (resolved < 0) throw childDiagnostic(child, property, value, container, 'absolute sizes must resolve to nonnegative finite numbers');
   return resolved;
 }
@@ -2987,7 +3024,7 @@ function resolveFlexInset(
   if (value === undefined) return;
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (isPercentage(value)) {
-    return resolveLength(value as Percentage, property === 'left' || property === 'right' ? container.width : container.height,
+    return resolveScalarSizingLength(value as Percentage, property === 'left' || property === 'right' ? container.width : container.height,
       property, childContext(child, container));
   }
   throw childDiagnostic(child, property, value, container, 'currently requires a finite numeric inset or a signed decimal percentage');
@@ -3050,7 +3087,7 @@ function hasFlexMargin(style: Readonly<Record<string, unknown>>): boolean {
 }
 function allocatedMargin(value: unknown, property: string, child: PibblElement<any>, container: Readonly<LayoutBox>): number {
   if (experimentalLayout && isPercentage(value)) {
-    return resolveLength(value as Percentage, container.width, property, childContext(child, container))!;
+    return resolveScalarSizingLength(value as Percentage, container.width, property, childContext(child, container))!;
   }
   return numericMargin(value, property, child, container);
 }

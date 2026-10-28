@@ -1,6 +1,6 @@
-import type { BoxStyle, Length } from '../style/types.js';
+import type { BoxStyle } from '../style/types.js';
+import { resolveScalarSizingLength, type SizingLength } from '../style/sizing-length.js';
 import { normalizeBoxInsets } from './box-insets.js';
-import { resolveLength } from '../style/resolve-length.js';
 import { layoutDiagnostic, type LayoutDiagnosticContext } from '../style/diagnostics.js';
 
 // Private canonical-input marker survives internal descriptor/style copies.
@@ -17,7 +17,7 @@ export function validateBoxSizing(style: Readonly<BoxStyle>, context: Readonly<L
 }
 
 /** Converts authored outer inputs once; ordinary content-box styles are returned unchanged. */
-export function contentBoxStyle<S extends BoxStyle & { flexBasis?: Length }>(style: Readonly<S>, options: { width: number; height: number; mainAxis?: 'width' | 'height'; context: Readonly<LayoutDiagnosticContext> }): Readonly<S> {
+export function contentBoxStyle<S extends BoxStyle & { flexBasis?: SizingLength }>(style: Readonly<S>, options: { width: number; height: number; mainAxis?: 'width' | 'height'; context: Readonly<LayoutDiagnosticContext> }): Readonly<S> {
   validateBoxSizing(style, options.context);
   if (style.boxSizing !== 'border-box') return style;
   const padding = normalizeBoxInsets(style, options.context);
@@ -30,7 +30,7 @@ export function contentBoxStyle<S extends BoxStyle & { flexBasis?: Length }>(sty
   const maxHeight = nonnegativeLength(style.maxHeight, options.height, 'maxHeight', options.context);
   if (minWidth !== undefined && maxWidth !== undefined && minWidth > maxWidth) throw layoutDiagnostic({ ...options.context, property: 'minWidth', value: minWidth, reason: 'minimum must not exceed maximum' });
   if (minHeight !== undefined && maxHeight !== undefined && minHeight > maxHeight) throw layoutDiagnostic({ ...options.context, property: 'minHeight', value: minHeight, reason: 'minimum must not exceed maximum' });
-  const result: BoxStyle & { flexBasis?: Length } & CanonicalBox = { ...style, boxSizing: 'content-box' as const, [BORDER_BOX_CONTENT]: true as const,
+  const result: BoxStyle & { flexBasis?: SizingLength } & CanonicalBox = { ...style, boxSizing: 'content-box' as const, [BORDER_BOX_CONTENT]: true as const,
     width: width === undefined ? style.width : Math.max(0, width-horizontal),
     height: height === undefined ? style.height : Math.max(0, height-vertical),
     minWidth: minWidth === undefined ? undefined : Math.max(0, minWidth-horizontal),
@@ -51,9 +51,9 @@ export function allocatedContentBoxStyle<S extends BoxStyle>(style: Readonly<S>,
   return { ...style, boxSizing: 'content-box', [BORDER_BOX_CONTENT]: true,
     width, height, minWidth: undefined, maxWidth: undefined, minHeight: undefined, maxHeight: undefined };
 }
-function nonnegativeLength(value: Length | undefined, reference: number, property: string, context: Readonly<LayoutDiagnosticContext>): number | undefined {
+function nonnegativeLength(value: SizingLength | undefined, reference: number, property: string, context: Readonly<LayoutDiagnosticContext>): number | undefined {
   if (value === undefined) return undefined;
-  const resolved = resolveLength(value, reference, property, context);
+  const resolved = resolveScalarSizingLength(value, reference, property, context);
   if (resolved !== undefined && resolved < 0) throw layoutDiagnostic({ ...context, property, value, reason: 'must be nonnegative when used as a layout allocation' });
   return resolved;
 }

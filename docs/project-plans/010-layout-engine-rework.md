@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice222 (`e6b42f37`): prepared structural last-source baselines.
+Latest delivery is slice223: public intrinsic sizing through paired Flex owners.
+Slice222 is `e6b42f37`: prepared structural last-source baselines.
 Consolidation74 verifies220–222 and closes the stated finite baseline capability.
 Slice221 is `7d7ca544`: native safe-end last-baseline groups.
 Slice220 is `77436ad0`: Yoga-compatible outer-column baseline fallback.
@@ -8293,15 +8294,42 @@ Only `flex.baselines` graduates for its stated finite contract. Fixed33:
 13complete/11experimental/3partial/5missing/1excluded. All seven release gates,
 aggregate trust and final independent whole-codebase review remain open.
 
-## [NEXT] Slice223: intrinsic sizing through the public Flex owner
+## [DONE] Slice223: intrinsic sizing through the public Flex owner
 
-Add sizing-only min-content/max-content and named `fitContent(limit)` values,
-reusing paired intrinsic measurement and existing numeric allocation. Preserve
-scalar Length for padding, positions and gaps. Start with a mounted public RED,
-then a runnable signal-driven lesson and installed consumer evidence. Reuse all
-currently admitted horizontal paired-provider direction/grow/shrink/bounds paths
-rather than adding arbitrary one-direction fences. Text, recursive owners,
-automatic minima and Grid contribution sizing remain explicit follow-up work.
+Delivered `SizingLength`, `SizingKeyword`, immutable branded `FitContent` and
+`fitContent(limit)` with direct paired-provider content-box sizing in finite
+horizontal nowrap Flex. Scalar public `Length` and `resolveLength` stay unchanged.
+Existing four horizontal directions, numeric grow/shrink and bounds consume the
+selected numeric basis. Intrinsic bounds/stretch are not prematurely exported;
+Text, vertical and structural intrinsic owners and Grid remain open.
+
+Public RED failed missing export before production changes
+(`/tmp/pibbl-slice223-red.txt`). Fresh Node24.15/Chromium focused47tests in6files
+pass, including signal geometry/targets/identity/cleanup, all four directions,
+numeric growth/shrink/bounds, percentage limits and unsupported-owner diagnostics.
+Ordinary new-file2pass/2skip. Types, changed-code lint, JSDoc6586links and
+109documentation mutation probes pass. Catalog180lessons/12snapshots/33labs.
+Source/built lesson driver passes errors[]/cleanup0000, built472inputs; screenshot
+inspected. Installed Bundler/NodeNext and nested browser pass new intrinsic
+receipt, prior baseline receipts and104margin cases;248installed inputs, tarball
+SHA256 `0bce641fcdf883803e5f720895aa6cf73be28cd11c89fe690f8257ed740c1233`.
+
+Paint-only RED exposed immutable FitContent cache admission plus regenerated
+fixture props. The receiver cache now snapshots only the branded frozen limit;
+arbitrary objects stay conservative, and fixtures preserve descriptor ownership.
+Native ABI19/86015bytes is unchanged. No capability promotion: fixed33 remains
+13complete/11experimental/3partial/5missing/1excluded; all7release gates open.
+
+Try `http://127.0.0.1:5192/#/examples/layout/wasm-flex-intrinsic-sizing`: Content
+moves the allocations, Direction cycles horizontal orientations, and the colored
+boxes receive clicks. Each delivered slice is committed independently.
+
+## [NEXT] Slice224: real Canvas Text intrinsic width contributions
+
+Adapt existing Canvas run/word measurement into honest min/max-content widths
+for the same sizing owner. Preserve final-width line layout and actual metrics;
+never synthesize intrinsic values by calling constrained measurement at zero.
+Add public RED, a runnable lesson composition and source/built/packed evidence.
 
 ## Scope and execution
 

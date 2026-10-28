@@ -1,10 +1,10 @@
+import { resolveScalarSizingLength } from '../../../lib/style/sizing-length.js';
 import {
   Group,
   Rectangle,
   definePrimitive,
   resolveSignalValue,
   resolveBox,
-  resolveLength,
   type BoxStyle,
   type PibblNode,
   type FillStyle,
@@ -188,12 +188,12 @@ const Card = definePrimitive<
   },
   {
     resolveStyle(style, context) {
-      const width = resolveLength(
+      const width = resolveScalarSizingLength(
           style.width,
           context.allocation.width,
           "width",
         ),
-        height = resolveLength(
+        height = resolveScalarSizingLength(
           style.height,
           context.allocation.height,
           "height",
