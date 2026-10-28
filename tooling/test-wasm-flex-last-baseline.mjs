@@ -21,6 +21,15 @@ try {
     await click(12, 94); current = await state(); assert.deepEqual(current.hits, ['A']); await click(42, 172); current = await state(); assert.equal(current.last, 20); box(current.boxes.A, 8, 88, 40, 40); box(current.boxes.B, 48, 58, 40, 60); assert.deepEqual({ A: current.boxes.A.stamp, B: current.boxes.B.stamp }, stamps);
     await click(140, 172); current = await state(); box(current.boxes.A, 68, 88, 40, 40); box(current.boxes.B, 28, 58, 40, 60);
     await click(236, 172); current = await state(); assert.equal(current.wrapped, true); box(current.boxes.A, 48, 58, 60, 20); box(current.boxes.B, 8, 48, 40, 40); box(current.boxes.C, 48, 103, 60, 20); box(current.boxes.D, 8, 88, 40, 30);
+    await click(236, 172); current = await state(); assert.equal(current.wrapped, false);
+    await click(78, 202); current = await state(); assert.equal(current.structural, true); box(current.boxes.A, 68, 88, 40, 40); box(current.boxes.B, 28, 58, 40, 60);
+    const structuralStamps = { A: current.boxes.A.stamp, B: current.boxes.B.stamp };
+    await click(72,94);current=await state();assert.equal(current.hits.at(-1),'A');
+    await click(42,172);current=await state();box(current.boxes.A,68,88,40,40);box(current.boxes.B,28,68,40,60);
+    assert.deepEqual({A:current.boxes.A.stamp,B:current.boxes.B.stamp},structuralStamps);
+    const beforeMoved=current.hits.length;await click(32,60);await click(32,74);current=await state();assert.equal(current.hits.length,beforeMoved+1);assert.equal(current.hits.at(-1),'B');
+    await click(72, 202); current = await state(); assert.equal(current.structural, false); assert.notEqual(current.boxes.A.stamp, structuralStamps.A); assert.equal(current.boxes.B.stamp, structuralStamps.B);
+    await click(72,202);current=await state();assert.equal(current.structural,true);
     if (process.env.PIBBL_LAYOUT_SCREENSHOT) await sandbox.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
     const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__); if (built) { assert.equal(proof?.mode, 'layout-wasm-built'); assert.ok(proof.coreInputs.length && proof.coreInputs.every(value => value.includes('packages/core/.layout-wasm-package/dist/') && !value.includes('packages/core/src/'))); }
     const disposed = await sandbox.evaluate(() => { dispatchEvent(new PageTransitionEvent('pagehide')); return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__?.(); }); assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances], [0, 0, 0, 0]); assert.deepEqual(errors, []);

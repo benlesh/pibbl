@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice221: native safe-end last-baseline groups.
+Latest delivery is slice222: prepared structural last-source baselines.
+Slice221 is `7d7ca544`: native safe-end last-baseline groups.
 Slice220 is `77436ad0`: Yoga-compatible outer-column baseline fallback.
 Slice219 is `666348da`: prepared Grid declared-source baselines.
 Consolidation73 verifies217–219 below.
@@ -8229,17 +8230,50 @@ all prior column receipts and104margin cases,247installed inputs; tarball SHA256
 
 Try `http://127.0.0.1:5192/#/examples/layout/wasm-flex-last-baseline`.
 
-## [NEXT] Slice222: structural last-source and final-line proof
+## [DONE] Slice222: structural last-source and final-line proof
 
-Select the last declared in-flow source from each current prepared Flex/Flow/Grid
-plan, regardless of reverse placement or Grid visual row. Preserve actual root
-receivers, final content allocation, padding once, relative paint-only offsets,
-static deferred absolute ownership, and empty content-bottom fallback. Wrapped
-Flex selection needs a current native final-line membership proof; no JS line
-inference or second solve. Finish this finite baseline class before returning to
-the major remaining gates, then consolidate220–222. Counts remain12complete/
-12experimental/3partial/5missing/1excluded; all7release gates and final independent
-whole-codebase review remain open.
+The prepared reader now returns the requested first/last scalar. Last mode
+reverse-selects the last declared in-flow source across Flex/Flow/Grid, skipping
+absolute and deferred-static descriptors before placement access. It recursively
+uses current prepared slots and actual receiver/query/content allocation, with
+top insets once and pre-relative physical y. Empty roots use content bottom.
+ABI19's constant-time native final-line member count validates wrapped endpoint
+membership under the existing in-flow source-order invariant. It shares first-line
+proof invalidation on count changes, ordinary/failed solves and disposal; cached
+same-count allocation preserves proof. No JS line inference or extra solve.
+
+Public RED4failed before implementation. Final four structural tests pass,
+including a padded static described root selecting nested Flex, trailing deferred
+absolute decoration, relative movement, real targets/identity, Grid declared-last
+versus visual row, all three empty families and wrapped final-line dependency.
+The final Node24.15/Chromium focused matrix passes126with1skip across18files;
+ordinary30pass/97skip. Native50tests pass; ABI19/86015bytes, SHA256
+`dde78bb4d0e5680a09105afca72f23ac326c53a5b8307b0e5d008128efa79d07`.
+Types, changed-code lint and catalog179lessons/12snapshots/33labs pass. The existing
+last-baseline lesson gains a structural Source toggle with explicit source
+remount/peer identity and moved-target proof. Source/built final drivers pass
+errors[]/cleanup0000; built471inputs. Screenshot inspected without overlap.
+Installed Bundler/NodeNext and nested browser pass all three structural families,
+wrapped source proof, signal/target changes, empty fallback, cleanup and104prior
+margin cases;247installed inputs. Final tarball SHA256
+`7b7d6e9043e1e2faf4272b98cdc1a861a60ded36e2aae65e3e7713c22c64208a`
+(`/tmp/pibbl-slice222-packed.txt`). Scoped independent review found no material
+issue in selection, final-line proof or resource ownership.
+
+Try `http://127.0.0.1:5192/#/examples/layout/wasm-flex-last-baseline` and select
+Source: Flex root, then change A's last offset and click the moved peer.
+
+## [NEXT] Consolidation74: baseline closure evidence and220–222 checkpoint
+
+Before intrinsic sizing, batch the remaining concrete baseline evidence:
+real Canvas Text last-visible-line reflow/targeting, responsive selected-owner
+last queries, Pibbl wrap-reverse last groups and direct missing-provider fallback.
+Explicitly classify Yoga reference-child flags as a versioned migration input;
+Pibbl's declared-source policy must not silently erase that distinction. Then
+run accumulated Node24 experimental/ordinary and source/built/packed checks.
+Keep the baseline capability experimental until those receipts and mapping are
+recorded. Counts remain12complete/12experimental/3partial/5missing/1excluded;
+all7release gates and final independent whole-codebase review remain open.
 
 ## Scope and execution
 

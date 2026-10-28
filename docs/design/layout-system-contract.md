@@ -2137,7 +2137,7 @@ earlier visual row. The prepared cell supplies physical y and actual content
 allocation, including spans and padding; empty Grid uses content bottom. This
 source-order policy does not promise CSS Grid baseline parity. Outer columns resolve first-baseline to ordinary logical flex-start across
 existing directions and wrapping modes, without baseline queries or vertical
-baseline groups. Last-baseline placement remains unsupported. An inner column may still contribute its selected physical-y source baseline to
+baseline groups. Last-baseline placement uses the separate safe-end contract below. An inner column may still contribute its selected physical-y source baseline to
 an outer horizontal group; this is distinct from the outer-column fallback.
 
 Inherited `alignSelf: auto` joins the baseline group. Existing explicit
@@ -2337,8 +2337,38 @@ allocation cache keys, including paint-scheduled changes to mutable parent style
 
 Outer columns resolve last-baseline to ordinary logical flex-end without provider
 queries or vertical baseline groups. This is distinct from first-baseline's
-logical flex-start column fallback. Prepared structural last-source selection is
-not yet admitted. Yoga3.2.1 has one baseline callback and cannot validate distinct
+logical flex-start column fallback. Prepared structural last-source selection uses the contract below. Yoga3.2.1 has one baseline callback and cannot validate distinct
 first/last offsets. The asserting Chromium control at
 `tooling/layout-yoga-rehearsal/baseline-last-css-control.mjs` verifies the selected
 safe-end line-origin and margin policy; it is not a full CSS compatibility claim.
+
+### Prepared structural last-baseline selection
+
+A settled finite known Flex, Flow or Grid root contributes the last declared
+in-flow source's local last baseline and physical pre-relative content-y origin.
+The existing prepared slots supply allocation, receiver, query and placement;
+selection does not solve layout again. Transparent descriptions and recursively
+selected known roots forward the requested last contribution under the actual
+root receiver. Each boundary adds top content insets exactly once. Static Flex
+owners skip deferred absolute descriptors before accessing their placements;
+absolute decorations never become baseline sources. Their containing origins
+still finalize after the outer placement settles. Relative offsets affect final
+paint, hit and focus geometry without changing the contribution.
+
+For Flex wrapping, the final in-flow source is the final native record by the
+same source-order formation invariant used for paint. ABI19's current native
+final-line member count proves that record belongs to the final formed line,
+including reverse main and wrap directions. The constant-time accessor rejects
+stale/ordinary/failed/disposed allocations; cached same-count allocation retains
+its proof. No pixel-line inference or JavaScript line graph is introduced. Flow
+retains native source-record order and rejects positioned direct children; its
+final source belongs to its final sequential line. Grid uses the last declared
+cell even if that cell lies above an earlier declared cell. This is the explicit
+Pibbl source policy, not CSS Grid visual-row baseline compatibility.
+
+An empty source set contributes content bottom. Structural queries return one
+requested scalar rather than manufacturing a provider `{first,last}` pair:
+declared Grid source order can legitimately put the last contribution physically
+above the first. The leaf provider's finite ordered-pair contract is unchanged.
+Query failure preserves existing teardown/remount behavior; this adds no retained
+screen rollback or new font ownership contract.

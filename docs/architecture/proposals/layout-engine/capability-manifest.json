@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "proposed",
-  "asOf": "2026-10-24",
+  "asOf": "2026-10-28",
   "purpose": "First-release capability denominator and evidence ledger. This file does not define a public API, enable the experimental engine, or claim Yoga parity.",
   "baseline": {
     "oracle": "Yoga",
@@ -2699,9 +2699,9 @@
       "id": "flex.baselines",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR/RTL nowrap row/row-reverse of direct primitive leaves with settled finite content boxes, including nonempty resolved unwrapped/wrapped Text at final allocation with positive px fonts, existing Canvas baselines/fitting/overflow and generic-only retained caching measured through an explicit Canvas service capability; missing-provider content-bottom fallback and explicit failure diagnostics; bounded finite horizontal LTR/RTL row/row-reverse wrapped first baselines use native line-local ascent/descent with all existing wrap/wrap-reverse alignContent policies and resolved finite gaps for fixed numeric primitive providers/fallback and settled Text, main grow/shrink, resolved numeric or automatic main margins and signed numeric cross-margin line extents and line-local automatic cross-margin absorption with provider exclusion, plus final static/relative paint and hit placement and resolved decorated content-to-outer baseline mapping and acyclic ordinary/paired-provider or aspect-derived final cross sizing independent of authored numeric basis/height, plus direct settled responsive selections with current finite-owner/transaction/receiver proof and uncached baseline queries; explicit alignSelf opts out through shared ordinary cross placement with measured hypothetical automatic stretch, padding/bounds and logical reverse margins; transparent described primitive roots forward final content baselines through actual root receivers and complete scalar source/root cache snapshots; finite non-static prepared Flex trees select their first in-flow source across all four inner main directions and explicit writing directions, with empty content-bottom fallback, transparent primitive/Flex roots and recursive prepared Flex selection, skipping absolute decoration, including wrapped roots with current native first-source-line proof and physical wrap-reversed origin, cached membership reuse and empty fallback; selected relative offsets compose after baseline allocation using the unshifted physical layout-y origin; static structural Flex roots preserve inherited containing origins; prepared Flow and Grid use declared first-source physical y and final content allocations, with described roots and empty fallback; outer columns normalize first-baseline to logical flex-start without baseline callbacks across existing directions and wraps; native direct-leaf last-baseline placement uses existing last offsets, safe-end groups, physical margin extents and wrapped line allocation, with explicit mode-aware frozen/native caches and ordinary logical-end column fallback",
+      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR/RTL nowrap row/row-reverse of direct primitive leaves with settled finite content boxes, including nonempty resolved unwrapped/wrapped Text at final allocation with positive px fonts, existing Canvas baselines/fitting/overflow and generic-only retained caching measured through an explicit Canvas service capability; missing-provider content-bottom fallback and explicit failure diagnostics; bounded finite horizontal LTR/RTL row/row-reverse wrapped first baselines use native line-local ascent/descent with all existing wrap/wrap-reverse alignContent policies and resolved finite gaps for fixed numeric primitive providers/fallback and settled Text, main grow/shrink, resolved numeric or automatic main margins and signed numeric cross-margin line extents and line-local automatic cross-margin absorption with provider exclusion, plus final static/relative paint and hit placement and resolved decorated content-to-outer baseline mapping and acyclic ordinary/paired-provider or aspect-derived final cross sizing independent of authored numeric basis/height, plus direct settled responsive selections with current finite-owner/transaction/receiver proof and uncached baseline queries; explicit alignSelf opts out through shared ordinary cross placement with measured hypothetical automatic stretch, padding/bounds and logical reverse margins; transparent described primitive roots forward final content baselines through actual root receivers and complete scalar source/root cache snapshots; finite non-static prepared Flex trees select their first in-flow source across all four inner main directions and explicit writing directions, with empty content-bottom fallback, transparent primitive/Flex roots and recursive prepared Flex selection, skipping absolute decoration, including wrapped roots with current native first-source-line proof and physical wrap-reversed origin, cached membership reuse and empty fallback; selected relative offsets compose after baseline allocation using the unshifted physical layout-y origin; static structural Flex roots preserve inherited containing origins; prepared Flow and Grid use declared first-source physical y and final content allocations, with described roots and empty fallback; outer columns normalize first-baseline to logical flex-start without baseline callbacks across existing directions and wraps; native direct-leaf last-baseline placement uses existing last offsets, safe-end groups, physical margin extents and wrapped line allocation, with explicit mode-aware frozen/native caches and ordinary logical-end column fallback; prepared structural last contributions select final declared in-flow sources across Flex/Flow/Grid, current native final-line proof, described/nested/static padded roots, pre-relative origins and empty content-bottom fallback",
       "status": "experimental",
-      "unresolvedPolicy": "Prepared structural last-source/line selection remains open. General leaf allocation constraints are tracked by measurement.custom-leaf; no separate font-loading/shaping subsystem is required.",
+      "unresolvedPolicy": "Finite first/last baseline profile closure audit pending; versioned migration still needs explicit analysis of Yoga reference-baseline inputs. General leaf allocation constraints remain tracked by measurement.custom-leaf.",
       "evidence": {
         "positive": [
           "packages/core/test/layout-flex-baseline.test.tsx",
@@ -2732,7 +2732,8 @@
           "tooling/layout-yoga-rehearsal/baseline-static-owner-probe.cpp",
           "tooling/layout-yoga-rehearsal/baseline-column-probe.cpp",
           "packages/core/test/layout-flex-last-baseline.test.tsx",
-          "tooling/layout-yoga-rehearsal/baseline-last-css-control.mjs"
+          "tooling/layout-yoga-rehearsal/baseline-last-css-control.mjs",
+          "packages/core/test/layout-flex-last-baseline-structural.test.tsx"
         ],
         "negative": [
           "packages/core/test/layout-flex-baseline.test.tsx",
@@ -2745,7 +2746,9 @@
           "baseline-provider-negative-a",
           "baseline-provider-overheight-a"
         ],
-        "missing": ["prepared structural last-source/line selection"]
+        "missing": [
+          "finite baseline closure audit and Yoga reference-baseline migration classification"
+        ]
       }
     },
     {

@@ -49,7 +49,7 @@ it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])('rejects older or incomplete lay
 });
 
 
-const abiV18Exports: WebAssembly.ModuleExportDescriptor[] = [
+const abiV19Exports: WebAssembly.ModuleExportDescriptor[] = [
   { name: 'memory', kind: 'memory' }, { name: 'solve', kind: 'function' }, { name: 'dispose', kind: 'function' },
   { name: 'arena_create', kind: 'function' }, { name: 'arena_generation', kind: 'function' }, { name: 'arena_dispose', kind: 'function' },
   { name: 'resize_grid', kind: 'function' }, { name: 'resolve_grid_tracks', kind: 'function' },
@@ -59,25 +59,25 @@ const abiV18Exports: WebAssembly.ModuleExportDescriptor[] = [
   { name: 'prepare_intrinsic_main_queries', kind: 'function' },
   { name: 'resize_intrinsic_main', kind: 'function' }, { name: 'resolve_intrinsic_main', kind: 'function' }, { name: 'intrinsic_main_result', kind: 'function' }, { name: 'intrinsic_main_contribution', kind: 'function' },
   { name: 'resolve_intrinsic_main_known_owner', kind: 'function' }, { name: 'intrinsic_main_auto_free', kind: 'function' }, { name: 'place_main_auto_staged', kind: 'function' },
-  { name: 'place_wrap_first_baseline', kind: 'function' }, { name: 'place_first_baseline', kind: 'function' }, { name: 'layout_abi_v18', kind: 'function' }, { name: 'place_last_baseline', kind: 'function' }, { name: 'place_wrap_last_baseline', kind: 'function' }, { name: 'first_wrap_line_count', kind: 'function' },
+  { name: 'place_wrap_first_baseline', kind: 'function' }, { name: 'place_first_baseline', kind: 'function' }, { name: 'layout_abi_v19', kind: 'function' }, { name: 'last_wrap_line_count', kind: 'function' }, { name: 'place_last_baseline', kind: 'function' }, { name: 'place_wrap_last_baseline', kind: 'function' }, { name: 'first_wrap_line_count', kind: 'function' },
 ];
 
-it.each(['place_last_baseline', 'place_wrap_last_baseline', 'first_wrap_line_count', 'place_wrap_first_baseline', 'place_first_baseline', 'prepare_intrinsic_main_queries', 'resize_intrinsic_main', 'resolve_intrinsic_main', 'intrinsic_main_result', 'intrinsic_main_contribution', 'resolve_intrinsic_main_known_owner', 'intrinsic_main_auto_free', 'place_main_auto_staged'])(
-  'rejects ABI v18 when %s is absent',
+it.each(['last_wrap_line_count', 'place_last_baseline', 'place_wrap_last_baseline', 'first_wrap_line_count', 'place_wrap_first_baseline', 'place_first_baseline', 'prepare_intrinsic_main_queries', 'resize_intrinsic_main', 'resolve_intrinsic_main', 'intrinsic_main_result', 'intrinsic_main_contribution', 'resolve_intrinsic_main_known_owner', 'intrinsic_main_auto_free', 'place_main_auto_staged'])(
+  'rejects ABI v19 when %s is absent',
   async absent => {
     vi.resetModules();
     const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
-    vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(abiV18Exports.filter(entry => entry.name !== absent));
+    vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(abiV19Exports.filter(entry => entry.name !== absent));
     expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
     expect(hasReadyLayoutModule()).toBe(false);
   },
 );
 
 
-it('rejects the complete previous ABI before accepting current native last-baseline placement', async () => {
+it('rejects the complete previous ABI before accepting current native final-line membership', async () => {
   vi.resetModules();
   const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
-  const prior = abiV18Exports.filter(entry => entry.name !== 'place_last_baseline' && entry.name !== 'place_wrap_last_baseline').map(entry => entry.name === 'layout_abi_v18' ? { ...entry, name: 'layout_abi_v17' } : entry);
+  const prior = abiV19Exports.filter(entry => entry.name !== 'last_wrap_line_count').map(entry => entry.name === 'layout_abi_v19' ? { ...entry, name: 'layout_abi_v18' } : entry);
   vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(prior);
   expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
   expect(hasReadyLayoutModule()).toBe(false);

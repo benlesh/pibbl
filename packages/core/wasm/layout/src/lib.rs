@@ -102,7 +102,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v18() -> u32 { 18 }
+pub extern "C" fn layout_abi_v19() -> u32 { 19 }
 
 /// Returns the source-record count in the current native first wrap line.
 /// `NaN` means no current wrapped membership is available; a successful empty
@@ -119,6 +119,22 @@ pub extern "C" fn first_wrap_line_count(handle: u32, generation: u32) -> f64 {
         // only the first and final endpoints on this per-render query path.
         if arena.lines.last().map(|line| line.1) != Some(count) { return f64::NAN; }
         let members = first_end - first_start;
+        let value = members as f64;
+        if value.is_finite() && value > 0.0 { value } else { f64::NAN }
+    })
+}
+#[no_mangle]
+pub extern "C" fn last_wrap_line_count(handle: u32, generation: u32) -> f64 {
+    with_arena(handle, generation, f64::NAN, |arena| {
+        if !arena.wrap_lines_current { return f64::NAN; }
+        let count = arena.nodes.len() / STRIDE;
+        if count == 0 { return if arena.lines.is_empty() { 0.0 } else { f64::NAN }; }
+        let Some(&(last_start, last_end)) = arena.lines.last() else { return f64::NAN; };
+        if last_start >= last_end || last_end != count { return f64::NAN; }
+        // Successful formation already validated every contiguous range. Read
+        // only the final and first endpoints on this per-render query path.
+        if arena.lines.first().map(|line| line.0) != Some(0) { return f64::NAN; }
+        let members = last_end - last_start;
         let value = members as f64;
         if value.is_finite() && value > 0.0 { value } else { f64::NAN }
     })
@@ -1489,6 +1505,45 @@ mod tests {
         assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
         assert_eq!(arena_dispose(handle, generation), 0);
         assert!(first_wrap_line_count(handle, generation).is_nan());
+    }
+
+    #[test] fn last_wrap_line_count_tracks_only_current_wrapped_membership() {
+        let handle = arena_create(); let generation = arena_generation(handle);
+        let records = resize(handle, generation, 3);
+        unsafe { std::slice::from_raw_parts_mut(records, 30).copy_from_slice(&[
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+        ]); }
+        assert!(last_wrap_line_count(handle, generation).is_nan());
+        assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
+        assert_eq!(last_wrap_line_count(handle, generation), 1.);
+        // Region cache hits call resize with the same count before deciding no solve.
+        assert!(!resize(handle, generation, 3).is_null());
+        assert_eq!(last_wrap_line_count(handle, generation), 1.);
+        assert!(!resize(handle, generation, 2).is_null());
+        assert!(last_wrap_line_count(handle, generation).is_nan());
+        let records = resize(handle, generation, 3);
+        unsafe { std::slice::from_raw_parts_mut(records, 30).copy_from_slice(&[
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+        ]); }
+        assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
+        assert_eq!(solve(handle, generation, 80., 0.), 0);
+        assert!(last_wrap_line_count(handle, generation).is_nan());
+        assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
+        assert_eq!(last_wrap_line_count(handle, generation), 1.);
+        assert_eq!(solve_wrap(handle, generation, f64::NAN, 0.), 1);
+        assert!(last_wrap_line_count(handle, generation).is_nan());
+        assert!(!resize(handle, generation, 0).is_null());
+        assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
+        assert_eq!(last_wrap_line_count(handle, generation), 0.);
+        assert_eq!(solve_wrap(handle, generation, f64::NAN, 0.), 1);
+        assert!(last_wrap_line_count(handle, generation).is_nan());
+        assert_eq!(solve_wrap(handle, generation, 80., 0.), 0);
+        assert_eq!(arena_dispose(handle, generation), 0);
+        assert!(last_wrap_line_count(handle, generation).is_nan());
     }
 
     #[test] fn last_baseline_anchors_shared_offsets_at_safe_end() {

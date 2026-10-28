@@ -40,6 +40,7 @@ interface Kernel {
   resize(handle: number, generation: number, count: number): number;
   solve(handle: number, generation: number, main: number, gap: number): number;
   solve_wrap(handle: number, generation: number, main: number, gap: number): number;
+  last_wrap_line_count(handle: number, generation: number): number;
   first_wrap_line_count(handle: number, generation: number): number;
   place_wrap_main(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
   place_wrap_main_auto(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
@@ -677,6 +678,17 @@ export class LayoutRegion {
     const count = this.layoutOwner.kernel.first_wrap_line_count(this.handle, this.generation);
     if (!Number.isInteger(count) || count < 0 || count > this.order.length || (count === 0) !== (this.order.length === 0)) {
       return this.fail(new Error('Structural baseline native first-line membership is stale or invalid.'));
+    }
+    return count;
+  }
+  /** Current native source-line membership, never inferred from placements. */
+  lastWrapLineCount(): number {
+    if (!this.wrap || !this.layoutOwner?.has(this.handle, this.generation)) {
+      return this.fail(new Error('Structural baseline requires a current wrapped allocation.'));
+    }
+    const count = this.layoutOwner.kernel.last_wrap_line_count(this.handle, this.generation);
+    if (!Number.isInteger(count) || count < 0 || count > this.order.length || (count === 0) !== (this.order.length === 0)) {
+      return this.fail(new Error('Structural baseline native last-line membership is stale or invalid.'));
     }
     return count;
   }

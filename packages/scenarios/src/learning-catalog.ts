@@ -4451,17 +4451,17 @@ const drafts = [
     api: ["Flex", "definePrimitive", "signal", "useLayoutBox"],
     objectives: [
       "See a last-offset update change the shared final baseline and its safe-end placement.",
-      "Compare row directions and a direct wrapped last-baseline group.",
+      "Compare row directions, a direct wrapped last-baseline group, and a structural Flex source.",
     ],
     prompts: {
-      gesture: "Move A’s last baseline, cycle Direction, then enable Wrap. Click the colored leaves and inspect their physical boxes.",
+      gesture: "Move A’s last baseline, cycle Direction, enable Wrap, then toggle Source to a nested Flex with a decorative absolute badge. Click the colored leaves and inspect their physical boxes.",
       code: "Each direct primitive returns its first and last offsets through the existing baseline capability. No new provider API is required.",
     },
     apiNotes: [
       "Experimental finite direct horizontal leaves. A single group uses safe-end fallback; wrapped lines form their own last-baseline groups.",
-      "Structural last-source selection remains separate. Outer columns use ordinary logical flex-end without baseline queries.",
+      "Prepared finite Flex, Flow and Grid roots select the last declared in-flow source. Outer columns use ordinary logical flex-end without baseline queries.",
     ],
-    canvas: { width: 280, height: 190 },
+    canvas: { width: 280, height: 220 },
     related: ["wasm-flex-baseline", "flex"],
     exportName: "WasmFlexLastBaselineExample",
     load: () => import("./learning/layout/wasm-flex-last-baseline.example"),
