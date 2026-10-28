@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is slice225: shared border-box intrinsic main normalization.
+Latest delivery is slice225 (`04b30ddf`): shared border-box intrinsic main normalization.
+Consolidation75 verifies223–225 below.
 Slice224 is `bd7dc967`: real Canvas Text intrinsic widths.
 Slice223 is `65b7a7b7`: public intrinsic sizing through paired Flex owners.
 Slice222 is `e6b42f37`: prepared structural last-source baselines.
@@ -8386,13 +8387,39 @@ No capability promotion; fixed33 remains13complete/11experimental/3partial/
 Try the lower Inset limit control at
 `http://127.0.0.1:5192/#/examples/layout/wasm-flex-intrinsic-sizing`.
 
-## [NEXT] Consolidation75: intrinsic sizing223–225 checkpoint
+## [DONE] Consolidation75: intrinsic sizing223–225 checkpoint
 
-Run the durable accumulated selector list in Node24 experimental and ordinary
-modes, then source/built full Text integration replays, current packed receipt,
-JSDoc/documentation and catalog checks. Record actual counts before selecting the
-next production change. Reconcile stale auto-margin prose as completed separately;
-negative/overflow margin closure still requires its pinned comparison.
+Fresh 2026-10-28 macOS Node24.15/Playwright Chromium:100experimental files pass,
+1231tests passed/12skipped (1243total),83.36s. Ordinary35files passed/65skipped,
+358tests passed/885skipped,8.82s. Both invocations use the durable91selector
+`tooling/layout-checkpoint-tests.json`, including the intentional loading-suite
+substring selector. Logs `/tmp/pibbl-consolidation75-{wasm,ordinary}.txt`.
+
+Source and built full Text integration replay pass errors[]/cleanup000 with
+unchanged paint solve/node counts and an allocation-cache hit; built472inputs.
+The intrinsic-sizing lesson separately passes both lanes with cleanup0000 and
+all six keyed stamps. Installed strict Bundler/NodeNext and nested browser pass
+all new intrinsic/border-box/Text receipts, prior baseline receipts and104margin
+cases;248inputs, tarball SHA256
+`15793153535ea546d56a06b23c61a639ae58a7a20ca68999b45da14ad80e5a9f`.
+JSDoc6586links,109documentation mutation probes, types, changed-code lint and
+catalog180lessons/12snapshots/33labs pass. Native ABI19/86015bytes is unchanged.
+
+Reconciled stale margin ledger prose: automatic margins are already complete as
+a separate capability, not a missing margin exit. Opposing-negative/overflow
+classification still needs its own evidence. The box/direction audit confirms
+percentage-gap feedback, general border-box/aspect ownership and aspect inference
+remain material work; no finite-profile matrix or capability promotion invented.
+Fixed33 stays13complete/11experimental/3partial/5missing/1excluded. All7release
+gates, final aggregate trust and whole-codebase review remain open.
+
+## [NEXT] Slice226: opposing-negative and overflow margin closure
+
+Compare the remaining semantic cases against pinned Yoga3.2.1 with explicit
+configuration, then public Pibbl geometry/paint/hit/ownership evidence. Implement
+only demonstrated gaps; preserve and document existing deliberate differences.
+Do not reopen the completed direction/auto-margin matrices. Intrinsic min/max
+width bounds are being prepared independently as the next measurement work.
 
 ## Scope and execution
 

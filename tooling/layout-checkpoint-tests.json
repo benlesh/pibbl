@@ -86,5 +86,8 @@
   "packages/core/test/layout-flex-baseline-grid-source.test.tsx",
   "packages/core/test/layout-flex-baseline-column.test.tsx",
   "packages/core/test/layout-flex-last-baseline.test.tsx",
-  "packages/core/test/layout-flex-last-baseline-structural.test.tsx"
+  "packages/core/test/layout-flex-last-baseline-structural.test.tsx",
+  "packages/core/test/layout-intrinsic-sizing.test.tsx",
+  "packages/core/test/layout-intrinsic-text-sizing.test.tsx",
+  "packages/core/test/layout-intrinsic-border-box-sizing.test.tsx"
 ]

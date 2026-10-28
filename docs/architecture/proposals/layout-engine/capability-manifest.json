@@ -2137,7 +2137,7 @@
       "group": "box-and-direction",
       "current": "experimental numeric physical margins on direct nowrap/wrapped row/column Flex items plus finite allocated-nowrap/wrap/wrap-reverse physical percentages against content width; finite negatives and specific-edge precedence; other families and normal JavaScript Flex reject; marginStart/marginEnd map receiver direction before physical placement, override physical edges/shorthand, and accept signed content-width percentages",
       "status": "experimental",
-      "unresolvedPolicy": "Existing physical-only geometry is preserved. Yoga wrapped cross-margin and mixed RTL logical/physical width differences are classified. Auto margins and the remaining opposing-negative/overflow matrix remain outstanding.",
+      "unresolvedPolicy": "Existing finite physical/logical geometry and classified Yoga wrapped cross-margin/mixed RTL differences are preserved. Automatic margins are complete in their separate capability. The remaining opposing-negative/overflow policy and evidence remain outstanding.",
       "evidence": {
         "positive": [
           "nowrap row/column numeric margins",
@@ -2182,10 +2182,7 @@
           "margin-percent-column-wrap-reverse-resized",
           "logical-margin-{start-zero,end-percent}-{ltr,rtl}-{logical-first,logical-last}"
         ],
-        "missing": [
-          "remaining overflow and opposing negative margin matrix",
-          "auto margins (separate capability)"
-        ]
+        "missing": ["remaining overflow and opposing negative margin matrix"]
       },
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
