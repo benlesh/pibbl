@@ -1,5 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import { pibbl, definePrimitive, Group, Layer, Rectangle, useTexture } from '@pibbl/core';
+import { definePrimitive, Group, Layer, Rectangle, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { displacement } from '@pibbl/core/filters';
 import { waterWaves } from '@pibbl/core/textures';
 import { expect, it, vi } from 'vitest';

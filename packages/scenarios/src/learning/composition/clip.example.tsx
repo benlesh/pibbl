@@ -1,17 +1,15 @@
 import {
   Clip,
-  pibbl,
+  Rectangle,
+  Text,
   useConst,
   useSignal,
   createRegularPolygonPath,
-  Rectangle,
-  Text,
-  type PibblController,
 } from "@pibbl/core";
-function ClipStudy() {
+export function ClipStudy() {
   const inside = useSignal(false);
-  const hexagon = useConst(
-    () => createRegularPolygonPath({ sides: 6, cx: 360, cy: 210, inradius: 142 }),
+  const hexagon = useConst(() =>
+    createRegularPolygonPath({ sides: 6, cx: 360, cy: 210, inradius: 142 }),
   );
   return [
     <Rectangle
@@ -71,7 +69,4 @@ function ClipStudy() {
       {inside.get() ? "INSIDE THE CLIP" : "HEXAGON WINDOW"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <ClipStudy />);
 }

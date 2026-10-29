@@ -4,7 +4,7 @@ import {
   Ellipse,
   Rectangle,
   Wedge,
-  pibbl,
+
   type ArcProps,
   type ArcStyle,
   type CircleProps,
@@ -21,6 +21,7 @@ import {
   type WedgeProps,
   type WedgeStyle,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const fill: FillStyle = "#0f766e";
 const stroke: StrokeStyle = "#134e4a";
@@ -75,7 +76,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <>
     <Circle {...circleProps} style={circleStyle} />

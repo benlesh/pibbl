@@ -1,6 +1,12 @@
 import { afterEach, expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-grouped-bars.example.js";
+import { Scene as mountComponent } from "../../../../scenarios/src/learning/composition/viz-grouped-bars.example.js";
 import { testRuntime } from "./support/runtime.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
+
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
 
@@ -8,9 +14,15 @@ it("runs the grouped lesson, inspects a bar, and composes two or three years thr
   runtime = testRuntime();
   const positions: [string, number][] = [];
   const original = CanvasRenderingContext2D.prototype.fillText;
-  const text = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText")
-    .mockImplementation(function (this: CanvasRenderingContext2D, ...args: Parameters<CanvasRenderingContext2D["fillText"]>) {
-      const point = new DOMPoint(args[1], args[2]).matrixTransform(this.getTransform());
+  const text = vi
+    .spyOn(CanvasRenderingContext2D.prototype, "fillText")
+    .mockImplementation(function (
+      this: CanvasRenderingContext2D,
+      ...args: Parameters<CanvasRenderingContext2D["fillText"]>
+    ) {
+      const point = new DOMPoint(args[1], args[2]).matrixTransform(
+        this.getTransform(),
+      );
       positions.push([args[0], point.x]);
       original.apply(this, args);
     });
@@ -47,9 +59,7 @@ it("runs the grouped lesson, inspects a bar, and composes two or three years thr
     expect(
       labels().filter((label) => ["2020", "2022", "2023"].includes(label)),
     ).toEqual(["2023", "2022", "2020"]);
-    const before = positions.findLast(
-      (call) => call[0] === "Illinois",
-    )![1];
+    const before = positions.findLast((call) => call[0] === "Illinois")![1];
     click(390);
     const after = positions.findLast(
       (call) => call[0] === "Illinois" || call[0] === "IL",

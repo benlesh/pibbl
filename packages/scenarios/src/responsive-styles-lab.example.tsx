@@ -1,8 +1,9 @@
 import type { responsiveStylesScenarioEntry } from './catalog.js';
 import {
-  pibbl, Flow, Grid, Group, Rectangle, Text, signal, useCanvasContext, useConst, useLayoutBox,
+  Flow, Grid, Group, Rectangle, Text, signal, useCanvasContext, useConst, useLayoutBox,
   type BoxStyle, type PibblResponsiveStyle, type FlowStyle, type LayoutItemStyle,
 } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import type { ScenarioDefinition } from './types';
 
 export const RESPONSIVE_STYLES_SOURCE_ID = 'responsive-styles-lab-example';
@@ -93,7 +94,7 @@ export const responsiveStylesScenario: ScenarioDefinition<ResponsiveStylesState>
     };
     canvas.style.width = '1000px';
     canvas.style.height = '600px';
-    const controller = pibbl(canvas, <Scene />, { viewport: 'responsive', pixelRatio: 1 });
+    const controller = pibblSync(canvas, <Scene />, { viewport: 'responsive', pixelRatio: 1 });
     await settle();
     return {
       getState: () => structuredClone(state),

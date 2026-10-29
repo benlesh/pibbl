@@ -1,4 +1,5 @@
-import { pibbl, createElement, signal } from '@pibbl/core';
+import { createElement, signal } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import { AgentLayoutPlacementScene, AGENT_LAYOUT_PLACEMENT_SOURCE_ID, type LayoutPlacementMode } from './agent-layout-placement.example';
 import type { TargetingProbe, TargetingGeneration } from '../../../tooling/agent-verification/targeting';
 import type { analyzeBoxRelations } from '../../../tooling/agent-verification/layout-box-relations.mjs';
@@ -27,7 +28,7 @@ export const agentLayoutPlacementScenario: ScenarioDefinition<AgentLayoutPlaceme
     const relationTools = source ? await import('../../../tooling/agent-verification/layout-box-relations.mjs') : null;
     const mode = signal<LayoutPlacementMode>('clipped');
     let allocation: Box | null = null, disposed = false;
-    let controller: ReturnType<typeof pibbl> | undefined;
+    let controller: ReturnType<typeof pibblSync> | undefined;
     let inspector: ReturnType<NonNullable<typeof source>['createTargetingInspector']> | undefined;
     let inFlight: Promise<void> | null = null, cancelWait: (() => void) | null = null;
     const evidence = document.createElement('pre'); evidence.dataset.testid = 'agent-layout-placement-evidence'; referenceHost?.append(evidence);
@@ -72,7 +73,7 @@ export const agentLayoutPlacementScenario: ScenarioDefinition<AgentLayoutPlaceme
       inFlight = operation; return operation;
     }
     async function dispose() { if (disposed) return; disposed = true; cancelWait?.(); inspector?.dispose(); controller?.dispose(); evidence.remove(); state = { ...state, status: 'disposed', assertion: 'unavailable', observed: null, allocation: null, relations: null, diagnosis: 'disposed' }; }
-    try { controller = pibbl(canvas, createElement(Scene, {}), { viewport: { width: 400, height: 240 }, fit: 'contain' }); inspector = source?.createTargetingInspector(canvas); await perform('clipped'); }
+    try { controller = pibblSync(canvas, createElement(Scene, {}), { viewport: { width: 400, height: 240 }, fit: 'contain' }); inspector = source?.createTargetingInspector(canvas); await perform('clipped'); }
     catch (error) { await dispose(); throw error; }
     return { getState: () => structuredClone(state), perform, reset: () => perform('clipped'), settled: async () => { if (disposed) throw new Error('Layout fixture disposed.'); await inFlight; }, dispose };
   },

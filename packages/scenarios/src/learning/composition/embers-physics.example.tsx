@@ -1,5 +1,4 @@
 import {
-  pibbl,
   Group,
   Rectangle,
   Circle,
@@ -8,7 +7,6 @@ import {
   useVisibilityTransition,
   useSignal,
   useConst,
-  type PibblController,
   type PibblVisibilityTransition,
 } from "@pibbl/core";
 import {
@@ -136,7 +134,7 @@ function Chamber({
     </Group>
   );
 }
-function Demo() {
+export function Demo() {
   const enabled = useSignal(true),
     status = useSignal("Burn it away, then watch the fragments bounce.");
   let handle: PibblVisibilityTransition | undefined;
@@ -250,7 +248,4 @@ function Demo() {
       </Text>
     </Group>
   );
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Demo />);
 }

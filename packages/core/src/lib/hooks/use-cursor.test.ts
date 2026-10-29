@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { componentTest } from '../test-utils/component-test';
 import { useCursor } from './use-cursor';
 import { createElement } from '../element/create-element';

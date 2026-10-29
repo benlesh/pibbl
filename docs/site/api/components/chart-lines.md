@@ -56,11 +56,9 @@ subscription ownership ends on removal or disposal.
 ## Minimal runnable composition
 
 ```tsx
-import { pibbl } from "@pibbl/core";
 import { LinearScale, GridLines, ReferenceLine } from "@pibbl/core/viz";
-export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(
-    canvas,
+export function ChartLinesExample() {
+  return (
     <LinearScale id="y" domain={[-10, 10]} range={[180, 20]}>
       <GridLines
         scale="y"
@@ -75,7 +73,7 @@ export default function mount(canvas: HTMLCanvasElement) {
         value={0}
         style={{ stroke: "#087f8c", strokeWidth: 2 }}
       />
-    </LinearScale>,
+    </LinearScale>
   );
 }
 ```
@@ -104,12 +102,10 @@ span length, and invalid opacity throw `RangeError`.
 Minimal runnable band demo:
 
 ```tsx
-import { pibbl } from "@pibbl/core";
-import { LinearScale, ReferenceBand } from "@pibbl/core/viz";
-export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(
-    canvas,
-    <LinearScale id="y" domain={[-10, 10]} range={[180, 20]}>
+import { LinearScale as BandScale, ReferenceBand } from "@pibbl/core/viz";
+export function ReferenceBandExample() {
+  return (
+    <BandScale id="y" domain={[-10, 10]} range={[180, 20]}>
       <ReferenceBand
         scale="y"
         direction="horizontal"
@@ -117,7 +113,7 @@ export default function mount(canvas: HTMLCanvasElement) {
         values={[-10, 0]}
         style={{ fill: "#b65a35", opacity: 0.1 }}
       />
-    </LinearScale>,
+    </BandScale>
   );
 }
 ```

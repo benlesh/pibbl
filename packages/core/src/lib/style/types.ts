@@ -15,6 +15,7 @@ import type {
 } from '../types.js';
 import type { LayoutBox } from '../layout/types.js';
 import type { PositioningStyle } from './positioning.js';
+import type { SizingLength } from './sizing-length.js';
 
 /**
  * A percentage string resolved against the relevant parent layout dimension.
@@ -50,20 +51,22 @@ export interface RoundedCornerStyle {
 /**
  * One inset for every edge or independently specified top, right, bottom, and left insets.
  *
+ * @typeParam T - Permitted edge values; defaults to numeric insets. Padding may opt into {@link Percentage}.
+ *
  * @see {@link BoxStyle}
  * @see {@link normalizeEdges}
  */
-export type EdgeValues =
-  | number
+export type EdgeValues<T extends number | Percentage = number> =
+  | T
   | Readonly<{
       /** Top edge value or top envelope guide. See {@link EdgeValues}. */
-      top?: number;
+      top?: T;
       /** Right edge coordinate or inset. See {@link EdgeValues}. */
-      right?: number;
+      right?: T;
       /** Bottom edge value or bottom envelope guide. See {@link EdgeValues}. */
-      bottom?: number;
+      bottom?: T;
       /** Left edge coordinate or inset. See {@link EdgeValues}. */
-      left?: number;
+      left?: T;
     }>;
 
 /**
@@ -77,20 +80,37 @@ export type EdgeValues =
  * @see {@link RectStyle}
  */
 export interface BoxStyle extends SystemStyle {
-  /** Horizontal extent in the units of the containing geometry or surface. See {@link Length}. */
-  width?: Length;
-  /** Vertical extent in the units of the containing geometry or surface. See {@link Length}. */
-  height?: Length;
-  /** Minimum permitted width. See {@link Length}. */
-  minWidth?: Exclude<Length, 'auto'>;
-  /** Maximum permitted width. See {@link Length}. */
-  maxWidth?: Exclude<Length, 'auto'>;
+  /** Positive finite width/height ratio. A declared definite axis derives the automatic axis before its bounds; boxSizing selects content or border geometry. See {@link resolveBox}. */
+  aspectRatio?: number;
+  /** Selects whether dimensions, bounds and Flex basis include padding and layout borders. Defaults to content-box.
+   * Border-box content floors at zero and the outer box floors at total axis padding plus layout borders.
+   * Painted stroke widths remain independent. See {@link ResolvedBoxStyle}.
+   */
+  boxSizing?: 'content-box' | 'border-box';
+  /** Horizontal extent in the units of the containing geometry or surface. See {@link SizingLength}. */
+  width?: SizingLength;
+  /** Vertical extent in the units of the containing geometry or surface. See {@link SizingLength}. */
+  height?: SizingLength;
+  /** Minimum permitted horizontal width. Finite horizontal Flex intrinsic owners also accept intrinsic sizing requests; automatic remains invalid. See {@link SizingLength}. */
+  minWidth?: Exclude<SizingLength, 'auto'>;
+  /** Maximum permitted horizontal width. Finite horizontal Flex intrinsic owners also accept intrinsic sizing requests; automatic remains invalid. See {@link SizingLength}. */
+  maxWidth?: Exclude<SizingLength, 'auto'>;
   /** Minimum permitted height. See {@link Length}. */
-  minHeight?: Exclude<Length, 'auto'>;
+  minHeight?: Exclude<SizingLength, 'auto'>;
   /** Maximum permitted height. See {@link Length}. */
-  maxHeight?: Exclude<Length, 'auto'>;
-  /** Insets between the border box and content box. See {@link EdgeValues}. */
-  padding?: EdgeValues;
+  maxHeight?: Exclude<SizingLength, 'auto'>;
+  /** Padding inside layout borders. Experimental allocated Flex percentages use owner content width for every edge. See {@link EdgeValues}, {@link Percentage}. */
+  padding?: EdgeValues<number | Percentage>;
+  /** Nonnegative inline-start padding overriding its physical padding edge. Experimental percentages require an allocated Flex owner and use its content width. See {@link BoxStyle}. */
+  paddingStart?: number | Percentage;
+  /** Nonnegative inline-end padding overriding its physical padding edge. See {@link BoxStyle}. */
+  paddingEnd?: number | Percentage;
+  /** Layout-only physical border insets, in logical pixels. Defaults to zero; does not paint a stroke. See {@link EdgeValues}. */
+  borderWidth?: EdgeValues;
+  /** Experimental nonnegative numeric inline-start layout border overriding its physical borderWidth edge. Does not paint a stroke. See {@link BoxStyle}. */
+  borderStartWidth?: number;
+  /** Experimental nonnegative numeric inline-end layout border overriding its physical borderWidth edge. See {@link BoxStyle}. */
+  borderEndWidth?: number;
   /** Selects `"visible"`, `"clip"` for overflow. See {@link BoxStyle}. */
   overflow?: 'visible' | 'clip';
 }
@@ -108,6 +128,9 @@ export interface ResolvedBoxStyle {
   contentBox: LayoutBox;
 }
 
+/** Flex edge margin value. Auto distributes remaining space on supported finite experimental Flex axes. See {@link FlexItemStyle}. */
+export type FlexMargin = number | Percentage | 'auto';
+
 /**
  * Parent-layout participation: positioning, self-alignment, flex sizing, and explicit grid placement.
  *
@@ -117,12 +140,28 @@ export interface ResolvedBoxStyle {
  * @see {@link PathStyle}
  */
 export interface LayoutItemStyle extends PositioningStyle {
+  /** Positive finite outer width/height ratio consumed by finite Flex, including wrapped lines. Final per-line main size derives cross size before cross bounds; intrinsic main sizing is unsupported. A documented direct absolute Flex child may derive exactly one automatic outer axis from its declared numeric opposite axis when no opposing inset pair supplies that axis. See {@link FlexItemStyle}. */
+  aspectRatio?: number;
+  /** Uniform physical margin in logical Canvas units, a percentage of allocated Flex content width, or auto on supported finite Flex axes. Finite negatives are allowed; specific edges override this value. Consumed by experimental Flex only. See {@link LayoutItemStyle}. */
+  margin?: FlexMargin;
+  /** Physical top margin overriding margin. See {@link LayoutItemStyle}. */
+  marginTop?: FlexMargin;
+  /** Physical right margin overriding margin. See {@link LayoutItemStyle}. */
+  marginRight?: FlexMargin;
+  /** Physical bottom margin overriding margin. See {@link LayoutItemStyle}. */
+  marginBottom?: FlexMargin;
+  /** Physical left margin overriding margin. See {@link LayoutItemStyle}. */
+  marginLeft?: FlexMargin;
+  /** Inline-start margin overriding the corresponding physical edge and margin shorthand in experimental Flex. Signed percentages use allocated content width. See {@link LayoutItemStyle}. */
+  marginStart?: FlexMargin;
+  /** Inline-end margin overriding the corresponding physical edge and margin shorthand in experimental Flex. See {@link LayoutItemStyle}. */
+  marginEnd?: FlexMargin;
   /** This child's cross-axis or block-axis alignment override. See {@link LayoutItemStyle}. */
   alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
   /** This child's inline-axis alignment override. See {@link LayoutItemStyle}. */
   justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
-  /** Initial main-axis size before flex growth or shrinkage. See {@link Length}. */
-  flexBasis?: Length;
+  /** Initial main-axis size before flex growth or shrinkage. See {@link SizingLength}. */
+  flexBasis?: SizingLength;
   /** Relative share of positive free space assigned to this child. See {@link LayoutItemStyle}. */
   flexGrow?: number;
   /** Relative factor used when reducing main-axis size. See {@link LayoutItemStyle}. */
@@ -144,10 +183,10 @@ export interface LayoutItemStyle extends PositioningStyle {
  */
 export type FlexItemStyle = Pick<
   LayoutItemStyle,
-  'flexBasis' | 'flexGrow' | 'flexShrink'
+  'position' | 'left' | 'right' | 'top' | 'bottom' | 'insetStart' | 'insetEnd' | 'aspectRatio' | 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft' | 'marginStart' | 'marginEnd'
 > & {
   /** This child's cross-axis or block-axis alignment override. See {@link FlexItemStyle}. */
-  alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center';
+  alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'start' | 'end';
 };
 
 /**
@@ -256,10 +295,10 @@ export interface RectStyle
     CursorStyle,
     BoxStyle,
     LayoutItemStyle {
-  /** Horizontal extent in the units of the containing geometry or surface. See {@link Length}. */
-  width: Length;
-  /** Vertical extent in the units of the containing geometry or surface. See {@link Length}. */
-  height: Length;
+  /** Horizontal extent in the units of the containing geometry or surface. See {@link SizingLength}. */
+  width: SizingLength;
+  /** Vertical extent in the units of the containing geometry or surface. See {@link SizingLength}. */
+  height: SizingLength;
   /**
    * Pixel-grid alignment policy applied to the resolved geometry. See {@link PixelGridAlignment}.
    */

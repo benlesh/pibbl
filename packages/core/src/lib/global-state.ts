@@ -1,3 +1,4 @@
+import { cancelPendingMount } from './mount-request.js';
 import type { LayoutContext } from './layout/types.js';
 import type { PibblNode } from './element/types.js';
 import type { RenderTargetSnapshot } from './render-target.js';
@@ -157,6 +158,7 @@ export function cleanupPibblInstance(pibblInstance: PibblInstance): void {
   }
 
   if (GLOBAL_STATE.pibblInstances.get(canvas) === pibblInstance) {
+    if (!pibblInstance.parent) cancelPendingMount(canvas);
     GLOBAL_STATE.pibblInstances.delete(canvas);
   }
   pibblInstance.eventParent = undefined;

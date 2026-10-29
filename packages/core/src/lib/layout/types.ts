@@ -22,6 +22,10 @@ export interface Size {
 /**
  * Available and limiting dimensions supplied to layout and measurement.
  *
+ * Equal minimum and maximum values require that exact logical content size.
+ * A positive-infinite maximum leaves that axis unbounded; all other values are
+ * finite logical sizes.
+ *
  * @see {@link measureElement}
  * @see {@link resolveBox}
  * @see {@link LayoutDiagnosticContext}
@@ -60,6 +64,7 @@ export interface LayoutBox extends Size {
 
 /** @internal Temporary render-time allocation and containing-block basis. */
 export interface LayoutContext {
+  layoutDirection?: 'ltr' | 'rtl';
   allocation: Readonly<LayoutBox>;
   percentageBasis: Readonly<LayoutBox>;
 }

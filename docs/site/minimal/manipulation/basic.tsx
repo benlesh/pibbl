@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   Manipulable,
   Rectangle,
   useSignal,
@@ -7,6 +7,7 @@ import {
   type PibblManipulableProps,
   type PibblManipulationBox,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 function Scene() {
   const box = useSignal<PibblManipulationBox>({
@@ -34,5 +35,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 420;
 canvas.height = 280;
 document.body.append(canvas);
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

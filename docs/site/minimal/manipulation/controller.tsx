@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   Rectangle,
   useSignal,
   useManipulation,
@@ -26,6 +26,7 @@ import {
   type PibblDragHandleProps,
   type PibblResizeHandleProps,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const canvas = document.createElement("canvas");
 canvas.width = 420;
@@ -65,7 +66,8 @@ function Scene() {
   const manipulation = useManipulation(options);
   controls = manipulation;
   const active: PibblManipulationActive | null = manipulation.active.get();
-  const snapshot: PibblManipulationSnapshot | null = manipulation.snapshot.get();
+  const snapshot: PibblManipulationSnapshot | null =
+    manipulation.snapshot.get();
   const frame: PibblManipulationFrameProps = manipulation.frameProps;
   const drag: PibblDragHandleProps = { controller: manipulation };
   const position: PibblResizePosition = "bottom-right";
@@ -86,7 +88,7 @@ function Scene() {
     </ManipulationFrame>
   );
 }
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 const cancel = document.createElement("button");
 cancel.textContent = "Cancel gesture";
 cancel.onclick = () => controls?.cancel();

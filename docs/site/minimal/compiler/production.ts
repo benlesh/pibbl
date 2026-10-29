@@ -1,4 +1,5 @@
-import { Rectangle, Text, pibbl } from "@pibbl/core";
+import { Rectangle, Text, } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import { Fragment, jsx, jsxs, type JSX } from "@pibbl/core/jsx-runtime";
 
 const canvas = document.createElement("canvas");
@@ -19,7 +20,7 @@ const label = jsx(Text, {
   [childSlot]: "Compiler output",
 });
 const root = jsxs(Fragment, { children: [background, label] });
-const controller = pibbl(canvas, root);
+const controller = pibblSync(canvas, root);
 
 // No lowercase Canvas tags exist in the module-scoped JSX vocabulary.
 const hasIntrinsicTag = (_name: string): _name is keyof JSX.IntrinsicElements =>

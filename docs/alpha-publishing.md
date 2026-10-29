@@ -29,6 +29,22 @@ Keep npm account 2FA enabled. No npm publishing secret is required. npm may
 require you to authenticate while configuring trust. See the current
 [npm trusted publishing instructions](https://docs.npmjs.com/trusted-publishers/).
 
+## Diagnose authentication without a release build
+
+Run `gh workflow run trust.yml -f check_npm_auth=true` to check the GitHub identity
+and npm token exchange for all four packages in the `npm-alpha` environment.
+This diagnostic skips build/test jobs and cannot publish packages. It also compares
+the installed npm CLI with the executable reached through pnpm using a dry run. It reports
+registry rejection messages while redacting credentials; tokens stay in memory.
+An accepted exchange does not establish a successful publication or validate a
+new publisher's first-publish deadline. Normal pushes still require every trust
+stage before publication.
+
+The publishing job installs npm into an isolated runner prefix and prepends its
+binaries to `GITHUB_PATH`. Both the workflow preflight and alpha publishing script
+require npm 11.5.1 or newer: a successful global installation alone does not prove
+that subsequent steps resolve the installed executable.
+
 ## Versions and installation
 
 CI prepares the next patch version followed by `-alpha.RUN.ATTEMPT`, for example

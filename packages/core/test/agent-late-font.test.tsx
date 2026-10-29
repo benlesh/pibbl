@@ -1,4 +1,5 @@
-import { pibbl, signal } from '@pibbl/core';
+import { signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { expect, it } from 'vitest';
 import { AgentLateFontScene } from '../../scenarios/src/agent-late-font.example';
 import fontUrl from '../../scenarios/src/assets/agent-space-grotesk.woff2?url';

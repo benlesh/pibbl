@@ -1,10 +1,15 @@
-import { pibbl, Rectangle, type Canvas, type PibblController } from "@pibbl/core";
+import {
+  pibbl,
+  Rectangle,
+  type Canvas,
+  type PibblController,
+} from "@pibbl/core";
 
 const canvas: Canvas = document.createElement("canvas");
 canvas.width = 360;
 canvas.height = 180;
 document.body.append(canvas);
-const controller: PibblController = pibbl(
+const controller: PibblController = await pibbl(
   canvas,
   <Rectangle
     style={{ left: 30, top: 30, width: 220, height: 100, fill: "#087e8b" }}
@@ -12,8 +17,8 @@ const controller: PibblController = pibbl(
 );
 const update = document.createElement("button");
 update.textContent = "Update root";
-update.onclick = () => {
-  pibbl(
+update.onclick = async () => {
+  await pibbl(
     canvas,
     <Rectangle
       style={{ left: 60, top: 30, width: 220, height: 100, fill: "#b83970" }}

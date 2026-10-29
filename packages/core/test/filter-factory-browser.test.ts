@@ -1,4 +1,5 @@
-import { Group, Rectangle, pibbl, createElement } from '@pibbl/core';
+import { Group, Rectangle, createElement } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { blur } from '@pibbl/core/filters';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clickMouse } from './support/mouse-input';

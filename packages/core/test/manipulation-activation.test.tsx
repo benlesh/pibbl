@@ -1,14 +1,5 @@
-import {
-  DragHandle,
-  ManipulationFrame,
-  Rectangle,
-  pibbl,
-  signal,
-  useEventListener,
-  useManipulation,
-  type PibblController,
-  type PibblNode,
-} from '@pibbl/core';
+import { DragHandle, ManipulationFrame, Rectangle, signal, useEventListener, useManipulation, type PibblController, type PibblNode } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, expect, it } from 'vitest';
 import { commands } from 'vitest/browser';
 

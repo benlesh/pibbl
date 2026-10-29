@@ -139,6 +139,7 @@ export function mountPibbl(
           surface.config.height :
           surface.kind === 'root' ? surface.display.height : canvas.height),
     }),
+    rootLayoutDirection: 'ltr',
     surface,
     optionalServices: new Map(),
     backendDriver: config?.driver ?? CANVAS_2D_BACKEND,

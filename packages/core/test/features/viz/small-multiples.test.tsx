@@ -1,8 +1,13 @@
 import { signal } from "@pibbl/core";
 import { userEvent } from "vitest/browser";
 import { expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-small-multiples.example.js";
+import { VizSmallMultiplesExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-small-multiples.example.js";
 import { testRuntime } from "./support/runtime.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
 
 it.each([
   [1000, 640],

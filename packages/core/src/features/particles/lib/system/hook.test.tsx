@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { pibbl, createElement, signal, type PibblNode } from "@pibbl/core";
+import { createElement, signal, type PibblNode } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../../../sync.js";
 import {
   pibblInternalRequestRender,
   type PibblInternalRenderOwner,

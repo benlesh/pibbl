@@ -45,7 +45,7 @@ function PlacedChild(
   }
 
   ctx.translate(props.box.x, props.box.y);
-  const releaseLayout = pushLayoutBox(localBox);
+  const releaseLayout = pushLayoutBox(localBox, { logicalOffset: props.box });
   let releaseClip: (() => void) | undefined;
   try {
     const clip = props.clipInChildSpace;

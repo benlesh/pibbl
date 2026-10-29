@@ -1,9 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import {
-  pibbl, Absolute, Group, Flow, Grid, Rectangle, Text, signal, useCanvasContext, useLayoutBox,
-  createElement, definePrimitive, measureElement, type MeasureResult, type SystemStyle,
-  type PibblController, type BoxStyle, type LayoutItemStyle, type PibblResponsiveStyle, type TextStyle,
-} from '@pibbl/core';
+import { Absolute, Group, Flow, Grid, Rectangle, Text, signal, useCanvasContext, useLayoutBox, createElement, definePrimitive, measureElement, type MeasureResult, type SystemStyle, type PibblController, type BoxStyle, type LayoutItemStyle, type PibblResponsiveStyle, type TextStyle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 
 const mounts: PibblController[] = [];
 afterEach(() => {

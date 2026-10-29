@@ -1,5 +1,5 @@
 import { afterEach, expect, it } from "vitest";
-import { pibbl } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { ProceduralTexture } from "@pibbl/core/textures";
 import { clearSharedState } from "../../../src/lib/global-state.js";
 import {

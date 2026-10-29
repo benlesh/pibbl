@@ -1,13 +1,5 @@
-import {
-  pibbl,
-  useSignal,
-  Group,
-  Layer,
-  Rectangle,
-  Text,
-  type PibblController,
-} from "@pibbl/core";
-function LayerStudy() {
+import { Group, Layer, Rectangle, Text, useSignal } from "@pibbl/core";
+export function LayerStudy() {
   const active = useSignal(false);
   return [
     <Rectangle
@@ -89,7 +81,4 @@ function LayerStudy() {
       </Layer>
     </Group>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <LayerStudy />);
 }

@@ -4,14 +4,19 @@ import {
   Line,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
   type WritableSignal,
 } from "@pibbl/core";
-import { Axis, BarSeries, useBarScale, useLinearScale, BarScale, LinearScale } from "@pibbl/core/viz";
+import {
+  Axis,
+  BarSeries,
+  BarScale,
+  LinearScale,
+  useBarScale,
+  useLinearScale,
+} from "@pibbl/core/viz";
 
 // Census Bureau, Vintage 2023, Table 1. Historical snapshot, not current estimates.
 // https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html
@@ -121,8 +126,7 @@ function Plot({
         scale="population"
         position="left"
         tickCount={5}
-        tickFormat={(v) =>
-          typeof v === "number" ? `${v / 1000000}m` : v}
+        tickFormat={(v) => (typeof v === "number" ? `${v / 1000000}m` : v)}
         style={{ stroke: "#a4b3b7", fill: "#637785", font: "11px sans-serif" }}
       />
       <Line
@@ -190,7 +194,7 @@ function Plot({
     </Group>
   );
 }
-function Scene() {
+export function Scene() {
   const box = useLayoutBox();
   const groups = useSignal<readonly string[]>(["2022", "2023"]);
   const compact = useSignal(false);
@@ -205,10 +209,14 @@ function Scene() {
         pointerEvents="none"
         style={{ width: box.width, height: box.height, fill: "#fffdf8" }}
       />
-      <Text style={{ left: 28, top: 25, font: "bold 26px sans-serif", fill: ink }}>
+      <Text
+        style={{ left: 28, top: 25, font: "bold 26px sans-serif", fill: ink }}
+      >
         Population, side by side
       </Text>
-      <Text style={{ left: 28, top: 59, font: "12px sans-serif", fill: "#637785" }}>
+      <Text
+        style={{ left: 28, top: 59, font: "12px sans-serif", fill: "#637785" }}
+      >
         Six largest U.S. states · population in millions
       </Text>
       <Button
@@ -245,7 +253,9 @@ function Scene() {
           style={{ translateX: 28 + index * 110, translateY: origin.y - 35 }}
         >
           <Rectangle style={{ width: 12, height: 12, fill: colors[year] }} />
-          <Text style={{ left: 19, top: 10, font: "12px sans-serif", fill: ink }}>
+          <Text
+            style={{ left: 19, top: 10, font: "12px sans-serif", fill: ink }}
+          >
             {year}
           </Text>
         </Group>
@@ -284,7 +294,4 @@ function Scene() {
       </Group>
     </Group>
   );
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Scene />, { viewport: "responsive" });
 }

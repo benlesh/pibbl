@@ -1,4 +1,5 @@
-import { Clip, Group, Rectangle, pibbl, signal, type PibblController } from '@pibbl/core';
+import { Clip, Group, Rectangle, signal, type PibblController } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';

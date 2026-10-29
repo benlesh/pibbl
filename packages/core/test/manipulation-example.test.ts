@@ -1,7 +1,11 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
-import mountExample from "../../scenarios/src/learning/user-events/manipulation.example";
+import { ManipulationExample as mountExampleComponent } from "../../scenarios/src/learning/user-events/manipulation.example";
 import type { PibblController } from "@pibbl/core";
+import { createExampleMount } from "../../scenarios/src/example-host";
+
+const mountExample = createExampleMount(mountExampleComponent);
+
 let mounted: PibblController | undefined;
 afterEach(() => {
   mounted?.dispose();

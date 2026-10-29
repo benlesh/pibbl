@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, it } from "vitest";
-import { pibbl, createElement } from "@pibbl/core";
+import { createElement } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../../../sync.js";
 import {
   useFlowField2D,
   useFlowSource2D,

@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   Rectangle,
   defineTransition,
   useVisibilityTransition,
@@ -7,6 +7,7 @@ import {
   type PibblTransitionRenderFrame,
   type PibblVisibilityTransition,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const definition: PibblTransitionDefinition = {
   render({
@@ -41,7 +42,7 @@ function Scene() {
     />
   );
 }
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 const button = document.createElement("button");
 button.textContent = "Toggle visibility";
 button.onclick = () => {

@@ -1,4 +1,5 @@
-import { Absolute, Layer, pibbl, signal, type Signal } from "@pibbl/core";
+import { Absolute, Layer, signal, type Signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { type ResolvedLinearScale, useLinearScale, LinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";

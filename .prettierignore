@@ -18,3 +18,8 @@ docs/testing/runtime-performance-audit/*/results/
 
 # Logo export metadata and retained recording reports are byte-fingerprinted assets.
 output/brand/**/*.json
+
+# Preserve archived brand studies and their export checksums byte for byte.
+output/brand/pibbl-distinctiveness-studies/
+output/brand/pibbl-loading-study/
+output/brand/pibbl-tangram*/

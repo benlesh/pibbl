@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { pibbl, HtmlBox, Group, Clip, PathGeometry } from '@pibbl/core';
+import { HtmlBox, Group, Clip, PathGeometry } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { clearSharedState } from '../src/lib/global-state.js';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing.js';
 

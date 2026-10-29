@@ -65,6 +65,8 @@ export type {
  * @see {@link PibblTransitionBinding}
  */
 export interface SystemStyle {
+  /** Numeric layout participation. Hidden subtrees retain mounted ownership without geometry or paint; contents retains logical ancestry without owning a box. See {@link SystemStyle}. */
+  layoutParticipation?: 'normal' | 'hidden' | 'contents';
   /** Visibility-transition binding applied to this primitive and its captured descendants. See {@link SystemStyle}. */
   transition?: import("./transitions/binding.js").PibblTransitionBinding;
   /** Application-defined style payload passed through the runtime. See {@link SystemStyle}. */
@@ -334,6 +336,22 @@ export interface CanvasMeasurementService {
    * @returns Canvas text metrics for the supplied text and font.
    */
   measureText(text: string, font: string): TextMetrics;
+  /**
+   * Measures text with the requested Canvas baseline state. Providers that do not
+   * implement this optional capability cannot supply Text baseline composition.
+   * @param text - Text to measure.
+   * @param options - Exact Canvas font and baseline configuration. See {@link CanvasMeasurementService}.
+   * @returns Canvas metrics in the requested baseline coordinate system.
+   */
+  measureTextAtBaseline?(
+    text: string,
+    options: Readonly<{
+      /** Canvas font configuration. See {@link CanvasMeasurementService}. */
+      font: string;
+      /** Canvas drawing baseline for the returned metrics. See {@link CanvasMeasurementService}. */
+      textBaseline: CanvasTextBaseline;
+    }>,
+  ): TextMetrics;
 }
 
 /**
@@ -392,6 +410,69 @@ export interface MeasureInput<P, S extends SystemStyle = SystemStyle> {
     constraints: Readonly<Constraints>,
   ): MeasureResult;
 }
+
+/** Available logical size along one intrinsic query axis. See {@link IntrinsicConstraints}. */
+export type IntrinsicAxisConstraints =
+  | Readonly<{ /** Finite availability. */ kind: 'bounded'; /** Minimum logical length. */ min: number; /** Maximum logical length. */ max: number }>
+  | Readonly<{ /** No finite upper bound. */ kind: 'unbounded'; /** Minimum logical length. */ min: number }>;
+
+/** Explicit axis availability for intrinsic measurement. See {@link IntrinsicMeasureInput}. */
+export interface IntrinsicConstraints {
+  /** Horizontal availability. See {@link IntrinsicAxisConstraints}. */
+  readonly width: IntrinsicAxisConstraints;
+  /** Vertical availability. See {@link IntrinsicAxisConstraints}. */
+  readonly height: IntrinsicAxisConstraints;
+}
+
+/** Pure custom-leaf input for both intrinsic contributions. See {@link PrimitiveCapabilities}. */
+export interface IntrinsicMeasureInput<P, S extends SystemStyle = SystemStyle> {
+  /** Resolved receiver inputs. See {@link MeasureInput}. */
+  readonly props: Readonly<P>;
+  /** Normalized content style. See {@link NormalizedStyle}. */
+  readonly style: NormalizedStyle<S>;
+  /** Tagged available dimensions. See {@link IntrinsicConstraints}. */
+  readonly constraints: Readonly<IntrinsicConstraints>;
+  /** Pure Canvas measurements. See {@link CanvasMeasurementService}. */
+  readonly service: CanvasMeasurementService;
+}
+
+/** Both content-box intrinsic contributions or explicit failure. See {@link IntrinsicMeasureInput}. */
+export type IntrinsicSizesResult =
+  | Readonly<{ /** Successful intrinsic query. */ status: 'measured'; /** Minimum unbroken content size. See {@link Size}. */ minContent: Readonly<Size>; /** Preferred content size. See {@link Size}. */ maxContent: Readonly<Size> }>
+  | Readonly<{ /** Unsupported intrinsic query. */ status: 'unsupported'; /** Actionable explanation. */ reason: string }>;
+
+/** Final-allocation input for a pure custom baseline query. See {@link PrimitiveCapabilities}. */
+export interface BaselineMeasureInput<P, S extends SystemStyle = SystemStyle> {
+  /** Resolved receiver inputs. See {@link MeasureInput}. */
+  readonly props: Readonly<P>;
+  /** Normalized content style. See {@link NormalizedStyle}. */
+  readonly style: NormalizedStyle<S>;
+  /** Final local content allocation; origin is always `{ x: 0, y: 0 }`. See {@link LayoutBox}. */
+  readonly allocation: Readonly<LayoutBox>;
+  /** Pure Canvas measurements. See {@link CanvasMeasurementService}. */
+  readonly service: CanvasMeasurementService;
+}
+/**
+ * First/last baseline offsets from content top, or explicit inability to provide them.
+ * Finite offsets may be negative or outside the content box; first must not exceed last.
+ * @see {@link BaselineMeasureInput}
+ * @see {@link PrimitiveCapabilities}
+ */
+export type BaselinesResult =
+  | Readonly<{
+      /** Successful baseline query. See {@link BaselinesResult}. */
+      status: 'measured';
+      /** First logical baseline offset from the content top. See {@link BaselinesResult}. */
+      first: number;
+      /** Last logical baseline offset, at or after first. See {@link BaselinesResult}. */
+      last: number;
+    }>
+  | Readonly<{
+      /** Explicit inability to supply baselines. See {@link BaselinesResult}. */
+      status: 'unsupported';
+      /** Actionable explanation; does not select the missing-provider fallback. See {@link BaselinesResult}. */
+      reason: string;
+    }>;
 
 /**
  * The synchronous drawing callback of a custom primitive.
@@ -470,6 +551,18 @@ export interface PrimitiveCapabilities<
    * @returns Measured dimensions or an unsupported measurement result. See {@link MeasureResult}.
    */
   measure?: (input: MeasureInput<PrimitiveProgramProps<P>, N>) => MeasureResult;
+  /**
+   * Measures both intrinsic content contributions without painting, hooks or writes.
+   * @param input - Resolved inputs and explicit availability. See {@link IntrinsicMeasureInput}.
+   * @returns Finite ordered content sizes or unsupported. See {@link IntrinsicSizesResult}.
+   */
+  measureIntrinsic?: (input: IntrinsicMeasureInput<PrimitiveProgramProps<P>, N>) => IntrinsicSizesResult;
+  /**
+   * Pure first/last baseline provider at the final content allocation.
+   * @param input - Resolved inputs and final local allocation. See {@link BaselineMeasureInput}.
+   * @returns Finite ordered offsets or unsupported. See {@link BaselinesResult}.
+   */
+  measureBaselines?: (input: BaselineMeasureInput<PrimitiveProgramProps<P>, N>) => BaselinesResult;
 }
 
 export interface InternalIdentityHint {
@@ -481,6 +574,7 @@ export interface InternalIdentityHint {
 export interface PibblComponentRefs<P> {
   /** Last traversal entry context, not proof that this evaluation painted successfully. */
   layoutEntry?: Readonly<{
+    layoutDirection?: 'ltr' | 'rtl';
     allocation: Readonly<LayoutBox>;
     percentageBasis: Readonly<LayoutBox>;
   }>;
@@ -566,8 +660,12 @@ export interface PibblEventRoot {
 
 /** @internal Root-wide render completion seam for optional policies. */
 export interface PibblRenderTransaction {
+  /** Validate staged geometry before any fallible resource publication. */
+  onPreflight?(callback: () => void): void;
   onPublish?(callback: () => void): void;
   onFinish(callback: (success: boolean) => void): void;
+  /** Run after all finish callbacks have published their committed state. */
+  onAfterFinish?(callback: (success: boolean) => void): void;
 }
 
 export interface PibblFocusPolicyBridge {
@@ -649,7 +747,7 @@ export interface PibblInstance {
   /** Last root traversal published successfully; failed render attempts do not advance it. */
   committedRenderGeneration?: number;
   /** Opt-in root bitmap observers; absent unless a recording is attached. */
-  rootFrameObservers?: Set<(success: boolean) => void>;
+  rootFrameObservers?: Set<(success: boolean, generation: number) => void>;
   canvas: Canvas;
   controller: PibblController;
   root: PibblNode;
@@ -675,6 +773,8 @@ export interface PibblInstance {
   /** Current child-to-parent mapping for focus geometry outside hit order. */
   focusParentBridge: PibblNestedPaintEntry | undefined;
   rootLayoutBox: Readonly<LayoutBox>;
+  /** Internal inherited direction used when this instance begins a root layout context. */
+  rootLayoutDirection: 'ltr' | 'rtl';
   surface: PibblSurfaceState;
   /** Feature-owned resources, installed only by imported optional entries. */
   optionalServices: Map<symbol, OptionalService>;

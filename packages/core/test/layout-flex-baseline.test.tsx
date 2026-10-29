@@ -1,0 +1,749 @@
+import { afterEach, beforeAll, expect, it, vi } from 'vitest';
+import {
+  FocusManagement,
+  Flex,
+  Rectangle,
+  Text,
+  createElement,
+  definePrimitive,
+  signal,
+  type LayoutBox,
+  type BoxStyle,
+  type BaselineMeasureInput,
+  type BaselinesResult,
+  type SystemStyle,
+  useCanvasContext,
+  useLayoutBox,
+} from '@pibbl/core';
+import { pibblSync as pibbl } from '@pibbl/core/sync';
+import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
+import {
+  nativeLayout,
+  snapshotWasmLayoutDiagnostics,
+} from '../src/lib/layout/wasm/region';
+
+const controllers: { dispose(): void }[] = [];
+beforeAll(() => {
+  if (nativeLayout) prepareLayoutEngineSync();
+});
+afterEach(() => {
+  for (const controller of controllers.splice(0)) controller.dispose();
+  document.body.replaceChildren();
+});
+const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+function click(canvas: HTMLCanvasElement, x: number, y: number): void {
+  const bounds = canvas.getBoundingClientRect();
+  for (const type of ['mousedown', 'mouseup', 'click']) {
+    canvas.dispatchEvent(new MouseEvent(type, {
+      clientX: bounds.left + x,
+      clientY: bounds.top + y,
+      bubbles: true,
+      button: 0,
+    }));
+  }
+}
+
+interface BaselineStyle extends SystemStyle {
+  marginLeft?: number | 'auto' | ReturnType<typeof signal<0 | 'auto'>>;
+  marginRight?: number | 'auto' | ReturnType<typeof signal<0 | 'auto'>>;
+  width?: number;
+  height?: number;
+  fill?: string;
+  minWidth?: number;
+  minHeight?: number;
+  flexBasis?: number;
+  flexGrow?: number;
+  flexShrink?: number;
+}
+interface BaselineProps {
+  readonly name: string;
+
+}
+
+it.runIf(nativeLayout)(
+  'aligns direct fixed primitive leaves on their measured first baseline without losing ownership',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const cjkFirst = signal(30);
+    const latinInk = signal('#19375b');
+    const hits: string[] = [];
+    const focused: string[] = [];
+    const boxes = new Map<string, LayoutBox>();
+    const allocations: LayoutBox[] = [];
+    const latinBaselines = vi.fn(() => ({ status: 'measured' as const, first: 12, last: 12 }));
+    const cjkBaselines = vi.fn((input: { allocation: Readonly<LayoutBox> }) => {
+      allocations.push({ ...input.allocation });
+      return { status: 'measured' as const, first: cjkFirst.get(), last: cjkFirst.get() };
+    });
+    const Leaf = (measureBaselines: (input: BaselineMeasureInput<BaselineProps, BaselineStyle>) => BaselinesResult) => definePrimitive<
+      BaselineProps,
+      BaselineStyle,
+      BaselineStyle,
+      BaselineStyle & { width: number; height: number }
+    >((props, style) => {
+      const box = useLayoutBox();
+      const matrix = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      return <Rectangle
+        keyboardFocusable
+        onFocus={() => focused.push(props.name)}
+        onClick={() => hits.push(props.name)}
+        style={{ width: box.width, height: box.height, fill: style.fill, cursor: 'pointer' }}
+      />;
+    }, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines,
+    });
+    const Latin = Leaf(latinBaselines);
+    const Cjk = Leaf(cjkBaselines);
+    const latinNode = createElement(Latin, {
+      key: 'latin', name: 'latin',
+      style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, fill: latinInk },
+    });
+    const cjkNode = createElement(Cjk, {
+      key: 'cjk', name: 'cjk',
+      style: { width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, fill: '#a63758' },
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = 120; canvas.height = 60; document.body.append(canvas);
+    const controller = pibbl(canvas, <FocusManagement><Flex style={{
+      width: 120,
+      height: 60,
+      flexDirection: 'row',
+      flexWrap: 'nowrap',
+      alignItems: 'first-baseline',
+    }}>{[latinNode, cjkNode]}</Flex></FocusManagement>);
+    controllers.push(controller);
+    await nextFrame();
+
+    expect(boxes.get('latin')).toEqual({ x: 0, y: 18, width: 40, height: 20 });
+    expect(boxes.get('cjk')).toEqual({ x: 40, y: 0, width: 40, height: 40 });
+    expect(allocations).toEqual([{ x: 0, y: 0, width: 40, height: 40 }]);
+    expect(latinBaselines).toHaveBeenCalledTimes(1);
+    expect(cjkBaselines).toHaveBeenCalledTimes(1);
+
+    canvas.blur(); canvas.focus({ preventScroll: true });
+    canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+    canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+    expect(focused).toEqual(['latin', 'cjk']);
+    click(canvas, 5, 20);
+    expect(hits).toEqual(['latin']);
+
+    const initial = snapshotWasmLayoutDiagnostics();
+    cjkFirst.set(34); await nextFrame();
+    expect(boxes.get('latin')).toEqual({ x: 0, y: 22, width: 40, height: 20 });
+    expect(boxes.get('cjk')).toEqual({ x: 40, y: 0, width: 40, height: 40 });
+    click(canvas, 5, 20);
+    expect(hits).toEqual(['latin']);
+    click(canvas, 5, 24);
+    expect(hits).toEqual(['latin', 'latin']);
+    const afterBaseline = snapshotWasmLayoutDiagnostics();
+    expect(afterBaseline.nodeCreates).toBe(initial.nodeCreates);
+    expect(cjkBaselines).toHaveBeenCalledTimes(2);
+
+    // Settle the explicit input/focus render requested by the preceding clicks.
+    await nextFrame();
+    const beforeLatinPaintCalls = latinBaselines.mock.calls.length;
+    const beforePaintCalls = cjkBaselines.mock.calls.length;
+    const beforePaint = snapshotWasmLayoutDiagnostics();
+    latinInk.set('#6e9d35'); await nextFrame();
+    const afterPaint = snapshotWasmLayoutDiagnostics();
+    expect(afterPaint.nodeCreates).toBe(afterBaseline.nodeCreates);
+    expect(latinBaselines).toHaveBeenCalledTimes(beforeLatinPaintCalls + 1);
+    expect(cjkBaselines).toHaveBeenCalledTimes(beforePaintCalls);
+    expect(afterPaint.solves).toBe(beforePaint.solves);
+    expect(afterPaint.crossPlacements).toBe(beforePaint.crossPlacements);
+
+    controller.dispose();
+    const afterDispose = snapshotWasmLayoutDiagnostics();
+    expect(afterDispose.activeNodes).toBe(baseline.activeNodes);
+    expect(afterDispose.activeArenas).toBe(baseline.activeArenas);
+    expect(afterDispose.cachedMeasurements).toBe(baseline.cachedMeasurements);
+  },
+);
+
+it.runIf(nativeLayout)(
+  'uses the bottom edge only when a direct fixed leaf omits the baseline capability',
+  async () => {
+    const boxes = new Map<string, LayoutBox>();
+    const Measured = definePrimitive<{ name: string }, BaselineStyle, BaselineStyle, BaselineStyle & { width: number; height: number }>((props) => {
+      const box = useLayoutBox(); const matrix = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+    }, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: () => ({ status: 'measured' as const, first: 12, last: 12 }),
+    });
+    const Missing = definePrimitive<{ name: string }, BaselineStyle, BaselineStyle, BaselineStyle & { width: number; height: number }>((props) => {
+      const box = useLayoutBox(); const matrix = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+    }, { resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }) });
+    const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 60; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: 120, height: 60, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'first-baseline' }}>
+      {[
+        createElement(Measured, { key: 'measured', name: 'measured', style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 } }),
+        createElement(Missing, { key: 'missing', name: 'missing', style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 } }),
+      ]}
+    </Flex>); controllers.push(controller); await nextFrame();
+    expect(boxes.get('measured')).toEqual({ x: 0, y: 8, width: 40, height: 20 });
+    expect(boxes.get('missing')).toEqual({ x: 40, y: 0, width: 40, height: 20 });
+  },
+);
+
+it.runIf(nativeLayout)(
+  'fails before paint when a declared baseline provider is unsupported', async () => {
+    const paints = vi.fn();
+    const Bad = definePrimitive<{}, BaselineStyle, BaselineStyle, BaselineStyle & { width: number; height: number }>(() => { paints(); }, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: () => ({ status: 'unsupported' as const, reason: 'not this allocation' }),
+    });
+    const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 60; document.body.append(canvas);
+    const errors: unknown[] = [];
+    const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+    window.addEventListener('error', prevent);
+    try {
+      const controller = pibbl(canvas, <Flex style={{ width: 120, height: 60, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'first-baseline' }}>
+        {createElement(Bad, { style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 } })}
+      </Flex>);
+      controllers.push(controller); await nextFrame();
+      expect(errors).toHaveLength(1);
+      expect(String(errors[0])).toMatch(/baseline.*not this allocation/i);
+      expect(paints).not.toHaveBeenCalled();
+    } finally { window.removeEventListener('error', prevent); }
+  },
+);
+
+it.runIf(nativeLayout)('rejects invalid baseline results and impure providers before paint with exact cleanup', async () => {
+  const writeProbe = signal(0);
+  const failures: readonly { name: string; provide: () => BaselinesResult; message: RegExp }[] = [
+    { name: 'NaN', provide: () => ({status:'measured',first:NaN,last:0}), message: /baselines must be finite/ },
+    { name: 'infinite', provide: () => ({status:'measured',first:0,last:Infinity}), message: /baselines must be finite/ },
+    { name: 'reversed', provide: () => ({status:'measured',first:12,last:11}), message: /first not after last/ },
+    { name: 'write', provide: () => { writeProbe.set(1); return {status:'measured',first:0,last:0}; }, message: /Signal writes are forbidden/ },
+    { name: 'context hook', provide: () => { useCanvasContext(); return {status:'measured',first:0,last:0}; }, message: /context/i },
+  ];
+  for (const failure of failures) {
+    const baseline = snapshotWasmLayoutDiagnostics(), paints = vi.fn(), errors: unknown[] = [];
+    const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+    const Bad = definePrimitive<{}, BaselineStyle, BaselineStyle, BaselineStyle & {width:number;height:number}>(() => { paints(); }, {
+      resolveStyle: (style, context) => ({...style,width:context.allocation.width,height:context.allocation.height}),
+      measureBaselines: failure.provide,
+    });
+    const canvas = document.createElement('canvas'); canvas.width=120;canvas.height=60;document.body.append(canvas);
+    window.addEventListener('error', prevent);
+    try {
+      const controller = pibbl(canvas,<Flex style={{width:120,height:60,alignItems:'first-baseline'}}>
+        <Bad style={{width:40,height:20,flexBasis:40,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0}} />
+      </Flex>); controllers.push(controller); await nextFrame();
+      expect(errors,failure.name).toHaveLength(1); expect(String(errors[0]),failure.name).toMatch(failure.message);
+      expect(paints,failure.name).not.toHaveBeenCalled(); expect(writeProbe.get()).toBe(0);
+      controller.dispose();
+      const disposed=snapshotWasmLayoutDiagnostics();
+      expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements,disposed.activeWasmInstances],failure.name).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements,baseline.activeWasmInstances]);
+    } finally { window.removeEventListener('error',prevent); canvas.remove(); }
+  }
+});
+
+it.runIf(!nativeLayout)('keeps first-baseline alignment explicitly experimental without evaluating providers', async () => {
+  const measureBaselines=vi.fn(()=>({status:'measured' as const,first:12,last:12})), paints=vi.fn(), errors:unknown[]=[];
+  const Bad=definePrimitive<{},BaselineStyle,BaselineStyle,BaselineStyle&{width:number;height:number}>(()=>{paints();},{resolveStyle:(style,context)=>({...style,width:context.allocation.width,height:context.allocation.height}),measureBaselines});
+  const canvas=document.createElement('canvas');canvas.width=120;canvas.height=60;document.body.append(canvas);
+  const prevent=(event:ErrorEvent)=>{errors.push(event.error);event.preventDefault();};window.addEventListener('error',prevent);
+  try{const controller=pibbl(canvas,<Flex style={{width:120,height:60,alignItems:'first-baseline'}}><Bad style={{width:40,height:20,flexBasis:40,minWidth:0,minHeight:0,flexShrink:0}} /></Flex>);controllers.push(controller);await nextFrame();expect(errors).toHaveLength(1);expect(String(errors[0])).toMatch(/alignItems/);expect(measureBaselines).not.toHaveBeenCalled();expect(paints).not.toHaveBeenCalled();}finally{window.removeEventListener('error',prevent);}
+});
+
+
+it.runIf(nativeLayout)(
+  'aligns fixed unwrapped Text leaves from their live Canvas top-baseline metrics',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const words = signal('Ag');
+    const font = signal('10px monospace');
+    const decoration = signal('#557a8b');
+    const hits: string[] = [];
+    const focused: string[] = [];
+    const canvas = document.createElement('canvas');
+    canvas.width = 240; canvas.height = 80; document.body.append(canvas);
+    const context = canvas.getContext('2d')!;
+    interface Draw { readonly text: string; readonly x: number; readonly y: number; readonly font: string; }
+    const draws: Draw[] = [];
+    const originalFillText = context.fillText.bind(context);
+    vi.spyOn(context, 'fillText').mockImplementation(((text: string, x: number, y: number, maxWidth?: number) => {
+      const transform = context.getTransform();
+      draws.push({ text, x: transform.e + x, y: transform.f + y, font: context.font });
+      originalFillText(text, x, y, maxWidth);
+    }) as typeof context.fillText);
+    const small = createElement(Text, {
+      key: 'small', children: words, keyboardFocusable: true,
+      onFocus: () => focused.push('small'), onClick: () => hits.push('small'),
+      style: { width: 60, height: 32, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0, font, wrap: false, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#19375b', cursor: 'pointer' },
+    });
+    const large = createElement(Text, {
+      key: 'large', children: 'Ag', keyboardFocusable: true,
+      onFocus: () => focused.push('large'), onClick: () => hits.push('large'),
+      style: { width: 80, height: 32, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, font: '20px sans-serif', wrap: false, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#a63758', cursor: 'pointer' },
+    });
+    const accent = createElement(Rectangle, {
+      key: 'accent', pointerEvents: 'none',
+      style: { width: 20, height: 20, minWidth: 0, minHeight: 0, flexBasis: 20, flexGrow: 0, flexShrink: 0, fill: decoration },
+    });
+    const controller = pibbl(canvas, <FocusManagement><Flex style={{ width: 240, height: 80, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'first-baseline' }}>{[small, large, accent]}</Flex></FocusManagement>);
+    controllers.push(controller);
+    await nextFrame();
+
+    const firstDraw = (expectedFont: string) => draws.find(draw => draw.font === expectedFont)!;
+    const topToAlphabetic = (draw: Draw) => {
+      context.save();
+      try {
+        context.font = draw.font;
+        context.textBaseline = 'top';
+        const top = context.measureText(draw.text).actualBoundingBoxAscent;
+        context.textBaseline = 'alphabetic';
+        const alphabetic = context.measureText(draw.text).actualBoundingBoxAscent;
+        expect(Number.isFinite(top)).toBe(true);
+        expect(Number.isFinite(alphabetic)).toBe(true);
+        return alphabetic - top;
+      } finally { context.restore(); }
+    };
+    const smallInitial = firstDraw('10px monospace');
+    const largeInitial = firstDraw('20px sans-serif');
+    expect(smallInitial.y + topToAlphabetic(smallInitial)).toBeCloseTo(largeInitial.y + topToAlphabetic(largeInitial), 5);
+
+    canvas.blur(); canvas.focus({ preventScroll: true });
+    canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+    canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+    expect(focused).toEqual(['small', 'large']);
+    context.save(); context.font = smallInitial.font; context.textBaseline = 'top';
+    const initialMetrics = context.measureText(smallInitial.text); context.restore();
+    click(canvas, smallInitial.x - initialMetrics.actualBoundingBoxLeft + 1, smallInitial.y - initialMetrics.actualBoundingBoxAscent + 1);
+    expect(hits).toEqual(['small']);
+
+    const beforeFont = snapshotWasmLayoutDiagnostics();
+    draws.splice(0);
+    font.set('16px monospace'); words.set('B'); await nextFrame();
+    const smallUpdated = firstDraw('16px monospace');
+    const largeUpdated = firstDraw('20px sans-serif');
+    expect(smallUpdated.y).not.toBeCloseTo(smallInitial.y, 5);
+    expect(smallUpdated.y + topToAlphabetic(smallUpdated)).toBeCloseTo(largeUpdated.y + topToAlphabetic(largeUpdated), 5);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(beforeFont.nodeCreates);
+    context.save(); context.font = smallUpdated.font; context.textBaseline = 'top';
+    const updatedMetrics = context.measureText(smallUpdated.text); context.restore();
+    click(canvas, smallUpdated.x - updatedMetrics.actualBoundingBoxLeft + 1, smallUpdated.y - updatedMetrics.actualBoundingBoxAscent + 1);
+    expect(hits).toEqual(['small', 'small']);
+
+    await nextFrame();
+    const beforePaint = snapshotWasmLayoutDiagnostics();
+    decoration.set('#9f7d35'); await nextFrame();
+    const afterPaint = snapshotWasmLayoutDiagnostics();
+    expect(afterPaint.nodeCreates).toBe(beforePaint.nodeCreates);
+    expect(afterPaint.solves).toBe(beforePaint.solves);
+    expect(afterPaint.crossPlacements).toBe(beforePaint.crossPlacements);
+
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+  },
+);
+
+
+it.runIf(nativeLayout)(
+  'aligns direct wrapped Text leaves on their first live Canvas baseline while preserving visible last-line glyph hits',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const words = signal('Ag Ag Ag Ag');
+    const width = signal(40);
+    const lineHeight = signal(10);
+    const hits: string[] = [];
+    const canvas = document.createElement('canvas');
+    canvas.width = 180; canvas.height = 90; document.body.append(canvas);
+    const context = canvas.getContext('2d')!;
+    interface Draw { readonly text: string; readonly x: number; readonly y: number; readonly font: string; }
+    const draws: Draw[] = [];
+    const originalFillText = context.fillText.bind(context);
+    vi.spyOn(context, 'fillText').mockImplementation(((text: string, x: number, y: number, maxWidth?: number) => {
+      const transform = context.getTransform();
+      draws.push({ text, x: transform.e + x, y: transform.f + y, font: context.font });
+      originalFillText(text, x, y, maxWidth);
+    }) as typeof context.fillText);
+    const wrapped = createElement(Text, {
+      key: 'wrapped', children: words, onClick: () => hits.push('wrapped'),
+      style: { width: 100, height: 60, minWidth: 0, minHeight: 0, flexBasis: width, flexGrow: 0, flexShrink: 0, font: '10px monospace', lineHeight, wrap: true, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#19375b', cursor: 'pointer' },
+    });
+    const large = createElement(Text, {
+      key: 'large', children: 'Ag',
+      style: { width: 80, height: 40, minWidth: 0, minHeight: 0, flexBasis: 80, flexGrow: 0, flexShrink: 0, font: '20px sans-serif', wrap: false, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#a63758' },
+    });
+    const controller = pibbl(canvas, <Flex style={{ width: 180, height: 90, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'first-baseline' }}>{[wrapped, large]}</Flex>);
+    controllers.push(controller);
+    await nextFrame();
+
+    const alphabeticOffset = (draw: Draw) => {
+      context.save();
+      try {
+        context.font = draw.font;
+        context.textBaseline = 'top';
+        const top = context.measureText(draw.text).actualBoundingBoxAscent;
+        context.textBaseline = 'alphabetic';
+        const alphabetic = context.measureText(draw.text).actualBoundingBoxAscent;
+        expect(Number.isFinite(top)).toBe(true);
+        expect(Number.isFinite(alphabetic)).toBe(true);
+        return alphabetic - top;
+      } finally { context.restore(); }
+    };
+    const first = (font: string) => draws.find(draw => draw.font === font)!;
+    const initialSmall = first('10px monospace');
+    const initialLarge = first('20px sans-serif');
+    const initialWrapped = draws.filter(draw => draw.font === '10px monospace');
+    expect(initialWrapped).toHaveLength(2);
+    expect(initialSmall.y + alphabeticOffset(initialSmall)).toBeCloseTo(initialLarge.y + alphabeticOffset(initialLarge), 5);
+
+    draws.splice(0);
+    width.set(28); lineHeight.set(14); words.set('Ag Ag Ag'); await nextFrame();
+    const changedSmall = first('10px monospace');
+    const changedLarge = first('20px sans-serif');
+    const changedWrapped = draws.filter(draw => draw.font === '10px monospace');
+    expect(changedWrapped).toHaveLength(3);
+    expect(changedWrapped.at(-1)!.y).toBeGreaterThan(initialWrapped.at(-1)!.y);
+    expect(changedSmall.y + alphabeticOffset(changedSmall)).toBeCloseTo(changedLarge.y + alphabeticOffset(changedLarge), 5);
+
+    const last = changedWrapped.at(-1)!;
+    context.save(); context.font = last.font; context.textBaseline = 'top';
+    const metrics = context.measureText(last.text); context.restore();
+    click(canvas, last.x - metrics.actualBoundingBoxLeft + 1, last.y - metrics.actualBoundingBoxAscent + 1);
+    expect(hits).toEqual(['wrapped']);
+
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+  },
+);
+
+for (const edge of ['marginLeft', 'marginRight'] as const) {
+  it.runIf(nativeLayout)(`places first-baseline ${edge} automatic margins after its zero-margin control`, async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const margin = signal<0 | 'auto'>(0);
+    const boxes = new Map<string, LayoutBox>();
+    const errors: unknown[] = [];
+    const hits: string[] = [];
+    const receive = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+    const Leaf = definePrimitive<{ readonly name: string; readonly first: number }, BaselineStyle, BaselineStyle, BaselineStyle & { readonly width: number; readonly height: number }>((props) => {
+      const box = useLayoutBox();
+      const transform = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: transform.e, y: transform.f, width: box.width, height: box.height });
+      return <Rectangle onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: '#8a3248' }} />;
+    }, {
+      resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: ({ props }) => ({ status: 'measured', first: props.first, last: props.first }),
+    });
+    const canvas = document.createElement('canvas'); canvas.width = 160; canvas.height = 80; document.body.append(canvas);
+    window.addEventListener('error', receive);
+    try {
+      const controller = pibbl(canvas, <Flex style={{ width: 160, height: 80, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'first-baseline' }}>
+        <Leaf key="A" name="A" first={12} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, [edge]: margin }} />
+        <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+      </Flex>);
+      controllers.push(controller); await nextFrame();
+      expect(errors).toEqual([]);
+      expect(boxes.get('A')).toEqual({ x: 0, y: 18, width: 40, height: 20 });
+      expect(boxes.get('B')).toEqual({ x: 40, y: 0, width: 40, height: 40 });
+
+      const mounted = snapshotWasmLayoutDiagnostics();
+      margin.set('auto'); await nextFrame();
+      expect(errors).toEqual([]);
+      expect(boxes.get('A')).toEqual({ x: edge === 'marginLeft' ? 80 : 0, y: 18, width: 40, height: 20 });
+      expect(boxes.get('B')).toEqual({ x: 120, y: 0, width: 40, height: 40 });
+      click(canvas, (edge === 'marginLeft' ? 80 : 0) + 4, 22); await nextFrame();
+      expect(hits).toEqual(['A']);
+      expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+      controller.dispose();
+      const disposed = snapshotWasmLayoutDiagnostics();
+      expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+        baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+      ]);
+    } finally { window.removeEventListener('error', receive); }
+  });
+}
+
+
+
+it.runIf(nativeLayout)(
+  'preserves first-baseline cross placement while RTL reverses only finite row main slots',
+  async () => {
+    for (const direction of ['ltr', 'rtl'] as const) {
+      const baseline = snapshotWasmLayoutDiagnostics();
+      const boxes = new Map<string, LayoutBox>();
+      const hits: string[] = [];
+      const focused: string[] = [];
+      const errors: unknown[] = [];
+      const receive = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+      const Leaf = definePrimitive<{ readonly name: string; readonly first: number }, BaselineStyle, BaselineStyle, BaselineStyle & { readonly width: number; readonly height: number }>((props) => {
+        const box = useLayoutBox();
+        const matrix = useCanvasContext().getTransform();
+        boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+        return <Rectangle keyboardFocusable onFocus={() => focused.push(props.name)} onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: props.name === 'A' ? '#8a3248' : '#426b61', cursor: 'pointer' }} />;
+      }, {
+        resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+        measureBaselines: ({ props }) => ({ status: 'measured' as const, first: props.first, last: props.first }),
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = 120; canvas.height = 60; document.body.append(canvas);
+      window.addEventListener('error', receive);
+      try {
+        const controller = pibbl(canvas, <FocusManagement><Flex style={{ width: 120, height: 60, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: direction, alignItems: 'first-baseline' }}>
+          <Leaf key="A" name="A" first={12} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+          <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+        </Flex></FocusManagement>);
+        controllers.push(controller);
+        await nextFrame();
+
+        expect(errors).toEqual([]);
+        expect(boxes.get('A')).toEqual({ x: direction === 'ltr' ? 0 : 80, y: 18, width: 40, height: 20 });
+        expect(boxes.get('B')).toEqual({ x: 40, y: 0, width: 40, height: 40 });
+
+        canvas.blur(); canvas.focus({ preventScroll: true });
+        canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+        canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+        expect(focused).toEqual(['A', 'B']);
+        click(canvas, (direction === 'ltr' ? 0 : 80) + 4, 22);
+        click(canvas, 44, 4);
+        expect(hits).toEqual(['A', 'B']);
+
+        const mounted = snapshotWasmLayoutDiagnostics();
+        controller.dispose();
+        const disposed = snapshotWasmLayoutDiagnostics();
+        expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+          baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+        ]);
+        expect(mounted.nodeCreates).toBeGreaterThan(baseline.nodeCreates);
+      } finally {
+        window.removeEventListener('error', receive);
+      }
+    }
+  },
+);
+
+
+it.runIf(nativeLayout)(
+  'keeps first-baseline offsets while row-reverse composes with LTR and RTL main placement',
+  async () => {
+    for (const direction of ['ltr', 'rtl'] as const) {
+      const baseline = snapshotWasmLayoutDiagnostics();
+      const boxes = new Map<string, LayoutBox>();
+      const hits: string[] = [];
+      const focused: string[] = [];
+      const errors: unknown[] = [];
+      const receive = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+      const Leaf = definePrimitive<{ readonly name: string; readonly first: number }, BaselineStyle, BaselineStyle, BaselineStyle & { readonly width: number; readonly height: number }>((props) => {
+        const box = useLayoutBox();
+        const matrix = useCanvasContext().getTransform();
+        boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+        return <Rectangle keyboardFocusable onFocus={() => focused.push(props.name)} onClick={() => hits.push(props.name)} style={{ width: box.width, height: box.height, fill: props.name === 'A' ? '#8a3248' : '#426b61', cursor: 'pointer' }} />;
+      }, {
+        resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+        measureBaselines: ({ props }) => ({ status: 'measured' as const, first: props.first, last: props.first }),
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = 120; canvas.height = 60; document.body.append(canvas);
+      window.addEventListener('error', receive);
+      try {
+        const controller = pibbl(canvas, <FocusManagement><Flex style={{ width: 120, height: 60, flexDirection: 'row-reverse', flexWrap: 'nowrap', layoutDirection: direction, alignItems: 'first-baseline' }}>
+          <Leaf key="A" name="A" first={12} style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+          <Leaf key="B" name="B" first={30} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+        </Flex></FocusManagement>);
+        controllers.push(controller);
+        await nextFrame();
+
+        const ax = direction === 'ltr' ? 80 : 0;
+        expect(errors).toEqual([]);
+        expect(boxes.get('A')).toEqual({ x: ax, y: 18, width: 40, height: 20 });
+        expect(boxes.get('B')).toEqual({ x: 40, y: 0, width: 40, height: 40 });
+
+        canvas.blur(); canvas.focus({ preventScroll: true });
+        canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+        canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+        expect(focused).toEqual(['A', 'B']);
+        click(canvas, ax + 4, 22);
+        click(canvas, 44, 4);
+        expect(hits).toEqual(['A', 'B']);
+
+        const mounted = snapshotWasmLayoutDiagnostics();
+        controller.dispose();
+        const disposed = snapshotWasmLayoutDiagnostics();
+        expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances]).toEqual([
+          baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements, baseline.activeWasmInstances,
+        ]);
+        expect(mounted.nodeCreates).toBeGreaterThan(baseline.nodeCreates);
+      } finally {
+        window.removeEventListener('error', receive);
+      }
+    }
+  },
+);
+
+it.runIf(nativeLayout)(
+  'keeps a decorated fixed Text leaf on its content baseline and paints its glyphs at the content inset',
+  async () => {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const hits: string[] = [];
+    const canvas = document.createElement('canvas');
+    canvas.width = 120; canvas.height = 80; document.body.append(canvas);
+    const context = canvas.getContext('2d')!;
+    interface Draw { readonly text: string; readonly x: number; readonly y: number; readonly font: string; }
+    const draws: Draw[] = [];
+    const originalFillText = context.fillText.bind(context);
+    vi.spyOn(context, 'fillText').mockImplementation(((text: string, x: number, y: number, maxWidth?: number) => {
+      const matrix = context.getTransform();
+      draws.push({ text, x: matrix.e + x, y: matrix.f + y, font: context.font });
+      originalFillText(text, x, y, maxWidth);
+    }) as typeof context.fillText);
+    const decorated = createElement(Text, {
+      key: 'decorated', children: 'Ag', onClick: () => hits.push('decorated'),
+      style: {
+        boxSizing: 'border-box', width: 57, height: 48, flexBasis: 57, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+        padding: { left: 5, right: 7, top: 10, bottom: 4 }, borderWidth: { left: 3, right: 2, top: 6, bottom: 8 },
+        font: '10px monospace', wrap: false, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#8a3248', cursor: 'pointer',
+      },
+    });
+    const peer = createElement(Text, {
+      key: 'peer', children: 'Ag',
+      style: { width: 40, height: 40, flexBasis: 40, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, font: '20px sans-serif', wrap: false, fit: 'visible', overflow: 'visible', textBaseline: 'top', fill: '#426b61' },
+    });
+    const follower = createElement(Rectangle, {
+      key: 'follower', onClick: () => hits.push('follower'),
+      style: { width: 60, height: 20, flexBasis: 60, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: '#6e9d35', cursor: 'pointer' },
+    });
+    const controller = pibbl(canvas, <Flex style={{ width: 100, height: 80, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'first-baseline', alignContent: 'flex-start' }}>{[decorated, peer, follower]}</Flex>);
+    controllers.push(controller);
+    await nextFrame();
+
+    const draw = (font: string) => draws.find(entry => entry.font === font)!;
+    const decoratedDraw = draw('10px monospace');
+    const peerDraw = draw('20px sans-serif');
+    const alphabetic = (entry: Draw) => {
+      context.save();
+      try {
+        context.font = entry.font;
+        context.textBaseline = 'top';
+        const top = context.measureText(entry.text).actualBoundingBoxAscent;
+        context.textBaseline = 'alphabetic';
+        const baselineAscent = context.measureText(entry.text).actualBoundingBoxAscent;
+        expect(Number.isFinite(top)).toBe(true);
+        expect(Number.isFinite(baselineAscent)).toBe(true);
+        return entry.y + baselineAscent - top;
+      } finally { context.restore(); }
+    };
+    // The 8px horizontal and 16px vertical combined insets are outside the
+    // Text provider allocation, but move the painted content and its baseline.
+    expect(decoratedDraw.x).toBeCloseTo(8, 5);
+    expect(peerDraw.x).toBeCloseTo(57, 5);
+    expect(alphabetic(decoratedDraw)).toBeCloseTo(alphabetic(peerDraw), 5);
+    context.save(); context.font = decoratedDraw.font; context.textBaseline = 'top';
+    const metrics = context.measureText(decoratedDraw.text); context.restore();
+    click(canvas, decoratedDraw.x - metrics.actualBoundingBoxLeft + 1, decoratedDraw.y - metrics.actualBoundingBoxAscent + 1);
+    click(canvas, 4, 52);
+    expect(hits).toEqual(['decorated', 'follower']);
+
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([
+      baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+    ]);
+  },
+);
+
+
+it('paints and targets standalone Text at its numeric padding and border content origin', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 60; document.body.append(canvas);
+  const context = canvas.getContext('2d')!;
+  const original = context.fillText.bind(context);
+  const draws: { text: string; x: number; y: number }[] = [];
+  let hits = 0;
+  vi.spyOn(context, 'fillText').mockImplementation(((text: string, x: number, y: number, maxWidth?: number) => {
+    const matrix = context.getTransform(); draws.push({text,x:matrix.e+x,y:matrix.f+y}); original(text,x,y,maxWidth);
+  }) as typeof context.fillText);
+  const controller = pibbl(canvas, <Text onClick={() => hits++} style={{ width: 40, height: 20, padding: {left:5,right:7,top:10,bottom:4}, borderWidth: {left:3,right:2,top:6,bottom:8}, font:'10px monospace', wrap:false, textBaseline:'top', fill:'#19375b' }}>Ag</Text>);
+  controllers.push(controller); await nextFrame();
+  expect(draws.at(-1)).toEqual({text:'Ag',x:8,y:16});
+  context.save(); context.font='10px monospace'; context.textBaseline='top'; const metrics=context.measureText('Ag'); context.restore();
+  click(canvas,8-metrics.actualBoundingBoxLeft+1,16-metrics.actualBoundingBoxAscent+1); expect(hits).toBe(1);
+  controller.dispose();
+});
+
+it.runIf(nativeLayout)(
+  'lifts allocated percentage and logical decoration baselines from content coordinates without changing provider allocations',
+  async () => {
+    const ownerWidth = signal(100);
+    const boxes = new Map<string, LayoutBox>();
+    const allocations: LayoutBox[] = [];
+    const calls = new Map<string, number>();
+    const Leaf = definePrimitive<BaselineProps, BaselineStyle & Pick<BoxStyle, 'padding' | 'paddingStart' | 'paddingEnd'>, BaselineStyle & Pick<BoxStyle, 'padding' | 'paddingStart' | 'paddingEnd'>, BaselineStyle & Pick<BoxStyle, 'padding' | 'paddingStart' | 'paddingEnd'> & { width: number; height: number }>((props) => {
+      const box = useLayoutBox();
+      const matrix = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      return <Rectangle style={{ width: box.width, height: box.height, fill: '#426b61' }} />;
+    }, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: ({ props, allocation }) => {
+        allocations.push({ ...allocation });
+        calls.set(props.name, (calls.get(props.name) ?? 0) + 1);
+        const first = props.name === 'A' ? 12 : props.name === 'B' ? 30 : 8;
+        return { status: 'measured' as const, first, last: first };
+      },
+    });
+    const a = createElement(Leaf, {
+      key: 'A', name: 'A',
+      style: {
+        width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0,
+        padding: { left: '50%', right: 0, top: '10%', bottom: '10%' }, paddingStart: 0, paddingEnd: '10%',
+      },
+    });
+    const b = createElement(Leaf, { key: 'B', name: 'B', style: { width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 } });
+    const c = createElement(Leaf, { key: 'C', name: 'C', style: { width: 60, height: 20, minWidth: 0, minHeight: 0, flexBasis: 60, flexGrow: 0, flexShrink: 0 } });
+    const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 100; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: ownerWidth, height: 100, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'first-baseline', alignContent: 'flex-start' }}>{[a, b, c]}</Flex>);
+    controllers.push(controller);
+    await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 8, width: 50, height: 40 });
+    expect(boxes.get('B')).toEqual({ x: 50, y: 0, width: 40, height: 40 });
+    expect(boxes.get('C')).toEqual({ x: 0, y: 48, width: 60, height: 20 });
+    expect(allocations.filter(box => box.width === 40 && box.height === 20)).toHaveLength(1);
+    const initialCalls = new Map(calls);
+    ownerWidth.set(120);
+    await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 6, width: 52, height: 44 });
+    expect(boxes.get('B')).toEqual({ x: 52, y: 0, width: 40, height: 40 });
+    expect(boxes.get('C')).toEqual({ x: 0, y: 50, width: 60, height: 20 });
+    expect(allocations.filter(box => box.width === 40 && box.height === 20)).toHaveLength(2);
+    expect(calls.get('A')).toBe((initialCalls.get('A') ?? 0) + 1);
+    expect(calls.get('B')).toBe(initialCalls.get('B'));
+    expect(calls.get('C')).toBe(initialCalls.get('C'));
+  },
+);
+
+it.runIf(nativeLayout)(
+  'uses the decorated content bottom, rather than the outer bottom, as a missing baseline fallback',
+  async () => {
+    const boxes = new Map<string, LayoutBox>();
+    const Plain = definePrimitive<BaselineProps, BaselineStyle & Pick<BoxStyle, 'padding' | 'paddingStart' | 'paddingEnd'>, BaselineStyle & Pick<BoxStyle, 'padding' | 'paddingStart' | 'paddingEnd'>, BaselineStyle & Pick<BoxStyle, 'padding' | 'paddingStart' | 'paddingEnd'> & { width: number; height: number }>((props) => {
+      const box = useLayoutBox(); const matrix = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      return <Rectangle style={{ width: box.width, height: box.height, fill: '#426b61' }} />;
+    }, { resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }) });
+    const Measured = definePrimitive<BaselineProps, BaselineStyle & Pick<BoxStyle, 'padding' | 'paddingStart' | 'paddingEnd'>, BaselineStyle & Pick<BoxStyle, 'padding' | 'paddingStart' | 'paddingEnd'>, BaselineStyle & Pick<BoxStyle, 'padding' | 'paddingStart' | 'paddingEnd'> & { width: number; height: number }>((props) => {
+      const box = useLayoutBox(); const matrix = useCanvasContext().getTransform();
+      boxes.set(props.name, { x: matrix.e, y: matrix.f, width: box.width, height: box.height });
+      return <Rectangle style={{ width: box.width, height: box.height, fill: '#426b61' }} />;
+    }, {
+      resolveStyle: (style, context) => ({ ...style, width: context.allocation.width, height: context.allocation.height }),
+      measureBaselines: () => ({ status: 'measured' as const, first: 30, last: 30 }),
+    });
+    const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 60; document.body.append(canvas);
+    const controller = pibbl(canvas, <Flex style={{ width: 120, height: 60, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'first-baseline' }}>
+      <Plain key="A" name="A" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, padding: { top: 10, bottom: 4 } }} />
+      <Measured key="B" name="B" style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0 }} />
+    </Flex>);
+    controllers.push(controller);
+    await nextFrame();
+    expect(boxes.get('A')).toEqual({ x: 0, y: 0, width: 40, height: 34 });
+    expect(boxes.get('B')).toEqual({ x: 40, y: 0, width: 40, height: 40 });
+  },
+);

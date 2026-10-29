@@ -1,4 +1,5 @@
-import { pibbl, Group, Rectangle, Circle, Text, signal } from "@pibbl/core";
+import {  Group, Rectangle, Circle, Text, signal } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import { displacement } from "@pibbl/core/filters";
 import {
   rainDrops,
@@ -109,5 +110,5 @@ function RainGlass() {
     </>
   );
 }
-const controller = pibbl(canvas, <RainGlass />);
+const controller = pibblSync(canvas, <RainGlass />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

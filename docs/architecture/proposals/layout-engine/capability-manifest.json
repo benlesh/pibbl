@@ -1,0 +1,3510 @@
+{
+  "schemaVersion": 1,
+  "status": "proposed",
+  "asOf": "2026-10-28",
+  "purpose": "First-release capability denominator and evidence ledger. This file does not define a public API, enable the experimental engine, or claim Yoga parity.",
+  "baseline": {
+    "oracle": "Yoga",
+    "version": "3.2.1",
+    "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
+    "configuration": {
+      "useWebDefaults": false,
+      "pointScaleFactor": 0,
+      "errata": "none",
+      "direction": "LTR"
+    },
+    "rule": "Released Yoga 3.2.1 is the parity oracle. Development Yoga is observational only and cannot replace this baseline."
+  },
+  "evidenceRules": {
+    "parity": "Requires a pinned Yoga fixture, a public Pibbl fixture, semantic geometry evidence, negative evidence, interaction evidence where applicable, and classified divergences.",
+    "preserve": "Requires current public-contract regression evidence and release notes for a material divergence from Yoga.",
+    "beyond": "Requires a Pibbl contract and public evidence; Yoga is not an oracle for the capability.",
+    "experimental": "Does not count as released parity or a production migration promise.",
+    "complete": "Capability-level evidence is complete for the stated supported contract. It does not close its group gate, enable the experimental engine, or substitute for final release trust."
+  },
+  "observationRule": "A `current` value without `evidenceRefs` is a source observation, not a test-pass claim. `evidenceRefs` identify focused executable evidence or the contract that records the current public surface.",
+  "sourceReferences": [
+    "docs/architecture/proposals/layout-engine/migration-and-evidence.md",
+    "docs/architecture/proposals/layout-engine/design.md",
+    "docs/architecture/proposals/layout-engine/reactivity.md",
+    "docs/project-plans/layout-engine-rework-proposal.md",
+    "docs/project-plans/010-layout-engine-rework.md",
+    "docs/design/layout-system-contract.md"
+  ],
+  "currentYogaEvidence": {
+    "fixture": "tooling/layout-yoga-rehearsal/reference.json",
+    "cases": [
+      {
+        "id": "grow",
+        "covers": ["flex.grow-shrink-basis", "flex.numeric-gap"]
+      },
+      {
+        "id": "cap",
+        "covers": ["flex.grow-shrink-basis", "flex.min-max"]
+      },
+      {
+        "id": "shrink",
+        "covers": ["flex.grow-shrink-basis", "flex.min-max"]
+      },
+      {
+        "id": "rectangle-shrink",
+        "covers": ["flex.automatic-minimum", "flex.grow-shrink-basis"]
+      },
+      {
+        "id": "rectangle-percent-content-box",
+        "covers": [
+          "flex.automatic-minimum",
+          "flex.grow-shrink-basis",
+          "flex.min-max"
+        ]
+      },
+      {
+        "id": "column-grow",
+        "covers": [
+          "flex.row-column-nowrap-wrap",
+          "flex.grow-shrink-basis",
+          "flex.numeric-gap"
+        ],
+        "classification": "exact explicit finite inputs; column/shrink1/minHeight0"
+      },
+      {
+        "id": "column-cap",
+        "covers": [
+          "flex.row-column-nowrap-wrap",
+          "flex.grow-shrink-basis",
+          "flex.min-max"
+        ],
+        "classification": "exact explicit finite inputs; first maxHeight30"
+      },
+      {
+        "id": "column-shrink",
+        "covers": [
+          "flex.row-column-nowrap-wrap",
+          "flex.grow-shrink-basis",
+          "flex.min-max"
+        ],
+        "classification": "exact explicit finite inputs; first minHeight60, second minHeight0"
+      },
+      {
+        "id": "row-reverse-cap",
+        "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"],
+        "classification": "exact finite LTR main-axis reversal; first maxWidth80"
+      },
+      {
+        "id": "column-reverse-cap",
+        "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"],
+        "classification": "exact finite LTR main-axis reversal; first maxHeight30"
+      },
+      {
+        "id": "row-wrap",
+        "covers": ["flex.row-column-nowrap-wrap", "flex.numeric-gap"],
+        "classification": "exact finite three-item source-formed lines; numeric basis/minimum/gap"
+      },
+      {
+        "id": "row-wrap-reverse",
+        "covers": [
+          "flex.reverse-and-wrap-reverse",
+          "flex.row-column-nowrap-wrap"
+        ],
+        "classification": "exact finite reversed cross placement; source A/B/C order unchanged"
+      },
+      {
+        "id": "border-box-floor-bounds",
+        "covers": ["box.box-sizing", "flex.min-max"],
+        "classification": "exact explicit padding floor and finite outer bounds"
+      },
+      {
+        "id": "border-box-percentage",
+        "covers": ["box.box-sizing", "flex.grow-shrink-basis"],
+        "classification": "exact definite percentage basis and cross size before inset conversion"
+      },
+      {
+        "id": "border-box-asymmetric-row",
+        "covers": ["box.box-sizing", "box.padding-and-layout-border"],
+        "classification": "exact physical numeric insets; row basis54"
+      },
+      {
+        "id": "border-box-asymmetric-column",
+        "covers": ["box.box-sizing", "box.padding-and-layout-border"],
+        "classification": "exact physical numeric insets; column basis62"
+      },
+      {
+        "id": "zero-fractional-grow",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "fractional-shrink",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "grow-freeze-release",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "shrink-freeze-release",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "large-finite-differential",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "subunit-zero-grow",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"
+      },
+      {
+        "id": "subunit-shrink-policy",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"
+      },
+      {
+        "id": "initial-freeze-grow-policy",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"
+      },
+      {
+        "id": "initial-freeze-shrink-policy",
+        "covers": ["flex.grow-shrink-basis"],
+        "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"
+      },
+      {
+        "id": "distribution-negative-row-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-row-stretch",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-row-stretch",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-auto-row",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-column-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-cross-negative-column-stretch",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-flex-start",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-flex-end",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-center",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-space-between",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-single-column-stretch",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-auto-column",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "distribution-negative-row-reverse-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-negative-row-reverse-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-cross-negative-row-reverse-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-cross-negative-row-reverse-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-negative-column-reverse-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-negative-column-reverse-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-cross-negative-column-reverse-space-around",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "distribution-cross-negative-column-reverse-space-evenly",
+        "covers": ["flex.main-cross-distribution"],
+        "classification": "css-safe-overflow-reverse"
+      },
+      {
+        "id": "percent-cap-row",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-cap-row-resized",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-floor-row",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-floor-row-resized",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-cap-column",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-cap-column-resized",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-floor-column",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "percent-floor-column-resized",
+        "covers": ["flex.min-max"],
+        "classification": "exact finite declared inputs"
+      },
+      {
+        "id": "aspect-wrap-row",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-row-resized",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-row-reverse",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-row-reverse-resized",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-column",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-column-resized",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-column-reverse",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "aspect-wrap-column-reverse-resized",
+        "covers": [
+          "box.aspect-ratio",
+          "flex.row-column-nowrap-wrap",
+          "flex.reverse-and-wrap-reverse"
+        ]
+      },
+      {
+        "id": "gap-percent-row-nowrap",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-row-nowrap-resized",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-row-wrap",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-row-wrap-resized",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-column-nowrap",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-column-nowrap-resized",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-column-wrap",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-column-wrap-resized",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "padding-percent-row-content-box",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-row-content-box-resized",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-row-border-box-basis",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-row-border-box-basis-resized",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-column-content-box",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-column-content-box-resized",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-column-border-box-basis",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "padding-percent-column-border-box-basis-resized",
+        "covers": ["box.padding-and-layout-border", "box.box-sizing"]
+      },
+      {
+        "id": "cross-percent-row-min",
+        "covers": ["flex.min-max", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "cross-percent-row-min-resized",
+        "covers": ["flex.min-max", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "cross-percent-row-max",
+        "covers": ["flex.min-max", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "cross-percent-row-max-resized",
+        "covers": ["flex.min-max", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "cross-percent-column-min",
+        "covers": ["flex.min-max", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "cross-percent-column-min-resized",
+        "covers": ["flex.min-max", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "cross-percent-column-max",
+        "covers": ["flex.min-max", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "cross-percent-column-max-resized",
+        "covers": ["flex.min-max", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "margin-percent-row-nowrap",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-row-nowrap-resized",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-column-nowrap",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-column-nowrap-resized",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "nested-percent-gap-row-nowrap",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-row-nowrap-resized",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-row-wrap",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-row-wrap-resized",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-column-nowrap",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-column-nowrap-resized",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-column-wrap",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "nested-percent-gap-column-wrap-resized",
+        "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "margin-percent-row-wrap",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-row-wrap-resized",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-column-wrap",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-column-wrap-resized",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-row-wrap-reverse",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-row-wrap-reverse-resized",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-column-wrap-reverse",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-column-wrap-reverse-resized",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "direction-matrix-row-wrap-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-wrap-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-wrap-reverse-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-wrap-reverse-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-reverse-wrap-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-reverse-wrap-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-reverse-wrap-reverse-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-reverse-wrap-reverse-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-wrap-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-wrap-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-wrap-reverse-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-wrap-reverse-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-reverse-wrap-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-reverse-wrap-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-reverse-wrap-reverse-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-reverse-wrap-reverse-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-margins-column-wrap-ltr",
+        "covers": ["direction.rtl-and-logical-edges", "flex.margin"]
+      },
+      {
+        "id": "direction-margins-column-wrap-rtl",
+        "covers": ["direction.rtl-and-logical-edges", "flex.margin"]
+      },
+      {
+        "id": "direction-margins-column-wrap-reverse-ltr",
+        "covers": ["direction.rtl-and-logical-edges", "flex.margin"]
+      },
+      {
+        "id": "direction-margins-column-wrap-reverse-rtl",
+        "covers": ["direction.rtl-and-logical-edges", "flex.margin"]
+      },
+      {
+        "id": "direction-insets-column-wrap-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-insets-column-wrap-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-insets-column-wrap-reverse-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-insets-column-wrap-reverse-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "auto-margin-left",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-left-resized",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-right",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-right-resized",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-both",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-both-resized",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-margin-left-justify-end",
+        "covers": ["flex.auto-margin"]
+      },
+      {
+        "id": "auto-main-row-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-row-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-row-reverse-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-row-reverse-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-column-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-column-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-column-reverse-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-main-column-reverse-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-logical-start-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-logical-end-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-wrap-row-wrap-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-wrap-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-wrap-reverse-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-wrap-reverse-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-reverse-wrap-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-reverse-wrap-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-reverse-wrap-reverse-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-reverse-wrap-reverse-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-wrap-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-wrap-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-wrap-reverse-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-wrap-reverse-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-reverse-wrap-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-reverse-wrap-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-reverse-wrap-reverse-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-reverse-wrap-reverse-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-line-without-auto-center",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-row-top-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-bottom-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-row-top-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-bottom-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-row-reverse-top-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-reverse-bottom-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-reverse-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-row-reverse-top-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-reverse-bottom-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-row-reverse-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-wrap-reverse-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-row-reverse-wrap-reverse-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-wrap-reverse-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-before-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-after-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-both-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-before-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-after-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-cross-auto-precedence"
+      },
+      {
+        "id": "auto-cross-direction-column-reverse-wrap-reverse-both-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
+      },
+      {
+        "id": "auto-shorthand-all-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-left-zero-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-top-zero-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-start-zero-ltr",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-all-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-left-zero-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-top-zero-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-shorthand-start-zero-rtl",
+        "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-opposing-main-grow-consumes",
+        "covers": ["flex.auto-margin", "flex.min-max", "flex.grow-shrink-basis"]
+      },
+      {
+        "id": "auto-opposing-main-grow-max",
+        "covers": ["flex.auto-margin", "flex.min-max", "flex.grow-shrink-basis"]
+      },
+      {
+        "id": "auto-opposing-main-grow-max-resized",
+        "covers": ["flex.auto-margin", "flex.min-max", "flex.grow-shrink-basis"]
+      },
+      {
+        "id": "auto-opposing-main-shrink-min",
+        "covers": ["flex.auto-margin", "flex.min-max", "flex.grow-shrink-basis"]
+      },
+      {
+        "id": "auto-opposing-main-numeric-after",
+        "covers": ["flex.auto-margin", "flex.min-max", "flex.grow-shrink-basis"]
+      },
+      {
+        "id": "auto-opposing-main-negative-center",
+        "covers": [
+          "flex.auto-margin",
+          "flex.min-max",
+          "flex.grow-shrink-basis"
+        ],
+        "classification": "css-nonpositive-auto-alignment"
+      },
+      {
+        "id": "auto-opposing-cross-min",
+        "covers": ["flex.auto-margin", "flex.min-max", "flex.grow-shrink-basis"]
+      },
+      {
+        "id": "auto-opposing-cross-max",
+        "covers": ["flex.auto-margin", "flex.min-max", "flex.grow-shrink-basis"]
+      },
+      {
+        "id": "text-cross-auto-top-stretch-wide",
+        "covers": ["flex.auto-margin", "flex.min-max"],
+        "note": "Native callback supplies explicit deterministic word-wrap measurement; no font-rendering parity claim."
+      },
+      {
+        "id": "text-cross-auto-top-stretch-narrow",
+        "covers": ["flex.auto-margin", "flex.min-max"],
+        "note": "Native callback supplies explicit deterministic word-wrap measurement; no font-rendering parity claim."
+      },
+      {
+        "id": "custom-cross-auto-top-stretch-wide",
+        "covers": ["flex.auto-margin", "flex.min-max"],
+        "note": "Native callback supplies explicit eight-job measurement."
+      },
+      {
+        "id": "custom-cross-auto-top-stretch-narrow",
+        "covers": ["flex.auto-margin", "flex.min-max"],
+        "note": "Native callback supplies explicit eight-job measurement."
+      },
+      {
+        "id": "owner-cross-auto-top-stretch-wide",
+        "covers": ["flex.auto-margin", "flex.min-max"]
+      },
+      {
+        "id": "owner-cross-auto-top-stretch-narrow",
+        "covers": ["flex.auto-margin", "flex.min-max"]
+      },
+      {
+        "id": "decorated-main-cap-row-reverse",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-cap-row-reverse-resized",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-floor-column-reverse",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-floor-column-reverse-resized",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-floor-row-reverse",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis symmetric percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-floor-row-reverse-resized",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis symmetric percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-cap-column-reverse",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis symmetric percentage bound with explicit numeric basis/minimum policy"
+      },
+      {
+        "id": "decorated-main-cap-column-reverse-resized",
+        "covers": ["flex.min-max", "box.box-sizing"],
+        "classification": "exact finite decorated reverse main-axis symmetric percentage bound with explicit numeric basis/minimum policy"
+      }
+    ],
+    "limit": "721 pinned native records:530 without a divergence classification,183 preserved semantic differences and8 native-font-source records. Fresh public runtime verification is limited to named replay receipts; this is not a721-case runtime replay or general intrinsic, percentage, auto-margin, font or CSS parity claim."
+  },
+  "gateGroups": [
+    {
+      "id": "flex-core",
+      "releaseGate": true,
+      "dependsOn": []
+    },
+    {
+      "id": "box-and-direction",
+      "releaseGate": true,
+      "dependsOn": ["flex-core"]
+    },
+    {
+      "id": "measurement-and-intrinsic",
+      "releaseGate": true,
+      "dependsOn": ["flex-core"]
+    },
+    {
+      "id": "placement-and-participation",
+      "releaseGate": true,
+      "dependsOn": ["box-and-direction", "measurement-and-intrinsic"]
+    },
+    {
+      "id": "reactivity-and-publication",
+      "releaseGate": true,
+      "dependsOn": ["measurement-and-intrinsic"]
+    },
+    {
+      "id": "migration-and-conformance",
+      "releaseGate": true,
+      "dependsOn": [
+        "flex-core",
+        "box-and-direction",
+        "measurement-and-intrinsic",
+        "placement-and-participation",
+        "reactivity-and-publication"
+      ]
+    },
+    {
+      "id": "grid-beyond-yoga",
+      "releaseGate": true,
+      "dependsOn": ["measurement-and-intrinsic", "reactivity-and-publication"]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "flex.row-column-nowrap-wrap",
+      "target": "preserve",
+      "group": "flex-core",
+      "current": "finite LTR row/column nowrap/wrap preserve contract complete, including bounded fixed-width Text and nested percentages resolved from actual final allocations; experimental engine only",
+      "status": "complete",
+      "evidenceRefs": [
+        "docs/design/layout-system-contract.md#flex",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-nested-percent-wrap.mjs",
+        "tooling/packed-layout-consumer.mjs"
+      ],
+      "evidence": {
+        "positive": [
+          "public Flex/Text scenarios",
+          "fixed-width direct Text auto-height forms wrapped columns before following card placement",
+          "eight pinned nested percentage owners use final allocated main size before leaf40% basis and10% gap",
+          "finite row/column \u00d7 nowrap/wrap resize matrix"
+        ],
+        "negative": [
+          "intrinsic wrapped containers rejected",
+          "intrinsic/max-only nested owners reject before percentage feedback",
+          "experimental loading and normal JavaScript boundaries retained"
+        ],
+        "interaction": [
+          "wrapped target geometry",
+          "source/built all eight nested cases: semantic outer/inner boxes, former leaf/footer misses, current hits, stable stamps/nodes, paint-only reuse and exact cleanup",
+          "fresh packed installed public nested fixtures cover all eight native cases"
+        ],
+        "yogaCases": [
+          "column-grow",
+          "column-cap",
+          "column-shrink",
+          "row-wrap",
+          "row-wrap-reverse",
+          "nested-percent-gap-row-nowrap",
+          "nested-percent-gap-row-nowrap-resized",
+          "nested-percent-gap-row-wrap",
+          "nested-percent-gap-row-wrap-resized",
+          "nested-percent-gap-column-nowrap",
+          "nested-percent-gap-column-nowrap-resized",
+          "nested-percent-gap-column-wrap",
+          "nested-percent-gap-column-wrap-resized"
+        ],
+        "missing": []
+      },
+      "supportedContract": "Finite LTR direct or explicitly allocated nested Flex; row/column \u00d7 nowrap/wrap; numeric/percentage direct dimensions, basis and gaps; finite bounds; source-order paint/hits, owner resize, identity, paint-only reuse and exact teardown. Intrinsic percentage feedback and indefinite owners remain unsupported; reverse/RTL/automatic minima retain their separate fixed-ledger entries."
+    },
+    {
+      "id": "flex.reverse-and-wrap-reverse",
+      "target": "parity",
+      "group": "flex-core",
+      "current": "bounded experimental finite Flex reverse-main and wrap-reverse placement across row/column, LTR/RTL and their combinations; native margin/content-box reflection differences remain explicitly classified",
+      "status": "complete",
+      "evidence": {
+        "positive": [
+          "row/column reverse with physical margins",
+          "source-formed wrapped line reversal",
+          "direction-relative flex-start/flex-end/center",
+          "wrap-reverse row/column cross alignment with asymmetric physical margins",
+          "combined main/cross reversal across LTR/RTL",
+          "twenty-four pinned row/column forward/reverse \u00d7 wrap/wrap-reverse \u00d7 LTR/RTL fixtures with classified native differences"
+        ],
+        "negative": [
+          "normal JavaScript reverse direction/wrap diagnostics",
+          "native build rejects stale test fixtures"
+        ],
+        "interaction": [
+          "combined main/cross/RTL transitions preserve keyed mounts, stamps and nodes",
+          "main and cross placement changes reuse allocation and measurement work",
+          "source/built and installed moved targets preserve source order and release owned resources",
+          "two wrap-reverse lines overlap through Group, Layer and filter: B stays topmost, pointer-events none reaches A, and Tab order remains source order"
+        ],
+        "yogaCases": [
+          "row-reverse-cap",
+          "column-reverse-cap",
+          "row-wrap-reverse",
+          "direction-matrix-{row,row-reverse,column,column-reverse}-{wrap,wrap-reverse}-{ltr,rtl}: preserved margin centering/content-box reflection explicitly classified"
+        ],
+        "missing": []
+      },
+      "supportedContract": "Finite direct Flex row/column, forward/reverse main axis, wrap/wrap-reverse cross axis and inherited LTR/RTL direction. Numeric declared boxes, finite margins and cross alignment preserve source paint, focus and target order through keyed changes; pinned Yoga differences remain classified. Indefinite/intrinsic owner sizing, general CSS compatibility and capabilities listed separately remain outside this entry.",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/test-wasm-wrapped-collections.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "docs/design/layout-system-contract.md"
+      ]
+    },
+    {
+      "id": "flex.grow-shrink-basis",
+      "target": "parity",
+      "group": "flex-core",
+      "current": "finite numerical grow/shrink/basis allocation complete with classified CSS partial-factor differences and f64 range extension; intrinsic contributions remain separate capabilities",
+      "status": "complete",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/test/layout-text-auto-basis.test.tsx",
+        "packages/core/wasm/layout/src/lib.rs",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/layout-yoga-rehearsal/README.md",
+        "tooling/test-css-partial-flex.mjs"
+      ],
+      "evidence": {
+        "positive": [
+          "grow/cap/shrink and column allocation",
+          "fractional and zero bases",
+          "finite1e30/2e30 differential",
+          "release grow/shrink freezing",
+          "initially frozen sizes participate in partial free space",
+          "bounded supported Text auto basis"
+        ],
+        "negative": [
+          "nonfinite intermediate allocation rejection",
+          "unequal1e308/1 f64 robustness is not a Yoga input-parity claim"
+        ],
+        "interaction": [
+          "signal resize/cap/floor target geometry",
+          "source/built25-case comparison with classification labels",
+          "installed initially-frozen allocation pixels and lifecycle"
+        ],
+        "yogaCases": [
+          "grow",
+          "cap",
+          "shrink",
+          "column-grow",
+          "column-cap",
+          "column-shrink",
+          "zero-fractional-grow",
+          "fractional-shrink",
+          "grow-freeze-release",
+          "shrink-freeze-release",
+          "large-finite-differential",
+          "subunit-zero-grow",
+          "subunit-shrink-policy",
+          "initial-freeze-grow-policy",
+          "initial-freeze-shrink-policy"
+        ],
+        "classifiedDivergences": [
+          "subunit-shrink-policy",
+          "initial-freeze-grow-policy",
+          "initial-freeze-shrink-policy"
+        ],
+        "missing": []
+      }
+    },
+    {
+      "id": "flex.main-cross-distribution",
+      "target": "parity",
+      "group": "flex-core",
+      "current": "finite LTR main/cross distribution complete; safe physical-start overflow follows Chromium with eight classified reverse differences from Yoga3.2.1; RTL remains separate",
+      "status": "complete",
+      "evidenceRefs": [
+        "packages/core/src/lib/layout/flex.test.ts",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-css-flex-distribution.mjs",
+        "tooling/test-css-flex-distribution-reverse.mjs",
+        "tooling/test-wasm-column-text-cross.mjs",
+        "tooling/packed-layout-consumer.mjs"
+      ],
+      "evidence": {
+        "positive": [
+          "all main/cross distribution policies on row and column",
+          "one-item wrapped lines for seven alignContent policies",
+          "bounded automatic cross sizes and real measured Text",
+          "LTR logical start/end remain physical under reversal"
+        ],
+        "negative": [
+          "invalid alignment diagnostics",
+          "safe overflow fallback on main and wrapped cross axes",
+          "explicit center and direction-relative space-between remain unchanged"
+        ],
+        "interaction": [
+          "source/built75-case comparison hit targets and zero ownership",
+          "measured Text footer x28 to158 with stable y, solves, measurements and nodes",
+          "installed overflow pixels and measured Text following-sibling hit target"
+        ],
+        "yogaCases": [
+          "distribution-negative-row-flex-start",
+          "distribution-negative-row-flex-end",
+          "distribution-negative-row-center",
+          "distribution-negative-row-space-between",
+          "distribution-negative-row-space-around",
+          "distribution-negative-row-space-evenly",
+          "distribution-cross-negative-row-flex-start",
+          "distribution-cross-negative-row-flex-end",
+          "distribution-cross-negative-row-center",
+          "distribution-cross-negative-row-space-between",
+          "distribution-cross-negative-row-space-around",
+          "distribution-cross-negative-row-space-evenly",
+          "distribution-cross-negative-row-stretch",
+          "distribution-single-row-flex-start",
+          "distribution-single-row-flex-end",
+          "distribution-single-row-center",
+          "distribution-single-row-space-between",
+          "distribution-single-row-space-around",
+          "distribution-single-row-space-evenly",
+          "distribution-single-row-stretch",
+          "distribution-auto-row",
+          "distribution-negative-column-flex-start",
+          "distribution-negative-column-flex-end",
+          "distribution-negative-column-center",
+          "distribution-negative-column-space-between",
+          "distribution-negative-column-space-around",
+          "distribution-negative-column-space-evenly",
+          "distribution-cross-negative-column-flex-start",
+          "distribution-cross-negative-column-flex-end",
+          "distribution-cross-negative-column-center",
+          "distribution-cross-negative-column-space-between",
+          "distribution-cross-negative-column-space-around",
+          "distribution-cross-negative-column-space-evenly",
+          "distribution-cross-negative-column-stretch",
+          "distribution-single-column-flex-start",
+          "distribution-single-column-flex-end",
+          "distribution-single-column-center",
+          "distribution-single-column-space-between",
+          "distribution-single-column-space-around",
+          "distribution-single-column-space-evenly",
+          "distribution-single-column-stretch",
+          "distribution-auto-column",
+          "distribution-negative-row-reverse-space-around",
+          "distribution-negative-row-reverse-space-evenly",
+          "distribution-cross-negative-row-reverse-space-around",
+          "distribution-cross-negative-row-reverse-space-evenly",
+          "distribution-negative-column-reverse-space-around",
+          "distribution-negative-column-reverse-space-evenly",
+          "distribution-cross-negative-column-reverse-space-around",
+          "distribution-cross-negative-column-reverse-space-evenly"
+        ],
+        "missing": []
+      }
+    },
+    {
+      "id": "flex.min-max",
+      "target": "parity",
+      "group": "flex-core",
+      "current": "numeric bounds, definite-owner percentage main-axis caps/floors and wrapped stretched cross bounds in row/column, including owner resize; an acyclic exact caller width/height supplies an omitted LTR nowrap row/column main reference for direct percentage bounds; bounded undecorated zero-factor numeric Rectangle owners use native staged percentage references for max-only, min-only and unbounded measurement; direct childless paired custom leaves use released native query preparation and constrained natural-result continuation; broader intrinsic profiles retain explicit admission boundaries; bounded direct nested row Flex cross minimum resolves from a definite wrapped outer owner; decorated border-box row-reverse/wrap nested cross minima use the final content owner; described known owners cover the same staged numeric/paired matrix, with finite native exact continuation through deeper and branching same-axis known Flex trees; receiving-owner percentage min/max resolve once against the original external reference, remain unresolved under unbounded availability and retain scalar bounds through allocated continuation; native parent-main contribution is distinct from final intrinsic content, with receiver-scoped roles and exact allocated remeasurement",
+      "status": "complete",
+      "evidenceRefs": [
+        "packages/core/src/lib/layout/flex.test.ts",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "packages/core/test/layout-exact-row-measurement.test.tsx",
+        "packages/core/test/layout-exact-column-measurement.test.tsx",
+        "packages/core/test/layout-indefinite-bound-validation.test.tsx",
+        "packages/core/test/layout-measured-percent-owner.test.tsx",
+        "packages/core/test/layout-measured-leaf-percent-owner.test.tsx",
+        "packages/scenarios/src/learning/layout/wasm-flex-measured-percentage-owner.example.tsx",
+        "tooling/test-wasm-measured-percentage-owner.mjs",
+        "tooling/layout-yoga-rehearsal/percentage-phase-probe.cpp",
+        "packages/scenarios/src/learning/layout/wasm-flex-percentage-owner.example.tsx",
+        "tooling/test-wasm-percentage-owner.mjs",
+        "tooling/layout-yoga-rehearsal/percentage-owner-probe.cpp",
+        "packages/scenarios/src/learning/layout/wasm-flex-intrinsic-primitive.example.tsx",
+        "tooling/test-wasm-intrinsic-primitive.mjs",
+        "packages/core/test/layout-measured-leaf-composition.test.tsx",
+        "packages/core/test/layout-percent-owner-bound.test.tsx",
+        "packages/core/test/layout-main-contribution.test.tsx",
+        "packages/core/test/layout-staged-auto-margin.test.tsx"
+      ],
+      "evidence": {
+        "positive": [
+          "slice177: finite normal numeric known-owner placement keeps owner160/A40/B80/C160 distinct from pure112.5; cap/floor across external80/160/200 and rootmax/min/minmax matches pinned native phases; direct/described row/column regressions and no-bound controls pass",
+          "Same-axis paired-leaf owners with numeric160 and percentage75% maxima allocate native contributions120 and117.5, requery paired leaves at30 and29.375, preserve full queries110 and109.375, and move the following target with exact teardown",
+          "cap",
+          "shrink",
+          "definite percentage grow caps and shrink floors in both axes",
+          "200\u2192240 cap owner and100\u2192140 floor owner pairs",
+          "wrapped auto-cross stretch minimum60% expands line size and maximum25% caps the item in both axes",
+          "Nested row Flex minHeight60% under owner height100\u2192160 expands its line60\u219296 while fixed inner leaves retain40\u00d720 geometry",
+          "Decorated border-box244\u00d7144\u2192204 with padding/border leaves content200\u00d7100\u2192160; reversed nested minHeight60% gives60\u219296 and world C y94\u2192130",
+          "Definite decorated reverse nested height60 capped by maxHeight25% gives25\u219240; 100% leaf heights consume that allocation once",
+          "Decorated column-reverse definite width60/maxWidth25% and 100%-width children resolve25\u219240 from content cross100\u2192160",
+          "Decorated column-reverse definite width20/minWidth60% gives nested width60\u219296 and C x94\u2192130 from content cross100\u2192160",
+          "Decorated row-reverse maxWidth25% under content width100\u2192140 freezes A at25\u219235 while column-reverse minHeight70% under content height100\u2192140 floors A70\u219298 with negative free space",
+          "Symmetric decorated row-reverse minWidth70% floors A70\u219298 and column-reverse maxHeight25% caps A25\u219235 across content main100\u2192140; both complementary sibling extents match pinned native output",
+          "Omitted-width LTR nowrap row measurement resolves direct percentage main bounds from finite equal min/max width constraints, including exact zero, and preserves natural cross size",
+          "Omitted-height LTR nowrap column measurement resolves direct percentage main bounds from finite equal min/max height constraints, including exact zero, and preserves natural cross size",
+          "Known Card numeric/paired row/column queries cover all seven accepted owner states; 24 finite normal-layout cases preserve staged extents, pixels, targets and teardown; deeper and branching finite known trees match native provider envelopes",
+          "Own percentage max75% under external200 yields root109.375/leaf29.375 with max37.5 query; min75% yields150/37.5 with max50 query; mixed min50/max75 matches the max branch; undefined references remain unbounded, row/column transpose and invalid bounds fail before callbacks"
+        ],
+        "negative": [
+          "opposing limits rejection",
+          "negative/nonfinite/malformed percentages rejected",
+          "resolved opposing percent bounds rejected",
+          "General percentage-dependent intrinsic measurement outside the staged numeric/paired-leaf profiles remains unsupported without resource allocation",
+          "Maximum-only and unbounded availability are not exact/final owners; the bounded numeric profile carries distinct native phase references while out-of-profile providers remain unsupported; conflicting bounds diagnose before provider evaluation",
+          "Malformed, negative and nonfinite percentage bounds diagnose before indefinite-owner rejection, provider evaluation or resource allocation"
+        ],
+        "interaction": [
+          "owner resize recomputes percent limits and moves hit targets in the same frame",
+          "two mounted identities and native nodes preserved",
+          "source/built focused eight-case plus prior-case checks; installed signal-driven cap/hit check",
+          "Nested following target moves y72\u2192108; old point misses, keyed leaves/native nodes survive, paint-only solves/lines reuse with one pure measure per preparation",
+          "Decorated reverse nested world leaves remain132/172,22; following target moves, keys/native solves/lines reuse, one pure measurement remains on paint",
+          "Expanded leaf extent admits a formerly empty point, preserves keys/main solves/lines/nodes, and performs zero pure measurements",
+          "Column leaf expansion admits formerly empty52,136; width-only updates preserve keys/main solves/lines, and paint uses zero pure measures",
+          "Point100,136 transfers from C to expanded A1 while new C remains targetable; keys/main solves/lines reuse, zero paint measurement",
+          "Source/built four-case replay and installed public mounts verify exact native world boxes, formerly empty point transfers to B, stable keys/nodes, paint solve reuse and exact teardown",
+          "Paired provider composes nested exact-width measurement with rendered row: owner80\u219240 caps A20\u219210, moves B hit target, preserves keys and paint reuse, and disposes measurement ownership",
+          "A one-auto absolute paired provider receives unbounded width plus exact height, composes an omitted-height column: owner80\u219240 caps A20\u219210, moves B target, preserves keys and paint reuse, and disposes measurement ownership"
+        ],
+        "yogaCases": [
+          "cap",
+          "shrink",
+          "column-cap",
+          "column-shrink",
+          "percent-cap-row",
+          "percent-cap-row-resized",
+          "percent-floor-row",
+          "percent-floor-row-resized",
+          "percent-cap-column",
+          "percent-cap-column-resized",
+          "percent-floor-column",
+          "percent-floor-column-resized",
+          "cross-percent-row-min",
+          "cross-percent-row-min-resized",
+          "cross-percent-row-max",
+          "cross-percent-row-max-resized",
+          "cross-percent-column-min",
+          "cross-percent-column-min-resized",
+          "cross-percent-column-max",
+          "cross-percent-column-max-resized",
+          "nested-cross-min-row",
+          "nested-cross-min-row-resized",
+          "nested-cross-min-decorated-row-reverse",
+          "nested-cross-min-decorated-row-reverse-resized",
+          "nested-cross-max-decorated-row-reverse",
+          "nested-cross-max-decorated-row-reverse-resized",
+          "nested-cross-max-decorated-column-reverse",
+          "nested-cross-max-decorated-column-reverse-resized",
+          "nested-cross-min-decorated-column-reverse",
+          "nested-cross-min-decorated-column-reverse-resized",
+          "decorated-main-cap-row-reverse",
+          "decorated-main-cap-row-reverse-resized",
+          "decorated-main-floor-column-reverse",
+          "decorated-main-floor-column-reverse-resized",
+          "decorated-main-floor-row-reverse",
+          "decorated-main-floor-row-reverse-resized",
+          "decorated-main-cap-column-reverse",
+          "decorated-main-cap-column-reverse-resized"
+        ],
+        "missing": []
+      }
+    },
+    {
+      "id": "flex.automatic-minimum",
+      "target": "parity",
+      "group": "flex-core",
+      "current": "experimental bounded wrapped Text content minima; direct empty Rectangle zero content minima with numeric/percentage dimensions; numeric empty Rectangle contributions; direct paired custom intrinsic row minima, exact-width finite cross measurement and bounded finite column natural-height minima; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows",
+      "status": "experimental",
+      "unresolvedPolicy": "Bounded Text and direct paired custom row/finite-column providers are implemented; general intrinsic graphs, other fitting/overflow modes and Yoga conversion differences remain unresolved.",
+      "evidenceRefs": [
+        "packages/core/test/layout-text-auto-minimum.test.tsx",
+        "docs/design/layout-system-contract.md",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "packages/core/test/layout-structural-intrinsic.test.tsx"
+      ],
+      "evidence": {
+        "positive": [
+          "public Text automatic/zero-minimum comparison",
+          "paired direct finite column provider exact-width natural height, explicit-zero escape and measurement-only signal invalidation",
+          "empty Rectangle direct row/column shrink, explicit minimum and no-shrink precedence",
+          "slice165: empty Rectangle numeric main/basis with automatic aspect cross uses zero content minimum; omitted/zero equivalence, explicit floor, cross cap, public target movement and pinned native probe",
+          "percentage Rectangle row/column shrink",
+          "outer padding floor under zero content minimum",
+          "numeric Rectangle intrinsic Flex measurement",
+          "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components"
+        ],
+        "negative": ["current explicit-minimum diagnostic for other items"],
+        "interaction": [
+          "resized sibling hit geometry in public example",
+          "public Rectangle 50/50 paint and click boundary",
+          "structural badge minimum60\u219270 moves the following target with stable keyed identity and unrelated-paint measurement reuse"
+        ],
+        "yogaCases": ["rectangle-shrink", "rectangle-percent-content-box"],
+        "missing": [
+          "general text/font/line-breaking rules",
+          "images",
+          "aspect ratio with nonempty/intrinsic content and broader automatic-minimum compatibility",
+          "other overflow and fitting modes",
+          "pinned native/Yoga divergence"
+        ]
+      }
+    },
+    {
+      "id": "flex.nested-intrinsic-containers",
+      "target": "parity",
+      "group": "measurement-and-intrinsic",
+      "current": "known nowrap Flex columns, bounded finite-width numeric row-wrap auto height, Text, Flow wrap measurement and fixed-row Grid at settled finite width; pure structural descriptions; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows; finite forward LTR nowrap row height derives from native final-width paired leaf queries",
+      "status": "experimental",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/test-wasm-nested-intrinsic.mjs",
+        "packages/core/test/layout-structural-card.test.tsx",
+        "packages/core/test/layout-structural-intrinsic.test.tsx"
+      ],
+      "evidence": {
+        "positive": [
+          "nested intrinsic Card scenario",
+          "single-root pure structural Card at settled finite width",
+          "nested finite pure Card column",
+          "Flow automatic height uses final clamped width and moves following footer",
+          "Grid fixed-row sums/gaps contribute automatic height and move following footer",
+          "known child percentage cross widths/bounds resolve once against explicit numeric column content width before intrinsic height",
+          "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components",
+          "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks",
+          "slice162: parent-owned bounded aggregate reuse replays direct-child receiver receipts after sibling paint; content invalidation, live-parent removal and conservative nested-query fallback",
+          "slice163: a direct pure described paired leaf inside a measured known row receives native final widths under its prepared root receiver; signals, keyed geometry, removal and source-cycle cleanup",
+          "slice164: one-wrapper aggregate reuse snapshots both input layers and replays current leaf receipts; content updates after paint hits, conservative function/nested-query misses and removal ownership"
+        ],
+        "negative": [
+          "ordinary opaque providers, wrapped intrinsic shapes beyond direct numeric row leaves, indefinite Grid fraction/percentage rows and unresolved feedback remain unsupported",
+          "percentage main sizing, percentage-dependent owners, conflicting cross bounds and malformed cross percentages remain rejected during intrinsic measurement"
+        ],
+        "interaction": [
+          "text width, keyed restore, moved footer target",
+          "structural badge minimum60\u219270 moves the following target with stable keyed identity and unrelated-paint measurement reuse",
+          "nested row width80\u219260 gives leaf60\u00d720\u219240\u00d740, then resolved content signal height50 moves following target with stable identity; temporary native arena released before callback"
+        ],
+        "yogaCases": [],
+        "missing": [
+          "complete intrinsic Flex/Grid/Flow constraint graph",
+          "general wrapped intrinsic Flex containers",
+          "constraint feedback"
+        ]
+      }
+    },
+    {
+      "id": "flex.margin",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "experimental numeric physical margins on direct nowrap/wrapped row/column Flex items plus finite allocated-nowrap/wrap/wrap-reverse physical percentages against content width; finite negatives and specific-edge precedence; other families and normal JavaScript Flex reject; marginStart/marginEnd map receiver direction before physical placement, override physical edges/shorthand, and accept signed content-width percentages",
+      "status": "experimental",
+      "unresolvedPolicy": "Existing finite physical/logical geometry and classified Yoga wrapped cross-margin/mixed RTL differences are preserved. Automatic margins are complete in their separate capability. The remaining opposing-negative/overflow policy and evidence remain outstanding.",
+      "evidence": {
+        "positive": [
+          "nowrap row/column numeric margins",
+          "negative leading margin",
+          "nowrap percentage physical edges use allocated content width including vertical edges",
+          "cross stretch and specific-edge precedence",
+          "final intrinsic auto dimension clamped after signed accumulation",
+          "wrapped row and column margin-box line extents",
+          "negative margin overlap within and between lines",
+          "wrapped row/column percentage margin boxes preserve pre-existing numeric physical offsets across owner resize",
+          "wrap-reverse row/column percentage margins equal pre-admission numeric geometry across owner resize",
+          "signed percentage shorthand, explicit zero edge override and declaration-order independence",
+          "logical start/end override physical edges and shorthand independent of declaration order; explicit zero and signed percentages",
+          "child Flex explicit direction maps its own logical edges; inherited fallback; intrinsic numeric winner ignores shadowed percentage"
+        ],
+        "negative": [
+          "intrinsic percentage and auto/nonfinite/null rejection",
+          "other layout families reject",
+          "normal JavaScript Flex diagnostic"
+        ],
+        "interaction": [
+          "margin-only misses and shifted border hits",
+          "margin signal classified layout input",
+          "source/built and installed artifact teardown",
+          "wrapped margin source paint/hit order",
+          "public right-box wrap toggle moves target",
+          "source/built logical start 0\u219410% with RTL, stable stamps, moved hits and paint reuse",
+          "fresh installed logical signal through retained Layer, pixels, targets and node identity"
+        ],
+        "yogaCases": [
+          "margin-percent-row-nowrap",
+          "margin-percent-row-nowrap-resized",
+          "margin-percent-column-nowrap",
+          "margin-percent-column-nowrap-resized",
+          "margin-percent-row-wrap",
+          "margin-percent-row-wrap-resized",
+          "margin-percent-column-wrap",
+          "margin-percent-column-wrap-resized",
+          "margin-percent-row-wrap-reverse",
+          "margin-percent-row-wrap-reverse-resized",
+          "margin-percent-column-wrap-reverse",
+          "margin-percent-column-wrap-reverse-resized",
+          "logical-margin-{start-zero,end-percent}-{ltr,rtl}-{logical-first,logical-last}"
+        ],
+        "missing": ["remaining overflow and opposing negative margin matrix"]
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/test-wasm-text-intrinsics.mjs",
+        "docs/design/layout-system-contract.md",
+        "docs/site/api/components/flex.md",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs"
+      ]
+    },
+    {
+      "id": "flex.auto-margin",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "experimental finite native main/cross auto margins across main directions, nowrap/wrap/wrap-reverse and LTR/RTL, physical/logical edges and uniform precedence; declared numeric/percentage and supported aspect cross sizes settle before absorption; final Text row and unwrapped-column measurement preserves existing Canvas font/fitting/overflow policy, with generic-only reusable caching; the separate fixed-height generic wrapped-column natural-advance policy remains bounded; direct/described paired providers and measurable Flex/Flow/fixed-track Grid roots use existing final-main pure measurement before native cross placement; intrinsic auto margins contribute zero in otherwise admitted native owner queries; source targets, keyed identity, receiver/cache ownership and teardown are evidenced; ordinary measure-only direct/described providers and finite wrapped-column Text profiles retain ordinary finite measurement; fixed LTR baseline leaves admit main and cross automatic margins, excluding cross-auto leaves from shared baseline queries and ascent",
+      "status": "complete",
+      "unresolvedPolicy": "The stated bounded experimental-Flex auto-margin contract is complete after consolidation63: every recorded auto-only admission class has public, interaction, negative, lifecycle and pinned-reference evidence, with native/CSS divergences classified. This capability-level completion does not enable the experimental engine or close any release gate. Normal-build migration, aggregate trust and whole-program conformance remain separate gates. Unavailable pure queries and failing numeric-zero measurements remain their existing independent capability prerequisites.",
+      "evidence": {
+        "positive": [
+          "consolidation63: fresh Node24.15/Chromium72-file matrix1070pass12skip; ordinary302pass780skip; full source/built replay errors[] cleanup000 with470built inputs; installed246-input strict consumer passes all current fixtures; pinned native118records and matching78986-byte ABI10artifacts; bounded guard audit finds no remaining auto-only admission guard",
+          "slice189: public and installed before/after/both baseline cross-auto placement excludes the leaf baseline callback/ascent; detached provider signals do not schedule new solves; native27tests, source/built companion targets, stable identities and exact teardown pass; pinned Yoga top-auto18 differs from existing Pibbl full-line60 policy",
+          "slice188: main left/right auto margins resolve before fixed LTR baseline alignment, preserving final provider allocation, targets and identities in public/source/built/installed consumers",
+          "slice187: ordinary measure-only direct/described providers and five wrapped Text policies retain finite cross measurement and live signal ownership without an intrinsic callback; public/source/built/installed ordinary-provider evidence passes",
+          "slice186: six public Flow/Grid row-nowrap/wrap and column cases share existing pure measurement; two described paired-provider cases preserve source identity and queries; Absolute/Overlay pure-query and zero/auto prepaint failures remain explicit; source/built/installed geometry, moved targets, resize, reuse and cleanup pass",
+          "slice185: eight matched public Text policy cases use existing Canvas font/ellipsis/clip/squish/overflow measurement across row and unwrapped-column final cross paths; active fitting, pure geometry, moved glyph hits, content updates, identity and cleanup pass; non-generic measurements remain uncached and intrinsic/query/aspect policies unchanged",
+          "slice184: unwrapped generic row Text uses real Canvas ink height; wrapped-row paired providers and direct/described Flex roots use real settled-width height before native line-local cross-auto placement; zero/auto geometry, split-line resize, moved targets, cache/identity/cleanup pass in public/source/built/installed consumers",
+          "slice183:11 public column cases and one paired/known row matrix require real settled-main cross measurement; provider final-height widths20/50, known natural60to100, Text factors/bounds, moved targets, identity and failure/remount cleanup pass; no new intrinsic-query policy or known Flow/Grid main profile",
+          "slice182:15 public Text cases cover ordinary row growth/shrink/bounds, numeric controls, column numeric/automatic basis and height, and wrapped reverse/RTL capped natural advance; zero/auto preserve supported main sizing and final height, required failures cannot fallback to0; wrapped zero cross-box extension is explicit",
+          "slice181:12 public Text/paired/known cases preserve zero baseline and physical left/both/right auto geometry in column/reverse across LTR/RTL; natural updates, moved targets, paint reuse and teardown pass; child-own intrinsic query admission is unchanged",
+          "slice180: public numeric0/auto pairs preserve aspect40x20 and percentage50/40 cross sizes through owner100to80; targets, native identity and exact teardown pass; percentage cross minimum baseline already passed; pinned Yoga77-record probe preserves prior65 and adds12 matching finite resolved-cross boxes",
+          "slice179: direct generic LTR row/wrap Text with automatic width/basis, omitted width min/max, zero grow and positive shrink composes natural basis/word floor, native membership and final-width height; numeric0 toauto preserves main layout, width70 reflows, and longest-word overflow keeps targets with exact cleanup",
+          "slice178: wrapped generic auto-width Text in finite LTR nowrap columns uses min(natural advance, available content width after padding/resolved margins), then exact-width/height Text measurement; width100 to140 reflows2 to1 lines, numeric0 toauto shifts only x, signals/targets/focus/cache/teardown and physical/logical percentage equivalence pass",
+          "slice177: numeric staged owner160/A40/B80 carries native auto share30; paired owner120/A30/B80 carries share10; authored zero and auto preserve pure112.5/110, following targets, identities and cleanup across direct/described rows/columns",
+          "slice176: direct/described known Flex content60 to100 moves x140 to100 with a fixed following item; numeric0 toauto preserves nodes; natural240 overflow stays targetable; fixed Grid60 uses the same dispatch while fractional intrinsic Grid fails before paint",
+          "slice175: paired column natural40/80 gives A x160/120 at height40, sibling unchanged; returned natural240 overflows at x0 and remains targetable beyond the200 owner, matching pinned geometry",
+          "slice174: zero/auto equivalence for shorthand with physical override, logical edges, paired-provider cross measurement, known Flex children and wrapped numeric intrinsic sizing; live paired natural20 to40 preserves pure200x20 to200x40 and final A x80/y60 to40",
+          "slice173: physical cross-auto start/both edges, overflow and numeric opposite10 contribute zero before native final placement: offsets160/80/0/150 in row and column; cross-owner200 to160 moves keyed targets without new nodes",
+          "slice172: numeric A40+B80 contributes120 under finite/unbounded availability and max160; own min200 final allocation places start-auto A80/B120 or both-auto A40/B120 in both axes",
+          "slice154: direct generic unwrapped Text in finite nowrap columns across forward/reverse and LTR/RTL parents measures natural cross width with exact numeric height before auto side-margin absorption; zero grow/shrink, minHeight0, no bounds/query/aspect",
+          "slice108: direct numeric-width generic Text in finite LTR row/wrap with automatic basis and zero grow/shrink measures final height before per-line cross-auto placement",
+          "slice107: direct generic wrapped Text omitted/auto width derives natural auto basis and final-width height before cross-auto absorption; auto basis/zero grow/positive shrink/no main bounds only",
+          "slice106: direct numeric-width LTR wrapped Flex owner measures height60 to90 before top auto absorption; unsupported intrinsic content remains required-measurement failure under stretch",
+          "left/right/both slots divide positive free space after flexible sizing and before justification",
+          "growth consumes space before auto slots; nonpositive free space preserves center alignment",
+          "numeric-to-auto-to-numeric toggles update main placement only without re-solving or recreating nodes",
+          "public FlexMargin and editor declarations expose six edge fields plus uniform margin auto; finite main/cross admission remains contextual",
+          "slice98: four main directions \u00d7 LTR/RTL physical auto, logical row start/end and exact source-order geometry; axis/direction signals preserve keyed focus",
+          "slice99: each wrapped line counts its own auto slots; a line without auto slots retains justification; 16 CSS-line-local differences explicitly classified against pinned Yoga",
+          "slice100: per-line top/bottom/both cross-auto override alignment; finite explicit-height rows, reverse main/RTL, nowrap and wrap; zero/negative space overflows at start and numeric opposite margin is retained",
+          "slice101: 36 additional physical cross-auto directions; effective cross reversal maps flags through the existing native conversion; logical column inline start/end and LTR/RTL oversized-item overflow remain coherent",
+          "slice102: uniform margin auto fills four slots before physical/logical overrides; explicit zero removes only that edge; RTL distinguishes physical left from logical start",
+          "slice103: grow consumes free space before opposing slots; maxWidth freezing releases remainder to slots; shrink minWidth freezes before absorption; numeric opposite margin and cross min/max precede auto sharing",
+          "slice105: direct paired-provider custom primitive measures final width before auto absorption; stable inputs reuse paint measurements, failed final width releases ownership before paint",
+          "slice104: direct wrapped generic Text initial/final-width measurement precedes cross-auto absorption and suppresses stretch; width80 to40 produces height20 to30 and top80 to70 without replacing native identities"
+        ],
+        "negative": [
+          "slice179: the existing Pibbl CSS line-local cross-auto policy places Text below a taller peer where pinned Yoga leaves auto top at0; synthetic84/24 callback records main sizing/floor provenance, not font or auto-offset parity.",
+          "slice178: Yoga synthetic callbacks request at-most width while Pibbl queries its chosen exact width; an untrusted long-word callback can yield a260 Yoga box where Pibbl retains a capped box and visible glyph overflow. Actual Canvas font geometry is not claimed as synthetic native parity.",
+          "slice175: Pibbl natural cross queries use unbounded width/exact height40; pinned Yoga supplies at-most200/exact40. Geometry agrees for40/80/240 returned widths; callback-envelope parity is not claimed. Unsupported required provider results fail before paint and permit explicit remount after exact teardown.",
+          "slice154 with178 amendment: custom-font/bounded/auto-height/RTL/wrapped-container Text profiles retain explicit rejection; wrapped direct Text now has the separate finite LTR nowrap column profile",
+          "slice108: automatic-width, reverse/RTL/wrap-reverse, nonzero flex factors and numeric basis remain outside the wrapped Text exception",
+          "slice107: automatic-width Text with numeric basis, grow, zero shrink or main min/max retains explicit rejection",
+          "normal JavaScript rejects auto margin admission",
+          "unsupported automatic child cross size and aspect sizing rejected explicitly; direct Text exceptions are limited to the documented row/column subsets; broader custom fonts, clipping/fitting and automatic main sizing reject",
+          "old v1/v2/v3/v4 modules rejected before publication; root/sync imports remain inert",
+          "native flag cardinality and NaN rejected without rewriting numeric margin inputs"
+        ],
+        "interaction": [
+          "slice172: owner min200 to120 transfers the same point from A to B without new native nodes, exact paint boundaries and teardown; source/built strip and installed both-slot targets preserve native solve/node reuse",
+          "slice154: public and installed Canvas ink geometry, direct signal text changes, glyph target transfer, source focus order, stable nodes, zero isolated column paint measurement and exact cleanup; source/built lesson coexists with the row automatic-minimum query",
+          "slice108: public Text width80 to40 gives height20 to30/top20 to10, sibling x90 to50 and second line y50; actual draws/targets/focus/native identity and disposal",
+          "slice107: public automatic-width Text draw positions, real targets/focus/node identity and disposal; host Canvas metrics are measured without native font-parity claim; existing automatic-minimum request per preparation remains",
+          "slice106: public nested job and sibling targets, empty-margin misses, node identity, paint reuse and exact cleanup; source/built two-case replay; sibling paint reuses native solves/nodes while retaining one pure owner measurement per preparation",
+          "source/built seven-case semantic boxes, stable keyed stamps, moved A/B targets and zero disposal ownership",
+          "fresh installed seven-case public geometry/targets, per-controller node/arena/cache cleanup and strict Bundler/NodeNext type consumers",
+          "public mounted resize preserves stamps; paint-only preserves solves and node identity",
+          "slice98: seventeen exact native/source/built/installed auto cases; public row\u2192column\u2192RTL signal movement preserves focus/stamps/nodes, old target misses and new target hits",
+          "slice99: source/built 17 wrapped cases plus installed 34-case auto family; line merge preserves keyed focus and moves targets; paint reuse and exact disposal",
+          "slice100: source/built 12 cross-auto cases, 8 CSS cross-auto precedence differences plus4 native matches; installed46auto cases; cross-only flag changes preserve sizing/main placement/node identity, focus/hits and disposal",
+          "slice101: all36 expected boxes independently match Chromium CSS; public mounted matrix plus source/built replay and installed82auto cases; wrap reversal and row-to-RTL-column signals preserve keyed focus and moved targets",
+          "slice102: eight native/source/built exact shorthand cases, installed90auto cases with positive shorthand Bundler/NodeNext types; mounted overrides preserve keyed focus, moved hits and placement-only reuse",
+          "slice103: eight public/source/built bounds cases and installed98auto cases; seven native matches plus explicit CSS nonpositive-auto alignment; independent Chromium CSS matches every expected box, visible overflow target points remain clickable",
+          "slice104: direct Text Canvas draw positions and real hit counts normalized through Studio root transform; source/built2cases and installed100auto cases, keyed focus and moved sibling target, paint-only measurement reuse and zero cleanup"
+        ],
+        "yogaCases": [
+          "auto-margin-left",
+          "auto-margin-left-resized",
+          "auto-margin-right",
+          "auto-margin-right-resized",
+          "auto-margin-both",
+          "auto-margin-both-resized",
+          "auto-margin-left-justify-end",
+          "auto-main-row-ltr",
+          "auto-main-row-rtl",
+          "auto-main-row-reverse-ltr",
+          "auto-main-row-reverse-rtl",
+          "auto-main-column-ltr",
+          "auto-main-column-rtl",
+          "auto-main-column-reverse-ltr",
+          "auto-main-column-reverse-rtl",
+          "auto-logical-start-rtl",
+          "auto-logical-end-rtl",
+          "auto-wrap-row-wrap-ltr",
+          "auto-wrap-row-wrap-rtl",
+          "auto-wrap-row-wrap-reverse-ltr",
+          "auto-wrap-row-wrap-reverse-rtl",
+          "auto-wrap-row-reverse-wrap-ltr",
+          "auto-wrap-row-reverse-wrap-rtl",
+          "auto-wrap-row-reverse-wrap-reverse-ltr",
+          "auto-wrap-row-reverse-wrap-reverse-rtl",
+          "auto-wrap-column-wrap-ltr",
+          "auto-wrap-column-wrap-rtl",
+          "auto-wrap-column-wrap-reverse-ltr",
+          "auto-wrap-column-wrap-reverse-rtl",
+          "auto-wrap-column-reverse-wrap-ltr",
+          "auto-wrap-column-reverse-wrap-rtl",
+          "auto-wrap-column-reverse-wrap-reverse-ltr",
+          "auto-wrap-column-reverse-wrap-reverse-rtl",
+          "auto-wrap-row-line-without-auto-center",
+          "auto-cross-row-top-ltr",
+          "auto-cross-row-bottom-ltr",
+          "auto-cross-row-both-ltr",
+          "auto-cross-row-top-rtl",
+          "auto-cross-row-bottom-rtl",
+          "auto-cross-row-both-rtl",
+          "auto-cross-row-reverse-top-ltr",
+          "auto-cross-row-reverse-bottom-ltr",
+          "auto-cross-row-reverse-both-ltr",
+          "auto-cross-row-reverse-top-rtl",
+          "auto-cross-row-reverse-bottom-rtl",
+          "auto-cross-row-reverse-both-rtl",
+          "auto-cross-direction-row-wrap-reverse-before-ltr",
+          "auto-cross-direction-row-wrap-reverse-after-ltr",
+          "auto-cross-direction-row-wrap-reverse-both-ltr",
+          "auto-cross-direction-row-wrap-reverse-before-rtl",
+          "auto-cross-direction-row-wrap-reverse-after-rtl",
+          "auto-cross-direction-row-wrap-reverse-both-rtl",
+          "auto-cross-direction-row-reverse-wrap-reverse-before-ltr",
+          "auto-cross-direction-row-reverse-wrap-reverse-after-ltr",
+          "auto-cross-direction-row-reverse-wrap-reverse-both-ltr",
+          "auto-cross-direction-row-reverse-wrap-reverse-before-rtl",
+          "auto-cross-direction-row-reverse-wrap-reverse-after-rtl",
+          "auto-cross-direction-row-reverse-wrap-reverse-both-rtl",
+          "auto-cross-direction-column-wrap-before-ltr",
+          "auto-cross-direction-column-wrap-after-ltr",
+          "auto-cross-direction-column-wrap-both-ltr",
+          "auto-cross-direction-column-wrap-before-rtl",
+          "auto-cross-direction-column-wrap-after-rtl",
+          "auto-cross-direction-column-wrap-both-rtl",
+          "auto-cross-direction-column-wrap-reverse-before-ltr",
+          "auto-cross-direction-column-wrap-reverse-after-ltr",
+          "auto-cross-direction-column-wrap-reverse-both-ltr",
+          "auto-cross-direction-column-wrap-reverse-before-rtl",
+          "auto-cross-direction-column-wrap-reverse-after-rtl",
+          "auto-cross-direction-column-wrap-reverse-both-rtl",
+          "auto-cross-direction-column-reverse-wrap-before-ltr",
+          "auto-cross-direction-column-reverse-wrap-after-ltr",
+          "auto-cross-direction-column-reverse-wrap-both-ltr",
+          "auto-cross-direction-column-reverse-wrap-before-rtl",
+          "auto-cross-direction-column-reverse-wrap-after-rtl",
+          "auto-cross-direction-column-reverse-wrap-both-rtl",
+          "auto-cross-direction-column-reverse-wrap-reverse-before-ltr",
+          "auto-cross-direction-column-reverse-wrap-reverse-after-ltr",
+          "auto-cross-direction-column-reverse-wrap-reverse-both-ltr",
+          "auto-cross-direction-column-reverse-wrap-reverse-before-rtl",
+          "auto-cross-direction-column-reverse-wrap-reverse-after-rtl",
+          "auto-cross-direction-column-reverse-wrap-reverse-both-rtl",
+          "auto-shorthand-all-ltr",
+          "auto-shorthand-left-zero-ltr",
+          "auto-shorthand-top-zero-ltr",
+          "auto-shorthand-start-zero-ltr",
+          "auto-shorthand-all-rtl",
+          "auto-shorthand-left-zero-rtl",
+          "auto-shorthand-top-zero-rtl",
+          "auto-shorthand-start-zero-rtl",
+          "auto-opposing-main-grow-consumes",
+          "auto-opposing-main-grow-max",
+          "auto-opposing-main-grow-max-resized",
+          "auto-opposing-main-shrink-min",
+          "auto-opposing-main-numeric-after",
+          "auto-opposing-main-negative-center",
+          "auto-opposing-cross-min",
+          "auto-opposing-cross-max",
+          "text-cross-auto-top-stretch-wide",
+          "text-cross-auto-top-stretch-narrow",
+          "custom-cross-auto-top-stretch-wide",
+          "custom-cross-auto-top-stretch-narrow",
+          "owner-cross-auto-top-stretch-wide",
+          "owner-cross-auto-top-stretch-narrow"
+        ],
+        "missing": []
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-intrinsic-auto-margin.test.tsx",
+        "packages/core/test/layout-wrapped-text-auto-basis.test.tsx",
+        "packages/core/test/layout-auto-cross-resolved-size.test.tsx",
+        "packages/core/test/layout-column-auto-margin-directions.test.tsx",
+        "packages/core/test/layout-auto-margin-measured-text.test.tsx",
+        "packages/core/test/layout-column-auto-margin-final-cross.test.tsx",
+        "packages/core/test/layout-row-auto-margin-measurement.test.tsx",
+        "packages/core/test/layout-text-cross-measurement-policy.test.tsx",
+        "packages/core/test/layout-known-auto-cross-measurement.test.tsx",
+        "packages/core/test/layout-staged-auto-margin.test.tsx",
+        "tooling/layout-yoga-rehearsal/percentage-phase-probe.cpp",
+        "tooling/test-wasm-measured-percentage-owner.mjs",
+        "tooling/layout-yoga-rehearsal/intrinsic-auto-margin-probe.cpp",
+        "tooling/test-wasm-column-text-auto-margin.mjs",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/wasm/layout/src/lib.rs",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "docs/design/layout-system-contract.md#experimental-main-axis-auto-margins",
+        "packages/core/test/layout-ordinary-cross-measurement.test.tsx",
+        "packages/core/test/layout-flex-baseline.test.tsx",
+        "packages/core/test/layout-flex-baseline-auto-cross.test.tsx",
+        "tooling/layout-yoga-rehearsal/baseline-auto-margin-probe.cpp",
+        "tooling/test-wasm-flex-baseline.mjs"
+      ]
+    },
+    {
+      "id": "flex.numeric-gap",
+      "target": "preserve",
+      "group": "flex-core",
+      "current": "finite nonnegative numeric gap/rowGap/columnGap with physical axis overrides and no phantom main/cross edge gaps",
+      "status": "complete",
+      "evidenceRefs": [
+        "packages/core/src/lib/layout/flex.test.ts",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/wasm/layout/src/lib.rs",
+        "tooling/test-wasm-wrapped-collections.mjs",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "docs/project-plans/010-layout-engine-rework.md"
+      ],
+      "evidence": {
+        "positive": [
+          "default zero and physical override precedence",
+          "empty/single/two-item count-minus-one main gaps",
+          "two growing items45/45 at0/55",
+          "wrapped row/column line edge counts and stretch placement",
+          "nine pinned-toolchain native tests"
+        ],
+        "negative": [
+          "negative/nonfinite/percentage gap,rowGap,columnGap rejected even with empty children",
+          "four public main/cross gap regions miss targets"
+        ],
+        "interaction": [
+          "numeric gap signal moves hit geometry without remount",
+          "one-empty-one numeric ownership transitions",
+          "source/built wrapped keyed targets and exact cleanup",
+          "paint-only solver reuse"
+        ],
+        "yogaCases": [
+          "grow",
+          "cap",
+          "shrink",
+          "column-grow",
+          "column-cap",
+          "column-shrink",
+          "row-wrap"
+        ],
+        "missing": []
+      }
+    },
+    {
+      "id": "flex.percentage-gap",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "experimental percentages resolved from finite allocated Flex content axes; columnGap uses width and rowGap uses height",
+      "status": "experimental",
+      "unresolvedPolicy": "Finite allocated-owner policy selected; intrinsic/max-only owners explicitly unsupported. No zero fallback or cyclic fixed-point inference.",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "docs/design/layout-system-contract.md"
+      ],
+      "evidence": {
+        "positive": [
+          "row/column nowrap and wrap",
+          "physical content-axis references after asymmetric padding",
+          "shorthand axis resolution and explicit override",
+          "nested Grid cell allocation"
+        ],
+        "negative": [
+          "ordinary JavaScript percentages rejected",
+          "invalid/negative percentage strings rejected",
+          "intrinsic percentage-gap owners unsupported before native allocation"
+        ],
+        "interaction": [
+          "owner resize moves gaps and targets without new nodes",
+          "source/built comparison and installed packed padded owner",
+          "exact disposal"
+        ],
+        "yogaCases": [
+          "gap-percent-row-nowrap",
+          "gap-percent-row-nowrap-resized",
+          "gap-percent-row-wrap",
+          "gap-percent-row-wrap-resized",
+          "gap-percent-column-nowrap",
+          "gap-percent-column-nowrap-resized",
+          "gap-percent-column-wrap",
+          "gap-percent-column-wrap-resized"
+        ],
+        "missing": [
+          "indefinite intrinsic cycle semantics",
+          "broader nested owner graph"
+        ]
+      }
+    },
+    {
+      "id": "box.padding-and-layout-border",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "numeric padding, allocated experimental Flex percentage padding and mounted Flow/Grid/Absolute/Overlay own-style and actual direct-child percentage padding from the established containing-owner basis, receiver-aware logical paddingStart/paddingEnd, and receiver-aware numeric borderStartWidth/borderEndWidth over physical layout borderWidth; painted stroke remains separate",
+      "status": "complete",
+      "unresolvedPolicy": "Complete for the stated allocated experimental contract after consolidation65: actual containing content/cell widths, logical precedence and receiver direction, numeric borders, nested/described preparation, pure-query rejection, source/built/installed interactions and exact ownership are evidenced. Unallocated intrinsic percentage feedback remains a separate unsupported measurement-owner prerequisite. Layer preserves its existing stripped-inset fixed-raster rule. Capability completion does not enable the experimental engine or close a release gate.",
+      "evidenceRefs": [
+        "docs/design/layout-system-contract.md#flex",
+        "docs/architecture/proposals/layout-engine/design.md#boxes-and-units",
+        "packages/core/test/layout-flow-percentage-padding.test.tsx",
+        "packages/scenarios/src/learning/layout/wasm-flow-padding.example.tsx",
+        "tooling/test-wasm-flow-padding.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "packages/core/test/layout-grid-percentage-padding.test.tsx",
+        "packages/core/src/lib/layout/grid.ts",
+        "packages/core/test/layout-root-percentage-padding.test.tsx",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/src/lib/layout/absolute.ts",
+        "packages/core/src/lib/layout/overlay.ts",
+        "packages/core/test/layout-raw-child-percentage-padding.test.tsx",
+        "packages/core/test/layout-raw-child-logical-percentage-padding.test.tsx"
+      ],
+      "evidence": {
+        "positive": [
+          "numeric padding",
+          "asymmetric row/column border plus padding content-box and border-box geometry",
+          "all physical percentage padding uses actual owner content width including vertical edges",
+          "content-box/border-box basis conversion before solving",
+          "slice90: logical start/end override physical padding in both directions, including zero and setter order",
+          "canonical allocated logical percentages retain owner width across resize and explicit receiver direction",
+          "isolated RTL intrinsic measurement accepts numeric winners and rejects active percentages",
+          "slice91: numeric logical border edges and receiver precedence implemented; stale missing marker removed in slice95",
+          "slice190: direct experimental Flow numeric0/numeric20/percentage10% preserves keyed content, targets and paint reuse; containing Canvas width200 remains the20px basis when Flow border-box width narrows200to160; pure measurement stays unsupported; public/source/built/installed evidence and exact cleanup pass",
+          "slice191: finite explicit-track Grid numeric0/numeric20/percentage10% shares the containing-owner width200 reference across own-width200to160, preserving keyed cell targets, native track/area reuse and exact disposal; pure measurement remains unsupported; public/source/built/installed evidence passes",
+          "slice192: direct Absolute/Overlay roots match numeric20 and10% against owner200 while own boxes narrow200to160; distinct placement/start alignment, real moved targets, hook identity, paint reuse and four-counter cleanup pass in public/source/built/installed consumers; both pure0/percentage queries retain missing-provider diagnostics",
+          "Layer source/contract audit and existing fresh consolidated raster regression preserve ignored padding/border inputs, including logical15%, explicit bitmap dimensions and zero child origin; no Layer padding implementation is required",
+          "slice193: actual Flow/Absolute/Overlay child owner200 resolves10%to20; owner160 resolves16; Grid fixed160cell uses16 within200parent; numeric controls, structural content geometry, targets, keyed identity, paint reuse and exact disposal",
+          "slice194: raw logical child precedence preserves zero winners under explicit RTL and described Flow inherited RTL, using actual parent width across resize, moved targets, stable identity, paint reuse and exact disposal",
+          "slice195: strict installed Bundler/NodeNext and browser proof covers all four actual parent/cell paths, pure rejection, moved targets, stable keyed content, paint reuse and per-family/aggregate exact disposal"
+        ],
+        "negative": [
+          "paint stroke is not a layout border",
+          "negative/nonfinite borders and inset overflow rejected",
+          "raw unallocated intrinsic percentage padding unsupported before native work",
+          "percentage borders and ordinary JavaScript percentage padding rejected"
+        ],
+        "interaction": [
+          "owner resize moves inner paint/hit geometry without remount",
+          "numeric-to-percentage frozen input transition",
+          "source/built and installed packed public evidence with exact disposal",
+          "source/built logical padding example: fixed border box, moving stable content targets and paint reuse",
+          "fresh installed owner resize, receiver override, pixels/targets, identity and exact teardown",
+          "Layer own logical padding preserves existing raster dimensions and origin"
+        ],
+        "yogaCases": [
+          "padding-percent-row-content-box",
+          "padding-percent-row-content-box-resized",
+          "padding-percent-row-border-box-basis",
+          "padding-percent-row-border-box-basis-resized",
+          "padding-percent-column-content-box",
+          "padding-percent-column-content-box-resized",
+          "padding-percent-column-border-box-basis",
+          "padding-percent-column-border-box-basis-resized",
+          "logical-padding-{start-zero,end-percent}-{ltr,rtl}-{logical-first,logical-last}: outer plus complete content region"
+        ],
+        "missing": []
+      }
+    },
+    {
+      "id": "box.box-sizing",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "content-box default preserved; explicit border-box dimensions, bounds, Flex basis and percentage-before-combined-padding/border conversion; slice225 preserves intrinsic width/basis through finite horizontal Flex border-box canonicalization, retains content-based fit limits and scalar outer bounds, and proves decorated Text/provider query widths without a general vertical or cyclic-owner claim",
+      "status": "experimental",
+      "unresolvedPolicy": "Opt-in policy selected with pinned Yoga padding floor; broad intrinsic/aspect/border interactions remain outside this slice.",
+      "evidence": {
+        "positive": [
+          "row/column basis and min/max converted once",
+          "percentage lengths resolve before padding",
+          "padding floor may overflow a smaller outer maximum/parent",
+          "Grid stretch and Flow measured content avoid double conversion",
+          "normal and WASM paths preserve content-box defaults"
+        ],
+        "negative": [
+          "opposing outer min/max rejected before conversion",
+          "invalid public policy literals rejected by packed types"
+        ],
+        "interaction": [
+          "mode/basis signals move same-frame target geometry without remount",
+          "paint-only allocation reuse",
+          "source/built226 and installed229 input cleanup",
+          "explicit editor/Bundler/NodeNext/Node helper policy use"
+        ],
+        "yogaCases": [],
+        "missing": [
+          "complete percentage/intrinsic and aspect interactions",
+          "broader layout-border intrinsic interactions"
+        ]
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-intrinsic-border-box-sizing.test.tsx"
+      ]
+    },
+    {
+      "id": "box.aspect-ratio",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "positive finite FlexItemStyle/ LayoutItemStyle aspectRatio for finite nowrap/wrapped Flex; final per-line outer main derives cross before bounds; finite direct row-nowrap absolute exactly-one-auto derives from the declared numeric opposite axis, with opposing-inset priority and independent bounds",
+      "status": "experimental",
+      "unresolvedPolicy": "Finite Flex outer ratio and cross override/clamp precedence selected from pinned Yoga; intrinsic and other-parent ratio rules remain deferred.",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/aspect-probe.cpp",
+        "docs/design/layout-system-contract.md",
+        "tooling/layout-preflight-lab.mjs",
+        "tooling/packed-layout-consumer.mjs"
+      ],
+      "evidence": {
+        "positive": [
+          "row/column final-main shrink derivation",
+          "explicit cross and default stretch overridden",
+          "combined outer insets and independent cross bounds",
+          "numeric definite basis",
+          "row/column wrap and wrap-reverse with owner resize",
+          "slice127: direct absolute one-auto axis, declared-axis derivation before independent bounds, opposing-inset priority"
+        ],
+        "negative": [
+          "nonpositive/nonfinite ratios rejected",
+          "intrinsic-main ratio items diagnosed, including wrapped containers",
+          "derived overflow rejected"
+        ],
+        "interaction": [
+          "ratio/basis/border signals update targets without remount",
+          "source/built Studio card",
+          "installed package ratio pixel geometry and exact cleanup"
+        ],
+        "yogaCases": [
+          "aspect-wrap-row",
+          "aspect-wrap-row-resized",
+          "aspect-wrap-row-reverse",
+          "aspect-wrap-row-reverse-resized",
+          "aspect-wrap-column",
+          "aspect-wrap-column-resized",
+          "aspect-wrap-column-reverse",
+          "aspect-wrap-column-reverse-resized",
+          "position-absolute-aspect-width-auto-height-ltr",
+          "position-absolute-aspect-width-auto-height-rtl",
+          "position-absolute-aspect-height-auto-width-ltr",
+          "position-absolute-aspect-height-auto-width-rtl",
+          "position-absolute-aspect-width-bound-ltr",
+          "position-absolute-aspect-height-inset-pair-ltr"
+        ],
+        "missing": [
+          "intrinsic both-auto and cross-to-main inference",
+          "other parent families and root sizing",
+          "general image/intrinsic and coupled-axis bounds"
+        ]
+      }
+    },
+    {
+      "id": "direction.rtl-and-logical-edges",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "bounded experimental inherited Flex LTR/RTL direction and receiver-aware logical margins, padding and numeric borders; reverse/wrap/min/max direction matrix complete for the stated supported contract, with preserved native-oracle differences explicitly classified",
+      "status": "complete",
+      "unresolvedPolicy": "No unresolved direction policy in the stated finite experimental Flex contract. Pibbl preserves margin-box centering and content-box wrap reflection; Yoga differences are independently isolated and labeled. General CSS compatibility and unimplemented margin/intrinsic features remain separate capabilities.",
+      "evidence": {
+        "positive": [
+          "slice88: inherited direction and explicit LTR override; row/column/reverse placement",
+          "slice89: logical margin edge precedence, signed percentages, explicit zero and child Flex direction override",
+          "slice90: logical padding zero/end-percentage precedence and exact native content geometry in both directions",
+          "slice91: numeric logical border precedence, explicit zero, both sizing modes and receiver override in eighteen native cases",
+          "slice95: sixteen row/column \u00d7 forward/reverse \u00d7 wrap/wrap-reverse \u00d7 LTR/RTL combined logical inset/margin/min/max fixtures with exact public world boxes",
+          "slice96: four zero-margin asymmetric-root-inset and four zero-root-inset logical-margin column fixtures isolate wrap/wrap-reverse LTR/RTL; exact public world boxes before pixels and hits"
+        ],
+        "negative": [
+          "normal JavaScript RTL rejected; invalid direction rejected; stale ABI rejected"
+        ],
+        "interaction": [
+          "source/built keyed wrap mirroring, stable stamps, moved hits, paint reuse, cleanup",
+          "installed package direction signal reaches retained Layer",
+          "slice95: keyed focus retained across RTL; Tab/Shift-Tab use source order; overlapping paint/hit priority unchanged; source/built keyed fixture transitions and installed package targets release owned resources",
+          "slice96: all24 direction cases source/built/installed with stable keyed panels, correct A/B/C targets and exact node/arena/measurement-cache disposal"
+        ],
+        "yogaCases": [
+          "layout-direction-{row,row-reverse,column,column-reverse}-{ltr,rtl}",
+          "direction-matrix-{row,row-reverse,column,column-reverse}-{wrap,wrap-reverse}-{ltr,rtl}: preserved margin centering/content-box reflection explicitly classified",
+          "direction-insets-column-{wrap,wrap-reverse}-{ltr,rtl}: two exact matches; two preserved-content-box-reflection differences",
+          "direction-margins-column-{wrap,wrap-reverse}-{ltr,rtl}: four preserved-physical-cross-margin differences"
+        ],
+        "missing": []
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "docs/design/layout-system-contract.md#experimental-inherited-inline-direction"
+      ]
+    },
+    {
+      "id": "flex.baselines",
+      "target": "parity",
+      "group": "measurement-and-intrinsic",
+      "current": "experimental pure first/last numeric baseline providers at final local allocations; native first-baseline placement for finite LTR/RTL nowrap row/row-reverse of direct primitive leaves with settled finite content boxes, including nonempty resolved unwrapped/wrapped Text at final allocation with positive px fonts, existing Canvas baselines/fitting/overflow and generic-only retained caching measured through an explicit Canvas service capability; missing-provider content-bottom fallback and explicit failure diagnostics; bounded finite horizontal LTR/RTL row/row-reverse wrapped first baselines use native line-local ascent/descent with all existing wrap/wrap-reverse alignContent policies and resolved finite gaps for fixed numeric primitive providers/fallback and settled Text, main grow/shrink, resolved numeric or automatic main margins and signed numeric cross-margin line extents and line-local automatic cross-margin absorption with provider exclusion, plus final static/relative paint and hit placement and resolved decorated content-to-outer baseline mapping and acyclic ordinary/paired-provider or aspect-derived final cross sizing independent of authored numeric basis/height, plus direct settled responsive selections with current finite-owner/transaction/receiver proof and uncached baseline queries; explicit alignSelf opts out through shared ordinary cross placement with measured hypothetical automatic stretch, padding/bounds and logical reverse margins; transparent described primitive roots forward final content baselines through actual root receivers and complete scalar source/root cache snapshots; finite non-static prepared Flex trees select their first in-flow source across all four inner main directions and explicit writing directions, with empty content-bottom fallback, transparent primitive/Flex roots and recursive prepared Flex selection, skipping absolute decoration, including wrapped roots with current native first-source-line proof and physical wrap-reversed origin, cached membership reuse and empty fallback; selected relative offsets compose after baseline allocation using the unshifted physical layout-y origin; static structural Flex roots preserve inherited containing origins; prepared Flow and Grid use declared first-source physical y and final content allocations, with described roots and empty fallback; outer columns normalize first-baseline to logical flex-start without baseline callbacks across existing directions and wraps; native direct-leaf last-baseline placement uses existing last offsets, safe-end groups, physical margin extents and wrapped line allocation, with explicit mode-aware frozen/native caches and ordinary logical-end column fallback; prepared structural last contributions select final declared in-flow sources across Flex/Flow/Grid, current native final-line proof, described/nested/static padded roots, pre-relative origins and empty content-bottom fallback",
+      "status": "complete",
+      "unresolvedPolicy": "The stated finite Pibbl first/last baseline contract is complete. Yoga explicit reference-child flags are a classified migration distinction: versioned conversion must diagnose/reject them or provide a separately designed explicit translation. General leaf allocation constraints remain tracked by measurement.custom-leaf.",
+      "evidence": {
+        "positive": [
+          "packages/core/test/layout-flex-baseline.test.tsx",
+          "packages/scenarios/src/learning/layout/wasm-flex-baseline.example.tsx",
+          "tooling/packed-layout-consumer.mjs",
+          "tooling/layout-yoga-rehearsal/baseline-rtl-probe.cpp",
+          "tooling/layout-yoga-rehearsal/baseline-row-reverse-probe.cpp",
+          "packages/core/test/layout-flex-baseline-wrap.test.tsx",
+          "tooling/layout-yoga-rehearsal/baseline-wrap-probe.cpp",
+          "packages/core/test/layout-flex-baseline-wrap-cross.test.tsx",
+          "packages/core/test/layout-flex-baseline-final-box.test.tsx",
+          "packages/core/test/layout-flex-baseline-align-self.test.tsx",
+          "packages/core/test/layout-flex-baseline-align-self-stretch.test.tsx",
+          "packages/core/test/layout-flex-baseline-described-root.test.tsx",
+          "packages/core/test/layout-flex-baseline-known-descendant.test.tsx",
+          "packages/core/test/layout-flex-baseline-known-tree.test.tsx",
+          "packages/core/test/layout-flex-baseline-known-wrap.test.tsx",
+          "tooling/layout-yoga-rehearsal/baseline-wrap-distribution-probe.cpp",
+          "tooling/layout-yoga-rehearsal/baseline-wrap-css-control.mjs",
+          "tooling/layout-yoga-rehearsal/baseline-cross-margin-probe.cpp",
+          "tooling/layout-yoga-rehearsal/baseline-wrap-auto-margin-probe.cpp",
+          "tooling/layout-yoga-rehearsal/baseline-wrap-auto-margin-css-control.mjs",
+          "tooling/layout-yoga-rehearsal/baseline-decorated-content-probe.cpp",
+          "packages/core/test/layout-flex-baseline-static-known.test.tsx",
+          "packages/core/test/layout-flex-baseline-flow-source.test.tsx",
+          "packages/core/test/layout-flex-baseline-grid-source.test.tsx",
+          "packages/core/test/layout-flex-baseline-column.test.tsx",
+          "tooling/layout-yoga-rehearsal/baseline-static-owner-probe.cpp",
+          "tooling/layout-yoga-rehearsal/baseline-column-probe.cpp",
+          "packages/core/test/layout-flex-last-baseline.test.tsx",
+          "tooling/layout-yoga-rehearsal/baseline-last-css-control.mjs",
+          "packages/core/test/layout-flex-last-baseline-structural.test.tsx",
+          "tooling/layout-yoga-rehearsal/baseline-reference-child-probe.cpp",
+          "docs/architecture/proposals/layout-engine/migration-and-evidence.md"
+        ],
+        "negative": [
+          "packages/core/test/layout-flex-baseline.test.tsx",
+          "packages/core/src/lib/layout/wasm/loader.test.ts"
+        ],
+        "interaction": [
+          "tooling/test-wasm-flex-baseline.mjs",
+          "tooling/test-wasm-flex-last-baseline.mjs",
+          "tooling/test-wasm-nested-intrinsic.mjs"
+        ],
+        "yogaCases": [
+          "baseline-provider-initial",
+          "baseline-provider-updated",
+          "baseline-provider-negative-a",
+          "baseline-provider-overheight-a"
+        ],
+        "missing": []
+      }
+    },
+    {
+      "id": "position.relative-static-absolute",
+      "target": "parity",
+      "group": "placement-and-participation",
+      "current": "experimental finite nowrap/wrap/wrap-reverse static/relative primitive placement and fixed/opposing-inset/aspect-derived absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets with signed horizontal-width/vertical-height percentages from immediate parent content axes; paired-provider natural sizing and bounded generic Text automatic height and unwrapped natural ink dimensions, including both-auto, across nowrap directions with explicit native query provenance; direct declarative nowrap static containing chains across main directions with fixed numeric neutral-flex owners; omitted-position legacy retained; all existing absolute sizing profiles supported across wrap/wrap-reverse directions; physical anchored axes use the padding box, including signed horizontal-width/vertical-height percentages, and omitted axes use whole-content main/cross alignment, including wrap-reverse cross reversal",
+      "status": "experimental",
+      "unresolvedPolicy": "Intrinsic absolute sizing, explicit containing-block overrides, opaque/transformed ancestry and wider layout admission remain open.",
+      "evidence": {
+        "positive": [
+          "packages/core/test/layout-relative-position.test.tsx: public static to relative slots, LTR/RTL precedence, right/bottom only, forwarded style consumed once",
+          "tooling/packed-layout-consumer.mjs: installed relativeStatic, decoratedRelativeStatic and absoluteParticipation and absoluteAlignment receipts",
+          "packages/core/test/layout-decorated-relative-position.test.tsx: asymmetric parent padding/border content origin and slots",
+          "packages/core/test/layout-absolute-participation.test.tsx: source-order absolute participation, known preflight and explicit intrinsic exclusion",
+          "slice124: public direct and forwarded automatic dimensions, resize, finite-before-clamp validation, zero-size precedence; installed absoluteDerivedSize receipt",
+          "slice125: direct static chains, relative reset, legacy omitted ownership, decorated ancestor resize; installed absoluteContainingBlock receipt",
+          "slice126: fixed/derived numeric absolute bounds, resize, RTL precedence and rejection of invalid/contradictory bounds; installed absoluteBounds receipt",
+          "slice127: exactly-one-auto absolute aspect derivation before bounds, opposing inset precedence and no measurement; installed absoluteAspect receipt",
+          "slice128: pure custom natural-width query, bounds after measurement, stable paint reuse, conservative resize remeasure, keyed remove/restore and failed-identity rollback; installed absoluteMeasuredWidth receipt",
+          "slice129: pure custom natural-height query at declared width before bounds, wrapping width changes, stable paint reuse, measurement signals and keyed removal/restore; installed absoluteMeasuredHeight receipt",
+          "slice130: fixed absolute main/cross alignment across all four nowrap directions and RTL, physical insets unchanged, source focus/hit order, stable keyed identity, paint reuse and cleanup; installed absoluteMainDirections receipt",
+          "slice131: static/relative leaves across all four nowrap directions and LTR/RTL; physical final offsets, source focus/hits, stable identity, paint reuse and cleanup; row-only known-layout/containing boundary; installed relativeMainDirections receipt",
+          "slice132: opposing-inset automatic and fixed numeric absolute bounds across all four nowrap main directions and LTR/RTL; resize, physical anchoring, unchanged flow slots, occlusion/source-order hits, paint reuse and cleanup; installed absoluteMainBounds receipt",
+          "slice133: exactly-one-auto absolute aspect derivation in all four nowrap directions and LTR/RTL, declared-axis-before-bounds and paired-inset precedence, resize/pixels/identity/paint reuse/cleanup; installed absoluteMainAspect receipt",
+          "slice134: paired absolute natural width/height across all four nowrap directions and LTR/RTL; exact Pibbl envelopes, explicit native column-query provenance, stable paint reuse, measurement signals, removal/restore and cleanup; installed absoluteMeasuredMain receipt",
+          "slice135: fixed numeric neutral-flex direct nowrap containing chains across directions; public cross-direction geometry/identity/resize/cleanup and 18 native/source/built cases",
+          "slice136: fixed physical-inset absolute leaves excluded from normal LTR wrapped row lines; public resize, source focus/hits, identity, paint reuse and teardown; native/source/built two-case proof and installed absoluteWrappedParticipation receipt",
+          "slice137: direct generic wrapped Text automatic absolute height at declared numeric width, real Canvas line origins/hits, content/font/width signal ownership, interactive conservative remeasurement, plain stable cache reuse/removal/restore, bounds and pair/aspect precedence; installed absoluteTextHeight receipt",
+          "slice138: direct generic unwrapped Text natural absolute ink width at declared numeric height, live Canvas right-anchor/glyph geometry, content/font/height ownership, cache and cleanup; classified native font-source probes with column query provenance; installed absoluteTextWidth receipt",
+          "slice139: generic unwrapped Text natural height at numeric width or both-auto ink dimensions, one unbounded-both query before independent clamps, stable cache/dimension-profile transitions, font/content changes, empty content, removal/restore and cleanup; classified native font/query probes and installed absoluteTextBoth receipt",
+          "slice140: physically anchored fixed/bounded/paired/aspect/provider/Text absolute profiles across all main directions, LTR/RTL and wrap/wrap-reverse; 34 native/source/built geometry cases, public wrapped direction/profile tests, keyed identity/paint reuse/cleanup and installed absoluteAnchoredWrap receipts",
+          "slice141: static/relative primitive leaves across all main/writing directions and wrapping modes; static equals ordinary flow and relative preserves physical final-world offsets; 32 native/source/built comparison records explicitly classify 16 static cross-inset and 12 relative reversal differences; wrapped known layout owners remain rejected",
+          "slice142: wrapped absolute omitted-axis alignment across all main/writing directions and existing admitted sizing profiles; whole-content alignment per omitted axis, wrap-reverse cross reflection, physical inset precedence and non-flow source order; 64 native/source/built fixed profiles plus focused sizing-family evidence",
+          "slice143: physical percentage absolute insets resolve locally against selected padding-box width/height before existing sizing and precedence; authored values survive exact forwarding and static containing inheritance; 38 native/source/built cases, focused signal/resize/bounds/overflow evidence, strict four-edge types and installed consumer proof",
+          "slice144: static percentage insets validate and remain inert; relative percentages resolve from immediate parent content width/height before one final physical translation across directions/wraps; ordinary sibling slots, signals, fixed direct containing owners, source input, resize/overflow, paint reuse and cleanup; 50 pinned native comparisons label 47 divergences and 3 matches"
+        ],
+        "negative": [
+          "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
+        ],
+        "interaction": [
+          "slice120: paint/hit/focus geometry, sibling slots, stable keyed/native identity, receiver-owned paint reuse and exact teardown"
+        ],
+        "yogaCases": [
+          "position-static-all-ltr",
+          "position-static-all-rtl",
+          "position-relative-all-ltr",
+          "position-relative-all-rtl",
+          "position-relative-right-bottom-ltr",
+          "position-relative-right-bottom-rtl",
+          "position-decorated-static-all-ltr",
+          "position-decorated-static-all-rtl",
+          "position-decorated-relative-all-ltr",
+          "position-decorated-relative-all-rtl",
+          "position-absolute-decorated-all-ltr",
+          "position-absolute-decorated-all-rtl",
+          "position-absolute-decorated-left-top-ltr",
+          "position-absolute-decorated-left-top-rtl",
+          "position-absolute-decorated-right-bottom-ltr",
+          "position-absolute-decorated-right-bottom-rtl",
+          "position-absolute-decorated-left72-top8-ltr",
+          "position-absolute-alignment-none-center-end-ltr",
+          "position-absolute-alignment-none-center-end-rtl",
+          "position-absolute-alignment-left-center-end-ltr",
+          "position-absolute-alignment-left-center-end-rtl",
+          "position-absolute-alignment-none-default-ltr",
+          "position-absolute-alignment-none-default-rtl",
+          "position-absolute-derived-auto-ltr",
+          "position-absolute-derived-auto-ltr-resized",
+          "position-absolute-derived-auto-rtl",
+          "position-absolute-derived-auto-rtl-resized",
+          "position-containing-static-ltr",
+          "position-containing-static-rtl",
+          "position-containing-relative-ltr",
+          "position-containing-relative-rtl",
+          "position-absolute-bounds-auto-ltr",
+          "position-absolute-bounds-auto-rtl",
+          "position-absolute-bounds-fixed-ltr",
+          "position-absolute-bounds-fixed-rtl",
+          "position-absolute-aspect-width-auto-height-ltr",
+          "position-absolute-aspect-width-auto-height-rtl",
+          "position-absolute-aspect-height-auto-width-ltr",
+          "position-absolute-aspect-height-auto-width-rtl",
+          "position-absolute-aspect-width-bound-ltr",
+          "position-absolute-aspect-height-inset-pair-ltr",
+          "position-absolute-measured-left",
+          "position-absolute-measured-left-resized",
+          "position-absolute-measured-right",
+          "position-absolute-measured-right-resized",
+          "position-absolute-measured-right-max50",
+          "position-absolute-measured-right-min80",
+          "position-absolute-measured-height-top",
+          "position-absolute-measured-height-bottom",
+          "position-absolute-measured-height-top-resized",
+          "position-absolute-measured-height-bottom-resized",
+          "position-absolute-measured-height-top-min30",
+          "position-absolute-measured-height-bottom-max10",
+          "position-absolute-main-column-ltr",
+          "position-absolute-main-column-rtl",
+          "position-absolute-main-column-reverse-ltr",
+          "position-absolute-main-column-reverse-rtl",
+          "position-absolute-main-column-center-end-ltr",
+          "position-absolute-main-column-center-end-rtl",
+          "position-absolute-main-column-reverse-insets-ltr",
+          "position-absolute-main-column-reverse-insets-rtl",
+          "position-absolute-main-row-reverse-ltr",
+          "position-absolute-main-row-reverse-rtl",
+          "position-relative-main-row-static-ltr",
+          "position-relative-main-row-static-rtl",
+          "position-relative-main-row-relative-ltr",
+          "position-relative-main-row-relative-rtl",
+          "position-relative-main-row-reverse-static-ltr",
+          "position-relative-main-row-reverse-static-rtl",
+          "position-relative-main-row-reverse-relative-ltr",
+          "position-relative-main-row-reverse-relative-rtl",
+          "position-relative-main-column-static-ltr",
+          "position-relative-main-column-static-rtl",
+          "position-relative-main-column-relative-ltr",
+          "position-relative-main-column-relative-rtl",
+          "position-relative-main-column-reverse-static-ltr",
+          "position-relative-main-column-reverse-static-rtl",
+          "position-relative-main-column-reverse-relative-ltr",
+          "position-relative-main-column-reverse-relative-rtl",
+          "position-absolute-main-bounds-auto-row-ltr-initial",
+          "position-absolute-main-bounds-auto-row-ltr-resized",
+          "position-absolute-main-bounds-auto-row-rtl-initial",
+          "position-absolute-main-bounds-auto-row-rtl-resized",
+          "position-absolute-main-bounds-auto-row-reverse-ltr-initial",
+          "position-absolute-main-bounds-auto-row-reverse-ltr-resized",
+          "position-absolute-main-bounds-auto-row-reverse-rtl-initial",
+          "position-absolute-main-bounds-auto-row-reverse-rtl-resized",
+          "position-absolute-main-bounds-auto-column-ltr-initial",
+          "position-absolute-main-bounds-auto-column-ltr-resized",
+          "position-absolute-main-bounds-auto-column-rtl-initial",
+          "position-absolute-main-bounds-auto-column-rtl-resized",
+          "position-absolute-main-bounds-auto-column-reverse-ltr-initial",
+          "position-absolute-main-bounds-auto-column-reverse-ltr-resized",
+          "position-absolute-main-bounds-auto-column-reverse-rtl-initial",
+          "position-absolute-main-bounds-auto-column-reverse-rtl-resized",
+          "position-absolute-main-bounds-fixed-row-ltr-fixed",
+          "position-absolute-main-bounds-fixed-row-rtl-fixed",
+          "position-absolute-main-bounds-fixed-row-reverse-ltr-fixed",
+          "position-absolute-main-bounds-fixed-row-reverse-rtl-fixed",
+          "position-absolute-main-bounds-fixed-column-ltr-fixed",
+          "position-absolute-main-bounds-fixed-column-rtl-fixed",
+          "position-absolute-main-bounds-fixed-column-reverse-ltr-fixed",
+          "position-absolute-main-bounds-fixed-column-reverse-rtl-fixed",
+          "position-absolute-main-aspect-width-bound-row-ltr",
+          "position-absolute-main-aspect-height-bound-row-ltr",
+          "position-absolute-main-aspect-width-bound-row-rtl",
+          "position-absolute-main-aspect-height-bound-row-rtl",
+          "position-absolute-main-aspect-width-bound-row-reverse-ltr",
+          "position-absolute-main-aspect-height-bound-row-reverse-ltr",
+          "position-absolute-main-aspect-width-bound-row-reverse-rtl",
+          "position-absolute-main-aspect-height-bound-row-reverse-rtl",
+          "position-absolute-main-aspect-width-bound-column-ltr",
+          "position-absolute-main-aspect-height-bound-column-ltr",
+          "position-absolute-main-aspect-width-bound-column-rtl",
+          "position-absolute-main-aspect-height-bound-column-rtl",
+          "position-absolute-main-aspect-width-bound-column-reverse-ltr",
+          "position-absolute-main-aspect-height-bound-column-reverse-ltr",
+          "position-absolute-main-aspect-width-bound-column-reverse-rtl",
+          "position-absolute-main-aspect-height-bound-column-reverse-rtl",
+          "position-absolute-main-aspect-height-pair-column-reverse-rtl",
+          "position-absolute-main-aspect-height-pair-column-reverse-rtl-resized",
+          "position-absolute-measured-main-width-row-ltr",
+          "position-absolute-measured-main-width-row-rtl",
+          "position-absolute-measured-main-width-row-reverse-ltr",
+          "position-absolute-measured-main-width-row-reverse-rtl",
+          "position-absolute-measured-main-width-column-ltr",
+          "position-absolute-measured-main-width-column-rtl",
+          "position-absolute-measured-main-width-column-reverse-ltr",
+          "position-absolute-measured-main-width-column-reverse-rtl",
+          "position-absolute-measured-main-height-row-ltr",
+          "position-absolute-measured-main-height-row-rtl",
+          "position-absolute-measured-main-height-row-reverse-ltr",
+          "position-absolute-measured-main-height-row-reverse-rtl",
+          "position-absolute-measured-main-height-column-ltr",
+          "position-absolute-measured-main-height-column-rtl",
+          "position-absolute-measured-main-height-column-reverse-ltr",
+          "position-absolute-measured-main-height-column-reverse-rtl",
+          "position-absolute-measured-main-width-column-reverse-rtl-resized",
+          "position-absolute-measured-main-height-column-reverse-rtl-resized"
+        ],
+        "missing": [
+          "general absolute intrinsic dimensions (built-in text/images, both-auto and nested owners)",
+          "broader positioned known layout owners and logical inset policy",
+          "general containing-block ownership"
+        ]
+      }
+    },
+    {
+      "id": "position.containing-block",
+      "target": "parity",
+      "group": "placement-and-participation",
+      "current": "Positioned Flex, Absolute, Overlay, Flow and Grid select their padding box; static owners pass the nearest logical box through opaque wrappers. Normal/contents Group transforms preserve world geometry without creating a containing block.",
+      "status": "experimental",
+      "unresolvedPolicy": "No additional policy within this implemented alpha contract; aggregate release verification remains separate.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": []
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-containing-block.test.tsx",
+        "packages/core/src/lib/layout/context.ts"
+      ]
+    },
+    {
+      "id": "participation.hidden-and-contents",
+      "target": "parity",
+      "group": "placement-and-participation",
+      "current": "Hidden and contents participation preserves logical identity and event ancestry, suspends descendant work and interaction/focus/HTML projection, and retains resources until real removal.",
+      "status": "experimental",
+      "unresolvedPolicy": "No additional policy within this implemented alpha contract; aggregate release verification remains separate.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": []
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-participation.test.tsx",
+        "packages/core/test/layout-workspace-evidence.test.tsx"
+      ]
+    },
+    {
+      "id": "overflow-sizing",
+      "target": "preserve",
+      "group": "measurement-and-intrinsic",
+      "current": "Visible and clip preserve natural intrinsic contributions and content-based automatic Text minima; clipping affects presentation rather than creating a scroll-sizing container. Yoga scroll conversion fails closed.",
+      "status": "experimental",
+      "unresolvedPolicy": "No additional policy within this implemented alpha contract; aggregate release verification remains separate.",
+      "evidence": {
+        "positive": ["visible/clip"],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": []
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-general-measurement.test.tsx",
+        "packages/layout/src/lib/yoga32.ts"
+      ]
+    },
+    {
+      "id": "measurement.custom-leaf",
+      "target": "parity",
+      "group": "measurement-and-intrinsic",
+      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom providers with one exact declared and one unbounded natural axis across finite nowrap main directions; native column-width query differences labeled separately from deterministic geometry; bounded built-in wrapped height and unwrapped natural ink dimensions, including both-auto, use the same owned query with real Canvas metrics; bounded pure structural descriptions forward paired custom-provider measurement in finite LTR nowrap rows; finite forward LTR nowrap row height derives from native final-width paired leaf queries; slice223 adds sizing-only min-content/max-content and immutable fitContent limits through direct paired finite horizontal nowrap content-box Flex, preserving four horizontal directions, numeric grow/shrink/bounds, signal targets/identity and immutable-value cache snapshots; slice224 resolves explicit direct Canvas Text intrinsic width/basis from actual wrapped word floors or unwrapped whole runs, then remeasures final cross height, without altering generic primitive capabilities",
+      "status": "partial",
+      "unresolvedPolicy": "Paired intrinsic and first/last baseline callbacks are implemented for bounded direct-leaf consumers; broader constraint modes, nested intrinsic consumers and feedback remain open.",
+      "evidenceRefs": [
+        "packages/core/src/lib/layout/layout-jsx.test.tsx",
+        "packages/core/src/lib/define-primitive.test.tsx",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "docs/design/layout-system-contract.md",
+        "packages/core/test/layout-structural-intrinsic.test.tsx",
+        "packages/core/test/layout-intrinsic-sizing.test.tsx",
+        "packages/scenarios/src/learning/layout/wasm-flex-intrinsic-sizing.example.tsx",
+        "tooling/test-wasm-flex-intrinsic-sizing.mjs",
+        "packages/core/test/layout-intrinsic-text-sizing.test.tsx"
+      ],
+      "evidence": {
+        "positive": [
+          "measure callbacks",
+          "finite-row paired intrinsic contribution, purity, retry and validation",
+          "exact final-width finite cross height, declared-size/intrinsic-only compatibility and real zero width",
+          "finite LTR column paired provider exact width40/60 and unbounded natural height40/30 with following-target movement",
+          "finite-column measurement-only signal dependency moves following targets; unrelated paint reuses constrained snapshots",
+          "slice128: pure absolute width query at exact height, measurement-owned signals, conservative layout revision and stable sibling-paint reuse",
+          "slices129/134: symmetric exact-width natural height and both absolute provider profiles across directions, query-before-bounds, owned signals, removal/restore and explicit native column-width query differences",
+          "slices137/138: built-in Text width-driven wrapped height and unwrapped natural ink width, conservative interactive callbacks versus stable plain cache reuse, font/content/dimension changes, bounds/precedence and exact teardown",
+          "one prepared structural description forwards paired intrinsic minimum and settled-width height without invoking ordinary components",
+          "definite-width described Flex row uses a same-root native main-only query before tracked exact-width/unbounded-height paired leaf callbacks",
+          "slice162: parent-owned bounded aggregate reuse replays direct-child receiver receipts after sibling paint; content invalidation, live-parent removal and conservative nested-query fallback",
+          "slice163: a direct pure described paired leaf inside a measured known row receives native final widths under its prepared root receiver; signals, keyed geometry, removal and source-cycle cleanup",
+          "slice164: one-wrapper aggregate reuse snapshots both input layers and replays current leaf receipts; content updates after paint hits, conservative function/nested-query misses and removal ownership"
+        ],
+        "negative": [
+          "opaque component measurement unsupported",
+          "unsupported intrinsic provider with explicit basis/minimum escape",
+          "mutable nested inputs conservatively remeasure"
+        ],
+        "interaction": [
+          "reactive intrinsic minimum moves the public target; unrelated sibling paint reuses snapshot; exact disposal",
+          "structural badge minimum60\u219270 moves the following target with stable keyed identity and unrelated-paint measurement reuse",
+          "nested row width80\u219260 gives leaf60\u00d720\u219240\u00d740, then resolved content signal height50 moves following target with stable identity; temporary native arena released before callback"
+        ],
+        "yogaCases": [
+          "custom-column-measure",
+          "custom-column-measure-resized",
+          "position-absolute-measured-left",
+          "position-absolute-measured-left-resized",
+          "position-absolute-measured-right",
+          "position-absolute-measured-right-resized",
+          "position-absolute-measured-right-max50",
+          "position-absolute-measured-right-min80",
+          "position-absolute-measured-height-top",
+          "position-absolute-measured-height-bottom",
+          "position-absolute-measured-height-top-resized",
+          "position-absolute-measured-height-bottom-resized",
+          "position-absolute-measured-height-top-min30",
+          "position-absolute-measured-height-bottom-max10",
+          "position-absolute-measured-main-width-row-ltr",
+          "position-absolute-measured-main-width-row-rtl",
+          "position-absolute-measured-main-width-row-reverse-ltr",
+          "position-absolute-measured-main-width-row-reverse-rtl",
+          "position-absolute-measured-main-width-column-ltr",
+          "position-absolute-measured-main-width-column-rtl",
+          "position-absolute-measured-main-width-column-reverse-ltr",
+          "position-absolute-measured-main-width-column-reverse-rtl",
+          "position-absolute-measured-main-height-row-ltr",
+          "position-absolute-measured-main-height-row-rtl",
+          "position-absolute-measured-main-height-row-reverse-ltr",
+          "position-absolute-measured-main-height-row-reverse-rtl",
+          "position-absolute-measured-main-height-column-ltr",
+          "position-absolute-measured-main-height-column-rtl",
+          "position-absolute-measured-main-height-column-reverse-ltr",
+          "position-absolute-measured-main-height-column-reverse-rtl",
+          "position-absolute-measured-main-width-column-reverse-rtl-resized",
+          "position-absolute-measured-main-height-column-reverse-rtl-resized"
+        ],
+        "missing": [
+          "broader exact/at-most/unbounded constraint matrix beyond finite row/column admissions",
+          "broader nested invalidation and owner feedback",
+          "broader baseline consumers (tracked by flex.baselines)",
+          "broader callback-count and constraint matrix"
+        ]
+      }
+    },
+    {
+      "id": "reactivity.incremental-layout",
+      "target": "beyond",
+      "group": "reactivity-and-publication",
+      "current": "root-owned shared WASM instance, isolated generational regions, bounded prepared Flex/Grid/Flow roots, transaction-committed known-root topology, arena-free Overlay/Absolute/Layer plans and native Grid/Flow numeric kernels",
+      "status": "experimental",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/test-wasm-nested-intrinsic.mjs",
+        "tooling/test-wasm-wrapped-collections.mjs",
+        "tooling/test-built-layout-lifecycle.mjs",
+        "tooling/layout-preflight-lab.mjs",
+        "packages/core/src/lib/layout/topology.ts",
+        "packages/core/test/layout-root-invalidation.test.tsx",
+        "docs/project-plans/010-layout-engine-rework.md"
+      ],
+      "evidence": {
+        "positive": [
+          "paint-only cache reuse",
+          "keyed removal/disposal",
+          "one mutable instance per root including managed Layers",
+          "isolated generational native region handles",
+          "settled Absolute-to-Flex and nested Flex plans reused during traversal",
+          "direct and opaque-boundary Flex entries and pure described Flex roots reuse prepared ownership",
+          "registered known Layer children and Grid/Flow entry Flex placements carry exact receiver plans into traversal",
+          "mounted Grid tracks/cell areas and resolved Flow line/wrap placement use the existing root-owned arena protocol",
+          "known Grid/Flow roots adopt the original native plan; Overlay stages aligned host placements without a native arena",
+          "Layer admits pure described known roots using cached primitive receiver and actual root sizing",
+          "known prepared roots stage a root-owned parent topology that commits only after successful traversal and releases on disposal"
+        ],
+        "negative": [
+          "failed known-layout preparation releases provisional regions",
+          "active-path known Flex cycles rejected"
+        ],
+        "interaction": [
+          "signal updates",
+          "prepared-region keyed reorder preserves targets",
+          "independent root updates through known-layout failure"
+        ],
+        "yogaCases": [],
+        "missing": [
+          "general role-aware prepared graph beyond known preflight roots",
+          "minimal visit proof",
+          "all-family root-wide prepared graph and batched topology revisions"
+        ]
+      }
+    },
+    {
+      "id": "geometry.transactional-publication",
+      "target": "preserve",
+      "group": "reactivity-and-publication",
+      "current": "bounded known Flex/Grid/Flow/Overlay/Absolute/Layer preparation, transaction-scoped immutable layout geometry receipts, and finite root-wide HTML projection preflight; general matching publication remains incomplete",
+      "status": "experimental",
+      "evidence": {
+        "positive": [
+          "settled known sibling and nested Flex plans before opaque descendant evaluation",
+          "normal traversal adopts prepared regions without another allocation pass",
+          "all pending HTML numeric projection work settles before host DOM mutation or callbacks",
+          "Grid/Flow settle existing placements before known Flex child preflight; Layer transfers plans across child-instance raster boundary",
+          "direct and opaque-entry Layers prepare known children before raster work; nested boundaries retain both numeric and boundary plans",
+          "successful transactions atomically adopt one immutable root geometry receipt; failed transactions discard staged geometry"
+        ],
+        "negative": [
+          "later known Flex factor/sizing failures prevent earlier opaque evaluation",
+          "failed preparation and root disposal release owned regions",
+          "later finite-transform border overflow prevents earlier HTML updater and clears failed HTML",
+          "later known Layer/Grid/Flow Flex input failure prevents earlier opaque evaluation inside the prepared boundary"
+        ],
+        "interaction": [
+          "source/built explicit recovery geometry and targets",
+          "independent Canvas root remains usable during known-layout failure",
+          "source/built HTML recovery restores native activation while independent Canvas updates",
+          "positioned Layer children and Grid/Flow recovery pixels/hits preserve settled geometry"
+        ],
+        "yogaCases": [],
+        "missing": [
+          "general staged geometry across all layout families",
+          "nonthrowing matching Canvas/hit/focus/HTML adoption",
+          "fallible publication preflight beyond bounded Flex and HTML numeric geometry",
+          "general atomic ledger adoption across all layout families"
+        ]
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/scenarios/src/layout-preflight-lab.tsx",
+        "tooling/layout-preflight-lab.mjs",
+        "docs/project-plans/010-layout-engine-rework.md",
+        "packages/core/test/html-box-layers.test.tsx",
+        "packages/core/src/lib/layout/geometry-publication.ts",
+        "packages/core/test/layout-geometry-publication.test.tsx",
+        "docs/design/html-box-contract.md"
+      ]
+    },
+    {
+      "id": "rounding-and-point-scale",
+      "target": "parity",
+      "group": "migration-and-conformance",
+      "current": "Yoga 3.2.1 point-scale-zero parity with unrounded logical allocations and nested origins; Canvas backing dimensions round independently of logical layout, pointer routing and focus",
+      "status": "complete",
+      "unresolvedPolicy": "None for the selected unrounded logical geometry policy. Positive Yoga point-scale pixel-grid snapping and a public snapping API are outside this contract.",
+      "evidenceRefs": [
+        "docs/design/layout-system-contract.md",
+        "docs/design/canvas-surface-contract.md",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/test/canvas-surface.test.ts",
+        "packages/scenarios/src/canvas-surface.example.tsx",
+        "packages/scenarios/src/learning/layout/wasm-yoga-migration.example.tsx",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "tooling/test-wasm-nested-intrinsic.mjs"
+      ],
+      "evidence": {
+        "positive": [
+          "Exact scale-zero fractional Flex allocation in pinned native Yoga, public source/private-built Studio and installed tarball",
+          "Fractional fixed logical viewport survives CSS resizing with stable mounted identity"
+        ],
+        "negative": [
+          "No positive Yoga point-scale snapping parity is claimed; no public snapping API",
+          "Large cancelling and negative nested origins do not independently round a 0.125-wide logical target"
+        ],
+        "interaction": [
+          "Densities 1/1.5/2 round only backing dimensions; retained Layer fractional pointer coordinates and logical target focus persist",
+          "Source and installed scale-zero A/B targets follow exact fractional boxes"
+        ],
+        "yogaCases": ["rounding-scale-zero-row"],
+        "missing": []
+      }
+    },
+    {
+      "id": "integration.source-order-canvas",
+      "target": "preserve",
+      "group": "reactivity-and-publication",
+      "current": "source paint, topmost coordinate targeting and source keyboard order preserved through finite reverse/RTL Flex, translated Group, retained Layer and filter capture composition",
+      "status": "complete",
+      "evidenceRefs": [
+        "docs/design/layout-system-contract.md",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/test/filter-ownership.test.ts",
+        "packages/scenarios/src/learning/layout/wasm-flex-keyed-wrap.example.tsx",
+        "tooling/test-wasm-wrapped-collections.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "tooling/test-wasm-nested-intrinsic.mjs",
+        "docs/project-plans/010-layout-engine-rework.md"
+      ],
+      "evidence": {
+        "positive": [
+          "source-order hit handling and Canvas paint remain independent of reverse/RTL spatial placement",
+          "Group translation, retained Layer and opacity-filter composition preserve later-source B over A",
+          "source and installed proofs cover filter-inside-Layer and filter-outside-Layer nesting"
+        ],
+        "negative": [
+          "pointerEvents none preserves B paint while the same overlap point targets A",
+          "disposed targets no longer receive clicks"
+        ],
+        "interaction": [
+          "world positions2/42 to42/2 to2/42 across row, row-reverse and RTL retain keyed stamps/native nodes",
+          "source Tab/Shift-Tab order and focused identity remain stable across geometry changes",
+          "paint-only updates change filtered content without another native numeric solve",
+          "source/built complete wrapped-collection and composition replay, installed245inputs with strict consumer types, exact disposal and fresh filter ownership test"
+        ],
+        "yogaCases": [],
+        "missing": []
+      }
+    },
+    {
+      "id": "integration.signal-aware-caching",
+      "target": "beyond",
+      "group": "reactivity-and-publication",
+      "current": "existing foundations and bounded experimental caches",
+      "status": "experimental",
+      "evidenceRefs": ["packages/core/test/layout-wasm-slice.test.tsx"],
+      "evidence": {
+        "positive": [
+          "measurement cache",
+          "receiver cleanup",
+          "native Grid axis/cell and Flow item/options numeric snapshots reuse paint-only work; measured Text changes invalidate Flow placement"
+        ],
+        "negative": [],
+        "interaction": ["paint-only update"],
+        "yogaCases": [],
+        "missing": ["full efficiency scenarios", "cache-on/off equivalence"]
+      }
+    },
+    {
+      "id": "integration.deterministic-cleanup",
+      "target": "preserve",
+      "group": "reactivity-and-publication",
+      "current": "Explicit layout ownership releases nodes, arenas, root instances and measurement caches on removal, disposal, supported render/preflight failures and external-loading cancellation/failure/retry",
+      "status": "complete",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/test/layout-loading/real-root-lifecycle.test.tsx",
+        "packages/core/test/layout-loading/cancellation.test.ts",
+        "packages/core/test/layout-loading/sync-race.test.ts",
+        "packages/core/test/layout-loading/updates.test.ts",
+        "packages/core/test/layout-loading/retry.test.ts",
+        "tooling/packed-layout-loading-consumer.mjs",
+        "tooling/test-wasm-wrapped-collections.mjs",
+        "tooling/test-wasm-nested-intrinsic.mjs"
+      ],
+      "evidence": {
+        "positive": [
+          "Exact native node/arena/root-instance/measurement baselines after real nested Flex/Layer retry disposal",
+          "Source/private-built/installed remove-restore-dispose evidence"
+        ],
+        "negative": [
+          "Three pending real roots remain unadmitted through supersession and caller abort while shared preparation stays live",
+          "503, integrity and compile failures create no component callbacks, Canvas context or native ownership; explicit retry succeeds",
+          "Known sibling sizing failure releases native ownership before explicit remount; stale async completions and disposed controllers cannot revive ownership"
+        ],
+        "interaction": [
+          "Retried real roots paint and accept clicks; disposal makes subsequent input inert",
+          "Installed normal-core cold pages prove held-load cancellation and first-503 retry under a nested deployment base without source fallback"
+        ],
+        "yogaCases": [],
+        "missing": []
+      }
+    },
+    {
+      "id": "grid.explicit-placement",
+      "target": "beyond",
+      "group": "grid-beyond-yoga",
+      "current": "finite explicit placement evidenced for numeric/percentage/fr tracks, positive starts/spans, numeric gaps, supported child measurement/alignment and source-order overlap; experimental mounted native per-axis tracks and batched areas preserve ordinary JavaScript behavior",
+      "status": "partial",
+      "implementedContract": "Nonempty finite declared track matrices; explicit positive one-based starts/spans contained within the matrix; numeric gaps; existing self/container alignment and supported pure child measurement; source paint/hit/focus order, resize, keyed identity, unchanged-axis and paint cache reuse, exact teardown. Advanced intrinsic/minmax tracks remain required by the original explicit-placement target; implicit placement is separately tracked.",
+      "unresolvedPolicy": "The finite explicit subset is evidenced; the accepted complete declared Grid target still requires intrinsic/minmax and advanced track behavior. Intrinsic vocabulary work overlaps that prerequisite and does not remove it from this entry. Implicit/auto/dense placement is separately tracked; unsupported syntax rejects without approximation.",
+      "evidence": {
+        "positive": [
+          "existing Grid",
+          "slice155: public border-box owner560\u2192700 with numeric/25%/1fr tracks and a two-column/two-row span resolves B236\u2192376 by160 while C/D retain their finite row-two areas",
+          "native mixed tracks resize200\u2192260 with unchanged-axis reuse",
+          "native spanning areas170\u00d745\u2192230\u00d745 and one-pixel spans after huge leading tracks"
+        ],
+        "negative": [
+          "invalid/unresolved/stale native records rejected",
+          "WASM memory-growth result view refreshed before caching",
+          "missing/invalid starts, out-of-range spans and unsupported track syntax reject; no implicit tracks or silent approximation"
+        ],
+        "interaction": [
+          "source/built moved targets, paint-only numeric reuse and exact native teardown",
+          "slice155: public/source/built/installed B expansion reaches a formerly empty point; later C and D independently win overlapping targets, Tab remains A/B/C/D, stamps persist, paint reuses tracks/cells and disposal releases inspector/native ownership"
+        ],
+        "yogaCases": [],
+        "missing": [
+          "intrinsic/auto/content/minmax explicit tracks and advanced declared-track behavior required by the accepted Grid design"
+        ]
+      },
+      "evidenceRefs": [
+        "docs/design/layout-system-contract.md",
+        "packages/core/test/grid-study-evidence.test.tsx",
+        "packages/scenarios/src/learning/layout/grid.example.tsx",
+        "tooling/test-wasm-grid-study.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/wasm/layout/src/lib.rs",
+        "tooling/layout-preflight-lab.mjs",
+        "docs/project-plans/010-layout-engine-rework.md"
+      ]
+    },
+    {
+      "id": "grid.implicit-tracks-and-auto-placement",
+      "target": "beyond",
+      "group": "grid-beyond-yoga",
+      "current": "Native sparse/dense row/column placement, implicit tracks, mixed explicit starts/spans, automatic fill/fit repetitions and exact Grid arena ownership are implemented.",
+      "status": "experimental",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": []
+      },
+      "evidenceRefs": [
+        "packages/core/src/lib/layout/grid.test.ts",
+        "packages/core/test/layout-grid-coupled-measurement.test.tsx",
+        "packages/core/test/layout-native-grid-ownership.test.tsx",
+        "packages/core/test/layout-workspace-evidence.test.tsx"
+      ],
+      "unresolvedPolicy": "No additional policy within this implemented alpha contract; aggregate release verification remains separate."
+    },
+    {
+      "id": "intrinsic-size-vocabulary",
+      "target": "beyond",
+      "group": "grid-beyond-yoga",
+      "current": "restricted auto",
+      "status": "missing",
+      "unresolvedPolicy": "Legal length vocabulary by property must be specified before API work.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "min-content",
+          "max-content",
+          "stretch",
+          "fit-content under indefinite constraints"
+        ]
+      }
+    },
+    {
+      "id": "migration.owned-tree-snapshots",
+      "target": "beyond",
+      "group": "migration-and-conformance",
+      "current": "Public @pibbl/layout owns native nodes, topology, immutable geometry snapshots, changed boxes and explicit disposal through a no-Canvas core friend entry; v21 native capability verification is in progress.",
+      "status": "experimental",
+      "unresolvedPolicy": "Final native ABI verification remains in progress.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": ["Final v21 packed and native lifecycle verification"]
+      },
+      "evidenceRefs": [
+        "packages/layout/src/lib/tree.ts",
+        "packages/layout/test/native-tree.test.ts",
+        "tooling/verify-packed-layout-package.mjs"
+      ]
+    },
+    {
+      "id": "migration.versioned-yoga-conversion",
+      "target": "parity",
+      "group": "migration-and-conformance",
+      "current": "25-case pinned rehearsal:22 geometry matches and3 classified CSS allocation differences, including box conversion and finite factors",
+      "status": "experimental",
+      "unresolvedPolicy": "Implementation direction is authorized; conversion/analyzer return contracts and supported compatibility policy remain to be specified. Explicit Yoga reference-baseline flags are classified unsupported input: a versioned converter must diagnose/reject or explicitly translate them, never drop them or substitute last-baseline.",
+      "evidenceRefs": [
+        "tooling/layout-yoga-rehearsal/reference.cpp",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "packages/core/test/layout-wasm-slice.test.tsx"
+      ],
+      "evidence": {
+        "positive": [
+          "25-case Yoga3.2.1 rehearsal with22matches/3classified differences",
+          "tooling/layout-yoga-rehearsal/baseline-reference-child-probe.cpp: pinned default-source and explicit-reference divergence; unsupported migration-input classification"
+        ],
+        "negative": ["no profile or public selector"],
+        "interaction": ["migration example resize"],
+        "yogaCases": [
+          "grow",
+          "cap",
+          "shrink",
+          "rectangle-shrink",
+          "rectangle-percent-content-box",
+          "column-grow",
+          "column-cap",
+          "column-shrink",
+          "row-reverse-cap",
+          "column-reverse-cap",
+          "row-wrap",
+          "row-wrap-reverse",
+          "border-box-floor-bounds",
+          "border-box-percentage",
+          "border-box-asymmetric-row",
+          "border-box-asymmetric-column",
+          "zero-fractional-grow",
+          "fractional-shrink",
+          "grow-freeze-release",
+          "shrink-freeze-release",
+          "large-finite-differential",
+          "subunit-zero-grow",
+          "subunit-shrink-policy",
+          "initial-freeze-grow-policy",
+          "initial-freeze-shrink-policy"
+        ],
+        "missing": [
+          "style/tree analysis",
+          "classified divergence manifest",
+          "real migration application",
+          "versioned conversion diagnostic/explicit translation for Yoga reference-baseline flags"
+        ]
+      }
+    },
+    {
+      "id": "excluded.full-css-vertical-writing-subgrid",
+      "target": "excluded",
+      "group": "migration-and-conformance",
+      "current": "not supported",
+      "status": "excluded",
+      "evidence": {
+        "positive": ["published exclusion"],
+        "negative": ["no silent fallback"],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": []
+      }
+    }
+  ],
+  "explicitExclusions": [
+    "Full CSS formatting and parsing",
+    "Vertical writing modes",
+    "Subgrid and masonry",
+    "A drop-in Yoga Node compatibility API",
+    "Automatic accessibility, rich text editing, or scrolling widgets"
+  ],
+  "integratedImplementation": {
+    "asOf": "2026-10-29",
+    "state": "native-default-verified",
+    "delivery": "Maintainer superseded numbered slices with one integrated implementation batch. Historical capability statuses below are not a current feature-count or a release claim.",
+    "evidenceRefs": [
+      "packages/core/test/layout-general-measurement.test.tsx",
+      "packages/core/test/layout-grid-coupled-measurement.test.tsx",
+      "packages/core/test/layout-participation.test.tsx",
+      "packages/core/test/layout-native-grid-ownership.test.tsx",
+      "packages/core/test/layout-root-invalidation.test.tsx",
+      "packages/core/test/layout-workspace-evidence.test.tsx",
+      "packages/layout/test",
+      "docs/site/learn/guides/standalone-layout-migration.md"
+    ],
+    "remainingReleaseEvidence": [
+      "The full uninterrupted aggregate trust command remains unclaimed; source browser shards, normal-built layout checks, native tests, package gates and static verification passed",
+      "Reconcile historical capability evidence and unsupported profiles with the implementation",
+      "Native default is implemented; general prepared-graph and shared geometry publication admission remain incomplete"
+    ]
+  }
+}

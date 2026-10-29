@@ -9,6 +9,7 @@ import { resolveLocalOffset } from './resolve-built-in.js';
 import type { Length } from './types.js';
 
 const PLACEMENT_HANDOFF = Symbol('pibbl.placement-handoff');
+const PLACEMENT_DERIVED_ABSOLUTE_AXES = Symbol('pibbl.placement-derived-absolute-axes');
 
 type PropsWithStyle = Record<PropertyKey, unknown> & {
   readonly style?: unknown;
@@ -24,14 +25,44 @@ let activeSignalHandoff: {
 } | undefined;
 
 function hasPositioning(style: Readonly<Record<PropertyKey, unknown>>): boolean {
-  if (Object.hasOwn(style, 'left') || Object.hasOwn(style, 'top')) return true;
+  if (Object.hasOwn(style, 'position') || Object.hasOwn(style, 'left') || Object.hasOwn(style, 'right') || Object.hasOwn(style, 'top') || Object.hasOwn(style, 'bottom') || Object.hasOwn(style, 'insetStart') || Object.hasOwn(style, 'insetEnd')) return true;
   const when = style.when;
   return Array.isArray(when) && when.some((rule) => {
     if (!rule || typeof rule !== 'object') return false;
     const patch = (rule as { style?: unknown }).style;
     return !!patch && typeof patch === 'object' &&
-      (Object.hasOwn(patch, 'left') || Object.hasOwn(patch, 'top'));
+      (Object.hasOwn(patch, 'position') || Object.hasOwn(patch, 'left') || Object.hasOwn(patch, 'right') || Object.hasOwn(patch, 'top') || Object.hasOwn(patch, 'bottom') || Object.hasOwn(patch, 'insetStart') || Object.hasOwn(patch, 'insetEnd'));
   });
+}
+
+/** @internal Marks only a fresh placement-owned style; authored style objects are never changed. */
+export function markDerivedAbsoluteAxes(style: SystemStyle, width: boolean, height: boolean): void {
+  (style as Record<PropertyKey, unknown>)[PLACEMENT_DERIVED_ABSOLUTE_AXES] = (width ? 1 : 0) | (height ? 2 : 0);
+}
+
+/** @internal Substitutes settled axes only across an exact forwarded placement handoff. */
+export function resolveForwardedDerivedAbsoluteAxes(
+  style: Readonly<SystemStyle>,
+  source: Readonly<SystemStyle> | undefined,
+): Readonly<SystemStyle> {
+  if (source === undefined) return style;
+  const axes = (source as Record<PropertyKey, unknown>)[PLACEMENT_DERIVED_ABSOLUTE_AXES] as number | undefined;
+  if (!axes || !samePositioning(style, source)) return style;
+  const raw = style as Readonly<Record<string, unknown>>;
+  const settled = source as Readonly<Record<string, unknown>>;
+  const width = (axes & 1) !== 0 && (raw.width === undefined || raw.width === 'auto') && typeof settled.width === 'number' ? settled.width : raw.width;
+  const height = (axes & 2) !== 0 && (raw.height === undefined || raw.height === 'auto') && typeof settled.height === 'number' ? settled.height : raw.height;
+  if (Object.is(width, raw.width) && Object.is(height, raw.height)) return style;
+  return Object.freeze({ ...raw, width, height }) as Readonly<SystemStyle>;
+}
+
+function samePositioning(style: Readonly<SystemStyle>, source: Readonly<SystemStyle>): boolean {
+  const left = style as Readonly<Record<string, unknown>>;
+  const right = source as Readonly<Record<string, unknown>>;
+  return Object.is(left.position, right.position) && Object.is(left.left, right.left) &&
+    Object.is(left.right, right.right) && Object.is(left.top, right.top) &&
+    Object.is(left.bottom, right.bottom) && Object.is(left.insetStart, right.insetStart) &&
+    Object.is(left.insetEnd, right.insetEnd);
 }
 
 /** @internal Marks a placed function component's object style for forwarding. */
@@ -103,9 +134,11 @@ export function getPlacementHandoffSource(
 export function consumePlacementHandoff(
   style: Readonly<SystemStyle>,
 ): Readonly<SystemStyle> {
-  if (getPlacementHandoffSource(style) === undefined) return style;
-  const withoutHandoff = { ...(style as Record<PropertyKey, unknown>) };
+  const record = style as Record<PropertyKey, unknown>;
+  if (record[PLACEMENT_HANDOFF] === undefined && record[PLACEMENT_DERIVED_ABSOLUTE_AXES] === undefined) return style;
+  const withoutHandoff = { ...record };
   delete withoutHandoff[PLACEMENT_HANDOFF];
+  delete withoutHandoff[PLACEMENT_DERIVED_ABSOLUTE_AXES];
   return Object.freeze(withoutHandoff) as Readonly<SystemStyle>;
 }
 
@@ -123,10 +156,54 @@ export function getPlacementSignalHandoff(
  * @see {@link SystemStyle}
  */
 export interface PositioningStyle extends SystemStyle {
-  /** Left edge coordinate or inset. See {@link Length}. */
+  /**
+   * Experimental direct-Flex placement mode. In a finite Flex, static
+   * keeps the allocated slot and ignores insets; relative offsets final geometry
+   * once without moving siblings. Primitive static/relative leaves support every
+   * main/writing direction and wrapping mode. Wrapped parents admit fixed numeric
+   * direct Flex owners that remain internally nowrap; non-row chains use the same
+   * fixed owner restriction, with zero grow/shrink and
+   * omitted or automatic basis; physical offsets retain their sign through main reversal. Absolute stays out of sibling allocation, using
+   * the padding box for explicit insets and content alignment for omitted axes.
+   * Fixed numeric, percentage and admitted automatic absolute profiles support all main directions
+   * and RTL, with numeric or percentage bounds applied before placement. In every wrapping mode,
+   * omitted axes use whole-content main/cross alignment; wrap-reverse reverses
+   * omitted cross alignment and combines with column RTL exactly once.
+   * Paired natural providers keep their exact/unbounded query in every admitted direction.
+   * Direct wrapped Text with a generic pixel font and visible fit/overflow may
+   * measure automatic height at a resolved numeric or percentage width through the same owned query.
+   * Unwrapped Text may measure automatic width at a resolved numeric or percentage height, using
+   * its existing Canvas ink-bounds width before bounds and physical anchoring.
+   * Generic unwrapped Text also supports natural ink height and both automatic
+   * dimensions through one unbounded query before independent numeric clamps;
+   * mixed opposing-pair/natural feedback and both-auto aspect remain excluded.
+   * On the documented finite direct-child path, automatic absolute axes resolve
+   * from opposing numeric or percentage physical insets. With a positive finite aspectRatio,
+   * exactly one automatic axis can instead derive from its resolved declared finite numeric or percentage opposite axis.
+   * Opposing insets win. Finite numeric or percentage min/max bounds clamp used axes
+   * independently after derivation; a clamp does not recouple aspectRatio, and a
+   * numeric minimum above its maximum rejects. A direct custom primitive with
+   * paired pure measurement providers may instead measure natural automatic
+   * width at a declared numeric or percentage height, or natural height at a declared numeric
+   * or percentage width. The automatic axis is unbounded; the exact axis uses its declared
+   * resolved padding-box value before bounds clamp the used dimensions.
+   * In direct declarative Flex chains,
+   * static Flex passes the containing box outward while relative Flex owns a local box.
+   * Omission retains the legacy local Flex boundary and left/top behavior.
+   */
+  position?: 'static' | 'relative' | 'absolute';
+  /** Left edge coordinate or inset. Explicit absolute Flex insets accept finite numbers or percentages of the containing padding-box axis; relative percentages use the parent content-box axis. See {@link Length}. */
   left?: Exclude<Length, 'auto'>;
-  /** Top edge value or top envelope guide. See {@link Length}. */
+  /** Right edge inset. Absolute Flex accepts finite numbers or percentages of the containing padding-box width; relative percentages use the parent content-box width. See {@link Length}. */
+  right?: Exclude<Length, 'auto'>;
+  /** Top edge coordinate or inset. Explicit absolute Flex insets accept finite numbers or percentages of the containing padding-box axis; relative percentages use the parent content-box axis. See {@link Length}. */
   top?: Exclude<Length, 'auto'>;
+  /** Bottom edge inset. Absolute Flex accepts finite numbers or percentages of the containing padding-box height; relative percentages use the parent content-box height. See {@link Length}. */
+  bottom?: Exclude<Length, 'auto'>;
+  /** Experimental direct absolute Flex inline-start inset, mapped through the receiving Flex direction. Overrides the corresponding physical edge, including zero. Percentages use the selected containing padding-box width. See {@link Length}. */
+  insetStart?: Exclude<Length, 'auto'>;
+  /** Experimental direct absolute Flex inline-end inset, mapped through the receiving Flex direction. Overrides the corresponding physical edge. See {@link Length}. */
+  insetEnd?: Exclude<Length, 'auto'>;
 }
 
 export interface ResolvedPosition {

@@ -8,6 +8,7 @@ const BUILT_ENTRY_SUFFIXES = new Map([
   ["@pibbl/text", "/packages/text/dist/index.mjs"],
   ['@pibbl/core', '/packages/core/dist/index.mjs'],
   ['@pibbl/core/internal', '/packages/core/dist/internal.mjs'],
+  ['@pibbl/core/internal/layout', '/packages/core/dist/layout-kernel.mjs'],
   ['@pibbl/core/jsx-runtime', '/packages/core/dist/jsx-runtime.mjs'],
   ['@pibbl/core/jsx-dev-runtime', '/packages/core/dist/jsx-dev-runtime.mjs'],
   ['@pibbl/three', '/packages/three/dist/index.mjs'],

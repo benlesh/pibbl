@@ -1,12 +1,10 @@
 import {
-  pibbl,
-  useEventTarget,
-  useConst,
-  useSignal,
   Path,
   Rectangle,
   Text,
-  type PibblController,
+  useEventTarget,
+  useConst,
+  useSignal,
 } from "@pibbl/core";
 function badgeGeometry(): Path2D {
   const geometry = new Path2D();
@@ -82,7 +80,7 @@ function CustomBadge() {
     </Text>,
   ];
 }
-function CustomEventTargetsStudy() {
+export function CustomEventTargetsStudy() {
   return [
     <Rectangle
       style={{
@@ -134,7 +132,4 @@ function CustomEventTargetsStudy() {
       }
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <CustomEventTargetsStudy />);
 }

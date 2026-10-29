@@ -95,6 +95,10 @@ helpers [`nearestPoint`](#/api/functions/nearest-point) and
 [`nearestDomainValue`](#/api/functions/nearest-domain-value) are also
 available.
 
+Graph visualization adds [ten component families](#/api/components/graph-visualization),
+independent layout calculations, reusable marks, and a replaceable force solver.
+Each family can be rebuilt using supported public geometry and rendering APIs.
+
 ## Compiler entries
 
 `@pibbl/core/jsx-runtime` exports `Fragment`, `jsx`, and `jsxs`; its local `JSX`
@@ -136,7 +140,7 @@ function Poster() {
   );
 }
 
-pibbl(document.querySelector("canvas")!, <Poster />);
+await pibbl(document.querySelector("canvas")!, <Poster />);
 ```
 
 Start with the [Getting started guide](#/learn/guides/configure-jsx). Add an

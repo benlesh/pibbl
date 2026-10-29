@@ -1,5 +1,10 @@
-import mount from "../../../../scenarios/src/learning/composition/financial-relative-performance.example.js";
+import { FinancialRelativePerformanceExample as mountComponent } from "../../../../scenarios/src/learning/composition/financial-relative-performance.example.js";
 import { afterEach, expect, it, vi } from "vitest";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
 
 afterEach(() => {
   document.body.replaceChildren();

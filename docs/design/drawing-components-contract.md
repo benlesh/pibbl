@@ -161,6 +161,21 @@ supplied; omitted height uses the Canvas allocation. Interaction paths union
 actual metrics for every rendered line. Paint and pure measurement share this
 resolver, so measured wrapping and eventual rendering agree.
 
+Resolved numeric padding and layout borders establish Text's local content
+origin before paint: left/top combined insets translate its line layout, clip
+rectangle and glyph interaction paths together. Already allocated width/height
+remain content dimensions, with no second inset subtraction. Baseline measurement
+stays content-local; a receiving Flex adds the top inset when mapping that result
+into its outer baseline group. Unallocated percentage insets keep their existing
+owner requirements.
+
+Experimental Flex row and unwrapped-column final cross measurement uses this
+same resolver for already supported main allocations, including non-generic Canvas fonts and all Text fit
+modes. It does not introduce font loading or new intrinsic-size policies. The
+application owns font readiness and fallback; non-generic font measurements do
+not enter Flex's reusable generic-font cache. Text glyph clipping remains
+`fit: "clip"`; layout-container overflow is a separate policy.
+
 Exact Canvas calls are tested with controlled text metrics. Image comparison
 masks only glyph rasterization; surrounding cards, clipping, layout, state, and
 interaction bounds remain exact.

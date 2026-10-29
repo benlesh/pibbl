@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { pibbl } from '../pibbl.js';
+import { pibblSync as pibbl } from "../../sync.js";
 import { clearSharedState } from '../global-state.js';
 import { useLayoutBox } from '../hooks/use-layout-box.js';
 import { useRef } from '../hooks/use-ref.js';

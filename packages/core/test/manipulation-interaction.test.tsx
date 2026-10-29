@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import { afterEach, expect, it } from 'vitest';
 import { commands } from 'vitest/browser';
 import * as Pibbl from '@pibbl/core';
@@ -48,7 +49,7 @@ it('moves the public frame with trusted pointer capture and commits the final ge
       ),
     );
   }
-  mount = Pibbl.pibbl(canvas, Pibbl.createElement(Scene, {}));
+  mount = __pibblSyncTest(canvas, Pibbl.createElement(Scene, {}));
   await settle();
   await commands.manipulationPointer([
     { type: 'move', x: 42, y: 50 }, { type: 'down' },
@@ -74,7 +75,7 @@ it('resizes the public corner handle with size snapping while keeping its opposi
     return Pibbl.createElement(Reflect.get(Pibbl, 'ManipulationFrame'), { ...manipulation.frameProps },
       Pibbl.createElement(ResizeHandles, { controller: manipulation, positions: 'corners' }));
   }
-  mount = Pibbl.pibbl(canvas, Pibbl.createElement(Scene, {}));
+  mount = __pibblSyncTest(canvas, Pibbl.createElement(Scene, {}));
   await settle();
   await commands.manipulationPointer([{ type: 'move', x: 132, y: 120 }, { type: 'down' }, { type: 'move', x: 155, y: 131 }, { type: 'up' }]);
   await settle();
@@ -105,7 +106,7 @@ it('cancels a captured drag without committing and preserves an external replace
       ),
     );
   }
-  mount = Pibbl.pibbl(canvas, Pibbl.createElement(Scene, {}));
+  mount = __pibblSyncTest(canvas, Pibbl.createElement(Scene, {}));
   await settle();
   await commands.manipulationPointer([{ type: 'move', x: 42, y: 50 }, { type: 'down' }, { type: 'move', x: 65, y: 65 }]);
   expect(box.get()).toEqual({ left: 55, top: 55, width: 100, height: 80 });

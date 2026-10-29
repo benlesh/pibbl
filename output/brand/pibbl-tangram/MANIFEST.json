@@ -1,0 +1,916 @@
+{
+  "brand": "Pibbl",
+  "identity": "Original Tangram",
+  "version": "1.1",
+  "date": "2026-10-06",
+  "fileCountExcludingManifestAndChecksums": 178,
+  "formats": {
+    ".pdf": 17,
+    ".png": 88,
+    ".md": 1,
+    ".html": 2,
+    ".svg": 35,
+    ".jpg": 4,
+    ".eps": 16,
+    ".mjs": 1,
+    ".py": 3,
+    ".json": 5,
+    ".css": 1,
+    ".gpl": 1,
+    ".ico": 1,
+    ".webp": 2,
+    ".webmanifest": 1
+  },
+  "files": [
+    {
+      "file": "Pibbl-Tangram-Brand-Guide.pdf",
+      "bytes": 10510,
+      "sha256": "60c6c0fdbb631c9ed7906030711eb3bb4090d71e6c6a1b1dc3849f439eff0d0b"
+    },
+    {
+      "file": "Pibbl-Tangram-Kit-Overview.png",
+      "bytes": 94533,
+      "sha256": "0c67b3b3976783010397387738d35a321ecc50df4e2a0aa7cf891beed2a82841"
+    },
+    {
+      "file": "README.md",
+      "bytes": 5321,
+      "sha256": "76aa4e7b50778a7acc5b51d6762ffcaf2f4ace9046f0b85812da1ab2b6e18fdd"
+    },
+    {
+      "file": "index.html",
+      "bytes": 20577,
+      "sha256": "ab0af645d572702d90a1590b41f0f4f02721e9330731f391a29a333f97bac5c2"
+    },
+    {
+      "file": "marketing/email/pibbl-email-logo-2x.png",
+      "bytes": 16153,
+      "sha256": "fdfc761856572b7ee7d49b7b896faa638cfeb17ef8507fae61784a67a1b27b39"
+    },
+    {
+      "file": "marketing/email/signature.html",
+      "bytes": 315,
+      "sha256": "732cc1c59e897d071f1b250bcc4f8dc1c464e698d2d92cc5cc7480e2031e4164"
+    },
+    {
+      "file": "marketing/motion/pibbl-tangram-assemble.svg",
+      "bytes": 898,
+      "sha256": "8aa525368ac59f12fa4d12e898d463f39005b92cdff3d98e4b9ed3301d122659"
+    },
+    {
+      "file": "marketing/pattern/pibbl-pattern-background.png",
+      "bytes": 68783,
+      "sha256": "3fbd856c04c778df631d83a2089d93b93ff53d461141474693a073743d6d872d"
+    },
+    {
+      "file": "marketing/pattern/pibbl-pattern-background.svg",
+      "bytes": 610,
+      "sha256": "1cbbb2e19d4fd654e2127344e621b37d50da3c11479fd1d2b6a4527380a296f2"
+    },
+    {
+      "file": "marketing/pattern/pibbl-pattern-tile-960.png",
+      "bytes": 29159,
+      "sha256": "fe3747e868fbc4176d16ead13a95d6fe4c88fe63502c80602cb741d08742acce"
+    },
+    {
+      "file": "marketing/pattern/pibbl-pattern-tile.svg",
+      "bytes": 456,
+      "sha256": "06f915066457fb3201f64c72a5c02d5ccea17c958ae1f1a2f54228f8126e7585"
+    },
+    {
+      "file": "marketing/presentation-cover/pibbl-presentation-cover-dark.png",
+      "bytes": 73221,
+      "sha256": "4a94bd69faa7e7ffbf0f64fb128b22eaacc45b0690393525cfca847ff61a9626"
+    },
+    {
+      "file": "marketing/presentation-cover/pibbl-presentation-cover-dark.svg",
+      "bytes": 2744,
+      "sha256": "4f4017c9c9d43e79b827ee5011aa0a37f502774191f29eda320375e1b1fb1390"
+    },
+    {
+      "file": "marketing/presentation-cover/pibbl-presentation-cover-light.png",
+      "bytes": 74180,
+      "sha256": "770d9023ececdea0e75ffca581abc984e880ee9fd7fd7e75dcf11aa714428d27"
+    },
+    {
+      "file": "marketing/presentation-cover/pibbl-presentation-cover-light.svg",
+      "bytes": 2744,
+      "sha256": "dc92c2aab549c2b9149648e83bdf16e15a6090c8bd115f65a626a660d05c3aba"
+    },
+    {
+      "file": "marketing/profile/pibbl-avatar-blue-1024.png",
+      "bytes": 30255,
+      "sha256": "dfca706eec16c4d1328a370646906937b06837e45523ff96139f3893d4e7c968"
+    },
+    {
+      "file": "marketing/profile/pibbl-avatar-blue.svg",
+      "bytes": 573,
+      "sha256": "9e6fe0d411fab5b7a9602f42244d4562ab6795fe5a3ef2e0ad8bfee1842b8a4d"
+    },
+    {
+      "file": "marketing/profile/pibbl-avatar-dark-1024.png",
+      "bytes": 34610,
+      "sha256": "1be499765a79c00870eb3c2f21fc6085bfd4483bda844fb7d55010631113a4c5"
+    },
+    {
+      "file": "marketing/profile/pibbl-avatar-dark.svg",
+      "bytes": 573,
+      "sha256": "d055f450be74e96d0b4fedb33d86eb2ac2ca4817b157322ca1256d0afe8b0f9a"
+    },
+    {
+      "file": "marketing/profile/pibbl-avatar-light-1024.png",
+      "bytes": 18772,
+      "sha256": "fa7a5ec80aad333ec98b3ad87cafdce784d5186bd9cc1d4f92e31ffefbcfbea9"
+    },
+    {
+      "file": "marketing/profile/pibbl-avatar-light.svg",
+      "bytes": 573,
+      "sha256": "85a34cd8d28ddb7dd52a9875834f82bb11cd824effa88e33077c6a4ddd69f12d"
+    },
+    {
+      "file": "marketing/profile/pibbl-avatar-yellow-1024.png",
+      "bytes": 34407,
+      "sha256": "fd9d3cf302fafaf940b7e1c393436129a082c06f4edb9b9fb6b6b85db8dc6cc8"
+    },
+    {
+      "file": "marketing/profile/pibbl-avatar-yellow.svg",
+      "bytes": 573,
+      "sha256": "bceda221e0b4e63bdb5e860c49ac5d44ea8e88ce5d40d2c26373ae7d9c07d2de"
+    },
+    {
+      "file": "marketing/share-card/pibbl-share-card-dark.jpg",
+      "bytes": 44126,
+      "sha256": "64d5d99b76d0a70d1644ddd66264685fc2c0b01676cdf86082aeb54b0e944051"
+    },
+    {
+      "file": "marketing/share-card/pibbl-share-card-dark.png",
+      "bytes": 35587,
+      "sha256": "50567e2305514e97857f2f1ac5f4cc62756698be3c338192494af57ace51c4d2"
+    },
+    {
+      "file": "marketing/share-card/pibbl-share-card-dark.svg",
+      "bytes": 2739,
+      "sha256": "55115a2191ebf60229ff743c512a239bcd7f5d4b430c7e25c9105ecb049a38bb"
+    },
+    {
+      "file": "marketing/share-card/pibbl-share-card-light.jpg",
+      "bytes": 40614,
+      "sha256": "61fc469c3518247b38c6f4539e1d591df4668417cedc7c3a3a324d3d95110b17"
+    },
+    {
+      "file": "marketing/share-card/pibbl-share-card-light.png",
+      "bytes": 35808,
+      "sha256": "7b71efc29c8f8b08bfb12ddae13ab136a4d5c3a0296855a681a1bbda76cebaeb"
+    },
+    {
+      "file": "marketing/share-card/pibbl-share-card-light.svg",
+      "bytes": 2739,
+      "sha256": "e0949c43f6dccc4699444d3b0026576fa203bda2e73a0482cb14dcaf50dee727"
+    },
+    {
+      "file": "marketing/square-post/pibbl-square-post-dark.png",
+      "bytes": 43719,
+      "sha256": "f0464ae6a284f2a6f73ca113c58790416a2df5070ff9392c5878290ae123d854"
+    },
+    {
+      "file": "marketing/square-post/pibbl-square-post-dark.svg",
+      "bytes": 2741,
+      "sha256": "a0eb165f4a18e50adfcc2eee52321ab7715972f506bf6999ec3f5964811af4a5"
+    },
+    {
+      "file": "marketing/square-post/pibbl-square-post-light.png",
+      "bytes": 44080,
+      "sha256": "2d1ae797839f2d08574452d88fc315397eb1e8528273fc29ced1f3689f2c7226"
+    },
+    {
+      "file": "marketing/square-post/pibbl-square-post-light.svg",
+      "bytes": 2741,
+      "sha256": "20d46673e91caf6ec7c208de272e6970278e73e723b9fe56e708be1cf1ba10eb"
+    },
+    {
+      "file": "marketing/sticker/pibbl-sticker-2048.png",
+      "bytes": 53903,
+      "sha256": "5515601d4631a1a7da8c6d0587819e787bf482d17abea8f38382cd819fde37c5"
+    },
+    {
+      "file": "marketing/sticker/pibbl-sticker.svg",
+      "bytes": 647,
+      "sha256": "33c5f0eb2ddeb22b4e2170c8221157adc28934ec92333c723dba070fc44552f7"
+    },
+    {
+      "file": "marketing/wallpaper/pibbl-wallpaper-dark.png",
+      "bytes": 117355,
+      "sha256": "8b11851418eea79adb543536c3326d548877b748627666218f92bac75a1c9f16"
+    },
+    {
+      "file": "marketing/wallpaper/pibbl-wallpaper-dark.svg",
+      "bytes": 2746,
+      "sha256": "72ab3731118662c353bbe7c134872cf836f915eebd4bb3b156217cc0fe5ae0cd"
+    },
+    {
+      "file": "marketing/wallpaper/pibbl-wallpaper-light.png",
+      "bytes": 119659,
+      "sha256": "faaaa25e2172c4a5a2553e05970cce273b9b53eeddecaa0ded712507dcab8437"
+    },
+    {
+      "file": "marketing/wallpaper/pibbl-wallpaper-light.svg",
+      "bytes": 2746,
+      "sha256": "df4a9925f5625f1255ff9e5a8b05fabeb3037be1e1d9b0a0eb7d872f5d1c0ce6"
+    },
+    {
+      "file": "marketing/wide-banner/pibbl-wide-banner-dark.jpg",
+      "bytes": 38117,
+      "sha256": "14bdd2b574ce06ad1a8e9db3dc2cea5e27b72e921ff7c98ac351e4a99baafec4"
+    },
+    {
+      "file": "marketing/wide-banner/pibbl-wide-banner-dark.png",
+      "bytes": 32537,
+      "sha256": "5f82c5e4cfcecdc978d128ecbc7556a3ad956bacfa7d9efa6a4792294fdc69e6"
+    },
+    {
+      "file": "marketing/wide-banner/pibbl-wide-banner-dark.svg",
+      "bytes": 2725,
+      "sha256": "f531242cc9354e6d5217108182e5d66ea3e881740c60f3a8ed97e83827cb3431"
+    },
+    {
+      "file": "marketing/wide-banner/pibbl-wide-banner-light.jpg",
+      "bytes": 35645,
+      "sha256": "4a0aa5385af0f5fd03551140b0c7386d24008ec5028219366d38f93f824884b2"
+    },
+    {
+      "file": "marketing/wide-banner/pibbl-wide-banner-light.png",
+      "bytes": 32849,
+      "sha256": "ef75de7f1fab09ff89f1cab55f4ef796aa1b187c1be661e4ee5ee01205461fb9"
+    },
+    {
+      "file": "marketing/wide-banner/pibbl-wide-banner-light.svg",
+      "bytes": 2725,
+      "sha256": "1abd9ac2c7350d743d51c8e5d7fbe2b6e3bab22d441ae5842ce4e4762fcbdb0b"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-black-1024.png",
+      "bytes": 19480,
+      "sha256": "033a4e9839bd8e1e78183ea95ca0963e6b506df06d7db074223ba5d84e49d7a7"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-black-2048.png",
+      "bytes": 67288,
+      "sha256": "d1db25deecafcabe96a435b35b27fa93389f57ca05479fc4c4cf1781f138be2a"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-black-4096.png",
+      "bytes": 148307,
+      "sha256": "4314ee57f55f03c2649aa3c5bd6697653d066a76d9fececef18711890bac870a"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-black-512.png",
+      "bytes": 8455,
+      "sha256": "b6eb8f1fab6f7113496ae88030f42736df863dc7ef430a042dc5174da86c01c8"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-color-1024.png",
+      "bytes": 19742,
+      "sha256": "c43cfb2f1fbe365e5bba0dade9668a3970d856b1ab428ed76f72e0c6e6aafedb"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-color-2048.png",
+      "bytes": 66885,
+      "sha256": "481231d030d2d22e3cbf63d045e11b38e9f8e3657bdcae1cdd7ab8f8b1ff46ce"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-color-4096.png",
+      "bytes": 152232,
+      "sha256": "513d2eab1057bb6ed130422243dba0640b124e3c4f3c0d9e847b4de737b1f2d8"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-color-512.png",
+      "bytes": 8841,
+      "sha256": "607c779cc7230e6217ebb14326a538411d2c7fdf4b181fe0fd23085f6bc587b4"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-color-on-dark-1024.png",
+      "bytes": 16832,
+      "sha256": "cb6ce3ef8bcb0a0b8c1fad7c73432fcdf286fcd09a9837938edd2c05a4a12cb6"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-color-on-dark-2048.png",
+      "bytes": 59919,
+      "sha256": "b3f9589b7246378c7688e4d51980f87812ccd352003de0007c0c06160f729e0f"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-color-on-dark-4096.png",
+      "bytes": 119693,
+      "sha256": "475d04a40a3d22a3ef4222f315432c18f3f83ca0e1e7950f10ce144cb2291792"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-color-on-dark-512.png",
+      "bytes": 7995,
+      "sha256": "7a46e70080d086f9a48d98720796e0503bb74b6e37763d66c316ebbf91e56d1f"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-white-1024.png",
+      "bytes": 15610,
+      "sha256": "4fc5fb82eeb3583abbdb41a305b9fecf26cf322494ef5577152349513b8bc5f7"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-white-2048.png",
+      "bytes": 52997,
+      "sha256": "b6f068a59a6ea93d17d0b834e07ae92adb19ef526c6637324f402d93088c72c2"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-white-4096.png",
+      "bytes": 97977,
+      "sha256": "dbf05df27ddef530e694e150c8b1d4b198cfe8aa57768e7e2ecf21844786100a"
+    },
+    {
+      "file": "png/horizontal/pibbl-horizontal-white-512.png",
+      "bytes": 7542,
+      "sha256": "89499ba09835e0c4be147fd85f3869170e0d814b2ca7d756f926396540785d1e"
+    },
+    {
+      "file": "png/icon/pibbl-icon-black-1024.png",
+      "bytes": 27568,
+      "sha256": "7401b94be115c14b445327fb3ed9280d9df390d3dfa506f9ab92f2439298eb2a"
+    },
+    {
+      "file": "png/icon/pibbl-icon-black-128.png",
+      "bytes": 1968,
+      "sha256": "fea12e74a6b7b580a9ba10aeeab997d8743911cb1a1e02b5163cb67ad40fc117"
+    },
+    {
+      "file": "png/icon/pibbl-icon-black-2048.png",
+      "bytes": 79794,
+      "sha256": "64f514600902f02e3db8587d5520fef37456c131c3d65e25e308eb19bd387381"
+    },
+    {
+      "file": "png/icon/pibbl-icon-black-256.png",
+      "bytes": 4311,
+      "sha256": "0df0066456e4cdb8e00a2e077616065ad1034a7b7559973fce073319f933696c"
+    },
+    {
+      "file": "png/icon/pibbl-icon-black-512.png",
+      "bytes": 10451,
+      "sha256": "55409734755fa79e20c6b7f298aa7605d91f6b781d710712c7ba49e7666e8883"
+    },
+    {
+      "file": "png/icon/pibbl-icon-color-1024.png",
+      "bytes": 28077,
+      "sha256": "37af41230b1fbc6deb86c813fc67b2e22c7e1517cfb82978e9d4565605847e81"
+    },
+    {
+      "file": "png/icon/pibbl-icon-color-128.png",
+      "bytes": 2039,
+      "sha256": "d1b1e613cdf48c51c0f671c9d78aff13c9e903694ca0862b4d064abcce3fdafa"
+    },
+    {
+      "file": "png/icon/pibbl-icon-color-2048.png",
+      "bytes": 81370,
+      "sha256": "75169dc40400f1affa38c579b0113547c1244251a60a0598d8e3d18f2ff231f2"
+    },
+    {
+      "file": "png/icon/pibbl-icon-color-256.png",
+      "bytes": 4500,
+      "sha256": "78461a55eb0d5665236b01a8e0505fca12724d922880013065613a63e89a6353"
+    },
+    {
+      "file": "png/icon/pibbl-icon-color-512.png",
+      "bytes": 10047,
+      "sha256": "8d123ac29bcfe7710eacc3bf2648151cc15a030a340819e26e72c5b027b13b80"
+    },
+    {
+      "file": "png/icon/pibbl-icon-color-on-dark-1024.png",
+      "bytes": 28077,
+      "sha256": "37af41230b1fbc6deb86c813fc67b2e22c7e1517cfb82978e9d4565605847e81"
+    },
+    {
+      "file": "png/icon/pibbl-icon-color-on-dark-128.png",
+      "bytes": 2039,
+      "sha256": "d1b1e613cdf48c51c0f671c9d78aff13c9e903694ca0862b4d064abcce3fdafa"
+    },
+    {
+      "file": "png/icon/pibbl-icon-color-on-dark-2048.png",
+      "bytes": 81370,
+      "sha256": "75169dc40400f1affa38c579b0113547c1244251a60a0598d8e3d18f2ff231f2"
+    },
+    {
+      "file": "png/icon/pibbl-icon-color-on-dark-256.png",
+      "bytes": 4500,
+      "sha256": "78461a55eb0d5665236b01a8e0505fca12724d922880013065613a63e89a6353"
+    },
+    {
+      "file": "png/icon/pibbl-icon-color-on-dark-512.png",
+      "bytes": 10047,
+      "sha256": "8d123ac29bcfe7710eacc3bf2648151cc15a030a340819e26e72c5b027b13b80"
+    },
+    {
+      "file": "png/icon/pibbl-icon-white-1024.png",
+      "bytes": 17030,
+      "sha256": "2a4702c4782aa88ef8978bcf5997d934fb5e5e1c08c7d9e08026dd401af56e53"
+    },
+    {
+      "file": "png/icon/pibbl-icon-white-128.png",
+      "bytes": 1724,
+      "sha256": "e266f47c5020a854c5677b3b6e4e4802413a655374d3fccd26900fd5e08a7aa4"
+    },
+    {
+      "file": "png/icon/pibbl-icon-white-2048.png",
+      "bytes": 42523,
+      "sha256": "f0ac4b38efe17ea8655e8ac6dd4b96a0ce07d986c0c3ef2e58f047f4e4d90c58"
+    },
+    {
+      "file": "png/icon/pibbl-icon-white-256.png",
+      "bytes": 3664,
+      "sha256": "dc6a8cdc4d8a5376b5e8775da4d68d038c43451415fb2ad25cb0d4e975d8d16f"
+    },
+    {
+      "file": "png/icon/pibbl-icon-white-512.png",
+      "bytes": 7229,
+      "sha256": "88398d5e4b9f6dadcec6e3c88f164c19742814af8b47a92fb46d19c68508bde5"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-black-1024.png",
+      "bytes": 30470,
+      "sha256": "ab602af61c062993d6bc466cdf55ce1bd62519ae736795625f5ef9e0a2d37f66"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-black-2048.png",
+      "bytes": 82448,
+      "sha256": "fe7dca07e0b78b02d38f3f02bf29ce13f3a7fa882bfb28a669e4de85e23fcc71"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-black-512.png",
+      "bytes": 12502,
+      "sha256": "174e6bdbaf0af401e5c2564cc50be6f1180d72a54037ac353bc198264a076150"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-color-1024.png",
+      "bytes": 30998,
+      "sha256": "1eb93286747fd1923f97ebbcea47390816010bfca6e3e44b60ab7bbc4e58d8b9"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-color-2048.png",
+      "bytes": 83094,
+      "sha256": "fa9bcf778cb61ed353f09d967fb50806a3ad93e7c55218c133ff0f936f4679a1"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-color-512.png",
+      "bytes": 12602,
+      "sha256": "ca6c9c592cf60055653fb70f47d04729274ed79fecb87c7508b962dc87ae665e"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-color-on-dark-1024.png",
+      "bytes": 27089,
+      "sha256": "490c918db6cf241f180b85e3c0a144b62ef079a347dec5ceaf849f7138cab443"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-color-on-dark-2048.png",
+      "bytes": 68825,
+      "sha256": "f751085d5f8ee324cc3402dfc4a3e2e69fb0bcbc5c98a21b51bb621ebd11f862"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-color-on-dark-512.png",
+      "bytes": 11178,
+      "sha256": "05d8996f18b1c341ae55a29c559a5d1c1cc1df464bba576fa41ef3b6502a197c"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-white-1024.png",
+      "bytes": 23667,
+      "sha256": "f71c52ab13fd6761bd90fa4c2c609325cf3255f41e7cba4023ae45784ca6a45c"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-white-2048.png",
+      "bytes": 59087,
+      "sha256": "1ea33630d18d385b0bf574a6326a9975324d11081eec40f4dd841b3b9eb7f816"
+    },
+    {
+      "file": "png/stacked/pibbl-stacked-white-512.png",
+      "bytes": 10536,
+      "sha256": "e820100da35cf67dbe115eaba90c6ec82e990a15b4c5a4a31c3cca8a5a22f96b"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-black-1024.png",
+      "bytes": 21498,
+      "sha256": "154d52f89747b8d2273435cc038ce31909430f0d57125632ba6667630a84fc39"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-black-2048.png",
+      "bytes": 58655,
+      "sha256": "9691f73fea24d73e58aea7012cd0aaebe4cb70d9b261adb425f81352ba1235de"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-black-512.png",
+      "bytes": 9088,
+      "sha256": "5f748ed1e92e00ec5f876e0d28bda09875048aeb3a550c39738c5659b89067c1"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-color-1024.png",
+      "bytes": 21498,
+      "sha256": "154d52f89747b8d2273435cc038ce31909430f0d57125632ba6667630a84fc39"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-color-2048.png",
+      "bytes": 58655,
+      "sha256": "9691f73fea24d73e58aea7012cd0aaebe4cb70d9b261adb425f81352ba1235de"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-color-512.png",
+      "bytes": 9088,
+      "sha256": "5f748ed1e92e00ec5f876e0d28bda09875048aeb3a550c39738c5659b89067c1"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-color-on-dark-1024.png",
+      "bytes": 17591,
+      "sha256": "13764369a3b64a685b3154151d8015b40ed995e11f9220ee6eb1bdd262df0cc3"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-color-on-dark-2048.png",
+      "bytes": 42632,
+      "sha256": "a01ff38ef472d11f4ba9c0444a83c87b793cbd2bda1932fa4a603782e3bcd748"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-color-on-dark-512.png",
+      "bytes": 7763,
+      "sha256": "ae4eba5aa1ad8f677dfb4c49541759df45aa7a0a0a72e1783b4f16ae90defc60"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-white-1024.png",
+      "bytes": 17591,
+      "sha256": "13764369a3b64a685b3154151d8015b40ed995e11f9220ee6eb1bdd262df0cc3"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-white-2048.png",
+      "bytes": 42632,
+      "sha256": "a01ff38ef472d11f4ba9c0444a83c87b793cbd2bda1932fa4a603782e3bcd748"
+    },
+    {
+      "file": "png/wordmark/pibbl-wordmark-white-512.png",
+      "bytes": 7763,
+      "sha256": "ae4eba5aa1ad8f677dfb4c49541759df45aa7a0a0a72e1783b4f16ae90defc60"
+    },
+    {
+      "file": "print/eps/pibbl-horizontal-black.eps",
+      "bytes": 3296,
+      "sha256": "de05a9b2a74071c4f3f83ad317142590579448982d09789be52122146a2f100b"
+    },
+    {
+      "file": "print/eps/pibbl-horizontal-color-on-dark.eps",
+      "bytes": 2960,
+      "sha256": "7f2106fa98d16d90c934935f5750cefa5cca8ffcdf3728f540526efd2b9f67c8"
+    },
+    {
+      "file": "print/eps/pibbl-horizontal-color.eps",
+      "bytes": 3284,
+      "sha256": "57d0a2706ae5fe589607726161de04729331bcad113d0733823756fdb2606002"
+    },
+    {
+      "file": "print/eps/pibbl-horizontal-white.eps",
+      "bytes": 2864,
+      "sha256": "1377be208fdbd3b80a8cbc75d4b50a1fc796914ec9f8717de9b7f3ac2ca6a4f3"
+    },
+    {
+      "file": "print/eps/pibbl-icon-black.eps",
+      "bytes": 928,
+      "sha256": "5fa826aaf88600ea437b45c2052e15c5349e673f827e8071a16319aee8f32671"
+    },
+    {
+      "file": "print/eps/pibbl-icon-color-on-dark.eps",
+      "bytes": 916,
+      "sha256": "d8ea933025a2de18d621b45ef30c02d4cdbc776d6a8d19446768433c0142a770"
+    },
+    {
+      "file": "print/eps/pibbl-icon-color.eps",
+      "bytes": 916,
+      "sha256": "d8ea933025a2de18d621b45ef30c02d4cdbc776d6a8d19446768433c0142a770"
+    },
+    {
+      "file": "print/eps/pibbl-icon-white.eps",
+      "bytes": 820,
+      "sha256": "b77cd8b0a3ece35088f7fd8d4c2b12135eb9bcae5de1b74269d5ecf9592418bb"
+    },
+    {
+      "file": "print/eps/pibbl-stacked-black.eps",
+      "bytes": 3297,
+      "sha256": "d6c3dc2b171acf6800529c97d144373aa30dc5f22f970d73b1ce34c9b2298a39"
+    },
+    {
+      "file": "print/eps/pibbl-stacked-color-on-dark.eps",
+      "bytes": 2961,
+      "sha256": "dccad548f2fd318184b2c75313c75012f6faccb983a3340ef500afe8bc14c0bd"
+    },
+    {
+      "file": "print/eps/pibbl-stacked-color.eps",
+      "bytes": 3285,
+      "sha256": "dacdda87de4b6754f5bfee056628a3613812a689f8bdf5f62d302ef534713801"
+    },
+    {
+      "file": "print/eps/pibbl-stacked-white.eps",
+      "bytes": 2865,
+      "sha256": "5fbe57f8ad83861f0c6b5424551ef611d2f2646d6f0979ec5ab8b3201e0be21d"
+    },
+    {
+      "file": "print/eps/pibbl-wordmark-black.eps",
+      "bytes": 2744,
+      "sha256": "512bca935a04b3ddc0de478ac71c7e239010569d8bc2389dcd41f8f27f620504"
+    },
+    {
+      "file": "print/eps/pibbl-wordmark-color-on-dark.eps",
+      "bytes": 2420,
+      "sha256": "b9e90459df38593d8c80e1f7405726d687ca59d00ff252b544fa32f405b7bbc5"
+    },
+    {
+      "file": "print/eps/pibbl-wordmark-color.eps",
+      "bytes": 2744,
+      "sha256": "512bca935a04b3ddc0de478ac71c7e239010569d8bc2389dcd41f8f27f620504"
+    },
+    {
+      "file": "print/eps/pibbl-wordmark-white.eps",
+      "bytes": 2420,
+      "sha256": "b9e90459df38593d8c80e1f7405726d687ca59d00ff252b544fa32f405b7bbc5"
+    },
+    {
+      "file": "print/pdf/pibbl-horizontal-black.pdf",
+      "bytes": 2045,
+      "sha256": "a5ca4e66e2226738fb27f825b00e7705ef2654531b0e63a626f723d26f1b7be1"
+    },
+    {
+      "file": "print/pdf/pibbl-horizontal-color-on-dark.pdf",
+      "bytes": 2084,
+      "sha256": "a44e37ddb97dc96f6ed291e62a5f5efd77c6c3a005b28ab3ec37b6072f134a53"
+    },
+    {
+      "file": "print/pdf/pibbl-horizontal-color.pdf",
+      "bytes": 2096,
+      "sha256": "89848916fa876b96b922923f5615ab3b04207e26341fd2ac0663c0895ed1d6f7"
+    },
+    {
+      "file": "print/pdf/pibbl-horizontal-white.pdf",
+      "bytes": 2032,
+      "sha256": "1345a3d8d3d97d7f71ae16fb4ba9a61bb7f12b018f046df3f427de96cd74d53b"
+    },
+    {
+      "file": "print/pdf/pibbl-icon-black.pdf",
+      "bytes": 1481,
+      "sha256": "bcb26536feb65cf353b9498ef438371cf6f44fa82de5e8a1df9d7b112ee6cf81"
+    },
+    {
+      "file": "print/pdf/pibbl-icon-color-on-dark.pdf",
+      "bytes": 1511,
+      "sha256": "82dcf6cd11abff99dda9f2e06521bb333737645758054759883292aa309b5468"
+    },
+    {
+      "file": "print/pdf/pibbl-icon-color.pdf",
+      "bytes": 1511,
+      "sha256": "679c93dc56963d87ee06bc6975eb7416f12ea7f803cdd09fcf18e4940788fabd"
+    },
+    {
+      "file": "print/pdf/pibbl-icon-white.pdf",
+      "bytes": 1466,
+      "sha256": "9f6524d9da43808298c1205c74637ae8777b9411010dcdc5228bc59fdae0332d"
+    },
+    {
+      "file": "print/pdf/pibbl-stacked-black.pdf",
+      "bytes": 2052,
+      "sha256": "4ca1491974f83167bcc63fa47da7f121feaa3b44e111f6522265379f399058b4"
+    },
+    {
+      "file": "print/pdf/pibbl-stacked-color-on-dark.pdf",
+      "bytes": 2085,
+      "sha256": "02007802b3a7465e3137dca8d0e5d236ab75732286e895df546fa82a1cc518ec"
+    },
+    {
+      "file": "print/pdf/pibbl-stacked-color.pdf",
+      "bytes": 2099,
+      "sha256": "09ca07495e59409db5cca4c0aaa7aff4c85d7bc86c55d8ff33c53ca4b94de442"
+    },
+    {
+      "file": "print/pdf/pibbl-stacked-white.pdf",
+      "bytes": 2036,
+      "sha256": "bf38552cefaa26eadf8ce172e9338320396ff133997062219abcbaa91a147dbc"
+    },
+    {
+      "file": "print/pdf/pibbl-wordmark-black.pdf",
+      "bytes": 1966,
+      "sha256": "bb5a7cb6032c82090c86aaf2556386e484e0b2d01207f2ebe4ffd5af5a504fc6"
+    },
+    {
+      "file": "print/pdf/pibbl-wordmark-color-on-dark.pdf",
+      "bytes": 1954,
+      "sha256": "e3720c52edb71a4c20bd5a0800a008d51c14f2b272ece1bd3a72fc61fda34f5a"
+    },
+    {
+      "file": "print/pdf/pibbl-wordmark-color.pdf",
+      "bytes": 1966,
+      "sha256": "6e78522a7de694ccaebb5ea1815074a8c780ff582384cc4c65cf48c81d875baa"
+    },
+    {
+      "file": "print/pdf/pibbl-wordmark-white.pdf",
+      "bytes": 1954,
+      "sha256": "84ec2b62e81729dec8bda4b7c81e1408b8c46689378acbcf332ec8c8fb2ba70d"
+    },
+    {
+      "file": "reference/original-tangram-concept.png",
+      "bytes": 996761,
+      "sha256": "41f5605644ec4e0e6ebce8f88ff3bb32cd2d28a91005f26ea2d281e47c1b1263"
+    },
+    {
+      "file": "source/build.mjs",
+      "bytes": 11762,
+      "sha256": "215f993d8803d8d45749f1ec57ec957d8ca576c8bbee14fdfa71b1e6122c6d49"
+    },
+    {
+      "file": "source/build_pdf.py",
+      "bytes": 8064,
+      "sha256": "1f109ce6d3c745125eff89f406e84d341d464b3623d93121e81577eae7b72b00"
+    },
+    {
+      "file": "source/export-catalog.json",
+      "bytes": 17432,
+      "sha256": "c98f2fab4ee540d9593c51a70dab8ed3ef3b1696dcbb8b527eb44150d9e1cf4f"
+    },
+    {
+      "file": "source/identity.json",
+      "bytes": 1671,
+      "sha256": "5b14dd2ceba8dc0c4578ccb78da54158e5700361f392bcd436057da210734315"
+    },
+    {
+      "file": "source/pack.py",
+      "bytes": 1598,
+      "sha256": "7e37e6655d142ff057f27bc2a0130852c8056175f0fb3a78ac0b61ba07a38cc9"
+    },
+    {
+      "file": "source/verification.json",
+      "bytes": 654,
+      "sha256": "277fc83fe7818de995b4cbbd8a68b84e001743d222d72fdc63cb31f5ef305746"
+    },
+    {
+      "file": "source/verify.py",
+      "bytes": 4148,
+      "sha256": "8809661c1d76453d1ba0467604797d4f37a89d7d839d3a1c243acb0e088d7a38"
+    },
+    {
+      "file": "source/wordmark-paths.json",
+      "bytes": 2046,
+      "sha256": "a1a7ea819825ee5de2d22b1aa732c6731ee8c8de463bea5ff2c30800169872b1"
+    },
+    {
+      "file": "svg/pibbl-horizontal-black.svg",
+      "bytes": 2463,
+      "sha256": "f2f20f5ad7aabc7482347478459ef3d29b0fa05aa04d8a563d4eb2386768e07b"
+    },
+    {
+      "file": "svg/pibbl-horizontal-color-on-dark.svg",
+      "bytes": 2471,
+      "sha256": "ef7544d017167064baff11a117e92bf1be9cbfb3769ff63e6e1f7a1b015c0de2"
+    },
+    {
+      "file": "svg/pibbl-horizontal-color.svg",
+      "bytes": 2463,
+      "sha256": "3aa2bbcb1984a30556842a3a5ea198df3486951cdc582d7bb7aaa2a0b78a3c74"
+    },
+    {
+      "file": "svg/pibbl-horizontal-white.svg",
+      "bytes": 2463,
+      "sha256": "5baf8a06b356c8a4417516152b6175cb57f68e8f96b607fc70235ec73f77289e"
+    },
+    {
+      "file": "svg/pibbl-icon-black.svg",
+      "bytes": 494,
+      "sha256": "4b75c497d1584ad7ce0cea6ed809a7e00cd100497cdc1873fef878f139d26e49"
+    },
+    {
+      "file": "svg/pibbl-icon-color-on-dark.svg",
+      "bytes": 502,
+      "sha256": "abeb577a5ca62d91d9376b4ab8c991702e3fdd7d2c2a9fc8051301d8ec70760c"
+    },
+    {
+      "file": "svg/pibbl-icon-color.svg",
+      "bytes": 494,
+      "sha256": "0a8ec7ed38d747ba39675ba052d6db6324403c229f0d5cbc1b811e5e77443682"
+    },
+    {
+      "file": "svg/pibbl-icon-white.svg",
+      "bytes": 494,
+      "sha256": "b9efa909432a55e25c214e852c1a5883ecc00fcb8783cf98fe378298d163f89d"
+    },
+    {
+      "file": "svg/pibbl-stacked-black.svg",
+      "bytes": 2461,
+      "sha256": "65f3a26735fce1ce7acd1fc5dd11e7df2b2ade1a26f1c1e15e4ec4162a0328bc"
+    },
+    {
+      "file": "svg/pibbl-stacked-color-on-dark.svg",
+      "bytes": 2469,
+      "sha256": "78368a945af3a57ccb412017b92d4ad4ff44964ab51ebf5d07b96c25a02a5856"
+    },
+    {
+      "file": "svg/pibbl-stacked-color.svg",
+      "bytes": 2461,
+      "sha256": "9188534afebec16ee4b1c27d28139ddb6454023185d5b191d1ecae9aa7efdebc"
+    },
+    {
+      "file": "svg/pibbl-stacked-white.svg",
+      "bytes": 2461,
+      "sha256": "e5352218aa3fc3e65e9b0a386a52faafc8b992175ee9f1d8d3c978de935144ee"
+    },
+    {
+      "file": "svg/pibbl-wordmark-black.svg",
+      "bytes": 2182,
+      "sha256": "2834b7d0a0889d267be3ab909a135f2fe737fbf97400064c45b36abf13bda183"
+    },
+    {
+      "file": "svg/pibbl-wordmark-color-on-dark.svg",
+      "bytes": 2190,
+      "sha256": "c6f979e773e3b3ff88ba28668f1192d2b869b3d2cf7f0943313996abe83f5cae"
+    },
+    {
+      "file": "svg/pibbl-wordmark-color.svg",
+      "bytes": 2182,
+      "sha256": "ac102b4ee208ebb2dda2bf9b4d0935c7e69a815d4cac2cc8d3c25a544bfc7b4d"
+    },
+    {
+      "file": "svg/pibbl-wordmark-white.svg",
+      "bytes": 2182,
+      "sha256": "ed59f9e4f05a5198c1d05f4026f11a569b35b0b0826140e535fca66462037ff3"
+    },
+    {
+      "file": "tokens/pibbl-colors.css",
+      "bytes": 189,
+      "sha256": "4d109634583e7101d822f5f2a3b7ba9d29d268d494fc76e18b69728c63a0587f"
+    },
+    {
+      "file": "tokens/pibbl-colors.json",
+      "bytes": 154,
+      "sha256": "c770c2d917592be6fafdf395aad1baadc779397de06948a5c6513978255a262c"
+    },
+    {
+      "file": "tokens/pibbl-palette.gpl",
+      "bytes": 169,
+      "sha256": "1d6d88a137efc116012d027c3a64a6dd12b7cc9fc0c2b18a53750fca7b9eea2b"
+    },
+    {
+      "file": "web/apple-touch-icon.png",
+      "bytes": 2235,
+      "sha256": "821ff917d81e5646a9e36ab9974d84ab9e89aaf031f3fd70abb241b9f1d7464f"
+    },
+    {
+      "file": "web/favicon-16.png",
+      "bytes": 263,
+      "sha256": "1d200d99ae6146459e148931f433a0570e4062b2dc496049b8d551b516a01284"
+    },
+    {
+      "file": "web/favicon-32.png",
+      "bytes": 422,
+      "sha256": "64082acc34e0e4762dff5901c6fac007164ced26b6f85340a2ed492da29aaeea"
+    },
+    {
+      "file": "web/favicon-48.png",
+      "bytes": 580,
+      "sha256": "91f06039a04d199338d817b12804dfc1e2221e582b58ac650e7eb952ce8ab469"
+    },
+    {
+      "file": "web/favicon.ico",
+      "bytes": 1319,
+      "sha256": "01a2df2cc0133dc7e583cd19141de97a185273d3b60ea9db285918a72736bc36"
+    },
+    {
+      "file": "web/favicon.svg",
+      "bytes": 483,
+      "sha256": "f7f10417290c1457865a16375c6d6c57ac1fe6c9b57af523c2b692004523f662"
+    },
+    {
+      "file": "web/pibbl-app-icon-180.png",
+      "bytes": 2235,
+      "sha256": "821ff917d81e5646a9e36ab9974d84ab9e89aaf031f3fd70abb241b9f1d7464f"
+    },
+    {
+      "file": "web/pibbl-app-icon-192.png",
+      "bytes": 2574,
+      "sha256": "6b1daea331cc4c932ed094edb061b4793fb48ed2d36d59669a8c55aacc353c27"
+    },
+    {
+      "file": "web/pibbl-app-icon-512.png",
+      "bytes": 7208,
+      "sha256": "9018752e8700a7de7ececab972f192c7a941227f231672a4775e9eb32a1c7e5e"
+    },
+    {
+      "file": "web/pibbl-app-icon-maskable-512.png",
+      "bytes": 7208,
+      "sha256": "9018752e8700a7de7ececab972f192c7a941227f231672a4775e9eb32a1c7e5e"
+    },
+    {
+      "file": "web/pibbl-horizontal-color-on-dark.webp",
+      "bytes": 7314,
+      "sha256": "ea132aca6c2e139d06c1a2f66407a0e7d6ee5360a81fb4f20061a9370a867c6f"
+    },
+    {
+      "file": "web/pibbl-horizontal-color.webp",
+      "bytes": 7874,
+      "sha256": "a1357345a005cb70b9c118040b5ac66df79a6cb96dac931baf4c5e1196ddc5e5"
+    },
+    {
+      "file": "web/site.webmanifest",
+      "bytes": 475,
+      "sha256": "02522de3a89121628f2f3db5b09e25fbb0d215e83902afc2b848de181cae15c8"
+    }
+  ]
+}

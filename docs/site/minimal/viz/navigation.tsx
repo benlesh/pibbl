@@ -2,10 +2,11 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
+
   useSignal,
   type WritableSignal,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   LineSeries,
   LinearScale,
@@ -79,5 +80,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 360;
 canvas.height = 240;
 document.body.append(canvas);
-const app = pibbl(canvas, <Scene />);
+const app = pibblSync(canvas, <Scene />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

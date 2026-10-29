@@ -1,7 +1,8 @@
 # Pibbl canvas surface contract
 
 Status: current implemented contract, updated for first-class signals, the realm
-scheduler, and external render-layer surfaces on 2026-09-28.
+scheduler, external render-layer surfaces, and asynchronous mount loading on
+2026-10-21.
 
 This document defines how a root Pibbl mount maps logical drawing units to the
 Canvas CSS content box and physical backing store. The mapping is owned by the
@@ -54,8 +55,32 @@ not accept `fit`, because its logical and display extents are identical.
 default `'device'` mode observes density changes. A numeric value is stable and
 does not acquire device-density listeners.
 
-Invalid viewports, pixel ratios, and fit values throw synchronously on mount.
+Invalid viewports, pixel ratios, and fit values reject the asynchronous mount
+Promise, or throw synchronously through `pibblSync`.
 A root mount also requires `ResizeObserver`.
+
+## Mount preparation and cancellation
+
+`pibbl(canvas, root, config?): Promise<PibblController>` prepares the external
+layout WASM module before admitting components, events, layout instances or frames.
+`prepareLayoutEngine(): Promise<void>` prewarms the same shared immutable module.
+Imports are inert. Layout, measurement and frame work remain synchronous after
+preparation. The normal JavaScript solver lane remains unchanged.
+
+The separate `@pibbl/core/sync` entry exposes
+`pibblSync(canvas, root, config?): PibblController`, using an embedded copy of the
+same generated binary without fetching. The root entry excludes embedded bytes.
+Both paths share compatible compiled code; mutable instances and memory remain
+owned by each layout region. Failures leave no partial mount, and failed external
+attempts are evicted so a later call can retry.
+
+A caller's `config.signal` cancels its own pending wait with `AbortError` without
+cancelling shared preparation. The newest valid, non-preaborted request on a canvas
+supersedes older pending requests. On an existing mount, cancellation does not
+release that mount or replace its original configuration, lifetime signal or stable
+controller. Disposing that controller invalidates pending updates so they cannot
+resurrect the released mount. A synchronous winner resolves compatible pending
+preparation promptly; stale external completion cannot replace it.
 
 ## Three coordinate spaces
 
@@ -76,7 +101,9 @@ backingHeight = max(1, round(displayHeight * pixelRatio))
 
 Pibbl derives the effective backing density from those rounded dimensions and
 installs one root transform before rendering. Component-local transforms then
-compose after that root transform. The bitmap is cleared in backing space
+compose after that root transform. Fractional logical boxes and nested origins
+remain unrounded at every density; only the backing dimensions above are rounded.
+Pointer inversion uses the same composed transform, including retained Layers. The bitmap is cleared in backing space
 before the root transform is installed.
 
 CSS borders and padding are excluded when measuring display space. If changing

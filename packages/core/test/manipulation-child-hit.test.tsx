@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
 import * as Pibbl from "@pibbl/core";
@@ -47,7 +48,7 @@ it("starts only from a painted DragHandle child and respects its pointer cancell
       </Pibbl.ManipulationFrame>
     );
   }
-  mount = Pibbl.pibbl(
+  mount = __pibblSyncTest(
     canvas,
     <Pibbl.FocusManagement>
       <Scene />
@@ -110,7 +111,7 @@ it("shows a move readout only for the active child-defined grip", async () => {
       </Pibbl.ManipulationFrame>
     );
   }
-  mount = Pibbl.pibbl(
+  mount = __pibblSyncTest(
     canvas,
     <Pibbl.FocusManagement>
       <Scene />

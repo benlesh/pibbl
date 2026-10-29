@@ -23,7 +23,7 @@ function renderHtmlBox(props: HtmlBoxProps<unknown>, style: Readonly<Resolved>, 
   let slot = refs.refs[0] as HtmlBoxSlot | undefined;
   if (!slot || slot.disposed) {
     if (typeof props.mount !== 'function') throw new TypeError('HtmlBox mount must be a function.');
-    slot = { owner, mount: props.mount, disposed: false, region: { identity: {}, owner, content: undefined, rootBounds: undefined, active: true } };
+    slot = { component: refs, owner, mount: props.mount, disposed: false, region: { identity: {}, owner, content: undefined, rootBounds: undefined, active: true } };
     const stable = slot;
     stable.region = { ...stable.region, onFocusSnapshot(snapshot) {
       queueMicrotask(() => { if (!stable.disposed) stable.callback?.(snapshot); });

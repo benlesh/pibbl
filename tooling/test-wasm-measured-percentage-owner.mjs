@@ -1,0 +1,108 @@
+import { strict as assert } from 'node:assert';
+import { chromium } from 'playwright';
+const base = process.argv.slice(2).find(value => !value.startsWith('--')) ?? 'http://127.0.0.1:5192';
+const source = process.argv.includes('--source');
+const browser = await chromium.launch({ headless: true });
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1150 } });
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  await page.goto(`${base}/#/examples/layout/wasm-flex-measured-percentage-owner`);
+  const frame = page.frameLocator('iframe[srcdoc]');
+  await frame.locator('pre').waitFor();
+  await page.locator('iframe[srcdoc]').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(220);
+  const state = async () => JSON.parse(await frame.locator('pre').innerText());
+  const click = async (x, y) => {
+    const bounds = await frame.locator('canvas').boundingBox();
+    const scale = Math.min(bounds.width / 760, bounds.height / 540);
+    await frame.locator('canvas').click({ position: { x: (bounds.width - 760 * scale) / 2 + x * scale, y: (bounds.height - 540 * scale) / 2 + y * scale } });
+    await page.waitForTimeout(160);
+    return state();
+  };
+  const pixel = async (x, y) => frame.locator('canvas').evaluate((canvas, point) => {
+    const scale = Math.min(canvas.width / 760, canvas.height / 540);
+    return [...canvas.getContext('2d').getImageData(Math.floor((canvas.width - 760 * scale) / 2 + point.x * scale), Math.floor((canvas.height - 540 * scale) / 2 + point.y * scale), 1, 1).data];
+  }, { x, y });
+  const red = [182, 61, 61, 255], green = [66, 107, 97, 255];
+  const initial = await state();
+  assert.equal(initial.externalOwner, 200);
+  assert.ok(initial.nestedQueries.length >= 2 && initial.nestedQueries.length % 2 === 0 && initial.nestedQueries.every((value, index) => value === (index % 2 ? 80 : 40)));
+  assert.deepEqual(await pixel(187, 480), red);
+  assert.deepEqual(await pixel(189, 480), [243, 240, 232, 255]);
+  assert.ok(initial.contributionQueries.length >= 2 && initial.contributionQueries.every((value, index) => value === (index % 2 ? 30 : 40)));
+  assert.deepEqual(await pixel(475, 480), [243, 240, 232, 255]);
+  assert.deepEqual(await pixel(485, 480), [53, 95, 150, 255]);
+  assert.deepEqual(await pixel(57, 210), red); assert.deepEqual(await pixel(59, 210), green);
+  assert.deepEqual((await click(57, 210)).hits, ['A']);
+  assert.deepEqual((await click(59, 210)).hits, ['A', 'B']);
+  const medium = await click(60, 138); assert.equal(medium.externalOwner, 160);
+  assert.deepEqual(await pixel(57, 210), red); assert.deepEqual(await pixel(59, 210), green);
+  assert.deepEqual((await click(59, 210)).hits, ['A', 'B', 'B']);
+  const naturalSmall = await click(300, 138); assert.equal(naturalSmall.natural, 20);
+  assert.deepEqual(await pixel(465, 480), [53, 95, 150, 255]);
+  assert.deepEqual(await pixel(485, 480), [243, 240, 232, 255]);
+  assert.deepEqual(await pixel(47, 210), red); assert.deepEqual(await pixel(49, 210), green);
+  const naturalRestored = await click(300, 138); assert.equal(naturalRestored.natural, 80);
+  assert.ok(naturalRestored.queries.length && naturalRestored.queries.every(value => value === 40));
+  const small = await click(60, 138); assert.equal(small.externalOwner, 80);
+  assert.deepEqual(await pixel(47, 210), red); assert.deepEqual(await pixel(49, 210), green);
+  assert.deepEqual((await click(120, 210)).hits, ['A', 'B', 'B', 'B']);
+  const restored = await click(60, 138); assert.equal(restored.externalOwner, 200);
+  assert.ok(restored.nestedQueries.length >= 2 && restored.nestedQueries.every((value, index) => value === (index % 2 ? 80 : 40)));
+  assert.deepEqual((await click(180, 480)).hits, [...restored.hits, 'overflow']);
+  assert.deepEqual(await pixel(57, 210), red);
+  assert.equal(restored.layout.nodeCreates, initial.layout.nodeCreates);
+  const percentage = await click(670, 138);
+  assert.equal(percentage.maximum, '75%');
+  assert.equal(percentage.queries.at(-1), 37.5);
+  assert.deepEqual(await pixel(56, 210), red); assert.deepEqual(await pixel(59, 210), green);
+  assert.equal(percentage.layout.nodeCreates, initial.layout.nodeCreates);
+  const following = await click(485, 480);
+  assert.deepEqual(following.hits, [...percentage.hits, 'next']);
+  assert.deepEqual((await click(475, 480)).hits, following.hits);
+
+  // The optional proof leaves the default percentage-owner view unchanged.
+  let staged = await click(676, 182);
+  assert.deepEqual(staged.stagedAutoMargin, { enabled: true, margin: 0 });
+  assert.deepEqual(await pixel(35, 238), red);
+  assert.deepEqual(await pixel(75, 238), green);
+  assert.deepEqual(await pixel(195, 238), [110, 62, 121, 255]);
+  assert.deepEqual(await pixel(35, 334), red);
+  assert.deepEqual(await pixel(65, 334), green);
+  assert.deepEqual(await pixel(155, 334), [110, 62, 121, 255]);
+  staged = await click(118, 138);
+  assert.deepEqual(staged.stagedAutoMargin, { enabled: true, margin: 'auto' });
+  assert.deepEqual(await pixel(35, 238), [243, 240, 232, 255]);
+  assert.deepEqual(await pixel(65, 238), red);
+  assert.deepEqual(await pixel(105, 238), green);
+  assert.deepEqual(await pixel(195, 238), [110, 62, 121, 255]);
+  assert.deepEqual(await pixel(35, 334), [243, 240, 232, 255]);
+  assert.deepEqual(await pixel(45, 334), red);
+  assert.deepEqual(await pixel(75, 334), green);
+  assert.deepEqual(await pixel(155, 334), [110, 62, 121, 255]);
+  staged = await click(65, 238); assert.equal(staged.hits.at(-1), 'numeric-A');
+  staged = await click(105, 238); assert.equal(staged.hits.at(-1), 'numeric-B');
+  staged = await click(195, 238); assert.equal(staged.hits.at(-1), 'numeric-C');
+  staged = await click(45, 334); assert.equal(staged.hits.at(-1), 'paired-A');
+  staged = await click(75, 334); assert.equal(staged.hits.at(-1), 'paired-B');
+  staged = await click(155, 334); assert.equal(staged.hits.at(-1), 'paired-C');
+  if (process.env.PIBBL_LAYOUT_STAGED_MARGIN_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_STAGED_MARGIN_SCREENSHOT });
+  staged = await click(676, 138);
+  assert.equal(staged.stagedAutoMargin.enabled, false);
+  if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
+  const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
+  const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
+  if (!source) {
+    assert.equal(proof.mode, 'layout-wasm-built');
+    assert.ok(proof.coreInputs.length && proof.coreInputs.every(value => value.includes('packages/core/.layout-wasm-package/dist/')));
+  }
+  const disposed = await sandbox.evaluate(() => {
+    dispatchEvent(new PageTransitionEvent('pagehide'));
+    return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();
+  });
+  assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances], [0, 0, 0, 0]);
+  assert.deepEqual(errors, []);
+  console.warn(`${source ? 'Source' : 'Built'} measured percentage owner: external200→160→80→200 preserves native nodes; exact paint boundaries and hit transfer agree; disposal0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
+} finally { await browser.close(); }

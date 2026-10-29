@@ -14,7 +14,7 @@ import {
   type PibblEventHandlers,
 } from '@pibbl/core';
 import { describe, expect, it, vi } from 'vitest';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { getPibblInstance } from '../global-state';
 import type { RectStyle } from '../style/types';
 import { componentTest } from '../test-utils/component-test';

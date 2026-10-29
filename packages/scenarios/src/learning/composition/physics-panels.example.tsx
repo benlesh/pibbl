@@ -1,12 +1,4 @@
-import {
-  Circle,
-  Group,
-  Rectangle,
-  Text,
-  pibbl,
-  useSignal,
-  type PibblController,
-} from "@pibbl/core";
+import { Circle, Group, Rectangle, Text, useSignal } from "@pibbl/core";
 import {
   PhysicsWorld2D,
   applyImpulse2D,
@@ -73,7 +65,7 @@ function SimulationPanel({ color }: { color: string }) {
   );
 }
 
-function PhysicsPanels() {
+export function PhysicsPanels() {
   const resized = useSignal(false);
   const moved = useSignal(false);
   return (
@@ -164,8 +156,4 @@ function PhysicsPanels() {
       </Text>
     </>
   );
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <PhysicsPanels />);
 }

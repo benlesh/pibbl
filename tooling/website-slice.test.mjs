@@ -3,6 +3,30 @@ import { test } from "node:test";
 import { readFile, readdir, access } from "node:fs/promises";
 
 const output = new URL("../website/dist/", import.meta.url);
+test("the home page keeps its title accessible without repeating the logo visually", async () => {
+  const home = await readFile(new URL("index.html", output), "utf8");
+  assert.match(home, /<h1 id="_top" class="home-page-title sr-only">Pibbl<\/h1>/);
+  const start = await readFile(new URL("start/index.html", output), "utf8");
+  assert.doesNotMatch(start, /home-page-title/);
+  assert.match(start, /<h1 id="_top"[^>]*>Start<\/h1>/);
+});
+
+test("documentation branding publishes the selected logo in both themes", async () => {
+  const html = await readFile(new URL("start/index.html", output), "utf8");
+  const titleLink = html.match(/<a[^>]*class="site-title[^>]*>(.*?)<\/a>/s)?.[1];
+  assert.ok(titleLink, "documentation header has a home link");
+  assert.match(titleLink, /pibbl-logo-light/);
+  assert.match(titleLink, /pibbl-logo-dark/);
+  assert.match(titleLink, /class="sr-only\b[^"]*"[^>]*>\s*Pibbl\s*</);
+  for (const [, src] of titleLink.matchAll(/src="([^"]+)"/g)) {
+    await access(new URL(`.${src}`, output));
+  }
+  const favicon = await readFile(new URL("favicon.svg", output), "utf8");
+  assert.match(favicon, /#FF735E/);
+  assert.match(favicon, /#159447/);
+  assert.match(favicon, /#8B5CCB/);
+});
+
 test("the first website slice publishes useful HTML and clean Markdown", async () => {
   for (const route of [
     "start",

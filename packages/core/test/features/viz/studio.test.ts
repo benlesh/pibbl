@@ -7,7 +7,7 @@ it("provides the viz public declarations to the editable Studio", () => {
   expect(lib).toBeDefined();
 });
 
-import { toRunnableScript } from "../../../../../playground/src/sandbox-module.js";
+import { toRunnableScript as compileRunnableScript } from "../../../../../playground/src/sandbox-module.js";
 import { validateLearningSourceText } from "../../../../../tooling/learning-source-contract.js";
 import lesson from "../../../../scenarios/src/learning/composition/viz-responsive-line.example.tsx?raw";
 it("accepts the standalone viz lesson but still rejects a required fixture argument", () => {
@@ -16,6 +16,7 @@ it("accepts the standalone viz lesson but still rejects a required fixture argum
     label: 'Learning example "viz-responsive-line"',
     sourcePath:
       "packages/scenarios/src/learning/composition/viz-responsive-line.example.tsx",
+    exportName: "VizResponsiveLineExample",
   };
   expect(() => validateLearningSourceText(lesson, contract)).not.toThrow();
   expect(() =>
@@ -23,15 +24,15 @@ it("accepts the standalone viz lesson but still rejects a required fixture argum
       lesson.replace("fixture: Fixture = {}", "fixture: Fixture"),
       contract,
     ),
-  ).toThrow(/mount/);
+  ).toThrow(/component/);
   expect(() =>
     toRunnableScript(
-      'import { LinearScale, Axis } from "@pibbl/core/viz"; export default function mount(canvas) { return {dispose(){}}; }',
+      'import { LinearScale, Axis } from "@pibbl/core/viz"; export function Lesson() { return {dispose(){}}; }',
     ),
   ).not.toThrow();
   expect(() =>
     toRunnableScript(
-      'import { LinearScale } from "@pibbl/core/viz/internal"; export default function mount(canvas) { return {dispose(){}}; }',
+      'import { LinearScale } from "@pibbl/core/viz/internal"; export function Lesson() { return {dispose(){}}; }',
     ),
   ).toThrow();
 });
@@ -44,7 +45,7 @@ it("loads the exact editable lesson source through the workbench adapter", async
 });
 it("runs a defaulted fixture mount without requiring a second caller argument", () => {
   const emitted =
-    'import { LinearScale } from "@pibbl/core/viz"; export default function mount(canvas, fixture = {}) { return {dispose(){}}; }';
+    'import { LinearScale } from "@pibbl/core/viz"; export function Lesson(fixture = {}) { return {dispose(){}}; }';
   expect(() => toRunnableScript(emitted)).not.toThrow();
   expect(() =>
     toRunnableScript(emitted.replace("fixture = {}", "fixture")),
@@ -59,6 +60,7 @@ it("loads the custom points lesson as editable canonical source", async () => {
       label: 'Learning example "viz-points-and-inspection"',
       sourcePath:
         "packages/scenarios/src/learning/composition/viz-points-and-inspection.example.tsx",
+      exportName: "VizPointsAndInspectionExample",
     }),
   ).not.toThrow();
   await expect(
@@ -66,7 +68,7 @@ it("loads the custom points lesson as editable canonical source", async () => {
   ).resolves.toBe(pointsLesson);
   expect(() =>
     toRunnableScript(
-      'import { PointSeries, PlotSeries, nearestPoint, nearestDomainValue } from "@pibbl/core/viz"; export default function mount(canvas) { return {dispose(){}}; }',
+      'import { PointSeries, PlotSeries, nearestPoint, nearestDomainValue } from "@pibbl/core/viz"; export function Lesson() { return {dispose(){}}; }',
     ),
   ).not.toThrow();
 });
@@ -79,6 +81,7 @@ it("loads the complete function-query comparison as canonical editable source", 
       label: 'Learning example "viz-hover-comparison"',
       sourcePath:
         "packages/scenarios/src/learning/composition/viz-hover-comparison.example.tsx",
+      exportName: "VizHoverComparisonExample",
     }),
   ).not.toThrow();
   await expect(
@@ -86,7 +89,7 @@ it("loads the complete function-query comparison as canonical editable source", 
   ).resolves.toBe(hoverLesson);
   expect(() =>
     toRunnableScript(
-      'import { HoverData, HoverCard, defineSeries, closestPoint, closestX, interpolateX, linearInterpolation } from "@pibbl/core/viz"; export default function mount(canvas) { return {dispose(){}}; }',
+      'import { HoverData, HoverCard, defineSeries, closestPoint, closestX, interpolateX, linearInterpolation } from "@pibbl/core/viz"; export function Lesson() { return {dispose(){}}; }',
     ),
   ).not.toThrow();
 });
@@ -99,6 +102,7 @@ it("loads grouped bars as the canonical editable public lesson", async () => {
       label: 'Learning example "viz-grouped-bars"',
       sourcePath:
         "packages/scenarios/src/learning/composition/viz-grouped-bars.example.tsx",
+      exportName: "Scene",
     }),
   ).not.toThrow();
   await expect(
@@ -114,9 +118,14 @@ it("loads stacked bars as the canonical editable public lesson", async () => {
       label: 'Learning example "viz-stacked-bars"',
       sourcePath:
         "packages/scenarios/src/learning/composition/viz-stacked-bars.example.tsx",
+      exportName: "Scene",
     }),
   ).not.toThrow();
   await expect(
     loadWorkbenchSource(getLearningExampleBySlug("viz-stacked-bars")!),
   ).resolves.toBe(stackedLesson);
 });
+
+function toRunnableScript(code: string) {
+  return compileRunnableScript(code, { exportName: "Lesson" });
+}

@@ -1,14 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";
-import {
-  pibbl,
-  FocusManagement,
-  Group,
-  HtmlBox,
-  Layer,
-  Rectangle,
-  type PibblController,
-} from "@pibbl/core";
+import { FocusManagement, Group, HtmlBox, Layer, Rectangle, type PibblController } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { getPibblInstance, clearSharedState } from "../src/lib/global-state.js";
 import {
   ManualSchedulerDriver,

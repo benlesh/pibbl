@@ -15,7 +15,7 @@ import type {
   RenderingContext2D,
   StyleResolutionContext,
 } from '../types.js';
-import { resolveLength } from '../style/resolve-length.js';
+import { resolveScalarSizingLength } from '../style/sizing-length.js';
 import {
   resolveOptionalLength,
   stripLayoutParticipation,
@@ -199,13 +199,13 @@ function measureImage({
   return {
     status: 'measured',
     size: {
-      width: resolveLength(
+      width: resolveScalarSizingLength(
         style.width,
         constraints.maxWidth,
         'width',
         context,
       )!,
-      height: resolveLength(
+      height: resolveScalarSizingLength(
         style.height,
         constraints.maxHeight,
         'height',

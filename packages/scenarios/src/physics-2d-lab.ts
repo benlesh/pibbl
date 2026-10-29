@@ -1,4 +1,5 @@
-import { pibbl, createElement } from "@pibbl/core";
+import { createElement } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   applyImpulse2D,
   disableBody2D,
@@ -154,7 +155,7 @@ async function mountPhysics2DLab(
   let disposed = false;
   let model = createPhysics2DLabModel();
   let lastAction: Physics2DLabState["lastAction"] = "mount";
-  let mount = pibbl(context.canvas, createElement(Physics2DLabRoot, { model }), {
+  let mount = pibblSync(context.canvas, createElement(Physics2DLabRoot, { model }), {
     pixelRatio: 1,
   });
   let actionQueue = Promise.resolve();
@@ -170,7 +171,7 @@ async function mountPhysics2DLab(
     mount.dispose();
     model = createPhysics2DLabModel();
     model.publish = publish;
-    mount = pibbl(context.canvas, createElement(Physics2DLabRoot, { model }), {
+    mount = pibblSync(context.canvas, createElement(Physics2DLabRoot, { model }), {
       pixelRatio: 1,
     });
   };

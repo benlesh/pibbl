@@ -92,7 +92,9 @@ Seed, scale, and detail for `marble`, `paper`, and `cellular` recipe factories.
 
 ## ReactionDiffusionOptions
 
-Seed and spots/stripes preset for the `reactionDiffusion` recipe factory.
+Seed and a `ReactionDiffusionPreset` for the `reactionDiffusion` recipe factory.
+The expanded presets, optional feed/kill overrides, and initial warmup steps are
+described in [pattern textures](./pattern-textures.md).
 
 ## InkMessage
 

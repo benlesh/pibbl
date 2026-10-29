@@ -1,13 +1,11 @@
 import {
   Clip,
-  pibbl,
-  useSignal,
   Group,
   Layer,
   Path,
   Rectangle,
   Text,
-  type PibblController,
+  useSignal,
 } from "@pibbl/core";
 interface MoonProps {
   active: boolean;
@@ -46,7 +44,7 @@ function Moon(props: MoonProps) {
     />,
   ];
 }
-function ComposedTargetStudy() {
+export function ComposedTargetStudy() {
   const active = useSignal(false);
   const crop = new Path2D();
   crop.roundRect(0, 0, 300, 260, 58);
@@ -79,7 +77,10 @@ function ComposedTargetStudy() {
             height: 260,
           }}
         >
-          <Moon active={active.get()} onSelect={() => active.update((value) => !value)} />
+          <Moon
+            active={active.get()}
+            onSelect={() => active.update((value) => !value)}
+          />
         </Layer>
       </Clip>
     </Group>,
@@ -95,7 +96,4 @@ function ComposedTargetStudy() {
       {active.get() ? "COMPOSED TARGET!" : "CLICK THE VISIBLE MOON"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <ComposedTargetStudy />);
 }

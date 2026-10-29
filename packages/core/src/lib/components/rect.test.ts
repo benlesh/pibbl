@@ -6,7 +6,7 @@ import { Rectangle } from './rect';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
 import { getPibblInstance } from '../global-state';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { useSignal } from '../hooks/use-signal';
 import { Group } from './g';
 

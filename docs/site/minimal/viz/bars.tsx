@@ -1,5 +1,16 @@
-import { pibbl, Overlay } from "@pibbl/core";
-import { Axis, BarSeries, type BarCategoryAccessor, type BarSeriesProps, type BarSeriesStyle, type BarStyleResolver, type BarThresholdFill, BarScale, LinearScale } from "@pibbl/core/viz";
+import {  Overlay } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
+import {
+  Axis,
+  BarSeries,
+  type BarCategoryAccessor,
+  type BarSeriesProps,
+  type BarSeriesStyle,
+  type BarStyleResolver,
+  type BarThresholdFill,
+  BarScale,
+  LinearScale,
+} from "@pibbl/core/viz";
 
 type Sale = { month: string; amount: number };
 const sales: readonly Sale[] = [
@@ -30,7 +41,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <Overlay style={{ left: 70, top: 15, width: 230, height: 170 }}>
     <BarScale
@@ -41,7 +52,7 @@ const app = pibbl(
       paddingInner={0.2}
       style={{ width: 230, height: 170 }}
     >
-      <LinearScale id="amount"  domain={[0, 80]} range="height" reverse>
+      <LinearScale id="amount" domain={[0, 80]} range="height" reverse>
         <BarSeries {...bars} />
         <Axis scale="amount" position="left" tickValues={[0, 20, 40, 60, 80]} />
         <Axis

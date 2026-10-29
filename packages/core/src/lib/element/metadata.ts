@@ -1,3 +1,4 @@
+import type { LayoutBox } from '../layout/types.js';
 import type { PibblBackendPrimitiveInput } from '../backend/types.js';
 import type { PibblInternalPrimitiveAttachmentInput } from '../element-enhancers.js';
 import type { getCurrentElementSource } from '../../internal.js';
@@ -31,6 +32,11 @@ export interface InternalElementMetadata {
   readonly primitiveProgramProps?: Readonly<Record<PropertyKey, unknown>>;
   readonly primitiveReceiverToken?: object;
   readonly policyPreparationSource?: PibblElement<any>;
+  readonly layoutDescriptionSource?: PibblElement<any>;
+  readonly preparedLayoutSlot?: object;
+  readonly layoutContentsChildren?: readonly PibblElement<any>[];
+  /** Ancestor padding box expressed in a placed static Flex content coordinate system. */
+  readonly absoluteContainingBlock?: Readonly<LayoutBox>;
   identityHint?: unknown;
   placementConsumed?: boolean;
   placementSignalHandoff?: Readonly<SystemStyle>;

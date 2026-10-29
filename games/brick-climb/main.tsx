@@ -71,6 +71,7 @@ if (failure?.status === 'rejected') {
 }
 const sheet: SpriteSheet = { frames: Object.freeze(Object.assign({}, ...sheets.map(s => s.frames), { 'cloud-0': sheets[3].frames[0], 'cloud-1': sheets[3].frames[4], trampoline: sheets[3].frames[8], conveyor: sheets[4].frames[0], 'conveyor-left': sheets[4].frames[4], 'conveyor-right': sheets[4].frames[8], 'cloud-block': sheets[4].frames[12] })), animations: Object.freeze(Object.assign({}, ...sheets.map(s => s.animations), Object.fromEntries(['cloud-0', 'cloud-1', 'spring'].map((name, row) => [name, defineSpriteAnimation({ frames: Array.from({ length: 4 }, (_, column) => sheets[3].frames[row * 4 + column]), fps: row < 2 ? 3 : 6 })])), Object.fromEntries(['conveyor', 'conveyor-left', 'conveyor-right', 'cloud-block'].map((name, row) => [name, defineSpriteAnimation({ frames: Array.from({ length: 4 }, (_, column) => sheets[4].frames[row * 4 + column]), fps: row === 3 ? 3 : 8 })])))), dispose: () => sheets.forEach(s => s.dispose()) };
 let controller: PibblController | undefined;
+let mountLifetime = new AbortController();
 let session: GameSession;
 const preview = new URLSearchParams(location.search).has('preview');
 function update() {
@@ -87,7 +88,10 @@ function update() {
     session.keys.clear();
   }
 }
-function start() {
+async function start() {
+  mountLifetime.abort();
+  const lifetime = new AbortController();
+  mountLifetime = lifetime;
   removePauseOverlay();
   controller?.dispose();
   session?.flow.stop();
@@ -102,7 +106,15 @@ function start() {
   } } });
   session = { game: createGame(), revision: signal(0), keys: new Set(), jump: false, grounded: false, boostUntil: 0, presentation: 'spawning', sheet, flow, onUpdate: update };
   flow.start(); flow.send({ type: 'START' }); update(); splash.hidden = true;
-  controller = pibbl(canvas, <GameScene session={session} />); canvas.focus(); update();
+  try {
+    const mounted = await pibbl(canvas, <GameScene session={session} />, { signal: lifetime.signal });
+    if (lifetime.signal.aborted) { mounted.dispose(); return; }
+    controller = mounted; canvas.focus(); update();
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    splash.hidden = false;
+    console.error(error);
+  }
 }
 document.getElementById('start')!.addEventListener('click', start);
 document.getElementById('restart')!.addEventListener('click', start);
@@ -138,7 +150,7 @@ function Preview() {
     </Group>)}
   </>;
 }
-if (preview) { splash.hidden = true; document.getElementById('level')!.textContent = 'FRAME INSPECTOR'; controller = pibbl(canvas, <Preview />); }
-window.addEventListener('pagehide', () => { controller?.dispose(); session?.flow.stop(); sheet.dispose(); });
+if (preview) { splash.hidden = true; document.getElementById('level')!.textContent = 'FRAME INSPECTOR'; controller = await pibbl(canvas, <Preview />, { signal: mountLifetime.signal }); }
+window.addEventListener('pagehide', () => { mountLifetime.abort(); controller?.dispose(); session?.flow.stop(); sheet.dispose(); });
 // Read-only diagnostics for the same manually playable scene.
 Object.defineProperty(window, 'brickClimb', { value: { observe: () => session ? { phase: session.game.phase, coins: session.game.coins, lives: session.game.lives, score: session.game.score, bricks: session.game.blocks.filter(b => b.brick).length, debris: session.game.debris.length, camera: session.game.camera, position: session.body?.position.get(), velocity: session.body?.linearVelocity.get(), grounded: session.grounded, playerState: session.playerState, machineStatus: session.flow.snapshot.get().status, presentation: session.presentation, paused: !!session.paused, boosting: session.boostUntil > session.game.time, trampolines: session.game.trampolines.map(item => ({ ...item })) } : { phase: 'start' } } });

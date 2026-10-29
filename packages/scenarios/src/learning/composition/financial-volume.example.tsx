@@ -1,15 +1,14 @@
+import { LinearScale, UTCScale, VolumeSeries } from "@pibbl/core/viz";
 import {
   FocusManagement,
   Path,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblLogicalMouseEvent,
 } from "@pibbl/core";
-import { LinearScale, UTCScale, VolumeSeries } from "@pibbl/core/viz";
+
 import {
   nearestRecordedVolumeX,
   useVolumeInspection,
@@ -263,12 +262,10 @@ function Chart() {
   );
 }
 /** Mount the responsive volume lesson. */
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function FinancialVolumeExample() {
+  return (
     <FocusManagement>
       <Chart />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

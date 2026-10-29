@@ -1,5 +1,26 @@
-import { pibbl, Overlay } from "@pibbl/core";
-import { Axis, type AxisProps, type AxisStyle, type BandCategory, type BandDomain, type BarScaleProps, type BandScaleRange, type LinearDomain, type LinearScaleProps, type ResolvedBandScale, type ResolvedLinearScale, type ResolvedScale, type ScaleId, type ScaleLayoutStyle, BarScale, LinearScale, type ScaleRange, useLinearScale, useBarScale } from "@pibbl/core/viz";
+import {  Overlay } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
+import {
+  Axis,
+  type AxisProps,
+  type AxisStyle,
+  type BandCategory,
+  type BandDomain,
+  type BarScaleProps,
+  type BandScaleRange,
+  type LinearDomain,
+  type LinearScaleProps,
+  type ResolvedBandScale,
+  type ResolvedLinearScale,
+  type ResolvedScale,
+  type ScaleId,
+  type ScaleLayoutStyle,
+  BarScale,
+  LinearScale,
+  type ScaleRange,
+  useLinearScale,
+  useBarScale,
+} from "@pibbl/core/viz";
 
 const xId: ScaleId = "month";
 const yId: ScaleId = "sales";
@@ -47,7 +68,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <Overlay style={{ left: 70, top: 15, width: 230, height: 170 }}>
     <BarScale {...x}>

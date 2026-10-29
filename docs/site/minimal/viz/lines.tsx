@@ -1,5 +1,17 @@
-import { pibbl } from "@pibbl/core";
-import { Axis, LineSeries, ScaleAdjust, type LineAccessor, type LineCoordinate, type LineCurve, type LineSeriesProps, type LineSeriesStyle, type ScaleAdjustProps, LinearScale } from "@pibbl/core/viz";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
+import {
+  Axis,
+  LineSeries,
+  ScaleAdjust,
+  type LineAccessor,
+  type LineCoordinate,
+  type LineCurve,
+  type LineSeriesProps,
+  type LineSeriesStyle,
+  type ScaleAdjustProps,
+  LinearScale,
+} from "@pibbl/core/viz";
 
 type Reading = { day: number; value: number | null };
 const data: readonly Reading[] = [
@@ -30,7 +42,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <LinearScale
     id="day"
@@ -39,7 +51,7 @@ const app = pibbl(
     range="width"
     style={{ width: 320, height: 220 }}
   >
-    <LinearScale id="value"  domain={[0, 40]} range="height" reverse>
+    <LinearScale id="value" domain={[0, 40]} range="height" reverse>
       <LineSeries {...line} />
       <ScaleAdjust {...marker} />
     </LinearScale>

@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Kelly & coral",
+    "triangle": "#FF785E",
+    "rectangle": "#159447",
+    "bowl": "#3748AE"
+  },
+  {
+    "name": "Lime voltage",
+    "triangle": "#244EE8",
+    "rectangle": "#93D500",
+    "bowl": "#26322B"
+  },
+  {
+    "name": "Forest & copper",
+    "triangle": "#D98B58",
+    "rectangle": "#D6BA91",
+    "bowl": "#14543D"
+  },
+  {
+    "name": "Emerald & lilac",
+    "triangle": "#BCA0F2",
+    "rectangle": "#00865A",
+    "bowl": "#E9A4BC"
+  },
+  {
+    "name": "Green on green",
+    "triangle": "#87C849",
+    "rectangle": "#146C3A",
+    "bowl": "#35A968"
+  },
+  {
+    "name": "Olive & plum",
+    "triangle": "#73852F",
+    "rectangle": "#673D68",
+    "bowl": "#D5AD36"
+  },
+  {
+    "name": "Sage & terracotta",
+    "triangle": "#BA5D45",
+    "rectangle": "#6F9878",
+    "bowl": "#5C748A"
+  },
+  {
+    "name": "Neon garden",
+    "triangle": "#EC489F",
+    "rectangle": "#6B35BF",
+    "bowl": "#71D530"
+  },
+  {
+    "name": "Racing green",
+    "triangle": "#EAC93B",
+    "rectangle": "#07583C",
+    "bowl": "#36B7CE"
+  },
+  {
+    "name": "Fern & sky",
+    "triangle": "#419539",
+    "rectangle": "#47A5EA",
+    "bowl": "#E4A331"
+  }
+]

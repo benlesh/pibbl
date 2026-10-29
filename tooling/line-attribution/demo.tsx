@@ -1,4 +1,5 @@
-import { Clip, Group, Overlay, Rectangle, pibbl, signal } from "@pibbl/core";
+import { Clip, Group, Overlay, Rectangle, signal } from "@pibbl/core";
+import { pibblSync } from "@pibbl/core/sync";
 import { LineSeries, LinearScale } from "@pibbl/core/viz";
 import { createLineAttributionInspector } from "./capture";
 
@@ -56,7 +57,7 @@ function Scene() {
     </>
   );
 }
-const app = pibbl(canvas, <Scene />, { pixelRatio: 1 });
+const app = pibblSync(canvas, <Scene />, { pixelRatio: 1 });
 const state = () => ({
   source: structuredClone(data.get()),
   domain: [...domain.get()],
@@ -94,7 +95,7 @@ const actions = {
   retry() {
     latestError = null;
     failed.set(false);
-    pibbl(canvas, <Scene />);
+    pibblSync(canvas, <Scene />);
   },
   reset() {
     latestError = null;
@@ -106,7 +107,7 @@ const actions = {
     ]);
     clipped.set(true);
     domain.set([0, 10]);
-    pibbl(canvas, <Scene />);
+    pibblSync(canvas, <Scene />);
   },
 };
 window.addEventListener("error", (event) => {

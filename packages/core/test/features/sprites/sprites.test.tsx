@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from 'vitest';
-import { pibbl, drive, repeat, signal, usePlayback, type PibblPlayback } from '@pibbl/core';
+import { drive, repeat, signal, usePlayback, type PibblPlayback } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { Sprite, loadSpriteSheet, defineSpriteAnimation } from '../../../src/features/sprites/index';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../../../src/lib/scheduler/testing';
 

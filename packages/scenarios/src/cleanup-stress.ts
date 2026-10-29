@@ -9,7 +9,8 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { pibbl } from '@pibbl/core';
+import {  } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import {
   CLEANUP_STRESS_SOURCE_ID,
   createCleanupStressScene,
@@ -49,7 +50,7 @@ export const CLEANUP_STRESS_ACTION_IDS = [
 
 interface InnerRuntime {
   abortController: AbortController;
-  controller: ReturnType<typeof pibbl>;
+  controller: ReturnType<typeof pibblSync>;
   status: CleanupRuntimeStatus;
 }
 
@@ -128,7 +129,7 @@ async function mountCleanupStress(
     if (!currentRuntime || currentRuntime.status !== 'mounted') {
       throw new Error('The cleanup stress runtime must be remounted before rendering.');
     }
-    pibbl(context.canvas, scene(), { signal: currentRuntime.abortController.signal });
+    pibblSync(context.canvas, scene(), { signal: currentRuntime.abortController.signal });
     pendingRender = nextFrame();
     await pendingRender;
     assertActive();
@@ -142,7 +143,7 @@ async function mountCleanupStress(
       mountGeneration: state.mountGeneration + 1,
       runtime: 'mounted',
     };
-    const controller = pibbl(context.canvas, scene(), { signal: abortController.signal });
+    const controller = pibblSync(context.canvas, scene(), { signal: abortController.signal });
     currentRuntime = { abortController, controller, status: 'mounted' };
     pendingRender = nextFrame();
     await pendingRender;
@@ -171,7 +172,7 @@ async function mountCleanupStress(
       lastAction: action,
       revision: state.revision + 1,
     };
-    pibbl(context.canvas, scene(), { signal: currentRuntime.abortController.signal });
+    pibblSync(context.canvas, scene(), { signal: currentRuntime.abortController.signal });
     pendingRender = Promise.resolve();
     publish();
   };
@@ -300,7 +301,7 @@ async function mountCleanupStress(
               mountCycles: state.mountCycles + 1,
               mountGeneration: state.mountGeneration + 1,
             };
-            const controller = pibbl(context.canvas, scene(), {
+            const controller = pibblSync(context.canvas, scene(), {
               signal: abortController.signal,
             });
             pendingRender = nextFrame();

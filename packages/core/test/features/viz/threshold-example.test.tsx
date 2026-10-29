@@ -1,8 +1,13 @@
 import { userEvent } from "vitest/browser";
 import { expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-threshold-segments.example.js";
+import { VizThresholdSegmentsExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-threshold-segments.example.js";
 import { testRuntime } from "./support/runtime.js";
 import { pressKey, tab } from "../../support/user-input.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
 
 it("splits domain-space threshold crossings at shared interpolated endpoints", () => {
   const runtime = testRuntime();

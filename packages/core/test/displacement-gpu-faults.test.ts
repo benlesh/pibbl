@@ -1,10 +1,5 @@
-import {
-  createElement,
-  pibbl,
-  defineTexture,
-  Rectangle,
-  useTexture,
-} from "@pibbl/core";
+import { createElement, defineTexture, Rectangle, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { displacement } from "@pibbl/core/filters";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getPibblInstance } from "../src/lib/global-state";

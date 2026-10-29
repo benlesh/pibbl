@@ -1,6 +1,6 @@
-import { pibbl, Rectangle, Star, type PibblController } from "@pibbl/core";
+import { Rectangle, Star } from "@pibbl/core";
 
-function StarStudy() {
+export function StarStudy() {
   return [
     <Rectangle
       style={{ left: 0, top: 0, width: 720, height: 420, fill: "#17211d" }}
@@ -32,8 +32,4 @@ function StarStudy() {
       }}
     />,
   ];
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <StarStudy />);
 }

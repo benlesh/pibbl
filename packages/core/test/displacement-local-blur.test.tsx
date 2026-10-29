@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { pibbl, defineTexture, Group, Rectangle, useTexture } from "@pibbl/core";
+import { defineTexture, Group, Rectangle, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { displacement, reflectedLight } from "@pibbl/core/filters";
 import { clearSharedState } from "../src/lib/global-state.js";
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from "../src/lib/scheduler/testing.js";

@@ -1,5 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import { Circle, Group, pibbl, signal, definePrimitive } from "@pibbl/core";
+import { Circle, Group, signal, definePrimitive } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   PhysicsWorld2D,
   collider2D,

@@ -62,9 +62,10 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
       heroButton.textContent = "Shuffle the composition";
       let phase = 0;
       let controller: PibblController | undefined;
+      const lifetime = new AbortController();
       const renderHero = () => {
         controller?.dispose();
-        controller = pibbl(
+        void pibbl(
           canvas,
           createElement(HeroScene, {
             phase,
@@ -73,7 +74,10 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
               renderHero();
             },
           }),
-        );
+          { signal: lifetime.signal },
+        ).then(mounted => { controller = mounted; }).catch(error => {
+          if (!lifetime.signal.aborted && error?.name !== 'AbortError') console.error(error);
+        });
       };
       heroButton.addEventListener("click", () => {
         phase++;
@@ -112,7 +116,7 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
       article.append(intro, cards);
       options.container.replaceChildren(article);
       await options.lifecycle.setDisposable(version, {
-        dispose: () => controller?.dispose(),
+        dispose: () => { lifetime.abort(); controller?.dispose(); },
       });
       if (options.lifecycle.isCurrent(version)) options.finishRoute("Interactive examples");
     },
@@ -149,6 +153,19 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
 
       const workbenchHost = document.createElement("div");
       workbenchHost.className = "lesson-workbench-loading";
+      workbenchHost.tabIndex = -1;
+      workbenchHost.ariaLabel = "Live Canvas workspace";
+      const jumpToCanvas = document.createElement("button");
+      jumpToCanvas.type = "button";
+      jumpToCanvas.disabled = true;
+      jumpToCanvas.className = "lesson-canvas-jump";
+      jumpToCanvas.textContent = "Jump to Live Canvas";
+      jumpToCanvas.addEventListener("click", () => {
+        const preview = workbenchHost.querySelector<HTMLElement>(".studio-preview") ?? workbenchHost;
+        preview.scrollIntoView({ block: "start" });
+        workbenchHost.focus({ preventScroll: true });
+      });
+      header.appendChild(jumpToCanvas);
       workbenchHost.innerHTML = '<p role="status">Loading the TypeScript workbench…</p>';
 
       const teaching = document.createElement("div");
@@ -208,6 +225,7 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
         sourceIssue: shared.issue,
       });
       await options.lifecycle.setDisposable(version, disposable);
+      if (options.lifecycle.isCurrent(version)) jumpToCanvas.disabled = false;
     },
   };
 }

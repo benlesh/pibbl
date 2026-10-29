@@ -1,4 +1,4 @@
-import { pibbl } from '@pibbl/core';
+import { pibblSync } from '../../sync.js';
 import { cdp, userEvent } from 'vitest/browser';
 import { afterEach, beforeEach } from 'vitest';
 import { getPibblInstance } from '../global-state';
@@ -200,7 +200,7 @@ export async function componentTest(comp: PibblElement<any>, options: {
   canvas.style.margin = '5px';
   document.body.appendChild(canvas);
 
-  const controller = pibbl(canvas, comp);
+  const controller = pibblSync(canvas, comp);
   activeControllers.add(controller);
   await animationFrame();
 

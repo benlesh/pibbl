@@ -21,6 +21,7 @@ installed through the `latest` or `next` npm tag.
 - `@pibbl/core` contains the Canvas runtime and optional feature subpaths.
 - `@pibbl/three` integrates ordinary Three.js scenes.
 - `@pibbl/text` provides text shaping and outlines.
+- `@pibbl/layout` provides an owned standalone layout tree and Yoga migration analysis.
 
 ## Quick start
 
@@ -99,7 +100,7 @@ function Poster({ initialMessage }: PosterProps): PibblNode {
 }
 
 const canvas = document.querySelector<HTMLCanvasElement>("#poster")!;
-const controller = pibbl(canvas, <Poster initialMessage="Hello" />);
+const controller = await pibbl(canvas, <Poster initialMessage="Hello" />);
 
 // Release listeners, frames, hooks, layers, and the mount when the page leaves.
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

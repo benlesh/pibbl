@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { pibbl, createElement, signal } from '@pibbl/core';
+import { createElement, signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../sync.js";
 import {
   pibblInternalAssertCommandAllowed,
   pibblInternalCurrentRenderOwner,

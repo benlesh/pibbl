@@ -6,17 +6,38 @@
     "source": "procedural-component.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "ProceduralTexture", "importPath": "@pibbl/core/textures" },
+      {
+        "name": "ProceduralTexture",
+        "importPath": "@pibbl/core/textures"
+      },
       {
         "name": "ProceduralTextureProps",
         "importPath": "@pibbl/core/textures"
       },
-      { "name": "texturePalettes", "importPath": "@pibbl/core/textures" },
-      { "name": "TextureKind", "importPath": "@pibbl/core/textures" },
-      { "name": "TexturePalette", "importPath": "@pibbl/core/textures" },
-      { "name": "TextureResolution", "importPath": "@pibbl/core/textures" },
-      { "name": "TextureRenderer", "importPath": "@pibbl/core/textures" },
-      { "name": "TextureRenderFrame", "importPath": "@pibbl/core/textures" }
+      {
+        "name": "texturePalettes",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "TextureKind",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "TexturePalette",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "TextureResolution",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "TextureRenderer",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "TextureRenderFrame",
+        "importPath": "@pibbl/core/textures"
+      }
     ],
     "notes": [
       "The borrowed source and mask canvases are used only inside the render callback."
@@ -29,12 +50,18 @@
     "source": "reaction-component.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "ReactionDiffusion", "importPath": "@pibbl/core/textures" },
+      {
+        "name": "ReactionDiffusion",
+        "importPath": "@pibbl/core/textures"
+      },
       {
         "name": "ReactionDiffusionProps",
         "importPath": "@pibbl/core/textures"
       },
-      { "name": "TextureBrush", "importPath": "@pibbl/core/textures" }
+      {
+        "name": "TextureBrush",
+        "importPath": "@pibbl/core/textures"
+      }
     ],
     "notes": [
       "The layer owns its simulation until the Pibbl controller is disposed."
@@ -47,11 +74,26 @@
     "source": "material-recipes.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "marble", "importPath": "@pibbl/core/textures" },
-      { "name": "paper", "importPath": "@pibbl/core/textures" },
-      { "name": "cellular", "importPath": "@pibbl/core/textures" },
-      { "name": "useTexture", "importPath": "@pibbl/core/textures" },
-      { "name": "MaterialOptions", "importPath": "@pibbl/core/textures" }
+      {
+        "name": "marble",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "paper",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "cellular",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "useTexture",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "MaterialOptions",
+        "importPath": "@pibbl/core/textures"
+      }
     ],
     "notes": [
       "Each hook slot owns one texture resource; the returned handle is directly usable as fill."
@@ -64,12 +106,18 @@
     "source": "ink-recipe.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "reactionDiffusion", "importPath": "@pibbl/core/textures" },
+      {
+        "name": "reactionDiffusion",
+        "importPath": "@pibbl/core/textures"
+      },
       {
         "name": "ReactionDiffusionOptions",
         "importPath": "@pibbl/core/textures"
       },
-      { "name": "InkMessage", "importPath": "@pibbl/core/textures" }
+      {
+        "name": "InkMessage",
+        "importPath": "@pibbl/core/textures"
+      }
     ],
     "notes": [
       "Messages are sent from the event handler, outside component evaluation."
@@ -82,9 +130,18 @@
     "source": "water-waves.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "waterWaves", "importPath": "@pibbl/core/textures" },
-      { "name": "WaterWavesOptions", "importPath": "@pibbl/core/textures" },
-      { "name": "WaterWavesMessage", "importPath": "@pibbl/core/textures" }
+      {
+        "name": "waterWaves",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "WaterWavesOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "WaterWavesMessage",
+        "importPath": "@pibbl/core/textures"
+      }
     ],
     "notes": [
       "Press anywhere on the image to add a ripple at that position. Turn off Refraction + reflections to see the undistorted source. Scale 10 produces finer periodic waves; speed 2.4 animates them more quickly. Both filters share the same numeric wave map and region."
@@ -97,10 +154,22 @@
     "source": "water-surface.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "waterSurface", "importPath": "@pibbl/core/textures" },
-      { "name": "WaterSurfaceObstacle", "importPath": "@pibbl/core/textures" },
-      { "name": "WaterSurfaceOptions", "importPath": "@pibbl/core/textures" },
-      { "name": "WaterSurfaceMessage", "importPath": "@pibbl/core/textures" }
+      {
+        "name": "waterSurface",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "WaterSurfaceObstacle",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "WaterSurfaceOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "WaterSurfaceMessage",
+        "importPath": "@pibbl/core/textures"
+      }
     ],
     "notes": [
       "Press to ripple the tiled image. The outlined island marks the normalized obstacle, which affects the height field rather than Canvas hit testing."
@@ -113,9 +182,18 @@
     "source": "rain-drops.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "rainDrops", "importPath": "@pibbl/core/textures" },
-      { "name": "RainDropsOptions", "importPath": "@pibbl/core/textures" },
-      { "name": "RainDropsMessage", "importPath": "@pibbl/core/textures" }
+      {
+        "name": "rainDrops",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "RainDropsOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "RainDropsMessage",
+        "importPath": "@pibbl/core/textures"
+      }
     ],
     "notes": [
       "Drag across the glass to wipe condensation with typed finger messages. Toggle Fogged glass to compare with the original; Pibbl owns animation and texture cleanup."
@@ -128,11 +206,26 @@
     "source": "tendrils.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "tendrils", "importPath": "@pibbl/core/textures" },
-      { "name": "TendrilsOptions", "importPath": "@pibbl/core/textures" },
-      { "name": "TendrilsMessage", "importPath": "@pibbl/core/textures" },
-      { "name": "ElectricSource", "importPath": "@pibbl/core/textures" },
-      { "name": "ElectricSourceMessage", "importPath": "@pibbl/core/textures" }
+      {
+        "name": "tendrils",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "TendrilsOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "TendrilsMessage",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "ElectricSource",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "ElectricSourceMessage",
+        "importPath": "@pibbl/core/textures"
+      }
     ],
     "notes": [
       "Source coordinates are normalized to the complete texture, including its padding."
@@ -145,15 +238,245 @@
     "source": "lightning.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "lightning", "importPath": "@pibbl/core/textures" },
-      { "name": "LightningOptions", "importPath": "@pibbl/core/textures" },
-      { "name": "LightningMessage", "importPath": "@pibbl/core/textures" },
-      { "name": "ElectricPoint", "importPath": "@pibbl/core/textures" },
-      { "name": "ElectricOptions", "importPath": "@pibbl/core/textures" },
-      { "name": "ElectricControl", "importPath": "@pibbl/core/textures" }
+      {
+        "name": "lightning",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "LightningOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "LightningMessage",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "ElectricPoint",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "ElectricOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "ElectricControl",
+        "importPath": "@pibbl/core/textures"
+      }
     ],
     "notes": [
       "The texture owns its animation through Pibbl; no application frame loop is needed."
+    ]
+  },
+  {
+    "id": "texture-pattern-recipes",
+    "title": "Repeat stripes, checks, and wood",
+    "description": "Compare geometric bands and irregular grain with optional knots.",
+    "source": "pattern-recipes.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "stripes",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "checkers",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "woodGrain",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "StripesOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "CheckersOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "WoodGrainOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "PatternMotionOptions",
+        "importPath": "@pibbl/core/textures"
+      }
+    ],
+    "notes": [
+      "Colors and painted tile dimensions are independent of raster resolution. Pibbl owns the texture lifetime."
+    ]
+  },
+  {
+    "id": "texture-fabric-recipes",
+    "title": "Compare three fabric weaves",
+    "description": "Compare alternating plain weave, diagonal twill, and broken herringbone.",
+    "source": "fabric-recipes.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "plainWeave",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "twill",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "herringbone",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "FabricOptions",
+        "importPath": "@pibbl/core/textures"
+      }
+    ],
+    "notes": [
+      "Colors and painted tile dimensions are independent of raster resolution. Pibbl owns the texture lifetime."
+    ]
+  },
+  {
+    "id": "texture-noise-recipes",
+    "title": "Compare periodic noise fields",
+    "description": "Paint soft and ridged multiscale noise as seamless surfaces.",
+    "source": "noise-recipes.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "softNoise",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "ridgedNoise",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "NoiseOptions",
+        "importPath": "@pibbl/core/textures"
+      }
+    ],
+    "notes": [
+      "Colors and painted tile dimensions are independent of raster resolution. Pibbl owns the texture lifetime."
+    ]
+  },
+  {
+    "id": "texture-gray-scott-presets",
+    "title": "Choose living ink chemistry",
+    "description": "Use a typed Gray\u2013Scott preset and its reusable coefficients.",
+    "source": "gray-scott-presets.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "grayScottPresets",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "ReactionDiffusionPreset",
+        "importPath": "@pibbl/core/textures"
+      }
+    ],
+    "notes": [
+      "Colors and painted tile dimensions are independent of raster resolution. Pibbl owns the texture lifetime."
+    ]
+  },
+  {
+    "id": "texture-chemical-recipes",
+    "title": "Compare reaction\u2013diffusion models",
+    "description": "Paint Schnakenberg spots, Barkley excitation, and Brusselator fields.",
+    "source": "chemical-recipes.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "schnakenberg",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "barkley",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "brusselator",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "schnakenbergPresets",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "barkleyPresets",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "brusselatorPresets",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "SchnakenbergOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "BarkleyOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "BrusselatorOptions",
+        "importPath": "@pibbl/core/textures"
+      }
+    ],
+    "notes": [
+      "Colors and painted tile dimensions are independent of raster resolution. Pibbl owns the texture lifetime."
+    ]
+  },
+  {
+    "id": "texture-geometric-recipes",
+    "title": "Repeat dots, halftone, plaid, and curves",
+    "description": "Use ordered color ramps and checked named plaid color references.",
+    "source": "geometric-recipes.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "polkaDots",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "halftone",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "plaid",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "truchet",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "plaidPresets",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "PolkaDotsOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "HalftoneOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "PlaidOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "PlaidBand",
+        "importPath": "@pibbl/core/textures"
+      },
+      {
+        "name": "TruchetOptions",
+        "importPath": "@pibbl/core/textures"
+      }
+    ],
+    "notes": [
+      "Colors and painted tile dimensions are independent of raster resolution. Pibbl owns the texture lifetime."
     ]
   }
 ]

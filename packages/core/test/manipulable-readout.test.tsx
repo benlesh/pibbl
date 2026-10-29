@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
 import * as Pibbl from "@pibbl/core";
@@ -24,7 +25,7 @@ it("forwards resize and rotation readout options through Manipulable", async () 
   canvas.height = 200;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  mount = Pibbl.pibbl(
+  mount = __pibblSyncTest(
     canvas,
     <Pibbl.FocusManagement>
       <Pibbl.Manipulable

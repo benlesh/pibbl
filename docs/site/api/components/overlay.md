@@ -30,3 +30,12 @@ or implicit intrinsic measurement.
 ```
 
 See the [Absolute and Overlay live example](#/examples/layout/absolute-and-overlay).
+
+Experimental mounted own-style resolution also accepts percentage `padding` from
+the established containing-owner width, including top/bottom. A 200px owner keeps
+10% at 20px when this container narrows to 160px. Upstream parent admission remains
+authoritative; this does not add a pure measurement provider or infer an owner
+from constraints. Try [allocated padding](#/examples/layout/wasm-flow-padding).
+
+Actual experimental child allocation resolves raw percentage padding before box
+conversion, using this parent’s content width. Pure measurement constraints alone do not supply that owner.

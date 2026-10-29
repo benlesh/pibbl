@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { Rectangle } from '../src/lib/components/rect';
 import {
   layoutGrid,
@@ -25,6 +26,7 @@ const measurement = {
   ) => measureElement(element, constraints, service),
 };
 
+beforeAll(() => prepareLayoutEngineSync());
 afterEach(() => document.body.replaceChildren());
 
 describe('Grid Chromium compatibility oracle', () => {

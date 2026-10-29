@@ -1,12 +1,5 @@
-import {
-  Layer,
-  computed,
-  pibbl,
-  createElement,
-  signal,
-  type PibblController,
-  type PibblNode,
-} from '@pibbl/core';
+import { Layer, computed, createElement, signal, type PibblController, type PibblNode } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { clearSharedState } from '../src/lib/global-state';
 import * as signalGraph from '../src/lib/signals/graph';

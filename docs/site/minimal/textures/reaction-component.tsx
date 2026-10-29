@@ -1,5 +1,5 @@
 /** @jsxImportSource @pibbl/core */
-import { pibbl } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   ReactionDiffusion,
   texturePalettes,
@@ -20,5 +20,8 @@ const props: ReactionDiffusionProps = {
   resolution: { width: 128, height: 80 },
   brush,
 };
-const controller = pibbl(canvas, <ReactionDiffusion {...props} style={{ width: 320, height: 200 }} />);
+const controller = pibblSync(
+  canvas,
+  <ReactionDiffusion {...props} style={{ width: 320, height: 200 }} />,
+);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

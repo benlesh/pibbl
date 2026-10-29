@@ -1,0 +1,31 @@
+{
+  "name": "@pibbl/layout",
+  "version": "0.0.2",
+  "type": "module",
+  "description": "Owned standalone layout trees and versioned Yoga 3.2 migration analysis for Pibbl",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-layout-package.mjs",
+    "test": "vitest run test"
+  },
+  "peerDependencies": {
+    "@pibbl/core": "0.0.2"
+  },
+  "devDependencies": {
+    "@pibbl/core": "workspace:*"
+  }
+}

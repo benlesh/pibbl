@@ -1,11 +1,4 @@
-import {
-  pibbl,
-  Group,
-  Path,
-  Rectangle,
-  Text,
-  type PibblController,
-} from "@pibbl/core";
+import { Group, Path, Rectangle, Text } from "@pibbl/core";
 
 const WORKSPACE_TOP = 56;
 
@@ -29,7 +22,7 @@ function arrowheadPath(point: Readonly<{ x: number; y: number }>): Path2D {
   return path;
 }
 
-function DiagramEditor() {
+export function DiagramEditor() {
   const ideaPort = { x: 260, y: 222 + WORKSPACE_TOP };
   const sketchPort = { x: 326, y: 134 + WORKSPACE_TOP };
 
@@ -37,7 +30,12 @@ function DiagramEditor() {
     <Rectangle style={{ width: 960, height: 56, fill: "#fffdf6" }} />,
     <Text
       pointerEvents="none"
-      style={{ left: 24, top: 34, fill: "#17211d", font: "900 22px sans-serif" }}
+      style={{
+        left: 24,
+        top: 34,
+        fill: "#17211d",
+        font: "900 22px sans-serif",
+      }}
     >
       WORKFLOW MAP
     </Text>,
@@ -185,13 +183,14 @@ function DiagramEditor() {
     />,
     <Text
       pointerEvents="none"
-      style={{ left: 20, top: 589, fill: "#fffdf6", font: "700 12px monospace" }}
+      style={{
+        left: 20,
+        top: 589,
+        fill: "#fffdf6",
+        font: "700 12px monospace",
+      }}
     >
       READY · 100%
     </Text>,
   ];
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <DiagramEditor />);
 }

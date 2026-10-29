@@ -219,6 +219,7 @@ export function pibblInternalCreateSignalConsumer(options: {
   const ownerState = requireActiveOwner(options.owner);
   let disposed = false;
   const signalConsumer = createSignalRenderConsumer({
+    layoutOwner: ownerState.instance,
     debugName: options.debugName ??
       `official renderer (${ownerState.component.id})`,
     invalidate: () => {

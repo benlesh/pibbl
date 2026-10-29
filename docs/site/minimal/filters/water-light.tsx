@@ -1,4 +1,5 @@
-import { pibbl, Group, Rectangle, Circle, useTexture } from "@pibbl/core";
+import {  Group, Rectangle, Circle, useTexture } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   displacement,
   reflectedLight,
@@ -85,7 +86,7 @@ const controllers = comparisons.map(([label, mode]) => {
   canvas.height = 156;
   figure.append(caption, canvas);
   grid.append(figure);
-  return pibbl(canvas, <Scene mode={mode} />);
+  return pibblSync(canvas, <Scene mode={mode} />);
 });
 window.addEventListener(
   "pagehide",

@@ -1,4 +1,4 @@
-import { pibbl } from '@pibbl/core';
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { expect, it } from 'vitest';
 import { AgentLayoutPlacementScene } from '../../scenarios/src/agent-layout-placement.example';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';

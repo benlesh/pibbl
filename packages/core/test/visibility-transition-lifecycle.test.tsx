@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from 'vitest';
-import { pibbl, Group, Rectangle, Clip, Layer, fade, defineTransition, useVisibilityTransition, signal, type PibblVisibilityTransition } from '@pibbl/core';
+import { Group, Rectangle, Clip, Layer, fade, defineTransition, useVisibilityTransition, signal, type PibblVisibilityTransition } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { opacity } from '@pibbl/core/filters';
 import { installSchedulerDriverForTest, ManualSchedulerDriver, snapshotRealmScheduler } from '../src/lib/scheduler/testing';
 const roots: ReturnType<typeof pibbl>[] = [];

@@ -1,4 +1,5 @@
-import { pibbl, Rectangle } from "@pibbl/core";
+import {  Rectangle } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   cellular,
   marble,
@@ -62,7 +63,7 @@ const controllers = materials.map((material, index) => {
   canvas.height = 156;
   figure.append(caption, canvas);
   grid.append(figure);
-  return pibbl(canvas, <Material index={index} />);
+  return pibblSync(canvas, <Material index={index} />);
 });
 window.addEventListener(
   "pagehide",

@@ -2,15 +2,13 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
   marker,
   repeat,
   sequence,
   usePlayback,
   useSignal,
   wait,
-  type PibblController,
-} from '@pibbl/core';
+} from "@pibbl/core";
 import {
   Particles2D,
   defineParticleEffect2D,
@@ -18,30 +16,30 @@ import {
   particleCurve,
   particleRange,
   useParticleSystem,
-} from '@pibbl/core/particles';
+} from "@pibbl/core/particles";
 
 const burningSquareEffect = defineParticleEffect2D({
-  debugName: 'learning burning square',
+  debugName: "learning burning square",
   emitters: [
     {
-      name: 'flame',
+      name: "flame",
       capacity: 180,
-      overflow: 'recycle-oldest',
-      emission: [{ type: 'manual', count: 5 }],
-      shape: { type: 'line', from: [-34, 0], to: [34, 0] },
+      overflow: "recycle-oldest",
+      emission: [{ type: "manual", count: 5 }],
+      shape: { type: "line", from: [-34, 0], to: [34, 0] },
       initial: {
         lifetimeMilliseconds: particleRange(420, 820),
         velocity: [particleRange(-28, 28), particleRange(-145, -82)],
         color: particleChoice([
-          { value: '#fff3a3', weight: 1 },
-          { value: '#fbbf24', weight: 3 },
-          { value: '#f97316', weight: 3 },
-          { value: '#dc2626', weight: 1 },
+          { value: "#fff3a3", weight: 1 },
+          { value: "#fbbf24", weight: 3 },
+          { value: "#f97316", weight: 3 },
+          { value: "#dc2626", weight: 1 },
         ]),
       },
       motion: [
-        { type: 'sway', amplitude: 13, frequency: [1.1, 2.1] },
-        { type: 'drag', amount: 0.45 },
+        { type: "sway", amplitude: 13, frequency: [1.1, 2.1] },
+        { type: "drag", amount: 0.45 },
       ],
       appearance: {
         size: particleCurve([
@@ -56,27 +54,27 @@ const burningSquareEffect = defineParticleEffect2D({
           [1, 0],
         ]),
       },
-      renderer: { type: 'circle', blend: 'additive' },
+      renderer: { type: "circle", blend: "additive" },
       bounds: { min: [-80, -150], max: [80, 24] },
     },
     {
-      name: 'smoke',
+      name: "smoke",
       capacity: 100,
-      overflow: 'recycle-oldest',
-      emission: [{ type: 'manual', count: 2 }],
-      shape: { type: 'line', from: [-24, -2], to: [24, -2] },
+      overflow: "recycle-oldest",
+      emission: [{ type: "manual", count: 2 }],
+      shape: { type: "line", from: [-24, -2], to: [24, -2] },
       initial: {
         lifetimeMilliseconds: particleRange(1_500, 2_700),
         velocity: [particleRange(-16, 16), particleRange(-62, -34)],
         color: particleChoice([
-          { value: '#334155', weight: 2 },
-          { value: '#475569', weight: 3 },
-          { value: '#64748b', weight: 1 },
+          { value: "#334155", weight: 2 },
+          { value: "#475569", weight: 3 },
+          { value: "#64748b", weight: 1 },
         ]),
       },
       motion: [
-        { type: 'sway', amplitude: 25, frequency: [0.28, 0.58] },
-        { type: 'drag', amount: 0.16 },
+        { type: "sway", amplitude: 25, frequency: [0.28, 0.58] },
+        { type: "drag", amount: 0.16 },
       ],
       appearance: {
         size: particleCurve([
@@ -91,7 +89,7 @@ const burningSquareEffect = defineParticleEffect2D({
           [1, 0],
         ]),
       },
-      renderer: { type: 'circle', blend: 'source-over' },
+      renderer: { type: "circle", blend: "source-over" },
       bounds: { min: [-120, -190], max: [120, 32] },
     },
   ],
@@ -100,11 +98,11 @@ const burningSquareEffect = defineParticleEffect2D({
 const emissionClock = repeat(
   sequence(
     wait(40),
-    marker('flame'),
+    marker("flame"),
     wait(80),
-    marker('flame'),
+    marker("flame"),
     wait(40),
-    marker('smoke'),
+    marker("smoke"),
   ),
   { iterations: Number.POSITIVE_INFINITY },
 );
@@ -126,29 +124,26 @@ function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
 }
 
-function ParticleEffectsStudy() {
+export function ParticleEffectsStudy() {
   const position = useSignal<Point>({ x: 360, y: 300 });
   const drag = useSignal<DragState | null>(null);
   const fire = useParticleSystem(burningSquareEffect, {
     autoplay: false,
     seed: 42,
-    debugName: 'learning burning square particle system',
+    debugName: "learning burning square particle system",
   });
 
   usePlayback(emissionClock, {
     autoplay: true,
-    debugName: 'learning burning square emission clock',
+    debugName: "learning burning square emission clock",
     onEvent: (event) => {
-      if (event.type !== 'marker') return;
+      if (event.type !== "marker") return;
       const current = position.get();
-      const emitterPosition = [
-        current.x,
-        current.y - SQUARE_SIZE / 2,
-      ] as const;
-      if (event.marker === 'flame') {
-        fire.emit('flame', { position: emitterPosition, count: 5 });
-      } else if (event.marker === 'smoke') {
-        fire.emit('smoke', { position: emitterPosition, count: 2 });
+      const emitterPosition = [current.x, current.y - SQUARE_SIZE / 2] as const;
+      if (event.marker === "flame") {
+        fire.emit("flame", { position: emitterPosition, count: 5 });
+      } else if (event.marker === "smoke") {
+        fire.emit("smoke", { position: emitterPosition, count: 2 });
       }
     },
   });
@@ -158,10 +153,10 @@ function ParticleEffectsStudy() {
 
   return (
     <Group>
-      <Rectangle style={{ width: 720, height: 420, fill: '#090b10' }} />
+      <Rectangle style={{ width: 720, height: 420, fill: "#090b10" }} />
       <Rectangle
         pointerEvents="none"
-        style={{ left: 28, top: 88, width: 664, height: 284, fill: '#111827' }}
+        style={{ left: 28, top: 88, width: 664, height: 284, fill: "#111827" }}
       />
       <Particles2D
         system={fire}
@@ -174,10 +169,10 @@ function ParticleEffectsStudy() {
           top: current.y - SQUARE_SIZE / 2,
           width: SQUARE_SIZE,
           height: SQUARE_SIZE,
-          fill: '#481b12',
-          stroke: isDragging ? '#fde68a' : '#f97316',
+          fill: "#481b12",
+          stroke: isDragging ? "#fde68a" : "#f97316",
           strokeWidth: isDragging ? 5 : 4,
-          cursor: isDragging ? 'grabbing' : 'grab',
+          cursor: isDragging ? "grabbing" : "grab",
         }}
         onPointerDown={(event) => {
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -220,8 +215,8 @@ function ParticleEffectsStudy() {
           top: current.y - 30,
           width: 60,
           height: 60,
-          fill: '#7c2d12',
-          stroke: '#fb923c',
+          fill: "#7c2d12",
+          stroke: "#fb923c",
           strokeWidth: 2,
         }}
       />
@@ -230,9 +225,9 @@ function ParticleEffectsStudy() {
         style={{
           left: current.x,
           top: current.y + 5,
-          fill: '#fed7aa',
-          font: '900 12px monospace',
-          textAlign: 'center',
+          fill: "#fed7aa",
+          font: "900 12px monospace",
+          textAlign: "center",
         }}
       >
         DRAG
@@ -242,9 +237,9 @@ function ParticleEffectsStudy() {
         style={{
           left: 360,
           top: 38,
-          fill: '#f8fafc',
-          font: '900 24px sans-serif',
-          textAlign: 'center',
+          fill: "#f8fafc",
+          font: "900 24px sans-serif",
+          textAlign: "center",
         }}
       >
         PARTICLE EFFECTS
@@ -254,9 +249,9 @@ function ParticleEffectsStudy() {
         style={{
           left: 360,
           top: 64,
-          fill: '#fb923c',
-          font: '700 12px monospace',
-          textAlign: 'center',
+          fill: "#fb923c",
+          font: "700 12px monospace",
+          textAlign: "center",
         }}
       >
         FIRE + SMOKE · WORLD-SPACE BIRTHS
@@ -266,17 +261,13 @@ function ParticleEffectsStudy() {
         style={{
           left: 360,
           top: 398,
-          fill: '#cbd5e1',
-          font: '600 12px monospace',
-          textAlign: 'center',
+          fill: "#cbd5e1",
+          font: "600 12px monospace",
+          textAlign: "center",
         }}
       >
         DRAG THE SQUARE · OLD PARTICLES STAY BEHIND
       </Text>
     </Group>
   );
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <ParticleEffectsStudy />, { pixelRatio: 1 });
 }

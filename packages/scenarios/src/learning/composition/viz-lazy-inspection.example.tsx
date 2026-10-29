@@ -3,9 +3,7 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
   type PibblLogicalMouseEvent,
 } from "@pibbl/core";
 import { LinearScale, PointSeries, defineSeries } from "@pibbl/core/viz";
@@ -146,15 +144,14 @@ function LazyInspection() {
   );
 }
 /** Mount the lazy event-query lesson; dispose the controller on removal. */
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizLazyInspectionExample() {
+  return (
     <FocusManagement>
       <LinearScale id="time" domain={[0, 10]} range={[80, 260]}>
         <LinearScale id="price" domain={[0, 40]} range={[160, 80]}>
           <LazyInspection />
         </LinearScale>
       </LinearScale>
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

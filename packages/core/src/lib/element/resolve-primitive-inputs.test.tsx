@@ -1,12 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  Rectangle,
-  pibbl,
-  definePrimitive,
-  resolveSignalValue,
-  signal,
-  type SignalValue,
-} from '../../index.js';
+import { Rectangle, definePrimitive, resolveSignalValue, signal, type SignalValue } from "../../index.js";
+import { pibblSync as pibbl } from "../../sync.js";
 import { clearSharedState, getPibblInstance } from '../global-state.js';
 import {
   getPrimitiveDefinition,

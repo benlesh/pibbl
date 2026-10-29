@@ -1,4 +1,5 @@
-import { Group, Overlay, Text, pibbl } from "@pibbl/core";
+import { Group, Overlay, Text, } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   Axis,
   AxisTitle,
@@ -49,7 +50,7 @@ canvas.width = 540;
 canvas.height = 350;
 canvas.style.cssText = "max-width:100%;height:auto";
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <>
     <Text

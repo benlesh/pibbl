@@ -2,7 +2,7 @@ import {
   Polygon,
   RegularPolygon,
   Star,
-  pibbl,
+
   type PolygonProps,
   type PolygonStyle,
   type RegularPolygonProps,
@@ -10,6 +10,7 @@ import {
   type StarProps,
   type StarStyle,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const triangleProps: PolygonProps = { pointerEvents: "auto" };
 const triangleStyle: PolygonStyle = {
@@ -44,7 +45,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 340;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <>
     <Polygon {...triangleProps} style={triangleStyle} />

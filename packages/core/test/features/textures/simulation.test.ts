@@ -3,8 +3,8 @@ import { InkSimulation } from "../../../src/features/textures/lib/simulation.js"
 import { materialField } from "../../../src/features/textures/lib/material-field.js";
 
 it("replays fixed step counts independently of batch boundaries and remains finite", () => {
-  const a = new InkSimulation(64, 40, 42, "stripes"),
-    b = new InkSimulation(64, 40, 42, "stripes");
+  const a = new InkSimulation({ width: 64, height: 40, seed: 42, preset: "stripes" }),
+    b = new InkSimulation({ width: 64, height: 40, seed: 42, preset: "stripes" });
   a.paint(20, 10, 6, 0.8);
   b.paint(20, 10, 6, 0.8);
   a.advance(480);
@@ -19,8 +19,8 @@ it("replays fixed step counts independently of batch boundaries and remains fini
   expect(a.a.length + a.b.length).toBe(0);
 });
 it("produces distinct spots and stripes without changing the seed", () => {
-  const spots = new InkSimulation(64, 40, 42, "spots"),
-    stripes = new InkSimulation(64, 40, 42, "stripes");
+  const spots = new InkSimulation({ width: 64, height: 40, seed: 42, preset: "spots" }),
+    stripes = new InkSimulation({ width: 64, height: 40, seed: 42, preset: "stripes" });
   spots.advance(1000);
   stripes.advance(1000);
   expect(spots.b).not.toEqual(stripes.b);
@@ -39,7 +39,7 @@ it("matches material edge values before colorization, including corners", () => 
 
 for (const radius of [3, 6, 12])
   it(`reshapes a radius-${radius} mature spot without collapsing it`, () => {
-    const ink = new InkSimulation(80, 80, 42, "spots");
+    const ink = new InkSimulation({ width: 80, height: 80, seed: 42, preset: "spots" });
     // Isolate a user-created colony from the constructor's seeded pattern.
     ink.a.fill(1);
     ink.b.fill(0);
@@ -66,7 +66,7 @@ it("keeps paper grain in a pale, narrow tonal range rather than broad dark bands
 });
 
 it("stirs existing ink locally without creating a new brush colony or changing memory", () => {
-  const ink = new InkSimulation(64, 40, 42, "spots");
+  const ink = new InkSimulation({ width: 64, height: 40, seed: 42, preset: "spots" });
   const before = ink.b.slice(),
     memory = ink.b.buffer;
   ink.stir(30, 20, 0, 0, 10);
@@ -84,7 +84,7 @@ it("stirs existing ink locally without creating a new brush colony or changing m
 });
 
 it("backtraces both fields correctly after buffer swaps and preserves uniform edge fields", () => {
-  const ink = new InkSimulation(16, 8, 42, "stripes");
+  const ink = new InkSimulation({ width: 16, height: 8, seed: 42, preset: "stripes" });
   try {
     ink.advance(1); // Exercise the alternate A/B field pair.
     for (let i = 0; i < ink.b.length; i++) {

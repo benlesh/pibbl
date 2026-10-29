@@ -1,5 +1,14 @@
 [
   {
+    "id": "prepare-layout-engine",
+    "title": "Prepare layout before mounting",
+    "description": "Warm the shared layout module before creating an asynchronous canvas mount.",
+    "source": "prepare-layout-engine.tsx",
+    "environment": "browser",
+    "symbols": [{ "name": "prepareLayoutEngine", "importPath": "@pibbl/core" }],
+    "notes": ["Uses the normal awaited mount after preparation."]
+  },
+  {
     "id": "signals",
     "title": "Read and update signals",
     "description": "Use writable, readonly, and computed values with synchronous batching.",

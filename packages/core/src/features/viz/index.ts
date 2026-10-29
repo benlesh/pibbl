@@ -24,6 +24,16 @@ export { AreaSeries } from "./lib/area-series.js";
 export type { AreaSeriesProps, AreaSeriesStyle } from "./lib/area-series.js";
 export { IntervalBandSeries } from "./lib/interval-band-series.js";
 export type { IntervalBandSeriesProps } from "./lib/interval-band-series.js";
+export {
+  HorizontalIntervalSeries,
+  VerticalIntervalSeries,
+} from "./lib/interval-series.js";
+export type {
+  IntervalSeriesStyle,
+  IntervalSeriesProps,
+  HorizontalIntervalSeriesProps,
+  VerticalIntervalSeriesProps,
+} from "./lib/interval-series.js";
 export type { SeriesCurve } from "./lib/curve-definition.js";
 export { stepBefore, stepAfter, stepMidpoint } from "./lib/step-curves.js";
 export { monotoneX } from "./lib/monotone-curve.js";
@@ -164,8 +174,23 @@ export type {
   SessionVwapOptions,
   SessionVwapPoint,
 } from "./lib/financial-aggregation.js";
-export { RangeNavigator, EditableReferenceLine, EditableReferenceBand, EditableTrendLine } from "./lib/editable-chart-elements.js";
-export type { ChartAnchor, RangeNavigatorProps, RangeNavigatorStyle, EditableReferenceLineProps, EditableReferenceLineStyle, EditableReferenceBandProps, EditableReferenceBandStyle, EditableTrendLineProps, EditableTrendLineStyle } from "./lib/editable-chart-elements.js";
+export {
+  RangeNavigator,
+  EditableReferenceLine,
+  EditableReferenceBand,
+  EditableTrendLine,
+} from "./lib/editable-chart-elements.js";
+export type {
+  ChartAnchor,
+  RangeNavigatorProps,
+  RangeNavigatorStyle,
+  EditableReferenceLineProps,
+  EditableReferenceLineStyle,
+  EditableReferenceBandProps,
+  EditableReferenceBandStyle,
+  EditableTrendLineProps,
+  EditableTrendLineStyle,
+} from "./lib/editable-chart-elements.js";
 export {
   simpleMovingAverage,
   exponentialMovingAverage,
@@ -283,3 +308,138 @@ export type {
   BaselineSeriesStyle,
   BaselineSideStyle,
 } from "./lib/baseline-series.js";
+export { IntervalDiamondSeries } from "./lib/interval-diamond-series.js";
+export type {
+  IntervalDiamondSeriesProps,
+  IntervalDiamondSeriesStyle,
+} from "./lib/interval-diamond-series.js";
+export { CensoredPointSeries } from "./lib/censored-point-series.js";
+export type {
+  CensoringStatus,
+  CensoringAccessor,
+  CensoredPointSeriesProps,
+  CensoredPointSeriesStyle,
+} from "./lib/censored-point-series.js";
+export { WeightedPointSeries } from "./lib/weighted-point-series.js";
+export type {
+  WeightedPointSeriesProps,
+  WeightedPointSeriesStyle,
+  WeightAccessor,
+} from "./lib/weighted-point-series.js";
+export { TrajectorySeries } from "./lib/trajectory-series.js";
+export type {
+  TrajectorySeriesProps,
+  TrajectorySeriesStyle,
+  TrajectoryGroupAccessor,
+} from "./lib/trajectory-series.js";
+export { PairedSeries } from "./lib/paired-series.js";
+export type {
+  PairedSeriesProps,
+  PairedSeriesStyle,
+} from "./lib/paired-series.js";
+
+// Graph visualization: public geometry, marks, layouts, and reference compositions.
+export type {
+  VizKey,
+  Accessor,
+  Bounds,
+  Point,
+  Style,
+  MarkStyle,
+  NodeStyle,
+  EdgeStyle,
+  LabelStyle,
+  FrameStyle,
+  LabelGeometry,
+  GraphData,
+  GraphAccessors,
+  GraphNodeGeometry,
+  GraphRoute,
+  GraphEdgeGeometry,
+  GraphLayout,
+  GraphPresentation,
+  MarkInteraction,
+  GraphNodeProps,
+  GraphEdgeProps,
+  GraphLabelProps,
+  GraphViewProps,
+  DependencyStyle,
+  DependencyOptions,
+  DependencyGraphProps,
+  ForceSettings,
+  ForceOptions,
+  ForceLayout,
+  ForceNetworkController,
+  ForceStyle,
+  ForceNetworkProps,
+  ForceHookOptions,
+  HierarchyAccessors,
+  TreeEdge,
+  TreeNodeGeometry,
+  TreeLayout,
+  TreeStyle,
+  TreeOptions,
+  TidyTreeProps,
+  MatrixData,
+  MatrixAccessors,
+  MatrixCellGeometry,
+  MatrixLayout,
+  MatrixStyle,
+  MatrixOptions,
+  AdjacencyMatrixProps,
+  MatrixCellProps,
+  SankeyNodeGeometry,
+  SankeyFlowGeometry,
+  SankeyLayout,
+  SankeyAccessors,
+  SankeyStyle,
+  SankeyOptions,
+  SankeyProps,
+  BipartiteData,
+  BipartiteAccessors,
+  BipartiteEdgeGeometry,
+  BipartiteLayout,
+  BipartiteStyle,
+  BipartiteOptions,
+  BipartiteGraphProps,
+  PartitionAccessors,
+  PartitionCellGeometry,
+  PartitionLayout,
+  PartitionPresentation,
+  TreemapStyle,
+  TreemapOptions,
+  TreemapProps,
+  PartitionCellProps,
+  NeighborhoodStyle,
+  NeighborhoodOptions,
+  NeighborhoodNodeGeometry,
+  NeighborhoodLayout,
+  RadialNeighborhoodProps,
+  IcicleStyle,
+  IcicleOptions,
+  IcicleProps,
+  ChordData,
+  ChordAccessors,
+  ChordArc,
+  ChordBandGeometry,
+  ChordRibbonGeometry,
+  ChordLayout,
+  ChordStyle,
+  ChordOptions,
+  ChordDiagramProps,
+  ForceSimulation,
+  ForceSimulationFactory,
+  Size,
+} from './lib/graph/types.js';
+export { GraphNode, GraphEdge, GraphLabel, GraphView, defaultGraphNodeStyle, defaultGraphEdgeStyle, defaultGraphLabelStyle } from './lib/graph/shared.js';
+export { straightGraphRoute, orthogonalGraphRoute, curvedGraphRoute } from './lib/graph/routes.js';
+export { layoutDependencies, DependencyGraph } from './lib/graph/dependency.js';
+export { layoutMatrix, AdjacencyMatrix, MatrixCell, defaultMatrixCellStyle } from './lib/graph/matrix.js';
+export { layoutSankey, Sankey, SankeyNode, SankeyFlow, defaultSankeyNodeStyle, defaultSankeyFlowStyle } from './lib/graph/sankey.js';
+export { layoutBipartite, BipartiteGraph } from './lib/graph/bipartite.js';
+export { layoutChords, ChordDiagram, ChordBand, ChordRibbon, defaultChordBandStyle, defaultChordRibbonStyle } from './lib/graph/chord.js';
+export { layoutTree, TidyTree } from './lib/graph/tree.js';
+export { layoutTreemap, Treemap, TreemapCell, defaultPartitionCellStyle } from './lib/graph/treemap.js';
+export { layoutIcicle, Icicle, IcicleCell } from './lib/graph/icicle.js';
+export { layoutNeighborhood, RadialNeighborhood } from './lib/graph/neighborhood.js';
+export { createForceSimulation, layoutForceNetwork, useForceNetwork, ForceNetwork } from './lib/graph/force.js';

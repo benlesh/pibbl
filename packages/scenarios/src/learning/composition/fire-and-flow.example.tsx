@@ -11,24 +11,22 @@ import {
   Ellipse,
   Polygon,
   Text,
-  pibbl,
+  ManipulationFrame,
+  DragHandle,
+  ResizeHandles,
+  RotationHandle,
   definePrimitive,
   useConst,
   useComputed,
   usePlayback,
   useSignal,
   useManipulation,
-  ManipulationFrame,
-  DragHandle,
-  ResizeHandles,
-  RotationHandle,
   type WritableSignal,
   type PibblManipulationBox,
   repeat,
   sequence,
   wait,
   marker,
-  type PibblController,
 } from "@pibbl/core";
 import {
   Particles2D,
@@ -92,8 +90,7 @@ function createFlameSurface() {
   return {
     canvas,
     update(time: number, intensity: number) {
-      if (time === lastTime && intensity === lastIntensity)
-        return;
+      if (time === lastTime && intensity === lastIntensity) return;
       lastTime = time;
       lastIntensity = intensity;
       for (let y = 0; y < canvas.height; y++) {
@@ -103,8 +100,7 @@ function createFlameSurface() {
           // Height increases upward; subtract time so the noise rises with it.
           const lift = height * 5 - time * 2.4;
           const curl = noise(u * 2.4 + 8, lift * 0.65) - 0.5;
-          const bent =
-            u - curl * height * 0.75;
+          const bent = u - curl * height * 0.75;
           const grain =
             noise(bent * 5 + 20, lift) * 0.62 +
             noise(bent * 11 + 40, lift * 1.8) * 0.26 +
@@ -287,9 +283,7 @@ function FireAndFlow() {
     resolution: [96, 64],
     obstacles,
   });
-  const force = useComputed(
-    () => [0, -180 * intensity.get()] as const,
-  );
+  const force = useComputed(() => [0, -180 * intensity.get()] as const);
   const heat = useComputed(() => 4 * intensity.get());
   useFlowSource2D(flow, {
     position: origin,
@@ -377,9 +371,9 @@ function FireAndFlow() {
       tick.value++;
       if (tick.value % 4 === 0) fire.emit("embers", { position });
       smoke.emit(`smoke${tick.value % 3}`, {
-          position,
-          count: Math.ceil(3 * intensity.get()),
-        });
+        position,
+        count: Math.ceil(3 * intensity.get()),
+      });
     },
   });
   const [x, y] = origin.get();
@@ -551,12 +545,10 @@ function FireAndFlow() {
     </Group>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function FireAndFlowExample() {
+  return (
     <PhysicsWorld2D space="local" gravity={[0, 0]}>
       <FireAndFlow />
-    </PhysicsWorld2D>,
-    { pixelRatio: 1 },
+    </PhysicsWorld2D>
   );
 }

@@ -3,10 +3,8 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
   useRef,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
 } from "@pibbl/core";
 import {
@@ -97,7 +95,9 @@ function DraggableBall() {
   const dragSession = useRef<BallDragSession | null>(null);
   const dragging = useSignal(false);
 
-  const dragTo = (event: PibblPointerEvent): readonly [number, number] | null => {
+  const dragTo = (
+    event: PibblPointerEvent,
+  ): readonly [number, number] | null => {
     const session = dragSession.current;
     if (session?.pointerId !== event.pointerId) return null;
     const position = clampBallPosition(
@@ -277,7 +277,7 @@ function GroundSensor() {
   );
 }
 
-function PhysicsLesson() {
+export function PhysicsLesson() {
   return (
     <>
       <Rectangle style={{ width: 720, height: 420, fill: "#eff6ff" }} />
@@ -286,7 +286,13 @@ function PhysicsLesson() {
           physics={staticBody2D({
             collider: { tag: "ground", friction: 0.55 },
           })}
-          style={{ left: 54, top: 316, width: 612, height: 34, fill: "#334155" }}
+          style={{
+            left: 54,
+            top: 316,
+            width: 612,
+            height: 34,
+            fill: "#334155",
+          }}
         />
         <Rectangle
           physics={staticBody2D({
@@ -300,7 +306,13 @@ function PhysicsLesson() {
             collider: { tag: "right-wall", friction: 0.4 },
           })}
           pointerEvents="none"
-          style={{ left: 646, top: 96, width: 20, height: 220, fill: "#475569" }}
+          style={{
+            left: 646,
+            top: 96,
+            width: 20,
+            height: 220,
+            fill: "#475569",
+          }}
         />
         <StaticBumper
           x={250}
@@ -364,8 +376,4 @@ function PhysicsLesson() {
       </Text>
     </>
   );
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <PhysicsLesson />, { pixelRatio: 1 });
 }

@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
 import * as Pibbl from "@pibbl/core";
@@ -80,7 +81,7 @@ it("does not arm or preview when native pointer capture fails", async () => {
       </Pibbl.ManipulationFrame>
     );
   }
-  mounts.push(Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 }));
+  mounts.push(__pibblSyncTest(canvas, <Scene />, { pixelRatio: 1 }));
   await settle();
 
   await commands.manipulationPointer([
@@ -130,7 +131,7 @@ it("lets a nested control decline a drag and lets the deepest resize handle clai
     );
   }
   mounts.push(
-    Pibbl.pibbl(
+    __pibblSyncTest(
       canvas,
       [<Declined key="declined" />, <DeepestResize key="resize" />],
       { pixelRatio: 1 },
@@ -169,7 +170,7 @@ it("rejects duplicate and cross-root frame attachment before either mount can re
         <Pibbl.ManipulationFrame key="second" {...control.frameProps} />,
       ];
     }
-    mounts.push(Pibbl.pibbl(createCanvas(), <Duplicate />, { pixelRatio: 1 }));
+    mounts.push(__pibblSyncTest(createCanvas(), <Duplicate />, { pixelRatio: 1 }));
     expect(() => driver.flush(0)).toThrow(
       "A manipulation controller can attach to only one frame.",
     );
@@ -182,10 +183,10 @@ it("rejects duplicate and cross-root frame attachment before either mount can re
       });
       return <Pibbl.ManipulationFrame {...shared.frameProps} />;
     }
-    mounts.push(Pibbl.pibbl(createCanvas(), <Owner />, { pixelRatio: 1 }));
+    mounts.push(__pibblSyncTest(createCanvas(), <Owner />, { pixelRatio: 1 }));
     driver.flush(1);
     mounts.push(
-      Pibbl.pibbl(
+      __pibblSyncTest(
         createCanvas(),
         <Pibbl.ManipulationFrame {...shared.frameProps} />,
         { pixelRatio: 1 },
@@ -239,7 +240,7 @@ it("rejects a manipulation press while an active animation owns its box signal",
       </Pibbl.ManipulationFrame>
     );
   }
-  mounts.push(Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 }));
+  mounts.push(__pibblSyncTest(canvas, <Scene />, { pixelRatio: 1 }));
   await settle();
   const beforePress = box.get();
   expect(playback.status.get()).toBe("running");
@@ -286,7 +287,7 @@ async function mountActiveDrag() {
       </Pibbl.ManipulationFrame>
     );
   }
-  mounts.push(Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 }));
+  mounts.push(__pibblSyncTest(canvas, <Scene />, { pixelRatio: 1 }));
   await settle();
   await commands.manipulationPointer([
     { type: "move", x: 60, y: 70 },

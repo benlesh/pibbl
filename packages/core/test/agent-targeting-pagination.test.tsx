@@ -1,4 +1,5 @@
-import { Layer, Rectangle, pibbl, signal } from '@pibbl/core';
+import { Layer, Rectangle, signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { expect, it } from 'vitest';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
 import { ManualSchedulerDriver, installSchedulerDriverForTest, snapshotRealmScheduler } from '../src/lib/scheduler/testing';

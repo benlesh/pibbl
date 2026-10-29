@@ -14,7 +14,7 @@ export function alphaInputHash(tree) {
 }
 
 export function needsAlphaPublish(packages, hash) {
-  return packages.length !== 4 || packages.some(pkg => !pkg?.version || pkg.pibblAlphaInputHash !== hash) || new Set(packages.map(pkg => pkg.version)).size !== 1;
+  return packages.length !== 5 || packages.some(pkg => !pkg?.version || pkg.pibblAlphaInputHash !== hash) || new Set(packages.map(pkg => pkg.version)).size !== 1;
 }
 
 function readAlpha(name) {
@@ -32,9 +32,9 @@ function readAlpha(name) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const hash = alphaInputHash(execFileSync('git', ['ls-tree', '-r', '-z', 'HEAD'], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }));
-  const packages = ['@pibbl/core', '@pibbl/three', '@pibbl/text', 'pibbl'].map(readAlpha);
+  const packages = ['@pibbl/core', '@pibbl/three', '@pibbl/text', '@pibbl/layout', 'pibbl'].map(readAlpha);
   const changed = needsAlphaPublish(packages, hash);
   if (!process.env.GITHUB_OUTPUT) throw new Error('This check requires GITHUB_OUTPUT');
   appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\nhash=${hash}\n`);
-  process.stdout.write((changed ? 'Package inputs changed or the previous alpha release is incomplete.' : 'All four alpha packages already contain these inputs; skipping publication.') + '\n');
+  process.stdout.write((changed ? 'Package inputs changed or the previous alpha release is incomplete.' : 'All five alpha packages already contain these inputs; skipping publication.') + '\n');
 }

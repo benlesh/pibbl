@@ -1,7 +1,12 @@
+import { stageLayoutGeometry } from './layout/geometry-publication.js';
+import { wireStructuralEvents, type PibblStructuralEventProps } from './components/structural-events.js';
+import { layoutParticipation, contentsChildren, isContentsTransform, registerLayoutComponentMount, resumeLayoutComponent, retainHiddenLayoutDescendants } from './layout/participation.js';
+import { isLayoutComponent, placedLayoutComponentRoot } from './layout/define-layout-component.js';
 import {
   clearComponentState,
   getAnonElemName,
   GLOBAL_STATE,
+  NO_PENDING_ROOT,
 } from './global-state.js';
 import { Teardowns } from './teardowns.js';
 import { PibblComponentRefs } from './types.js';
@@ -21,6 +26,7 @@ import {
   reconcileElementEnhancers,
 } from './element-enhancers.js';
 import {
+  getElementMetadata,
   getPlacementIdentityHint,
   getPrimitiveDefinition,
   getPrimitiveReceiverToken,
@@ -175,12 +181,20 @@ function renderComponentElement<P>(
             GLOBAL_STATE.renderTransaction,
             receiverToken,
           );
+          const preparedStyle = takePreNormalizedStyle(componentRefs.element);
+          const participation = layoutParticipation(componentRefs.element, preparedStyle ?? null);
+          if (participation === 'hidden') {
+            retainHiddenLayoutDescendants(componentRefs);
+            commitSignalReads();
+            return;
+          }
           const renderProgram = (invoke: () => PibblNodeInput | void) => {
             try {
               const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
               GLOBAL_STATE.primitiveReceiverToken = receiverToken;
               let result: PibblNodeInput | void;
               try {
+                stageLayoutGeometry(componentRefs);
                 result = invoke();
               } finally {
                 GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
@@ -202,6 +216,13 @@ function renderComponentElement<P>(
               finishAfterRender();
             }
           };
+          const assignedContents = getElementMetadata(componentRefs.element)?.layoutContentsChildren;
+          if (participation === 'contents' && !isContentsTransform(componentRefs.element.type)) {
+            const children = assignedContents ?? contentsChildren(componentRefs.element);
+            wireStructuralEvents(componentRefs.element.props as PibblStructuralEventProps);
+            renderProgram(() => children);
+            return;
+          }
           if (definition) {
             if (definition.backend !== driver.token) {
               throw backendMismatchError(
@@ -211,7 +232,6 @@ function renderComponentElement<P>(
                 getElementSource(componentRefs.element),
               );
             }
-            const preparedStyle = takePreNormalizedStyle(componentRefs.element);
             const inputs = resolvePrimitiveInputs(
               componentRefs.element,
               definition,
@@ -233,7 +253,7 @@ function renderComponentElement<P>(
             })();
             const componentName = componentRefs.element.type.name || 'Anonymous';
             const source = getElementSource(componentRefs.element);
-            const props = inputs.props;
+            const props = assignedContents ? { ...inputs.props, children: assignedContents } : inputs.props;
             const tracksPresentationLineage = hasElementEnhancers(componentRefs);
             const tracksCanvasWorldTransform =
               GLOBAL_STATE.worldBaseTransform !== undefined &&
@@ -288,7 +308,6 @@ function renderComponentElement<P>(
           } else {
             // Layout owns the outer translation. A private marker survives one
             // intentional `{ ...style }` forward without changing other children.
-            const preparedStyle = takePreNormalizedStyle(componentRefs.element);
             const signalHandoff = getPlacementSignalHandoff(componentRefs.element);
             const consumedStyle = preparedStyle?.style ?? signalHandoff;
             const receivesPlacementHandoff =
@@ -302,7 +321,9 @@ function renderComponentElement<P>(
                 enterPlacementHandoffCapture(props, consumedStyle) :
                 undefined;
               try {
-                return componentRefs.element.type(props);
+                return isLayoutComponent(componentRefs.element.type) ?
+                  placedLayoutComponentRoot(componentRefs.element, preparedStyle) :
+                  componentRefs.element.type(props);
               } finally {
                 releaseHandoff?.();
               }
@@ -326,12 +347,15 @@ function renderComponentElement<P>(
   }
 }
 
+let signalInputRender: Parameters<typeof requestInstanceRender>[1];
+
 function componentSignalReadOptions(
   componentRefs: PibblComponentRefs<any>,
 ) {
   const pibblInstance = GLOBAL_STATE.currentPibblInstance!;
   return {
     debugName: `${componentRefs.element.type.name || 'Anonymous'} (${componentRefs.id})`,
+    layoutOwner: pibblInstance,
     invalidate: () => {
       if (
         GLOBAL_STATE.pibblInstances.get(pibblInstance.canvas) !== pibblInstance ||
@@ -341,7 +365,7 @@ function componentSignalReadOptions(
       ) {
         return;
       }
-      requestInstanceRender(pibblInstance);
+      requestInstanceRender(pibblInstance, signalInputRender ??= { pendingRoot: NO_PENDING_ROOT, pendingUpdateParents: false, signalInput: true });
     },
     onMaterialize: () => {
       if (componentRefs.signalConsumerTeardownAttached) return;
@@ -402,9 +426,11 @@ function prepareComponentScope<P>(
       onAfterRender: undefined,
     };
     pibblInstance.refs.set(id, mountedRefs);
+    registerLayoutComponentMount(mountedRefs);
     componentRefs = mountedRefs;
   }
 
+  resumeLayoutComponent(componentRefs);
   componentRefs.parent = parent;
   componentRefs.element = element;
   componentRefs.renderGeneration = pibblInstance.renderGeneration;
@@ -414,8 +440,8 @@ function prepareComponentScope<P>(
     const previous = componentRefs.layoutEntry;
     const allocation = captureLayoutBox(previous?.allocation, layout.allocation);
     const percentageBasis = captureLayoutBox(previous?.percentageBasis, layout.percentageBasis);
-    if (allocation !== previous?.allocation || percentageBasis !== previous?.percentageBasis) {
-      componentRefs.layoutEntry = Object.freeze({ allocation, percentageBasis });
+    if (allocation !== previous?.allocation || percentageBasis !== previous?.percentageBasis || layout.layoutDirection !== previous?.layoutDirection) {
+      componentRefs.layoutEntry = Object.freeze({ allocation, percentageBasis, layoutDirection: layout.layoutDirection });
     }
   }
   return componentRefs;

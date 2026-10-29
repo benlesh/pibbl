@@ -4,7 +4,8 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { pibbl } from '@pibbl/core';
+import {  } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import {
   formatContractTrace,
   formatOrderingPolicy,
@@ -47,7 +48,7 @@ async function mountMouseContractScenario(
     if (!contractCase) {
       throw new Error(`Unknown mouse contract case "${state.caseId}".`);
     }
-    pibbl(context.canvas, createMouseContractScene(contractCase, (target) => {
+    pibblSync(context.canvas, createMouseContractScene(contractCase, (target) => {
       state = {
         ...state,
         interactionCount: state.interactionCount + 1,

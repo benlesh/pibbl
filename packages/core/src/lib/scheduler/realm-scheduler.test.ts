@@ -8,7 +8,7 @@ import {
   drive,
   type PibblPlayback,
 } from "../../index";
-import { pibbl } from "../pibbl";
+import { pibblSync as pibbl } from "../../sync.js";
 import { Layer } from "../components/layer";
 import { Rectangle } from "../components/rect";
 import { createElement, isPibblElement } from "../element/create-element";
@@ -702,26 +702,22 @@ describe("realm scheduler", () => {
     });
   });
 
-  it("releases provisional dirty work when an already-aborted mount disposes", () => {
+  it("rejects an already-aborted synchronous mount before scheduling work", () => {
     const canvas = createCanvas();
     installSynchronousResizeChange(canvas);
     const abortController = new AbortController();
     abortController.abort();
 
-    const controller = pibbl(
-      canvas,
-      createElement(() => undefined, {}),
-      { signal: abortController.signal },
-    );
-
+    expect(() => pibbl(canvas, createElement(() => undefined, {}), {
+      signal: abortController.signal,
+    })).toThrow(expect.objectContaining({ name: "AbortError" }));
     expect(snapshotRealmScheduler()).toMatchObject({
       registeredRoots: 0,
       dirtyInstances: 0,
       dirtyRoots: 0,
       pendingHostFrames: 0,
     });
-    expect(driver.cancelCount).toBe(1);
-    controller.dispose();
+    expect(driver.cancelCount).toBe(0);
   });
 
   it("releases provisional dirty work when requesting the setup frame throws", () => {

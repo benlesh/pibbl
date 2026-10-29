@@ -1,4 +1,5 @@
-import { pibbl, type PibblController } from '@pibbl/core';
+import { type PibblController } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import {
   createThreeInstancingLabScene,
   THREE_INSTANCING_LAB_SOURCE_ID,
@@ -91,7 +92,7 @@ async function mountThreeInstancingLab(
   });
   const render = () => {
     assertActive();
-    runtime = pibbl(
+    runtime = pibblSync(
       context.canvas,
       createThreeInstancingLabScene({
         state,

@@ -1,4 +1,5 @@
-import { Group, Rectangle, Text, pibbl, useSignal } from "@pibbl/core";
+import { Group, Rectangle, Text,  useSignal } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   LinearScale,
   LineSeries,
@@ -127,7 +128,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 230;
 document.body.append(canvas);
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <LinearScale id="time" domain={[0, 10]} range={[30, 280]}>
     <LinearScale id="price" domain={[0, 20]} range={[150, 20]}>

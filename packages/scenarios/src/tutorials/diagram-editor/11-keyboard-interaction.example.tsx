@@ -1,13 +1,7 @@
-import { dropShadow } from '@pibbl/core/filters';
+import { dropShadow } from "@pibbl/core/filters";
 import {
   Absolute,
   Clip,
-  pibbl,
-  useEventTarget,
-  useLayoutBox,
-  useRectPath,
-  useRef,
-  useSignal,
   FocusManagement,
   Fragment,
   Group,
@@ -16,8 +10,12 @@ import {
   Path,
   Rectangle,
   Text,
+  useEventTarget,
+  useLayoutBox,
+  useRectPath,
+  useRef,
+  useSignal,
   type BoxStyle,
-  type PibblController,
   type PibblNode,
   type PibblPointerEvent,
   type PibblWheelEvent,
@@ -233,7 +231,6 @@ function NodePaint({
       style={{
         filter: selected
           ? dropShadow({
-              
               offsetX: 6,
               offsetY: 8,
               blurRadius: 10,
@@ -495,13 +492,23 @@ function Toolbar({
       />
       <Text
         pointerEvents="none"
-        style={{ left: 24, top: 34, fill: "#17211d", font: "900 22px sans-serif" }}
+        style={{
+          left: 24,
+          top: 34,
+          fill: "#17211d",
+          font: "900 22px sans-serif",
+        }}
       >
         WORKFLOW MAP
       </Text>
       <Text
         pointerEvents="none"
-        style={{ left: 250, top: 32, fill: "#667066", font: "600 13px sans-serif" }}
+        style={{
+          left: 250,
+          top: 32,
+          fill: "#667066",
+          font: "600 13px sans-serif",
+        }}
       >
         DRAG NODES · DRAG SPACE · WHEEL TO ZOOM
       </Text>
@@ -636,7 +643,12 @@ function StatusBar({
       />
       <Text
         pointerEvents="none"
-        style={{ left: 20, top: 21, fill: "#fffdf6", font: "700 12px monospace" }}
+        style={{
+          left: 20,
+          top: 21,
+          fill: "#fffdf6",
+          font: "700 12px monospace",
+        }}
       >
         {message}
       </Text>
@@ -661,7 +673,8 @@ function DiagramEditor(): PibblNode {
   const view = useSignal<ViewTransform>(INITIAL_VIEW);
   const moveNode = (id: NodeId, x: number, y: number): void => {
     nodes.update((current) =>
-      current.map((node) => (node.id === id ? { ...node, x, y } : node)));
+      current.map((node) => (node.id === id ? { ...node, x, y } : node)),
+    );
   };
   return (
     <Absolute style={{ width: 960, height: 600 }}>
@@ -684,7 +697,9 @@ function DiagramEditor(): PibblNode {
         onViewChange={(value) => view.set(value)}
         onWheel={(event) => {
           event.preventDefault();
-          view.update((current) => zoomAroundPoint(current, event, event.deltaY));
+          view.update((current) =>
+            zoomAroundPoint(current, event, event.deltaY),
+          );
         }}
       />
       <StatusBar
@@ -695,13 +710,12 @@ function DiagramEditor(): PibblNode {
     </Absolute>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function KeyboardInteractionExample() {
+  return (
     <FocusManagement>
       <KeyboardNavigation mode="directional">
         <DiagramEditor />
       </KeyboardNavigation>
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

@@ -1625,3 +1625,15 @@ code {
     animation-iteration-count: 1 !important;
   }
 }
+
+.lesson-canvas-jump {
+  margin-top: 1rem;
+  padding: 0.35rem 0;
+  border: 0;
+  border-bottom: 2px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

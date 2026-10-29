@@ -1,6 +1,6 @@
+import { pibblSync } from '@pibbl/core/sync';
 /** @jsxImportSource @pibbl/core */
 import {
-  pibbl,
   Group,
   Rectangle,
   Circle,
@@ -140,7 +140,7 @@ export function mountProductionScene(canvas: HTMLCanvasElement) {
       </PhysicsWorld2D>
     );
   }
-  const controller = pibbl(
+  const controller = pibblSync(
     canvas,
     <>
       <Materials />

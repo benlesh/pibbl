@@ -120,7 +120,7 @@ function Scene() {
   );
 }
 
-const controller = pibbl(document.querySelector("canvas"), <Scene />);
+const controller = await pibbl(document.querySelector("canvas"), <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });
 ```
 
@@ -137,7 +137,6 @@ import {
   Text,
   pibbl,
   useSignal,
-  type PibblController,
   type PibblNode,
 } from "@pibbl/core";
 
@@ -145,7 +144,7 @@ interface PosterProps {
   initialMessage: string;
 }
 
-function Poster({ initialMessage }: PosterProps): PibblNode {
+export function Poster({ initialMessage }: PosterProps): PibblNode {
   const message = useSignal(initialMessage);
 
   return (
@@ -171,17 +170,19 @@ function Poster({ initialMessage }: PosterProps): PibblNode {
     </Group>
   );
 }
-
-export function mountPoster(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Poster initialMessage="Hello" />);
-}
 ```
 
-```ts docs:complete-snippet=jsx-quick-start
-const controller = mountPoster(document.querySelector("canvas")!);
+```tsx docs:complete-snippet=jsx-quick-start
+const canvas = document.querySelector("canvas")!;
+const controller = await pibbl(canvas, <Poster initialMessage="Hello" />);
 controller.dispose();
 controller.dispose(); // Idempotent.
 ```
+
+Studio examples export a named component. Their catalog entry selects that export
+and supplies the Canvas settings; Studio owns mounting, rerunning, and disposal.
+Your application can call `pibbl(canvas, <Poster initialMessage="Hello" />)` directly.
+A reusable component needs no mounting wrapper or default export.
 
 ## One runtime per file
 

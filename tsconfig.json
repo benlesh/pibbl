@@ -6,7 +6,12 @@
     "module": "esnext",
     "moduleResolution": "Bundler",
     "paths": {
+      "@pibbl/layout": ["./packages/layout/src/index.ts"],
+      "@pibbl/core/sync": ["./packages/core/src/sync.ts"],
+      "@pibbl/scenarios": ["./packages/scenarios/src/index.ts"],
+      "@pibbl/scenarios/*": ["./packages/scenarios/src/*"],
       "@pibbl/core/filters": ["./packages/core/src/filters.ts"],
+      "@pibbl/core/internal/layout": ["./packages/core/src/layout-kernel.ts"],
       "@pibbl/core/internal": ["./packages/core/src/internal.ts"],
       "@pibbl/core/jsx-dev-runtime": ["./packages/core/src/jsx-dev-runtime.ts"],
       "@pibbl/core/jsx-runtime": ["./packages/core/src/jsx-runtime.ts"],

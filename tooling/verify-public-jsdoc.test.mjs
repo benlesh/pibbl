@@ -189,3 +189,13 @@ test('ignores private implementation returns and accepts documented destructured
   });
   assert.deepEqual(auditPublicJsdoc(root).issues, []);
 });
+
+test('does not parse exported WASM assets as public declarations', t => {
+  const root = fixture(t, {
+    'src/index.ts': '/** A static example {@link value}. */ export const value = 1;',
+    'src/layout.wasm': Buffer.from([0,97,115,109,1,0,0,0]),
+  }, { '.': './src/index.ts', './layout.wasm': './src/layout.wasm' });
+  const result = auditPublicJsdoc(root);
+  assert.equal(result.entries.length, 1);
+  assert.deepEqual(result.issues, []);
+});

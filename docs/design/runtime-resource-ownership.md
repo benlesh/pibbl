@@ -230,3 +230,15 @@ See [the frame recording contract](./frame-recording-contract.md). Deterministic
 resource counters and native Worker termination evidence accompany public-API
 capture, decoded-GIF, cancellation, and repeat-cycle tests. Returned frame copies,
 GIF Blobs, and application-created Blob URLs are application-owned.
+
+### Intrinsic Flex native queries
+
+The experimental finite-row measurement path captures only its root owner before
+measurement isolates rendering globals. A native main-only query uses a temporary
+raw arena in that same root WASM instance. It validates numeric inputs, solves,
+copies widths into JavaScript-owned numbers, and releases the arena before any
+leaf measurement callback. A standalone query owns and disposes its temporary
+instance. Nested scopes restore their previous owner/context in `finally`, and
+failure releases temporary storage before ordinary render-failure teardown.
+These queries create no retained layout nodes, prepared slots or cache entries.
+They do not publish geometry; the normal mounted plan still owns placement.

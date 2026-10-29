@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function RectangleStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function RectangleStudy() {
   const hovered = useSignal(false);
   return [
     <Rectangle
@@ -71,7 +71,4 @@ function RectangleStudy() {
       {hovered.get() ? "TARGET FOUND" : "RECTANGLE STUDY"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <RectangleStudy />);
 }

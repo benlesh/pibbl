@@ -1,4 +1,5 @@
 import type { WorkbenchSourceMetadata } from "@pibbl/scenarios";
+import { parse } from "@babel/parser";
 
 const learningModules = import.meta.glob(
   "../../packages/scenarios/src/learning/**/*.example.tsx",
@@ -13,10 +14,12 @@ const SOURCE_PREFIX = "../../";
 function sourceLoaders(
   modules: Readonly<Record<string, () => Promise<string>>>,
 ): ReadonlyMap<string, () => Promise<string>> {
-  return new Map(Object.entries(modules).map(([path, load]) => [
-    path.startsWith(SOURCE_PREFIX) ? path.slice(SOURCE_PREFIX.length) : path,
-    load,
-  ]));
+  return new Map(
+    Object.entries(modules).map(([path, load]) => [
+      path.startsWith(SOURCE_PREFIX) ? path.slice(SOURCE_PREFIX.length) : path,
+      load,
+    ]),
+  );
 }
 
 function sourcePaths(
@@ -45,11 +48,21 @@ export async function loadWorkbenchSource(
       `No workbench source adapter matches "${entry.source.path}".`,
     );
   const source = await load();
-  if (
-    !/^export default function mount\(\s*canvas:\s*HTMLCanvasElement(?:,\s*\w+:\s*\w+\s*=\s*\{\})?,?\s*\):\s*PibblController/mu.test(source)
-  ) {
+  const exportName = entry.source.exportName;
+  const hasEntry = parse(source, {
+    sourceType: "module",
+    plugins: ["typescript", "jsx"],
+  }).program.body.some(
+    (statement) =>
+      statement.type === "ExportNamedDeclaration" &&
+      statement.declaration?.type === "FunctionDeclaration" &&
+      statement.declaration.id?.name === exportName &&
+      !statement.declaration.async &&
+      !statement.declaration.generator,
+  );
+  if (!hasEntry) {
     throw new Error(
-      `Workbench source "${entry.source.path}" does not expose the canonical mount contract.`,
+      `Workbench source "${entry.source.path}" must export the named component "${exportName}".`,
     );
   }
   return source;

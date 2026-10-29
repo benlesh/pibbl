@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile, copyFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -11,7 +11,14 @@ const exports = {};
 const typesVersions = { '*': {} };
 for (const [subpath, entry] of Object.entries(core.exports)) {
   if (subpath === './package.json') { exports[subpath] = './package.json'; continue; }
-  const specifier = '@pibbl/core' + (subpath === '.' ? '' : subpath.slice(1));
+  if (typeof entry === 'string' && entry.endsWith('.wasm')) {
+    const target = `./dist/${subpath.slice(2)}`;
+    exports[subpath] = target;
+    await mkdir(dirname(resolve(directory, target)), { recursive: true });
+    await copyFile(resolve(root, 'packages/core', entry), resolve(directory, target));
+    continue;
+  }
+  const specifier = '@pibbl/core'  + (subpath === '.' ? '' : subpath.slice(1));
   const stem = subpath === '.' ? 'index' : subpath.slice(2);
   const source = resolve(directory, `src/${stem}.ts`);
   await mkdir(dirname(source), { recursive: true });

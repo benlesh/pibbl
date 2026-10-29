@@ -44,11 +44,10 @@ subscriptions detach on removal or disposal.
 ## Minimal runnable title
 
 ```tsx
-import { Group, pibbl } from "@pibbl/core";
+import { Group } from "@pibbl/core";
 import { Axis, AxisTitle, LinearScale } from "@pibbl/core/viz";
-export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(
-    canvas,
+export function AxisTitleExample() {
+  return (
     <Group style={{ translateX: 80, translateY: 30 }}>
       <LinearScale id="y" domain={[0, 100]} range={[150, 0]}>
         <Axis scale="y" position="left" />
@@ -60,7 +59,7 @@ export default function mount(canvas: HTMLCanvasElement) {
           offset={55}
         />
       </LinearScale>
-    </Group>,
+    </Group>
   );
 }
 ```
@@ -77,10 +76,9 @@ wrapper is needed. Parent layouts or Groups own placement and reserve space for
 both the text and plot. For example:
 
 ```tsx
-import { Group, Text, pibbl } from "@pibbl/core";
-export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(
-    canvas,
+import { Group as CaptionGroup, Text } from "@pibbl/core";
+export function AxisTitleExample2() {
+  return (
     <>
       <Text
         style={{
@@ -93,7 +91,7 @@ export default function mount(canvas: HTMLCanvasElement) {
       >
         Population change
       </Text>
-      <Group style={{ translateX: 20, translateY: 80 }}>
+      <CaptionGroup style={{ translateX: 20, translateY: 80 }}>
         <Text
           style={{
             width: 280,
@@ -107,8 +105,8 @@ export default function mount(canvas: HTMLCanvasElement) {
         >
           Source: US Census Bureau, Vintage 2023. July 2022–July 2023; people.
         </Text>
-      </Group>
-    </>,
+      </CaptionGroup>
+    </>
   );
 }
 ```

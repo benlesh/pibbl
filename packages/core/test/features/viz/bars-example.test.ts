@@ -1,15 +1,27 @@
 import { afterEach, expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-band-bars.example.js";
+import { Scene as mountComponent } from "../../../../scenarios/src/learning/composition/viz-band-bars.example.js";
 import { testRuntime } from "./support/runtime.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
+
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
 it("runs the editable bars lesson through its public mount", () => {
   runtime = testRuntime();
   const positions: [string, number][] = [];
   const original = CanvasRenderingContext2D.prototype.fillText;
-  const text = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText")
-    .mockImplementation(function (this: CanvasRenderingContext2D, ...args: Parameters<CanvasRenderingContext2D["fillText"]>) {
-      const point = new DOMPoint(args[1], args[2]).matrixTransform(this.getTransform());
+  const text = vi
+    .spyOn(CanvasRenderingContext2D.prototype, "fillText")
+    .mockImplementation(function (
+      this: CanvasRenderingContext2D,
+      ...args: Parameters<CanvasRenderingContext2D["fillText"]>
+    ) {
+      const point = new DOMPoint(args[1], args[2]).matrixTransform(
+        this.getTransform(),
+      );
       positions.push([args[0], point.x]);
       original.apply(this, args);
     });

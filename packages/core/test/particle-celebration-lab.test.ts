@@ -9,12 +9,12 @@ import {
   scenarioCatalog,
   type ParticleCelebrationLabState,
   type ScenarioController,
-} from '@pibbl/scenarios';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { loadWorkbenchSource } from '../../../playground/src/learning-sources';
-import { loadScenarioSource } from '../../../playground/src/scenario-sources';
-import { mountScenarioSurface } from '@pibbl/scenarios/surface';
-import { clickLogicalPoint } from './support/user-input';
+} from "@pibbl/scenarios";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { loadWorkbenchSource } from "../../../playground/src/learning-sources";
+import { loadScenarioSource } from "../../../playground/src/scenario-sources";
+import { mountScenarioSurface } from "@pibbl/scenarios/surface";
+import { clickLogicalPoint } from "./support/user-input";
 
 const activeControllers = new Set<
   ScenarioController<ParticleCelebrationLabState>
@@ -44,9 +44,9 @@ function pixels(
   canvas: HTMLCanvasElement,
   region: Readonly<{ x: number; y: number; width: number; height: number }>,
 ): Uint8ClampedArray {
-  const context = canvas.getContext('2d');
+  const context = canvas.getContext("2d");
   if (!context)
-    throw new Error('The particle celebration Canvas has no 2D context.');
+    throw new Error("The particle celebration Canvas has no 2D context.");
   return context.getImageData(region.x, region.y, region.width, region.height)
     .data;
 }
@@ -88,21 +88,23 @@ function nonBackgroundPixelCount(
 
 function dispatchPointer(
   canvas: HTMLCanvasElement,
-  type: 'pointerdown' | 'pointermove' | 'pointerup',
+  type: "pointerdown" | "pointermove" | "pointerup",
   x: number,
   y: number,
   pointerId = 17,
 ): void {
   const bounds = canvas.getBoundingClientRect();
-  canvas.dispatchEvent(new PointerEvent(type, {
-    bubbles: true,
-    cancelable: true,
-    clientX: bounds.left + x,
-    clientY: bounds.top + y,
-    pointerId,
-    pointerType: 'mouse',
-    buttons: type === 'pointerup' ? 0 : 1,
-  }));
+  canvas.dispatchEvent(
+    new PointerEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      clientX: bounds.left + x,
+      clientY: bounds.top + y,
+      pointerId,
+      pointerType: "mouse",
+      buttons: type === "pointerup" ? 0 : 1,
+    }),
+  );
 }
 
 function occupiedParticleCells(
@@ -138,10 +140,10 @@ function overlapRatio(
 }
 
 async function mountCelebrationLab() {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = particleCelebrationLabScenarioEntry.canvas.width;
   canvas.height = particleCelebrationLabScenarioEntry.canvas.height;
-  canvas.style.cssText = 'display:block;width:640px;height:360px';
+  canvas.style.cssText = "display:block;width:640px;height:360px";
   document.body.replaceChildren(canvas);
   const definition = await loadScenario(particleCelebrationLabScenarioEntry);
   const controller = await definition.mount({ canvas });
@@ -150,65 +152,65 @@ async function mountCelebrationLab() {
   return { canvas, controller, definition };
 }
 
-describe('first-class Canvas particle public scenarios', () => {
-  it('registers one runnable laboratory and one focused learning example', async () => {
-    const learning = getLearningExampleBySlug('particle-effects');
+describe("first-class Canvas particle public scenarios", () => {
+  it("registers one runnable laboratory and one focused learning example", async () => {
+    const learning = getLearningExampleBySlug("particle-effects");
     expect(learning).toMatchObject({
-      slug: 'particle-effects',
-      section: 'composition',
+      slug: "particle-effects",
+      section: "composition",
       api: [
-        'defineParticleEffect2D',
-        'particleRange',
-        'particleChoice',
-        'particleCurve',
-        'useParticleSystem',
-        'Particles2D',
-        'useSignal',
-        'usePlayback',
-        'repeat',
-        'sequence',
-        'wait',
-        'marker',
+        "defineParticleEffect2D",
+        "particleRange",
+        "particleChoice",
+        "particleCurve",
+        "useParticleSystem",
+        "Particles2D",
+        "useSignal",
+        "usePlayback",
+        "repeat",
+        "sequence",
+        "wait",
+        "marker",
       ],
       source: {
-        path: 'packages/scenarios/src/learning/composition/particle-effects.example.tsx',
+        path: "packages/scenarios/src/learning/composition/particle-effects.example.tsx",
       },
     });
     expect(learning && getLearningExampleRoute(learning)).toBe(
-      '#/examples/composition/particle-effects',
+      "#/examples/composition/particle-effects",
     );
 
     expect(scenarioCatalog).toContain(particleCelebrationLabScenarioEntry);
     expect(getScenarioRoute(particleCelebrationLabScenarioEntry)).toBe(
-      '#/testing/particle-celebration',
+      "#/testing/particle-celebration",
     );
     expect(particleCelebrationLabScenarioEntry).toMatchObject({
       metadata: {
-        id: 'first-class-particle-celebration',
-        slug: 'particle-celebration',
+        id: "first-class-particle-celebration",
+        slug: "particle-celebration",
       },
       canvas: { width: 640, height: 360 },
       source: {
-        id: 'first-class-particle-celebration-laboratory-example',
+        id: "first-class-particle-celebration-laboratory-example",
         marker:
           "PARTICLE_CELEBRATION_LAB_SOURCE_ID = 'first-class-particle-celebration-laboratory-example'",
-        path: 'packages/scenarios/src/particle-celebration-lab.example.tsx',
+        path: "packages/scenarios/src/particle-celebration-lab.example.tsx",
       },
     });
     expect(PARTICLE_CELEBRATION_LAB_ACTION_IDS).toEqual([
-      'launch',
-      'pause',
-      'resume',
-      'replay',
-      'clear',
-      'toggle-glow',
+      "launch",
+      "pause",
+      "resume",
+      "replay",
+      "clear",
+      "toggle-glow",
     ]);
     expect(
       particleCelebrationLabScenarioEntry.actions.map((action) => action.id),
     ).toEqual(PARTICLE_CELEBRATION_LAB_ACTION_IDS);
 
     if (!learning)
-      throw new Error('Missing particle-effects learning example.');
+      throw new Error("Missing particle-effects learning example.");
     const [learningSource, labSource] = await Promise.all([
       loadWorkbenchSource(learning),
       loadScenarioSource(particleCelebrationLabScenarioEntry),
@@ -223,33 +225,34 @@ describe('first-class Canvas particle public scenarios', () => {
 
     const definition = await loadScenario(particleCelebrationLabScenarioEntry);
     expect(definition).toMatchObject({
-      id: 'first-class-particle-celebration',
-      sourceId: 'first-class-particle-celebration-laboratory-example',
+      id: "first-class-particle-celebration",
+      sourceId: "first-class-particle-celebration-laboratory-example",
       actionIds: PARTICLE_CELEBRATION_LAB_ACTION_IDS,
     });
   });
 
-  it('shows selected launch points, launches there, and exposes human-readable state', async () => {
+  it("shows selected launch points, launches there, and exposes human-readable state", async () => {
     // Keep native frame delivery and input, but give each observed frame one
     // fixed duration so loaded CI cannot advance seeded replays by unequal time.
     const requestFrame = globalThis.requestAnimationFrame.bind(globalThis);
     let previousHostTime = -1;
     let logicalTime = 0;
-    vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation(callback =>
-      requestFrame(hostTime => {
-        if (hostTime !== previousHostTime) {
-          previousHostTime = hostTime;
-          logicalTime += 1000 / 60;
-        }
-        callback(logicalTime);
-      }),
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(
+      (callback) =>
+        requestFrame((hostTime) => {
+          if (hostTime !== previousHostTime) {
+            previousHostTime = hostTime;
+            logicalTime += 1000 / 60;
+          }
+          callback(logicalTime);
+        }),
     );
     const { canvas, controller } = await mountCelebrationLab();
     expect(controller.getState()).toEqual({
-      animation: 'ready',
+      animation: "ready",
       selectedPoints: 0,
       celebrations: 0,
-      lastAction: 'Choose up to two launch points.',
+      lastAction: "Choose up to two launch points.",
       glow: true,
     });
 
@@ -264,10 +267,10 @@ describe('first-class Canvas particle public scenarios', () => {
     await controller.settled();
 
     expect(controller.getState()).toEqual({
-      animation: 'ready',
+      animation: "ready",
       selectedPoints: 2,
       celebrations: 0,
-      lastAction: '2 launch points ready.',
+      lastAction: "2 launch points ready.",
       glow: true,
     });
     expect(
@@ -277,13 +280,13 @@ describe('first-class Canvas particle public scenarios', () => {
       changedPixelCount(beforeRight, pixels(canvas, rightRegion)),
     ).toBeGreaterThan(10);
 
-    await controller.perform('launch');
+    await controller.perform("launch");
     await controller.settled();
     expect(controller.getState()).toEqual({
-      animation: 'playing',
+      animation: "playing",
       selectedPoints: 0,
       celebrations: 2,
-      lastAction: 'Celebration launched from 2 points.',
+      lastAction: "Celebration launched from 2 points.",
       glow: true,
     });
     expect(
@@ -293,27 +296,27 @@ describe('first-class Canvas particle public scenarios', () => {
       changedPixelCount(beforeRight, pixels(canvas, rightRegion)),
     ).toBeGreaterThan(20);
 
-    await controller.perform('pause');
+    await controller.perform("pause");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
-      animation: 'paused',
-      lastAction: 'Animation paused.',
+      animation: "paused",
+      lastAction: "Animation paused.",
     });
 
-    await controller.perform('resume');
+    await controller.perform("resume");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
-      animation: 'playing',
-      lastAction: 'Animation resumed.',
+      animation: "playing",
+      lastAction: "Animation resumed.",
     });
 
-    await controller.perform('replay');
+    await controller.perform("replay");
     await controller.settled();
     const replayRegion = { x: 12, y: 52, width: 616, height: 292 };
     const firstSeededBurst = pixels(canvas, replayRegion);
 
-    await controller.perform('clear');
-    await controller.perform('replay');
+    await controller.perform("clear");
+    await controller.perform("replay");
     await controller.settled();
     const repeatedSeededBurst = pixels(canvas, replayRegion);
     // Both captures now follow the same fixed-duration replay sequence.
@@ -325,34 +328,34 @@ describe('first-class Canvas particle public scenarios', () => {
       ),
     ).toBeGreaterThanOrEqual(0.75);
 
-    await controller.perform('clear');
+    await controller.perform("clear");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
-      animation: 'ready',
+      animation: "ready",
       selectedPoints: 0,
-      lastAction: 'Stage cleared.',
+      lastAction: "Stage cleared.",
     });
 
-    await controller.perform('toggle-glow');
+    await controller.perform("toggle-glow");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
       glow: false,
-      lastAction: 'Glow turned off.',
+      lastAction: "Glow turned off.",
     });
 
     await controller.reset();
     await controller.settled();
     expect(controller.getState()).toEqual({
-      animation: 'ready',
+      animation: "ready",
       selectedPoints: 0,
       celebrations: 0,
-      lastAction: 'Choose up to two launch points.',
+      lastAction: "Choose up to two launch points.",
       glow: true,
     });
   });
 
-  it('presents one Reset and only understandable particle controls', async () => {
-    const container = document.createElement('main');
+  it("presents one Reset and only understandable particle controls", async () => {
+    const container = document.createElement("main");
     document.body.appendChild(container);
     const definition = await loadScenario(particleCelebrationLabScenarioEntry);
     const sourceText = await loadScenarioSource(
@@ -367,80 +370,101 @@ describe('first-class Canvas particle public scenarios', () => {
 
     try {
       expect([...surface.actionButtons.keys()]).toEqual([
-        'launch',
-        'pause',
-        'resume',
-        'replay',
-        'clear',
-        'toggle-glow',
+        "launch",
+        "pause",
+        "resume",
+        "replay",
+        "clear",
+        "toggle-glow",
       ]);
       expect(
-        [...container.querySelectorAll('button')].filter(
-          (button) => button.textContent === 'Reset',
+        [...container.querySelectorAll("button")].filter(
+          (button) => button.textContent === "Reset",
         ),
       ).toHaveLength(1);
       expect(
-        container.querySelector('.scenario-runner__state')?.textContent,
-      ).toContain('Choose up to two launch points.');
+        container.querySelector(".scenario-runner__state")?.textContent,
+      ).toContain("Choose up to two launch points.");
       expect(
-        container.querySelector('.scenario-runner__state')?.textContent,
+        container.querySelector(".scenario-runner__state")?.textContent,
       ).not.toMatch(/unbound|owner|rejected|stale/iu);
     } finally {
       await surface.dispose();
     }
   });
 
-  it('drags the burning square while leaving living fire and smoke at their birth positions', async () => {
-    const entry = getLearningExampleBySlug('particle-effects');
-    if (!entry) throw new Error('Missing particle-effects learning example.');
-    const canvas = document.createElement('canvas');
+  it("drags the burning square while leaving living fire and smoke at their birth positions", async () => {
+    const entry = getLearningExampleBySlug("particle-effects");
+    if (!entry) throw new Error("Missing particle-effects learning example.");
+    const canvas = document.createElement("canvas");
     canvas.width = entry.canvas.width;
     canvas.height = entry.canvas.height;
     canvas.style.cssText = `display:block;width:${canvas.width}px;height:${canvas.height}px`;
     document.body.replaceChildren(canvas);
     const module = await loadLearningExample(entry);
-    const controller = module.default(canvas);
+    const controller = await module.mount(canvas);
     const capturedPointers = new Set<number>();
-    vi.spyOn(canvas, 'setPointerCapture').mockImplementation((pointerId) => {
+    vi.spyOn(canvas, "setPointerCapture").mockImplementation((pointerId) => {
       capturedPointers.add(pointerId);
     });
-    vi.spyOn(canvas, 'hasPointerCapture').mockImplementation((pointerId) =>
-      capturedPointers.has(pointerId));
-    vi.spyOn(canvas, 'releasePointerCapture').mockImplementation((pointerId) => {
-      capturedPointers.delete(pointerId);
-    });
+    vi.spyOn(canvas, "hasPointerCapture").mockImplementation((pointerId) =>
+      capturedPointers.has(pointerId),
+    );
+    vi.spyOn(canvas, "releasePointerCapture").mockImplementation(
+      (pointerId) => {
+        capturedPointers.delete(pointerId);
+      },
+    );
     try {
       await advanceVisibleTime(240);
-      expect(Array.from(pixels(canvas, {
-        x: 360,
-        y: 300,
-        width: 1,
-        height: 1,
-      }))).toEqual([124, 45, 18, 255]);
+      expect(
+        Array.from(
+          pixels(canvas, {
+            x: 360,
+            y: 300,
+            width: 1,
+            height: 1,
+          }),
+        ),
+      ).toEqual([124, 45, 18, 255]);
 
-      dispatchPointer(canvas, 'pointerdown', 360, 300);
-      dispatchPointer(canvas, 'pointermove', 520, 320);
-      dispatchPointer(canvas, 'pointerup', 520, 320);
+      dispatchPointer(canvas, "pointerdown", 360, 300);
+      dispatchPointer(canvas, "pointermove", 520, 320);
+      dispatchPointer(canvas, "pointerup", 520, 320);
       await advanceVisibleTime(200);
 
-      expect(Array.from(pixels(canvas, {
-        x: 520,
-        y: 320,
-        width: 1,
-        height: 1,
-      }))).toEqual([124, 45, 18, 255]);
-      expect(nonBackgroundPixelCount(pixels(canvas, {
-        x: 320,
-        y: 170,
-        width: 80,
-        height: 80,
-      }), [17, 24, 39])).toBeGreaterThan(10);
-      expect(nonBackgroundPixelCount(pixels(canvas, {
-        x: 480,
-        y: 190,
-        width: 80,
-        height: 80,
-      }), [17, 24, 39])).toBeGreaterThan(5);
+      expect(
+        Array.from(
+          pixels(canvas, {
+            x: 520,
+            y: 320,
+            width: 1,
+            height: 1,
+          }),
+        ),
+      ).toEqual([124, 45, 18, 255]);
+      expect(
+        nonBackgroundPixelCount(
+          pixels(canvas, {
+            x: 320,
+            y: 170,
+            width: 80,
+            height: 80,
+          }),
+          [17, 24, 39],
+        ),
+      ).toBeGreaterThan(10);
+      expect(
+        nonBackgroundPixelCount(
+          pixels(canvas, {
+            x: 480,
+            y: 190,
+            width: 80,
+            height: 80,
+          }),
+          [17, 24, 39],
+        ),
+      ).toBeGreaterThan(5);
     } finally {
       controller.dispose();
     }

@@ -1,15 +1,14 @@
+import { CandlestickSeries, LinearScale, UTCScale } from "@pibbl/core/viz";
 import {
   FocusManagement,
   Path,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblLogicalMouseEvent,
 } from "@pibbl/core";
-import { CandlestickSeries, LinearScale, UTCScale } from "@pibbl/core/viz";
+
 import {
   nearestRecordedCandleX,
   paintedCandleAt,
@@ -292,12 +291,10 @@ function Chart() {
   );
 }
 /** Mount the responsive candle lesson. */
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function FinancialCandlesExample() {
+  return (
     <FocusManagement>
       <Chart />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

@@ -1,5 +1,5 @@
 /** @jsxImportSource @pibbl/core */
-import { pibbl } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   ProceduralTexture,
   texturePalettes,
@@ -36,7 +36,7 @@ const props: ProceduralTextureProps = {
   detail: 0.3,
   render,
 };
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <ProceduralTexture {...props} style={{ width: 320, height: 200 }} />,
 );

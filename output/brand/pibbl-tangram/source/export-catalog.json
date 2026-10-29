@@ -1,0 +1,837 @@
+[
+  {
+    "file": "svg/pibbl-horizontal-color.svg",
+    "format": "svg",
+    "variant": "horizontal",
+    "colorway": "color",
+    "width": 890,
+    "height": 364,
+    "background": "transparent"
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-color-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 209
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-color-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 419
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-color-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 838
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-color-4096.png",
+    "format": "png",
+    "width": 4096,
+    "height": 1675
+  },
+  {
+    "file": "web/pibbl-horizontal-color.webp",
+    "format": "webp",
+    "width": 1024,
+    "height": 419
+  },
+  {
+    "file": "svg/pibbl-horizontal-color-on-dark.svg",
+    "format": "svg",
+    "variant": "horizontal",
+    "colorway": "color-on-dark",
+    "width": 890,
+    "height": 364,
+    "background": "transparent"
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-color-on-dark-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 209
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-color-on-dark-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 419
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-color-on-dark-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 838
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-color-on-dark-4096.png",
+    "format": "png",
+    "width": 4096,
+    "height": 1675
+  },
+  {
+    "file": "web/pibbl-horizontal-color-on-dark.webp",
+    "format": "webp",
+    "width": 1024,
+    "height": 419
+  },
+  {
+    "file": "svg/pibbl-horizontal-black.svg",
+    "format": "svg",
+    "variant": "horizontal",
+    "colorway": "black",
+    "width": 890,
+    "height": 364,
+    "background": "transparent"
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-black-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 209
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-black-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 419
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-black-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 838
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-black-4096.png",
+    "format": "png",
+    "width": 4096,
+    "height": 1675
+  },
+  {
+    "file": "svg/pibbl-horizontal-white.svg",
+    "format": "svg",
+    "variant": "horizontal",
+    "colorway": "white",
+    "width": 890,
+    "height": 364,
+    "background": "transparent"
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-white-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 209
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-white-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 419
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-white-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 838
+  },
+  {
+    "file": "png/horizontal/pibbl-horizontal-white-4096.png",
+    "format": "png",
+    "width": 4096,
+    "height": 1675
+  },
+  {
+    "file": "svg/pibbl-icon-color.svg",
+    "format": "svg",
+    "variant": "icon",
+    "colorway": "color",
+    "width": 298,
+    "height": 350,
+    "background": "transparent"
+  },
+  {
+    "file": "png/icon/pibbl-icon-color-128.png",
+    "format": "png",
+    "width": 128,
+    "height": 150
+  },
+  {
+    "file": "png/icon/pibbl-icon-color-256.png",
+    "format": "png",
+    "width": 256,
+    "height": 301
+  },
+  {
+    "file": "png/icon/pibbl-icon-color-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 601
+  },
+  {
+    "file": "png/icon/pibbl-icon-color-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 1203
+  },
+  {
+    "file": "png/icon/pibbl-icon-color-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 2405
+  },
+  {
+    "file": "svg/pibbl-icon-color-on-dark.svg",
+    "format": "svg",
+    "variant": "icon",
+    "colorway": "color-on-dark",
+    "width": 298,
+    "height": 350,
+    "background": "transparent"
+  },
+  {
+    "file": "png/icon/pibbl-icon-color-on-dark-128.png",
+    "format": "png",
+    "width": 128,
+    "height": 150
+  },
+  {
+    "file": "png/icon/pibbl-icon-color-on-dark-256.png",
+    "format": "png",
+    "width": 256,
+    "height": 301
+  },
+  {
+    "file": "png/icon/pibbl-icon-color-on-dark-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 601
+  },
+  {
+    "file": "png/icon/pibbl-icon-color-on-dark-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 1203
+  },
+  {
+    "file": "png/icon/pibbl-icon-color-on-dark-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 2405
+  },
+  {
+    "file": "svg/pibbl-icon-black.svg",
+    "format": "svg",
+    "variant": "icon",
+    "colorway": "black",
+    "width": 298,
+    "height": 350,
+    "background": "transparent"
+  },
+  {
+    "file": "png/icon/pibbl-icon-black-128.png",
+    "format": "png",
+    "width": 128,
+    "height": 150
+  },
+  {
+    "file": "png/icon/pibbl-icon-black-256.png",
+    "format": "png",
+    "width": 256,
+    "height": 301
+  },
+  {
+    "file": "png/icon/pibbl-icon-black-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 601
+  },
+  {
+    "file": "png/icon/pibbl-icon-black-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 1203
+  },
+  {
+    "file": "png/icon/pibbl-icon-black-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 2405
+  },
+  {
+    "file": "svg/pibbl-icon-white.svg",
+    "format": "svg",
+    "variant": "icon",
+    "colorway": "white",
+    "width": 298,
+    "height": 350,
+    "background": "transparent"
+  },
+  {
+    "file": "png/icon/pibbl-icon-white-128.png",
+    "format": "png",
+    "width": 128,
+    "height": 150
+  },
+  {
+    "file": "png/icon/pibbl-icon-white-256.png",
+    "format": "png",
+    "width": 256,
+    "height": 301
+  },
+  {
+    "file": "png/icon/pibbl-icon-white-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 601
+  },
+  {
+    "file": "png/icon/pibbl-icon-white-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 1203
+  },
+  {
+    "file": "png/icon/pibbl-icon-white-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 2405
+  },
+  {
+    "file": "svg/pibbl-stacked-color.svg",
+    "format": "svg",
+    "variant": "stacked",
+    "colorway": "color",
+    "width": 650,
+    "height": 630,
+    "background": "transparent"
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-color-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 496
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-color-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 992
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-color-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 1985
+  },
+  {
+    "file": "svg/pibbl-stacked-color-on-dark.svg",
+    "format": "svg",
+    "variant": "stacked",
+    "colorway": "color-on-dark",
+    "width": 650,
+    "height": 630,
+    "background": "transparent"
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-color-on-dark-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 496
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-color-on-dark-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 992
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-color-on-dark-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 1985
+  },
+  {
+    "file": "svg/pibbl-stacked-black.svg",
+    "format": "svg",
+    "variant": "stacked",
+    "colorway": "black",
+    "width": 650,
+    "height": 630,
+    "background": "transparent"
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-black-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 496
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-black-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 992
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-black-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 1985
+  },
+  {
+    "file": "svg/pibbl-stacked-white.svg",
+    "format": "svg",
+    "variant": "stacked",
+    "colorway": "white",
+    "width": 650,
+    "height": 630,
+    "background": "transparent"
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-white-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 496
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-white-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 992
+  },
+  {
+    "file": "png/stacked/pibbl-stacked-white-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 1985
+  },
+  {
+    "file": "svg/pibbl-wordmark-color.svg",
+    "format": "svg",
+    "variant": "wordmark",
+    "colorway": "color",
+    "width": 621,
+    "height": 325,
+    "background": "transparent"
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-color-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 268
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-color-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 536
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-color-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 1072
+  },
+  {
+    "file": "svg/pibbl-wordmark-color-on-dark.svg",
+    "format": "svg",
+    "variant": "wordmark",
+    "colorway": "color-on-dark",
+    "width": 621,
+    "height": 325,
+    "background": "transparent"
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-color-on-dark-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 268
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-color-on-dark-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 536
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-color-on-dark-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 1072
+  },
+  {
+    "file": "svg/pibbl-wordmark-black.svg",
+    "format": "svg",
+    "variant": "wordmark",
+    "colorway": "black",
+    "width": 621,
+    "height": 325,
+    "background": "transparent"
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-black-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 268
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-black-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 536
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-black-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 1072
+  },
+  {
+    "file": "svg/pibbl-wordmark-white.svg",
+    "format": "svg",
+    "variant": "wordmark",
+    "colorway": "white",
+    "width": 621,
+    "height": 325,
+    "background": "transparent"
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-white-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 268
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-white-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 536
+  },
+  {
+    "file": "png/wordmark/pibbl-wordmark-white-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 1072
+  },
+  {
+    "file": "marketing/profile/pibbl-avatar-light.svg",
+    "format": "svg",
+    "width": 1024,
+    "height": 1024
+  },
+  {
+    "file": "marketing/profile/pibbl-avatar-light-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 1024
+  },
+  {
+    "file": "marketing/profile/pibbl-avatar-dark.svg",
+    "format": "svg",
+    "width": 1024,
+    "height": 1024
+  },
+  {
+    "file": "marketing/profile/pibbl-avatar-dark-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 1024
+  },
+  {
+    "file": "marketing/profile/pibbl-avatar-blue.svg",
+    "format": "svg",
+    "width": 1024,
+    "height": 1024
+  },
+  {
+    "file": "marketing/profile/pibbl-avatar-blue-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 1024
+  },
+  {
+    "file": "marketing/profile/pibbl-avatar-yellow.svg",
+    "format": "svg",
+    "width": 1024,
+    "height": 1024
+  },
+  {
+    "file": "marketing/profile/pibbl-avatar-yellow-1024.png",
+    "format": "png",
+    "width": 1024,
+    "height": 1024
+  },
+  {
+    "file": "web/pibbl-app-icon-180.png",
+    "format": "png",
+    "width": 180,
+    "height": 180
+  },
+  {
+    "file": "web/pibbl-app-icon-192.png",
+    "format": "png",
+    "width": 192,
+    "height": 192
+  },
+  {
+    "file": "web/pibbl-app-icon-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 512
+  },
+  {
+    "file": "web/pibbl-app-icon-maskable-512.png",
+    "format": "png",
+    "width": 512,
+    "height": 512
+  },
+  {
+    "file": "web/apple-touch-icon.png",
+    "format": "png",
+    "width": 180,
+    "height": 180
+  },
+  {
+    "file": "web/favicon.svg",
+    "format": "svg",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "file": "web/favicon-16.png",
+    "format": "png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "file": "web/favicon-32.png",
+    "format": "png",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "file": "web/favicon-48.png",
+    "format": "png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "file": "web/favicon.ico",
+    "format": "ico",
+    "sizes": [
+      16,
+      32,
+      48
+    ]
+  },
+  {
+    "file": "web/site.webmanifest",
+    "format": "json"
+  },
+  {
+    "file": "marketing/share-card/pibbl-share-card-light.svg",
+    "format": "svg",
+    "width": 1200,
+    "height": 630
+  },
+  {
+    "file": "marketing/share-card/pibbl-share-card-light.png",
+    "format": "png",
+    "width": 1200,
+    "height": 630
+  },
+  {
+    "file": "marketing/share-card/pibbl-share-card-light.jpg",
+    "format": "jpg",
+    "width": 1200,
+    "height": 630
+  },
+  {
+    "file": "marketing/share-card/pibbl-share-card-dark.svg",
+    "format": "svg",
+    "width": 1200,
+    "height": 630
+  },
+  {
+    "file": "marketing/share-card/pibbl-share-card-dark.png",
+    "format": "png",
+    "width": 1200,
+    "height": 630
+  },
+  {
+    "file": "marketing/share-card/pibbl-share-card-dark.jpg",
+    "format": "jpg",
+    "width": 1200,
+    "height": 630
+  },
+  {
+    "file": "marketing/wide-banner/pibbl-wide-banner-light.svg",
+    "format": "svg",
+    "width": 1500,
+    "height": 500
+  },
+  {
+    "file": "marketing/wide-banner/pibbl-wide-banner-light.png",
+    "format": "png",
+    "width": 1500,
+    "height": 500
+  },
+  {
+    "file": "marketing/wide-banner/pibbl-wide-banner-light.jpg",
+    "format": "jpg",
+    "width": 1500,
+    "height": 500
+  },
+  {
+    "file": "marketing/wide-banner/pibbl-wide-banner-dark.svg",
+    "format": "svg",
+    "width": 1500,
+    "height": 500
+  },
+  {
+    "file": "marketing/wide-banner/pibbl-wide-banner-dark.png",
+    "format": "png",
+    "width": 1500,
+    "height": 500
+  },
+  {
+    "file": "marketing/wide-banner/pibbl-wide-banner-dark.jpg",
+    "format": "jpg",
+    "width": 1500,
+    "height": 500
+  },
+  {
+    "file": "marketing/presentation-cover/pibbl-presentation-cover-light.svg",
+    "format": "svg",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "marketing/presentation-cover/pibbl-presentation-cover-light.png",
+    "format": "png",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "marketing/presentation-cover/pibbl-presentation-cover-dark.svg",
+    "format": "svg",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "marketing/presentation-cover/pibbl-presentation-cover-dark.png",
+    "format": "png",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "marketing/square-post/pibbl-square-post-light.svg",
+    "format": "svg",
+    "width": 1080,
+    "height": 1080
+  },
+  {
+    "file": "marketing/square-post/pibbl-square-post-light.png",
+    "format": "png",
+    "width": 1080,
+    "height": 1080
+  },
+  {
+    "file": "marketing/square-post/pibbl-square-post-dark.svg",
+    "format": "svg",
+    "width": 1080,
+    "height": 1080
+  },
+  {
+    "file": "marketing/square-post/pibbl-square-post-dark.png",
+    "format": "png",
+    "width": 1080,
+    "height": 1080
+  },
+  {
+    "file": "marketing/wallpaper/pibbl-wallpaper-light.svg",
+    "format": "svg",
+    "width": 2560,
+    "height": 1440
+  },
+  {
+    "file": "marketing/wallpaper/pibbl-wallpaper-light.png",
+    "format": "png",
+    "width": 2560,
+    "height": 1440
+  },
+  {
+    "file": "marketing/wallpaper/pibbl-wallpaper-dark.svg",
+    "format": "svg",
+    "width": 2560,
+    "height": 1440
+  },
+  {
+    "file": "marketing/wallpaper/pibbl-wallpaper-dark.png",
+    "format": "png",
+    "width": 2560,
+    "height": 1440
+  },
+  {
+    "file": "marketing/pattern/pibbl-pattern-tile.svg",
+    "format": "svg",
+    "width": 240,
+    "height": 240
+  },
+  {
+    "file": "marketing/pattern/pibbl-pattern-tile-960.png",
+    "format": "png",
+    "width": 960,
+    "height": 960
+  },
+  {
+    "file": "marketing/pattern/pibbl-pattern-background.svg",
+    "format": "svg",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "marketing/pattern/pibbl-pattern-background.png",
+    "format": "png",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "marketing/sticker/pibbl-sticker.svg",
+    "format": "svg",
+    "width": 512,
+    "height": 512,
+    "background": "transparent"
+  },
+  {
+    "file": "marketing/sticker/pibbl-sticker-2048.png",
+    "format": "png",
+    "width": 2048,
+    "height": 2048
+  },
+  {
+    "file": "marketing/email/pibbl-email-logo-2x.png",
+    "format": "png",
+    "width": 890,
+    "height": 364
+  },
+  {
+    "file": "marketing/email/signature.html",
+    "format": "html"
+  },
+  {
+    "file": "marketing/motion/pibbl-tangram-assemble.svg",
+    "format": "svg",
+    "width": 298,
+    "height": 350,
+    "animated": true
+  },
+  {
+    "file": "Pibbl-Tangram-Kit-Overview.png",
+    "format": "png",
+    "width": 1600,
+    "height": 1120
+  }
+]

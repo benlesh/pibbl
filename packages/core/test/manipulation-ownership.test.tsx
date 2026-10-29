@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
 import * as Pibbl from "@pibbl/core";
@@ -59,7 +60,7 @@ async function setup(
   let captures = 0;
   canvas.addEventListener("gotpointercapture", () => captures++);
   document.body.append(canvas);
-  mounted = Pibbl.pibbl(
+  mounted = __pibblSyncTest(
     canvas,
     <Pibbl.FocusManagement>
       <Scene />
@@ -119,7 +120,7 @@ it("rejects a second controller that tries to own active shared geometry", async
       </Pibbl.ManipulationFrame>
     );
   }
-  const competingMount = Pibbl.pibbl(
+  const competingMount = __pibblSyncTest(
     canvas,
     <Pibbl.FocusManagement>
       <Competing />

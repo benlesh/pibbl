@@ -148,51 +148,45 @@ describe('layout diagnostic hardening', () => {
     );
   });
 
-  it('reports invalid Grid starts and overflowing spans with area context', () => {
-    expectDiagnostic(
-      () => layoutGrid(container, [createElement(Rectangle, {
-        style: {
-          width: 20,
-          height: 20,
-          fill: '#000000',
-          gridColumnStart: 3,
-          gridRowStart: 1,
-        },
-      })], {
-        gridTemplateColumns: [100, 100],
-        gridTemplateRows: [100],
-      }, measurement),
-      {
-        component: 'Rectangle',
-        property: 'gridColumnStart',
-        suppliedValue: 3,
-        algorithm: 'grid',
-        constraints,
+  it('creates measured implicit Grid tracks and still rejects invalid starts or spans', () => {
+    const implicit = layoutGrid(container, [createElement(Rectangle, {
+      style: {
+        width: 20,
+        height: 20,
+        fill: '#000000',
+        gridColumnStart: 3,
+        gridRowStart: 2,
       },
-    );
-    const spanError = expectDiagnostic(
-      () => layoutGrid(container, [createElement(Rectangle, {
-        style: {
-          width: 20,
-          height: 20,
-          fill: '#000000',
-          gridColumnStart: 2,
-          gridColumnSpan: 2,
-          gridRowStart: 1,
+    })], {
+      gridTemplateColumns: [100, 100],
+      gridTemplateRows: [100],
+      gridAutoColumns: 40,
+      gridAutoRows: 30,
+    }, measurement);
+    expect(implicit).toEqual([{ x: 200, y: 100, width: 20, height: 20 }]);
+
+    for (const [property, style, suppliedValue] of [
+      ['gridColumnStart', { gridColumnStart: 0 }, 0],
+      ['gridRowStart', { gridRowStart: 1.5 }, 1.5],
+      ['gridColumnSpan', { gridColumnSpan: 0 }, 0],
+      ['gridRowSpan', { gridRowSpan: 1.5 }, 1.5],
+    ] as const) {
+      expectDiagnostic(
+        () => layoutGrid(container, [createElement(Rectangle, {
+          style: { width: 20, height: 20, fill: '#000000', ...style },
+        })], {
+          gridTemplateColumns: [100, 100],
+          gridTemplateRows: [100],
+        }, measurement),
+        {
+          component: 'Rectangle',
+          property,
+          suppliedValue,
+          algorithm: 'grid',
+          constraints,
         },
-      })], {
-        gridTemplateColumns: [100, 100],
-        gridTemplateRows: [100],
-      }, measurement),
-      {
-        component: 'Rectangle',
-        property: 'gridColumnSpan',
-        suppliedValue: 2,
-        algorithm: 'grid',
-        constraints,
-      },
-    );
-    expect(spanError.message).toContain('start 2 plus span 2');
+      );
+    }
   });
 });
 

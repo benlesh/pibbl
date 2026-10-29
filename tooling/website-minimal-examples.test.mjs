@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
-import { readdir, readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import {
+  readdir,
+  readFile,
+  writeFile,
+  mkdtemp,
+  rm,
+  mkdir,
+} from "node:fs/promises";
+import { resolve, relative, dirname } from "node:path";
 import { test } from "node:test";
 import { spawnSync } from "node:child_process";
 
@@ -11,30 +18,41 @@ test("complete minimal programs typecheck against public packages", async () => 
     .filter((path) => /\.tsx?$/.test(path))
     .map((path) => resolve(dir, path));
   assert.ok(paths.length >= 13);
+  const examples = await Promise.all(
+    paths.map(async (path) => ({
+      path: relative(dir, path),
+      source: await readFile(path, "utf8"),
+    })),
+  );
+  const directory = await mkdtemp(resolve(root, ".pibbl-minimal-examples-"));
+  const sources = resolve(directory, "sources");
+  const copied = await Promise.all(
+    examples.map(async ({ path, source }) => {
+      const destination = resolve(sources, path);
+      await mkdir(dirname(destination), { recursive: true });
+      await writeFile(destination, source);
+      return destination;
+    }),
+  );
+  const config = resolve(directory, "tsconfig.json");
+  await writeFile(
+    config,
+    JSON.stringify({
+      extends: `./${relative(directory, resolve(root, "tsconfig.json"))}`,
+      files: copied,
+    }),
+  );
   const result = spawnSync(
     resolve(root, "node_modules/.bin/tsc"),
-    [
-      "--ignoreConfig",
-      "--noEmit",
-      "--strict",
-      "--skipLibCheck",
-      "--target",
-      "ES2022",
-      "--module",
-      "ESNext",
-      "--moduleResolution",
-      "Bundler",
-      "--jsx",
-      "react-jsx",
-      "--jsxImportSource",
-      "@pibbl/core",
-      ...paths,
-    ],
-    { cwd: root, encoding: "utf8" },
+    ["--project", config],
+    {
+      cwd: root,
+      encoding: "utf8",
+    },
   );
+  await rm(directory, { recursive: true, force: true });
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  for (const path of paths) {
-    const source = await readFile(path, "utf8");
+  for (const { source } of examples) {
     if (/const controller\s*=\s*pibbl\(/.test(source))
       assert.match(source, /controller.dispose\(\)/);
   }

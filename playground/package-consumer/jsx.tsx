@@ -26,7 +26,7 @@ import { tween, spring,
   Text,
   computed,
   createElement,
-  pibbl,
+
   resolveSignalValue,
   useComputed,
   usePlayback,
@@ -40,6 +40,7 @@ import { tween, spring,
   drive,
   untracked,
 } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import {
   Particles2D,
   defineParticleEffect2D,
@@ -306,7 +307,7 @@ function Poster({ labels, showTitle }: PosterProps): PibblNode {
 export function mountAutomaticJSXConsumer(
   canvas: HTMLCanvasElement,
 ): PibblController {
-  return pibbl(canvas, <Poster labels={['Bundler', 'NodeNext']} showTitle />);
+  return pibblSync(canvas, <Poster labels={['Bundler', 'NodeNext']} showTitle />);
 }
 
 function* layoutChildren(): Generator<PibblNode> {

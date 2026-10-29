@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
 import * as Pibbl from "@pibbl/core";
@@ -47,7 +48,7 @@ it.each([false, true])(
         </Pibbl.ManipulationFrame>
       );
     }
-    mount = Pibbl.pibbl(
+    mount = __pibblSyncTest(
       canvas,
       <Pibbl.FocusManagement>
         <Scene />
@@ -116,7 +117,7 @@ it.each([
       <Pibbl.RotationHandle controller={control} style={{ arc: true }} />
     </Pibbl.ManipulationFrame>;
   }
-  mount = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
+  mount = __pibblSyncTest(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
   expect(corners).toHaveLength(4);
   const normal = { x: Math.sin(angle), y: -Math.cos(angle) };

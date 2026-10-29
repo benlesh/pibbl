@@ -12,7 +12,7 @@ import {
 } from '@pibbl/core';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { createElement } from '../element/create-element';
 import { Fragment } from '../element/fragment';
 import { executeRender } from '../execute-render';
@@ -1192,7 +1192,7 @@ describe('layer', () => {
 
     it('only re-renders when props change', async () => {
       let renderCount = 0;
-      const countedRect = definePrimitive<RectangleProps, RectStyle>((props, style) => {
+      const countedRect = definePrimitive<RectangleProps, SystemStyle & Pick<RectStyle, 'fill'> & { left: number; top: number; width: number; height: number }>((props, style) => {
         renderCount++;
         return createElement(Rectangle, {
           ...props,

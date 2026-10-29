@@ -11,3 +11,7 @@ declare module "monaco-editor/languages/features/typescript/tsMode" {
   import type { LanguageServiceDefaults } from "monaco-editor/languages/features/typescript/register";
   export function setupTypeScript(defaults: LanguageServiceDefaults): void;
 }
+
+declare module 'virtual:pibbl-layout-preflight' { const html: string; export default html; }
+
+declare module 'virtual:pibbl-layout-yoga-rehearsal' { const html: string; export default html; }

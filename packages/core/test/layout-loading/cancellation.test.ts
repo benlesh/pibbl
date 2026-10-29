@@ -1,0 +1,21 @@
+import { expect, it, vi } from 'vitest';
+import { canvas, controllers, binaryResponse } from './helpers.js';
+it('cancels one waiter without aborting shared loading, and never revives superseded requests', async () => {
+  const core = await import('@pibbl/core');
+  let release!: (response: Response) => void;
+  const fetch = vi.spyOn(globalThis, 'fetch').mockReturnValue(new Promise(resolve => {release=resolve;}));
+  const target = canvas();
+  const first = core.pibbl(target, null);
+  const oldRejected = expect(first).rejects.toMatchObject({name:'AbortError'});
+  const lifetime = new AbortController();
+  const latest = core.pibbl(target, null, {signal:lifetime.signal});
+  const cancelled = expect(latest).rejects.toMatchObject({name:'AbortError'});
+  const independent = core.pibbl(canvas(), null);
+  lifetime.abort();
+  await Promise.all([oldRejected,cancelled]);
+  expect((fetch.mock.calls[0][1]?.signal as AbortSignal).aborted).toBe(false);
+  release(binaryResponse());
+  controllers.push(await independent);
+  const { GLOBAL_STATE } = await import('../../src/lib/global-state.js');
+  expect(GLOBAL_STATE.pibblInstances.has(target)).toBe(false);
+});

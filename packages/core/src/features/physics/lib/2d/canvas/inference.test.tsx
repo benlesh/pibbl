@@ -1,23 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import {
-  Arc,
-  Circle,
-  Ellipse,
-  HorizontalLine,
-  Image,
-  Line,
-  Path,
-  Polygon,
-  Rectangle,
-  RegularPolygon,
-  Star,
-  SvgPath,
-  Text,
-  VerticalLine,
-  Wedge,
-  pibbl,
-  type PibblController,
-} from "@pibbl/core";
+import { Arc, Circle, Ellipse, HorizontalLine, Image, Line, Path, Polygon, Rectangle, RegularPolygon, Star, SvgPath, Text, VerticalLine, Wedge, type PibblController } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../../../../sync.js";
 import {
   Capsule2D,
   Chain2D,

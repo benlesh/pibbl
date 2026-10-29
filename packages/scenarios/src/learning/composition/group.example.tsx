@@ -1,12 +1,5 @@
-import {
-  pibbl,
-  useSignal,
-  Group,
-  Rectangle,
-  Text,
-  type PibblController,
-} from "@pibbl/core";
-function GroupStudy() {
+import { Group, Rectangle, Text, useSignal } from "@pibbl/core";
+export function GroupStudy() {
   const selected = useSignal(false);
   const ticket = (
     <Group
@@ -84,7 +77,4 @@ function GroupStudy() {
     />,
     ticket,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <GroupStudy />);
 }

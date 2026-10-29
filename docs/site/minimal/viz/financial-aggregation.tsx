@@ -73,3 +73,7 @@ export const vwap: readonly SessionVwapPoint<Row>[] = sessionVwap(
   rows,
   vwapOptions,
 );
+
+const output = document.createElement("pre");
+output.textContent = JSON.stringify({ aggregated, vwap }, null, 2);
+document.body.append(output);

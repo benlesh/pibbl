@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Electric violet",
+    "triangle": "#B8E62E",
+    "rectangle": "#7550E8",
+    "bowl": "#16B8BA"
+  },
+  {
+    "name": "Lagoon",
+    "triangle": "#F5BC42",
+    "rectangle": "#087E8B",
+    "bowl": "#55C9B0"
+  },
+  {
+    "name": "Citrus",
+    "triangle": "#FFC23B",
+    "rectangle": "#F16B32",
+    "bowl": "#68A842"
+  },
+  {
+    "name": "Arcade",
+    "triangle": "#FFAF35",
+    "rectangle": "#F0449B",
+    "bowl": "#5259E8"
+  },
+  {
+    "name": "Sunset",
+    "triangle": "#F7B84D",
+    "rectangle": "#E35470",
+    "bowl": "#8553BB"
+  },
+  {
+    "name": "Candy",
+    "triangle": "#FF7CB6",
+    "rectangle": "#7363D8",
+    "bowl": "#3EBBBF"
+  },
+  {
+    "name": "Cobalt & mint",
+    "triangle": "#64DDB8",
+    "rectangle": "#195BD8",
+    "bowl": "#8EABF4"
+  },
+  {
+    "name": "Ember",
+    "triangle": "#EBA74B",
+    "rectangle": "#DD543E",
+    "bowl": "#334B66"
+  },
+  {
+    "name": "Orchid",
+    "triangle": "#D9AFEF",
+    "rectangle": "#A649A2",
+    "bowl": "#5044A1"
+  },
+  {
+    "name": "Graphite & lime",
+    "triangle": "#C7EB39",
+    "rectangle": "#303D4B",
+    "bowl": "#6B8898"
+  }
+]

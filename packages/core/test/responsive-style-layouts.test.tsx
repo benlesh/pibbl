@@ -1,7 +1,5 @@
-import {
-  Absolute, Overlay, Flow, Flex, Grid, Rectangle, pibbl, createElement, definePrimitive,
-  type PibblController, type SystemStyle,
-} from '@pibbl/core';
+import { Absolute, Overlay, Flow, Flex, Grid, Rectangle, createElement, definePrimitive, type PibblController, type SystemStyle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it } from 'vitest';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
 let controller: PibblController | undefined;

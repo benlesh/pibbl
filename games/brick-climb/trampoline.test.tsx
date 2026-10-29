@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from 'vitest';
-import { pibbl, signal } from '@pibbl/core';
+import { signal } from '@pibbl/core';
+import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { createMachine } from '@pibbl/core/machines';
 import { defineSpriteAnimation, loadSpriteSheet, type SpriteSheet } from '@pibbl/core/sprites';
 import { clearSharedState } from '../../packages/core/src/lib/global-state';

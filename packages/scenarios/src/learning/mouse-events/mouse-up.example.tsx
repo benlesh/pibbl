@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function MouseUpStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function MouseUpStudy() {
   const releases = useSignal(0);
   const position = useSignal("—");
   return [
@@ -49,7 +49,4 @@ function MouseUpStudy() {
       }}
     >{`UP / ${releases.get()} / ${position.get()}`}</Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <MouseUpStudy />);
 }

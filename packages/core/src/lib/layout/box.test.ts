@@ -156,3 +156,48 @@ describe('resolveBox', () => {
     ).toThrow(/overlay.*width.*bogus.*overlay-layout.*minWidth.*maxWidth.*320/);
   });
 });
+
+it('floors border-box dimensions and outer bounds at padding without changing content-box constraints', () => {
+  const constraints = { minWidth: 0, maxWidth: 10, minHeight: 0, maxHeight: 10 };
+  expect(resolveBox({ boxSizing: 'border-box', width: 8, height: 8, maxWidth: 8, maxHeight: 8, padding: 10 }, constraints)).toEqual({ borderBox: { x: 0, y: 0, width: 20, height: 20 }, contentBox: { x: 10, y: 10, width: 0, height: 0 } });
+  expect(resolveBox({ width: 8, height: 8, padding: 10 }, constraints)).toEqual({ borderBox: { x: 0, y: 0, width: 10, height: 10 }, contentBox: { x: 10, y: 10, width: 0, height: 0 } });
+});
+it('resolves border-box percentages before subtracting padding and validates outer bounds first', () => {
+  const constraints = { minWidth: 0, maxWidth: 200, minHeight: 0, maxHeight: 100 };
+  expect(resolveBox({ boxSizing: 'border-box', width: '50%', height: '50%', padding: 10 }, constraints)).toEqual({ borderBox: { x: 0, y: 0, width: 100, height: 50 }, contentBox: { x: 10, y: 10, width: 80, height: 30 } });
+  expect(() => resolveBox({ boxSizing: 'border-box', width: 8, height: 8, minWidth: 9, maxWidth: 8, padding: 10 }, constraints)).toThrow(/minimum must not exceed maximum/);
+});
+
+it('combines finite asymmetric layout borders and padding once in both sizing modes', () => {
+  const edges = { padding: { left: 3, right: 5, top: 7, bottom: 11 }, borderWidth: { left: 2, right: 4, top: 6, bottom: 8 } };
+  const expected = { borderBox: { x: 0, y: 0, width: 54, height: 62 }, contentBox: { x: 5, y: 13, width: 40, height: 30 } };
+  expect(resolveBox({ ...edges, width: 40, height: 30 }, constraints)).toEqual(expected);
+  expect(resolveBox({ ...edges, boxSizing: 'border-box', width: 54, height: 62 }, constraints)).toEqual(expected);
+  expect(() => resolveBox({ borderWidth: -1 }, constraints)).toThrow(/borderWidth.*nonnegative/);
+  expect(() => resolveBox({ borderWidth: { left: Infinity } }, constraints)).toThrow(/borderWidth.left.*finite/);
+  expect(() => resolveBox({ borderWidth: Number.MAX_VALUE, padding: Number.MAX_VALUE }, constraints)).toThrow(/combined padding and border insets must be finite/);
+});
+
+
+it.each([
+  [{ width: 100, height: 'auto', aspectRatio: 2 }, 100, 50],
+  [{ width: 'auto', height: 40, aspectRatio: 2 }, 80, 40],
+  [{ width: 100, height: 'auto', maxWidth: 60, aspectRatio: 2 }, 60, 30],
+  [{ width: 100, height: 40, aspectRatio: 2 }, 100, 40],
+  [{ boxSizing: 'border-box', width: 100, height: 'auto', padding: 10, borderWidth: 5, aspectRatio: 2 }, 100, 50],
+] as const)('resolves aspect ratio from the final definite axis: %j', (style, width, height) => {
+  const result = resolveBox(style, constraints);
+  expect(result.borderBox.width).toBe(width);
+  expect(result.borderBox.height).toBe(height);
+});
+it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('rejects an invalid box aspect ratio %s', aspectRatio => {
+  expect(() => resolveBox({ width: 100, aspectRatio }, constraints)).toThrow(/aspectRatio/);
+});
+
+it('fills the finite outer allocation for stretch instead of adding padding twice', () => {
+  for (const boxSizing of ['content-box', 'border-box'] as const) {
+    const box = resolveBox({ boxSizing, width: 'stretch', height: 20, padding: 10 }, { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 80 });
+    expect(box.borderBox.width).toBe(100);
+    expect(box.contentBox.width).toBe(80);
+  }
+});

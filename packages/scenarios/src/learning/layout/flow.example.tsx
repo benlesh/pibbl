@@ -1,13 +1,6 @@
-import {
-  pibbl,
-  useSignal,
-  Flow,
-  Rectangle,
-  Text,
-  type PibblController,
-} from "@pibbl/core";
+import { Flow, Rectangle, Text, useSignal } from "@pibbl/core";
 const colors = ["#1f4bd8", "#ff6b57", "#74d3ae", "#f7c948"] as const;
-function FlowStudy() {
+export function FlowStudy() {
   const selected = useSignal(0);
   return [
     <Rectangle
@@ -52,7 +45,4 @@ function FlowStudy() {
       ]}
     </Flow>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <FlowStudy />);
 }

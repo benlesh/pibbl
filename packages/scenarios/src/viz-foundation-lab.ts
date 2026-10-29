@@ -1,6 +1,10 @@
 import { batch, signal } from "@pibbl/core";
-import mount from "./learning/composition/viz-responsive-line.example.js";
+import { VizResponsiveLineExample as mountComponent } from "./learning/composition/viz-responsive-line.example.js";
 import type { ScenarioDefinition } from "./types.js";
+import { createExampleMount } from "./example-host";
+
+const mount = createExampleMount(mountComponent, { config: { viewport: "responsive" } });
+
 export interface VizFoundationState {
   panels: readonly {
     width: number;

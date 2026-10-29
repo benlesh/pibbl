@@ -1,4 +1,5 @@
-import { Clip, Group, Overlay, pibbl, signal } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
+import { Clip, Group, Overlay, signal } from "@pibbl/core";
 import { LinearScale, LineSeries } from "@pibbl/core/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { createLineAttributionInspector } from "./capture";
@@ -56,7 +57,7 @@ it("connects a decorative segment to captured data, scales, transform and clip a
       </Group>
     );
   }
-  const app = pibbl(canvas, <App />, { pixelRatio: 1 });
+  const app = pibblSync(canvas, <App />, { pixelRatio: 1 });
   try {
     runtime.flush();
     const first = inspector.snapshot();
@@ -111,7 +112,7 @@ it("connects a decorative segment to captured data, scales, transform and clip a
       { id: "a", x: 0, y: 0 },
       { id: "b", x: 10, y: 5 },
     ]);
-    pibbl(canvas, <App />); // Failed traversal detaches component consumers; explicitly retry the root.
+    pibblSync(canvas, <App />); // Failed traversal detaches component consumers; explicitly retry the root.
     runtime.flush();
     expect(inspector.snapshot().generation).toBeGreaterThan(first.generation!);
     const repaired = inspector.segmentAt({ x: 70, y: 117.5 });

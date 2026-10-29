@@ -1,5 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import { pibbl, Rectangle } from "@pibbl/core";
+import { Rectangle } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   reactionDiffusion,
   useTexture,
@@ -34,5 +35,5 @@ function Ink() {
   );
 }
 
-const controller = pibbl(canvas, <Ink />);
+const controller = pibblSync(canvas, <Ink />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

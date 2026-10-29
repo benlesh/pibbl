@@ -1,4 +1,5 @@
-import { pibbl, createElement, signal } from '@pibbl/core';
+import { createElement, signal } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import { AgentSignalMutationScene, AGENT_SIGNAL_MUTATION_SOURCE_ID } from './agent-signal-mutation.example';
 import type { ScenarioDefinition } from './types';
 export interface AgentSignalMutationState {
@@ -44,7 +45,7 @@ export const agentSignalMutationScenario: ScenarioDefinition<AgentSignalMutation
       const tick = () => { if (disposed) return finish(new Error('Signal mutation fixture disposed.')); if (++count === 2) finish(); else frame = requestAnimationFrame(tick); };
       frame = requestAnimationFrame(tick);
     });
-    let controller: ReturnType<typeof pibbl> | null = null;
+    let controller: ReturnType<typeof pibblSync> | null = null;
     function perform(action: string): Promise<void> {
       if (disposed) return Promise.reject(new Error('Signal mutation fixture disposed.'));
       if (inFlight) return Promise.reject(new Error('Signal mutation action already running.'));
@@ -79,7 +80,7 @@ export const agentSignalMutationScenario: ScenarioDefinition<AgentSignalMutation
     }
     async function dispose() { if (disposed) return; disposed = true; cancelWait?.(); controller?.dispose(); inspector?.dispose(); evidence.remove(); state = { ...state, status: 'disposed', assertion: 'unavailable', diagnosis: 'disposed' }; }
     try {
-      controller = pibbl(canvas, createElement(AgentSignalMutationScene, { amount, onRender(value: number) { evaluatedAmount = value; componentEvaluations++; } }), { viewport: { width: 480, height: 180 }, fit: 'contain' });
+      controller = pibblSync(canvas, createElement(AgentSignalMutationScene, { amount, onRender(value: number) { evaluatedAmount = value; componentEvaluations++; } }), { viewport: { width: 480, height: 180 }, fit: 'contain' });
       await perform('reset');
     } catch (error) { await dispose(); throw error; }
     return { getState: () => structuredClone(state), perform, reset: () => perform('reset'), settled: async () => { if (disposed) throw new Error('Signal mutation fixture disposed.'); await inFlight; }, dispose };

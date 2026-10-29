@@ -1,4 +1,5 @@
-import { Circle, Group, Rectangle, pibbl, useReaction } from "@pibbl/core";
+import { Circle, Group, Rectangle,  useReaction } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   PhysicsDebug2D,
   PhysicsWorld2D,
@@ -61,7 +62,7 @@ const solver: PibblPhysicsSolverOptions = {
   velocityIterations: 4,
   positionIterations: 2,
 };
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <PhysicsWorld2D gravity={[0, 420]} solver={solver}>
     <Rectangle
@@ -80,22 +81,23 @@ function refresh() {
   status.textContent = `Tick ${snapshot.tick}; bodies ${snapshot.bodies.length}; ball ${ball?.pose.position.join(", ") ?? "pending"}; velocity ${body.linearVelocity.get().join(", ")}`;
 }
 
-const actions: readonly [string, (handle: PibblPhysicsBodyHandle2D) => void][] = [
-  ["Impulse", (handle) => applyImpulse2D(handle, [80, -180])],
-  ["Force", (handle) => applyForce2D(handle, [20, -50])],
-  ["Torque", (handle) => applyTorque2D(handle, 5)],
-  ["Set speed", (handle) => setLinearVelocity2D(handle, [60, -100])],
-  ["Spin", (handle) => setAngularVelocity2D(handle, 45)],
+const actions: readonly [string, (handle: PibblPhysicsBodyHandle2D) => void][] =
   [
-    "Teleport",
-    (handle) =>
-      teleportBody2D(handle, { position: [100, 40], rotationDegrees: 0 }),
-  ],
-  ["Sleep", sleepBody2D],
-  ["Wake", wakeBody2D],
-  ["Disable", disableBody2D],
-  ["Enable", (handle) => enableBody2D(handle, { velocity: "zero" })],
-];
+    ["Impulse", (handle) => applyImpulse2D(handle, [80, -180])],
+    ["Force", (handle) => applyForce2D(handle, [20, -50])],
+    ["Torque", (handle) => applyTorque2D(handle, 5)],
+    ["Set speed", (handle) => setLinearVelocity2D(handle, [60, -100])],
+    ["Spin", (handle) => setAngularVelocity2D(handle, 45)],
+    [
+      "Teleport",
+      (handle) =>
+        teleportBody2D(handle, { position: [100, 40], rotationDegrees: 0 }),
+    ],
+    ["Sleep", sleepBody2D],
+    ["Wake", wakeBody2D],
+    ["Disable", disableBody2D],
+    ["Enable", (handle) => enableBody2D(handle, { velocity: "zero" })],
+  ];
 for (const [label, action] of actions) {
   const button = document.createElement("button");
   button.textContent = label;

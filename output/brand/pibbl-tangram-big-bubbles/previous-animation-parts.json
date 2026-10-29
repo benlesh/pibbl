@@ -1,0 +1,191 @@
+{
+  "name": "Pibbl Big Bubbles",
+  "palette": {
+    "coral": "#FF735E",
+    "green": "#159447",
+    "violet": "#8B5CCB",
+    "ink": "#111211"
+  },
+  "coordinateSystem": {
+    "viewBox": [
+      0,
+      0,
+      350,
+      350
+    ],
+    "shapeOrigin": [
+      35,
+      35
+    ],
+    "horizontalWordmarkOrigin": [
+      330,
+      73
+    ],
+    "units": "SVG units; bubble positions are relative to shapeOrigin"
+  },
+  "shapes": [
+    {
+      "id": "triangle",
+      "path": "M0 0H128L0 140Z",
+      "fill": "#FF735E",
+      "pivot": [
+        42.667,
+        46.667
+      ]
+    },
+    {
+      "id": "square",
+      "path": "M0 140H124V280H0Z",
+      "fill": "#159447",
+      "pivot": [
+        62,
+        210
+      ]
+    },
+    {
+      "id": "bowl",
+      "path": "M128 0H148C192 0 228 31 228 70C228 109 192 140 148 140H128Z",
+      "fill": "#8B5CCB",
+      "pivot": [
+        172,
+        70
+      ]
+    }
+  ],
+  "bubbles": [
+    {
+      "id": "bubble-1",
+      "destination": {
+        "x": 245,
+        "y": 34,
+        "r": 9
+      },
+      "fill": "#8B5CCB",
+      "source": {
+        "x": 216,
+        "y": 32,
+        "r": 12
+      },
+      "release": "cutout grows as bubble exits"
+    },
+    {
+      "id": "bubble-2",
+      "destination": {
+        "x": 258,
+        "y": 77,
+        "r": 11
+      },
+      "fill": "#8B5CCB",
+      "source": {
+        "x": 228,
+        "y": 65,
+        "r": 10
+      },
+      "release": "cutout grows as bubble exits"
+    },
+    {
+      "id": "bubble-3",
+      "destination": {
+        "x": 238,
+        "y": 119,
+        "r": 7
+      },
+      "fill": "#8B5CCB",
+      "source": {
+        "x": 211,
+        "y": 105,
+        "r": 9
+      },
+      "release": "cutout grows as bubble exits"
+    },
+    {
+      "id": "bubble-4",
+      "destination": {
+        "x": 245,
+        "y": 59,
+        "r": 8
+      },
+      "fill": "#8B5CCB",
+      "source": {
+        "x": 187,
+        "y": 52,
+        "r": 8
+      },
+      "release": "cutout grows as bubble exits"
+    },
+    {
+      "id": "bubble-5",
+      "destination": {
+        "x": 260,
+        "y": 111,
+        "r": 6
+      },
+      "fill": "#8B5CCB",
+      "source": {
+        "x": 183,
+        "y": 91,
+        "r": 6
+      },
+      "release": "cutout grows as bubble exits"
+    },
+    {
+      "id": "bubble-6",
+      "destination": {
+        "x": 268,
+        "y": 13,
+        "r": 4
+      },
+      "fill": "#FF735E",
+      "release": "accent dot fades in during bloom"
+    },
+    {
+      "id": "bubble-7",
+      "destination": {
+        "x": 278,
+        "y": 105,
+        "r": 4
+      },
+      "fill": "#159447",
+      "release": "accent dot fades in during bloom"
+    }
+  ],
+  "cutouts": [
+    {
+      "bubbleId": "bubble-1",
+      "x": 216,
+      "y": 32,
+      "r": 12
+    },
+    {
+      "bubbleId": "bubble-2",
+      "x": 228,
+      "y": 65,
+      "r": 10
+    },
+    {
+      "bubbleId": "bubble-3",
+      "x": 211,
+      "y": 105,
+      "r": 9
+    },
+    {
+      "bubbleId": "bubble-4",
+      "x": 187,
+      "y": 52,
+      "r": 8
+    },
+    {
+      "bubbleId": "bubble-5",
+      "x": 183,
+      "y": 91,
+      "r": 6
+    }
+  ],
+  "intendedSequence": [
+    "Tumble the three solid primary shapes in a repeating loading loop.",
+    "When ready, finish the current loop and settle shapes into the P.",
+    "Release violet bubbles from their source positions; reveal corresponding cutouts.",
+    "Reveal coral and green accent dots, then hold the completed logo."
+  ],
+  "status": "Prepared geometry and parts; animation timing and motion are not implemented."
+}

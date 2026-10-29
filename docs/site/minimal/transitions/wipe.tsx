@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   Group,
   Rectangle,
   Text,
@@ -13,6 +13,7 @@ import {
   type PibblVisibilityTransitionStatus,
   type PibblTransitionBinding,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const options: PibblWipeOptions = {
   region: { x: 30, y: 30, width: 260, height: 100 },
@@ -61,7 +62,7 @@ function Scene() {
     </>
   );
 }
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 for (const action of ["show", "hide"] as const) {
   const button = document.createElement("button");
   button.textContent = action;

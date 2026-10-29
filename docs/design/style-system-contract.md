@@ -167,10 +167,61 @@ scientific notation, malformed strings, and non-finite results reject.
 - Padding and gaps are finite nonnegative numbers, never percentages.
 - Allocation size, min/max, padding, gaps, and growth factors are nonnegative;
   minimum greater than maximum is an error.
-- `width` and `height` specify a content box. Min/max clamp content before
-  numeric padding is added. Padding can reduce content to zero, not below.
-- There is no margin. Parent placement uses `left`/`top`; drawing-local geometry
+- `boxSizing` defaults to `"content-box"`: dimensions and min/max name content
+  sizes, then numeric padding and explicit layout borders are added. Explicit `"border-box"` dimensions,
+  bounds and Flex basis name outer sizes. Percentages resolve against the existing
+  axis basis before combined padding and border insets are subtracted. Content floors at zero, and border-box
+  outer dimensions floor at total axis padding plus layout borders even if a declared maximum or
+  parent allocation is smaller. Opposing min/max remain invalid before that
+  conversion. `borderWidth` is finite nonnegative physical numeric edge shorthand,
+  default zero; it reserves layout space and does not paint. Painted strokes remain independent. Existing automatic/intrinsic sizing rules remain unchanged.
+- Experimental Flex children support signed numeric and allocated percentage
+  physical margins plus logical `marginStart`/`marginEnd`. Logical edges map
+  through the receiving item’s direction and override their physical counterpart
+  and the `margin` shorthand regardless of property order. Explicit zero is an
+  override. Automatic margins and participation in other layout families remain
+  unsupported. Parent placement uses `left`/`top`; drawing-local geometry
   uses `x`/`y` (`x1`/`x2` or `y1`/`y2` for line helpers).
+- Experimental direct children of a finite row-nowrap `Flex` may explicitly set
+  `position: "static" | "relative"`. Static keeps its Flex slot and ignores
+  insets. Relative keeps that slot and applies finite numeric physical
+  `left`/`right`/`top`/`bottom` once to final geometry: LTR prefers left, RTL
+  prefers right, and top prefers bottom. Omitted `position` keeps the existing
+  Flex `left`/`top` diagnostic. This is not an Absolute or containing-block
+  model; percentages, wrapping, other layout parents, and normal JavaScript
+  Flex remain unsupported.
+- Experimental finite row-nowrap Flex also admits fixed-size direct children with
+  `position: "absolute"`. They leave line allocation but retain source paint,
+  hit and focus order. Explicit numeric insets use the inner-border/padding-box
+  edge; an axis without an inset uses parent content-box alignment through
+  `justifyContent`/`alignItems`. LTR prefers left, RTL prefers right, and top
+  prefers bottom. An automatic or omitted width/height is admitted only with
+  opposing finite physical insets on that axis, or with a positive finite
+  aspectRatio and one declared numeric opposite axis. Ratio admission requires
+  exactly one automatic axis; both-auto and both-explicit ratio cases reject.
+  Opposing insets win over ratio derivation; otherwise the declared opposite
+  axis derives the automatic axis before independent bounds. For paired insets,
+  the remaining padding-box extent becomes the finite used size and clamps at zero. Finite numeric
+  min/max bounds then clamp fixed or derived axes before physical inset
+  precedence places them; a numeric minimum above its maximum rejects rather
+  than following Yoga's minimum-wins conflict behavior. This does not measure
+  the child. Percentages, unpaired automatic axes without aspect derivation, nonnumeric or automatic
+  bounds, child decoration/margins, direct layout children and general nested
+  containing blocks are outside this
+  admission; see the layout contract for exact limits.
+  Direct declarative nested Flex boxes additionally pass the containing box through
+  explicit static ancestors; relative and omitted-position Flex boxes establish
+  local boundaries. Omitted position retains Pibbl legacy behavior. Opaque and
+  transformed ancestry does not acquire an inferred containing box.
+  Direct custom primitives with paired pure measurement providers can also
+  resolve an unpaired automatic absolute width at a definite numeric height,
+  using unbounded horizontal availability before numeric bounds. See the
+  layout contract for receiver/cache ownership and exact limits.
+- Experimental `paddingStart` and `paddingEnd` override their direction-mapped
+  physical padding edge, including zero and independent of declaration order.
+  Values are nonnegative; percentages require actual allocated Flex ownership and
+  use owner content width before box conversion. Layer’s own raster sizing stays
+  independent from physical/logical padding. See the layout contract.
 - Primitive rectangle/image geometry retains signed Canvas semantics outside
   nonnegative layout allocation.
 - `"auto"` is accepted only on documented measurement paths. Local offsets,
@@ -313,3 +364,24 @@ where their individual contracts define them. A freely positioned
 `ManipulationFrame` publishes its writable finite box through this same local
 style channel. Direct `Flex`, `Flow`, and `Grid` placement remains parent-owned.
 See the [component-manipulation contract](./component-manipulation-contract.md).
+
+## Backdrop contrast
+
+The optional `backdropContrast({ light?, dark? })` factory from
+`@pibbl/core/filters` defaults to white and black. Unlike source-only native
+filters, it samples prior paint in the current Canvas render target and uses the
+receiving subtree's combined alpha as its mask. It selects `light` below linear
+sRGB relative luminance 0.179128785, `dark` otherwise. Color inputs accept signals
+and concrete supported CSS colors; custom colors retain that luminance mapping.
+Their alpha multiplies the mask. Layout, hit geometry, and source traversal do not
+change. Transparent backdrop is evaluated over white; DOM backgrounds are outside
+the contract. Isolated filters and cached Layers expose only local prior paint.
+Outer paint changes do not invalidate cached Layer pixels.
+
+It uses the existing optional filter executor, surface pool, and GPU resource
+implementation, requires OffscreenCanvas/WebGL2, and does not read scene pixels
+back to JavaScript. Captures use the active target's finite viewport and transforms.
+Resources are created lazily, reused across passes, restored through scheduled
+invalidation after context loss, and released on removal or mount disposal.
+Ordered filter lists remain ordered; every backdrop pass reads the same prior
+parent paint, while intervening operations change the source mask/result normally.

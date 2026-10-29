@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function MouseDownStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function MouseDownStudy() {
   const presses = useSignal(0);
   const button = useSignal("none");
   return [
@@ -25,8 +25,10 @@ function MouseDownStudy() {
       }}
       onMouseDown={(event) => {
         presses.update((value) => value + 1);
-        button.set(["primary", "middle", "secondary"][event.originalEvent.button] ??
-            `button ${event.originalEvent.button}`);
+        button.set(
+          ["primary", "middle", "secondary"][event.originalEvent.button] ??
+            `button ${event.originalEvent.button}`,
+        );
       }}
     />,
     <Text
@@ -50,7 +52,4 @@ function MouseDownStudy() {
       }}
     >{`DOWN / ${presses.get()} / ${button.get()}`}</Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <MouseDownStudy />);
 }

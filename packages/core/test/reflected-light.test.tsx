@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { pibbl, defineTexture, Rectangle, useTexture } from '@pibbl/core';
+import { defineTexture, Rectangle, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { displacement, reflectedLight } from '@pibbl/core/filters';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing.js';
 import { resolveFilterList } from '../src/lib/style/filter.js';

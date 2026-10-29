@@ -2,12 +2,17 @@
 
 ## Active plan
 
-[008 — Financial charting](./008-financial-charting.md) is active. Batches 1 and 2
-are accepted; the user authorized a local commit and continuation on 2026-10-09.
-The next checkpoint is Batch 3 authoring review: linked panes, range controls and
-normalized returns. Platform Intl number formatting is reused. Final focused
-Batch 2 runtime, desktop/touch Studio, editor, catalog, documentation and TypeScript
-checks pass; no aggregate trust pass is claimed. Unrelated changes remain separate.
+[010 — Native layout engine rework](./010-layout-engine-rework.md) is the
+current user-authorized layout execution plan. The native engine is the default
+runtime path; the numbered delivery slices are historical evidence. Remaining
+work covers native graph hardening, migration/conformance evidence, and release
+gates. This does not close the earlier work below.
+
+[008 — Financial charting](./008-financial-charting.md) records the approved financial delivery.
+[009 — Parameterized textures](./009-parameterized-textures.md) records the user-directed texture library work.
+[Scientific visualization priorities](./viz-charting-priorities.md) records the research marks and next proposed slices.
+
+## Completed plans
 
 [007 — Visualization charting](./007-visualization-charting.md) completed its approved
 scope on 2026-10-06. The [closeout walkthrough](../testing/field-notes/2026-10-06-chart-api-walkthrough.md)
@@ -29,6 +34,10 @@ evidence; this queue switch does not mark it complete.
 These documents do not replace the active numbered plan.
 
 ## Strategy input
+
+- [Layout engine rework proposal](./layout-engine-rework-proposal.md) — 2026-10-21
+  Yoga research, WASM architecture, reactive integration, migration, and evidence
+  plan. Proposed only; does not replace the active numbered plans.
 
 - [`Pibbl product strategy and future opportunities`](../strategy/README.md)
 

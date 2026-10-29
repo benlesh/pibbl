@@ -1,6 +1,10 @@
-import lazyMount from "../../../../scenarios/src/learning/composition/viz-lazy-inspection.example.js";
-import paintedMount from "../../../../scenarios/src/learning/composition/viz-painted-inspection.example.js";
+import { VizLazyInspectionExample as lazyMountComponent } from "../../../../scenarios/src/learning/composition/viz-lazy-inspection.example.js";
+import { VizPaintedInspectionExample as paintedMountComponent } from "../../../../scenarios/src/learning/composition/viz-painted-inspection.example.js";
 import { afterEach, expect, it, vi } from "vitest";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const lazyMount = createExampleMount(lazyMountComponent);
+const paintedMount = createExampleMount(paintedMountComponent);
 
 const cleanups: (() => void)[] = [];
 

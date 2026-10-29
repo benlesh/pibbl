@@ -1,6 +1,6 @@
-import { pibbl, useSignal, Rectangle, Wedge, type PibblController } from "@pibbl/core";
+import { Rectangle, Wedge, useSignal } from "@pibbl/core";
 
-function WedgeStudy() {
+export function WedgeStudy() {
   const active = useSignal(false);
 
   return [
@@ -22,8 +22,4 @@ function WedgeStudy() {
       onClick={() => active.update((value) => !value)}
     />,
   ];
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <WedgeStudy />);
 }

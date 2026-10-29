@@ -1,12 +1,5 @@
-import {
-  pibbl,
-  useSignal,
-  Line,
-  Rectangle,
-  Text,
-  type PibblController,
-} from "@pibbl/core";
-function LineStudy() {
+import { Line, Rectangle, Text, useSignal } from "@pibbl/core";
+export function LineStudy() {
   const tracking = useSignal(false);
   return [
     <Rectangle
@@ -61,7 +54,4 @@ function LineStudy() {
       {tracking.get() ? "ON THE ROUTE" : "FOLLOW THE ROUTE"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <LineStudy />);
 }

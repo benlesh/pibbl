@@ -1,4 +1,5 @@
-import { pibbl, type PibblController } from '@pibbl/core';
+import { type PibblController } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../../../../sync.js";
 /** @jsxImportSource @pibbl/core */
 import {
   Capsule2D,

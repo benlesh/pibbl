@@ -1,21 +1,15 @@
-import {
-  computed,
-  pibbl,
-  useSignal,
-  Rectangle,
-  Text,
-  signal,
-  type PibblController,
-} from "@pibbl/core";
+import { Rectangle, Text, computed, useSignal, signal } from "@pibbl/core";
 
 const x = signal(144, { debugName: "learning x" });
-const doubledX = computed(() => x.get() * 2, { debugName: "learning doubled x" });
+const doubledX = computed(() => x.get() * 2, {
+  debugName: "learning doubled x",
+});
 const signalSummary = computed(
   () => `x ${x.get()} · computed ${doubledX.get()}`,
   { debugName: "learning signal summary" },
 );
 
-function SignalCard() {
+export function SignalCard() {
   const color = useSignal("#2563eb", { debugName: "learning color" });
 
   return [
@@ -72,8 +66,4 @@ function SignalCard() {
       CLICK TO UPDATE THE WRITABLE SIGNAL
     </Text>,
   ];
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <SignalCard />);
 }

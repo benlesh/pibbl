@@ -3,7 +3,8 @@ import { jsxDEV } from '@pibbl/core/jsx-dev-runtime';
 import type { PibblAdvanceParticipant } from '../src/lib/scheduler/types';
 import { queueBeginCommand, registerAdvanceParticipant, queueFrameCompletion } from '../src/lib/scheduler/realm-scheduler';
 import { createSchedulerHistory, observeScheduler } from '../../../tooling/agent-verification/scheduler';
-import { computed, createElement, pibbl, Absolute, Group, Layer, Rectangle, signal, useReaction, useConst, useLayoutBox, type BoxStyle } from '@pibbl/core';
+import { computed, createElement, Absolute, Group, Layer, Rectangle, signal, useReaction, useConst, useLayoutBox, type BoxStyle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { expect, it } from 'vitest';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
 import { createSignalInspector } from '../../../tooling/agent-verification/signals';
@@ -1106,8 +1107,8 @@ it.each([false, true])('restores sibling allocations after a failed child (neste
     visited.length = 0;
     fail.set(false); pibbl(canvas, <Scene />); driver.flush(3);
     const before = { name: 'before', width: 60, height: 40 }, middle = { name: 'middle', width: 100, height: 30 }, after = { name: 'after', width: 70, height: 80 };
-    // Dirty Layers advance deepest-first; source paint order is a separate fact.
-    expect(visited).toEqual(nestedLayer ? [middle, before, after] : [before, middle, after]);
+    // Allocation-dependent Layers adopt the settled parent plan during traversal.
+    expect(visited).toEqual([before, middle, after]);
     const inspector = createSignalInspector(canvas);
     try {
       const records = inspector.snapshot().ownership.components.records.filter(record => record.typeId === inspector.identifyType(Panel));

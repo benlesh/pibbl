@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
 import * as Pibbl from "@pibbl/core";
@@ -17,7 +18,7 @@ it("accepts an empty resize collection without registering a label or handle", a
       <Pibbl.ResizeHandles controller={control} positions={[]} style={{ readout: true }} />
     </Pibbl.ManipulationFrame>;
   }
-  mount = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
+  mount = __pibblSyncTest(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
   expect(canvas.getContext("2d")!.getImageData(200, 150, 1, 1).data).toHaveLength(4);
 });
@@ -34,7 +35,7 @@ it("does not retain removed collection state for a later standalone handle", asy
       <Pibbl.ResizeHandle controller={control} position="bottom-right" style={{ readout: true }} formatReadout={() => "standalone"} />
     </Pibbl.ManipulationFrame>;
   }
-  mount = Pibbl.pibbl(canvas, <Pibbl.FocusManagement><Scene /></Pibbl.FocusManagement>, { pixelRatio: 1 });
+  mount = __pibblSyncTest(canvas, <Pibbl.FocusManagement><Scene /></Pibbl.FocusManagement>, { pixelRatio: 1 });
   await settle();
   collection.set(false);
   await settle();

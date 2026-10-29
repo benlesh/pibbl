@@ -1,11 +1,9 @@
 import {
-  pibbl,
-  useEventTarget,
-  useSignal,
   FocusManagement,
   Rectangle,
   Text,
-  type PibblController,
+  useEventTarget,
+  useSignal,
   type PibblEventTargetSnapshot,
   type PibblKeyboardEvent,
   type PibblLogicalMouseEvent,
@@ -145,20 +143,21 @@ function KeyboardActivationLesson() {
         fill: "#431407",
       }}
     />,
-    ...(events.get().length ? events.get() : ["Key fields will appear here."]).map(
-      (entry, index) => (
-        <Text
-          style={{
-            left: 72,
-            top: 324 + index * 13,
-            fill: "#ffedd5",
-            font: "11px monospace",
-          }}
-        >
-          {entry}
-        </Text>
-      ),
-    ),
+    ...(events.get().length
+      ? events.get()
+      : ["Key fields will appear here."]
+    ).map((entry, index) => (
+      <Text
+        style={{
+          left: 72,
+          top: 324 + index * 13,
+          fill: "#ffedd5",
+          font: "11px monospace",
+        }}
+      >
+        {entry}
+      </Text>
+    )),
     <Text
       style={{
         left: 360,
@@ -174,11 +173,10 @@ function KeyboardActivationLesson() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function KeyboardEventsAndActivationExample() {
+  return (
     <FocusManagement>
       <KeyboardActivationLesson />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

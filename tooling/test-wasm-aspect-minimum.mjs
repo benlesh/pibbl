@@ -1,0 +1,73 @@
+import { strict as assert } from 'node:assert';
+import { chromium } from 'playwright';
+const base = process.argv.slice(2).find(value => !value.startsWith('--')) ?? 'http://127.0.0.1:5192';
+const source = process.argv.includes('--source');
+const browser = await chromium.launch({ headless: true });
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1150 } });
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  await page.goto(`${base}/#/examples/layout/wasm-flex-aspect-minimum`);
+  const frame = page.frameLocator('iframe[srcdoc]');
+  await frame.locator('pre').waitFor();
+  await page.locator('iframe[srcdoc]').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(220);
+  const state = async () => JSON.parse(await frame.locator('pre').innerText());
+  const click = async (x, y) => {
+    const bounds = await frame.locator('canvas').boundingBox();
+    const scale = Math.min(bounds.width / 760, bounds.height / 540);
+    await frame.locator('canvas').click({ position: { x: (bounds.width - 760 * scale) / 2 + x * scale, y: (bounds.height - 540 * scale) / 2 + y * scale } });
+    await page.waitForTimeout(160);
+    return state();
+  };
+  const pixel = async (x, y) => frame.locator('canvas').evaluate((canvas, point) => {
+    const scale = Math.min(canvas.width / 760, canvas.height / 540);
+    return [...canvas.getContext('2d').getImageData(Math.floor((canvas.width - 760 * scale) / 2 + point.x * scale), Math.floor((canvas.height - 540 * scale) / 2 + point.y * scale), 1, 1).data];
+  }, { x, y });
+  const blue = [25, 55, 91, 255], green = [66, 107, 97, 255];
+  const initial = await state();
+  assert.equal(initial.owner, 240); assert.equal(initial.min, 'omitted');
+  assert.deepEqual(await pixel(207, 180), blue); assert.deepEqual(await pixel(208, 180), green);
+  assert.deepEqual(await pixel(394, 349), blue); assert.deepEqual(await pixel(394, 350), green);
+  assert.deepEqual((await click(210, 180)).hits, ['row B']);
+  assert.deepEqual((await click(394, 355)).hits, ['row B', 'column B']);
+  const zero = await click(250, 110); assert.equal(zero.min, '0');
+  assert.deepEqual(await pixel(208, 180), green);
+  const floored = await click(250, 110); assert.equal(floored.min, '240');
+  assert.deepEqual(await pixel(267, 180), blue); assert.deepEqual(await pixel(268, 180), green);
+  assert.deepEqual(await pixel(394, 409), blue); assert.deepEqual(await pixel(394, 410), green);
+  assert.deepEqual((await click(210, 180)).hits, ['row B', 'column B', 'row A']);
+  assert.deepEqual((await click(394, 355)).hits, ['row B', 'column B', 'row A', 'column A']);
+  const wide = await click(60, 110); assert.equal(wide.owner, 300);
+  const omittedWide = await click(250, 110); assert.equal(omittedWide.min, 'omitted');
+  assert.deepEqual(await pixel(268, 180), green);
+  const restored = await click(60, 110);
+  assert.deepEqual(await pixel(208, 180), green);
+  assert.deepEqual(await pixel(394, 350), green);
+  assert.equal(restored.layout.nodeCreates, initial.layout.nodeCreates);
+  const auto = await click(660, 110); assert.equal(auto.crossAuto, true);
+  assert.deepEqual(await pixel(40, 180), [231, 229, 223, 255]);
+  assert.deepEqual(await pixel(40, 215), blue);
+  assert.deepEqual(await pixel(390, 180), [231, 229, 223, 255]);
+  assert.deepEqual(await pixel(480, 180), blue);
+  assert.deepEqual(await pixel(40, 453), [243, 240, 232, 255]);
+  assert.deepEqual(await pixel(40, 475), [110, 62, 121, 255]);
+  assert.deepEqual((await click(40, 475)).hits.at(-1), 'percentage');
+  assert.deepEqual((await click(480, 180)).hits.at(-1), 'column A');
+  assert.equal((await state()).layout.nodeCreates, initial.layout.nodeCreates);
+  if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
+  const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
+  const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
+  if (!source) {
+    assert.equal(proof.mode, 'layout-wasm-built');
+    assert.ok(proof.coreInputs.length && proof.coreInputs.every(value => value.includes('packages/core/.layout-wasm-package/dist/')));
+  }
+  const disposed = await sandbox.evaluate(() => {
+    dispatchEvent(new PageTransitionEvent('pagehide'));
+    return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();
+  });
+  assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances], [0, 0, 0, 0]);
+  assert.deepEqual(errors, []);
+  console.warn(`${source ? 'Source' : 'Built'} empty aspect minimum: omitted=0, floor240 and owner240→300→240 preserve native nodes; row/column exact paint boundaries, aspect/percentage side-auto placement and old-target transfer agree; disposal0000; ${proof?.coreInputs.length ?? 'source'} inputs.`);
+} finally { await browser.close(); }

@@ -1,0 +1,221 @@
+{
+  "name": "Pibbl Big Bubbles",
+  "palette": {
+    "coral": "#FF735E",
+    "green": "#159447",
+    "violet": "#8B5CCB",
+    "ink": "#111211"
+  },
+  "coordinateSystem": {
+    "viewBox": [
+      0,
+      0,
+      350,
+      350
+    ],
+    "shapeOrigin": [
+      35,
+      35
+    ],
+    "horizontalWordmarkOrigin": [
+      330,
+      73
+    ],
+    "units": "SVG units; bubble positions are relative to shapeOrigin"
+  },
+  "shapes": [
+    {
+      "id": "triangle",
+      "path": "M0 0H128L0 140Z",
+      "fill": "#FF735E",
+      "pivot": [
+        42.667,
+        46.667
+      ]
+    },
+    {
+      "id": "square",
+      "path": "M0 140H124V280H0Z",
+      "fill": "#159447",
+      "pivot": [
+        62,
+        210
+      ]
+    },
+    {
+      "id": "bowl",
+      "path": "M128 0H148C192 0 228 31 228 70C228 109 192 140 148 140H128Z",
+      "fill": "#8B5CCB",
+      "pivot": [
+        172,
+        70
+      ]
+    }
+  ],
+  "bubbles": [
+    {
+      "id": "bubble-1",
+      "destination": {
+        "x": 241,
+        "y": 18,
+        "r": 9
+      },
+      "fill": "#8B5CCB",
+      "source": {
+        "x": 216,
+        "y": 32,
+        "r": 12
+      },
+      "release": "cutout grows as bubble exits",
+      "sourceFill": "#8B5CCB",
+      "colorTransition": "none"
+    },
+    {
+      "id": "bubble-2",
+      "destination": {
+        "x": 267,
+        "y": 67,
+        "r": 10
+      },
+      "fill": "#8B5CCB",
+      "source": {
+        "x": 228,
+        "y": 65,
+        "r": 10
+      },
+      "release": "cutout grows as bubble exits",
+      "sourceFill": "#8B5CCB",
+      "colorTransition": "none"
+    },
+    {
+      "id": "bubble-3",
+      "destination": {
+        "x": 228,
+        "y": 121,
+        "r": 7
+      },
+      "fill": "#8B5CCB",
+      "source": {
+        "x": 211,
+        "y": 105,
+        "r": 9
+      },
+      "release": "cutout grows as bubble exits",
+      "sourceFill": "#8B5CCB",
+      "colorTransition": "none"
+    },
+    {
+      "id": "bubble-4",
+      "destination": {
+        "x": 241,
+        "y": 62,
+        "r": 6
+      },
+      "fill": "#FF735E",
+      "source": {
+        "x": 187,
+        "y": 52,
+        "r": 8
+      },
+      "release": "cutout grows as bubble exits",
+      "sourceFill": "#8B5CCB",
+      "colorTransition": "violet to destination color during release"
+    },
+    {
+      "id": "bubble-5",
+      "destination": {
+        "x": 254,
+        "y": 107,
+        "r": 8
+      },
+      "fill": "#159447",
+      "source": {
+        "x": 183,
+        "y": 91,
+        "r": 6
+      },
+      "release": "cutout grows as bubble exits",
+      "sourceFill": "#8B5CCB",
+      "colorTransition": "violet to destination color during release"
+    },
+    {
+      "id": "bubble-6",
+      "destination": {
+        "x": 272,
+        "y": 27,
+        "r": 6
+      },
+      "fill": "#FF735E",
+      "release": "accent dot fades in during bloom"
+    },
+    {
+      "id": "bubble-7",
+      "destination": {
+        "x": 253,
+        "y": -2,
+        "r": 4
+      },
+      "fill": "#159447",
+      "release": "accent dot fades in during bloom"
+    },
+    {
+      "id": "bubble-8",
+      "destination": {
+        "x": 286,
+        "y": 96,
+        "r": 5
+      },
+      "fill": "#8B5CCB",
+      "release": "accent dot fades in during bloom"
+    },
+    {
+      "id": "bubble-9",
+      "destination": {
+        "x": 282,
+        "y": 47,
+        "r": 5
+      },
+      "fill": "#159447",
+      "release": "accent dot fades in during bloom"
+    }
+  ],
+  "cutouts": [
+    {
+      "bubbleId": "bubble-1",
+      "x": 216,
+      "y": 32,
+      "r": 12
+    },
+    {
+      "bubbleId": "bubble-2",
+      "x": 228,
+      "y": 65,
+      "r": 10
+    },
+    {
+      "bubbleId": "bubble-3",
+      "x": 211,
+      "y": 105,
+      "r": 9
+    },
+    {
+      "bubbleId": "bubble-4",
+      "x": 187,
+      "y": 52,
+      "r": 8
+    },
+    {
+      "bubbleId": "bubble-5",
+      "x": 183,
+      "y": 91,
+      "r": 6
+    }
+  ],
+  "intendedSequence": [
+    "Tumble the three solid primary shapes in a repeating loading loop.",
+    "When ready, finish the current loop and settle shapes into the P.",
+    "Release bubbles from their source positions; reveal corresponding cutouts and transition accent colors.",
+    "Reveal coral and green accent dots, then hold the completed logo."
+  ],
+  "status": "Prepared geometry and parts; animation timing and motion are not implemented."
+}

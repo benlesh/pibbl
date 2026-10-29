@@ -1,7 +1,11 @@
+import { layoutPreflightSource } from '../tooling/layout-preflight-source';
+import { layoutYogaRehearsalSource } from '../tooling/layout-yoga-rehearsal-source';
 
 import { targetingIdentityPlugin } from '../tooling/agent-verification/identity-plugin.mjs';
 import { textAssets } from "../tooling/text-assets.ts";
-import { defineConfig } from "vite";
+import { layoutAssets } from "../tooling/layout-assets.ts";
+import { defineConfig, searchForWorkspaceRoot } from "vite";
+import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { assertBuiltCore } from "../tooling/assert-built-core.ts";
 import { pibblRuntimeSource } from "../tooling/pibbl-runtime-source.ts";
@@ -28,6 +32,8 @@ export default defineConfig(({ mode }) => {
     ["@pibbl/core/textures", "../packages/core/src/features/textures/index.ts"],
     ["@pibbl/core/viz", "../packages/core/src/features/viz/index.ts"],
     ["@pibbl/core/internal", "../packages/core/src/internal.ts"],
+    ["@pibbl/core/internal/layout", "../packages/core/src/layout-kernel.ts"],
+    ["@pibbl/core/sync", "../packages/core/src/sync.ts"],
     ["@pibbl/core/jsx-dev-runtime", "../packages/core/src/jsx-dev-runtime.ts"],
     ["@pibbl/core/jsx-runtime", "../packages/core/src/jsx-runtime.ts"],
     ["@pibbl/core", "../packages/core/src/index.ts"],
@@ -37,22 +43,50 @@ export default defineConfig(({ mode }) => {
     find: new RegExp(`^${find.replaceAll("/", "\\/")}$`, "u"),
     replacement: resolve(import.meta.dirname, path),
   }));
+  // Private Studio metadata must stay in this checkout even when node_modules is shared.
+  // Resolve runtime entries to this checkout's built package output as well.
+  const builtStudioAliases = [
+    ["@pibbl/scenarios", "../packages/scenarios/src/index.ts"],
+    ["@pibbl/scenarios/surface", "../packages/scenarios/src/surface.ts"],
+  ].map(([find, path]) => ({
+    find: new RegExp(`^${find.replaceAll("/", "\\/")}$`, "u"),
+    replacement: resolve(import.meta.dirname, path),
+  }));
+  for (const entry of sourceAliases) {
+    builtStudioAliases.push({
+      find: entry.find,
+      replacement: entry.replacement.replace('/src/', '/dist/').replace(/\.ts$/, '.mjs'),
+    });
+  }
   return {
+    // Source and private-built lanes run concurrently; their optimizer graphs differ.
+    cacheDir: mode === "layout-wasm-built" ? "node_modules/.vite-layout-wasm-built" : undefined,
     plugins: [
       targetingIdentityPlugin(resolve(import.meta.dirname, "..")),
       textAssets(),
+      layoutAssets(),
+      layoutPreflightSource(mode),
+      layoutYogaRehearsalSource(mode),
       ...(mode === "built" ? [assertBuiltCore()] : []),
       pibblRuntimeSource(mode),
       pibblStudioDocs({ repositoryRoot: resolve(import.meta.dirname, "..") }),
     ],
     resolve: {
-      alias: mode === "built" ? [] : sourceAliases,
-      tsconfigPaths: mode !== "built",
+      alias: mode === "built" || mode === "layout-wasm-built" ? builtStudioAliases : sourceAliases,
+      tsconfigPaths: mode !== "built" && mode !== "layout-wasm-built",
     },
     define: {
       __PIBBL_STUDIO_DOCS_ACCEPTANCE__: JSON.stringify(isStudioDocsAcceptance),
     },
-    server: { headers: sandboxAssetHeaders },
+    server: {
+      headers: sandboxAssetHeaders,
+      fs: {
+        allow: [
+          searchForWorkspaceRoot(import.meta.dirname),
+          realpathSync(resolve(import.meta.dirname, "../node_modules")),
+        ],
+      },
+    },
     preview: { headers: sandboxAssetHeaders },
     build: isStudioDocsAcceptance
       ? { outDir: studioDocsAcceptanceOutput }

@@ -375,3 +375,6 @@ website/.astro/
 website/src/content/docs/
 website/public/generated/
 website/public/tutorials/
+
+# Local unpublished layout experiment
+packages/core/.layout-wasm-package/

@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   HtmlBox,
   Rectangle,
   signal,
@@ -9,6 +9,7 @@ import {
   type HtmlUpdateFunction,
   type HtmlBoxFocusState,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const count = signal(0);
 const output = document.createElement("output");
@@ -53,5 +54,5 @@ function Scene() {
     </>
   );
 }
-const controller = pibbl(canvas, <Scene />, { htmlOverlay: overlay });
+const controller = pibblSync(canvas, <Scene />, { htmlOverlay: overlay });
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

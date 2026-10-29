@@ -1,4 +1,5 @@
-import { batch, pibbl, createElement, signal } from '@pibbl/core';
+import { batch, createElement, signal } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import {
   createSignalsLabModel,
   SIGNALS_LAB_SOURCE_ID,
@@ -103,8 +104,8 @@ async function mountSignalsLab(
   let model: SignalsLabModel;
   let metrics: SignalsLabMetrics;
   let lastAction: 'mount' | SignalsLabAction = 'mount';
-  let primaryController: ReturnType<typeof pibbl> | undefined;
-  let secondaryController: ReturnType<typeof pibbl> | undefined;
+  let primaryController: ReturnType<typeof pibblSync> | undefined;
+  let secondaryController: ReturnType<typeof pibblSync> | undefined;
   let secondaryCanvas: HTMLCanvasElement | undefined;
 
   const assertActive = (): void => {
@@ -114,7 +115,7 @@ async function mountSignalsLab(
     context.onStateChange?.(snapshot(model, metrics, lastAction));
   };
   const renderPrimary = (): void => {
-    primaryController = pibbl(
+    primaryController = pibblSync(
       context.canvas,
       createElement(SignalsLabRootA, { model, metrics }),
     );
@@ -131,7 +132,7 @@ async function mountSignalsLab(
     (context.referenceHost ?? context.canvas.parentElement ?? document.body)
       .appendChild(secondaryCanvas);
     renderPrimary();
-    secondaryController = pibbl(
+    secondaryController = pibblSync(
       secondaryCanvas,
       createElement(SignalsLabRootB, { model, metrics }),
     );

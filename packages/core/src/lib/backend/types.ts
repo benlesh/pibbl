@@ -7,6 +7,10 @@ import type { PibblHitTestOutput } from '../events/paint-entry.js';
 import type { PibblEventFocusOptions, PibblEventHandlers } from '../events/types.js';
 import type {
   MeasureInput,
+  IntrinsicMeasureInput,
+  IntrinsicSizesResult,
+  BaselineMeasureInput,
+  BaselinesResult,
   MeasureResult,
   NormalizedStyle,
   PreservedSignalPropKey,
@@ -146,6 +150,18 @@ export interface PibblBackendPrimitiveDefinition<
    * @returns Measured dimensions or an unsupported measurement result. See {@link MeasureResult}.
    */
   readonly measure?: (input: MeasureInput<PrimitiveProgramProps<P>, N>) => MeasureResult;
+  /**
+   * Pure intrinsic content provider. See {@link IntrinsicMeasureInput}.
+   * @param input - Resolved inputs and tagged availability. See {@link IntrinsicMeasureInput}.
+   * @returns Paired content sizes or unsupported. See {@link IntrinsicSizesResult}.
+   */
+  readonly measureIntrinsic?: (input: IntrinsicMeasureInput<PrimitiveProgramProps<P>, N>) => IntrinsicSizesResult;
+  /**
+   * Pure first/last baseline provider at the final content allocation.
+   * @param input - Resolved inputs and final local allocation. See {@link BaselineMeasureInput}.
+   * @returns Finite ordered offsets or unsupported. See {@link BaselinesResult}.
+   */
+  readonly measureBaselines?: (input: BaselineMeasureInput<PrimitiveProgramProps<P>, N>) => BaselinesResult;
 }
 
 /**

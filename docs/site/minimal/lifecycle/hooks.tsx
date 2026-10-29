@@ -1,6 +1,5 @@
 /** @jsxImportSource @pibbl/core */
 import {
-  pibbl,
   Rectangle,
   Text,
   useSignal,
@@ -11,6 +10,7 @@ import {
   type PibblRef,
   type PibblReactionOptions,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const canvas = document.createElement("canvas");
 canvas.width = 320;
@@ -47,5 +47,5 @@ function Counter() {
     </Text>,
   ];
 }
-const controller = pibbl(canvas, <Counter />);
+const controller = pibblSync(canvas, <Counter />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

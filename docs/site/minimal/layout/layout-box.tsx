@@ -1,10 +1,11 @@
 import {
   Rectangle,
   Text,
-  pibbl,
+
   useLayoutBox,
   type LayoutItemStyle,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 function Scene() {
   const box = useLayoutBox();
@@ -31,5 +32,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(canvas, <Scene />);
+const app = pibblSync(canvas, <Scene />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

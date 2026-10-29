@@ -1,5 +1,8 @@
 import { afterEach, expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-recorded-inspection.example.js";
+import { VizRecordedInspectionExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-recorded-inspection.example.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent);
 
 afterEach(() => {
   document.body.replaceChildren();

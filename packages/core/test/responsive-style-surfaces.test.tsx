@@ -1,5 +1,6 @@
 import { invert, blur } from '@pibbl/core/filters';
-import { pibbl, Rectangle, Text, createElement, definePrimitive, measureElement, signal, type PibblController, type SystemStyle } from '@pibbl/core';
+import { Rectangle, Text, createElement, definePrimitive, measureElement, signal, type PibblController, type SystemStyle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it, vi } from 'vitest';
 const controllers: PibblController[] = [];
 afterEach(() => {

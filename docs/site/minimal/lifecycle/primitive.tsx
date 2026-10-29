@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   definePrimitive,
   useCanvasContext,
   Text,
@@ -19,6 +19,7 @@ import {
   type MeasureResult,
   type CanvasMeasurementService,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 type Props = { label: string };
 interface Style extends SystemStyle {
@@ -89,5 +90,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 360;
 canvas.height = 180;
 document.body.append(canvas);
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

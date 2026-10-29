@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function ContextMenuStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function ContextMenuStudy() {
   const opened = useSignal(false);
   return [
     <Rectangle
@@ -55,7 +55,4 @@ function ContextMenuStudy() {
         : "A contextual action\ncan stay contextual."}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <ContextMenuStudy />);
 }

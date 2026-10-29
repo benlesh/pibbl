@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   Group,
   Rectangle,
   SvgPath,
@@ -14,6 +14,7 @@ import {
   type PibblVisibilityTransitionStatus,
   type PibblTransitionBinding,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const options: PibblHologramOptions = {
   region: { x: 138, y: 44, width: 204, height: 204 },
@@ -78,7 +79,7 @@ function Scene() {
     </>
   );
 }
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 // Wait for the scheduled first mount before starting its entrance.
 void ready.then((transition) => transition.show());
 for (const action of ["show", "hide"] as const) {

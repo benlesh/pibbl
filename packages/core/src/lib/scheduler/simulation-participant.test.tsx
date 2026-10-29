@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  Fragment,
-  pibbl,
-  createElement,
-  signal,
-} from '@pibbl/core';
+import { Fragment, createElement, signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../sync.js";
 import {
   pibblInternalCurrentSimulationOwner,
   pibblInternalOnSimulationRenderTransactionFinish,

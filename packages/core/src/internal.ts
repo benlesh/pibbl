@@ -505,3 +505,6 @@ export { getCurrentWorldTransform as pibblInternalCurrentWorldTransform } from "
 
 export { borrowTextureRaster, resolveTexturePaint, validateTexturePaint } from './lib/textures/texture-protocol.js';
 export type { BorrowedTextureRaster } from './lib/textures/texture-protocol.js';
+
+export { createStandaloneLayoutKernel } from "./lib/layout/standalone-kernel.js";
+export type { StandaloneLayoutKernel, StandaloneLayoutKernelNode, StandaloneLayoutKernelInput, StandaloneLayoutKernelBox } from "./lib/layout/standalone-kernel.js";

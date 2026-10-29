@@ -1,7 +1,7 @@
 ---
 id: api-types-frame-recording
 title: Frame recording types
-summary: Capture sessions, timestamped frames, and GIF export options.
+summary: Capture sessions, committed render generations, and GIF export options.
 kind: api
 slug: frame-recording
 apiCategory: types
@@ -13,6 +13,7 @@ symbols:
     PibblRecordedFrameInfo,
     PibblRecordedFrame,
     PibblGifExportOptions,
+    PibblRenderCompletion,
   ]
 ---
 
@@ -21,7 +22,18 @@ symbols:
 ## PibblFrameRecordingOptions
 
 `PibblFrameRecordingOptions` requires `duration` in milliseconds and accepts
-`frameRate`, `memoryHeadroom`, and an optional cancellation `signal`.
+`frameRate`, `memoryHeadroom`, and an optional cancellation `signal`. The optional
+`onRenderComplete` callback observes each root render after render-owned state has
+published. It receives a `committed` event with a committed `generation` or a
+`failed` event for an attempted generation. Failed attempts never yield pixel
+frames; a failed capture rejects. `onFrameCaptured` observes the exact generation
+after its RGBA bytes are copied, which can occur later than the render-completion
+callback when capture coalesces renders.
+
+## PibblRenderCompletion
+
+`PibblRenderCompletion` distinguishes committed generations from failed attempts.
+Only committed generations can identify recorded pixel evidence.
 
 ## PibblFrameRecordingSession
 
@@ -36,8 +48,10 @@ copy; disposal releases worker-owned pixels and cancels pending operations.
 
 ## PibblRecordedFrameInfo
 
-`PibblRecordedFrameInfo` contains `timestamp` in milliseconds from capture start,
-plus physical backing `width` and `height`.
+`PibblRecordedFrameInfo` contains `renderGeneration`, the committed root render
+generation whose pixels were copied; `timestamp` in milliseconds from capture
+start; and physical backing `width` and `height`. Timestamps measure wall-clock
+capture time, can coalesce multiple renders, and are not generation identifiers.
 
 ## PibblRecordedFrame
 

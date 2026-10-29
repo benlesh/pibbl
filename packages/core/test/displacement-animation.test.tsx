@@ -1,5 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import { pibbl, defineTexture, Group, Rectangle, signal, drive, tween, usePlayback, useTexture, type PibblPlayback } from '@pibbl/core';
+import { defineTexture, Group, Rectangle, signal, drive, tween, usePlayback, useTexture, type PibblPlayback } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { displacement } from '@pibbl/core/filters';
 import { expect, it } from 'vitest';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';

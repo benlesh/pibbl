@@ -8,7 +8,6 @@ import {
   type TutorialSnapshotCatalogEntry,
 } from "@pibbl/scenarios";
 import {
-  pibbl,
   useEventTarget,
   useRectPath,
   useRef,
@@ -16,6 +15,7 @@ import {
   createElement,
   Rectangle,
 } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, expect, it } from "vitest";
 import {
   learningSourcePaths,
@@ -224,7 +224,7 @@ async function renderTutorialSnapshot(slug: string): Promise<{
   let mountedController: { dispose: () => void } | undefined;
   try {
     const module = await loadTutorialSnapshot(entry);
-    const runtimeController = module.default(canvas);
+    const runtimeController = await module.mount(canvas);
     mountedController = {
       dispose(): void {
         try {
@@ -258,7 +258,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-const module = async () => ({ default: () => ({ dispose() {} }) });
+const module = async () => ({ mount: async () => ({ dispose() {} }) });
 const canonicalSnapshots = [
   ["canvas-scene", "canvas-scene"],
   ["first-node", "first-node"],
@@ -284,6 +284,7 @@ const record = (
   authoring: "jsx",
   canvas: { width: 960, height: 600 },
   source: {
+    exportName: "Fixture",
     path: `packages/scenarios/src/tutorials/diagram-editor/${String(chapter).padStart(2, "0")}-${canonicalSnapshots[chapter - 1]?.[1] ?? `chapter-${String(chapter)}`}.example.tsx`,
   },
   load: module,
@@ -421,6 +422,7 @@ it("rejects metadata outside the diagram-editor JSX snapshot contract", () => {
       withRecord(1, {
         ...record(1),
         source: {
+          exportName: "Fixture",
           path: "packages/scenarios/src/learning/start/nope.example.tsx",
         },
       }),
@@ -440,6 +442,7 @@ it("rejects filename-order and stable slug/path correspondence mutations", () =>
       withRecord(2, {
         ...record(2),
         source: {
+          exportName: "Fixture",
           path: "packages/scenarios/src/tutorials/diagram-editor/03-first-node.example.tsx",
         },
       }),
@@ -457,7 +460,9 @@ it("rejects tutorial modules without a default mount function", async () => {
     ...record(1),
     load: async () => ({}),
   } as TutorialSnapshotCatalogEntry;
-  await expect(loadTutorialSnapshot(invalid)).rejects.toThrow(/default mount/u);
+  await expect(loadTutorialSnapshot(invalid)).rejects.toThrow(
+    /selected component host/u,
+  );
 });
 
 it("discovers learning and tutorial source paths as separate inventories", () => {
@@ -480,6 +485,7 @@ it("validates and loads every cataloged tutorial source", async () => {
         authoring: "jsx",
         label: `Tutorial snapshot "${entry.slug}"`,
         sourcePath: entry.source.path,
+        exportName: entry.source.exportName,
       }),
     ).not.toThrow();
     if (entry.chapter >= 4) {
@@ -490,7 +496,7 @@ it("validates and loads every cataloged tutorial source", async () => {
         }),
       ).not.toThrow();
     }
-    expect(typeof (await loadTutorialSnapshot(entry)).default).toBe("function");
+    expect(typeof (await loadTutorialSnapshot(entry)).mount).toBe("function");
   }
 });
 

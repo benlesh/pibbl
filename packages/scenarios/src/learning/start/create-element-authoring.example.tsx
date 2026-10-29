@@ -2,14 +2,12 @@ import {
   FocusManagement,
   Fragment,
   KeyboardNavigation,
-  pibbl,
   createElement,
   useSignal,
   useReaction,
   Group,
   Rectangle,
   Text,
-  type PibblController,
 } from "@pibbl/core";
 
 let liveLifecycleGenerations = 0;
@@ -97,48 +95,39 @@ function CreateElementPoster(_props: Record<never, never>) {
         },
         "CREATE ELEMENT",
       ),
-      createElement(
-        Text,
-        {
-          style: {
-            left: 360,
-            top: 164,
-            fill: "#ffffff",
-            font: "700 16px monospace",
-            textAlign: "center",
-          },
-          children: ["SELECTED ", selection.get(), " · COUNT ", count.get()],
+      createElement(Text, {
+        style: {
+          left: 360,
+          top: 164,
+          fill: "#ffffff",
+          font: "700 16px monospace",
+          textAlign: "center",
         },
-      ),
+        children: ["SELECTED ", selection.get(), " · COUNT ", count.get()],
+      }),
       choices,
-      createElement(
-        Text,
-        {
-          style: {
-            left: 360,
-            top: 322,
-            fill: "#ffffff",
-            font: "700 13px monospace",
-            textAlign: "center",
-          },
-          children: ["LIFECYCLE ", liveLifecycleGenerations],
+      createElement(Text, {
+        style: {
+          left: 360,
+          top: 322,
+          fill: "#ffffff",
+          font: "700 13px monospace",
+          textAlign: "center",
         },
-      ),
+        children: ["LIFECYCLE ", liveLifecycleGenerations],
+      }),
     ),
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function CreateElementAuthoringExample() {
+  return createElement(
+    FocusManagement,
+    null,
     createElement(
-      FocusManagement,
-      null,
-      createElement(
-        KeyboardNavigation,
-        { mode: "directional", children: null },
-        createElement(CreateElementPoster, null),
-      ),
+      KeyboardNavigation,
+      { mode: "directional", children: null },
+      createElement(CreateElementPoster, null),
     ),
   );
 }

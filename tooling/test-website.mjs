@@ -7,7 +7,7 @@ const server = await preview({
   configFile: false,
   root: fileURLToPath(new URL("../website/", import.meta.url)),
   appType: "mpa",
-  preview: { host: "127.0.0.1", port: 0, cors: true, open: false },
+  preview: { host: "127.0.0.1", port: 0, cors: false, open: false },
 });
 try {
   const address = server.httpServer.address();
@@ -16,6 +16,7 @@ try {
     "website-documentation-browser.mjs",
     "website-brick-climb-browser.mjs",
     "website-unified-browser.mjs",
+    "website-playground-browser.mjs",
     "website-minimal-browser.mjs",
   ]) {
     await new Promise((resolve, reject) => {

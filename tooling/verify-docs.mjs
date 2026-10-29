@@ -106,6 +106,9 @@ const publicGuidePaths = [
   "docs/site/learn/guides/manipulation.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/functions/define-layout-component.md",
+  "docs/site/api/functions/pibbl-sync.md",
+  "docs/site/api/functions/prepare-layout-engine.md",
   "docs/site/api/functions/record-frames.md",
   "docs/site/api/types/frame-recording.md",
   "docs/site/api/components/sprite.md",
@@ -128,6 +131,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/reaction-diffusion.md",
   "docs/site/api/components/procedural-texture.md",
   "docs/site/api/types/textures.md",
+  "docs/site/api/types/pattern-textures.md",
   "docs/site/api/types/electric-textures.md",
   "docs/site/api/functions/path-bending.md",
   "docs/site/api/functions/path-geometry.md",
@@ -140,6 +144,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/manipulable.md",
   "docs/site/api/components/manipulation-frame.md",
   "docs/site/api/components/pie-layout.md",
+  "docs/site/api/components/graph-visualization.md",
   "docs/site/api/components/resize-handle.md",
   "docs/site/api/components/resize-handles.md",
   "docs/site/api/components/rotation-handle.md",
@@ -158,6 +163,12 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/domain-navigation.md",
   "docs/site/api/components/color-scales.md",
   "docs/site/api/components/interval-band-series.md",
+  "docs/site/api/components/interval-series.md",
+  "docs/site/api/components/censored-point-series.md",
+  "docs/site/api/components/weighted-point-series.md",
+  "docs/site/api/components/interval-diamond-series.md",
+  "docs/site/api/components/trajectory-series.md",
+  "docs/site/api/components/paired-series.md",
   "docs/site/api/components/chart-editing.md",
   "docs/site/api/components/point-series.md",
   "docs/site/api/components/plot-series.md",
@@ -171,6 +182,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/closest-x.md",
   "docs/site/api/functions/rendered-series-inspection.md",
   "docs/site/api/functions/financial-series.md",
+  "docs/site/api/functions/fit-content.md",
+  "docs/site/api/functions/grid-tracks.md",
   "docs/site/api/functions/interpolate-x.md",
   "docs/site/api/functions/linear-interpolation.md",
 
@@ -312,6 +325,9 @@ const currentMarkdownPaths = [
   "packages/core/src/features/particles/README.md",
   "packages/core/src/features/physics/README.md",
   "packages/three/README.md",
+  "packages/layout/README.md",
+  "docs/site/api/functions/grid-tracks.md",
+  "docs/site/learn/guides/standalone-layout-migration.md",
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
@@ -324,6 +340,7 @@ const currentMarkdownPaths = [
   "docs/design/runtime-hooks-contract.md",
   "docs/design/render-layer-and-three-contract.md",
   "docs/design/runtime-resource-ownership.md",
+  "docs/design/api-design-guidance.md",
   "docs/design/signals-and-scheduling-contract.md",
   "docs/design/style-system-contract.md",
   "docs/design/user-events-contract.md",
@@ -363,6 +380,13 @@ const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
+  "docs/project-plans/010-layout-engine-rework.md",
+  "docs/architecture/proposals/layout-engine/design.md",
+  "docs/architecture/proposals/layout-engine/migration-and-evidence.md",
+  "docs/architecture/proposals/layout-engine/reactivity.md",
+  "docs/architecture/proposals/layout-engine/yoga-research.md",
+  "docs/project-plans/layout-engine-rework-proposal.md",
+  "tooling/layout-yoga-rehearsal/README.md",
   "docs/alpha-publishing.md",
   "docs/testing/field-notes/visibility-transition-integration.md",
   ...trackedRepositoryFiles([
@@ -409,6 +433,7 @@ for (const representative of [
   );
 }
 const historicalMarkdownPatterns = [
+  /^docs\/strategy\/agent-verification-evidence\//u,
   /^docs\/testing\/runtime-performance-audit\//u,
   /^\.superpowers\/sdd\//u,
   /^docs\/design\/tfc-01-characterization-baseline\.md$/u,
@@ -1177,7 +1202,6 @@ function assertNonJsxEvidence(source) {
   let hasConditionalList = false;
   let hasDirectionalPolicy = false;
   let hasLifecycle = false;
-  let hasMount = false;
   let textUsesZeroState = false;
   let textUsesDynamicState = false;
 
@@ -1185,7 +1209,6 @@ function assertNonJsxEvidence(source) {
     if (node.type === "JSXElement" || node.type === "JSXFragment")
       hasJsx = true;
     if (callName(node) === "useReaction") hasLifecycle = true;
-    if (callName(node) === "pibbl") hasMount = true;
     if (
       node.type === "CallExpression" &&
       memberName(node.callee) === "map" &&
@@ -1246,7 +1269,7 @@ function assertNonJsxEvidence(source) {
     "Complete non-JSX evidence lacks directional KeyboardNavigation",
   );
   assert.ok(hasLifecycle, "Complete non-JSX evidence lacks hook lifecycle");
-  assert.ok(hasMount, "Complete non-JSX evidence lacks root mounting");
+  // Studio owns mounting; assertMountedNonJsxEvidence checks the public host path.
 }
 
 function assertMountedNonJsxEvidence(source) {
@@ -2181,9 +2204,9 @@ const contractPrecisionRequirements = new Map([
   [
     "docs/design/layout-system-contract.md",
     [
-      "`justifyContent`             | `flex-start` (default), `flex-end`, `center`, `space-between`, `space-around`, `space-evenly`",
-      "`alignItems`                 | `stretch` (default), `flex-start`, `flex-end`, `center`",
-      "`alignContent`               | `stretch` (default), `flex-start`, `flex-end`, `center`, `space-between`, `space-around`, `space-evenly`",
+      "`justifyContent`             | `flex-start` (default), `flex-end`, `start`, `end`, `center`, `space-between`, `space-around`, `space-evenly`",
+      "`alignItems`                 | `stretch` (default), `flex-start`, `flex-end`, `start`, `end`, `center`",
+      "`alignContent`               | `stretch` (default), `flex-start`, `flex-end`, `start`, `end`, `center`, `space-between`, `space-around`, `space-evenly`",
       "finite nonnegative numbers; axis values override `gap`; default `0`",
       "`flexBasis: auto`, `flexGrow: 0`, `flexShrink: 1`, `alignSelf: auto`",
       "finite nonnegative numeric `gap`, `rowGap`, `columnGap`; no percentages",
@@ -4152,7 +4175,10 @@ export async function verifyMutationProbes() {
     ["lifecycle", nonJsx.replace("useSignal(", "missingSignal(")],
     [
       "mount",
-      nonJsx.replace("return pibbl(canvas,", "return missingMount(canvas,"),
+      nonJsx.replace(
+        "return await pibbl(canvas,",
+        "return await missingMount(canvas,",
+      ),
     ],
     [
       "disposal",

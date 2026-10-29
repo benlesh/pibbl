@@ -1,6 +1,6 @@
-import { pibbl, useSignal, Ellipse, Rectangle, type PibblController } from "@pibbl/core";
+import { Ellipse, Rectangle, useSignal } from "@pibbl/core";
 
-function EllipseStudy() {
+export function EllipseStudy() {
   const active = useSignal(false);
 
   return [
@@ -22,8 +22,4 @@ function EllipseStudy() {
       onClick={() => active.update((value) => !value)}
     />,
   ];
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <EllipseStudy />);
 }

@@ -1,0 +1,997 @@
+import {
+  useConst,
+  computed,
+  definePrimitive,
+  type SystemStyle,
+  type FlexMargin,
+  type FlexStyle,
+  Flex,
+  Rectangle,
+  Text,
+  useCanvasContext,
+  useReaction,
+  type PibblNode,
+  signal,
+  useLayoutBox,
+  type BoxStyle,
+  type FlexItemStyle,
+} from "@pibbl/core";
+
+interface YogaMigrationBox {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** Recorded fixture data accepted by the bounded Yoga migration example. */
+type YogaMigrationContainerStyle = Omit<Readonly<FlexStyle>, "alignItems"> & { readonly alignItems?: NonNullable<FlexStyle["alignItems"]> | "baseline" };
+
+interface YogaMigrationFixture {
+  readonly name: string;
+  readonly width: number;
+  readonly height: number;
+  readonly gap: number;
+  readonly flexDirection: NonNullable<FlexStyle["flexDirection"]>;
+  readonly flexWrap: NonNullable<FlexStyle["flexWrap"]>;
+  readonly boxes: readonly YogaMigrationBox[];
+  readonly containerStyle?: YogaMigrationContainerStyle;
+  readonly itemStyles?: readonly Readonly<FlexStyle>[];
+  readonly ownerLeafStyles?: readonly Readonly<FlexStyle>[];
+  readonly nestedOwnerStyle?: Readonly<FlexStyle>;
+  readonly nestedItemStyles?: readonly Readonly<FlexStyle>[];
+  readonly innerStyle?: Readonly<FlexStyle>;
+  readonly footerStyle?: Readonly<FlexStyle>;
+  readonly layoutDirection?: "ltr" | "rtl";
+  readonly textValue?: string;
+  readonly comparisonLabel?: string;
+  readonly classification?: string;
+  readonly pibblBoxes?: readonly YogaMigrationBox[];
+  readonly contentBoxes?: readonly YogaMigrationBox[];
+  readonly nestedBoxes?: readonly YogaMigrationBox[];
+  readonly nestedCrossBoxes?: readonly YogaMigrationBox[];
+  readonly nestedDecoratedBoxes?: readonly YogaMigrationBox[];
+  readonly nestedDecoratedMaxBoxes?: readonly YogaMigrationBox[];
+  readonly nestedDecoratedColumnMaxBoxes?: readonly YogaMigrationBox[];
+  readonly nestedDecoratedColumnMinBoxes?: readonly YogaMigrationBox[];
+  readonly intrinsicNestedBoxes?: readonly YogaMigrationBox[];
+  readonly intrinsicLeafStyles?: readonly Readonly<FlexStyle>[];
+  readonly intrinsicFixture?: boolean;
+  readonly directionMatrixFixture?: boolean;
+  readonly decoratedReverseMainPercentFixture?: boolean;
+  readonly decoratedReverseMainSymmetricFixture?: boolean;
+  readonly autoMarginFixture?: boolean;
+  readonly autoWrappedMarginFixture?: boolean;
+  readonly autoCrossMarginFixture?: boolean;
+  readonly autoCrossDirectionFixture?: boolean;
+  readonly autoMainDirectionFixture?: boolean;
+  readonly autoShorthandMarginFixture?: boolean;
+  readonly autoOpposingMarginFixture?: boolean;
+  readonly textCrossAutoFixture?: boolean;
+  readonly customCrossAutoFixture?: boolean;
+  readonly ownerCrossAutoFixture?: boolean;
+  readonly roundingFixture?: boolean;
+  readonly nestedCrossMinFixture?: boolean;
+  readonly nestedDecoratedCrossMinFixture?: boolean;
+  readonly nestedDecoratedCrossMaxFixture?: boolean;
+  readonly nestedDecoratedColumnCrossMaxFixture?: boolean;
+  readonly nestedDecoratedColumnCrossMinFixture?: boolean;
+  readonly customColumnMeasureFixture?: boolean;
+  readonly relativeStaticFixture?: boolean;
+  readonly decoratedRelativeStaticFixture?: boolean;
+  readonly absoluteParticipationFixture?: boolean;
+  /** Private corpus only: fixed direct absolute box stays out of finite LTR row-wrap lines. */
+  readonly absoluteWrapFixture?: boolean;
+  /** Private corpus only: direct bounded Text measures its automatic absolute height. */
+  readonly absoluteTextHeightFixture?: boolean;
+  /** Private corpus only: direct unwrapped Text measures its automatic absolute width from Canvas ink bounds. */
+  readonly absoluteTextWidthFixture?: boolean;
+  /** Private corpus only: direct unwrapped Text measures both automatic absolute axes from Canvas ink bounds. */
+  readonly absoluteTextBothFixture?: boolean;
+  /** Private corpus only: fixed physically anchored absolute leaves across wrap modes and main directions. */
+  readonly absoluteAnchoredWrapFixture?: boolean;
+  /** Private corpus only: fixed absolute leaves use parent alignment on omitted axes across wrap directions. */
+  readonly absoluteWrappedAlignmentFixture?: boolean;
+  /** Private corpus only: physical percentage insets resolve against the finite padding box. */
+  readonly absolutePercentageInsetFixture?: boolean;
+  /** Private corpus only: static percentage insets stay inert and relative insets use physical content axes. */
+  readonly relativePercentageInsetFixture?: boolean;
+  readonly absoluteAlignmentFixture?: boolean;
+  readonly absoluteDerivedSizeFixture?: boolean;
+  readonly nestedContainingBlockFixture?: boolean;
+  /** Private corpus: direct static/relative Flex containing chains across all nowrap directions. */
+  readonly nestedContainingBlockDirectionFixture?: boolean;
+  readonly absoluteBoundsFixture?: boolean;
+  readonly absoluteAspectFixture?: boolean;
+  readonly absoluteMeasuredWidthFixture?: boolean;
+  readonly absoluteMeasuredHeightFixture?: boolean;
+  readonly absoluteMainDirectionFixture?: boolean;
+  readonly relativeMainDirectionFixture?: boolean;
+  /** Private corpus only: direct static/relative leaves across wrapped main directions. */
+  readonly relativeWrappedDirectionFixture?: boolean;
+  readonly absoluteMainBoundsFixture?: boolean;
+  readonly absoluteMainAspectFixture?: boolean;
+  /** Private corpus only: paired absolute provider with one natural axis under every nowrap direction. */
+  readonly absoluteMeasuredMainFixture?: boolean;
+  /** Native callback envelope when it intentionally differs from Pibbl's supported provider query. */
+  readonly measurementQueryDifference?: boolean;
+  readonly nativeMeasurementConstraints?: Readonly<{ minWidth: number; maxWidth: number; minHeight: number; maxHeight: number }>;
+  readonly measurementModel?: string;
+  /** Private corpus only: direct primitive first-baseline providers, kept outside public style data. */
+  readonly baselineProviderFixture?: boolean;
+  readonly baselineProviders?: readonly Readonly<{ value: number; width: number; height: number; calls: number }>[];
+}
+
+interface WasmYogaMigrationExampleProps {
+  /** Optional recorded cases. Omit for the concise public lesson. */
+  readonly fixtures?: readonly YogaMigrationFixture[];
+}
+
+function requireFixtureValue<T>(value: T | undefined, label: string): T {
+  if (value === undefined)
+    throw new Error(`Fixture is missing ${label}.`);
+  return value;
+}
+
+function requireFixtureNumber(value: unknown, label: string): number {
+  if (typeof value !== "number")
+    throw new Error(`Fixture ${label} must be numeric.`);
+  return value;
+}
+
+/** Small, copyable public subset; the private lab supplies the complete recording. */
+const DEFAULT_WASM_YOGA_MIGRATION_FIXTURES = [
+  {"name":"grow","width":300,"height":100,"gap":12,"flexDirection":"row","flexWrap":"nowrap","boxes":[{"x":0,"y":0,"width":144,"height":80},{"x":156,"y":0,"width":144,"height":80}]},
+  {"name":"cap","width":300,"height":100,"gap":12,"flexDirection":"row","flexWrap":"nowrap","boxes":[{"x":0,"y":0,"width":80,"height":80},{"x":92,"y":0,"width":208,"height":80}]},
+  {"name":"shrink","width":220,"height":100,"gap":12,"flexDirection":"row","flexWrap":"nowrap","boxes":[{"x":0,"y":0,"width":120,"height":80},{"x":132,"y":0,"width":88,"height":80}]},
+  {"name":"custom-column-measure","width":120,"height":140,"gap":0,"flexDirection":"column","flexWrap":"nowrap","containerStyle":{"alignItems":"flex-start","alignContent":"flex-start"},"customColumnMeasureFixture":true,"boxes":[{"x":0,"y":0,"width":40,"height":40},{"x":0,"y":40,"width":20,"height":20}],"itemStyles":[{"width":40,"height":"auto","flexBasis":"auto","flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":20,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0}]},
+  {"name":"custom-column-measure-resized","width":120,"height":140,"gap":0,"flexDirection":"column","flexWrap":"nowrap","containerStyle":{"alignItems":"flex-start","alignContent":"flex-start"},"customColumnMeasureFixture":true,"boxes":[{"x":0,"y":0,"width":60,"height":30},{"x":0,"y":30,"width":20,"height":20}],"itemStyles":[{"width":60,"height":"auto","flexBasis":"auto","flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":20,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0}]}
+] satisfies readonly YogaMigrationFixture[];
+
+function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement, fixtureCases: readonly YogaMigrationFixture[]) {
+  let node: PibblNode;
+  const index = signal(0);
+  const ink = signal("#19375b");
+  const selected = signal("none");
+  const actual = new Map<string, string>();
+  let rootTransform = new DOMMatrix();
+  let nextStamp = 1, hits = 0;
+  const stamps = new Map<string, number>();
+  const boxes = new Map<string, {x:number;y:number;width:number;height:number}>();
+  function recordBox(name: string) {
+    const box = useLayoutBox();
+    const stamp = useConst(() => nextStamp++);
+    const transform = rootTransform.inverse().multiply(useCanvasContext().getTransform());
+    stamps.set(name, stamp);
+    boxes.set(name, {x:+(transform.e-392).toFixed(3),y:+(transform.f-240).toFixed(3),width:+box.width.toFixed(3),height:+box.height.toFixed(3)});
+    return box;
+  }
+  function NestedLeaf({name,style:_style}:{name:string;style:BoxStyle & FlexItemStyle}) {
+    const box=recordBox(name);
+    return <Rectangle style={{width:box.width,height:box.height,fill:name.endsWith('1')?'#426b61':'#a63758',cursor:'pointer'}} onClick={()=>{hits++;selected.set(name);}} />;
+  }
+  function NestedCard({name,column,style:_style}:{name:string;column:boolean;style:BoxStyle & FlexItemStyle}) {
+    const box=recordBox(name);
+    actual.set(name, `${box.width} × ${box.height}`);
+    return <Flex style={{width:box.width,height:box.height,flexDirection:column?'column':'row',gap:'10%',alignItems:'stretch'}}>
+      <NestedLeaf key="first" name={`${name}1`} style={{width:column?'100%':'40%',height:column?'40%':'100%',flexBasis:'40%',flexGrow:0,flexShrink:0,minWidth:0,minHeight:0}} />
+      <NestedLeaf key="second" name={`${name}2`} style={{width:column?'100%':'40%',height:column?'40%':'100%',flexBasis:'40%',flexGrow:0,flexShrink:0,minWidth:0,minHeight:0}} />
+    </Flex>;
+  }
+  function LogicalPaddingLeaf({style:_style}:{style:BoxStyle & FlexItemStyle}) {
+    const box=recordBox("A1");
+    actual.set("A1", `${box.width} × ${box.height}`);
+    return <Rectangle style={{width:box.width,height:box.height,fill:"#426b61",cursor:"pointer"}} onClick={()=>{hits++;selected.set("A1");}} />;
+  }
+  function Panel({
+    name,
+    column = false,
+    wrapped = false,
+    style: _specifiedStyle,
+  }: {
+    name: string;
+    column?: boolean;
+    wrapped?: boolean;
+    style: BoxStyle & FlexItemStyle;
+  }) {
+    const box = recordBox(name);
+    const textProof = fixtureCases[index.get()].absoluteTextHeightFixture === true || fixtureCases[index.get()].absoluteTextWidthFixture === true || fixtureCases[index.get()].absoluteTextBothFixture === true;
+    const compact = textProof || column || wrapped || box.width < 50;
+    actual.set(name, `${box.width} × ${box.height}`);
+    return (
+      <>
+        <Rectangle
+          style={{
+            width: box.width,
+            height: box.height,
+            fill: name === "ABS" ? "#a63758" : name === "A" ? "#d6e3db" : "#e1dbca",
+            cursor: "pointer",
+          }}
+          onClick={() => {hits++;selected.set(name);}}
+        />
+        <Text
+          pointerEvents="none"
+          style={{ left: compact ? 4 : 12, top: compact ? 4 : 14, font: compact ? "bold 10px monospace" : "bold 14px monospace", fill: ink }}
+        >
+          {wrapped ? `${name} ${box.width}×${box.height}` : name}
+        </Text>
+        {!wrapped && !textProof && box.width >= 50 && <Text
+          pointerEvents="none"
+          style={{ left: column ? 4 : 12, top: column ? 16 : 38, font: column ? box.width < 80 ? "7px monospace" : "10px monospace" : "12px monospace", fill: ink }}
+        >{column ? `${box.width} × ${box.height} px` : `${box.width} px`}</Text>}
+      </>
+    );
+  }
+  type AutoQueueStyle = SystemStyle & { width?: number; height?: number; minWidth?: number; minHeight?: number; flexBasis?: number | "auto"; flexGrow?: number; flexShrink?: number; marginTop?: FlexMargin };
+  let queueMeasureCalls = 0, measuredQueueJobs = 8;
+  const queueJobs = signal(8);
+  const AutoQueue = definePrimitive<{ name: string }, AutoQueueStyle, AutoQueueStyle, SystemStyle & { width: number; height: number }>(props => {
+    const box = recordBox(props.name);
+    actual.set(props.name, `${box.width} × ${box.height}`);
+    const columns = Math.max(1, Math.floor(box.width / 20));
+    const tiles: PibblNode[] = [];
+    for (let job = 0; job < measuredQueueJobs; job++) tiles.push(<Rectangle key={job} pointerEvents="none" style={{ left: (job % columns) * 20 + 1, top: Math.floor(job / columns) * 10 + 1, width: 18, height: 8, fill: "#426b61" }} />);
+    return <><Rectangle onClick={() => { hits++; selected.set(props.name); }} style={{ width: box.width, height: box.height, fill: "#d6e3db", cursor: "pointer" }} />{tiles}<Text pointerEvents="none" style={{left:4,top:12,font:"bold 10px monospace",fill:"#ffffff"}}>B</Text></>;
+  }, {
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: "measured", minContent: { width: 20, height: 80 }, maxContent: { width: 160, height: 10 } }),
+    measure: ({ constraints }) => {
+      queueMeasureCalls++;
+      const jobs = queueJobs.get();
+      measuredQueueJobs = jobs;
+      const columns = Math.max(1, Math.floor(constraints.maxWidth / 20));
+      return { status: "measured", size: { width: constraints.maxWidth, height: Math.ceil(jobs / columns) * 10 } };
+    },
+  });
+  const absoluteMeasureStyle = computed(() => {
+    const fixture = fixtureCases[index.get()];
+    return fixture.absoluteMeasuredWidthFixture || fixture.absoluteMeasuredHeightFixture || fixture.absoluteMeasuredMainFixture ? requireFixtureValue(fixture.itemStyles, "itemStyles")[1] : {};
+  });
+  const absoluteMeasuredHeight = computed(() => {
+    const fixture = fixtureCases[index.get()];
+    return fixture.absoluteMeasuredHeightFixture === true || fixture.absoluteMeasuredMainFixture === true && requireFixtureValue(fixture.itemStyles, "itemStyles")[1].height === "auto";
+  });
+  let absoluteMeasureCalls = 0;
+  let absoluteMeasureQuery: {minWidth:number;maxWidth:number|"unbounded";minHeight:number;maxHeight:number|"unbounded"} | undefined;
+  type AbsoluteMeasuredStyle = BoxStyle & FlexItemStyle;
+  const AbsoluteMeasured = definePrimitive<{ readonly name: string }, AbsoluteMeasuredStyle, AbsoluteMeasuredStyle, SystemStyle & { width: number; height: number }>(props => {
+    const box = recordBox(props.name);
+    actual.set(props.name, `${box.width} × ${box.height}`);
+    const measuresHeight = absoluteMeasuredHeight.get();
+    const jobs = measuresHeight ? 8 : 3;
+    const columns = measuresHeight ? Math.max(1, Math.floor(box.width / 20)) : 3;
+    const rows = Math.ceil(jobs / columns);
+    const cellWidth = box.width / columns;
+    const cellHeight = Math.min(measuresHeight ? 10 : 20, box.height / rows);
+    const tiles: PibblNode[] = [];
+    for (let job = 0; job < jobs; job++) tiles.push(<Rectangle key={job} pointerEvents="none" style={{ left: (job % columns) * cellWidth + Math.min(1, cellWidth / 2), top: Math.floor(job / columns) * cellHeight + Math.min(1, cellHeight / 2), width: Math.max(0, Math.min(18, cellWidth - 2)), height: Math.max(0, cellHeight - 2), fill: "#426b61" }} />);
+    return <><Rectangle onClick={() => { hits++; selected.set(props.name); }} style={{ width: box.width, height: box.height, fill: "#d6e3db", cursor: "pointer" }} />{tiles}</>;
+  }, {
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: "measured", minContent: { width: 0, height: 20 }, maxContent: { width: 60, height: 20 } }),
+    measure: ({ constraints }) => {
+      absoluteMeasureCalls++;
+      absoluteMeasureQuery = {minWidth:constraints.minWidth,maxWidth:Number.isFinite(constraints.maxWidth)?constraints.maxWidth:"unbounded",minHeight:constraints.minHeight,maxHeight:Number.isFinite(constraints.maxHeight)?constraints.maxHeight:"unbounded"};
+      if (absoluteMeasuredHeight.get()) {
+        const columns = Math.max(1, Math.floor(constraints.maxWidth / 20));
+        return { status: "measured", size: { width: constraints.maxWidth, height: Math.ceil(8 / columns) * 10 } };
+      }
+      return { status: "measured", size: { width: 60, height: constraints.maxHeight } };
+    },
+  });
+  const absoluteMeasuredNode = <AbsoluteMeasured key="B" name="B" style={absoluteMeasureStyle} />;
+  let baselineCalls = 0;
+  type BaselineProviderStyle = BoxStyle & FlexItemStyle;
+  function createBaselineProvider(providerIndex: number | undefined, fill: string) {
+    return definePrimitive<{ readonly name: string }, BaselineProviderStyle, BaselineProviderStyle, SystemStyle & {width:number;height:number}>((props) => {
+      const box = recordBox(props.name);
+      actual.set(props.name, `${box.width} × ${box.height}`);
+      return <Rectangle keyboardFocusable onFocus={() => selected.set(props.name)} onClick={() => { hits++; selected.set(props.name); }} style={{width:box.width,height:box.height,fill,cursor:"pointer"}} />;
+    }, {
+      resolveStyle: (_style, context) => ({width:context.allocation.width,height:context.allocation.height}),
+      measureBaselines: providerIndex === undefined ? undefined : () => {
+        baselineCalls++;
+        const fixture = fixtureCases[index.get()];
+        const provider = requireFixtureValue(fixture.baselineProviders, "baselineProviders")[providerIndex];
+        return {status:"measured" as const,first:provider.value,last:provider.value};
+      },
+    });
+  }
+  const BaselineA = createBaselineProvider(0, "#d6e3db");
+  const BaselineB = createBaselineProvider(1, "#a63758");
+  const BaselineC = createBaselineProvider(undefined, "#426b61");
+  const queueWidth = computed(() => { const fixture = fixtureCases[index.get()]; return fixture.customCrossAutoFixture ? requireFixtureNumber(requireFixtureValue(fixture.itemStyles, "itemStyles")[0].width, "custom cross-auto width") : 80; });
+  const queueNode = <AutoQueue key={0} name="A" style={{ width: queueWidth, minWidth: 0, flexShrink: 0, marginTop: "auto" }} />;
+  const columnQueueWidth = computed(() => { const fixture = fixtureCases[index.get()]; return fixture.customColumnMeasureFixture ? requireFixtureNumber(requireFixtureValue(fixture.itemStyles, "itemStyles")[0].width, "custom column width") : 40; });
+  const columnQueueNode = <AutoQueue key={0} name="A" style={{ width: columnQueueWidth, minWidth: 0, minHeight: 0, flexBasis: "auto", flexGrow: 0, flexShrink: 0 }} />;
+  function JobControls() {
+    const fixture = fixtureCases[index.get()];
+    if (!("customColumnMeasureFixture" in fixture)) return null;
+    return <>
+      <Rectangle style={{left:600,top:52,width:132,height:28,fill:"#426b61",cursor:"pointer"}} onClick={() => queueJobs.update(value => value === 8 ? 12 : 8)} />
+      <Text pointerEvents="none" style={{left:612,top:59,font:"12px sans-serif",fill:"#ffffff"}}>More jobs</Text>
+    </>;
+  }
+  function Workspace() {
+    rootTransform=useCanvasContext().getTransform();
+    const fixture = fixtureCases[index.get()];
+    const itemStyles = fixture.itemStyles;
+    const wrapped = fixture.flexWrap !== "nowrap";
+    const boxed = fixture.name.startsWith("border-box-");
+    const floor = fixture.name === "border-box-floor-bounds";
+    const percentBox = fixture.name === "border-box-percentage";
+    const asymmetricBorder = fixture.name.startsWith("border-box-asymmetric-");
+    const column = fixture.flexDirection.startsWith("column");
+    const compact = fixture.absoluteTextHeightFixture === true || fixture.absoluteTextWidthFixture === true || fixture.absoluteTextBothFixture === true || column || wrapped;
+    const shrinking = fixture.name === "shrink" || fixture.name === "column-shrink";
+    const rectangles = fixture.name.startsWith("rectangle-");
+    const padded = fixture.name === "rectangle-percent-content-box";
+    const intrinsicFixture = fixture.intrinsicFixture === true;
+    const directionMatrixFixture = fixture.directionMatrixFixture === true;
+    const autoMarginFixture = fixture.autoMarginFixture === true;
+    const roundingFixture = fixture.roundingFixture === true;
+    const relativeStaticFixture = fixture.relativeStaticFixture === true;
+    const decoratedRelativeStaticFixture = fixture.decoratedRelativeStaticFixture === true;
+    const absoluteParticipationFixture = fixture.absoluteParticipationFixture === true;
+    const absoluteWrapFixture = fixture.absoluteWrapFixture === true;
+    const absoluteTextHeightFixture = fixture.absoluteTextHeightFixture === true;
+    const absoluteTextWidthFixture = fixture.absoluteTextWidthFixture === true;
+    const absoluteTextBothFixture = fixture.absoluteTextBothFixture === true;
+    const absoluteAlignmentFixture = fixture.absoluteAlignmentFixture === true;
+    const absolutePercentageInsetFixture = fixture.absolutePercentageInsetFixture === true;
+    const relativePercentageInsetFixture = fixture.relativePercentageInsetFixture === true;
+    const absoluteDerivedSizeFixture = fixture.absoluteDerivedSizeFixture === true;
+    const nestedContainingBlockFixture = fixture.nestedContainingBlockFixture === true;
+    const nestedContainingBlockDirectionFixture = fixture.nestedContainingBlockDirectionFixture === true;
+    const containingOwnerStyle = nestedContainingBlockFixture || nestedContainingBlockDirectionFixture ? requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle") : undefined;
+    const absoluteBoundsFixture = fixture.absoluteBoundsFixture === true;
+    const absoluteAspectFixture = fixture.absoluteAspectFixture === true;
+    const absoluteMeasuredWidthFixture = fixture.absoluteMeasuredWidthFixture === true;
+    const absoluteMeasuredHeightFixture = fixture.absoluteMeasuredHeightFixture === true;
+    const absoluteMeasuredMainFixture = fixture.absoluteMeasuredMainFixture === true;
+    const baselineProviderFixture = fixture.baselineProviderFixture === true;
+    const absoluteMainDirectionFixture = fixture.absoluteMainDirectionFixture === true;
+    const relativeMainDirectionFixture = fixture.relativeMainDirectionFixture === true;
+    const relativeWrappedDirectionFixture = fixture.relativeWrappedDirectionFixture === true;
+    const absoluteMainBoundsFixture = fixture.absoluteMainBoundsFixture === true;
+    const absoluteMainAspectFixture = fixture.absoluteMainAspectFixture === true;
+    const nestedCrossMinFixture = fixture.nestedCrossMinFixture === true || fixture.nestedDecoratedCrossMinFixture === true || fixture.nestedDecoratedCrossMaxFixture === true || fixture.nestedDecoratedColumnCrossMaxFixture === true || fixture.nestedDecoratedColumnCrossMinFixture === true;
+    return (
+      <>
+        <Text
+          style={{
+            left: 28,
+            top: 194,
+            font: "bold 16px sans-serif",
+            fill: "#19375b",
+          }}
+        >
+          Before · Yoga 3.2.1 reference
+        </Text>
+        <Text
+          style={{
+            left: 392,
+            top: 194,
+            font: "bold 16px sans-serif",
+            fill: "#19375b",
+          }}
+        >
+          After · public Pibbl
+        </Text>
+        {fixture.boxes.map((box, i) => (
+          <>
+            <Rectangle
+              style={{
+                left: 28 + box.x,
+                top: 240 + box.y,
+                width: box.width,
+                height: box.height,
+                fill: i === 0 ? "#d6e3db" : "#e1dbca",
+              }}
+            />
+            <Text
+              pointerEvents="none"
+              style={{
+                left: 28 + box.x + (compact || box.width < 50 ? 4 : 12),
+                top: 240 + box.y + (compact || box.width < 50 ? 4 : 14),
+                font: compact || box.width < 50 ? "bold 10px monospace" : "bold 14px monospace",
+                fill: "#19375b",
+              }}
+            >
+              {wrapped ? `${String.fromCharCode(65+i)} ${box.width}×${box.height}` : String.fromCharCode(65+i)}
+            </Text>
+            {!wrapped && !fixture.absoluteTextHeightFixture && box.width >= 50 && <Text
+              pointerEvents="none"
+              style={{
+                left: 28 + box.x + (column ? 4 : 12),
+                top: 240 + box.y + (column ? 16 : 38),
+                font: column ? box.width < 80 ? "7px monospace" : "10px monospace" : "12px monospace",
+                fill: "#19375b",
+              }}
+            >{column ? `${box.width} × ${box.height} px` : `${box.width} px`}</Text>}
+          </>
+        ))}
+        {intrinsicFixture && requireFixtureValue(fixture.intrinsicNestedBoxes, "intrinsicNestedBoxes").map((box, i) => <Rectangle key={`intrinsic-reference-${i}`} pointerEvents="none" style={{left:28+box.x,top:240+box.y,width:box.width,height:box.height,fill:i===1?"#6e3e79":"#426b61"}} />)}
+        {(nestedContainingBlockFixture || nestedContainingBlockDirectionFixture) && requireFixtureValue(fixture.nestedBoxes, "nestedBoxes").map((box, i) => <Rectangle key={`containing-reference-${i}`} pointerEvents="none" style={{left:28+box.x,top:240+box.y,width:box.width,height:box.height,fill:"#a63758"}} />)}
+        {fixture.contentBoxes && fixture.contentBoxes.map((box, i) => <Rectangle key={`content-${i}`} pointerEvents="none" style={{left:28+box.x,top:240+box.y,width:box.width,height:box.height,fill:"#426b61"}} />)}
+        <Flex
+          style={{
+            left: 392,
+            top: 240,
+            width: fixture.width,
+            height: fixture.height,
+            flexDirection: fixture.flexDirection,
+            flexWrap: fixture.flexWrap,
+            gap: fixture.gap,
+            alignContent: fixture.containerStyle?.alignContent ?? "flex-start",
+            alignItems: fixture.containerStyle?.alignItems === "baseline" ? "first-baseline" : fixture.containerStyle?.alignItems ?? "flex-start",
+            boxSizing: fixture.containerStyle?.boxSizing,
+            columnGap: fixture.containerStyle?.columnGap,
+            layoutDirection: fixture.layoutDirection,
+            justifyContent: fixture.containerStyle?.justifyContent,
+            padding: fixture.containerStyle?.padding,
+            paddingStart: fixture.containerStyle?.paddingStart,
+            borderWidth: fixture.containerStyle?.borderWidth,
+            borderStartWidth: fixture.containerStyle?.borderStartWidth,
+            rowGap: fixture.containerStyle?.rowGap,
+          }}
+        >
+          {nestedContainingBlockFixture || nestedContainingBlockDirectionFixture ? <>
+            <Flex key="owner" style={{
+              position: containingOwnerStyle?.position,
+              width: containingOwnerStyle?.width,
+              height: containingOwnerStyle?.height,
+              minWidth: containingOwnerStyle?.minWidth,
+              maxWidth: containingOwnerStyle?.maxWidth,
+              minHeight: containingOwnerStyle?.minHeight,
+              maxHeight: containingOwnerStyle?.maxHeight,
+              flexDirection: containingOwnerStyle?.flexDirection,
+              flexWrap: containingOwnerStyle?.flexWrap,
+              flexBasis: containingOwnerStyle?.flexBasis,
+              flexGrow: containingOwnerStyle?.flexGrow,
+              flexShrink: containingOwnerStyle?.flexShrink,
+              alignItems: containingOwnerStyle?.alignItems,
+              marginLeft: containingOwnerStyle?.marginLeft,
+              marginTop: containingOwnerStyle?.marginTop,
+            }}>
+              <Panel key="background" name="A" style={{width:"100%",height:"100%",minWidth:0,minHeight:0,flexShrink:0}} />
+              <Panel key="absolute" name="ABS" style={requireFixtureValue(fixture.nestedItemStyles, "nestedItemStyles")[0]} />
+            </Flex>
+            <Panel key="sibling" name="B" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[1]} />
+          </> : intrinsicFixture ? <>
+            <Flex style={{width:requireFixtureValue(fixture.innerStyle, "innerStyle").width,flexDirection:"row",flexWrap:requireFixtureValue(fixture.innerStyle, "innerStyle").flexWrap,gap:requireFixtureValue(fixture.innerStyle, "innerStyle").gap,alignItems:"flex-start",flexGrow:requireFixtureValue(fixture.innerStyle, "innerStyle").flexGrow,flexShrink:requireFixtureValue(fixture.innerStyle, "innerStyle").flexShrink,minWidth:requireFixtureValue(fixture.innerStyle, "innerStyle").minWidth,minHeight:requireFixtureValue(fixture.innerStyle, "innerStyle").minHeight}}>
+              {requireFixtureValue(fixture.intrinsicLeafStyles, "intrinsicLeafStyles").map((style, itemIndex) => <Rectangle key={`intrinsic-leaf-${itemIndex}`} style={{width:requireFixtureValue(style.width, "intrinsic leaf width"),height:requireFixtureValue(style.height, "intrinsic leaf height"),flexGrow:style.flexGrow,flexShrink:style.flexShrink,minWidth:style.minWidth,minHeight:style.minHeight,fill:itemIndex===1?"#6e3e79":"#426b61"}} />)}
+            </Flex>
+            <Panel name="B" style={requireFixtureValue(fixture.footerStyle, "footerStyle")} />
+          </> : fixture.contentBoxes ? <Flex style={{width:requireFixtureValue(fixture.itemStyles, "itemStyles")[0].width,height:requireFixtureValue(fixture.itemStyles, "itemStyles")[0].height,boxSizing:requireFixtureValue(fixture.itemStyles, "itemStyles")[0].boxSizing,minWidth:0,minHeight:0,flexShrink:0,padding:"padding" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].padding:undefined,borderWidth:"borderWidth" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].borderWidth:undefined,borderStartWidth:"borderStartWidth" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].borderStartWidth:undefined,borderEndWidth:"borderEndWidth" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].borderEndWidth:undefined,layoutDirection:"layoutDirection" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].layoutDirection:undefined,paddingStart:"paddingStart" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].paddingStart:undefined,paddingEnd:"paddingEnd" in requireFixtureValue(fixture.itemStyles, "itemStyles")[0]?requireFixtureValue(fixture.itemStyles, "itemStyles")[0].paddingEnd:undefined}}><LogicalPaddingLeaf style={{width:"100%",height:"100%",flexShrink:0,minWidth:0,minHeight:0}} /></Flex>
+            : absoluteTextBothFixture ? <>
+              <Panel key="A" name="A" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[0]} />
+              <Text key="B" onClick={() => { hits++; selected.set("B"); }} style={{
+                position: "absolute", width: "auto", height: "auto",
+                right: requireFixtureValue(fixture.itemStyles, "itemStyles")[1].right,
+                bottom: requireFixtureValue(fixture.itemStyles, "itemStyles")[1].bottom,
+                minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, wrap: false,
+                font: "10px monospace", overflow: "visible", fill: "#19375b", cursor: "pointer",
+              }}>{fixture.textValue}</Text>
+              <Panel key="C" name="C" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[2]} />
+            </>
+            : absoluteTextWidthFixture ? <>
+              <Panel key="A" name="A" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[0]} />
+              <Text key="B" onClick={() => { hits++; selected.set("B"); }} style={{
+                position: "absolute", width: "auto", height: requireFixtureValue(fixture.itemStyles, "itemStyles")[1].height,
+                right: requireFixtureValue(fixture.itemStyles, "itemStyles")[1].right,
+                top: requireFixtureValue(fixture.itemStyles, "itemStyles")[1].top,
+                minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, wrap: false,
+                font: "10px monospace", overflow: "visible", fill: "#19375b", cursor: "pointer",
+              }}>{fixture.textValue}</Text>
+              <Panel key="C" name="C" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[2]} />
+            </>
+            : absoluteTextHeightFixture ? <>
+              <Panel key="A" name="A" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[0]} />
+              <Text key="B" onClick={() => { hits++; selected.set("B"); }} style={{
+                position: "absolute", width: requireFixtureValue(fixture.itemStyles, "itemStyles")[1].width,
+                height: "auto", left: requireFixtureValue(fixture.itemStyles, "itemStyles")[1].left,
+                bottom: requireFixtureValue(fixture.itemStyles, "itemStyles")[1].bottom,
+                minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, wrap: true,
+                font: "10px monospace", lineHeight: 10, overflow: "visible", fill: "#19375b", cursor: "pointer",
+              }}>{fixture.textValue}</Text>
+              <Panel key="C" name="C" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[2]} />
+            </>
+          : baselineProviderFixture ? <>
+              <BaselineA key="A" name="A" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[0]} />
+              <BaselineB key="B" name="B" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[1]} />
+              <BaselineC key="C" name="C" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[2]} />
+            </>
+          : absoluteMeasuredWidthFixture || absoluteMeasuredHeightFixture || absoluteMeasuredMainFixture ? <>
+              <Panel key="A" name="A" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[0]} />
+              {absoluteMeasuredNode}
+              <Panel key="C" name="C" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[2]} />
+            </>
+          : nestedCrossMinFixture ? <>
+              <Flex
+                key="A"
+                style={{
+                  width: requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle").width,
+                  height: requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle").height,
+                  maxHeight: requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle").maxHeight,
+                  maxWidth: requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle").maxWidth,
+                  flexBasis: requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle").flexBasis,
+                  flexGrow: requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle").flexGrow,
+                  flexShrink: requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle").flexShrink,
+                  minWidth: requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle").minWidth,
+                  minHeight: requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle").minHeight,
+                  flexDirection: requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle").flexDirection,
+                  alignItems: requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle").alignItems,
+                }}
+              >
+                {requireFixtureValue(fixture.nestedItemStyles, "nestedItemStyles").map((style, itemIndex) => (
+                  <NestedLeaf
+                    key={`nested-cross-${itemIndex}`}
+                    name={`A${itemIndex + 1}`}
+                    style={{
+                      width: style.width,
+                      height: style.height,
+                      flexGrow: style.flexGrow,
+                      flexShrink: style.flexShrink,
+                      minWidth: style.minWidth,
+                      minHeight: style.minHeight,
+                    }}
+                  />
+                ))}
+              </Flex>
+              <Panel key="B" name="B" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[1]} />
+              <Panel key="C" name="C" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[2]} />
+            </>
+            : fixture.nestedBoxes ? requireFixtureValue(fixture.itemStyles, "itemStyles").map((style,itemIndex) => itemIndex<3
+            ? <NestedCard key={itemIndex} name={String.fromCharCode(65+itemIndex)} column={column} style={style} />
+            : <Panel key={itemIndex} name="D" column={column} wrapped={wrapped} style={style} />)
+            : fixture.ownerCrossAutoFixture ? <>
+              <Flex key={0} style={{width:requireFixtureValue(fixture.itemStyles, "itemStyles")[0].width,minWidth:0,flexShrink:0,flexDirection:"row",flexWrap:"wrap",gap:10,alignItems:"flex-start",marginTop:"auto"}}>
+                {requireFixtureValue(fixture.ownerLeafStyles, "ownerLeafStyles").map((style,itemIndex)=><Rectangle key={itemIndex} onClick={()=>{hits++;selected.set("A");}} style={{width:requireFixtureValue(style.width, "owner leaf width"),height:requireFixtureValue(style.height, "owner leaf height"),minWidth:0,minHeight:0,flexShrink:0,fill:itemIndex===1?"#6e3e79":"#426b61",cursor:"pointer"}} />)}
+              </Flex><Panel key={1} name="B" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[1]} />
+            </>
+            : fixture.customColumnMeasureFixture ? <>{columnQueueNode}<Panel key={1} name="B" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[1]} /></>
+            : fixture.customCrossAutoFixture ? <>{queueNode}<Panel key={1} name="B" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[1]} /></>
+            : fixture.textCrossAutoFixture ? <>
+              <Text key={0} onClick={() => { hits++; selected.set("A"); }} style={{ width: requireFixtureValue(fixture.itemStyles, "itemStyles")[0].width, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, wrap: true, font: "10px monospace", lineHeight: 10, marginTop: "auto", fill: "#19375b", cursor: "pointer" }}>{fixture.textValue}</Text>
+              <Panel key={1} name="B" style={requireFixtureValue(fixture.itemStyles, "itemStyles")[1]} />
+            </>
+            : itemStyles ? itemStyles.map((style, index) => <Panel key={index} name={String.fromCharCode(65+index)} column={column} wrapped={wrapped} style={style} />) : rectangles ? <>
+            <Rectangle onClick={() => selected.set("A")} style={{
+              width: 80, height: 80, flexBasis: padded ? "70%" : "auto", flexShrink: 1,
+              minWidth: padded ? 90 : undefined, padding: padded ? 10 : 0,
+              fill: "#d6e3db", cursor: "pointer",
+            }} />
+            <Rectangle onClick={() => selected.set("B")} style={{
+              width: 80, height: 80, flexBasis: padded ? "70%" : "auto", flexShrink: 1,
+              padding: padded ? 10 : 0, fill: "#e1dbca", cursor: "pointer",
+            }} />
+          </> : <>
+          <Panel
+            name="A"
+            column={column}
+            wrapped={wrapped}
+            style={{
+              flexBasis: asymmetricBorder ? column ? 62 : 54 : percentBox ? "70%" : floor ? 8 : column ? shrinking ? 80 : 20 : shrinking ? 180 : 60,
+              flexGrow: boxed || wrapped || shrinking ? 0 : 1,
+              flexShrink: floor || asymmetricBorder ? 0 : 1,
+              boxSizing: boxed ? "border-box" : undefined,
+              padding: asymmetricBorder ? { left: 3, right: 5, top: 7, bottom: 11 } : boxed ? 10 : undefined,
+              borderWidth: asymmetricBorder ? { left: 2, right: 4, top: 6, bottom: 8 } : undefined,
+              minWidth: percentBox ? 110 : column ? undefined : shrinking ? 120 : 0,
+              minHeight: column ? shrinking ? 60 : 0 : undefined,
+              maxHeight: fixture.name === "column-cap" || fixture.name === "column-reverse-cap" ? 30 : undefined,
+              width: column ? asymmetricBorder ? 54 : 80 : undefined,
+              maxWidth: floor ? 8 : percentBox ? "60%" : fixture.name === "cap" || fixture.name === "row-reverse-cap" ? 80 : undefined,
+              height: asymmetricBorder ? column ? undefined : 62 : percentBox ? "60%" : boxed ? 60 : wrapped ? 20 : 80,
+            }}
+          />
+          <Panel
+            name="B"
+            column={column}
+            wrapped={wrapped}
+            style={{
+              flexBasis: asymmetricBorder ? column ? 62 : 54 : percentBox ? "70%" : floor ? 80 : column ? shrinking ? 80 : 20 : shrinking ? 180 : 60,
+              flexGrow: boxed || wrapped || shrinking ? 0 : 1,
+              flexShrink: floor || asymmetricBorder ? 0 : 1,
+              boxSizing: boxed ? "border-box" : undefined,
+              padding: asymmetricBorder ? { left: 3, right: 5, top: 7, bottom: 11 } : boxed ? 10 : undefined,
+              borderWidth: asymmetricBorder ? { left: 2, right: 4, top: 6, bottom: 8 } : undefined,
+              minWidth: floor ? 100 : column ? undefined : 0,
+              minHeight: column ? 0 : undefined,
+              maxWidth: floor ? 110 : undefined,
+              width: column ? asymmetricBorder ? 54 : 80 : undefined,
+              height: asymmetricBorder ? column ? undefined : 62 : percentBox ? "60%" : boxed ? 60 : wrapped ? 20 : 80,
+            }}
+          />
+          {wrapped && <Panel name="C" wrapped style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 1, minWidth: 0 }} />}
+          </>}
+        </Flex>
+        <Text
+          pointerEvents="none"
+          style={{
+            left: 28,
+            top: 492,
+            width: 700,
+            wrap: true,
+            font: "12px monospace",
+            fill: "#19375b",
+          }}
+        >{absoluteTextBothFixture
+          ? "direct Text · automatic Canvas ink width and height · physical right/bottom anchor follows the measured result · Yoga synthetic callback documents only its query source"
+          : absoluteTextWidthFixture
+          ? "direct Text · automatic Canvas ink width / fixed height · physical right/top anchor follows the measured result · Yoga synthetic callback documents only its query source"
+          : absoluteTextHeightFixture
+          ? "direct Text · exact declared width / automatic measured height · physical left/bottom position it after measurement · native callback provenance is sizing-only, not Canvas font parity"
+          : baselineProviderFixture
+          ? "first-baseline · numeric provider offsets are recorded Yoga callbacks, not font parity · C deliberately falls back to its bottom edge"
+          : absoluteMeasuredMainFixture
+          ? fixture.measurementQueryDifference
+            ? `${fixture.flexDirection} · ${fixture.layoutDirection} · query difference: Yoga width availability ≤${requireFixtureValue(fixture.nativeMeasurementConstraints, "native measurement constraints").maxWidth}px; Pibbl width unbounded. Same recorded geometry.`
+            : `${fixture.flexDirection} · ${fixture.layoutDirection} · paired provider: exact declared axis / unbounded natural axis. Recorded geometry matches Yoga.`
+          : absoluteMainAspectFixture
+          ? `${fixture.flexDirection} · ${fixture.layoutDirection} · one automatic absolute axis derives from its declared opposite axis, then numeric bounds clamp; opposing insets win`
+          : absoluteMainBoundsFixture
+          ? `${fixture.flexDirection} · ${fixture.layoutDirection} · paired physical insets derive automatic axes then clamp numeric bounds; flow A/C keep their direction slots`
+          : relativeWrappedDirectionFixture
+          ? "comparisonLabel" in fixture
+            ? `${fixture.flexDirection} · ${fixture.flexWrap} · ${fixture.layoutDirection} · classified difference: static ignores insets; relative preserves physical final-world offset`
+            : `${fixture.flexDirection} · ${fixture.flexWrap} · ${fixture.layoutDirection} · relative B keeps physical inset signs after wrapped placement`
+          : relativeMainDirectionFixture
+          ? "comparisonLabel" in fixture
+            ? `${fixture.flexDirection} · ${fixture.layoutDirection} · classified difference: Yoga reverses relative offsets; Pibbl preserves physical inset signs`
+            : `${fixture.flexDirection} · ${fixture.layoutDirection} · static ignores insets while relative preserves one physical final-world translation under every main direction`
+          : absoluteMainDirectionFixture
+          ? `${fixture.flexDirection} · ${fixture.layoutDirection} · fixed absolute B: inset-free axes follow main/cross alignment; physical insets stay tied to the padding box`
+          : absoluteMeasuredHeightFixture
+          ? "8 jobs · exact width80px / natural unbounded height · top or bottom inset positions the measured result · bounds clamp after measurement"
+          : absoluteMeasuredWidthFixture
+          ? "3 jobs ×20px · natural width60px; query width unbounded / height20px · bounds clamp after measurement · Paint reuses; resize remeasures"
+          : absoluteAspectFixture
+          ? `${fixture.layoutDirection} · one auto axis uses the declared numeric axis and aspect ratio; opposing insets win, then bounds clamp independently · no intrinsic measurement`
+          : absoluteBoundsFixture
+          ? `${fixture.layoutDirection} · absolute dimensions clamp to finite numeric bounds before physical inset precedence · A/C keep their flow slots`
+          : nestedContainingBlockDirectionFixture
+          ? `${fixture.flexDirection} · ${fixture.layoutDirection} · direct static Flex passes the nearest ancestor box while relative Flex owns its inner padding box under every nowrap direction`
+          : nestedContainingBlockFixture
+          ? `${fixture.layoutDirection} · explicit static Flex passes the outer containing box; relative Flex owns its local absolute child · omitted position retains legacy ownership`
+          : intrinsicFixture
+          ? `finite row wrap · numeric direct leaves settle ${fixture.boxes[0].width} × ${fixture.boxes[0].height} before footer B at y ${fixture.boxes[1].y}`
+          : nestedCrossMinFixture
+          ? "nestedDecoratedColumnCrossMinFixture" in fixture
+            ? "border-box column-reverse · declared 20px Flex minWidth60% follows the 100px → 160px content cross size · its 100% leaves grow 60px → 96px"
+            : "nestedDecoratedColumnCrossMaxFixture" in fixture
+            ? "border-box column-reverse · declared 60px Flex maxWidth25% follows the 100px → 160px content cross size · its 100% leaves grow 25px → 40px"
+            : "nestedDecoratedCrossMaxFixture" in fixture
+            ? "border-box row-reverse · declared 60px Flex maxHeight25% follows the 100px → 160px content cross size · its 100% leaves grow 25px → 40px"
+            : "nestedDecoratedCrossMinFixture" in fixture
+            ? "border-box row-reverse · built-in Flex minHeight60% follows the 100px → 160px content cross size · C moves y94 → y130"
+            : "built-in Flex minHeight60% follows its finite outer cross size · fixed inner leaves stay 20px · C moves y72 → y108"
+          : "ownerCrossAutoFixture" in fixture
+          ? "3 direct jobs · built-in wrapped Flex height controls top auto margin · click jobs A and sibling B"
+          : "customColumnMeasureFixture" in fixture
+          ? "finite column · paired custom provider measures 8 jobs at its exact 40px → 60px width · More jobs is a Pibbl-only content mutation; the pinned Yoga reference remains 8 jobs"
+          : "customCrossAutoFixture" in fixture
+          ? "8 job tiles · 20px columns × 10px rows · pure measured height controls top auto margin · click A/B"
+          : "textCrossAutoFixture" in fixture
+          ? "direct wrapped Text · measured height controls top auto margin · stretch is suppressed · native callback is a sizing probe, not font parity"
+          : roundingFixture
+          ? "Yoga point scale 0 · fractional logical boxes stay unrounded; Canvas backing pixels round separately · click A/B"
+          : relativePercentageInsetFixture
+          ? "comparisonLabel" in fixture
+            ? `${fixture.flexDirection} · ${fixture.flexWrap} · ${fixture.layoutDirection} · classified difference: static insets stay inert and relative percentage offsets use physical Pibbl content-box axes`
+            : `${fixture.flexDirection} · ${fixture.flexWrap} · ${fixture.layoutDirection} · static percentage insets stay inert; relative B applies physical width/height percentage offsets after allocation`
+          : absolutePercentageInsetFixture
+          ? "comparisonLabel" in fixture
+            ? `${fixture.flexDirection} · ${fixture.flexWrap} · ${fixture.layoutDirection} · classified difference: Pibbl preserves content-box wrap reflection for flow leaves; physical percentage absolute insets still match Yoga`
+            : `${fixture.flexDirection} · ${fixture.flexWrap} · ${fixture.layoutDirection} · physical percentage insets use this finite padding box: horizontal edges use width; vertical edges use height`
+          : absoluteDerivedSizeFixture
+          ? `${fixture.layoutDirection} absolute B derives auto dimensions from paired physical insets · resize preserves A/C flow slots · covered A stays behind B`
+          : absoluteAlignmentFixture
+          ? `${fixture.layoutDirection} absolute B · no-inset axes align inside content; explicit axes use the inner border · A/C keep flow slots`
+          : absoluteTextHeightFixture
+          ? "direct bounded Text · automatic height follows exact numeric width; the native callback is a sizing oracle, not font parity"
+          : fixture.absoluteWrappedAlignmentFixture
+          ? `${fixture.flexDirection} · ${fixture.flexWrap} · ${fixture.layoutDirection} · fixed absolute B keeps physical anchors; omitted axes use content alignment and wrap-reverse cross direction`
+          : fixture.absoluteAnchoredWrapFixture
+          ? `${fixture.flexDirection} · ${fixture.flexWrap} · ${fixture.layoutDirection} · fixed absolute B uses physical horizontal and vertical insets while A/C retain wrapped source slots`
+          : absoluteTextBothFixture
+          ? "direct Text · both automatic dimensions come from active Canvas ink bounds; Yoga callback geometry is classified source provenance, not font parity"
+          : absoluteTextWidthFixture
+          ? "direct Text · automatic width comes from the active Canvas ink bounds at a fixed numeric height; Yoga callback geometry is classified source provenance, not font parity"
+          : absoluteWrapFixture
+          ? "finite LTR row wrap · absolute B stays at its inner-border offset while A/C/D form source-ordered lines"
+          : absoluteParticipationFixture
+          ? `${fixture.layoutDirection} absolute B leaves Flex flow · numeric insets start at the inner border edge · A/C keep slots and authored paint order`
+          : decoratedRelativeStaticFixture
+          ? `${fixture.layoutDirection} border-box row · asymmetric padding and border define the content box before static or relative physical insets · click exposed A, overlap B, and B`
+          : relativeStaticFixture
+          ? `${fixture.layoutDirection} direct row · static keeps its allocated slot; relative applies physical insets after allocation · click exposed A, overlap B, and B`
+          : "autoOpposingMarginFixture" in fixture
+          ? "sizing and bounds settle before auto slots share remaining space · click A/B"
+          : "autoShorthandMarginFixture" in fixture
+          ? "uniform auto margin · physical/logical zero edges override only their own slots · click A/B"
+          : "autoCrossDirectionFixture" in fixture
+          ? "cross auto margins follow physical edges across direction changes · click A/B/C"
+          : "autoCrossMarginFixture" in fixture
+          ? "cross auto edges use each line’s own height · click A/B/C"
+          : "autoWrappedMarginFixture" in fixture
+          ? "three 40px items · each actual line divides its own free space · click A/B/C"
+          : autoMarginFixture
+          ? `two items, 40px along the main axis · ${(column?fixture.height:fixture.width)-80}px free space goes to auto edges · click A/B at their new positions`
+          : directionMatrixFixture
+          ? fixture.name.startsWith("direction-insets-")
+            ? `${fixture.layoutDirection} ${fixture.flexWrap} · zero child margins isolate asymmetric parent insets · reflection uses the Pibbl content box`
+            : fixture.name.startsWith("direction-margins-")
+            ? `${fixture.layoutDirection} ${fixture.flexWrap} · zero parent insets isolate logical margins6/3 · Pibbl centers the margin box`
+            : `${fixture.flexDirection} ${fixture.flexWrap} · ${fixture.layoutDirection} receiver · combined logical inset/margin bounds · native and Pibbl coordinates are classified separately`
+          : "contentBoxes" in fixture
+          ? `${fixture.layoutDirection} row · logical inline padding overrides physical edges · inner leaf records the final content origin`
+          : "nestedBoxes" in fixture
+          ? `${fixture.flexDirection} ${fixture.flexWrap} · inner children40% + gap10% use final allocated card · keyed D follows outer reflow`
+          : fixture.name.startsWith("margin-percent-")
+          ? `${fixture.flexDirection} ${fixture.flexWrap} · margins use content width · ${"comparisonLabel" in fixture ? "Pibbl keeps physical cross margins; Yoga differs" : "L10% R15% T5% B20%"} · outer ${fixture.width} × ${fixture.height}px`
+          : fixture.name.startsWith("cross-percent-")
+          ? `${fixture.flexDirection} wrap · stretched automatic cross · ${fixture.name.includes("-min") ? "minimum60%" : "maximum25%"} of owner cross · owner ${fixture.width} × ${fixture.height}px`
+          : fixture.name.startsWith("padding-percent-")
+          ? `${fixture.flexDirection} · padding L10% R15% T5% B10%, all of owner width · ${fixture.name.includes("content-box") ? "content-box" : "border-box basis"} · owner ${fixture.width} × ${fixture.height}px`
+          : fixture.name.startsWith("gap-percent-")
+          ? `${fixture.flexDirection} ${fixture.flexWrap} · column gap10% of content width / row gap20% of content height · outer ${fixture.width} × ${fixture.height}px`
+          : fixture.name.startsWith("aspect-wrap-")
+          ? `${fixture.flexDirection} ${fixture.flexWrap} · ratio ${fixture.flexDirection === "row" ? 2 : 0.5} W/H · parent ${fixture.width} × ${fixture.height} px · main gap12 / cross gap10 px`
+          : `${"comparisonLabel" in fixture ? fixture.comparisonLabel : fixture.name} · parent ${fixture.width} × ${fixture.height} px · ${fixture.flexDirection} · gap ${fixture.gap} px`}</Text>
+      </>
+    );
+  }
+  node = (
+    <>
+      <Rectangle style={{ width: 760, height: 540, fill: "#f3f0e8" }} />
+      <Text
+        style={{
+          left: 28,
+          top: 24,
+          font: "bold 24px sans-serif",
+          fill: "#19375b",
+        }}
+      >
+        Yoga → Pibbl · bounded rehearsal
+      </Text>
+      <Text
+        style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}
+      >
+        {fixtureCases.length} recorded cases: {fixtureCases.filter(value => value.classification === undefined).length} geometry matches; classified cases label their evidence boundary.
+      </Text>
+      <Text
+        style={{ left: 28, top: 100, font: "13px sans-serif", fill: "#475569" }}
+      >
+        Explicit axes, wrapping, sizing, borders and factors; left is recorded Yoga, not a live runtime.
+      </Text>
+      <Rectangle
+        style={{
+          left: 28,
+          top: 140,
+          width: 220,
+          height: 36,
+          fill: "#19375b",
+          cursor: "pointer",
+        }}
+        onClick={() => {
+          queueJobs.set(8);
+          index.update((value) => (value + 1) % fixtureCases.length);
+        }}
+      />
+      <Text
+        pointerEvents="none"
+        style={{ left: 40, top: 150, font: "14px sans-serif", fill: "#ffffff" }}
+      >
+        Next case + resize
+      </Text>
+      <Rectangle
+        style={{
+          left: 264,
+          top: 140,
+          width: 180,
+          height: 36,
+          fill: "#6e3e79",
+          cursor: "pointer",
+        }}
+        onClick={() =>
+          ink.update((value) => (value === "#19375b" ? "#a63758" : "#19375b"))
+        }
+      />
+      <Text
+        pointerEvents="none"
+        style={{
+          left: 276,
+          top: 150,
+          font: "14px sans-serif",
+          fill: "#ffffff",
+        }}
+      >
+        Paint only
+      </Text>
+      {fixtureCases.length > DEFAULT_WASM_YOGA_MIGRATION_FIXTURES.length && <>
+      <Rectangle style={{left:484,top:142,width:120,height:36,fill:"#426b61",cursor:"pointer"}} onClick={() => {
+        queueJobs.set(8);
+        index.update(value => {
+        const bounds = fixtureCases.findIndex(fixture => fixture.name === "percent-cap-row");
+        const aspect = fixtureCases.findIndex(fixture => fixture.name === "aspect-wrap-row");
+        const gaps = fixtureCases.findIndex(fixture => fixture.name === "gap-percent-row-nowrap");
+        const padding = fixtureCases.findIndex(fixture => fixture.name === "padding-percent-row-content-box");
+        const nested = fixtureCases.findIndex(fixture => fixture.name === "nested-percent-gap-row-nowrap");
+        const margins = fixtureCases.findIndex(fixture => fixture.name === "margin-percent-row-nowrap");
+        const crossBounds = fixtureCases.findIndex(fixture => fixture.name === "cross-percent-row-min");
+        const logicalPadding = fixtureCases.findIndex(fixture => fixture.name === "logical-padding-end-percent-ltr-logical-last");
+        const logicalBorders = fixtureCases.findIndex(fixture => fixture.name === "logical-border-end-thirty-ltr-logical-last-content-box");
+        const intrinsic = fixtureCases.findIndex(fixture => fixture.name === "intrinsic-row-wrap-column-wide");
+        const directionMatrix = fixtureCases.findIndex(fixture => fixture.name === "direction-matrix-row-wrap-ltr");
+        const autoMargins = fixtureCases.findIndex(fixture => fixture.name === "auto-margin-left");
+        const wrappedAutoMargins = fixtureCases.findIndex(fixture => fixture.name === "auto-wrap-row-wrap-ltr");
+        const crossAutoMargins = fixtureCases.findIndex(fixture => fixture.name === "auto-cross-row-top-ltr");
+        const crossAutoDirections = fixtureCases.findIndex(fixture => fixture.name === "auto-cross-direction-row-wrap-reverse-before-ltr");
+        const autoShorthand = fixtureCases.findIndex(fixture => fixture.name === "auto-shorthand-all-ltr");
+        const autoOpposing = fixtureCases.findIndex(fixture => fixture.name === "auto-opposing-main-grow-consumes");
+        const textCrossAuto = fixtureCases.findIndex(fixture => fixture.name === "text-cross-auto-top-stretch-wide");
+        const customCrossAuto = fixtureCases.findIndex(fixture => fixture.name === "custom-cross-auto-top-stretch-wide");
+        const ownerCrossAuto = fixtureCases.findIndex(fixture => fixture.name === "owner-cross-auto-top-stretch-wide");
+        const rounding = fixtureCases.findIndex(fixture => "roundingFixture" in fixture);
+        const nestedCrossMin = fixtureCases.findIndex(fixture => "nestedCrossMinFixture" in fixture);
+        const nestedDecoratedCrossMin = fixtureCases.findIndex(fixture => "nestedDecoratedCrossMinFixture" in fixture);
+        const nestedDecoratedCrossMax = fixtureCases.findIndex(fixture => "nestedDecoratedCrossMaxFixture" in fixture);
+        const nestedDecoratedColumnCrossMax = fixtureCases.findIndex(fixture => "nestedDecoratedColumnCrossMaxFixture" in fixture);
+        const nestedDecoratedColumnCrossMin = fixtureCases.findIndex(fixture => "nestedDecoratedColumnCrossMinFixture" in fixture);
+        const customColumnMeasure = fixtureCases.findIndex(fixture => "customColumnMeasureFixture" in fixture);
+        const relativeStatic = fixtureCases.findIndex(fixture => "relativeStaticFixture" in fixture);
+        const decoratedRelativeStatic = fixtureCases.findIndex(fixture => "decoratedRelativeStaticFixture" in fixture);
+        const absoluteParticipation = fixtureCases.findIndex(fixture => "absoluteParticipationFixture" in fixture);
+        const absoluteWrap = fixtureCases.findIndex(fixture => "absoluteWrapFixture" in fixture);
+        const absoluteTextHeight = fixtureCases.findIndex(fixture => "absoluteTextHeightFixture" in fixture);
+        const absoluteTextWidth = fixtureCases.findIndex(fixture => "absoluteTextWidthFixture" in fixture);
+        const absoluteTextBoth = fixtureCases.findIndex(fixture => "absoluteTextBothFixture" in fixture);
+        const absoluteAnchoredWrap = fixtureCases.findIndex(fixture => "absoluteAnchoredWrapFixture" in fixture);
+        const absoluteWrappedAlignment = fixtureCases.findIndex(fixture => "absoluteWrappedAlignmentFixture" in fixture);
+        const absolutePercentageInset = fixtureCases.findIndex(fixture => "absolutePercentageInsetFixture" in fixture);
+        const relativePercentageInset = fixtureCases.findIndex(fixture => "relativePercentageInsetFixture" in fixture);
+        const absoluteAlignment = fixtureCases.findIndex(fixture => "absoluteAlignmentFixture" in fixture);
+        const absoluteAspect = fixtureCases.findIndex(fixture => "absoluteAspectFixture" in fixture);
+        const absoluteMeasured = fixtureCases.findIndex(fixture => "absoluteMeasuredWidthFixture" in fixture);
+        const absoluteMeasuredHeight = fixtureCases.findIndex(fixture => "absoluteMeasuredHeightFixture" in fixture);
+        const absoluteMainDirection = fixtureCases.findIndex(fixture => "absoluteMainDirectionFixture" in fixture);
+        const relativeMainDirection = fixtureCases.findIndex(fixture => "relativeMainDirectionFixture" in fixture);
+        const relativeWrappedDirection = fixtureCases.findIndex(fixture => "relativeWrappedDirectionFixture" in fixture);
+        const absoluteMainBounds = fixtureCases.findIndex(fixture => "absoluteMainBoundsFixture" in fixture);
+        const absoluteMainAspect = fixtureCases.findIndex(fixture => "absoluteMainAspectFixture" in fixture);
+        const absoluteMeasuredMain = fixtureCases.findIndex(fixture => "absoluteMeasuredMainFixture" in fixture);
+        const absoluteBounds = fixtureCases.findIndex(fixture => "absoluteBoundsFixture" in fixture);
+        const nestedContainingBlock = fixtureCases.findIndex(fixture => "nestedContainingBlockFixture" in fixture);
+        const nestedContainingBlockDirection = fixtureCases.findIndex(fixture => "nestedContainingBlockDirectionFixture" in fixture);
+        const absoluteDerivedSize = fixtureCases.findIndex(fixture => "absoluteDerivedSizeFixture" in fixture);
+        const baselineProviders = fixtureCases.findIndex(fixture => fixture.baselineProviderFixture);
+        const reverseMainBounds = fixtureCases.findIndex(fixture => fixture.decoratedReverseMainPercentFixture);
+        const reverseMainSymmetric = fixtureCases.findIndex(fixture => fixture.decoratedReverseMainSymmetricFixture);
+        return value < bounds ? bounds : value < aspect ? aspect : value < gaps ? gaps : value < padding ? padding : value < crossBounds ? crossBounds : value < margins ? margins : value < nested ? nested : value < logicalPadding ? logicalPadding : value < logicalBorders ? logicalBorders : value < intrinsic ? intrinsic : value < directionMatrix ? directionMatrix : value < autoMargins ? autoMargins : value < wrappedAutoMargins ? wrappedAutoMargins : value < crossAutoMargins ? crossAutoMargins : value < crossAutoDirections ? crossAutoDirections : value < autoShorthand ? autoShorthand : value < autoOpposing ? autoOpposing : value < textCrossAuto ? textCrossAuto : value < customCrossAuto ? customCrossAuto : value < ownerCrossAuto ? ownerCrossAuto : value < rounding ? rounding : value < nestedCrossMin ? nestedCrossMin : value < nestedDecoratedCrossMin ? nestedDecoratedCrossMin : value < nestedDecoratedCrossMax ? nestedDecoratedCrossMax : value < nestedDecoratedColumnCrossMax ? nestedDecoratedColumnCrossMax : value < nestedDecoratedColumnCrossMin ? nestedDecoratedColumnCrossMin : value < customColumnMeasure ? customColumnMeasure : value < relativeStatic ? relativeStatic : value < decoratedRelativeStatic ? decoratedRelativeStatic : value < absoluteParticipation ? absoluteParticipation : value < absoluteAlignment ? absoluteAlignment : value < absoluteDerivedSize ? absoluteDerivedSize : value < nestedContainingBlock ? nestedContainingBlock : value < absoluteBounds ? absoluteBounds : value < absoluteAspect ? absoluteAspect : value < absoluteMeasured ? absoluteMeasured : value < absoluteMeasuredHeight ? absoluteMeasuredHeight : value < absoluteMainDirection ? absoluteMainDirection : value < relativeMainDirection ? relativeMainDirection : value < absoluteMainBounds ? absoluteMainBounds : value < absoluteMainAspect ? absoluteMainAspect : value < absoluteMeasuredMain ? absoluteMeasuredMain : value < nestedContainingBlockDirection ? nestedContainingBlockDirection : value < absoluteWrap ? absoluteWrap : value < absoluteTextHeight ? absoluteTextHeight : value < absoluteTextWidth ? absoluteTextWidth : value < absoluteTextBoth ? absoluteTextBoth : value < absoluteAnchoredWrap ? absoluteAnchoredWrap : value < relativeWrappedDirection ? relativeWrappedDirection : value < absoluteWrappedAlignment ? absoluteWrappedAlignment : value < absolutePercentageInset ? absolutePercentageInset : value < relativePercentageInset ? relativePercentageInset : baselineProviders >= 0 && value < baselineProviders ? baselineProviders : reverseMainBounds >= 0 && value < reverseMainBounds ? reverseMainBounds : reverseMainSymmetric >= 0 && value < reverseMainSymmetric ? reverseMainSymmetric : 0;
+        });
+      }} />
+      <Text pointerEvents="none" style={{left:496,top:150,font:"14px sans-serif",fill:"#ffffff"}}>Next section</Text>
+      </>}
+      <Rectangle style={{left:616,top:142,width:116,height:36,fill:"#19375b",cursor:"pointer"}} onClick={() => {
+        queueJobs.set(8);
+        const latest = fixtureCases[fixtureCases.length - 1];
+        const latestName = latest.baselineProviderFixture
+          ? fixtureCases.find(fixture => fixture.baselineProviderFixture)!.name
+          : latest.decoratedReverseMainSymmetricFixture
+          ? fixtureCases.find(fixture => fixture.decoratedReverseMainSymmetricFixture)!.name
+          : latest.decoratedReverseMainPercentFixture
+          ? fixtureCases.find(fixture => fixture.decoratedReverseMainPercentFixture)!.name
+          : latest.relativePercentageInsetFixture
+          ? fixtureCases.find(fixture => fixture.relativePercentageInsetFixture)!.name
+          : latest.absolutePercentageInsetFixture
+          ? fixtureCases.find(fixture => fixture.absolutePercentageInsetFixture)!.name
+          : latest.absoluteWrappedAlignmentFixture
+          ? fixtureCases.find(fixture => fixture.absoluteWrappedAlignmentFixture)!.name
+          : latest.relativeWrappedDirectionFixture
+          ? fixtureCases.find(fixture => fixture.relativeWrappedDirectionFixture)!.name
+          : latest.absoluteAnchoredWrapFixture
+          ? fixtureCases.find(fixture => fixture.absoluteAnchoredWrapFixture)!.name
+          : latest.absoluteTextBothFixture
+          ? fixtureCases.find(fixture => fixture.absoluteTextBothFixture)!.name
+          : latest.absoluteTextWidthFixture
+          ? fixtureCases.find(fixture => fixture.absoluteTextWidthFixture)!.name
+          : latest.absoluteTextHeightFixture
+          ? fixtureCases.find(fixture => fixture.absoluteTextHeightFixture)!.name
+          : latest.absoluteWrapFixture
+          ? fixtureCases.find(fixture => fixture.absoluteWrapFixture)!.name
+          : latest.nestedContainingBlockDirectionFixture
+          ? fixtureCases.find(fixture => fixture.nestedContainingBlockDirectionFixture)!.name
+          : latest.absoluteMeasuredMainFixture
+          ? fixtureCases.find(fixture => fixture.absoluteMeasuredMainFixture)!.name
+          : latest.absoluteMainAspectFixture
+          ? fixtureCases.find(fixture => fixture.absoluteMainAspectFixture)!.name
+          : latest.absoluteMainBoundsFixture
+          ? fixtureCases.find(fixture => fixture.absoluteMainBoundsFixture)!.name
+          : latest.relativeMainDirectionFixture
+          ? fixtureCases.find(fixture => fixture.relativeMainDirectionFixture)!.name
+          : latest.absoluteMainDirectionFixture
+          ? fixtureCases.find(fixture => fixture.absoluteMainDirectionFixture)!.name
+          : latest.absoluteMeasuredHeightFixture
+          ? fixtureCases.find(fixture => fixture.absoluteMeasuredHeightFixture)!.name
+          : latest.absoluteMeasuredWidthFixture
+          ? fixtureCases.find(fixture => fixture.absoluteMeasuredWidthFixture)!.name
+          : latest.absoluteAspectFixture
+          ? fixtureCases.find(fixture => fixture.absoluteAspectFixture)!.name
+          : latest.absoluteBoundsFixture
+          ? fixtureCases.find(fixture => fixture.absoluteBoundsFixture)!.name
+          : latest.nestedContainingBlockFixture
+          ? fixtureCases.find(fixture => fixture.nestedContainingBlockFixture)!.name
+          : latest.absoluteDerivedSizeFixture
+          ? fixtureCases.find(fixture => fixture.absoluteDerivedSizeFixture)!.name
+          : latest.absoluteAlignmentFixture
+          ? fixtureCases.find(fixture => fixture.absoluteAlignmentFixture)!.name
+          : latest.absoluteParticipationFixture
+          ? fixtureCases.find(fixture => fixture.absoluteParticipationFixture)!.name
+          : latest.decoratedRelativeStaticFixture
+          ? fixtureCases.find(fixture => fixture.decoratedRelativeStaticFixture)!.name
+          : latest.relativeStaticFixture
+            ? fixtureCases.find(fixture => fixture.relativeStaticFixture)!.name
+            : latest.name.replace(/-resized$/, "");
+        index.set(fixtureCases.findIndex(fixture => fixture.name === latestName));
+      }} />
+      <Text pointerEvents="none" style={{left:624,top:150,font:"14px sans-serif",fill:"#ffffff"}}>Latest proof</Text>
+      <JobControls />
+      <Workspace />
+      <Text
+        pointerEvents="none"
+        style={{
+          left: 28,
+          top: 520,
+          width: 700,
+          wrap: true,
+          font: "11px sans-serif",
+          fill: "#475569",
+        }}
+      >
+        Finite recorded cases only; general CSS/Yoga parity and font migration remain unproven.
+      </Text>
+    </>
+  );
+  const read = (
+    globalThis as typeof globalThis & {
+      __PIBBL_LAYOUT_DIAGNOSTICS__?: () => Record<string, number>;
+    }
+  ).__PIBBL_LAYOUT_DIAGNOSTICS__;
+  const panel = document.createElement("pre");
+  panel.style.cssText =
+    "font:12px monospace;white-space:pre-wrap;color:#19375b;padding:12px;background:#e7e5df";
+  canvas.insertAdjacentElement("afterend", panel);
+  const refresh = () => {
+    const fixture = fixtureCases[index.get()];
+    panel.textContent = `${
+      read
+        ? "EXPERIMENTAL WASM · " +
+          Object.entries(read())
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(" · ")
+        : "Normal JS build"
+    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name} · fixture count: ${fixtureCases.length}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${fixture.absoluteWrappedAlignmentFixture ? `absolute aligned wrap · C: ${actual.get("C")} px · D: ${actual.get("D")} px` : fixture.absoluteAnchoredWrapFixture ? `anchored wrapped absolute · C: ${actual.get("C")} px` : fixture.absoluteTextBothFixture ? `direct absolute Text · both automatic axes · C: ${actual.get("C")} px` : fixture.absoluteTextWidthFixture ? `direct absolute Text width · C: ${actual.get("C")} px` : fixture.absoluteTextHeightFixture ? `direct absolute Text · C: ${actual.get("C")} px` : fixture.absoluteWrapFixture ? `absolute wrapped row · C: ${actual.get("C")} px · D: ${actual.get("D")} px` : fixture.nestedContainingBlockDirectionFixture ? `containing direction · B: ${actual.get("B")} px` : fixture.absoluteMainAspectFixture ? `absolute main aspect · B: ${actual.get("B")} px` : fixture.absoluteMeasuredMainFixture ? `paired absolute provider · B: ${actual.get("B")} px` : fixture.absoluteMainBoundsFixture ? `absolute main bounds · B: ${actual.get("B")} px` : fixture.relativeMainDirectionFixture ? `relative main direction · B: ${actual.get("B")} px` : fixture.absoluteMainDirectionFixture ? `finite absolute main direction · B: ${actual.get("B")} px` : fixture.absoluteMeasuredHeightFixture ? `paired absolute height provider · B: ${actual.get("B")} px` : fixture.absoluteMeasuredWidthFixture ? `paired absolute provider · B: ${actual.get("B")} px` : fixture.customColumnMeasureFixture ? `paired column provider · B: ${actual.get("B")} px` : fixture.textCrossAutoFixture ? `direct wrapped Text · sibling B: ${actual.get("B")} px` : "intrinsicFixture" in fixture ? `direct wrapped leaves · footer B: ${actual.get("B")} px` : ("nestedCrossMinFixture" in fixture || "nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture) ? `nested leaves A1/A2 · B: ${actual.get("B")} px · C: ${actual.get("C")} px` : "contentBoxes" in fixture ? `content ${actual.get("A1")} px` : fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}${fixture.decoratedReverseMainPercentFixture || fixture.decoratedReverseMainSymmetricFixture ? "\nreverse decorated main bounds state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.relativePercentageInsetFixture ? "\nrelative percentage inset state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.absolutePercentageInsetFixture ? "\nabsolute percentage inset state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.absoluteWrappedAlignmentFixture ? "\nabsolute wrapped alignment state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.absoluteAnchoredWrapFixture ? "\nabsolute anchored wrap state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.absoluteTextBothFixture ? "\nabsolute text both-auto state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,text:fixture.textValue,textMeasure:"active Canvas ink width and height; native callback is classified query-source provenance"}) : fixture.absoluteTextWidthFixture ? "\nabsolute text width state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,text:fixture.textValue,textMeasure:"active Canvas ink bounds; native callback is classified query-source provenance"}) : fixture.absoluteTextHeightFixture ? "\nabsolute text height state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,text:fixture.textValue,textMeasure:"deterministic native callback; not font parity"}) : fixture.absoluteWrapFixture ? "\nabsolute wrapped row state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.nestedContainingBlockDirectionFixture ? "\ncontaining direction state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.baselineProviderFixture ? "\nbaseline provider state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,baselineCalls}) : fixture.absoluteMeasuredMainFixture ? "\nabsolute measured main state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,measureCalls:absoluteMeasureCalls,query:absoluteMeasureQuery,measurementQueryDifference:fixture.measurementQueryDifference === true,nativeMeasurementConstraints:fixture.nativeMeasurementConstraints}) : fixture.absoluteMainAspectFixture ? "\nabsolute main aspect state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.absoluteMainBoundsFixture ? "\nabsolute main bounds state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.relativeWrappedDirectionFixture ? "\nrelative wrapped direction state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.relativeMainDirectionFixture ? "\nrelative main direction state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.absoluteMainDirectionFixture ? "\nabsolute main direction state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.absoluteMeasuredHeightFixture ? "\nabsolute measured height state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,measureCalls:absoluteMeasureCalls,query:absoluteMeasureQuery,jobs:8}) : fixture.absoluteMeasuredWidthFixture ? "\nabsolute measured width state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,measureCalls:absoluteMeasureCalls,query:absoluteMeasureQuery,jobs:3}) : fixture.absoluteAspectFixture ? "\nabsolute aspect state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.absoluteBoundsFixture ? "\nabsolute bounds state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.nestedContainingBlockFixture ? "\ncontaining block state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : fixture.customColumnMeasureFixture ? "\ncustom column state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,measureCalls:queueMeasureCalls,jobs:measuredQueueJobs,comparison:"pinned Yoga reference uses 8 jobs; More jobs is a Pibbl-only content mutation"}) : "intrinsicFixture" in fixture ? "\nintrinsic state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ("nestedCrossMinFixture" in fixture || "nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture) ? "\nnested cross min state: "+JSON.stringify({decorated:"nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture,maximum:"nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture,column:"nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture,minimum:"nestedDecoratedColumnCrossMinFixture" in fixture,boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "absoluteDerivedSizeFixture" in fixture ? "\nabsolute derived size state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "absoluteAlignmentFixture" in fixture ? "\nabsolute alignment state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "absoluteParticipationFixture" in fixture ? "\nabsolute participation state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "decoratedRelativeStaticFixture" in fixture ? "\ndecorated relative position state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "relativeStaticFixture" in fixture ? "\nrelative position state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "roundingFixture" in fixture ? "\nrounding state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "autoMarginFixture" in fixture ? "\nauto margin state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,canvasTransform:{a:rootTransform.a,b:rootTransform.b,c:rootTransform.c,d:rootTransform.d,e:rootTransform.e,f:rootTransform.f}}) : "directionMatrixFixture" in fixture ? "\ndirection matrix state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "contentBoxes" in fixture ? "\ncontent state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "nestedBoxes" in fixture ? "\nnested state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ""}`;
+  };
+  refresh();
+  const timer = window.setInterval(refresh, 200);
+  return {
+    node,
+    ...{
+      dispose() {
+        window.clearInterval(timer);
+        panel.remove();
+      },
+    },
+  };
+}
+
+export function WasmYogaMigrationExample({ fixtures = DEFAULT_WASM_YOGA_MIGRATION_FIXTURES }: WasmYogaMigrationExampleProps = {}) {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  const resource = useConst(() =>
+    createWasmYogaMigrationExampleContent(canvas, fixtures),
+  );
+  useReaction(() => resource.dispose, []);
+  return resource.node;
+}

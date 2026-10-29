@@ -186,6 +186,21 @@ render deepest-first before ancestor composition; clean sibling Layer trees
 retain their cached bitmaps. A parent placement-only change may reuse a clean
 child bitmap.
 
+In the default native layout engine, a managed Canvas Layer under an active
+parent layout allocation records a weak parent allocation dependency. The allocation
+context remains active through ordinary components, Group and Clip; it does not
+require direct Layer placement or speculative execution of a reusable component. Eligible pending Canvas work in
+that branch waits for the parent's inline Layer traversal, so rasterization uses
+the final allocation once. Clean sibling bitmaps still reuse. Branches containing
+renderer-participant work, admitted root payloads or next-frame instance work keep
+the existing ordering; allocation-aware friend-work integration is not yet implemented. Public
+`defineRenderLayer` lifecycle callbacks run inline during Canvas traversal and
+therefore follow this Layer allocation handoff; they do not use the friend-work
+queue. The public renderer-in-Layer example verifies final sizes and committed
+target geometry. Teardown removes the dependency. Normal builds retain deepest-first
+ordering. This is scoped experimental evidence, not a general scheduler contract
+replacement; see [Plan 010](../project-plans/010-layout-engine-rework.md).
+
 An instance's completed revision advances only after its successful work.
 Arbitrary state, root, renderer, or completion requests raised during Advance,
 Render, or Complete are deferred to a later frame. Signal notifications from
@@ -272,3 +287,26 @@ notifies finish callbacks of failure and releases affected HTML while unrelated
 roots complete. This adds no scheduler or animation loop. HtmlBox data remains
 opaque; lifecycle setup/update/abort cleanup forbid signal writes. See the
 [HtmlBox contract](./html-box-contract.md).
+
+## Experimental declared-input classification
+
+The layout experiment records private effect roles on the existing receiver-owned
+signal edges. Supported individual style inputs distinguish paint, measurement,
+layout and interaction effects; measured Text content is a measurement input.
+Whole-style replacements, unclassified fields and ordinary application reads
+remain conservative unknown inputs. This adds no application-facing API or second
+reactive graph, and does not change scheduler admission or immediate-mode drawing.
+
+One source used in multiple declared roles retains their union. Recollection stages
+candidate roles and publishes them with a successful dependency generation; a
+failed collection retains the prior committed classification. Receiver provisions
+carry the same roles through existing transaction adoption and rollback. Multiple
+source changes before one redraw preserve their effect classifications while
+render scheduling stays coalesced.
+
+The experimental inspector exposes cumulative role-notification counters. Each
+renderer notification increments the counters for its carried roles; one batched
+notification can increment several role counters. They do not count render passes,
+timing savings or skipped layout visits. Paint-only updates already reuse the
+experiment's numeric and measurement results, but root-wide prepared traversal and
+role-directed work suppression remain separate unfinished capabilities.

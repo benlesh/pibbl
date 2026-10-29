@@ -27,6 +27,10 @@
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.mjs"
     },
+    "./internal/layout": {
+      "types": "./dist/layout-kernel.d.ts",
+      "default": "./dist/layout-kernel.mjs"
+    },
     "./filters": {
       "types": "./dist/filters.d.ts",
       "default": "./dist/filters.mjs"
@@ -90,7 +94,12 @@
     "./viz/inspection": {
       "types": "./dist/features/viz/inspection.d.ts",
       "default": "./dist/features/viz/inspection.mjs"
-    }
+    },
+    "./sync": {
+      "types": "./dist/sync.d.ts",
+      "default": "./dist/sync.mjs"
+    },
+    "./layout.wasm": "./dist/lib/layout/wasm/layout.wasm"
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -105,6 +114,9 @@
       ],
       "internal": [
         "./dist/internal.d.ts"
+      ],
+      "internal/layout": [
+        "./dist/layout-kernel.d.ts"
       ],
       "*": [
         "./dist/*",
@@ -151,6 +163,9 @@
       ],
       "viz/inspection": [
         "./dist/features/viz/inspection.d.ts"
+      ],
+      "sync": [
+        "./dist/sync.d.ts"
       ]
     }
   },
@@ -159,7 +174,7 @@
     "THIRD_PARTY_NOTICES.txt"
   ],
   "scripts": {
-    "build": "node ../../tooling/build-transition-wasm.mjs --check && node ../../tooling/build-recording-wasm.mjs --check && node ../../tooling/build-recording-worker.mjs --check && rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs",
+    "build": "node ../../tooling/build-transition-wasm.mjs --check && node ../../tooling/build-recording-wasm.mjs --check && node ../../tooling/build-layout-wasm.mjs --check && node ../../tooling/build-recording-worker.mjs --check && rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs",
     "dev": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "test": "vitest"

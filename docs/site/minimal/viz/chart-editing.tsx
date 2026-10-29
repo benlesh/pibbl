@@ -1,4 +1,5 @@
-import { Group, pibbl, signal } from "@pibbl/core";
+import { Group,  signal } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   EditableReferenceBand,
   EditableReferenceLine,
@@ -72,7 +73,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 400;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <Group>
     <TradingTimeScale

@@ -1,10 +1,8 @@
 import {
-  pibbl,
-  useEventListener,
-  useSignal,
   Rectangle,
   Text,
-  type PibblController,
+  useEventListener,
+  useSignal,
   type PibblPointerEvent,
 } from "@pibbl/core";
 type CancellationMode =
@@ -62,7 +60,7 @@ function PropagationAncestor(props: PropagationProps) {
   });
   return <PropagationLeaf mode={props.mode} record={props.record} />;
 }
-function PropagationAndCancellationStudy() {
+export function PropagationAndCancellationStudy() {
   const mode = useSignal<CancellationMode>("none");
   const trace = useSignal<readonly string[]>([]);
   const record = (line: string) => {
@@ -198,7 +196,4 @@ function PropagationAndCancellationStudy() {
       }
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <PropagationAndCancellationStudy />);
 }

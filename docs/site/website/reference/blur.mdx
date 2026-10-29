@@ -8,7 +8,7 @@ symbols: [blur]
 ```js
 import { pibbl, createElement, Circle } from "@pibbl/core";
 import { blur } from "@pibbl/core/filters";
-const controller = pibbl(
+const controller = await pibbl(
   canvas,
   createElement(Circle, {
     style: {

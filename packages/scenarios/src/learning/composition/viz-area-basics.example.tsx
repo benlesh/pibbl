@@ -5,10 +5,8 @@ import {
   Rectangle,
   Circle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
 } from "@pibbl/core";
 import {
@@ -306,12 +304,10 @@ function Scene() {
     </>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizAreaBasicsExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

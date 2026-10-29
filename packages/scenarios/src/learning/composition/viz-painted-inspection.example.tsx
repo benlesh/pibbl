@@ -3,9 +3,7 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
   type PibblLogicalMouseEvent,
 } from "@pibbl/core";
 import { LinearScale, PointSeries, defineSeries } from "@pibbl/core/viz";
@@ -143,15 +141,14 @@ function PaintedInspection() {
   );
 }
 /** Mount the overlap lesson; dispose its controller when the canvas is removed. */
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizPaintedInspectionExample() {
+  return (
     <FocusManagement>
       <LinearScale id="x" domain={[0, 10]} range={[30, 230]}>
         <LinearScale id="y" domain={[0, 10]} range={[160, 60]}>
           <PaintedInspection />
         </LinearScale>
       </LinearScale>
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

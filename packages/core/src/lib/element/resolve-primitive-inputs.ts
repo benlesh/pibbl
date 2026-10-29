@@ -11,6 +11,7 @@ import {
   recordPlainInputResolution,
   recordShallowInputCopy,
   recordSignalInputResolution,
+  withSignalDependencyRole,
 } from '../signals/graph.js';
 
 export interface ResolvedPrimitiveInputs {
@@ -43,7 +44,8 @@ export function resolvePrimitiveInputs(
         programProps = { ...rawProps };
         recordShallowInputCopy();
       }
-      programProps[key] = value.get();
+      programProps[key] = key === 'pointerEvents' || key === 'keyboardFocusable' || key === 'keyboardNavigationBounds'
+        ? withSignalDependencyRole('interaction', () => value.get()) : value.get();
     } else {
       recordPlainInputResolution();
       if (programProps !== undefined) programProps[key] = value;
@@ -102,10 +104,23 @@ export function resolvePrimitiveStyleInput(
         resolved = { ...source };
         recordShallowInputCopy();
       }
-      resolved[key] = value.get();
+      resolved[key] = withSignalDependencyRole(
+        styleInputRole(key),
+        () => value.get(),
+      );
     } else {
       recordPlainInputResolution();
     }
   }
   return resolved ?? source;
+}
+
+function styleInputRole(
+  key: string,
+): 'layout' | 'measurement' | 'paint' | 'interaction' | 'transform' | 'unknown' {
+  if (key === 'fill' || key === 'stroke' || key === 'opacity' || key === 'filter') return 'paint';
+  if (key === 'cursor' || key === 'pointerEvents') return 'interaction';
+  if (key === 'font' || key === 'lineHeight' || key === 'wrap' || key === 'fit') return 'measurement';
+  if (key === 'layoutParticipation' || key === 'gridAutoFlow' || key === 'gridAutoColumns' || key === 'gridAutoRows' || key === 'gridTemplateColumns' || key === 'gridTemplateRows' || key === 'gridColumnStart' || key === 'gridColumnSpan' || key === 'gridRowStart' || key === 'gridRowSpan' || key === 'aspectRatio' || key === 'borderWidth' || key === 'borderStartWidth' || key === 'borderEndWidth' || key === 'boxSizing' || key === 'width' || key === 'height' || key === 'minWidth' || key === 'minHeight' || key === 'maxWidth' || key === 'maxHeight' || key === 'position' || key === 'left' || key === 'right' || key === 'top' || key === 'bottom' || key === 'insetStart' || key === 'insetEnd' || key === 'flexBasis' || key === 'flexGrow' || key === 'flexShrink' || key === 'layoutDirection' || key === 'flexDirection' || key === 'flexWrap' || key === 'justifyContent' || key === 'alignItems' || key === 'alignSelf' || key === 'alignContent' || key === 'gap' || key === 'rowGap' || key === 'columnGap' || key === 'padding' || key === 'paddingStart' || key === 'paddingEnd' || key === 'margin' || key === 'marginTop' || key === 'marginRight' || key === 'marginBottom' || key === 'marginLeft' || key === 'marginStart' || key === 'marginEnd') return 'layout';
+  return 'unknown';
 }

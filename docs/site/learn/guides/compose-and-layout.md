@@ -71,8 +71,51 @@ const row = (
 The `style` received by `Tile` is its specified author value. The finite local
 box calculated by the parent comes from `useLayoutBox()`. Parent placement uses
 `left`/`top`; drawing-local geometry uses `x`/`y`. `width` and `height` describe
-content boxes, padding is numeric, and `overflow: "clip"` clips both paint and
+content boxes by default. Use `boxSizing: "border-box"` to include numeric padding and layout borders
+in declared dimensions, bounds and Flex basis. A border-box width100 with padding10
+has80px content; a content-box width100 has120px outer width. Padding forms a floor
+when a border-box dimension is smaller than its insets. `overflow: "clip"` clips both paint and
 target geometry without creating scrolling.
+
+### Adjust one direct Flex child without moving its siblings
+
+In native layout, a finite row-nowrap Flex can reserve a child's usual
+slot and then adjust only that child with `position: "relative"`. The four
+physical insets are finite numbers. LTR uses `left` before `right`; RTL uses
+`right` before `left`; `top` uses precedence over `bottom`.
+
+```tsx
+<Flex
+  style={{
+    width: 160,
+    height: 60,
+    flexDirection: "row",
+    flexWrap: "nowrap",
+    gap: 10,
+  }}
+>
+  <Rectangle
+    style={{
+      width: 50,
+      height: 20,
+      flexGrow: 0,
+      flexShrink: 0,
+      position: "relative",
+      left: 12,
+      top: 8,
+      fill: "tomato",
+    }}
+  />
+  <Rectangle
+    style={{ width: 50, height: 20, flexGrow: 0, flexShrink: 0, fill: "gold" }}
+  />
+</Flex>
+```
+
+The tomato rectangle paints, targets, and focuses at `(12, 8)`, while the gold
+rectangle remains at its normal `(60, 0)` slot. Use `position: "static"` to
+make the same child ignore its insets while retaining that slot. Omitting
+`position` keeps existing Flex behavior; this is not an `Absolute` replacement.
 
 ### Forwarding a placed style
 
@@ -269,3 +312,18 @@ is shared by the Studio and headless browser evidence.
 
 See [responsive local styles](#/learn/guides/responsive-styles) for typed width
 and height conditions, the placement/content distinction, and measurement limits.
+
+`style.borderWidth` reserves finite nonnegative layout insets, using a number or
+physical `{ top, right, bottom, left }` edges. It defaults to zero and does not
+paint. Padding and borders combine once: content-box40×30 with padding10 and
+borderWidth2 occupies64×54; border-box64×54 preserves40×30 content.
+`strokeWidth` remains independent paint. Percentage/logical border aliases are
+not supported. Layer raster sizing retains its separate width/height policy.
+
+For a finite nowrap Flex item, `style={{ width: 90, height: 50, minWidth: 0,
+flexShrink: 0, aspectRatio: 3 }}` produces an outer90×30 box. The ratio follows
+the final main allocation, so shrinking the width to50 derives height16⅔.
+Cross min/max clamp afterward and may break the ratio. Borders and padding are
+included in the ratio; margins are outside it. This Flex-only field requires a
+definite main dimension or basis; intrinsic, wrapped and root ratio sizing remain
+outside this slice.

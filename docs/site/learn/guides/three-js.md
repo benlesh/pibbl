@@ -88,7 +88,7 @@ function App() {
   );
 }
 
-pibbl(document.querySelector("canvas")!, <App />);
+await pibbl(document.querySelector("canvas")!, <App />);
 ```
 
 `create()` runs once for a mounted identity. Pibbl component updates call

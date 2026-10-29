@@ -1,3 +1,6 @@
+import { isKnownLayoutType } from '../layout/prepared-root.js';
+import { nativeLayout } from '../layout/wasm/region.js';
+import { allocatedContentBoxStyle } from '../layout/box-sizing.js';
 import { resolveTransitionBinding } from '../transitions/binding.js';
 import { type PreparedQuery } from './responsive.js';
 import { getLayoutBox, getPercentageBasis } from '../layout/context.js';
@@ -23,6 +26,7 @@ import {
   consumePlacementHandoff,
   getPlacementSignalHandoff,
   getPlacementHandoffSource,
+  resolveForwardedDerivedAbsoluteAxes,
   resolveStandalonePosition,
   type PositioningStyle,
 } from './positioning.js';
@@ -34,6 +38,11 @@ export interface PreparedStyleInput {
   source: PibblElement<any>;
   query?: PreparedQuery;
 }
+const allocatedContentSizes = new WeakMap<PibblElement<any>, { width: number; height: number }>();
+export function setAllocatedContentSize(element: PibblElement<any>, width: number, height: number): void {
+  allocatedContentSizes.set(element, { width, height });
+}
+
 const preNormalizedStyles = new WeakMap<PibblElement<any>, PreparedStyleInput>();
 
 /** @internal Carries one normalized style through an internal placement descriptor. */
@@ -46,6 +55,11 @@ export function setPreNormalizedStyle(
 ): void {
   preNormalizedStyles.set(element, { style, source, query });
   if (receiverToken) setPrimitiveReceiverToken(element, receiverToken);
+}
+
+/** @internal Reads a settled descriptor for known descendant preparation. */
+export function peekPreNormalizedStyle(element: PibblElement<any>): PreparedStyleInput | undefined {
+  return preNormalizedStyles.get(element);
 }
 
 /** @internal Consumes an internal normalized-style override exactly once. */
@@ -127,6 +141,12 @@ export function resolveElementStyle<
     getSpecifiedStyle(element),
   ) ?? getPlacementSignalHandoff(element);
   const handoffStyle = consumePlacementHandoff(resolvedInput);
+  const forwarded = forwardedStyle as Readonly<PositioningStyle> | undefined;
+  if (forwarded?.position === 'absolute') {
+    assertExplicitPositionBoundary(
+      handoffStyle as Readonly<PositioningStyle>, forwarded, isPlacementConsumed(element), context,
+    );
+  }
   const ordinaryFilter = extractSystemFilter(handoffStyle);
   const transitionFilters = handoffStyle.transition === undefined ? undefined : resolveTransitionBinding(handoffStyle.transition);
   const combined = transitionFilters?.length ? [...(ordinaryFilter === undefined ? [] : Array.isArray(ordinaryFilter) ? ordinaryFilter : [ordinaryFilter]), ...transitionFilters] : ordinaryFilter;
@@ -134,23 +154,28 @@ export function resolveElementStyle<
     combined,
     context,
   );
-  const normalized = preNormalized ?
+  const normalizedInput = preNormalized ?
       withoutSystemFilter(handoffStyle) as Readonly<N> :
     definition.normalizeStyle ?
         definition.normalizeStyle(
           withoutSystemFilter(handoffStyle) as SpecifiedStyle<S>,
         ) :
         withoutSystemFilter(handoffStyle) as unknown as Readonly<N>;
+  const normalizedDimensions = resolveForwardedDerivedAbsoluteAxes(normalizedInput, forwardedStyle) as Readonly<N>;
+  const usedSize = allocatedContentSizes.get(element);
+  allocatedContentSizes.delete(element);
+  const normalized = usedSize ? allocatedContentBoxStyle(normalizedDimensions, usedSize.width, usedSize.height) as Readonly<N> : normalizedDimensions;
   const resolved = definition.resolveStyle ?
       definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;
   const positioning = normalized as Readonly<PositioningStyle>;
-  const hasLeft = positioning.left !== undefined;
-  const hasTop = positioning.top !== undefined;
+  const staticLayout = nativeLayout && positioning.position === 'static' && isKnownLayoutType(element.type);
+  if (!staticLayout) assertExplicitPositionBoundary(positioning, forwarded, isPlacementConsumed(element), context);
+  const hasLeft = !staticLayout && positioning.left !== undefined;
+  const hasTop = !staticLayout && positioning.top !== undefined;
   let positioned = resolved;
   if (definition.backend === CANVAS_2D_BACKEND.token && (hasLeft || hasTop)) {
     const standalone = resolveStandalonePosition(normalized, context);
-    const forwarded = forwardedStyle as Readonly<PositioningStyle> | undefined;
     const consumesOuterPosition = isPlacementConsumed(element);
     const position = {
       left: consumesOuterPosition ||
@@ -177,6 +202,60 @@ export function resolveElementStyle<
   return final;
 }
 
+
+function assertExplicitPositionBoundary(
+  positioning: Readonly<PositioningStyle>,
+  forwarded: Readonly<PositioningStyle> | undefined,
+  consumesOuterPosition: boolean,
+  context: Readonly<StyleResolutionContext>,
+): void {
+  const position = positioning.position;
+  if ((positioning.insetStart !== undefined || positioning.insetEnd !== undefined) && position !== 'absolute') {
+    throw layoutDiagnostic({ component: context.component, property: 'position', value: position,
+      algorithm: 'render-dispatch', constraints: context.constraints,
+      reason: 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: logical insets require a supported direct absolute Flex child' });
+  }
+  const hasRightOrBottom = positioning.right !== undefined || positioning.bottom !== undefined;
+  if (position === undefined) {
+    if (!hasRightOrBottom) return;
+    throw layoutDiagnostic({
+      component: context.component,
+      property: positioning.right !== undefined ? 'right' : 'bottom',
+      value: positioning.right ?? positioning.bottom,
+      algorithm: 'render-dispatch',
+      constraints: context.constraints,
+      reason: 'PIBBL_LAYOUT_IGNORED_POSITION: right/bottom require an explicit position in a supported direct Flex child',
+    });
+  }
+  if (position !== 'static' && position !== 'relative' && position !== 'absolute') {
+    throw layoutDiagnostic({
+      component: context.component,
+      property: 'position',
+      value: position,
+      algorithm: 'render-dispatch',
+      constraints: context.constraints,
+      reason: 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: uses an unsupported placement mode',
+    });
+  }
+  if (consumesOuterPosition) return;
+  if (forwarded !== undefined &&
+    Object.is(positioning.position, forwarded.position) &&
+    Object.is(positioning.left, forwarded.left) &&
+    Object.is(positioning.right, forwarded.right) &&
+    Object.is(positioning.top, forwarded.top) &&
+    Object.is(positioning.bottom, forwarded.bottom) &&
+    Object.is(positioning.insetStart, forwarded.insetStart) &&
+    Object.is(positioning.insetEnd, forwarded.insetEnd)) return;
+  throw layoutDiagnostic({
+    component: context.component,
+    property: 'position',
+    value: position,
+    algorithm: 'render-dispatch',
+    constraints: context.constraints,
+    reason: 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: requires direct Flex placement or one exact forwarded position/inset style',
+  });
+}
+
 function assertResolvedValue(
   value: unknown,
   property: string,
@@ -184,6 +263,7 @@ function assertResolvedValue(
   seen: Set<object>,
   opaqueProperties: ReadonlySet<string>,
 ): void {
+  if (opaqueProperties.has(property)) return;
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) {
       throw unresolvedDiagnostic(property, value, context, 'must be finite');

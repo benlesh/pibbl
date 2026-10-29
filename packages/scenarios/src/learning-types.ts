@@ -1,7 +1,15 @@
-import type { getLearningExampleBySlug, getLearningExamplesByBrowseGroup, getLearningExamplesBySection, learningSections } from './learning-catalog.js';
-import type { loadTutorialSnapshot } from './tutorial-catalog.js';
-import type { TutorialSnapshotCatalogEntry, TutorialSnapshotMetadata } from './tutorial-types.js';
-import type { PibblController } from "@pibbl/core";
+import type {
+  getLearningExampleBySlug,
+  getLearningExamplesByBrowseGroup,
+  getLearningExamplesBySection,
+  learningSections,
+} from "./learning-catalog.js";
+import type { loadTutorialSnapshot } from "./tutorial-catalog.js";
+import type {
+  TutorialSnapshotCatalogEntry,
+  TutorialSnapshotMetadata,
+} from "./tutorial-types.js";
+import type { PibblController, PibblConfig } from "@pibbl/core";
 
 /**
  * A stable identifier for a public learning-example section.
@@ -105,6 +113,12 @@ export interface WorkbenchSourceMetadata {
   source: {
     /** Path recorded or configured by this scenario. See {@link WorkbenchSourceMetadata}. */
     path: string;
+    /** Named component selected by Studio. See {@link WorkbenchSourceMetadata}. */
+    exportName: string;
+    /** Host-owned surface settings. See {@link PibblConfig}. */
+    config?: PibblConfig;
+    /** Creates an opt-in HTML overlay host. See {@link WorkbenchSourceMetadata}. */
+    htmlOverlay?: boolean;
   };
 }
 
@@ -153,13 +167,13 @@ export interface LearningExampleMetadata extends WorkbenchSourceMetadata {
  * The mounted learning example's ownership and cleanup interface.
  *
  * @param canvas - Canvas on which to mount the example.
- * @returns A controller whose dispose method releases the example mount. See {@link PibblController}
- * .
+ * @returns A Promise for a controller whose dispose method releases the example mount
+ * after asynchronous runtime preparation. See {@link PibblController}.
  *
  * @see {@link PibblController}
  * @see {@link LearningExampleModule}
  */
-export type LearningMount = (canvas: HTMLCanvasElement) => PibblController;
+export type LearningMount = (canvas: HTMLCanvasElement) => Promise<PibblController>;
 
 /**
  * The executable module loaded by a public learning catalog entry.
@@ -170,8 +184,8 @@ export type LearningMount = (canvas: HTMLCanvasElement) => PibblController;
  * @see {@link TutorialSnapshotCatalogEntry}
  */
 export interface LearningExampleModule {
-  /** Default recorded or configured by this scenario. See {@link LearningMount}. */
-  default: LearningMount;
+  /** Host operation for the catalog-selected component. See {@link LearningMount}. */
+  mount: LearningMount;
 }
 
 /**

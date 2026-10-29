@@ -22,6 +22,10 @@
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.mjs"
     },
+    "./internal/layout": {
+      "types": "./dist/internal/layout.d.ts",
+      "default": "./dist/internal/layout.mjs"
+    },
     "./filters": {
       "types": "./dist/filters.d.ts",
       "default": "./dist/filters.mjs"
@@ -85,7 +89,12 @@
     "./viz/inspection": {
       "types": "./dist/viz/inspection.d.ts",
       "default": "./dist/viz/inspection.mjs"
-    }
+    },
+    "./sync": {
+      "types": "./dist/sync.d.ts",
+      "default": "./dist/sync.mjs"
+    },
+    "./layout.wasm": "./dist/layout.wasm"
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -94,6 +103,9 @@
     "*": {
       "internal": [
         "./dist/internal.d.ts"
+      ],
+      "internal/layout": [
+        "./dist/internal/layout.d.ts"
       ],
       "filters": [
         "./dist/filters.d.ts"
@@ -142,6 +154,9 @@
       ],
       "viz/inspection": [
         "./dist/viz/inspection.d.ts"
+      ],
+      "sync": [
+        "./dist/sync.d.ts"
       ]
     }
   },

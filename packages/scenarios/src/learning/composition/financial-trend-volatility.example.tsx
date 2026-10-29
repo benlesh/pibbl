@@ -4,7 +4,6 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
   useCanvasContext,
   useLayoutBox,
   useAnimatedValue,
@@ -13,7 +12,6 @@ import {
   useReaction,
   useRef,
   useSignal,
-  type PibblController,
   type PibblLogicalMouseEvent,
   type PibblPointerEvent,
   type PibblWheelEvent,
@@ -25,13 +23,13 @@ import {
   LineSeries,
   ReferenceLine,
   TradingTimeScale,
+  CandlestickSeries,
+  IntervalBandSeries,
   defineSeries,
   formatNumber,
   padLinearDomain,
   niceLinearDomain,
   linearTicks,
-  CandlestickSeries,
-  IntervalBandSeries,
   simpleMovingAverage,
   exponentialMovingAverage,
   bollingerBands,
@@ -1044,12 +1042,10 @@ function Desk() {
     </>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function FinancialTrendVolatilityExample() {
+  return (
     <FocusManagement>
       <Desk />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

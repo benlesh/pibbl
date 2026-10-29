@@ -8,20 +8,24 @@ apiCategory: types
 typeDomain: filters
 symbols:
   [
+    backdropContrast,
     blur,
     brightness,
     contrast,
     displacement,
     dropShadow,
+    emboss,
     grayscale,
     hueRotate,
     invert,
     opacity,
+    PibblBackdropContrastFilterOptions,
     PibblBlurFilterOptions,
     PibblBrightnessFilterOptions,
     PibblContrastFilterOptions,
     PibblDisplacementFilterOptions,
     PibblDropShadowFilterOptions,
+    PibblEmbossFilterOptions,
     PibblFilter,
     PibblGrayscaleFilterOptions,
     PibblHueRotateFilterOptions,
@@ -93,6 +97,43 @@ Invalid input is diagnosed during receiving-primitive preparation, before its
 render callback. Custom style normalization cannot remove or reinterpret filters.
 Pure measurement ignores their appearance and acquires no raster resources.
 
+## backdropContrast
+
+`backdropContrast({ light?, dark? } = {})` colors each pixel of the receiving
+primitive and its descendants according to the already-painted backdrop. `light`
+defaults to white and `dark` to black; both accept color signals. The original RGB
+is replaced and its alpha mask is preserved, including glyph antialiasing. A color's
+own alpha additionally scales coverage. Geometry, events, and layout are unchanged.
+
+```tsx
+import { Text } from "@pibbl/core";
+import { backdropContrast } from "@pibbl/core/filters";
+
+<Text style={{ left: 24, top: 40, fill: "black", filter: backdropContrast() }}>
+  Natural gas · 400 MWh
+</Text>;
+```
+
+The two-color mapping uses linear sRGB relative luminance: `light` below
+0.179128785, `dark` at or above it. This is the equal-contrast boundary for black
+and white. Custom colors retain the same mapping; their contrast is the caller's
+responsibility. Inputs must be concrete supported CSS colors, without contextual
+references such as `currentColor` or `var()`.
+
+The backdrop is content already painted in the **current Canvas render target**.
+Transparent backdrop pixels are evaluated over white. DOM/CSS backgrounds are not
+sampled. Inside an isolated filter or Layer, only that target's local prior paint
+is visible. A cached Layer does not recolor when an outer background changes;
+place backdrop-sensitive content outside that isolation when it must react to outer
+paint. Later paint can cover the result normally.
+
+This optional effect requires OffscreenCanvas and WebGL2. It shares the existing
+GPU filter resource implementation and performs no scene pixel readback. Surface
+captures are bounded by the active target viewport. GPU/scratch resources are reused
+and released when the effect is removed or the mount is disposed. Filter arrays
+remain ordered: earlier effects change the source mask; later effects process the
+recolored result. Each backdropContrast pass samples the same prior target paint.
+
 ## blur
 
 `blur(options)` creates an opaque filter for Gaussian blur with a logical radius.
@@ -114,6 +155,16 @@ It changes pixels only; the receiving primitive retains its original hit geometr
 
 `dropShadow(options)` creates an opaque filter for a shadow of the combined silhouette.
 
+## emboss
+
+`emboss(map, options)` lights a receiving primitive and its descendants using a
+mounted grayscale height texture. Luminance times alpha supplies height; white
+is high. Neighboring height samples one logical pixel apart give the surface
+slopes. A directional diffuse light brightens facing slopes and darkens opposing
+slopes; flat heights preserve the original color. Alpha and logical geometry are
+preserved. Repeat, offset, rotation, and tile scale follow the map's paint placement.
+Processing uses the optional WebGL2 filter surface without scene pixel readback.
+
 ## grayscale
 
 `grayscale(options)` creates an opaque filter for grayscale conversion.
@@ -129,6 +180,13 @@ It changes pixels only; the receiving primitive retains its original hit geometr
 ## opacity
 
 `opacity(options)` creates an opaque filter for combined-raster opacity.
+
+## PibblBackdropContrastFilterOptions
+
+| Property | Type                                                  | Default   | Meaning                                |
+| -------- | ----------------------------------------------------- | --------- | -------------------------------------- |
+| `light`  | [`SignalValue<string>`](signal-inputs.md#signalvalue) | `"white"` | Foreground over dark backdrop pixels.  |
+| `dark`   | [`SignalValue<string>`](signal-inputs.md#signalvalue) | `"black"` | Foreground over light backdrop pixels. |
 
 ## PibblBlurFilterOptions
 
@@ -160,6 +218,15 @@ map without acquiring GPU processing or subscribing to map pixel revisions.
 
 `PibblDropShadowFilterOptions` describes the validated inputs to `dropShadow`, shown in the
 field table above. Numeric fields support signals owned by the receiving primitive.
+
+## PibblEmbossFilterOptions
+
+`region` supplies finite local x/y coordinates and positive width/height.
+`depth` is the height range in logical pixels (0–32, default 3); `strength` is
+0–1 (default 1). Both accept signals. Zero depth or strength bypasses processing.
+`direction` is a finite nonzero pair pointing toward the light (default
+`[-0.6, -0.8]`); it is normalized. The filter uses a fixed light elevation.
+A flat surface remains neutral instead of receiving a uniform brightness change.
 
 ## PibblFilter
 

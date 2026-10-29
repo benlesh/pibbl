@@ -1,7 +1,13 @@
 import { tab, pressKey } from "../../support/user-input.js";
 import { expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
-import mount from "../../../../scenarios/src/learning/composition/viz-long-labels.example.js";
+import { VizLongLabelsExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-long-labels.example.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
+
 const compactMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
 type Draw = {
   readonly text: string;

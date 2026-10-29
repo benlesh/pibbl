@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function ClickStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function ClickStudy() {
   const picks = useSignal(0);
   const sleeve = (x: number, color: string, value: number) => (
     <Rectangle
@@ -50,7 +50,4 @@ function ClickStudy() {
       {"CLICK A SLEEVE"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <ClickStudy />);
 }

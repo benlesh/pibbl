@@ -1,6 +1,6 @@
 import { setPlacementConsumed } from '../element/metadata';
 import { describe, expect, it, vi } from 'vitest';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { getPibblInstance } from '../global-state';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import { useRef } from '../hooks/use-ref';

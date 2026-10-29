@@ -1,6 +1,6 @@
 import { userEvent } from "vitest/browser";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { pibbl } from "../pibbl";
+import { pibblSync as pibbl } from "../../sync.js";
 import { getPibblInstance } from "../global-state";
 import { useEventTarget } from "../hooks/use-event-target";
 import { useSignal } from "../hooks/use-signal";

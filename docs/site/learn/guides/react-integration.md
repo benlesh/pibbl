@@ -54,11 +54,16 @@ export function PosterCanvas() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const controller = pibbl(
+    const lifetime = new AbortController();
+    void pibbl(
       canvas,
       createPibblElement(Poster, { title: "Pibbl inside React" }),
-    );
-    return () => controller.dispose();
+      { signal: lifetime.signal },
+    ).catch((error) => {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      console.error(error);
+    });
+    return () => lifetime.abort();
   }, []);
 
   return <canvas ref={canvasRef} width={400} height={240} />;
@@ -67,8 +72,8 @@ export function PosterCanvas() {
 
 The React file keeps React's JSX runtime. Its minority Pibbl tree is constructed
 explicitly with an aliased `createElement`; the Pibbl component itself is not
-called directly. React cleanup disposes the stable Pibbl controller before the
-host Canvas is discarded. Pibbl does not render or replace the `<canvas>` DOM
+called directly. React cleanup aborts a pending mount or disposes the mounted runtime through
+the same lifetime signal before the host Canvas is discarded. Pibbl does not render or replace the `<canvas>` DOM
 node.
 
 If Pibbl is the dominant JSX runtime in a file, reverse the pattern and construct

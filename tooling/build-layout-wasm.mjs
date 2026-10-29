@@ -1,0 +1,150 @@
+import { createHash } from "node:crypto";
+import { readFile, writeFile, mkdtemp, rm } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+const root = new URL("../packages/core/", import.meta.url);
+const sources = [
+  "Cargo.toml",
+  "Cargo.lock",
+  "rust-toolchain.toml",
+  "src/lib.rs",
+  "src/grid.rs",
+  "src/tree.rs",
+];
+const hash = createHash("sha256");
+for (const source of sources)
+  hash.update(await readFile(new URL(`wasm/layout/${source}`, root)));
+const sourceHash = hash.digest("hex");
+const destination = new URL("src/lib/layout/wasm/bytes.ts", root);
+const requiredLayoutAbiExports = [
+  ['grid_v2_auto_fit_keep', 'function'],
+  ['grid_v2_collapse_auto_fit', 'function'],
+  ['standalone_tree_measure_kind', 'function'],
+
+  ['grid_v2_resize_contributions', 'function'],
+  ['grid_v2_apply_contributions', 'function'],
+
+  ['standalone_tree_resize_grid', 'function'],
+  ['grid_v2_assigned_columns', 'function'],
+  ['grid_v2_assigned_rows', 'function'],
+  ['grid_v2_assign_cells', 'function'],
+  ['grid_v2_create', 'function'],
+  ['grid_v2_dispose', 'function'],
+  ['grid_v2_generation', 'function'],
+  ['grid_v2_place_cells', 'function'],
+  ['grid_v2_resize_cells', 'function'],
+  ['grid_v2_resize_tracks', 'function'],
+  ['grid_v2_resolve_tracks', 'function'],
+  ['standalone_tree_box_count', 'function'],
+  ['standalone_tree_box_height', 'function'],
+  ['standalone_tree_box_id', 'function'],
+  ['standalone_tree_box_width', 'function'],
+  ['standalone_tree_box_x', 'function'],
+  ['standalone_tree_box_y', 'function'],
+  ['standalone_tree_create', 'function'],
+  ['standalone_tree_dispose', 'function'],
+  ['standalone_tree_generation', 'function'],
+  ['standalone_tree_measure_count', 'function'],
+  ['standalone_tree_measure_height_max', 'function'],
+  ['standalone_tree_measure_height_min', 'function'],
+  ['standalone_tree_measure_node', 'function'],
+  ['standalone_tree_measure_width_max', 'function'],
+  ['standalone_tree_measure_width_min', 'function'],
+  ['standalone_tree_prepare', 'function'],
+  ['standalone_tree_prepare_settled_measurements', 'function'],
+  ['standalone_tree_replace', 'function'],
+  ['standalone_tree_resize_children', 'function'],
+  ['standalone_tree_resize_measurements', 'function'],
+  ['standalone_tree_resize_nodes', 'function'],
+  ['standalone_tree_solve', 'function'],
+
+  ['layout_abi_v21', 'function'], ['last_wrap_line_count', 'function'], ['first_wrap_line_count', 'function'],
+  ['prepare_intrinsic_main_queries', 'function'],
+  ['resize_intrinsic_main', 'function'], ['resolve_intrinsic_main', 'function'], ['intrinsic_main_result', 'function'], ['intrinsic_main_contribution', 'function'],
+  ['resolve_intrinsic_main_known_owner', 'function'], ['intrinsic_main_auto_free', 'function'], ['place_main_auto_staged', 'function'],
+  ['place_last_baseline', 'function'], ['place_wrap_last_baseline', 'function'], ['place_wrap_first_baseline', 'function'], ['place_first_baseline', 'function'], ['resize_main_auto', 'function'], ['place_main_auto', 'function'], ['place_wrap_main_auto', 'function'],
+  ['memory', 'memory'], ['solve', 'function'], ['dispose', 'function'],
+  ['resize_flow', 'function'], ['place_flow', 'function'],
+  ['resize_grid_cells', 'function'], ['place_grid_cells', 'function'], ['resize_grid', 'function'], ['resolve_grid_tracks', 'function'],
+  ['arena_create', 'function'], ['arena_generation', 'function'], ['arena_dispose', 'function'],
+];
+function assertLayoutArtifact(bytes) {
+  const module = new WebAssembly.Module(bytes);
+  if (WebAssembly.Module.imports(module).length)
+    throw new Error("Layout WASM must be self-contained.");
+  const exports = WebAssembly.Module.exports(module);
+  for (const [name, kind] of requiredLayoutAbiExports) {
+    if (!exports.some(entry => entry.name === name && entry.kind === kind))
+      throw new Error(`Layout WASM ABI v21 is missing ${kind} export ${name}.`);
+  }
+}
+if (process.argv.includes("--check")) {
+  const content = await readFile(destination, "utf8");
+  if (!content.includes(`// Source SHA256: ${sourceHash}\n`))
+    throw new Error(
+      "Stale layout WASM; run node tooling/build-layout-wasm.mjs",
+    );
+  const bytes = Buffer.from(
+    JSON.parse(content.match(/export const bytes = (.+);/)[1]),
+    "base64",
+  );
+  const binaryHash = createHash("sha256").update(bytes).digest("hex");
+  if (!content.includes(`// WASM SHA256: ${binaryHash}\n`))
+    throw new Error("Layout WASM integrity check failed.");
+  const asset = await readFile(new URL('src/lib/layout/wasm/layout.wasm', root));
+  if (!asset.equals(bytes)) throw new Error('External and embedded layout binaries differ.');
+  const identity = await readFile(new URL('src/lib/layout/wasm/artifact.ts', root), 'utf8');
+  if (!identity.includes(JSON.stringify(binaryHash))) throw new Error('Stale layout binary identity.');
+  assertLayoutArtifact(bytes);
+  process.stdout.write(
+    `layout: ${bytes.length} bytes; source fingerprint and WASM validated\n`,
+  );
+} else {
+  const temporary = await mkdtemp(join(tmpdir(), "pibbl-layout-build-"));
+  try {
+    const tested = spawnSync(
+      process.env.PIBBL_CARGO ?? "cargo",
+      ["test", "--manifest-path", fileURLToPath(new URL("wasm/layout/Cargo.toml", root)),
+        "--locked", "--target-dir", temporary],
+      { stdio: "inherit", cwd: fileURLToPath(new URL("wasm/layout/", root)) },
+    );
+    if (tested.status !== 0) throw new Error("Layout kernel native tests failed; no new WASM artifact was generated.");
+    const result = spawnSync(
+      process.env.PIBBL_CARGO ?? "cargo",
+      [
+        "build",
+        "--manifest-path",
+        fileURLToPath(new URL("wasm/layout/Cargo.toml", root)),
+        "--locked",
+        "--release",
+        "--target",
+        "wasm32-unknown-unknown",
+        "--target-dir",
+        temporary,
+      ],
+      {
+        stdio: "inherit",
+        cwd: fileURLToPath(new URL("wasm/layout/", root)),
+      },
+    );
+    if (result.status !== 0)
+      throw new Error(
+        "Failed compiling layout WASM. Install the pinned Rust toolchain and wasm32 target.",
+      );
+    const bytes = await readFile(
+      join(temporary, "wasm32-unknown-unknown/release/pibbl_layout.wasm"),
+    );
+    assertLayoutArtifact(bytes);
+    await writeFile(
+      destination,
+      `// Generated by tooling/build-layout-wasm.mjs; do not edit.\n// Source SHA256: ${sourceHash}\n// WASM SHA256: ${createHash("sha256").update(bytes).digest("hex")}\nexport const bytes = ${JSON.stringify(bytes.toString("base64"))};\n`,
+    );
+    await writeFile(new URL('src/lib/layout/wasm/layout.wasm', root), bytes);
+    await writeFile(new URL('src/lib/layout/wasm/artifact.ts', root), `// Generated by tooling/build-layout-wasm.mjs; do not edit.\nexport const layoutBinaryHash = ${JSON.stringify(createHash('sha256').update(bytes).digest('hex'))};\n`);
+    process.stdout.write(`layout: ${bytes.length} bytes\n`);
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
+  }
+}

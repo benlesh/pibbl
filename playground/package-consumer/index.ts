@@ -212,7 +212,7 @@ import {
   type PibblInternalSimulationOwner,
 } from '@pibbl/core/internal';
 import { tween, spring,
-  pibbl,
+
   useComputed,
   useConst,
   useCursor,
@@ -293,6 +293,7 @@ import { tween, spring,
   untracked,
   wait,
 } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 
 // Removed hooks intentionally have no built-package compatibility exports.
 // @ts-expect-error useState was replaced by useSignal
@@ -655,7 +656,7 @@ export const scene = createElement(FocusManagement, {
     }),
   }),
 });
-export const mount = pibbl;
+export const mount = pibblSync;
 
 const pathStyle = {
   d: new Path2D(),
@@ -909,6 +910,10 @@ const gridStyle = {
   gridTemplateRows: [120],
 } satisfies GridStyle;
 const flexItem = { flexBasis: '50%', flexGrow: 1 } satisfies FlexItemStyle;
+const absoluteFlexItem = { position: 'absolute', left: 12, right: 18, top: 8, bottom: 10 } satisfies FlexItemStyle;
+createElement(Flex, { style: { width: 160, height: 60 }, children: createElement(Rectangle, { style: { ...absoluteFlexItem, width: 30, height: 20 } }) });
+// @ts-expect-error position accepts only the supported explicit literals
+createElement(Rectangle, { style: { position: 'fixed', width: 30, height: 20 } });
 const gridItem = { gridColumnStart: 1, gridRowStart: 1 } satisfies GridItemStyle;
 const layoutItem = { left: '25%', top: 10 } satisfies LayoutItemStyle;
 void boxStyle;
@@ -1047,14 +1052,22 @@ createElement(Line, { style: { coords: [[0, 0], [20, 10]], fill: 'red' } });
 createElement(HorizontalLine, { y: 12 });
 // @ts-expect-error horizontal line requires style.y
 createElement(HorizontalLine, { style: { stroke: 'black' } });
-// @ts-expect-error legacy horizontal endpoint names are not supported
-createElement(HorizontalLine, { style: { y: 12, right: 40 } });
+// right is a numeric positioning inset, independent of horizontal-line endpoints.
+createElement(HorizontalLine, { style: { y: 12, right: 40, position: "relative" } });
+// Percentage right is available to explicit absolute Flex placement.
+createElement(HorizontalLine, { style: { y: 12, right: "10%", position: "absolute" } });
+// @ts-expect-error automatic right inset is unsupported
+createElement(HorizontalLine, { style: { y: 12, right: "auto", position: "absolute" } });
 // @ts-expect-error vertical-line geometry is style-only
 createElement(VerticalLine, { x: 12 });
 // @ts-expect-error vertical line requires style.x
 createElement(VerticalLine, { style: { stroke: 'black' } });
-// @ts-expect-error legacy vertical endpoint names are not supported
-createElement(VerticalLine, { style: { x: 12, bottom: 40 } });
+// bottom is a numeric positioning inset, independent of vertical-line endpoints.
+createElement(VerticalLine, { style: { x: 12, bottom: 40, position: "relative" } });
+// Percentage bottom is available to explicit absolute Flex placement.
+createElement(VerticalLine, { style: { x: 12, bottom: "10%", position: "absolute" } });
+// @ts-expect-error automatic bottom inset is unsupported
+createElement(VerticalLine, { style: { x: 12, bottom: "auto", position: "absolute" } });
 // @ts-expect-error text content is supplied through children, not a program prop
 createElement(Text, { text: 'legacy' });
 // @ts-expect-error text is not a style property
@@ -1159,7 +1172,7 @@ createElement(Clip, { style: {} }, []);
 createElement(Layer, { width: 100, height: 100 },
   createElement(Rectangle, { style: rectangleStyle }));
 
-export function disposeMount(controller: ReturnType<typeof pibbl>): void {
+export function disposeMount(controller: ReturnType<typeof pibblSync>): void {
   const publicController: PibblController = controller;
   publicController.dispose();
 }
@@ -1190,7 +1203,7 @@ const unsupportedEnhancerElement: PibblElement = {
 };
 void publicElementHasEnhancers;
 void unsupportedEnhancerElement;
-const runtimeController: PibblController = pibbl(canvas, runtimeElement, {
+const runtimeController: PibblController = pibblSync(canvas, runtimeElement, {
   signal: new AbortController().signal,
 });
 runtimeController.dispose();
@@ -1207,8 +1220,8 @@ const responsiveSurfaceConfig: PibblResponsiveViewportConfig = {
   pixelRatio: 'device',
 };
 const publicSurfaceConfig: PibblConfig = fixedSurfaceConfig;
-pibbl(canvas, runtimeElement, publicSurfaceConfig);
-pibbl(canvas, runtimeElement, responsiveSurfaceConfig);
+pibblSync(canvas, runtimeElement, publicSurfaceConfig);
+pibblSync(canvas, runtimeElement, responsiveSurfaceConfig);
 
 interface RuntimeProbeStyle extends SystemStyle {
   width: number;
@@ -1395,17 +1408,17 @@ createElement(RuntimeProbe, {});
 // @ts-expect-error excess component props are rejected
 createElement(RuntimeProbe, { count: 1, unknown: true });
 // @ts-expect-error pibbl requires an HTML Canvas
-pibbl(document.createElement('div'), runtimeElement);
+pibblSync(document.createElement('div'), runtimeElement);
 // @ts-expect-error pibbl requires a component element, not a component factory
-pibbl(canvas, RuntimeProbe);
+pibblSync(canvas, RuntimeProbe);
 // @ts-expect-error pibbl signal must be an AbortSignal
-pibbl(canvas, runtimeElement, { signal: 'abort' });
+pibblSync(canvas, runtimeElement, { signal: 'abort' });
 // @ts-expect-error responsive viewports do not accept a fit
-pibbl(canvas, runtimeElement, { viewport: 'responsive', fit: 'contain' });
+pibblSync(canvas, runtimeElement, { viewport: 'responsive', fit: 'contain' });
 // @ts-expect-error fixed viewport dimensions must be numeric
-pibbl(canvas, runtimeElement, { viewport: { width: '720', height: 420 } });
+pibblSync(canvas, runtimeElement, { viewport: { width: '720', height: 420 } });
 // @ts-expect-error pixelRatio accepts only device or a number
-pibbl(canvas, runtimeElement, { pixelRatio: 'retina' });
+pibblSync(canvas, runtimeElement, { pixelRatio: 'retina' });
 
 const state = useSignal({ count: 0 });
 const stateCount: number = state.get().count;

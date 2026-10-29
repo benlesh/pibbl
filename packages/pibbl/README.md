@@ -11,7 +11,7 @@ npm install pibbl
 ```ts
 import { pibbl, createElement, Rectangle } from "pibbl";
 
-const app = pibbl(
+const app = await pibbl(
   canvas,
   createElement(Rectangle, {
     style: { width: 100, height: 100, fill: "tomato" },

@@ -50,3 +50,20 @@ const result = measureElement(element, constraints, measurementService);
 
 [`Constraints`](#/api/types/layout#constraints) and a [`CanvasMeasurementService`](#/api/types/layout#canvasmeasurementservice) describe the call; its result is a [`MeasureResult`](#/api/types/layout#measureresult). Use declared boxes for ordinary layout rather than assuming visual primitives
 have intrinsic dimensions.
+
+In the default native layout engine, an omitted/automatic-width LTR, unwrapped
+`Flex` can use equal finite `minWidth` and `maxWidth` as an exact row width.
+Definite-main, declared-cross children can then resolve percentage `minWidth` and
+`maxWidth`; the result has that exact width and its natural cross size. Exact
+zero is valid. A maximum alone or unbounded availability does not supply a
+percentage basis. Other intrinsic measurement restrictions still apply.
+
+The column counterpart uses equal finite `minHeight` and `maxHeight` for an
+omitted/automatic-height LTR, unwrapped `Flex`. Direct percentage height bounds
+resolve against that height; the result retains its natural width. A maximum
+alone remains an availability limit. These are single-main-axis admissions;
+they do not define cyclic percentage sizing or a new both-axes-exact shortcut.
+
+The [custom intrinsic leaf example](#/examples/layout/wasm-flex-intrinsic-primitive)
+uses this existing operation inside a paired provider, then renders the same
+percentage-capped row with matching pointer targets.

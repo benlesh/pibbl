@@ -1,5 +1,8 @@
-import mount from "../../../../scenarios/src/learning/composition/viz-inspection-workbench.example.js";
+import { VizInspectionWorkbenchExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-inspection-workbench.example.js";
 import { afterEach, expect, it, vi } from "vitest";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, { config: { pixelRatio: 1 } });
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {
@@ -56,7 +59,10 @@ it("runs the public showcase through click and keyboard with semantic results an
     new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
   );
   expect(evidence.at(-1)?.sourceIndex).toBe(13);
-  expect(evidence.at(-1)).toMatchObject({nearestMark:null,paintedMark:null});
+  expect(evidence.at(-1)).toMatchObject({
+    nearestMark: null,
+    paintedMark: null,
+  });
   flush();
   controller.dispose();
   controller.dispose();

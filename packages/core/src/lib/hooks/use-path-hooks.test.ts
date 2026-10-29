@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { clearSharedState } from '../global-state';
 import { useLinePath } from './use-line-path';
 import { useConst } from './use-const';

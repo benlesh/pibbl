@@ -230,7 +230,7 @@ for (const slug of galleries.find((gallery) => gallery.id === "shapes").slugs) {
   const snippet = record?.content.match(/```tsx\n([\s\S]*?)\n```/)?.[1];
   if (!symbol || !snippet)
     throw new Error(`Missing minimal shape source for ${slug}`);
-  const code = `/** @jsxImportSource @pibbl/core */\nimport { pibbl, ${symbol} } from '@pibbl/core';\n\nconst canvas = document.createElement('canvas');\ncanvas.width = 320;\ncanvas.height = 240;\ndocument.body.append(canvas);\n\nconst controller = pibbl(canvas, (\n${snippet}\n));\n\nwindow.addEventListener('pagehide', () => controller.dispose(), { once: true });\n`;
+  const code = `/** @jsxImportSource @pibbl/core */\nimport { pibbl, ${symbol} } from '@pibbl/core';\n\nconst canvas = document.createElement('canvas');\ncanvas.width = 320;\ncanvas.height = 240;\ndocument.body.append(canvas);\n\nconst controller = await pibbl(canvas, (\n${snippet}\n));\n\nwindow.addEventListener('pagehide', () => controller.dispose(), { once: true });\n`;
   const url = `/minimal/${slug}.tsx`;
   await mkdir(resolve(publicDir, "minimal"), { recursive: true });
   await writeFile(resolve(publicDir, `minimal/${slug}.tsx`), code);

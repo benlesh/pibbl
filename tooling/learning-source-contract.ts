@@ -6,6 +6,7 @@ export interface LearningSourceContract {
   readonly authoring: LearningSourceAuthoring;
   readonly label: string;
   readonly sourcePath?: string;
+  readonly exportName?: string;
 }
 
 interface SyntaxNode {
@@ -48,7 +49,7 @@ interface SourceInspection {
   readonly hasOnlyScenarioImports: boolean;
   readonly hasOrbitHandlersSpread: boolean;
   readonly hasScenarioReExport: boolean;
-  readonly hasCanonicalMount: boolean;
+  readonly hasExampleEntry: boolean;
   readonly hasTestScaffolding: boolean;
   readonly hasUninspectableProps: boolean;
   readonly hasUninspectableLegacySensitiveProps: boolean;
@@ -65,6 +66,7 @@ const THREE_MODULE = "three";
 const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = ["@pibbl", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
+  "@pibbl/core/sync",
   "@pibbl/text",
   "@pibbl/core/machines",
   "@pibbl/core/sprites",
@@ -328,43 +330,27 @@ function parseSource(source: string, label: string): SyntaxNode {
   }
 }
 
-function typeReferenceName(annotation: unknown): string | undefined {
-  if (!isNode(annotation) || annotation.type !== "TSTypeAnnotation") {
-    return undefined;
-  }
-  const typeAnnotation = annotation.typeAnnotation;
-  if (!isNode(typeAnnotation) || typeAnnotation.type !== "TSTypeReference") {
-    return undefined;
-  }
-  return identifierName(typeAnnotation.typeName);
-}
-
-function isCanonicalMount(programBody: readonly SyntaxNode[]): boolean {
-  const defaults = programBody.filter(
-    (statement) => statement.type === "ExportDefaultDeclaration",
-  );
-  if (defaults.length !== 1) return false;
-  const declaration = defaults[0]?.declaration;
-  if (
-    !isNode(declaration) ||
-    declaration.type !== "FunctionDeclaration" ||
-    identifierName(declaration.id) !== "mount" ||
-    declaration.async === true ||
-    declaration.generator === true
-  ) {
-    return false;
-  }
-  const parameters = nodes(declaration.params);
-  const canvas = parameters[0];
+function hasExampleEntry(
+  programBody: readonly SyntaxNode[],
+  exportName?: string,
+): boolean {
   return (
-    parameters.length >= 1 &&
-    parameters
-      .slice(1)
-      .every((parameter) => parameter.type === "AssignmentPattern") &&
-    canvas?.type === "Identifier" &&
-    canvas.name === "canvas" &&
-    typeReferenceName(canvas.typeAnnotation) === "HTMLCanvasElement" &&
-    typeReferenceName(declaration.returnType) === "PibblController"
+    !!exportName &&
+    programBody.some((statement) => {
+      const declaration = statement.declaration;
+      return (
+        statement.type === "ExportNamedDeclaration" &&
+        isNode(declaration) &&
+        declaration.type === "FunctionDeclaration" &&
+        identifierName(declaration.id) === exportName &&
+        nodes(declaration.params).length <= 1 &&
+        nodes(declaration.params).every(
+          (parameter) => parameter.type === "AssignmentPattern",
+        ) &&
+        declaration.async !== true &&
+        declaration.generator !== true
+      );
+    })
   );
 }
 
@@ -905,10 +891,25 @@ function resolvedCoreNamespaceTypeName(
     : undefined;
 }
 
-function inspectSource(source: string, label: string): SourceInspection {
+function inspectSource(
+  source: string,
+  label: string,
+  exportName?: string,
+): SourceInspection {
   const file = parseSource(source, label);
   const program = isNode(file.program) ? file.program : undefined;
   const programBody = nodes(program?.body);
+  const namedEntries = programBody.filter(
+    (statement) =>
+      statement.type === "ExportNamedDeclaration" &&
+      isNode(statement.declaration) &&
+      statement.declaration.type === "FunctionDeclaration",
+  );
+  const selectedExport =
+    exportName ??
+    (namedEntries.length === 1 && isNode(namedEntries[0]?.declaration)
+      ? identifierName(namedEntries[0].declaration.id)
+      : undefined);
   const valueImports = new Map<string, string>();
   const namespaceBindings = new Set<string>();
   const coreNamespaceBindings = new Set<string>();
@@ -938,7 +939,14 @@ function inspectSource(source: string, label: string): SourceInspection {
   for (const statement of programBody) {
     if (statement.type !== "ImportDeclaration") {
       if (
-        statement.type === "ExportNamedDeclaration" ||
+        (statement.type === "ExportNamedDeclaration" &&
+          !(
+            selectedExport &&
+            isNode(statement.declaration) &&
+            statement.declaration.type === "FunctionDeclaration" &&
+            statement.declaration.async !== true &&
+            statement.declaration.generator !== true
+          )) ||
         statement.type === "ExportAllDeclaration" ||
         statement.type === "TSExportAssignment" ||
         statement.type === "TSNamespaceExportDeclaration" ||
@@ -1377,7 +1385,7 @@ function inspectSource(source: string, label: string): SourceInspection {
 
   return {
     hasBindingViolation,
-    hasCanonicalMount: isCanonicalMount(programBody),
+    hasExampleEntry: hasExampleEntry(programBody, selectedExport),
     hasCommonJsSyntax,
     hasCoreValueImport,
     hasOrbitControlsValueImport,
@@ -1478,7 +1486,7 @@ export function validateScenarioSourceText(
   ) {
     throw invalid(
       label,
-      "must use supported static imports from @pibbl/core, @pibbl/text, @pibbl/core/viz, @pibbl/core/particles, @pibbl/core/physics/2d, @pibbl/three, three, and supported Three addons; relative imports must be type-only; and at least one public @pibbl/core value is required.",
+      "must use supported static imports from @pibbl/core, @pibbl/core/sync, @pibbl/text, @pibbl/core/viz, @pibbl/core/particles, @pibbl/core/physics/2d, @pibbl/three, three, and supported Three addons; relative imports must be type-only; and at least one public @pibbl/core value is required.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1514,8 +1522,8 @@ export function validateLearningSourceText(
   source: string,
   contract: LearningSourceContract,
 ): void {
-  const { authoring, label, sourcePath } = contract;
-  const inspection = inspectSource(source, label);
+  const { authoring, label, sourcePath, exportName } = contract;
+  const inspection = inspectSource(source, label, exportName);
   const isParticlesLesson =
     sourcePath === PARTICLES_LEARNING_SOURCE_PATH ||
     (sourcePath === undefined &&
@@ -1640,8 +1648,13 @@ export function validateLearningSourceText(
   if (inspection.hasCommonJsSyntax) {
     throw invalid(label, "must not use CommonJS module loading or exports.");
   }
-  if (!inspection.hasCanonicalMount) {
-    throw invalid(label, "must export the canonical mount(canvas) contract.");
+  if (!inspection.hasExampleEntry) {
+    throw invalid(
+      label,
+      exportName
+        ? `must export the catalog-selected component "${exportName}".`
+        : "must export a named component; select its export in the catalog when the module has several exports.",
+    );
   }
   if (inspection.hasBindingViolation) {
     throw invalid(
@@ -1721,7 +1734,8 @@ const DIAGRAM_EDITOR_BASE_DECLARATIONS = [
 function topLevelDeclarationNames(sourceFile: SyntaxNode): Set<string> {
   const program = isNode(sourceFile.program) ? sourceFile.program : undefined;
   const names = new Set<string>();
-  for (const statement of nodes(program?.body)) {
+  for (const entry of nodes(program?.body)) {
+    const statement = declarationValue(entry);
     if (
       statement.type === "FunctionDeclaration" ||
       statement.type === "TSInterfaceDeclaration" ||
@@ -1745,11 +1759,13 @@ function topLevelFunction(
   name: string,
 ): SyntaxNode | undefined {
   const program = isNode(sourceFile.program) ? sourceFile.program : undefined;
-  return nodes(program?.body).find(
-    (statement) =>
-      statement.type === "FunctionDeclaration" &&
-      identifierName(statement.id) === name,
-  );
+  return nodes(program?.body)
+    .map(declarationValue)
+    .find(
+      (statement) =>
+        statement.type === "FunctionDeclaration" &&
+        identifierName(statement.id) === name,
+    );
 }
 
 function callsIdentifier(node: SyntaxNode | undefined, name: string): boolean {

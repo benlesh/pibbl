@@ -1,3 +1,4 @@
+import { registerContentsTransform } from '../layout/participation.js';
 import type { PibblDragHandleStyle } from '../manipulation/handles.js';
 import type { HtmlBoxStyle } from '../html/types.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -91,3 +92,5 @@ export const Group = definePrimitive<
 setPrimitivePresentation<ResolvedGStyle>(Group, style => ({
   transform: createGroupTransform(style),
 }));
+
+registerContentsTransform(Group);

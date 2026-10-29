@@ -1,12 +1,5 @@
-import {
-  pibbl,
-  useSignal,
-  Path,
-  Rectangle,
-  Text,
-  type PibblController,
-} from "@pibbl/core";
-function PathStudy() {
+import { Path, Rectangle, Text, useSignal } from "@pibbl/core";
+export function PathStudy() {
   const inside = useSignal(false);
   const star = new Path2D();
   const points = [
@@ -57,7 +50,4 @@ function PathStudy() {
       {inside.get() ? "PATH2D!" : "TRACE THE STAR"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <PathStudy />);
 }

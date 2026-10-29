@@ -1,21 +1,39 @@
-const unsupportedProperties = ['order', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'] as const;
+import { contentBoxStyle } from './box-sizing.js';
+import { canvasMeasurementService } from './canvas-measurement.js';
+import { Grid } from './grid.js';
+import { Flow } from './flow.js';
+import type { PreparedFlexLayoutPlan, PreparedLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
+import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, peekPreparedLayoutPlan, peekPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedIntrinsicMain, peekPreparedIntrinsicMain, takePreparedIntrinsicMain, type PreparedIntrinsicMainStage } from './prepared-root.js';
+import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
+import { allocationInputRevision, allocationStructuralRevision, allocationInputState, allocationOwner } from './allocation-revision.js';
+import { FLEX_BASELINE_GROUP, FLEX_LAST_BASELINE } from './flex-baseline-mode.js';
+import { FlexAllocationCache, frozenFlexInputs, frozenFlexMetricDependencies, type CachedFlexPlacement } from './flex-allocation-cache.js';
+import { nativeLayout, LayoutRegion, mountedLayoutRegion, solveTransientFlexMain, prepareTransientIntrinsicMainQueries, resolveTransientIntrinsicMain, resolveTransientKnownOwnerMain, type NumericFlexMainInput, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
+import { Rectangle } from '../components/rect.js';
+import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth, measureLayoutTextNaturalRun } from '../components/text.js';
 
-import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
+const unsupportedProperties = ['order'] as const;
+
+import { ResponsiveStylePreparation, UnsupportedResponsiveMeasurement, withStyleMeasurement, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
-import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
+import { getChildPrimitiveReceiverToken, getPrimitiveReceiverToken, getPrimitiveDefinition, getPrimitiveProgramProps, getElementMetadata, setElementMetadata } from '../element/metadata.js';
 import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import { layoutDiagnostic } from '../style/diagnostics.js';
+import { LayoutDiagnostic, layoutDiagnostic } from '../style/diagnostics.js';
 import {
   type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
-import { normalizeEdges } from '../style/normalize.js';
-import { resolveLength } from '../style/resolve-length.js';
-import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
+import { normalizeBoxInsets, hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
+import { resolveScalarSizingLength } from '../style/sizing-length.js';
+import { parsePercentage } from '../style/resolve-length.js';
+import { isIntrinsicSizingValue, normalizeSizingLength, type NormalizedSizingLength } from '../style/sizing-length.js';
+import { setPreNormalizedStyle, peekPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
   BoxStyle,
+  TextStyle,
+  Percentage,
   FlexItemStyle,
   LayoutItemStyle,
   ResolvedBoxStyle,
@@ -25,25 +43,31 @@ import type {
   PibblNodeInput,
   MeasureInput,
   MeasureResult,
+  IntrinsicMeasureInput,
+  IntrinsicSizesResult,
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
 import {
   childWithUsedSize,
+  childWithCachedUsedSize,
   prepareDirectChildStyle,
   materializeLayoutChildren,
   placeDirectChildren,
   prepareLayoutChildren,
   resolveContainerBox,
+  resolveDirectChildBox,
 } from './absolute.js';
-import { pushLayoutBox } from './context.js';
+import { getLayoutDirection, getLogicalContainingBox, pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
-import { measureElement } from './measure.js';
+import { markDerivedAbsoluteAxes } from '../style/positioning.js';
+import { measureElement, measureConstrainedLayoutChild, measureIntrinsicElement, measureConstrainedIntrinsicElement, measurePreparedLayoutElement, measureBaselineElement, setPreparedBaselineOwner, type BaselineMeasurementOptions, withIsolatedRenderState } from './measure.js';
+import { isSignal, withSignalWriteForbidden } from '../signals/graph.js';
 import type { Constraints, LayoutBox } from './types.js';
 
-type FlexDirection = 'row' | 'column';
-type FlexWrap = 'nowrap' | 'wrap';
+type FlexDirection = 'row' | 'column' | 'row-reverse' | 'column-reverse';
+type FlexWrap = 'nowrap' | 'wrap' | 'wrap-reverse';
 type MainAlignment =
   | 'flex-start'
   | 'flex-end'
@@ -52,6 +76,7 @@ type MainAlignment =
   | 'space-around'
   | 'space-evenly';
 type CrossAlignment = 'stretch' | 'flex-start' | 'flex-end' | 'center';
+type ItemCrossAlignment = CrossAlignment | 'first-baseline' | 'last-baseline';
 
 /**
  * Supported geometry and presentation properties for Flex.
@@ -61,25 +86,27 @@ type CrossAlignment = 'stretch' | 'flex-start' | 'flex-end' | 'center';
  * @see {@link Flex}
  */
 export interface FlexStyle extends BoxStyle, LayoutItemStyle {
+  /** Inherited inline direction. Roots default to LTR. See {@link Flex}. */
+  layoutDirection?: 'ltr' | 'rtl';
   /** The main axis along which flex children are placed. See {@link FlexDirection}. */
   flexDirection?: FlexDirection;
   /** Whether children may wrap onto additional flex lines. See {@link FlexWrap}. */
   flexWrap?: FlexWrap;
-  /** Distribution of children along the main axis. See {@link MainAlignment}. */
-  justifyContent?: MainAlignment;
-  /** Default alignment of children on the cross or block axis. See {@link CrossAlignment}. */
-  alignItems?: CrossAlignment;
+  /** Distribution along the main axis. start/end follow layout direction independently of axis reversal. See {@link MainAlignment}. */
+  justifyContent?: MainAlignment | 'start' | 'end';
+  /** Cross alignment. start/end follow layout direction independently of wrap reversal. See {@link CrossAlignment}. */
+  alignItems?: ItemCrossAlignment | 'start' | 'end';
   /**
    * Distribution of wrapped flex lines within the available cross-axis space. See
    * {@link CrossAlignment}, {@link MainAlignment}.
    */
-  alignContent?: CrossAlignment | MainAlignment;
-  /** Spacing between adjacent items. See {@link FlexStyle}. */
-  gap?: number;
-  /** Space between adjacent rows or items on the row axis. See {@link FlexStyle}. */
-  rowGap?: number;
-  /** Space between adjacent columns or items on the column axis. See {@link FlexStyle}. */
-  columnGap?: number;
+  alignContent?: CrossAlignment | MainAlignment | 'start' | 'end';
+  /** Numeric spacing, or experimental allocated-axis percentages. See {@link Percentage}, {@link FlexStyle}. */
+  gap?: number | Percentage;
+  /** Physical row spacing; experimental percentages use content height. See {@link Percentage}, {@link FlexStyle}. */
+  rowGap?: number | Percentage;
+  /** Physical column spacing; experimental percentages use content width. See {@link Percentage}, {@link FlexStyle}. */
+  columnGap?: number | Percentage;
 }
 
 /**
@@ -101,16 +128,27 @@ export interface FlexMeasurementInput {
   ): MeasureResult;
 }
 
+// Parent input is private metadata, not a recursively validated resolved value.
+const FLEX_ABSOLUTE_BOX_STYLE = Symbol('pibbl.flex-absolute-box-style');
+const FLEX_INHERITED_CONTAINING_BOX = Symbol('pibbl.flex-inherited-containing-box');
+
 interface ResolvedFlexStyle extends SystemStyle {
+  layoutDirection: 'ltr' | 'rtl';
   box: ResolvedBoxStyle;
   overflow: 'visible' | 'clip';
   flexDirection: FlexDirection;
   flexWrap: FlexWrap;
   justifyContent: MainAlignment;
   alignItems: CrossAlignment;
+  /** True when first/last baseline requires a horizontal measured group. */
+  [FLEX_BASELINE_GROUP]: boolean;
+  [FLEX_LAST_BASELINE]: boolean;
   alignContent: CrossAlignment | MainAlignment;
   rowGap: number;
   columnGap: number;
+  /** Original container input retained for lazy absolute padding-box derivation. */
+  [FLEX_ABSOLUTE_BOX_STYLE]: Readonly<FlexStyle>;
+  [FLEX_INHERITED_CONTAINING_BOX]?: Readonly<LayoutBox>;
 }
 
 interface FlexItem {
@@ -119,8 +157,17 @@ interface FlexItem {
   baseMain: number;
   targetMain: number;
   paddingMain: number;
+  marginMainBefore: number;
+  marginMainAfter: number;
+  autoMainBefore: boolean;
+  autoMainAfter: boolean;
+  marginCrossBefore: number;
+  marginCrossAfter: number;
+  autoCrossBefore: boolean;
+  autoCrossAfter: boolean;
   preferredCross: number;
   paddingCross: number;
+  paddingCrossBefore: number;
   minMain: number;
   maxMain: number;
   minCross: number;
@@ -128,9 +175,25 @@ interface FlexItem {
   grow: number;
   shrink: number;
   crossAuto: boolean;
+  aspectRatio?: number;
   alignSelf: CrossAlignment | 'auto';
   receiverToken: object;
+  layoutToken?: object;
   query?: PreparedQuery;
+  relativeX: number;
+  relativeY: number;
+  /** Signed selected baseline offset resolved after final main allocation. */
+  firstBaseline?: number;
+  /** Current transaction root of a transparent layout description. */
+  baselineRoot?: PibblElement<any>;
+  /** Existing known-Flex slot prepared before this outer baseline pass. */
+  structuralBaselineSlot?: PreparedLayoutSlot;
+  /** Unkeyed source-type occurrence, shared with known descendant preparation. */
+  layoutOccurrence: number;
+  /** Column natural cross size is measured only after native main allocation. */
+  deferredColumnAutoCross: boolean;
+  ordinaryColumnAutoCross: boolean;
+  sourceIndex: number;
 }
 
 interface FlexLine {
@@ -139,9 +202,34 @@ interface FlexLine {
   crossOffset: number;
 }
 
-interface FlexPlacement {
+/** One current known-Flex baseline result, without claiming its staged region. */
+interface PreparedKnownBaseline {
+  readonly slot: PreparedLayoutSlot;
+  readonly offset: number;
+}
+
+export interface FlexPlacement extends CachedFlexPlacement {
   box: LayoutBox;
   element: PibblElement<any>;
+}
+interface DeferredStaticAbsolutePlacement {
+  readonly sourceIndex: number;
+  readonly child: PibblElement<any>;
+  readonly style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>;
+  readonly receiverToken: object;
+  readonly query: PreparedQuery | undefined;
+  readonly measurement: FlexMeasurementInput | undefined;
+  readonly measurementToken: object | undefined;
+}
+interface DeferredStaticPlacementState {
+  /** Source-indexed descriptors keep source ordering without scanning pending entries. */
+  readonly slots: Array<DeferredStaticAbsolutePlacement | undefined>;
+  readonly style: Readonly<ResolvedFlexStyle>;
+}
+const deferredStaticPlans = new WeakMap<PreparedFlexLayoutPlan, DeferredStaticPlacementState>();
+function deferredStaticPlacementSentinel(): FlexPlacement {
+  const fail = (): never => { throw new Error('Deferred static Flex absolute placement was read before finalization.'); };
+  return { get box() { return fail(); }, get layoutY() { return fail(); }, get usedWidth() { return fail(); }, get usedHeight() { return fail(); }, get element() { return fail(); } };
 }
 
 function renderFlex(
@@ -150,7 +238,6 @@ function renderFlex(
   ctx: RenderingContext2D,
 ) {
   wireStructuralEvents(props);
-  const children = prepareLayoutChildren(props.children, 'Flex');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -160,29 +247,43 @@ function renderFlex(
     width: content.width,
     height: content.height,
   });
-  const releaseLayout = pushLayoutBox(localContent);
+  const specified = style[FLEX_ABSOLUTE_BOX_STYLE];
+  const releaseLayout = pushLayoutBox(localContent, {
+    layoutDirection: style.layoutDirection,
+    logicalOffset: content,
+    containingBlock: nativeLayout && specified?.position !== 'static'
+      ? resolveFlexAbsolutePaddingBox(specified ?? {}, localContent) : undefined,
+  });
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
-  const service = {
-    measureText(value: string, font: string) {
-      ctx.save();
-      try {
-        ctx.font = font;
-        return ctx.measureText(value);
-      } finally {
-        ctx.restore();
+  const service = flexMeasurementService(ctx);
+  const prepared = nativeLayout ? claimPreparedFlexPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
+  const region = nativeLayout ? mountedLayoutRegion() : undefined;
+  const plan = prepared ?? prepareFlexAllocation(props, style, localContent, service, region);
+  if (nativeLayout && !prepared) prepareFlexDescendants(plan, style);
+  const { children, placements, revision } = plan;
+  if (!plan.cached) {
+    const transaction = GLOBAL_STATE.renderTransaction;
+    const input = props.children;
+    const metricDependencies = frozenFlexMetricDependencies(input);
+    if (region && transaction && !style[FLEX_INHERITED_CONTAINING_BOX] && metricDependencies && frozenFlexInputs(input)) {
+      const owner = GLOBAL_STATE.componentRefs!;
+      const allocationRoot = allocationOwner();
+      const snapshot: CachedFlexPlacement[] = [];
+      for (const placement of placements) {
+        snapshot.push({
+          box: { x: placement.box.x, y: placement.box.y, width: placement.box.width, height: placement.box.height },
+          layoutY: placement.layoutY,
+          usedWidth: placement.usedWidth, usedHeight: placement.usedHeight,
+        });
       }
-    },
-  };
-  const placements = resolveFlexPlacements(
-    localContent,
-    children,
-    style,
-    {
-      service,
-      measureElement: (element, constraints) =>
-        measureElement(element, constraints, service),
-    },
-  );
+      transaction.onFinish(success => {
+        if (!success || owner.teardowns.closed || allocationInputRevision(allocationRoot) !== revision) return;
+        const cache = new FlexAllocationCache();
+        cache.store(input, allocationInputState(allocationRoot), localContent, style, snapshot, metricDependencies);
+        region.allocationCache = cache;
+      });
+    }
+  }
   let index = 0;
   return placeDirectChildren(
     children,
@@ -192,8 +293,55 @@ function renderFlex(
   );
 }
 
+function flexMeasurementService(ctx: RenderingContext2D): CanvasMeasurementService {
+  return canvasMeasurementService(ctx);
+}
+function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexStyle>, localContent: Readonly<LayoutBox>, service: CanvasMeasurementService, region?: LayoutRegion, parentSlot?: PreparedLayoutSlot, deferStaticAbsolute?: Array<DeferredStaticAbsolutePlacement | undefined>) {
+  const revision = allocationInputRevision();
+  // Decide before materializing or inspecting children; normal paint traversal
+  // still visits them and resolves their current receiver-owned paint inputs.
+  const cached = deferStaticAbsolute || style[FLEX_INHERITED_CONTAINING_BOX] ? undefined : region?.allocationCache?.read(props.children, allocationInputState(), localContent, style);
+  const children = prepareLayoutChildren(props.children, 'Flex');
+  let placements: FlexPlacement[];
+  if (cached) {
+    recordWasmAllocationCacheHit();
+    placements = [];
+    for (let index = 0; index < children.length; index++) {
+      const allocation = cached[index];
+      const child = children[index];
+      const receiver = hasPreparedChildStyles() ? getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, index) : undefined;
+      const prepared = takePreparedChildStyle(child, receiver, localContent);
+      placements.push({
+        box: allocation.box,
+        layoutY: allocation.layoutY,
+        usedWidth: allocation.usedWidth,
+        usedHeight: allocation.usedHeight,
+        element: prepared ? childWithUsedSize(child, preparedStyleValue(prepared), allocation.usedWidth, allocation.usedHeight, receiver, preparedStyleQuery(prepared)) :
+          childWithCachedUsedSize(child, allocation.usedWidth, allocation.usedHeight),
+      });
+    }
+  } else {
+    if (region) region.allocationCache = undefined;
+    const axis = isRowDirection(style.flexDirection) ? 'row' : 'column';
+    const staged = takePreparedIntrinsicMain(
+      GLOBAL_STATE.primitiveReceiverToken,
+      children,
+      axis,
+      axis === 'row' ? localContent.width : localContent.height,
+      revision,
+    );
+    placements = resolveFlexPlacements(localContent, children, style, {
+      service,
+      measureElement: (element, constraints) => measureElement(element, constraints, service),
+    }, region, staged, parentSlot, deferStaticAbsolute);
+  }
+  return { children, placements, revision, content: localContent, cached: cached !== undefined };
+}
+
 /**
  * Describes the supported Flexbox subset for JSX or createElement authoring.
+ * Text automatic heights use the final allocated width in rows and nowrap columns
+ * before dependent sibling placement. See {@link Text}.
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
@@ -209,42 +357,344 @@ export const Flex = definePrimitive<
   ResolvedFlexStyle
 >(renderFlex, {
   childInput: 'structural',
-  resolveStyle: (style, context) => ({
-    box: resolveContainerBox(style, context, 'Flex', 'flex'),
-    overflow: style.overflow ?? 'visible',
-    ...normalizeFlexOptions(style, context.allocation),
-  }),
+  resolveStyle: (style, context) => {
+    const box = resolveContainerBox(style, context, 'Flex', 'flex');
+    return {
+      box,
+      [FLEX_ABSOLUTE_BOX_STYLE]: style,
+      [FLEX_INHERITED_CONTAINING_BOX]: nativeLayout ? getElementMetadata(GLOBAL_STATE.componentRefs!.element)?.absoluteContainingBlock : undefined,
+      overflow: style.overflow ?? 'visible',
+      ...normalizeFlexOptions(style, box.contentBox),
+    };
+  },
   measure: input => measureFlex(input),
+  measureIntrinsic: input => measureFlexIntrinsic(input),
 });
+
+// A known Absolute sibling boundary resolves these receiver inputs before any
+// sibling's opaque component executes. Geometry still solves in normal traversal.
+let allocatedIntrinsicMain: { receiver: object; main: number; rootMin?: number; rootMax?: number } | undefined;
+
+// A known Flex contributes its native adjusted line size while its parent is
+// measuring the same main axis. The scope is receiver-bound and only exists
+// through the immediate child measurement; ordinary public queries retain the
+// resolved outer size.
+let requestedIntrinsicContribution: { receiver: object; axis: 'row' | 'column'; normalOwner?: boolean } | undefined;
+if (nativeLayout) registerKnownLayoutPreflight(Flex, (element, style, content, receiver, slot, parentMainAxis, preflightOptions) => {
+  const options = normalizeFlexOptions(style as Readonly<FlexStyle>, content);
+  const releaseLayout = pushLayoutBox(content, options);
+  const previous = GLOBAL_STATE.primitiveReceiverToken;
+  GLOBAL_STATE.primitiveReceiverToken = receiver;
+  try {
+    const children = prepareLayoutChildren(element.props.children, 'Flex');
+    const axis = isRowDirection(options.flexDirection) ? 'row' : 'column';
+    const main = axis === 'row' ? content.width : content.height;
+    const contribution = parentMainAxis === axis ? peekPreparedIntrinsicMain(
+      receiver, children, axis, main, allocationInputRevision(),
+    ) : undefined;
+    if (contribution && !contribution.normalOwner) {
+      // A main-axis contribution sizes this owner, not its final descendants.
+      // Rebind those descendants through native exact mode at the allocated main.
+      const ctx = GLOBAL_STATE.renderContext;
+      if (!ctx) throw new Error('Known layout preparation requires a Canvas measurement context.');
+      const measuredRoot = clonePibblElement(element);
+      setPreNormalizedStyle(measuredRoot, contribution.style, element, receiver);
+      const previousPhase = allocatedIntrinsicMain;
+      allocatedIntrinsicMain = { receiver, main, rootMin: contribution.rootMin, rootMax: contribution.rootMax };
+      try {
+        const result = measureConstrainedIntrinsicElement(measuredRoot, {
+          minWidth: 0, maxWidth: content.width, minHeight: 0, maxHeight: content.height,
+        }, flexMeasurementService(ctx));
+        if (result.status !== 'measured') throw new Error(`Known Flex allocated-owner measurement is unsupported: ${result.reason}`);
+      } finally { allocatedIntrinsicMain = previousPhase; }
+    }
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index];
+      const token = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, receiver, index);
+      let prepared = prepareDirectChildStyle(child, token, content, true);
+      const specified = preparedStyleValue(prepared) as Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>>;
+      const normalized = resolveAllocatedInsets(specified, { width: content.width, layoutDirection: options.layoutDirection, context: childContext(child, content) });
+      if (normalized !== specified) {
+        if (prepared instanceof ResponsiveStylePreparation) prepared.style = normalized;
+        else prepared = normalized;
+      }
+      assertSupportedChildPosition('Flex', child, normalized, true);
+      rejectUnsupportedItemFields(child, normalized, content);
+      nonnegativeFactor(normalized.flexGrow ?? 0, 'flexGrow', child, content);
+      nonnegativeFactor(normalized.flexShrink ?? 1, 'flexShrink', child, content);
+      stagePreparedChildStyle(child, token, content, prepared);
+    }
+    const ctx = GLOBAL_STATE.renderContext;
+    if (!ctx) throw new Error('Known layout preparation requires a Canvas measurement context.');
+    const region = slot.acquire();
+    const resolved = {
+      box: { contentBox: content },
+      [FLEX_ABSOLUTE_BOX_STYLE]: style as Readonly<FlexStyle>,
+      [FLEX_INHERITED_CONTAINING_BOX]: getElementMetadata(element)?.absoluteContainingBlock,
+      overflow: (style as Readonly<FlexStyle>).overflow ?? 'visible',
+      ...normalizeFlexOptions(style as Readonly<FlexStyle>, content),
+    } as Readonly<ResolvedFlexStyle>;
+    const deferred = preflightOptions?.deferStaticContainingDescendants ? [] as Array<DeferredStaticAbsolutePlacement | undefined> : undefined;
+    const plan = prepareFlexAllocation(element.props as FlexProps, resolved, content, flexMeasurementService(ctx), region, slot, deferred);
+    const staged = { ...plan, region } as PreparedFlexLayoutPlan;
+    if (deferred) {
+      // Count represents the unresolved origin phase, even if this owner has no direct absolute child.
+      staged.pending = { kind: 'static-flex-containing-origin', count: 1 };
+      deferredStaticPlans.set(staged, { slots: deferred, style: resolved });
+      // Prepare in-flow known descendants now; static descendants inherit this pending origin.
+      prepareFlexDescendants(staged, resolved, slot, true);
+    } else prepareFlexDescendants(staged, resolved, slot);
+    stagePreparedLayoutPlan(slot, staged);
+  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; releaseLayout(); }
+});
+
+function deferredStaticState(plan: PreparedFlexLayoutPlan): DeferredStaticPlacementState | undefined {
+  return deferredStaticPlans.get(plan);
+}
+function finalizeDeferredStaticAbsolutePlacements(plan: PreparedFlexLayoutPlan, style: Readonly<ResolvedFlexStyle>): void {
+  const state = deferredStaticState(plan as PreparedFlexLayoutPlan);
+  if (!state) return;
+  let paddingBox: Readonly<LayoutBox> | undefined;
+  for (let sourceIndex = 0; sourceIndex < state.slots.length; sourceIndex++) {
+    const entry = state.slots[sourceIndex];
+    if (!entry) continue;
+    if (entry.sourceIndex !== sourceIndex || sourceIndex >= plan.placements.length) throw new Error('Deferred static absolute placement lost source ordering.');
+    plan.placements[sourceIndex] = resolveAbsoluteFlexPlacement(paddingBox ??= resolveFlexContainingBox(style, plan.content),
+      entry.child, entry.style, entry.receiverToken, entry.query, plan.content, style, entry.measurement, plan.region, entry.measurementToken);
+    state.slots[sourceIndex] = undefined;
+  }
+}
+
+/** Known descendants prepare only after this boundary's own allocation settles. */
+function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 'placements' | 'content'> & { region?: LayoutRegion }, style: Readonly<ResolvedFlexStyle>, parentSlot?: PreparedLayoutSlot, unresolvedStaticOrigin = false): void {
+  if (!unresolvedStaticOrigin) finalizeDeferredStaticAbsolutePlacements(plan as PreparedFlexLayoutPlan, style);
+  let containingBox: Readonly<LayoutBox> | undefined;
+  let flexOccurrence = 0;
+  let descriptionOccurrences: Map<Function, number> | undefined;
+    for (let index = 0; index < plan.children.length; index++) {
+      const child = plan.children[index];
+      if (!isKnownLayoutType(child.type) && !isLayoutComponent(child.type)) continue;
+      let occurrence = 0;
+      if (child.key === undefined) {
+        if (child.type === Flex) occurrence = flexOccurrence++;
+        else {
+          descriptionOccurrences ??= new Map();
+          occurrence = descriptionOccurrences.get(child.type) ?? 0;
+          descriptionOccurrences.set(child.type, occurrence + 1);
+        }
+      }
+      // A static owner has not received its containing origin yet. Its direct
+      // absolute entries are descriptors, never settled placement objects.
+      if (deferredStaticState(plan as PreparedFlexLayoutPlan)?.slots[index]) continue;
+      const placement = plan.placements[index];
+      const prepared = peekPreNormalizedStyle(placement.element);
+      if (!prepared) throw new Error('Known layout preparation requires settled receiver inputs.');
+      const receiver = getPrimitiveReceiverToken(placement.element);
+      if (!receiver) throw new Error('Known layout preparation requires the current child receiver.');
+      const preparedRoot = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken: receiver }) : child;
+      const staticFlexRoot = preparedRoot.type === Flex && (prepared.style as FlexStyle).position === 'static';
+      let preparationChild = child;
+      // Declarative static Flex boxes pass the nearest owner's padding box through
+      // existing placement metadata. Nothing is attached to authored props/styles.
+      const unresolvedStaticChild = unresolvedStaticOrigin && staticFlexRoot;
+      if (staticFlexRoot && !unresolvedStaticChild) {
+        containingBox ??= resolveFlexContainingBox(style, plan.content);
+        const insets = normalizeBoxInsets(prepared.style as FlexStyle, childContext(child, plan.content));
+        const x = finiteRelativePlacement(containingBox.x - placement.box.x - insets.left, 'left', child, plan.content);
+        const y = finiteRelativePlacement(containingBox.y - placement.box.y - insets.top, 'top', child, plan.content);
+        setElementMetadata(placement.element, {
+          ...getElementMetadata(placement.element),
+          layoutDescriptionSource: getElementMetadata(child)?.layoutDescriptionSource ?? child,
+          absoluteContainingBlock: Object.freeze({ x, y, width: containingBox.width, height: containingBox.height }),
+        });
+        preparationChild = placement.element;
+      }
+      const content = { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight };
+      const staged = getElementMetadata(placement.element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
+      // A baseline pass may have already staged this exact settled child. Retain
+      // static containing-box metadata above, but never stage the slot twice.
+      const current = staged && peekPreparedLayoutPlan(staged, content, (prepared.style as FlexStyle).layoutDirection ?? style.layoutDirection);
+      if (current) {
+        if (preparedRoot.type === Flex) {
+          const stagedFlex = current as PreparedFlexLayoutPlan;
+          const state = deferredStaticState(stagedFlex);
+          if (state && !unresolvedStaticOrigin) {
+            const inherited = getElementMetadata(placement.element)?.absoluteContainingBlock;
+            if (!inherited) throw new Error('Static structural descendants require the settled containing box before finalization.');
+            const nestedStyle = { ...state.style, [FLEX_INHERITED_CONTAINING_BOX]: inherited } as Readonly<ResolvedFlexStyle>;
+            finalizeDeferredStaticAbsolutePlacements(stagedFlex, nestedStyle);
+            prepareFlexDescendants(stagedFlex, nestedStyle, staged);
+            stagedFlex.pending!.count = 0;
+            deferredStaticPlans.delete(stagedFlex);
+          }
+        }
+        continue;
+      }
+      const nested = preflightKnownLayout(preparationChild, prepared.style, content, receiver, occurrence, parentSlot, isRowDirection(style.flexDirection) ? 'row' : 'column',
+        unresolvedStaticChild ? { deferStaticContainingDescendants: true } : undefined);
+      attachPreparedLayoutSlot(placement.element, nested);
+    }
+}
+
+
+/** Pure content contributions; final allocation still belongs to the native solver. */
+function measureFlexIntrinsic(input: IntrinsicMeasureInput<FlexProps, FlexStyle>): IntrinsicSizesResult {
+  const width = input.constraints.width.kind === 'bounded' ? input.constraints.width.max : Number.POSITIVE_INFINITY;
+  const height = input.constraints.height.kind === 'bounded' ? input.constraints.height.max : Number.POSITIVE_INFINITY;
+  const owner = { x: 0, y: 0, width: Number.isFinite(width) ? width : 0, height: Number.isFinite(height) ? height : 0 };
+  const row = isRowDirection(input.style.flexDirection);
+  const wrap = (input.style.flexWrap ?? 'nowrap') !== 'nowrap';
+  if (isPercentage(input.style.gap) || isPercentage(input.style.columnGap) || isPercentage(input.style.rowGap)) return { status: 'unsupported', reason: 'Flex intrinsic percentage gaps require a definite owning axis' };
+  const options = normalizeFlexOptions(input.style, owner);
+  const children = materializeLayoutChildren(input.props.children, 'Flex');
+  let minMain = 0, maxMain = 0, minCross = 0, maxCross = 0, count = 0;
+  for (let index = 0; index < children.length; index++) {
+    const child = children[index];
+    const receiver = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, index);
+    const prepared = prepareDirectChildStyle(child, receiver, owner, true);
+    let style = preparedStyleValue(prepared) as Readonly<BoxStyle & FlexItemStyle>;
+    if (style.position === 'absolute') continue;
+    if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: owner.width, height: owner.height, mainAxis: row ? 'width' : 'height', context: childContext(child, owner) });
+    if (hasPercentageBoxPadding(style) || isPercentage(style.width) || isPercentage(style.height) ||
+      isPercentage(style.flexBasis) || hasPercentageBounds(style)) return { status: 'unsupported', reason: 'Flex intrinsic percentage child sizes require a definite owning axis' };
+    const measuredChild = clonePibblElement(child);
+    setPreNormalizedStyle(measuredChild, style, child, receiver, preparedStyleQuery(prepared));
+    const measured = typeof style.width === 'number' && typeof style.height === 'number' ? {
+      status: 'measured' as const, minContent: { width: style.width, height: style.height }, maxContent: { width: style.width, height: style.height },
+    } : measureIntrinsicElement(measuredChild, { minWidth: 0, maxWidth: width, minHeight: 0, maxHeight: height }, input.service);
+    if (measured.status !== 'measured') return measured;
+    const padding = normalizeBoxInsets(style, childContext(child, owner));
+    const horizontal = padding.left + padding.right, vertical = padding.top + padding.bottom;
+    const marginLeft = style.marginLeft ?? style.margin, marginRight = style.marginRight ?? style.margin;
+    const marginTop = style.marginTop ?? style.margin, marginBottom = style.marginBottom ?? style.margin;
+    const marginsX = allocatedMargin(marginLeft === 'auto' ? 0 : marginLeft, 'marginLeft', child, owner) + allocatedMargin(marginRight === 'auto' ? 0 : marginRight, 'marginRight', child, owner);
+    const marginsY = allocatedMargin(marginTop === 'auto' ? 0 : marginTop, 'marginTop', child, owner) + allocatedMargin(marginBottom === 'auto' ? 0 : marginBottom, 'marginBottom', child, owner);
+    const lowerWidth = intrinsicOptionalNumber(style.minWidth, 0, 'minWidth');
+    const upperWidth = intrinsicOptionalNumber(style.maxWidth, Number.POSITIVE_INFINITY, 'maxWidth');
+    const lowerHeight = intrinsicOptionalNumber(style.minHeight, 0, 'minHeight');
+    const upperHeight = intrinsicOptionalNumber(style.maxHeight, Number.POSITIVE_INFINITY, 'maxHeight');
+    if (lowerWidth > upperWidth) throw childDiagnostic(child, 'minWidth', lowerWidth, owner, 'minimum must not exceed maximum');
+    if (lowerHeight > upperHeight) throw childDiagnostic(child, 'minHeight', lowerHeight, owner, 'minimum must not exceed maximum');
+    const minimumWidth = clamp(typeof style.width === 'number' ? style.width : measured.minContent.width, lowerWidth, upperWidth) + horizontal + marginsX;
+    const maximumWidth = clamp(typeof style.width === 'number' ? style.width : measured.maxContent.width, lowerWidth, upperWidth) + horizontal + marginsX;
+    const minimumHeight = clamp(typeof style.height === 'number' ? style.height : measured.minContent.height, lowerHeight, upperHeight) + vertical + marginsY;
+    const maximumHeight = clamp(typeof style.height === 'number' ? style.height : measured.maxContent.height, lowerHeight, upperHeight) + vertical + marginsY;
+    const childMinMain = row ? minimumWidth : minimumHeight, childMaxMain = row ? maximumWidth : maximumHeight;
+    const childMinCross = row ? minimumHeight : minimumWidth, childMaxCross = row ? maximumHeight : maximumWidth;
+    minMain = wrap ? Math.max(minMain, childMinMain) : minMain + childMinMain;
+    maxMain += childMaxMain;
+    minCross = wrap ? minCross + childMinCross : Math.max(minCross, childMinCross);
+    maxCross = Math.max(maxCross, childMaxCross);
+    count++;
+  }
+  const mainGaps = Math.max(0, count - 1) * (row ? options.columnGap : options.rowGap);
+  const crossGaps = Math.max(0, count - 1) * (row ? options.rowGap : options.columnGap);
+  if (!wrap) minMain += mainGaps; else minCross += crossGaps;
+  maxMain += mainGaps;
+  return { status: 'measured', minContent: { width: Math.max(0, row ? minMain : minCross), height: Math.max(0, row ? minCross : minMain) }, maxContent: { width: Math.max(0, row ? maxMain : maxCross), height: Math.max(0, row ? maxCross : maxMain) } };
+}
+
+/** Finite-main native continuation for general intrinsic children. */
+function measureAllocatedFlex(input: MeasureInput<FlexProps, FlexStyle>, children: readonly PibblElement<any>[], measuredWidth: NonNullable<FlexStyle['width']>): MeasureResult {
+    const width = resolveMeasuredContainerLength(measuredWidth, input.constraints.maxWidth, 'width', input.constraints);
+    const height = Number.isFinite(input.constraints.maxHeight) ? input.constraints.maxHeight : 0;
+    const region = new LayoutRegion();
+    let placements: FlexPlacement[];
+    try {
+      placements = resolveFlexPlacements({ x: 0, y: 0, width, height }, children, {
+        ...input.style, alignContent: 'flex-start',
+        alignItems: input.style.alignItems === undefined || input.style.alignItems === 'stretch' ? 'flex-start' : input.style.alignItems,
+      }, input, region);
+    } catch (error) {
+      if (error instanceof LayoutDiagnostic && error.message.includes('measurement is required but unsupported:')) return { status: 'unsupported', reason: error.message };
+      throw error;
+    } finally { region.dispose(); }
+    let first = Number.POSITIVE_INFINITY, last = Number.NEGATIVE_INFINITY;
+    const owner = { x: 0, y: 0, width, height };
+    for (let index = 0; index < placements.length; index++) {
+      const placement = placements[index];
+      const style = peekPreNormalizedStyle(placement.element)?.style as Readonly<FlexItemStyle & BoxStyle>;
+      if (style.position === 'absolute') continue;
+      const top = style.marginTop ?? style.margin, bottom = style.marginBottom ?? style.margin;
+      const before = top === 'auto' ? 0 : allocatedMargin(top, 'marginTop', placement.element, owner);
+      const after = bottom === 'auto' ? 0 : allocatedMargin(bottom, 'marginBottom', placement.element, owner);
+      first = Math.min(first, placement.layoutY - before);
+      last = Math.max(last, placement.layoutY + placement.box.height + after);
+    }
+    return { status: 'measured', size: { width, height: Number.isFinite(first) ? Math.max(0, last - first) : 0 } };
+}
+
+interface IntrinsicRowItem extends NumericFlexMainInput {
+  readonly sourceIndex: number;
+  readonly child: PibblElement<any>;
+  /** Prepared direct paired root when the source child is a layout description. */
+  readonly measuredChild: PibblElement<any>;
+  readonly style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>>;
+  readonly receiverToken: object;
+  readonly measureCross: boolean;
+  readonly baseCross: number;
+  readonly minCross: number;
+  readonly maxCross: number;
+  readonly paddingCross: number;
+  readonly marginCross: number;
+}
 
 function measureFlex(
   input: MeasureInput<FlexProps, FlexStyle>,
 ): MeasureResult {
   const children = prepareLayoutChildren(input.props.children, 'Flex');
-  const widthDefinite = input.style.width !== undefined &&
-    input.style.width !== 'auto';
-  const heightDefinite = input.style.height !== undefined &&
-    input.style.height !== 'auto';
+  const phase = allocatedIntrinsicMain;
+  if (phase && phase.receiver === GLOBAL_STATE.primitiveReceiverToken) {
+    allocatedIntrinsicMain = undefined;
+    try {
+      const diagnosticBox = { x: 0, y: 0, width: input.constraints.maxWidth, height: input.constraints.maxHeight };
+      const result = measureStagedNonexactMain(input, children, normalizeFlexOptions(input.style, diagnosticBox), diagnosticBox, phase);
+      if (result) return result;
+      return unsupportedIntrinsic('allocated known-owner continuation no longer matches its measured profile');
+    } finally { allocatedIntrinsicMain = phase; }
+  }
+  // Exact caller availability supplies a definite main axis. A finite maximum
+  // alone remains an availability limit, never a percentage containing size.
+  const automaticWidth = input.style.width === undefined || input.style.width === 'auto';
+  const exactRowWidth = nativeLayout && automaticWidth &&
+    (input.style.flexDirection ?? 'row') === 'row' &&
+    (input.style.flexWrap ?? 'nowrap') === 'nowrap' &&
+    (input.style.layoutDirection ?? getLayoutDirection()) === 'ltr' &&
+    input.constraints.minWidth === input.constraints.maxWidth &&
+    Number.isFinite(input.constraints.maxWidth) && input.constraints.maxWidth >= 0 ?
+    input.constraints.maxWidth : undefined;
+  const automaticHeight = input.style.height === undefined || input.style.height === 'auto';
+  const exactColumnHeight = nativeLayout && automaticHeight &&
+    input.style.flexDirection === 'column' &&
+    (input.style.flexWrap ?? 'nowrap') === 'nowrap' &&
+    (input.style.layoutDirection ?? getLayoutDirection()) === 'ltr' &&
+    input.constraints.minHeight === input.constraints.maxHeight &&
+    Number.isFinite(input.constraints.maxHeight) && input.constraints.maxHeight >= 0 ?
+    input.constraints.maxHeight : undefined;
+  const measuredHeight = exactColumnHeight ?? input.style.height;
+  const measuredWidth = exactRowWidth ?? input.style.width;
+  const widthDefinite = measuredWidth !== undefined && measuredWidth !== 'auto';
+  const heightDefinite = measuredHeight !== undefined && measuredHeight !== 'auto';
   if (widthDefinite && heightDefinite) {
     return { status: 'measured', size: {
       width: resolveMeasuredContainerLength(
-        input.style.width!,
+        measuredWidth!,
         input.constraints.maxWidth,
         'width',
         input.constraints,
       ),
       height: resolveMeasuredContainerLength(
-        input.style.height!,
+        measuredHeight!,
         input.constraints.maxHeight,
         'height',
         input.constraints,
       ),
     } };
   }
-  if ((input.style.flexWrap ?? 'nowrap') !== 'nowrap') {
-    return unsupportedIntrinsic('requires nowrap because wrapped intrinsic sizing is deferred');
-  }
-  const row = (input.style.flexDirection ?? 'row') === 'row';
+  const wrappedIntrinsic = (input.style.flexWrap ?? 'nowrap') !== 'nowrap';
+  if (wrappedIntrinsic && !nativeLayout) return unsupportedIntrinsic('requires nowrap because wrapped intrinsic sizing is deferred');
+  if (isPercentage(input.style.gap) || isPercentage(input.style.rowGap) || isPercentage(input.style.columnGap)) return unsupportedIntrinsic('does not support percentage gaps without an actual finite content allocation');
+  const row = isRowDirection(input.style.flexDirection);
   const diagnosticBox = {
     x: 0,
     y: 0,
@@ -254,21 +704,132 @@ function measureFlex(
       input.constraints.maxHeight : 0,
   };
   const options = normalizeFlexOptions(input.style, diagnosticBox);
+  const stagedNonexact = measureStagedNonexactMain(input, children, options, diagnosticBox);
+  if (stagedNonexact) return stagedNonexact;
+  if (wrappedIntrinsic && !(nativeLayout && options.flexDirection === 'row' && options.flexWrap === 'wrap' && options.layoutDirection === 'ltr' && typeof input.style.width === 'number' && !heightDefinite)) {
+    if (nativeLayout && row && widthDefinite && !heightDefinite) return measureAllocatedFlex(input, children, measuredWidth!);
+    return unsupportedIntrinsic('wrapped intrinsic height requires a finite main allocation');
+  }
+  const wrapWidth = wrappedIntrinsic ? resolveMeasuredContainerLength(measuredWidth!, input.constraints.maxWidth, 'width', input.constraints) : 0;
   const mainGap = row ? options.columnGap : options.rowGap;
+  // An exact width makes this dependency acyclic: main allocation precedes each
+  // paired leaf's height query. Metadata inspection never evaluates components.
+  const measuredRowWidth = nativeLayout && options.flexDirection === 'row' &&
+    options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' && !heightDefinite &&
+    typeof measuredWidth === 'number' ?
+    resolveMeasuredContainerLength(measuredWidth, input.constraints.maxWidth, 'width', input.constraints) : undefined;
+  let rowItems: IntrinsicRowItem[] | undefined;
+  if (measuredRowWidth !== undefined) for (let index = 0; index < children.length; index++) {
+    const candidate = children[index];
+    // A layout description is inspectable only through its prepared root. Keep
+    // the same receiver that the item pass will use, so description ownership
+    // and cycle metadata stay on the source wrapper.
+    const root = isLayoutComponent(candidate.type) ?
+      prepareLayoutComponent(candidate, { receiverToken: getChildPrimitiveReceiverToken(
+        GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, index,
+      ) }) : candidate;
+    const definition = getPrimitiveDefinition(root.type);
+    if (root.type !== Text && definition?.measureIntrinsic && definition.measure) { rowItems = []; break; }
+  }
+  let requiresSolvedCross = false;
+  let lineMain = 0, lineCross = 0, lineItems = 0, wrappedHeight = 0;
   let intrinsicMain = 0;
   let intrinsicCross = 0;
   let count = 0;
-  for (const child of children) {
+  for (let sourceIndex = 0; sourceIndex < children.length; sourceIndex++) {
+    const child = children[sourceIndex];
     const receiverToken = getChildPrimitiveReceiverToken(
       GLOBAL_STATE.renderTransaction,
       GLOBAL_STATE.primitiveReceiverToken,
-      count,
+      sourceIndex,
     );
-    const prepared = prepareDirectChildStyle(child, receiverToken, diagnosticBox);
-    const style = preparedStyleValue(prepared) as Readonly<
+    const prepared = prepareDirectChildStyle(child, receiverToken, diagnosticBox, true);
+    let style = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    if (nativeLayout) {
+      validateIntrinsicBound(style.minWidth, 'minWidth', child, diagnosticBox);
+      validateIntrinsicBound(style.maxWidth, 'maxWidth', child, diagnosticBox);
+      validateIntrinsicBound(style.minHeight, 'minHeight', child, diagnosticBox);
+      validateIntrinsicBound(style.maxHeight, 'maxHeight', child, diagnosticBox);
+    }
+    if (hasPercentageBoxPadding(style, options.layoutDirection)) return unsupportedIntrinsic('does not support percentage padding without an actual finite Flex allocation');
+    // Absolute children have no flow contribution. This first slice does not
+    // define an intrinsic containing-block cascade, so fail before a child can
+    // be measured into the owner size.
+    if (style.position === 'absolute') {
+      if (nativeLayout && wrappedIntrinsic && row && widthDefinite && !heightDefinite) return measureAllocatedFlex(input, children, measuredWidth!);
+      return unsupportedIntrinsic('does not support absolute children during intrinsic Flex measurement');
+    }
+    if (nativeLayout && (style.paddingStart !== undefined || style.paddingEnd !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined)) style = resolveAllocatedInsets(style, { width: diagnosticBox.width, layoutDirection: options.layoutDirection, context: childContext(child, diagnosticBox) });
+    const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
+    const layoutReceiverToken = getPrimitiveReceiverToken(layoutChild) ?? receiverToken;
+    const settledColumnChild = nativeLayout && !row && typeof input.style.width === 'number' && !heightDefinite &&
+      (child.type === Text || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap');
+    if (settledColumnChild && (isPercentage(style.width) || isPercentage(style.minWidth) || isPercentage(style.maxWidth))) {
+      if (isPercentage(style.height) || isPercentage(style.flexBasis) || isPercentage(style.minHeight) || isPercentage(style.maxHeight)) return unsupportedIntrinsic('does not support percentage child main sizes or bounds');
+      const reference = resolveMeasuredContainerLength(measuredWidth!, input.constraints.maxWidth, 'width', input.constraints);
+      const context = childContext(child, diagnosticBox);
+      // Resolve only against an explicit owner, before converting outer box inputs.
+      // Keep numeric hot paths allocation-free and leave indefinite owners unsupported.
+      style = { ...style,
+        width: isPercentage(style.width) ? resolveScalarSizingLength(style.width!, reference, 'width', context) : style.width,
+        minWidth: isPercentage(style.minWidth) ? resolveScalarSizingLength(style.minWidth!, reference, 'minWidth', context) : style.minWidth,
+        maxWidth: isPercentage(style.maxWidth) ? resolveScalarSizingLength(style.maxWidth!, reference, 'maxWidth', context) : style.maxWidth,
+      };
+    }
+    if (nativeLayout && automaticWidth && options.flexDirection === 'row' &&
+      options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' &&
+      (isPercentage(style.minWidth) || isPercentage(style.maxWidth))) {
+      if (exactRowWidth === undefined) return unsupportedIntrinsic('requires an exact finite row width to resolve percentage main bounds');
+      const context = childContext(child, diagnosticBox);
+      style = { ...style,
+        minWidth: isPercentage(style.minWidth) ? resolveScalarSizingLength(style.minWidth!, exactRowWidth, 'minWidth', context) : style.minWidth,
+        maxWidth: isPercentage(style.maxWidth) ? resolveScalarSizingLength(style.maxWidth!, exactRowWidth, 'maxWidth', context) : style.maxWidth,
+      };
+      if (typeof style.minWidth === 'number' && typeof style.maxWidth === 'number' && style.minWidth > style.maxWidth) {
+        throw childDiagnostic(child, 'minWidth', style.minWidth, diagnosticBox, 'minimum must not exceed maximum');
+      }
+    }
+    if (nativeLayout && automaticHeight && options.flexDirection === 'column' &&
+      options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' &&
+      (isPercentage(style.minHeight) || isPercentage(style.maxHeight))) {
+      if (exactColumnHeight === undefined) return unsupportedIntrinsic('requires an exact finite column height to resolve percentage main bounds');
+      const context = childContext(child, diagnosticBox);
+      style = { ...style,
+        minHeight: isPercentage(style.minHeight) ? resolveScalarSizingLength(style.minHeight!, exactColumnHeight, 'minHeight', context) : style.minHeight,
+        maxHeight: isPercentage(style.maxHeight) ? resolveScalarSizingLength(style.maxHeight!, exactColumnHeight, 'maxHeight', context) : style.maxHeight,
+      };
+      if (typeof style.minHeight === 'number' && typeof style.maxHeight === 'number' && style.minHeight > style.maxHeight) {
+        throw childDiagnostic(child, 'minHeight', style.minHeight, diagnosticBox, 'minimum must not exceed maximum');
+      }
+    }
+    if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: diagnosticBox.width, height: diagnosticBox.height, mainAxis: row ? 'width' : 'height', context: childContext(child, diagnosticBox) });
     rejectUnsupportedItemFields(child, style, diagnosticBox);
+    if (style.aspectRatio !== undefined) return unsupportedIntrinsic('does not support aspectRatio during intrinsic measurement');
+    const marginDirection = layoutChild.type === Flex ? style.layoutDirection ?? options.layoutDirection : options.layoutDirection;
+    const logicalLeft = marginDirection === 'rtl' ? style.marginEnd : style.marginStart;
+    const logicalRight = marginDirection === 'rtl' ? style.marginStart : style.marginEnd;
+    const leftValue = logicalLeft !== undefined ? logicalLeft : style.marginLeft === undefined ? style.margin : style.marginLeft;
+    const rightValue = logicalRight !== undefined ? logicalRight : style.marginRight === undefined ? style.margin : style.marginRight;
+    const topValue = style.marginTop === undefined ? style.margin : style.marginTop;
+    const bottomValue = style.marginBottom === undefined ? style.margin : style.marginBottom;
+    const hasLogicalMargin = style.marginStart !== undefined || style.marginEnd !== undefined;
+    if ((!hasLogicalMargin && isPercentage(style.margin)) || isPercentage(topValue) || isPercentage(rightValue) || isPercentage(bottomValue) || isPercentage(leftValue)) return unsupportedIntrinsic('does not support percentage margins without an actual finite Flex allocation');
+    const autoTop = topValue === 'auto', autoRight = rightValue === 'auto';
+    const autoBottom = bottomValue === 'auto', autoLeft = leftValue === 'auto';
+    if (!nativeLayout && (autoTop || autoRight || autoBottom || autoLeft)) return unsupportedIntrinsic('automatic margins require the experimental layout engine');
+    // Physical-only paths retain their existing shorthand validation.
+    if (!hasLogicalMargin) numericMargin(nativeLayout && style.margin === 'auto' ? 0 : style.margin, 'margin', child, diagnosticBox);
+    // Final allocation already represents automatic margins as zero until the
+    // native placement pass divides free space. The intrinsic contribution uses
+    // the same zero contribution; each measurement path retains its sizing guards.
+    const marginTop = numericMargin(autoTop ? 0 : topValue, 'marginTop', child, diagnosticBox);
+    const marginRight = numericMargin(autoRight ? 0 : rightValue, logicalRight !== undefined ? marginDirection === 'rtl' ? 'marginStart' : 'marginEnd' : 'marginRight', child, diagnosticBox);
+    const marginBottom = numericMargin(autoBottom ? 0 : bottomValue, 'marginBottom', child, diagnosticBox);
+    const marginLeft = numericMargin(autoLeft ? 0 : leftValue, logicalLeft !== undefined ? marginDirection === 'rtl' ? 'marginEnd' : 'marginStart' : 'marginLeft', child, diagnosticBox);
+    const marginMain = row ? marginLeft + marginRight : marginTop + marginBottom;
+    const marginCross = row ? marginTop + marginBottom : marginLeft + marginRight;
     const grow = nonnegativeFactor(
       style.flexGrow ?? 0,
       'flexGrow',
@@ -276,6 +837,7 @@ function measureFlex(
       diagnosticBox,
     );
     if (grow !== 0) {
+      if (nativeLayout && wrappedIntrinsic && row && widthDefinite && !heightDefinite) return measureAllocatedFlex(input, children, measuredWidth!);
       return unsupportedIntrinsic('does not support flexGrow during intrinsic measurement');
     }
     const shrink = nonnegativeFactor(
@@ -285,10 +847,13 @@ function measureFlex(
       diagnosticBox,
     );
     const basis = style.flexBasis ?? 'auto';
+    if (wrappedIntrinsic && (!hasEmptyRectangleMinimum(child, style, preparedStyleQuery(prepared)) || shrink !== 0 || basis !== 'auto')) return measureAllocatedFlex(input, children, measuredWidth!);
     const mainProperty = row ? 'width' : 'height';
     const crossProperty = row ? 'height' : 'width';
     const minimumProperty = row ? 'minWidth' : 'minHeight';
-    if ((shrink > 0 || basis === 'auto') && style[minimumProperty] === undefined) {
+    if ((shrink > 0 || basis === 'auto') && style[minimumProperty] === undefined &&
+      !hasEmptyRectangleMinimum(child, style, preparedStyleQuery(prepared))) {
+      if (nativeLayout && row && widthDefinite && !heightDefinite && getPrimitiveDefinition(layoutChild.type)?.measureIntrinsic) return measureAllocatedFlex(input, children, measuredWidth!);
       throw childDiagnostic(
         child,
         minimumProperty,
@@ -303,14 +868,71 @@ function measureFlex(
       hasPercentageBounds(style)) {
       return unsupportedIntrinsic('does not support percentage child sizes or bounds');
     }
-    if (mainValue === undefined || mainValue === 'auto') {
-      return unsupportedIntrinsic('requires a definite child basis; measured auto basis is deferred');
+    let baseMain: number;
+    let baseCross: number;
+    const provider = rowItems && layoutChild.type !== Text ? getPrimitiveDefinition(layoutChild.type) : undefined;
+    const measureCross = !!rowItems && !!provider?.measureIntrinsic && !!provider.measure &&
+      (crossValue === undefined || crossValue === 'auto');
+    if (rowItems && preparedStyleQuery(prepared)) return unsupportedIntrinsic('does not support responsive child queries during solved row measurement');
+    if (nativeLayout && layoutChild.type === Flex &&
+      (style.flexDirection ?? 'row') === options.flexDirection &&
+      options.flexWrap === 'nowrap' && (style.flexWrap ?? 'nowrap') === 'nowrap' &&
+      options.layoutDirection === 'ltr' && (style.layoutDirection ?? 'ltr') === 'ltr' &&
+      (mainValue === undefined || mainValue === 'auto') &&
+      typeof crossValue === 'number' && Number.isFinite(crossValue) && crossValue >= 0 &&
+      grow === 0 && shrink === 0) {
+      // A declared same-axis owner can contribute its natural main size through
+      // the shared pure context. Its finite cross size makes this descent acyclic.
+      const measuredChild = clonePibblElement(layoutChild);
+      setPreNormalizedStyle(measuredChild, style, layoutChild, layoutReceiverToken, preparedStyleQuery(prepared));
+      const previousContribution = requestedIntrinsicContribution;
+      requestedIntrinsicContribution = { receiver: layoutReceiverToken, axis: row ? 'row' : 'column' };
+      let result: MeasureResult;
+      try {
+        result = input.measureElement(measuredChild, row ? {
+          minWidth: 0, maxWidth: input.constraints.maxWidth, minHeight: crossValue, maxHeight: crossValue,
+        } : {
+          minWidth: crossValue, maxWidth: crossValue, minHeight: 0, maxHeight: input.constraints.maxHeight,
+        });
+      } finally {
+        requestedIntrinsicContribution = previousContribution;
+      }
+      if (result.status !== 'measured') return result;
+      baseMain = row ? result.size.width : result.size.height;
+      baseCross = crossValue;
+    } else if (nativeLayout && !row && widthDefinite && !heightDefinite &&
+      (child.type === Text || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap') &&
+      (mainValue === undefined || mainValue === 'auto' || crossValue === undefined || crossValue === 'auto')) {
+      // Descend only through known built-in columns at settled content widths.
+      // The shared measurement context detects descriptor cycles; there is no
+      // speculative component execution, percentage feedback or fixed-point loop.
+      const padding = normalizeBoxInsets(style, childContext(child, diagnosticBox));
+      const automaticWidth = crossValue === undefined || crossValue === 'auto';
+      if (automaticWidth && effectiveAlignment(normalizeItemAlignment(style.alignSelf, child, diagnosticBox), options.alignItems) !== 'stretch') {
+        return unsupportedIntrinsic('requires stretch or a definite child width in an auto-height column');
+      }
+      const availableWidth = resolveMeasuredContainerLength(measuredWidth!, input.constraints.maxWidth, 'width', input.constraints);
+      const minWidth = intrinsicOptionalNumber(style.minWidth, 0, 'minWidth');
+      const maxWidth = intrinsicOptionalNumber(style.maxWidth, Number.POSITIVE_INFINITY, 'maxWidth');
+      if (minWidth > maxWidth) throw childDiagnostic(child, 'minWidth', minWidth, diagnosticBox, 'minimum must not exceed maximum');
+      const usedWidth = clamp(automaticWidth ? Math.max(0, availableWidth-padding.left-padding.right-marginCross) : intrinsicNumber(crossValue, 'width'), minWidth, maxWidth);
+      const measuredChild = clonePibblElement(layoutChild);
+      const measuredStyle = { ...style, width: usedWidth };
+      setPreNormalizedStyle(measuredChild, measuredStyle, layoutChild, getPrimitiveReceiverToken(layoutChild) ?? receiverToken, preparedStyleQuery(prepared));
+      const result = input.measureElement(measuredChild, { minWidth: 0, maxWidth: usedWidth, minHeight: 0, maxHeight: input.constraints.maxHeight });
+      if (result.status !== 'measured') return result;
+      baseMain = mainValue === undefined || mainValue === 'auto' ? result.size.height : intrinsicNumber(mainValue, 'flexBasis');
+      baseCross = usedWidth;
+    } else {
+      if (mainValue === undefined || mainValue === 'auto') {
+        return unsupportedIntrinsic('requires a definite child basis; measured auto basis is deferred');
+      }
+      if ((crossValue === undefined || crossValue === 'auto') && !measureCross) {
+        return unsupportedIntrinsic('requires a definite child cross size');
+      }
+      baseMain = intrinsicNumber(mainValue, 'flexBasis');
+      baseCross = measureCross ? 0 : intrinsicNumber(crossValue, crossProperty);
     }
-    if (crossValue === undefined || crossValue === 'auto') {
-      return unsupportedIntrinsic('requires a definite child cross size');
-    }
-    const baseMain = intrinsicNumber(mainValue, 'flexBasis');
-    const baseCross = intrinsicNumber(crossValue, crossProperty);
     const minMain = intrinsicOptionalNumber(style[minimumProperty], 0, minimumProperty);
     const maxMainProperty = row ? 'maxWidth' : 'maxHeight';
     const maxMain = intrinsicOptionalNumber(
@@ -326,37 +948,236 @@ function measureFlex(
       Number.POSITIVE_INFINITY,
       maxCrossProperty,
     );
-    const padding = normalizeEdges(
-      style.padding,
-      'padding',
-      childContext(child, diagnosticBox),
-    );
+    const padding = normalizeBoxInsets(style, childContext(child, diagnosticBox));
     const paddingMain = row ? padding.left + padding.right :
       padding.top + padding.bottom;
     const paddingCross = row ? padding.top + padding.bottom :
       padding.left + padding.right;
-    intrinsicMain += clamp(baseMain, minMain, maxMain) + paddingMain;
-    intrinsicCross = Math.max(
-      intrinsicCross,
-      clamp(baseCross, minCross, maxCross) + paddingCross,
-    );
+    if (wrappedIntrinsic) {
+      const outerMain = clamp(baseMain, minMain, maxMain) + paddingMain + marginLeft + marginRight;
+      const crossExtent = clamp(baseCross, minCross, maxCross) + paddingCross + marginTop + marginBottom;
+      const nextMain = lineMain + (lineItems > 0 ? mainGap : 0) + outerMain;
+      if (!Number.isFinite(outerMain) || !Number.isFinite(crossExtent)) throw childDiagnostic(child, 'intrinsicLine', nextMain, diagnosticBox, 'wrapped intrinsic outer extents and line widths must remain finite');
+      const outerCross = Math.max(0, crossExtent);
+      if (lineItems > 0 && nextMain > wrapWidth) {
+        wrappedHeight += lineCross + options.rowGap;
+        if (!Number.isFinite(wrappedHeight)) throw childDiagnostic(child, 'intrinsicLine', wrappedHeight, diagnosticBox, 'wrapped intrinsic accumulated height must remain finite');
+        lineCross = 0; lineItems = 0;
+      }
+      lineMain = lineItems > 0 ? nextMain : outerMain;
+      if (!Number.isFinite(lineMain)) throw childDiagnostic(child, 'intrinsicLine', lineMain, diagnosticBox, 'wrapped intrinsic accumulated line width must remain finite');
+      lineCross = Math.max(lineCross, outerCross);
+      lineItems++;
+    }
+    if (rowItems) {
+      rowItems.push({ sourceIndex, child, measuredChild: layoutChild, style, receiverToken: layoutReceiverToken, measureCross, baseMain, minMain, maxMain,
+        paddingMain, grow, shrink, marginMainBefore: marginLeft, marginMainAfter: marginRight,
+        baseCross, minCross, maxCross, paddingCross, marginCross });
+      if (measureCross) requiresSolvedCross = true;
+    } else {
+      intrinsicMain += clamp(baseMain, minMain, maxMain) + paddingMain + marginMain;
+      intrinsicCross = Math.max(intrinsicCross,
+        clamp(baseCross, minCross, maxCross) + paddingCross + marginCross);
+    }
     count++;
   }
-  intrinsicMain += Math.max(0, count - 1) * mainGap;
+  if (rowItems) {
+    const targets = requiresSolvedCross ? solveTransientFlexMain(rowItems, measuredRowWidth!, mainGap) : undefined;
+    for (let index = 0; index < rowItems.length; index++) {
+      const item = rowItems[index];
+      const main = targets ? targets[index] : clamp(item.baseMain, item.minMain, item.maxMain);
+      let cross = item.baseCross;
+      if (item.measureCross) {
+        const measuredChild = clonePibblElement(item.measuredChild);
+        const measuredStyle = { ...item.style, width: main };
+        // The root clone keeps its layout-description source metadata, while
+        // the style handoff still names the authored wrapper and uses the
+        // prepared leaf receiver for provider input ownership.
+        setPreNormalizedStyle(measuredChild, measuredStyle, item.child, item.receiverToken);
+        const result = measureConstrainedLayoutChild(measuredChild, {
+          minWidth: main, maxWidth: main, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
+        }, item.sourceIndex);
+        if (result.status !== 'measured') return result;
+        cross = result.size.height;
+      }
+      intrinsicMain += main + item.paddingMain + item.marginMainBefore! + item.marginMainAfter!;
+      intrinsicCross = Math.max(intrinsicCross,
+        clamp(cross, item.minCross, item.maxCross) + item.paddingCross + item.marginCross);
+    }
+  }
+  intrinsicMain = Math.max(0, intrinsicMain + Math.max(0, count - 1) * mainGap);
   return { status: 'measured', size: {
     width: widthDefinite ? resolveMeasuredContainerLength(
-      input.style.width!,
+      measuredWidth!,
       input.constraints.maxWidth,
       'width',
       input.constraints,
     ) : row ? intrinsicMain : intrinsicCross,
     height: heightDefinite ? resolveMeasuredContainerLength(
-      input.style.height!,
+      measuredHeight!,
       input.constraints.maxHeight,
       'height',
       input.constraints,
-    ) : row ? intrinsicCross : intrinsicMain,
+    ) : row ? wrappedIntrinsic ? wrappedHeight + lineCross : intrinsicCross : intrinsicMain,
   } };
+}
+
+function intrinsicMainLength(value: unknown, property: string, child: PibblElement<any>, box: Readonly<LayoutBox>): { value?: number; unit: 'none' | 'point' | 'percent' } | undefined {
+  if (value === undefined) return { unit: 'none' };
+  if (typeof value === 'number' && Number.isFinite(value) && value >= 0) return { value, unit: 'point' };
+  if (isPercentage(value)) return { value: parsePercentage(value, property, childContext(child, box)), unit: 'percent' };
+  return undefined;
+}
+
+/**
+ * The native query retains Yoga's two main-axis phases. It returns final numeric
+ * child bounds, which are staged only for the matching normal placement; raw
+ * percentage styles are deliberately left untouched for forwarding.
+ */
+function measureStagedNonexactMain(
+  input: MeasureInput<FlexProps, FlexStyle>,
+  children: readonly PibblElement<any>[],
+  options: Readonly<ReturnType<typeof normalizeFlexOptions>>,
+  diagnosticBox: Readonly<LayoutBox>,
+  allocated?: Readonly<{ main: number; rootMin?: number; rootMax?: number }>,
+): MeasureResult | undefined {
+  if (!nativeLayout || options.flexWrap !== 'nowrap' || options.layoutDirection !== 'ltr') return;
+  if (options.flexDirection !== 'row' && options.flexDirection !== 'column') return;
+  const row = options.flexDirection === 'row';
+  const automaticMain = row ? input.style.width === undefined || input.style.width === 'auto' : input.style.height === undefined || input.style.height === 'auto';
+  const cross = row ? input.style.height : input.style.width;
+  const available = row ? input.constraints.maxWidth : input.constraints.maxHeight;
+  const ownerReference = Number.isFinite(available) ? available : undefined;
+  const rootMin = allocated ? allocated.rootMin : intrinsicOwnerBound(
+    row ? input.style.minWidth : input.style.minHeight, ownerReference, row ? 'minWidth' : 'minHeight', input.constraints,
+  );
+  const rootMax = allocated ? allocated.rootMax : intrinsicOwnerBound(
+    row ? input.style.maxWidth : input.style.maxHeight, ownerReference, row ? 'maxWidth' : 'maxHeight', input.constraints,
+  );
+  if (input.style.padding !== undefined || input.style.paddingStart !== undefined || input.style.paddingEnd !== undefined ||
+      input.style.borderWidth !== undefined || input.style.borderStartWidth !== undefined || input.style.borderEndWidth !== undefined ||
+      input.style.boxSizing !== undefined || input.style.aspectRatio !== undefined ||
+      (row ? input.style.minHeight !== undefined && input.style.minHeight !== 0 || input.style.maxHeight !== undefined : input.style.minWidth !== undefined && input.style.minWidth !== 0 || input.style.maxWidth !== undefined)) return;
+  if (!automaticMain || typeof cross !== 'number' || !Number.isFinite(cross) || cross < 0 ||
+      (rootMin !== undefined && (typeof rootMin !== 'number' || !Number.isFinite(rootMin) || rootMin < 0)) ||
+      (rootMax !== undefined && (typeof rootMax !== 'number' || !Number.isFinite(rootMax) || rootMax < 0)) ||
+      typeof input.style.gap === 'number' && input.style.gap !== 0 ||
+      input.style.rowGap !== undefined || input.style.columnGap !== undefined) return;
+  if (typeof rootMin === 'number' && typeof rootMax === 'number' && rootMin > rootMax) {
+    throw layoutDiagnostic({ component: 'Flex', property: row ? 'minWidth' : 'minHeight', value: rootMin, algorithm: 'measurement', constraints: input.constraints, reason: 'minimum must not exceed maximum' });
+  }
+  const externalOwner = allocated?.main ?? ownerReference;
+  // An authored maximum retains its own initial envelope. Otherwise a finite
+  // caller maximum is fit-content availability, still distinct from exact size.
+  const initialAvailable = allocated?.main ?? (typeof rootMax === 'number' ? rootMax : externalOwner);
+  const mode = allocated !== undefined ? 'exact' as const : initialAvailable === undefined ? 'max-content' as const : 'fit-content' as const;
+  let hasPercentageBound = false;
+  const items: { base: number; min: { value?: number; unit: 'none' | 'point' | 'percent' }; max: { value?: number; unit: 'none' | 'point' | 'percent' }; measured?: boolean; queryMaximum?: number }[] = [];
+  const measuredLeaves: { readonly sourceIndex: number; readonly child: PibblElement<any>; readonly normalized: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>; readonly receiver: object; readonly query: PreparedQuery | undefined }[] = [];
+  for (let sourceIndex = 0; sourceIndex < children.length; sourceIndex++) {
+    const child = children[sourceIndex];
+    const definition = getPrimitiveDefinition(child.type);
+    const pairedMeasuredLeaf = child.type !== Rectangle && child.type !== Text && !isKnownLayoutType(child.type) &&
+      !Object.hasOwn(child.props, 'children') && !!definition?.measureIntrinsic && !!definition.measure;
+    if ((!pairedMeasuredLeaf && (child.type !== Rectangle || Object.hasOwn(child.props, 'children'))) ||
+        !child.props.style || typeof child.props.style !== 'object' || isSignal(child.props.style)) return;
+    const receiver = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, sourceIndex);
+    const prepared = prepareDirectChildStyle(child, receiver, diagnosticBox, true);
+    const style = preparedStyleValue(prepared) as Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>;
+    validateIntrinsicBound(style.minWidth, 'minWidth', child, diagnosticBox);
+    validateIntrinsicBound(style.maxWidth, 'maxWidth', child, diagnosticBox);
+    validateIntrinsicBound(style.minHeight, 'minHeight', child, diagnosticBox);
+    validateIntrinsicBound(style.maxHeight, 'maxHeight', child, diagnosticBox);
+    const main = row ? style.width : style.height;
+    const basis = style.flexBasis ?? 'auto';
+    const childCross = row ? style.height : style.width;
+    const min = row ? style.minWidth : style.minHeight;
+    const max = row ? style.maxWidth : style.maxHeight;
+    const automaticMeasuredMain = main === undefined || main === 'auto';
+    if (preparedStyleQuery(prepared) || style.position !== undefined || style.aspectRatio !== undefined ||
+        (pairedMeasuredLeaf && (row ? style.minHeight !== undefined && style.minHeight !== 0 || style.maxHeight !== undefined : style.minWidth !== undefined && style.minWidth !== 0 || style.maxWidth !== undefined)) ||
+        typeof childCross !== 'number' || !Number.isFinite(childCross) || childCross < 0 ||
+        (style.flexGrow ?? 0) !== 0 || (style.flexShrink ?? 1) !== 0 ||
+        !zeroIntrinsicMargin(style.margin) || !zeroIntrinsicMargin(style.marginTop) || !zeroIntrinsicMargin(style.marginRight) ||
+        !zeroIntrinsicMargin(style.marginBottom) || !zeroIntrinsicMargin(style.marginLeft) ||
+        !zeroIntrinsicMargin(style.marginStart) || !zeroIntrinsicMargin(style.marginEnd) ||
+        style.padding !== undefined || style.paddingStart !== undefined || style.paddingEnd !== undefined ||
+        style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined ||
+        (pairedMeasuredLeaf ? !automaticMeasuredMain || basis !== 'auto' :
+          typeof main !== 'number' || !Number.isFinite(main) || main < 0 ||
+          typeof basis !== 'number' || !Number.isFinite(basis) || basis < 0 || main !== basis)) return;
+    const intrinsicMin = intrinsicMainLength(min, row ? 'minWidth' : 'minHeight', child, diagnosticBox);
+    const intrinsicMax = intrinsicMainLength(max, row ? 'maxWidth' : 'maxHeight', child, diagnosticBox);
+    if (!intrinsicMin || !intrinsicMax) return;
+    if (intrinsicMin.unit === 'percent' || intrinsicMax.unit === 'percent') hasPercentageBound = true;
+    items.push({ base: pairedMeasuredLeaf ? 0 : basis as number, min: intrinsicMin, max: intrinsicMax, measured: pairedMeasuredLeaf || undefined });
+    if (pairedMeasuredLeaf) measuredLeaves.push({ sourceIndex, child, normalized: style, receiver, query: preparedStyleQuery(prepared) });
+  }
+  if (!items.length || !hasPercentageBound) return;
+  const intrinsicQuery = { externalOwner, initialAvailable, rootMin: rootMin as number | undefined,
+    rootMax: rootMax as number | undefined, mode, gap: 0 };
+  if (measuredLeaves.length) {
+    const preparedQueries = prepareTransientIntrinsicMainQueries(items, intrinsicQuery);
+    for (let index = 0; index < measuredLeaves.length; index++) {
+      const leaf = measuredLeaves[index];
+      const queryMaximum = preparedQueries.maximums[leaf.sourceIndex];
+      const measurementChild = clonePibblElement(leaf.child);
+      setPreNormalizedStyle(measurementChild, leaf.normalized, leaf.child, leaf.receiver, leaf.query);
+      const leafCross = (row ? leaf.normalized.height : leaf.normalized.width) as number;
+      const constraints = row ? { minWidth: 0, maxWidth: queryMaximum, minHeight: leafCross, maxHeight: leafCross } :
+        { minWidth: leafCross, maxWidth: leafCross, minHeight: 0, maxHeight: queryMaximum };
+      const result = measureConstrainedLayoutChild(measurementChild, constraints);
+      if (result.status === 'unsupported') return result;
+      const natural = row ? result.size.width : result.size.height;
+      if (!Number.isFinite(natural) || natural < 0) throw new Error('Experimental staged intrinsic Flex provider returned an invalid main size.');
+      items[leaf.sourceIndex] = { ...items[leaf.sourceIndex], base: natural, measured: true, queryMaximum };
+    }
+  }
+  const receiver = GLOBAL_STATE.primitiveReceiverToken;
+  const axis = row ? 'row' : 'column';
+  // A same-axis known Flex is contributing to a parent's intrinsic line. Its
+  // parent needs the adjusted native contribution, while standalone queries
+  // deliberately continue to report the full resolved size.
+  const contribution = allocated === undefined && requestedIntrinsicContribution !== undefined && requestedIntrinsicContribution.receiver === receiver &&
+    requestedIntrinsicContribution.axis === axis;
+  const normalOwner = contribution && requestedIntrinsicContribution?.normalOwner === true && !measuredLeaves.length &&
+    externalOwner !== undefined && Number.isFinite(externalOwner) && initialAvailable !== undefined && Number.isFinite(initialAvailable);
+  const resolved = normalOwner ? resolveTransientKnownOwnerMain(items, intrinsicQuery) : resolveTransientIntrinsicMain(items, intrinsicQuery);
+  const stagedMain = allocated?.main ?? (contribution ? resolved.contributionMain : resolved.main);
+  stagePreparedIntrinsicMain(receiver, {
+    elements: children, axis, style: input.style, rootMin, rootMax, contentMain: stagedMain,
+    normalOwner, autoMarginFreeMain: resolved.autoMarginFreeMain,
+    revision: allocationInputRevision(),
+    items: resolved.targets.map((target, sourceIndex) => ({
+      sourceIndex, target, min: resolved.effectiveMins[sourceIndex], max: resolved.effectiveMaxes[sourceIndex],
+      measured: items[sourceIndex].measured,
+    })),
+  });
+  const reportedMain = contribution ? resolved.contributionMain : resolved.main;
+  return { status: 'measured', size: row ? { width: reportedMain, height: cross } : { width: cross, height: reportedMain } };
+}
+
+/** Auto edges contribute zero; positive numeric edges need a separate phase profile. */
+function zeroIntrinsicMargin(value: FlexItemStyle['margin']): boolean {
+  return value === undefined || value === 0 || value === 'auto';
+}
+
+/** Own bounds use the caller reference, never the eventual auto-owner size. */
+function intrinsicOwnerBound(
+  value: BoxStyle['minWidth'], reference: number | undefined,
+  property: string, constraints: Readonly<Constraints>,
+): number | undefined {
+  if (value === undefined) return;
+  if (typeof value === 'number') {
+    if (Number.isFinite(value) && value >= 0) return value;
+    throw layoutDiagnostic({ component: 'Flex', property, value, algorithm: 'measurement', constraints, reason: 'must be finite and nonnegative' });
+  }
+  const percentage = parsePercentage(value, property, { component: 'Flex', algorithm: 'measurement', constraints });
+  if (percentage < 0) throw layoutDiagnostic({ component: 'Flex', property, value, algorithm: 'measurement', constraints, reason: 'must be nonnegative' });
+  if (reference === undefined) return;
+  const resolved = percentage / 100 * reference;
+  if (!Number.isFinite(resolved)) throw layoutDiagnostic({ component: 'Flex', property, value, algorithm: 'measurement', constraints, reason: 'resolved percentage arithmetic must remain finite' });
+  return resolved;
 }
 
 function resolveMeasuredContainerLength(
@@ -365,7 +1186,7 @@ function resolveMeasuredContainerLength(
   property: string,
   constraints: Readonly<Constraints>,
 ): number {
-  const resolved = resolveLength(value, reference, property, {
+  const resolved = resolveScalarSizingLength(value, reference, property, {
     component: 'Flex',
     algorithm: 'measurement',
     constraints,
@@ -399,6 +1220,16 @@ function intrinsicNumber(
   return value;
 }
 
+function validateIntrinsicBound(value: unknown, property: string, child: PibblElement<any>, container: Readonly<LayoutBox>): void {
+  if (value === undefined) return;
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value < 0) throw childDiagnostic(child, property, value, container, 'must be finite and nonnegative');
+    return;
+  }
+  const percentage = parsePercentage(value, property, childContext(child, container));
+  if (percentage < 0) throw childDiagnostic(child, property, value, container, 'must be nonnegative');
+}
+
 function intrinsicOptionalNumber(
   value: unknown,
   fallback: number,
@@ -430,8 +1261,16 @@ export function layoutFlex(
   measurement: FlexMeasurementInput,
 ): LayoutBox[] {
   const prepared = materializeLayoutChildren(children, 'Flex');
-  return resolveFlexPlacements(container, prepared, style, measurement)
-    .map(placement => placement.box);
+  const region = nativeLayout ? new LayoutRegion() : undefined;
+  try {
+    return resolveFlexPlacements(
+      container,
+      prepared,
+      style,
+      measurement,
+      region,
+    ).map(placement => placement.box);
+  } finally { region?.dispose(); }
 }
 
 function resolveFlexPlacements(
@@ -439,28 +1278,232 @@ function resolveFlexPlacements(
   children: readonly PibblElement<any>[],
   style: Readonly<FlexStyle>,
   measurement: FlexMeasurementInput,
+  region?: LayoutRegion,
+  stagedIntrinsic?: PreparedIntrinsicMainStage,
+  parentSlot?: PreparedLayoutSlot,
+  deferStaticAbsolute?: Array<DeferredStaticAbsolutePlacement | undefined>,
 ): FlexPlacement[] {
+  if (region) recordWasmAllocationPass();
   assertFiniteBox(container);
   const options = normalizeFlexOptions(style, container);
-  const row = options.flexDirection === 'row';
+  const row = isRowDirection(options.flexDirection);
+  const authoredReverse = options.flexDirection === 'row-reverse' || options.flexDirection === 'column-reverse';
+  const reverse = authoredReverse !== (row && options.layoutDirection === 'rtl');
+  const authoredWrapReverse = options.flexWrap === 'wrap-reverse';
+  const wrapReverse = authoredWrapReverse !== (!row && options.layoutDirection === 'rtl');
   const mainSize = row ? container.width : container.height;
   const crossSize = row ? container.height : container.width;
   const mainGap = row ? options.columnGap : options.rowGap;
   const crossGap = row ? options.rowGap : options.columnGap;
   const items: FlexItem[] = [];
+  const placementsBySource: Array<FlexPlacement | undefined> = new Array(children.length);
+  let hasAspectRatio = false;
+  let hasAutoMainMargins = false;
+  let absolutePaddingBox: Readonly<LayoutBox> | undefined;
+  let absoluteMeasurementTokens: Set<object> | undefined;
 
-  for (const child of children) {
+  const occurrences = new Map<object, number>();
+  for (let sourceIndex = 0; sourceIndex < children.length; sourceIndex++) {
+    const child = children[sourceIndex];
+    if (region) recordWasmAllocationItem();
     const receiverToken = getChildPrimitiveReceiverToken(
       GLOBAL_STATE.renderTransaction,
       GLOBAL_STATE.primitiveReceiverToken,
-      items.length,
+      sourceIndex,
     );
-    const prepared = prepareDirectChildStyle(child, receiverToken, container);
-    const normalized = preparedStyleValue(prepared) as Readonly<
+    const occurrence = occurrences.get(child.type) ?? 0;
+    if (child.key === undefined) occurrences.set(child.type, occurrence + 1);
+    const prepared = prepareDirectChildStyle(child, receiverToken, container, true);
+    const declared = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
-    assertSupportedChildPosition('Flex', child, normalized);
+    let normalized = declared;
+    if (nativeLayout) normalized = resolveAllocatedInsets(normalized, { width: container.width, layoutDirection: options.layoutDirection, context: childContext(child, container) });
+    if (normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized, { width: container.width, height: container.height, mainAxis: row ? 'width' : 'height', context: childContext(child, container) });
+    const stagedItem = stagedIntrinsic?.items[sourceIndex];
+    if (stagedItem && stagedItem.sourceIndex !== sourceIndex) throw new Error('Staged intrinsic Flex children are out of source order.');
+    const stagedMeasured = stagedItem?.measured === true;
+    const aspectRatio = normalized.aspectRatio;
+    if (aspectRatio !== undefined && (typeof aspectRatio !== 'number' || !Number.isFinite(aspectRatio) || aspectRatio <= 0)) {
+      throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'must be a positive finite outer width/height ratio');
+    }
+    if (nativeLayout && aspectRatio !== undefined && normalized.position !== 'absolute' &&
+      (normalized.flexBasis === undefined || normalized.flexBasis === 'auto')) {
+      const main = normalized[row ? 'width' : 'height'], cross = normalized[row ? 'height' : 'width'];
+      if ((main === undefined || main === 'auto') && typeof cross === 'number') {
+        const insets = normalizeBoxInsets(normalized, childContext(child, container));
+        const crossInsets = row ? insets.top + insets.bottom : insets.left + insets.right;
+        const mainInsets = row ? insets.left + insets.right : insets.top + insets.bottom;
+        const outer = row ? (cross + crossInsets) * aspectRatio : (cross + crossInsets) / aspectRatio;
+        normalized = { ...normalized, [row ? 'width' : 'height']: Math.max(0, outer - mainInsets) };
+      }
+    }
+    assertSupportedChildPosition('Flex', child, normalized, true);
     rejectUnsupportedItemFields(child, normalized, container);
+    if (options[FLEX_BASELINE_GROUP] && normalized.position === 'absolute') {
+      throw childDiagnostic(child, 'position', 'absolute', container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: absolute children are outside first-baseline composition');
+    }
+    if (normalized.position === 'absolute') {
+      const definition = getPrimitiveDefinition(child.type);
+      const hasPairedMeasurement = child.type !== Text && !!definition?.measureIntrinsic && !!definition.measure;
+      const measurableText = child.type === Text &&
+        (normalized.wrap === undefined || typeof normalized.wrap === 'boolean') &&
+        (normalized.fit === undefined || normalized.fit === 'visible') &&
+        (normalized.overflow === undefined || normalized.overflow === 'visible' || normalized.overflow === 'clip') && genericTextFont(normalized);
+      const unwrappedText = measurableText && normalized.wrap !== true;
+      const automaticWidth = normalized.width === undefined || normalized.width === 'auto';
+      const automaticHeight = normalized.height === undefined || normalized.height === 'auto';
+      const naturalBoth = unwrappedText && automaticWidth && automaticHeight && normalized.aspectRatio === undefined &&
+        (absoluteLeftInset(normalized, options.layoutDirection) === undefined || absoluteRightInset(normalized, options.layoutDirection) === undefined) &&
+        (normalized.top === undefined || normalized.bottom === undefined);
+      const naturalWidth = naturalBoth || automaticWidth &&
+        isAbsoluteSizeInput(normalized.height) &&
+        normalized.aspectRatio === undefined && (absoluteLeftInset(normalized, options.layoutDirection) === undefined || absoluteRightInset(normalized, options.layoutDirection) === undefined) &&
+        (hasPairedMeasurement || unwrappedText);
+      const naturalHeight = naturalBoth || automaticHeight &&
+        isAbsoluteSizeInput(normalized.width) &&
+        normalized.aspectRatio === undefined && (normalized.top === undefined || normalized.bottom === undefined) &&
+        (hasPairedMeasurement || measurableText);
+      assertSupportedAbsoluteFlexPosition(child, normalized, container, options.layoutDirection, preparedStyleQuery(prepared), naturalWidth, naturalHeight);
+      const measurementToken = naturalWidth || naturalHeight ? region?.absoluteMeasurementIdentity(child.type,
+        child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`) : undefined;
+      if (measurementToken) (absoluteMeasurementTokens ??= new Set()).add(measurementToken);
+      const absoluteMeasurement = naturalWidth || naturalHeight ? measurement : undefined;
+      if (deferStaticAbsolute) {
+        deferStaticAbsolute[sourceIndex] = { sourceIndex, child, style: normalized, receiverToken,
+          query: preparedStyleQuery(prepared), measurement: absoluteMeasurement, measurementToken };
+        placementsBySource[sourceIndex] = deferredStaticPlacementSentinel();
+      } else placementsBySource[sourceIndex] = resolveAbsoluteFlexPlacement(
+        absolutePaddingBox ??= resolveFlexContainingBox(style, container), child, normalized, receiverToken,
+        preparedStyleQuery(prepared), container, options, absoluteMeasurement, region, measurementToken,
+      );
+      continue;
+    }
+    if (aspectRatio !== undefined) hasAspectRatio = true;
+    const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
+    const pairedLayoutDefinition = getPrimitiveDefinition(layoutChild.type);
+    const knownIntrinsicLayout = child.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex &&
+      isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
+    const layoutToken = region?.identity(child.type, child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`);
+    let relativeX = 0;
+    let relativeY = 0;
+    const position = normalized.position;
+    if (position !== undefined) {
+      assertSupportedRelativeFlexPosition(child, normalized, options, container);
+      const left = resolveFlexInset(normalized.left, 'left', child, container);
+      const right = resolveFlexInset(normalized.right, 'right', child, container);
+      const top = resolveFlexInset(normalized.top, 'top', child, container);
+      const bottom = resolveFlexInset(normalized.bottom, 'bottom', child, container);
+      if (position === 'relative') {
+        if (options.layoutDirection === 'rtl') relativeX = right === undefined ? left ?? 0 : -right;
+        else relativeX = left === undefined ? right === undefined ? 0 : -right : left;
+        relativeY = top === undefined ? bottom === undefined ? 0 : -bottom : top;
+      }
+    }
+    const allMargin = normalized.margin === 'auto' ? 'auto' : allocatedMargin(normalized.margin, 'margin', child, container);
+    const marginDirection = layoutChild.type === Flex ? normalized.layoutDirection ?? options.layoutDirection : options.layoutDirection;
+    const logicalLeft = marginDirection === 'rtl' ? normalized.marginEnd : normalized.marginStart;
+    const logicalRight = marginDirection === 'rtl' ? normalized.marginStart : normalized.marginEnd;
+    const marginLeftProperty = logicalLeft !== undefined ? marginDirection === 'rtl' ? 'marginEnd' : 'marginStart' : 'marginLeft';
+    const marginRightProperty = logicalRight !== undefined ? marginDirection === 'rtl' ? 'marginStart' : 'marginEnd' : 'marginRight';
+    const marginTopValue = normalized.marginTop === undefined ? allMargin : normalized.marginTop;
+    const marginBottomValue = normalized.marginBottom === undefined ? allMargin : normalized.marginBottom;
+    const marginRightValue = logicalRight !== undefined ? logicalRight : normalized.marginRight === undefined ? allMargin : normalized.marginRight;
+    const marginLeftValue = logicalLeft !== undefined ? logicalLeft : normalized.marginLeft === undefined ? allMargin : normalized.marginLeft;
+    const autoTop = marginTopValue === 'auto', autoRight = marginRightValue === 'auto';
+    const autoBottom = marginBottomValue === 'auto', autoLeft = marginLeftValue === 'auto';
+    const declaredCrossSize = row ? normalized.height : normalized.width;
+    const hasAutoCrossMargin = row ? autoTop || autoBottom : autoLeft || autoRight;
+    const measuredCrossContext = hasAutoCrossMargin && nativeLayout && row &&
+      (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined;
+    const columnNaturalWrappedTextCross = nativeLayout && !row &&
+      options.flexWrap === 'nowrap' &&
+      child.type === Text && (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      typeof declared.height === 'number' && typeof normalized.height === 'number' &&
+      Number.isFinite(normalized.height) && normalized.height >= 0 &&
+      (normalized.flexBasis === undefined || normalized.flexBasis === 'auto') &&
+      (normalized.flexGrow ?? 0) === 0 && normalized.flexShrink === 0 && normalized.minHeight === 0 &&
+      normalized.maxHeight === undefined && (normalized.minWidth === undefined || normalized.minWidth === 0) && normalized.maxWidth === undefined &&
+      normalized.wrap === true &&
+      (normalized.fit === undefined || normalized.fit === 'visible') &&
+      (normalized.overflow === undefined || normalized.overflow === 'visible' || normalized.overflow === 'clip') &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined && genericTextFont(normalized);
+    const measuredColumnTextCross = hasAutoCrossMargin && nativeLayout && !row &&
+      options.flexWrap === 'nowrap' &&
+      child.type === Text && (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      (normalized.height === undefined || normalized.height === 'auto' ||
+        typeof normalized.height === 'number' && Number.isFinite(normalized.height) && normalized.height >= 0) &&
+      (normalized.flexBasis === undefined || normalized.flexBasis === 'auto' ||
+        typeof normalized.flexBasis === 'number' && Number.isFinite(normalized.flexBasis) && normalized.flexBasis >= 0) &&
+      (normalized.flexGrow ?? 0) === 0 && normalized.flexShrink === 0 && normalized.minHeight === 0 &&
+      normalized.maxHeight === undefined && normalized.minWidth === undefined && normalized.maxWidth === undefined &&
+      (normalized.wrap === undefined || normalized.wrap === false) &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined;
+    const measuredColumnProviderCrossDefinition = hasAutoCrossMargin && nativeLayout && !row &&
+      options.flexWrap === 'nowrap' &&
+      (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      typeof declared.height === 'number' && typeof normalized.height === 'number' &&
+      Number.isFinite(normalized.height) && normalized.height >= 0 &&
+      (normalized.flexBasis === undefined || normalized.flexBasis === 'auto') &&
+      (normalized.flexGrow ?? 0) === 0 && normalized.flexShrink === 0 && normalized.minHeight === 0 &&
+      normalized.maxHeight === undefined && normalized.minWidth === undefined && normalized.maxWidth === undefined &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined && child.type !== Text ?
+      getPrimitiveDefinition(child.type) : undefined;
+    const measuredColumnProviderCross = !!measuredColumnProviderCrossDefinition?.measureIntrinsic &&
+      !!measuredColumnProviderCrossDefinition.measure;
+    const measuredColumnKnownCrossAuto = hasAutoCrossMargin && nativeLayout && !row &&
+      options.flexWrap === 'nowrap' &&
+      isKnownLayoutType(layoutChild.type) && (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      typeof declared.height === 'number' && typeof normalized.height === 'number' &&
+      Number.isFinite(normalized.height) && normalized.height >= 0 &&
+      (normalized.flexBasis === undefined || normalized.flexBasis === 'auto') &&
+      (normalized.flexGrow ?? 0) === 0 && normalized.flexShrink === 0 && normalized.minHeight === 0 &&
+      normalized.maxHeight === undefined && (normalized.minWidth === undefined || normalized.minWidth === 0) && normalized.maxWidth === undefined &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined;
+    // In a finite column the main allocation is authoritative. For these
+    // measured children, wait until the kernel settles height, then obtain the
+    // natural width under that exact height before cross placement.
+    const deferredColumnAutoCross = hasAutoCrossMargin && nativeLayout && !row &&
+      options.flexWrap === 'nowrap' &&
+      (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined && (
+        child.type === Text &&
+          (normalized.wrap === undefined || normalized.wrap === false) ||
+        layoutChild.type !== Text && !!pairedLayoutDefinition?.measureIntrinsic && !!pairedLayoutDefinition.measure ||
+        layoutChild.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid
+      );
+    // Main sizing remains authoritative. The existing Text resolver uses
+    // the shared settled-width pass before a row cross-auto margin is placed.
+    const measuredTextCrossAuto = hasAutoCrossMargin && nativeLayout && row &&
+      child.type === Text && (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined;
+    const autoCrossDefinition = measuredCrossContext && !measuredTextCrossAuto ? pairedLayoutDefinition : undefined;
+    const measuredPrimitiveCrossAuto = !!autoCrossDefinition?.measureIntrinsic && !!autoCrossDefinition.measure;
+    const measuredKnownCrossAuto = measuredCrossContext && (layoutChild.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid);
+    // Remaining ordinary providers keep the same finite-availability query as
+    // non-stretch sizing; an intrinsic callback is not a cross-size prerequisite.
+    const ordinaryCrossAuto = hasAutoCrossMargin && nativeLayout &&
+      (row || options.flexWrap === 'nowrap') &&
+      (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined && !!pairedLayoutDefinition?.measure;
+    if (hasAutoCrossMargin && !measuredTextCrossAuto && !measuredColumnTextCross && !columnNaturalWrappedTextCross && !measuredColumnProviderCross && !measuredColumnKnownCrossAuto && !deferredColumnAutoCross && !measuredPrimitiveCrossAuto && !measuredKnownCrossAuto && !ordinaryCrossAuto &&
+        aspectRatio === undefined && (declaredCrossSize === undefined || declaredCrossSize === 'auto')) {
+      throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child cross size or supported measurement');
+    }
+    const autoCrossBefore = row ? wrapReverse ? autoBottom : autoTop : wrapReverse ? autoRight : autoLeft;
+    const autoCrossAfter = row ? wrapReverse ? autoTop : autoBottom : wrapReverse ? autoLeft : autoRight;
+    const autoMainBefore = row ? reverse ? autoRight : autoLeft : reverse ? autoBottom : autoTop;
+    const autoMainAfter = row ? reverse ? autoLeft : autoRight : reverse ? autoTop : autoBottom;
+    if (autoMainBefore || autoMainAfter) hasAutoMainMargins = true;
+    const marginTop = allocatedMargin(autoTop ? 0 : marginTopValue, 'marginTop', child, container);
+    const marginRight = allocatedMargin(autoRight ? 0 : marginRightValue, marginRightProperty, child, container);
+    const marginBottom = allocatedMargin(autoBottom ? 0 : marginBottomValue, 'marginBottom', child, container);
+    const marginLeft = allocatedMargin(autoLeft ? 0 : marginLeftValue, marginLeftProperty, child, container);
+    const marginMainBefore = row ? reverse ? marginRight : marginLeft : reverse ? marginBottom : marginTop;
+    const marginMainAfter = row ? reverse ? marginLeft : marginRight : reverse ? marginTop : marginBottom;
+    const marginCrossBefore = row ? wrapReverse ? marginBottom : marginTop : wrapReverse ? marginRight : marginLeft;
+    const marginCrossAfter = row ? wrapReverse ? marginTop : marginBottom : wrapReverse ? marginLeft : marginRight;
     const grow = nonnegativeFactor(normalized.flexGrow ?? 0, 'flexGrow', child, container);
     const shrink = nonnegativeFactor(
       normalized.flexShrink ?? 1,
@@ -469,8 +1512,129 @@ function resolveFlexPlacements(
       container,
     );
     const basisValue = normalized.flexBasis ?? 'auto';
+    const alignment = normalizeItemAlignment(normalized.alignSelf, child, container, authoredWrapReverse);
+    const padding = normalizeBoxInsets(normalized, childContext(child, container));
+    const paddingMain = row ? padding.left + padding.right : padding.top + padding.bottom;
+    const paddingCross = row ? padding.top + padding.bottom : padding.left + padding.right;
     const minimumProperty = row ? 'minWidth' : 'minHeight';
-    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined) {
+    // Natural Text contributions are independent of row orientation and line
+    // direction. Native allocation still owns grow/shrink and line formation.
+    const intrinsicTextSizing = nativeLayout && row && child.type === Text &&
+      (normalized.fit === undefined || normalized.fit === 'visible') &&
+      (normalized.overflow === undefined || normalized.overflow === 'visible' || normalized.overflow === 'clip') &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined &&
+      (normalized.width === undefined || normalized.width === 'auto' || typeof normalized.width === 'number') &&
+      (normalized.maxWidth === undefined || typeof normalized.maxWidth === 'number');
+    const automaticTextBasis = intrinsicTextSizing && basisValue === 'auto' &&
+      (normalized.width === undefined || normalized.width === 'auto') &&
+      (normalized.minWidth === undefined || typeof normalized.minWidth === 'number');
+    const automaticTextMinimum = intrinsicTextSizing && normalized[minimumProperty] === undefined && shrink > 0 &&
+      (typeof basisValue === 'number' || basisValue === 'auto' &&
+        (typeof normalized.width === 'number' || automaticTextBasis));
+    // An empty authored rectangle has no intrinsic content contribution. Keep
+    // opaque/child-bearing primitives conservative without evaluating children.
+    const aspectMain = basisValue === 'auto' ? normalized[row ? 'width' : 'height'] : basisValue;
+    const aspectCross = normalized[row ? 'height' : 'width'];
+    // An empty shape has no content floor. Aspect sizing still derives cross
+    // size from the solved main allocation; it does not transfer a cross floor.
+    const automaticAspectRectangleMinimum = nativeLayout && aspectRatio !== undefined &&
+      child.type === Rectangle && !Object.hasOwn(child.props, 'children') && !preparedStyleQuery(prepared) &&
+      typeof aspectMain === 'number' && Number.isFinite(aspectMain) && aspectMain >= 0 &&
+      (aspectCross === undefined || aspectCross === 'auto' ||
+        typeof aspectCross === 'number' && Number.isFinite(aspectCross) && aspectCross >= 0);
+    const automaticRectangleMinimum = automaticAspectRectangleMinimum ||
+      hasEmptyRectangleMinimum(child, normalized, preparedStyleQuery(prepared), true);
+    // A selected intrinsic main value reuses the existing direct paired-provider
+    // transaction. The established numeric grow/shrink/bounds path remains the
+    // authority after this contribution becomes a number.
+    const intrinsicMainValue = basisValue === undefined || basisValue === 'auto'
+      ? normalized[row ? 'width' : 'height']
+      : basisValue;
+    const intrinsicMainBounds = isIntrinsicSizingValue(normalized[row ? 'minWidth' : 'minHeight']) || isIntrinsicSizingValue(normalized[row ? 'maxWidth' : 'maxHeight']);
+    const intrinsicMainRequested = isIntrinsicSizingValue(intrinsicMainValue);
+    const directIntrinsicTextMain = (intrinsicMainRequested || intrinsicMainBounds) &&
+      !stagedMeasured && nativeLayout && row &&
+      child.type === Text && !preparedStyleQuery(prepared);
+    const directIntrinsicMain = (intrinsicMainRequested || intrinsicMainBounds) &&
+      !stagedMeasured && nativeLayout &&
+      row && !preparedStyleQuery(prepared) &&
+      child.type !== Text && !isLayoutComponent(child.type) &&
+      !!pairedLayoutDefinition?.measureIntrinsic && !!pairedLayoutDefinition.measure;
+    const customIntrinsic = child.type !== Text && (!isKnownLayoutType(layoutChild.type) || directIntrinsicMain) && !stagedMeasured && nativeLayout && row &&
+      !preparedStyleQuery(prepared) && !!pairedLayoutDefinition?.measureIntrinsic &&
+      (!isLayoutComponent(child.type) || aspectRatio === undefined && !!pairedLayoutDefinition.measure) &&
+      (directIntrinsicMain || basisValue === 'auto' && (normalized.width === undefined || normalized.width === 'auto') || shrink > 0 && normalized.minWidth === undefined);
+    let intrinsicMainRequest: NormalizedSizingLength | undefined;
+    if (intrinsicMainRequested && (directIntrinsicMain || directIntrinsicTextMain)) {
+      intrinsicMainRequest = normalizeSizingLength(intrinsicMainValue, {
+        reference: mainSize, property: basisValue === undefined || basisValue === 'auto' ? 'width' : 'flexBasis',
+        context: childContext(child, container), allowAuto: false, allowIntrinsic: true,
+      });
+    }
+    let intrinsicTextMinimum: number | undefined;
+    let intrinsicTextBasis: number | undefined;
+    let intrinsicTextMaximum: number | undefined;
+    if (directIntrinsicTextMain) {
+      const font = normalized.font as string ?? '13px sans-serif';
+      const content = prepareLayoutTextContent(child.props, { receiverToken });
+      if (region) recordWasmMeasurement();
+      const maximum = normalized.wrap === true
+        ? measureLayoutTextNaturalRun(content, { font, service: measurement.service })
+        : measurement.service.measureText(content, font).width;
+      if (!Number.isFinite(maximum) || maximum < 0) {
+        throw childDiagnostic(child, 'width', intrinsicMainValue, container, 'Text intrinsic run width must be finite and nonnegative');
+      }
+      // An unwrapped run has no soft break opportunities in Text's public policy.
+      intrinsicTextMinimum = normalized.wrap === true
+        ? measureLayoutTextMinimumWidth(child.props, { font, service: measurement.service, receiverToken })
+        : maximum;
+      intrinsicTextMaximum = maximum;
+      if (intrinsicMainRequest) {
+        intrinsicTextBasis = resolveIntrinsicMainBasis(intrinsicMainRequest, intrinsicTextMinimum, maximum, child, container);
+      } else if (basisValue === 'auto' && (normalized.width === undefined || normalized.width === 'auto')) {
+        intrinsicTextBasis = maximum;
+      }
+    }
+    let intrinsicSizes: Extract<import('../types.js').IntrinsicSizesResult, { status: 'measured' }> | undefined;
+    if (customIntrinsic) {
+      const measurementChild = clonePibblElement(child);
+      setPreNormalizedStyle(measurementChild, normalized, child, receiverToken);
+      const result = measureIntrinsicElement(measurementChild, { minWidth: 0, maxWidth: container.width, minHeight: 0, maxHeight: container.height }, measurement.service, region ? { cache: region, token: layoutToken ?? receiverToken, recordMeasurement: recordWasmMeasurement, key: JSON.stringify([allocationStructuralRevision(), measurementStyle(normalized), container.width, container.height]) } : undefined);
+      if (result.status === 'unsupported') throw childDiagnostic(child, 'measureIntrinsic', 'unsupported', container, `intrinsic measurement is required but unsupported: ${result.reason}; supply a definite basis and explicit minWidth: 0 to avoid the query`);
+      intrinsicSizes = result;
+    }
+
+    // Intrinsic-pair heights belong to their respective widths. A column floor
+    // instead needs natural content height measured at its declared exact width.
+    const columnExactWidth = !row && typeof normalized.width === 'number' ? normalized.width :
+      !row && (normalized.width === undefined || normalized.width === 'auto' || normalized.width === 'stretch') &&
+      !hasAutoCrossMargin && effectiveAlignment(alignment, options.alignItems) === 'stretch' ?
+        clamp(Math.max(0, crossSize - paddingCross - marginCrossBefore - marginCrossAfter),
+          resolveOptionalBound(normalized.minWidth, crossSize, 'minWidth', 0, child, container),
+          resolveOptionalBound(normalized.maxWidth, crossSize, 'maxWidth', Number.POSITIVE_INFINITY, child, container)) : undefined;
+    const columnMinimumDefinition = nativeLayout && !row &&
+      (intrinsicMainRequested || intrinsicMainBounds || shrink > 0 && normalized.minHeight === undefined) &&
+      (normalized.height === undefined || normalized.height === 'auto' || typeof normalized.height === 'number' || isIntrinsicSizingValue(normalized.height)) &&
+      columnExactWidth !== undefined && Number.isFinite(columnExactWidth) && columnExactWidth >= 0 && aspectRatio === undefined &&
+      !preparedStyleQuery(prepared) ? getPrimitiveDefinition(layoutChild.type) : undefined;
+    let columnMinimumSize: { width: number; height: number } | undefined;
+    if (columnMinimumDefinition?.measure && (columnMinimumDefinition.measureIntrinsic || child.type === Text || knownIntrinsicLayout)) {
+      const measurementChild = clonePibblElement(child);
+      const measurementStyle = { ...normalized, width: columnExactWidth };
+      setPreNormalizedStyle(measurementChild, measurementStyle, child, receiverToken);
+      const result = measureFlexChild(measurementChild, {
+        minWidth: columnExactWidth!, maxWidth: columnExactWidth!,
+        minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
+      }, measurementStyle, layoutToken ?? receiverToken, measurement, region, undefined, true);
+      if (result.status === 'unsupported') throw childDiagnostic(child, 'minHeight', 'auto', container,
+        `exact-width automatic minimum measurement is required but unsupported: ${result.reason}`);
+      columnMinimumSize = result.size;
+      if (intrinsicMainRequested) intrinsicMainRequest = normalizeSizingLength(intrinsicMainValue, {
+        reference: mainSize, property: 'height', context: childContext(child, container), allowAuto: false, allowIntrinsic: true,
+      });
+    }
+
+    if (!stagedMeasured && (shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum && !intrinsicSizes && intrinsicTextMinimum === undefined && !columnMinimumSize) {
       throw childDiagnostic(
         child,
         minimumProperty,
@@ -484,21 +1648,57 @@ function resolveFlexPlacements(
     const crossProperty = row ? 'height' : 'width';
     const mainReference = mainSize;
     const crossReference = crossSize;
-    let measured: { width: number; height: number } | undefined;
+    let measured: { width: number; height: number } | undefined = columnMinimumSize;
     const specifiedMain = normalized[mainProperty];
     const specifiedCross = normalized[crossProperty];
-    const needsMeasuredMain = basisValue === 'auto' &&
+    const needsMeasuredMain = !stagedMeasured && basisValue === 'auto' &&
       (specifiedMain === undefined || specifiedMain === 'auto');
+    if (aspectRatio !== undefined && needsMeasuredMain && !intrinsicSizes && !automaticTextBasis) throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'requires a definite main dimension or flexBasis; intrinsic aspect sizing is unsupported');
     const crossAuto = specifiedCross === undefined || specifiedCross === 'auto';
-    const alignment = normalizeItemAlignment(normalized.alignSelf, child, container);
-    const needsMeasuredCross = crossAuto && alignment !== 'stretch' &&
+    const measuredColumnWrapText = nativeLayout && !row && options.flexWrap !== 'nowrap' &&
+      needsMeasuredMain && child.type === Text && aspectRatio === undefined &&
+      typeof declared.width === 'number' && typeof normalized.width === 'number' &&
+      Number.isFinite(normalized.width) && normalized.width >= 0 && declared.minHeight === 0 &&
+      grow === 0 && shrink === 0 && normalized.wrap === true &&
+      (normalized.fit === undefined || normalized.fit === 'visible') &&
+      (normalized.overflow === undefined || normalized.overflow === 'visible' || normalized.overflow === 'clip') &&
+      (normalized.minWidth === undefined || normalized.minWidth === 0) &&
+      normalized.maxWidth === undefined && normalized.maxHeight === undefined &&
+      !preparedStyleQuery(prepared) && genericTextFont(normalized);
+    const measuredColumnProviderDefinition = nativeLayout && !row && options.flexDirection === 'column' &&
+      options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' && needsMeasuredMain &&
+      aspectRatio === undefined && typeof declared.width === 'number' && typeof normalized.width === 'number' &&
+      Number.isFinite(normalized.width) && normalized.width >= 0 && declared.minHeight === 0 &&
+      grow === 0 && shrink === 0 && (normalized.minWidth === undefined || normalized.minWidth === 0) &&
+      normalized.maxWidth === undefined && !preparedStyleQuery(prepared) ?
+      getPrimitiveDefinition(child.type) : undefined;
+    const measuredColumnProvider = child.type !== Text && !isKnownLayoutType(layoutChild.type) && !!measuredColumnProviderDefinition?.measureIntrinsic &&
+      !!measuredColumnProviderDefinition.measure;
+    const naturalColumnWrappedTextCross = columnNaturalWrappedTextCross &&
+      (hasAutoCrossMargin || effectiveAlignment(alignment, options.alignItems) !== 'stretch');
+    if (nativeLayout && !row && options.flexWrap !== 'nowrap' &&
+      (needsMeasuredMain && !measuredColumnWrapText || aspectRatio === undefined && crossAuto && effectiveAlignment(alignment, options.alignItems) !== 'stretch')) {
+      throw childDiagnostic(child, needsMeasuredMain ? mainProperty : crossProperty, 'auto', container,
+        'Experimental WASM column wrap requires a declared height or flexBasis and a declared width or stretched automatic width; intrinsic item sizes are unsupported.');
+    }
+    const needsMeasuredCross = aspectRatio === undefined && crossAuto && alignment !== 'stretch' &&
       options.alignItems !== 'stretch';
-    if (needsMeasuredMain || needsMeasuredCross || crossAuto) {
+    // A finite column cross allocation determines a stretched built-in child's
+    // width without measuring its intrinsic height. Resolve bounds/padding first.
+    const deferredIntrinsicColumn = aspectRatio === undefined && nativeLayout && !row && knownIntrinsicLayout &&
+      needsMeasuredMain && crossAuto && effectiveAlignment(alignment, options.alignItems) === 'stretch';
+    if (intrinsicSizes) measured = intrinsicSizes.maxContent;
+    if (!columnMinimumSize && !directIntrinsicTextMain && !intrinsicSizes && !deferredIntrinsicColumn && !naturalColumnWrappedTextCross && (!deferredColumnAutoCross || needsMeasuredMain) && (needsMeasuredMain || aspectRatio === undefined && (needsMeasuredCross || crossAuto))) {
+      // A deferred auto-cross child may still need an initial main-size query.
+      // That provisional query must not borrow the container width: the later
+      // exact-height query is the only cross-size authority.
+      const naturalColumnCross = measuredColumnTextCross || measuredColumnProviderCross || measuredColumnKnownCrossAuto || deferredColumnAutoCross;
+      const exactColumnHeight = naturalColumnCross && typeof normalized.height === 'number' ? normalized.height : undefined;
       const constraints = {
-        minWidth: 0,
-        maxWidth: container.width,
-        minHeight: 0,
-        maxHeight: container.height,
+        minWidth: naturalColumnCross ? 0 : measuredColumnWrapText || measuredColumnProvider ? normalized.width as number : 0,
+        maxWidth: naturalColumnCross ? Number.POSITIVE_INFINITY : measuredColumnWrapText || measuredColumnProvider ? normalized.width as number : container.width,
+        minHeight: exactColumnHeight ?? 0,
+        maxHeight: exactColumnHeight ?? (measuredColumnWrapText || measuredColumnProvider ? Number.POSITIVE_INFINITY : container.height),
       };
       const measurementChild = clonePibblElement(child);
       setPreNormalizedStyle(
@@ -508,10 +1708,15 @@ function resolveFlexPlacements(
         receiverToken,
         preparedStyleQuery(prepared),
       );
-      const result = measurement.measureElement(measurementChild, constraints);
+      const result = measureFlexChild(
+        measurementChild, constraints, normalized, layoutToken ?? receiverToken, measurement, region,
+        preparedStyleQuery(prepared),
+        (nativeLayout && row && options.flexWrap === 'nowrap') || measuredPrimitiveCrossAuto || measuredColumnProvider || measuredColumnProviderCross,
+        needsMeasuredMain ? (row ? 'row' : 'column') : undefined, ordinaryCrossAuto || !!pairedLayoutDefinition?.measure && !pairedLayoutDefinition.measureIntrinsic && layoutChild.type !== Text && !isKnownLayoutType(layoutChild.type),
+      );
       if (result.status === 'measured') {
         measured = result.size;
-      } else if (needsMeasuredMain || (crossAuto && effectiveAlignment(
+      } else if (measuredTextCrossAuto || measuredColumnTextCross || measuredKnownCrossAuto || measuredColumnProviderCross || measuredColumnKnownCrossAuto || deferredColumnAutoCross || ordinaryCrossAuto || needsMeasuredMain || (crossAuto && effectiveAlignment(
         alignment,
         options.alignItems,
       ) !== 'stretch')) {
@@ -525,28 +1730,11 @@ function resolveFlexPlacements(
       }
     }
 
-    const baseMain = resolveBasis(
-      basisValue,
-      specifiedMain,
-      measured?.[mainProperty],
-      mainReference,
-      mainProperty,
-      child,
-      container,
-    );
-    const preferredCross = crossAuto ?
-      measured?.[crossProperty] ?? 0 :
-      resolveItemLength(
-        specifiedCross,
-        crossReference,
-        crossProperty,
-        child,
-        container,
-      );
-    const padding = normalizeEdges(normalized.padding, 'padding', childContext(child, container));
-    const paddingMain = row ? padding.left + padding.right : padding.top + padding.bottom;
-    const paddingCross = row ? padding.top + padding.bottom : padding.left + padding.right;
-    const minMain = resolveOptionalBound(
+    const intrinsicMinimum = row ? intrinsicSizes?.minContent.width ?? intrinsicTextMinimum : columnMinimumSize?.height;
+    const intrinsicMaximum = row ? intrinsicSizes?.maxContent.width ?? intrinsicTextMaximum : columnMinimumSize?.height;
+    let minMain = stagedItem ? stagedItem.min : isIntrinsicSizingValue(normalized[minimumProperty])
+      ? resolveIntrinsicMainBound(normalized[minimumProperty]!, intrinsicMinimum, intrinsicMaximum, minimumProperty, mainReference, child, container)
+      : resolveOptionalBound(
       normalized[minimumProperty],
       mainReference,
       minimumProperty,
@@ -555,7 +1743,9 @@ function resolveFlexPlacements(
       container,
     );
     const maximumProperty = row ? 'maxWidth' : 'maxHeight';
-    const maxMain = resolveOptionalBound(
+    const maxMain = stagedItem ? stagedItem.max : isIntrinsicSizingValue(normalized[maximumProperty])
+      ? resolveIntrinsicMainBound(normalized[maximumProperty]!, intrinsicMinimum, intrinsicMaximum, maximumProperty, mainReference, child, container)
+      : resolveOptionalBound(
       normalized[maximumProperty],
       mainReference,
       maximumProperty,
@@ -563,6 +1753,29 @@ function resolveFlexPlacements(
       child,
       container,
     );
+    if (intrinsicSizes && normalized.minWidth === undefined && shrink > 0) {
+      minMain = Math.min(intrinsicSizes.minContent.width, maxMain,
+        typeof specifiedMain === 'number' ? specifiedMain : Number.POSITIVE_INFINITY);
+    }
+    if (columnMinimumSize) {
+      minMain = Math.min(columnMinimumSize.height, maxMain,
+        typeof specifiedMain === 'number' ? specifiedMain : Number.POSITIVE_INFINITY);
+    }
+    if (intrinsicTextMinimum !== undefined && normalized.minWidth === undefined && shrink > 0) {
+      minMain = Math.min(intrinsicTextMinimum, maxMain);
+    }
+    const intrinsicMainBasis = intrinsicTextBasis ?? (intrinsicMainRequest && intrinsicMinimum !== undefined && intrinsicMaximum !== undefined
+      ? resolveIntrinsicMainBasis(intrinsicMainRequest, intrinsicMinimum, intrinsicMaximum, child, container)
+      : undefined);
+    if (automaticTextMinimum) {
+      if (region) recordWasmMeasurement();
+      const font = normalized.font as string ?? '13px sans-serif';
+      const contentMinimum = normalized.wrap === true ? measureLayoutTextMinimumWidth(child.props, {
+        font, service: measurement.service, receiverToken,
+      }) : measurement.service.measureText(prepareLayoutTextContent(child.props, { receiverToken }), font).width;
+      minMain = Math.min(contentMinimum, maxMain,
+        typeof specifiedMain === 'number' ? specifiedMain : Number.POSITIVE_INFINITY);
+    }
     const minCrossProperty = row ? 'minHeight' : 'minWidth';
     const maxCrossProperty = row ? 'maxHeight' : 'maxWidth';
     const minCross = resolveOptionalBound(
@@ -581,6 +1794,30 @@ function resolveFlexPlacements(
       child,
       container,
     );
+    if (naturalColumnWrappedTextCross) {
+      const content = prepareLayoutTextContent(child.props, { receiverToken });
+      const font = normalized.font as string ?? '13px sans-serif';
+      const token = layoutToken ?? receiverToken;
+      let naturalWidth = region?.readTextMaximum(token, content, font);
+      if (naturalWidth === undefined) {
+        if (region) recordWasmMeasurement();
+        naturalWidth = measureLayoutTextNaturalRun(content, { font, service: measurement.service });
+        region?.writeTextMaximum(token, content, font, naturalWidth);
+      }
+      const chosenWidth = Math.min(naturalWidth, Math.max(0, crossSize - paddingCross - marginCrossBefore - marginCrossAfter));
+      const measuredStyle = { ...normalized, width: chosenWidth };
+      const measurementChild = clonePibblElement(child);
+      setPreNormalizedStyle(measurementChild, measuredStyle, child, receiverToken, preparedStyleQuery(prepared));
+      const result = measureFlexChild(measurementChild, {
+        minWidth: chosenWidth, maxWidth: chosenWidth,
+        minHeight: normalized.height as number, maxHeight: normalized.height as number,
+      }, measuredStyle, token, measurement, region, preparedStyleQuery(prepared));
+      if (result.status !== 'measured') {
+        throw childDiagnostic(child, 'width', 'auto', container,
+          `measurement is required but unsupported: ${result.reason}`);
+      }
+      measured = result.size;
+    }
     if (minMain > maxMain) {
       throw childDiagnostic(
         child,
@@ -599,96 +1836,687 @@ function resolveFlexPlacements(
         'minimum must not exceed maximum',
       );
     }
+    // Settle width-dependent height before using an automatic main basis.
+    // The experimental built-in intrinsic column uses the same final-width rule.
+    if (!row && options.flexWrap === 'nowrap' && (child.type === Text || nativeLayout && knownIntrinsicLayout) && needsMeasuredMain) {
+      const preferredWidth = crossAuto ?
+        effectiveAlignment(alignment, options.alignItems) === 'stretch' && !hasAutoCrossMargin ?
+          Math.max(0, crossSize - paddingCross - marginCrossBefore - marginCrossAfter) : measured?.width ?? 0 :
+        resolveItemLength(specifiedCross, crossReference, crossProperty, child, container);
+      const usedWidth = clamp(preferredWidth, minCross, maxCross);
+      if (child.type === Text || usedWidth !== measured?.width) {
+        const measuredStyle = { ...normalized, width: usedWidth };
+        const measurementChild = clonePibblElement(layoutChild);
+        setPreNormalizedStyle(measurementChild, measuredStyle, layoutChild, getPrimitiveReceiverToken(layoutChild) ?? receiverToken, preparedStyleQuery(prepared));
+        const result = measureFlexChild(measurementChild, {
+          minWidth: 0, maxWidth: usedWidth,
+          minHeight: 0, maxHeight: container.height,
+        }, measuredStyle, layoutToken ?? receiverToken, measurement, region, preparedStyleQuery(prepared));
+        if (result.status === 'measured') measured = result.size;
+        else throw childDiagnostic(child, mainProperty, 'auto', container,
+          `measurement is required but unsupported: ${result.reason}`);
+      }
+    }
+
+    let naturalTextMain: number | undefined;
+    if (automaticTextBasis) {
+      const content = prepareLayoutTextContent(child.props, { receiverToken });
+      const font = normalized.font as string ?? '13px sans-serif';
+      const token = layoutToken ?? receiverToken;
+      naturalTextMain = genericTextFont(normalized) ? region?.readTextMaximum(token, content, font) : undefined;
+      if (naturalTextMain === undefined) {
+        if (region) recordWasmMeasurement();
+        naturalTextMain = normalized.wrap === true ? measureLayoutTextNaturalRun(content, { font, service: measurement.service }) : measurement.service.measureText(content, font).width;
+        if (genericTextFont(normalized)) region?.writeTextMaximum(token, content, font, naturalTextMain);
+      }
+    }
+    const stretchMain = (declared.flexBasis === undefined || declared.flexBasis === 'auto' ? declared[mainProperty] : declared.flexBasis) === 'stretch';
+    const baseMain = stagedMeasured ? stagedItem!.target : stretchMain ? Math.max(0, mainReference - marginMainBefore - marginMainAfter - paddingMain) : intrinsicMainBasis ?? naturalTextMain ?? resolveBasis(
+      basisValue,
+      specifiedMain,
+      measured?.[mainProperty],
+      mainReference,
+      mainProperty,
+      child,
+      container,
+    );
+    const preferredCross = declared[crossProperty] === 'stretch' ? Math.max(0, crossReference - marginCrossBefore - marginCrossAfter - paddingCross) : aspectRatio !== undefined ? 0 : crossAuto ?
+      measured?.[crossProperty] ?? 0 :
+      resolveItemLength(
+        specifiedCross,
+        crossReference,
+        crossProperty,
+        child,
+        container,
+      );
     items.push({
       child,
       normalized,
       baseMain,
       targetMain: baseMain,
       paddingMain,
+      marginMainBefore, marginMainAfter, autoMainBefore, autoMainAfter, marginCrossBefore, marginCrossAfter, autoCrossBefore, autoCrossAfter,
       preferredCross: clamp(preferredCross, minCross, maxCross) + paddingCross,
       paddingCross,
+      paddingCrossBefore: row ? padding.top : padding.left,
       minMain,
       maxMain,
       minCross,
       maxCross,
       grow,
       shrink,
-      crossAuto,
+      crossAuto: aspectRatio === undefined && crossAuto,
+      aspectRatio,
       alignSelf: alignment,
       receiverToken,
+      layoutToken,
       query: preparedStyleQuery(prepared),
+      relativeX,
+      relativeY,
+      deferredColumnAutoCross,
+      ordinaryColumnAutoCross: !row && ordinaryCrossAuto && !deferredColumnAutoCross && !naturalColumnWrappedTextCross,
+      sourceIndex,
+      layoutOccurrence: occurrence,
     });
   }
 
-  const lines = collectLines(items, mainSize, mainGap, options.flexWrap);
-  for (const line of lines) resolveFlexibleLengths(line, mainSize, mainGap);
-  resolveLineCrossSizes(
-    lines,
-    crossSize,
-    crossGap,
-    options.alignContent,
-    options.flexWrap === 'wrap',
-  );
-
-  const placements: FlexPlacement[] = [];
+  const wrappedRegion = region && options.flexWrap !== 'nowrap';
+  // Rust owns wrapped line boundaries and offsets; JS retains source-order items
+  // only for host measurement and immediate rendering, never a second line solver.
+  const lines = region ? items.length ? [{ items, crossSize: 0, crossOffset: 0 }] : [] :
+    collectLines(items, mainSize, mainGap, options.flexWrap);
+  if (lines.length === 0) region?.solve([], mainSize, mainGap, !!wrappedRegion);
   for (const line of lines) {
-    const occupied = line.items.reduce(
+    if (region) region.solve(line.items, mainSize, mainGap, !!wrappedRegion);
+    else resolveFlexibleLengths(line, mainSize, mainGap);
+    if (hasAspectRatio) for (const item of line.items) {
+      if (item.aspectRatio === undefined) continue;
+      const outerMain = item.targetMain + item.paddingMain;
+      const outerCross = row ? outerMain / item.aspectRatio : outerMain * item.aspectRatio;
+      if (!Number.isFinite(outerCross)) throw childDiagnostic(item.child, 'aspectRatio', item.aspectRatio, container, 'derived cross size must be finite');
+      item.preferredCross = clamp(Math.max(0, outerCross - item.paddingCross), item.minCross, item.maxCross) + item.paddingCross;
+    }
+    // Width-dependent content uses the settled content allocation.
+    if (row) for (const item of line.items) {
+      let measuredRoot = item.child;
+      if (item.crossAuto && nativeLayout && (options.flexWrap === 'nowrap' && options.flexDirection === 'row' && options.layoutDirection === 'ltr' || item.autoCrossBefore || item.autoCrossAfter || options[FLEX_BASELINE_GROUP]) && !item.query && item.aspectRatio === undefined && isLayoutComponent(item.child.type)) {
+        measuredRoot = prepareLayoutComponent(item.child, { receiverToken: item.receiverToken });
+      }
+      const definition = nativeLayout && (options.flexWrap === 'nowrap' || item.autoCrossBefore || item.autoCrossAfter || options[FLEX_BASELINE_GROUP]) && !item.query && item.aspectRatio === undefined ? getPrimitiveDefinition(measuredRoot.type) : undefined;
+      const constrainedProvider = measuredRoot.type !== Text && !isKnownLayoutType(measuredRoot.type) && !!definition?.measureIntrinsic && !!definition.measure;
+      const ordinaryProvider = !!definition?.measure && (item.autoCrossBefore || item.autoCrossAfter || options[FLEX_BASELINE_GROUP]);
+      const requiredKnownCross = nativeLayout && (item.autoCrossBefore || item.autoCrossAfter) && (measuredRoot.type === Flex || measuredRoot.type === Flow || measuredRoot.type === Grid);
+      if (!item.crossAuto || (item.child.type !== Text && !(nativeLayout && item.child.type === Flex) && !constrainedProvider && !ordinaryProvider && !requiredKnownCross)) continue;
+      if (item.child.type === Flex && item.normalized.width === item.targetMain) continue;
+      const measuredStyle = { ...item.normalized, width: item.targetMain };
+      const child = clonePibblElement(item.child);
+      setPreNormalizedStyle(child, measuredStyle, item.child, item.receiverToken, item.query);
+      const result = measureFlexChild(child, {
+        minWidth: constrainedProvider || ordinaryProvider ? item.targetMain : 0, maxWidth: item.targetMain,
+        minHeight: 0, maxHeight: container.height,
+      }, measuredStyle, item.layoutToken ?? item.receiverToken, measurement, region, item.query, constrainedProvider, undefined, ordinaryProvider);
+      if (result.status === 'measured') {
+        item.preferredCross = clamp(result.size.height, item.minCross, item.maxCross) + item.paddingCross;
+        // Baseline grouping consumes this final measured box rather than stretching
+        // an authored automatic cross size after the provider has been queried.
+        if (options[FLEX_BASELINE_GROUP] && (item.alignSelf !== 'stretch' || item.autoCrossBefore || item.autoCrossAfter)) item.crossAuto = false;
+      } else if (constrainedProvider || ordinaryProvider || requiredKnownCross || options[FLEX_BASELINE_GROUP] || nativeLayout && item.child.type === Text && (item.autoCrossBefore || item.autoCrossAfter)) throw childDiagnostic(item.child, 'height', 'auto', container, `final-width measurement is required but unsupported: ${result.reason}`);
+    }
+  }
+  // Defer column natural cross measurement until the kernel has resolved each
+  // item's final main allocation. The result is still measured through the
+  // normal transaction/cache path and is required before any placement.
+  if (!row) for (const item of items) {
+    if ((!item.deferredColumnAutoCross && !item.ordinaryColumnAutoCross) || !item.crossAuto) continue;
+    let measuredRoot = item.child;
+    if (isLayoutComponent(item.child.type)) {
+      measuredRoot = prepareLayoutComponent(item.child, { receiverToken: item.receiverToken });
+    }
+    const definition = getPrimitiveDefinition(measuredRoot.type);
+    const constrainedProvider = measuredRoot.type !== Text && !!definition?.measureIntrinsic && !!definition.measure;
+    const ordinaryWidth = Math.max(0, item.preferredCross - item.paddingCross);
+    const measuredStyle = item.ordinaryColumnAutoCross ?
+      { ...item.normalized, width: ordinaryWidth, height: item.targetMain } :
+      { ...item.normalized, height: item.targetMain };
+    const measurementChild = clonePibblElement(item.child);
+    setPreNormalizedStyle(measurementChild, measuredStyle, item.child, item.receiverToken, item.query);
+    const result = measureFlexChild(measurementChild, {
+      minWidth: 0, maxWidth: item.ordinaryColumnAutoCross ? ordinaryWidth : Number.POSITIVE_INFINITY,
+      minHeight: item.targetMain, maxHeight: item.targetMain,
+    }, measuredStyle, item.layoutToken ?? item.receiverToken, measurement, region, item.query, constrainedProvider, undefined, item.ordinaryColumnAutoCross);
+    if (result.status === 'unsupported') {
+      throw childDiagnostic(item.child, 'width', 'auto', container,
+        `final-height measurement is required but unsupported: ${result.reason}`);
+    }
+    item.preferredCross = clamp(result.size.width, item.minCross, item.maxCross) + item.paddingCross;
+  }
+  if (options[FLEX_BASELINE_GROUP]) {
+    assertSupportedBaselineFlex(options, items, container, region !== undefined);
+    for (const item of items) {
+      // Automatic cross margins replace alignment, so this leaf neither supplies
+      // nor consumes a shared baseline. Native placement resolves its free space.
+      if (item.alignSelf !== 'auto' || item.autoCrossBefore || item.autoCrossAfter) { item.firstBaseline = 0; continue; }
+      const structural = prepareKnownStructuralBaseline(item, container, measurement, parentSlot, options[FLEX_LAST_BASELINE]);
+      if (structural !== undefined) {
+        item.structuralBaselineSlot = structural.slot;
+        item.firstBaseline = item.paddingCrossBefore + structural.offset;
+        continue;
+      }
+      const allocation = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
+      const baselineRoot = item.baselineRoot ?? item.child;
+      const definition = getPrimitiveDefinition(baselineRoot.type);
+      if (!definition?.measureBaselines) {
+        item.firstBaseline = item.paddingCrossBefore + allocation.height;
+        continue;
+      }
+      const measurementChild = clonePibblElement(baselineRoot);
+      const measuredStyle: SystemStyle & { width: number; height: number } = { ...item.normalized, width: allocation.width, height: allocation.height };
+      setPreNormalizedStyle(measurementChild, measuredStyle, baselineRoot, getPrimitiveReceiverToken(baselineRoot) ?? item.receiverToken, item.query);
+      if (item.query) setPreparedBaselineOwner(measurementChild, container);
+      // Application-owned fonts can change outside retained layout revisions.
+      // Query them on each admitted render; only generic Text results are retained.
+      const cacheOptions: BaselineMeasurementOptions | undefined = region && !item.query && (baselineRoot.type !== Text || genericTextFont(item.normalized)) ? {
+        cache: region,
+        token: item.layoutToken ?? item.receiverToken,
+        key: `${allocationStructuralRevision()}:${allocation.width}:${allocation.height}:${JSON.stringify(measurementStyle(item.normalized))}`,
+        recordMeasurement: recordWasmMeasurement,
+      } : undefined;
+      if (cacheOptions && item.baselineRoot) cacheOptions.source = item.child;
+      const result = measureBaselineElement(measurementChild, allocation, measurement.service, cacheOptions);
+      if (result.status === 'unsupported') {
+        throw childDiagnostic(item.child, 'measureBaselines', 'unsupported', container, `first-baseline alignment requires a baseline result: ${result.reason}`);
+      }
+      item.firstBaseline = item.paddingCrossBefore + (options[FLEX_LAST_BASELINE] ? result.last : result.first);
+    }
+  }
+  if (region) {
+    // Per-item wrapped line cross offsets are produced by the kernel below.
+    for (const line of lines) { line.crossSize = crossSize; line.crossOffset = 0; }
+  } else {
+    resolveLineCrossSizes(lines, crossSize, crossGap, options.alignContent, options.flexWrap === 'wrap');
+  }
+
+  const crossPlacements = region?.placeCross(items, crossSize, options.alignItems, {
+    reverse: wrapReverse,
+    wrap: wrappedRegion ? { gap: crossGap, alignContent: options.alignContent } : undefined,
+    baseline: options[FLEX_BASELINE_GROUP],
+    lastBaseline: options[FLEX_LAST_BASELINE],
+  });
+  const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent, reverse, hasAutoMainMargins ? items : undefined, stagedIntrinsic?.autoMarginFreeMain);
+  let mainIndex = 0;
+  let crossIndex = 0;
+  for (const line of lines) {
+    const occupied = mainPlacements ? 0 : line.items.reduce(
       (total, item) => total + item.targetMain + item.paddingMain,
       Math.max(0, line.items.length - 1) * mainGap,
     );
-    const distribution = distributeAlignment(
+    const distribution = mainPlacements ? { start: 0, between: 0 } : distributeAlignment(
       options.justifyContent,
       mainSize - occupied,
       line.items.length,
     );
     let mainCursor = distribution.start;
     for (const item of line.items) {
-      const alignment = effectiveAlignment(item.alignSelf, options.alignItems);
-      let outerCross = item.preferredCross;
-      if (alignment === 'stretch' && item.crossAuto) {
-        outerCross = clamp(
-          Math.max(0, line.crossSize - item.paddingCross),
-          item.minCross,
-          item.maxCross,
-        ) + item.paddingCross;
+      if (mainPlacements) mainCursor = mainPlacements[mainIndex++];
+      let outerCross: number;
+      let crossOffset: number;
+      if (crossPlacements) {
+        const placement = crossPlacements[crossIndex++];
+        outerCross = placement.outerCross;
+        crossOffset = placement.offset;
+      } else {
+        const alignment = effectiveAlignment(item.alignSelf, options.alignItems);
+        outerCross = item.preferredCross;
+        if (alignment === 'stretch' && item.crossAuto) {
+          outerCross = clamp(Math.max(0, line.crossSize - item.paddingCross), item.minCross, item.maxCross) + item.paddingCross;
+        }
+        crossOffset = alignmentOffset(alignment, line.crossSize, outerCross);
       }
-      const crossOffset = alignmentOffset(
-        alignment,
-        line.crossSize,
-        outerCross,
-      );
       const outerMain = item.targetMain + item.paddingMain;
-      const box = row ? {
-        x: container.x + mainCursor,
-        y: container.y + line.crossOffset + crossOffset,
-        width: outerMain,
-        height: outerCross,
-      } : {
-        x: container.x + line.crossOffset + crossOffset,
-        y: container.y + mainCursor,
-        width: outerCross,
-        height: outerMain,
+      const x = row ?
+        container.x + mainCursor + item.relativeX :
+        container.x + line.crossOffset + crossOffset + item.relativeX;
+      const layoutY = row ?
+        container.y + line.crossOffset + crossOffset :
+        container.y + mainCursor;
+      const y = layoutY + item.relativeY;
+      const box = {
+        x: finiteRelativePlacement(x, 'left', item.child, container),
+        y: finiteRelativePlacement(y, 'top', item.child, container),
+        width: row ? outerMain : outerCross,
+        height: row ? outerCross : outerMain,
       };
       const usedStyle = {
         ...item.normalized,
         width: row ? item.targetMain : Math.max(0, outerCross - item.paddingCross),
         height: row ? Math.max(0, outerCross - item.paddingCross) : item.targetMain,
       };
-      placements.push({
+      const element = childWithUsedSize(
+        item.child,
+        usedStyle,
+        usedStyle.width,
+        usedStyle.height,
+        item.receiverToken,
+        item.query,
+      );
+      attachPreparedLayoutSlot(element, item.structuralBaselineSlot);
+      placementsBySource[item.sourceIndex] = {
+        usedWidth: usedStyle.width,
+        usedHeight: usedStyle.height,
+        layoutY: finiteRelativePlacement(layoutY, 'top', item.child, container),
         box,
-        element: childWithUsedSize(
-          item.child,
-          usedStyle,
-          usedStyle.width,
-          usedStyle.height,
-          item.receiverToken,
-          item.query,
-        ),
-      });
+        element,
+      };
       mainCursor += outerMain + mainGap + distribution.between;
     }
   }
-  return placements;
+  for (let sourceIndex = 0; sourceIndex < placementsBySource.length; sourceIndex++) {
+    if (!placementsBySource[sourceIndex]) throw new Error('Flex placement did not resolve one direct child.');
+  }
+  region?.pruneAbsoluteMeasurements(absoluteMeasurementTokens);
+  return placementsBySource as FlexPlacement[];
+}
+
+function resolveFlexContainingBox(style: Readonly<FlexStyle> | Readonly<ResolvedFlexStyle>, content: Readonly<LayoutBox>): Readonly<LayoutBox> {
+  const resolved = style as Readonly<Partial<ResolvedFlexStyle>>;
+  const inherited = resolved[FLEX_INHERITED_CONTAINING_BOX];
+  if (inherited) return inherited;
+  const specified = resolved[FLEX_ABSOLUTE_BOX_STYLE] ?? style as Readonly<FlexStyle>;
+  if (specified.position === 'static') {
+    return getLogicalContainingBox();
+  }
+  return resolveFlexAbsolutePaddingBox(specified, content);
+}
+
+function resolveFlexAbsolutePaddingBox(
+  style: Readonly<FlexStyle>,
+  content: Readonly<LayoutBox>,
+): LayoutBox {
+  const paddingOnly = normalizeBoxInsets({
+    ...style,
+    borderWidth: undefined,
+    borderStartWidth: undefined,
+    borderEndWidth: undefined,
+  }, {
+    component: 'Flex', algorithm: 'flex absolute', constraints: constraintsFor(content),
+  });
+  return Object.freeze({
+    x: content.x - paddingOnly.left,
+    y: content.y - paddingOnly.top,
+    width: content.width + paddingOnly.left + paddingOnly.right,
+    height: content.height + paddingOnly.top + paddingOnly.bottom,
+  });
+}
+
+export function resolveAbsoluteFlexPlacement(
+  paddingBox: Readonly<LayoutBox>,
+  child: PibblElement<any>,
+  style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
+  receiverToken: object,
+  query: PreparedQuery | undefined,
+  content: Readonly<LayoutBox>,
+  options: Readonly<Pick<ResolvedFlexStyle, 'flexDirection' | 'flexWrap' | 'justifyContent' | 'alignItems' | 'layoutDirection'>>,
+  measurement?: FlexMeasurementInput,
+  region?: LayoutRegion,
+  measurementToken?: object,
+): FlexPlacement {
+  const left = resolveFlexInset(absoluteLeftInset(style, options.layoutDirection), 'left', child, paddingBox);
+  const right = resolveFlexInset(absoluteRightInset(style, options.layoutDirection), 'right', child, paddingBox);
+  const top = resolveFlexInset(style.top, 'top', child, paddingBox);
+  const bottom = resolveFlexInset(style.bottom, 'bottom', child, paddingBox);
+  const specifiedWidth = resolveAbsoluteSize(style.width, 'width', paddingBox.width, child, paddingBox);
+  const specifiedHeight = resolveAbsoluteSize(style.height, 'height', paddingBox.height, child, paddingBox);
+  const specifiedMinWidth = resolveAbsoluteSize(style.minWidth, 'minWidth', paddingBox.width, child, paddingBox);
+  const specifiedMaxWidth = resolveAbsoluteSize(style.maxWidth, 'maxWidth', paddingBox.width, child, paddingBox);
+  const specifiedMinHeight = resolveAbsoluteSize(style.minHeight, 'minHeight', paddingBox.height, child, paddingBox);
+  const specifiedMaxHeight = resolveAbsoluteSize(style.maxHeight, 'maxHeight', paddingBox.height, child, paddingBox);
+  const sizingStyle = specifiedWidth === style.width && specifiedHeight === style.height &&
+    specifiedMinWidth === style.minWidth && specifiedMaxWidth === style.maxWidth &&
+    specifiedMinHeight === style.minHeight && specifiedMaxHeight === style.maxHeight ? style : {
+      ...style, width: specifiedWidth, height: specifiedHeight,
+      minWidth: specifiedMinWidth, maxWidth: specifiedMaxWidth,
+      minHeight: specifiedMinHeight, maxHeight: specifiedMaxHeight,
+    };
+  const automaticWidth = specifiedWidth === undefined || specifiedWidth === 'auto';
+  const automaticHeight = specifiedHeight === undefined || specifiedHeight === 'auto';
+  let measuredWidth: number | undefined;
+  let measuredHeight: number | undefined;
+  if (measurement) {
+    const measurementAxis = automaticWidth && automaticHeight ? 'both' : automaticWidth ? 'width' : 'height';
+    const measuredChild = clonePibblElement(child);
+    // Text's measure callback uses an omitted natural axis. Keep authored
+    // automatic dimensions on the original descriptor for final settlement.
+    const measuredStyle = child.type === Text ? measurementAxis === 'both' ?
+      { ...sizingStyle, width: undefined, height: undefined } : measurementAxis === 'width' ?
+        { ...sizingStyle, width: undefined } : { ...sizingStyle, height: undefined } : sizingStyle;
+    setPreNormalizedStyle(measuredChild, measuredStyle, child, receiverToken, query);
+    const fixedAxis = measurementAxis === 'both' ? 0 : measurementAxis === 'width' ? specifiedHeight as number : specifiedWidth as number;
+    const result = measureConstrainedIntrinsicElement(measuredChild, measurementAxis === 'both' ? {
+      minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
+    } : measurementAxis === 'width' ? {
+      minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: fixedAxis, maxHeight: fixedAxis,
+    } : {
+      minWidth: fixedAxis, maxWidth: fixedAxis, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY,
+    }, measurement.service, region && measurementToken ? {
+      cache: region, token: measurementToken,
+      key: measurementAxis === 'both' ? `absolute-size:both:${allocationStructuralRevision()}` :
+        `absolute-size:${measurementAxis}:${allocationStructuralRevision()}:${fixedAxis}`,
+      recordMeasurement: recordWasmMeasurement,
+    } : undefined);
+    if (result.status !== 'measured') {
+      throw childDiagnostic(child, measurementAxis, 'auto', paddingBox, `absolute natural ${measurementAxis} requires supported pure measurement: ${result.reason}`);
+    }
+    if (measurementAxis !== 'height') measuredWidth = result.size.width;
+    if (measurementAxis !== 'width') measuredHeight = result.size.height;
+  }
+  const settledStyle = automaticWidth || automaticHeight ? {
+    ...sizingStyle,
+    width: automaticWidth ? measuredWidth ?? resolveAbsoluteAutoSize(left, right, paddingBox.width, 'width', child, paddingBox, sizingStyle.aspectRatio === undefined ? undefined : (specifiedHeight as number) * sizingStyle.aspectRatio) : specifiedWidth,
+    height: automaticHeight ? measuredHeight ?? resolveAbsoluteAutoSize(top, bottom, paddingBox.height, 'height', child, paddingBox, sizingStyle.aspectRatio === undefined ? undefined : (specifiedWidth as number) / sizingStyle.aspectRatio) : specifiedHeight,
+  } : sizingStyle;
+  if (automaticWidth || automaticHeight) markDerivedAbsoluteAxes(settledStyle, automaticWidth, automaticHeight);
+  const resolved = resolveDirectChildBox(paddingBox, child, 'absolute', settledStyle);
+  const width = resolved.borderBox.width;
+  const height = resolved.borderBox.height;
+  const row = isRowDirection(options.flexDirection);
+  const mainReversed = (options.flexDirection === 'row-reverse' || options.flexDirection === 'column-reverse') !==
+    (row && options.layoutDirection === 'rtl');
+  const crossReversed = (options.flexWrap === 'wrap-reverse') !== (!row && options.layoutDirection === 'rtl');
+  const x = left !== undefined || right !== undefined ?
+    options.layoutDirection === 'rtl'
+      ? right === undefined ? paddingBox.x + left! : paddingBox.x + paddingBox.width - right - width
+      : left === undefined ? paddingBox.x + paddingBox.width - right! - width : paddingBox.x + left :
+    row ? resolveAbsoluteMainAlignment(content, width, options.justifyContent, mainReversed, true) :
+      resolveAbsoluteCrossAlignment(content, width, options.alignItems, crossReversed, false);
+  const y = top !== undefined || bottom !== undefined ?
+    top === undefined ? paddingBox.y + paddingBox.height - bottom! - height : paddingBox.y + top :
+    row ? resolveAbsoluteCrossAlignment(content, height, options.alignItems, crossReversed, true) :
+      resolveAbsoluteMainAlignment(content, height, options.justifyContent, mainReversed, false);
+  const usedWidth = resolved.contentBox.width;
+  const usedHeight = resolved.contentBox.height;
+  return {
+    box: { x: finiteRelativePlacement(x, 'left', child, paddingBox), y: finiteRelativePlacement(y, 'top', child, paddingBox), width, height },
+    usedWidth,
+    usedHeight,
+    layoutY: finiteRelativePlacement(y, 'top', child, paddingBox),
+    element: childWithUsedSize(child, settledStyle, usedWidth, usedHeight, receiverToken, query),
+  };
+}
+
+function resolveAbsoluteAutoSize(
+  start: number | undefined,
+  end: number | undefined,
+  available: number,
+  property: 'width' | 'height',
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+  aspectSize?: number,
+): number {
+  if ((start === undefined || end === undefined) && aspectSize === undefined) {
+    throw childDiagnostic(child, property, 'auto', container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: automatic absolute size requires opposing physical insets or one definite aspect-ratio axis');
+  }
+  // Opposing insets win; otherwise use the declared opposite axis before bounds.
+  const size = start !== undefined && end !== undefined ? available - start - end : aspectSize!;
+  if (!Number.isFinite(size)) {
+    throw childDiagnostic(child, property, size, container, 'derived absolute size must remain finite');
+  }
+  return Math.max(0, size);
+}
+
+function resolveAbsoluteMainAlignment(
+  content: Readonly<LayoutBox>,
+  size: number,
+  justifyContent: MainAlignment,
+  reversed: boolean,
+  horizontal: boolean,
+): number {
+  let alignment: CrossAlignment = justifyContent === 'flex-end' ? 'flex-end' :
+    justifyContent === 'flex-start' || justifyContent === 'space-between' ? 'flex-start' : 'center';
+  if (reversed) {
+    if (alignment === 'flex-start') alignment = 'flex-end';
+    else if (alignment === 'flex-end') alignment = 'flex-start';
+  }
+  return horizontal ? content.x + alignmentOffset(alignment, content.width, size) :
+    content.y + alignmentOffset(alignment, content.height, size);
+}
+
+function resolveAbsoluteCrossAlignment(
+  content: Readonly<LayoutBox>,
+  size: number,
+  alignItems: CrossAlignment,
+  reversed: boolean,
+  vertical: boolean,
+): number {
+  let alignment: CrossAlignment = alignItems === 'stretch' ? 'flex-start' : alignItems;
+  if (reversed) {
+    if (alignment === 'flex-start') alignment = 'flex-end';
+    else if (alignment === 'flex-end') alignment = 'flex-start';
+  }
+  return vertical ? content.y + alignmentOffset(alignment, content.height, size) :
+    content.x + alignmentOffset(alignment, content.width, size);
+}
+
+function genericTextFont(style: Readonly<Record<string, unknown>>): boolean {
+  return /^(?:(?:bold|italic|normal) )?\d+(?:\.\d+)?px (?:sans-serif|serif|monospace)$/.test(String(style.font ?? '13px sans-serif'));
+}
+function measurementStyle(style: Readonly<Record<string, unknown>>) {
+  const { fill: _fill, stroke: _stroke, opacity: _opacity, cursor: _cursor, filter: _filter, ...metrics } = style;
+  // Rest construction owns this fresh snapshot; normalize geometry-equivalent axes.
+  const owned = metrics as Record<string, unknown>;
+  if (owned.flexDirection === 'row-reverse') owned.flexDirection = 'row';
+  else if (owned.flexDirection === 'column-reverse') owned.flexDirection = 'column';
+  return owned;
+}
+
+// Resolve every receiver even on cache hits so normal traversal adopts current
+// subscriptions. Retain only scalar snapshots, never descriptors or provisions.
+function intrinsicTextSnapshot(child: PibblElement<any>, style: Readonly<BoxStyle & Record<string, unknown>>, constraints: Constraints): unknown[] | undefined {
+  if (child.type !== Flex || !isColumnDirection(style.flexDirection) || (style.flexWrap ?? 'nowrap') !== 'nowrap' ||
+    typeof style.width !== 'number' || (style.height !== undefined && style.height !== 'auto')) return;
+  return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () => withIsolatedRenderState(() => {
+    const previous = GLOBAL_STATE.primitiveReceiverToken;
+    const visiting = new Set<PibblElement<any>>();
+    function visit(column: PibblElement<any>, columnStyle: Readonly<Record<string, unknown>>, parent: object | undefined, width: number): unknown[] | undefined {
+      if (visiting.has(column)) return;
+      visiting.add(column);
+      GLOBAL_STATE.primitiveReceiverToken = parent;
+      try {
+        const snapshot: unknown[] = [];
+        for (const [index, leaf] of prepareLayoutChildren(column.props.children, 'Flex').entries()) {
+          const receiver = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, parent, index);
+          const prepared = prepareDirectChildStyle(leaf, receiver, { x: 0, y: 0, width, height: constraints.maxHeight });
+          const leafStyle = preparedStyleValue(prepared) as Readonly<BoxStyle & Record<string, unknown>>;
+          if (preparedStyleQuery(prepared) || hasPercentageBounds(leafStyle) || isPercentage(leafStyle.width) || isPercentage(leafStyle.height)) return;
+          let content: unknown;
+          if (leaf.type === Text) {
+            if (!genericTextFont(leafStyle)) return;
+            content = prepareLayoutTextContent(leaf.props, { receiverToken: receiver });
+          } else if (leaf.type === Flex && isColumnDirection(leafStyle.flexDirection) && (leafStyle.flexWrap ?? 'nowrap') === 'nowrap' && (leafStyle.height === undefined || leafStyle.height === 'auto')) {
+            const padding = normalizeBoxInsets(leafStyle, childContext(leaf, { x: 0, y: 0, width, height: constraints.maxHeight }));
+            const available = typeof leafStyle.width === 'number' ? leafStyle.width : Math.max(0, width-padding.left-padding.right);
+            const usedWidth = clamp(available, typeof leafStyle.minWidth === 'number' ? leafStyle.minWidth : 0, typeof leafStyle.maxWidth === 'number' ? leafStyle.maxWidth : Infinity);
+            content = visit(leaf, leafStyle, receiver, usedWidth);
+            if (content === undefined) return;
+          } else {
+            // Opaque components participate only by already-declared finite sizes.
+            if (typeof leafStyle.width !== 'number' || typeof leafStyle.height !== 'number' || !Number.isFinite(leafStyle.width) || !Number.isFinite(leafStyle.height)) return;
+            content = null;
+          }
+          snapshot.push([leaf.key, content, measurementStyle(leafStyle)]);
+          GLOBAL_STATE.primitiveReceiverToken = parent;
+        }
+        return [measurementStyle(columnStyle), snapshot];
+      } finally { visiting.delete(column); GLOBAL_STATE.primitiveReceiverToken = parent; }
+    }
+    try { return visit(child, style, getPrimitiveReceiverToken(child), style.width as number); }
+    finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
+  }));
+}
+
+interface PreparedRowMeasurement {
+  readonly snapshot: readonly unknown[];
+  readonly receivers: readonly object[];
+}
+
+// This snapshot is intentionally stricter than the ordinary primitive snapshot:
+// a layout description can otherwise hide mutable leaf props behind its own stable
+// descriptor. It records every direct leaf's identity and resolved full style, so
+// cache reuse never bypasses a provider-visible paint/style or program input.
+function preparedRowMeasurement(
+  child: PibblElement<any>,
+  style: Readonly<BoxStyle & Record<string, unknown>>,
+): PreparedRowMeasurement | undefined {
+  try { return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () =>
+    withStyleMeasurement('recursive', () => withIsolatedRenderState(() => {
+      const previous = GLOBAL_STATE.primitiveReceiverToken;
+      try {
+        const root = prepareLayoutComponent(child);
+        if (root.type !== Flex) return;
+        const rootReceiver = getPrimitiveReceiverToken(root);
+        if (!rootReceiver) return;
+        GLOBAL_STATE.primitiveReceiverToken = rootReceiver;
+        const rootStyle = style as Readonly<FlexStyle & Record<string, unknown>>;
+        if ((rootStyle.flexDirection ?? 'row') !== 'row' ||
+          (rootStyle.flexWrap ?? 'nowrap') !== 'nowrap' ||
+          (rootStyle.layoutDirection ?? getLayoutDirection()) !== 'ltr' ||
+          typeof rootStyle.width !== 'number' || !Number.isFinite(rootStyle.width) || rootStyle.width < 0 ||
+          rootStyle.height !== undefined && rootStyle.height !== 'auto') return;
+        const snapshot: unknown[] = ['prepared-row', root.type, root.key];
+        if (!appendPreparedProgramSnapshot(snapshot, getPrimitiveProgramProps(child))) return;
+        if (!appendPreparedProgramSnapshot(snapshot, getPrimitiveProgramProps(root), true)) return;
+        if (!appendPreparedStyleSnapshot(snapshot, rootStyle)) return;
+        const children = prepareLayoutChildren(root.props.children, 'Flex');
+        snapshot.push(children.length);
+        const receivers: object[] = [];
+        for (let index = 0; index < children.length; index++) {
+          const leaf = children[index];
+          const directReceiver = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, rootReceiver, index);
+          const directPrepared = prepareDirectChildStyle(leaf, directReceiver, undefined, true);
+          if (preparedStyleQuery(directPrepared)) return;
+          const directStyle = preparedStyleValue(directPrepared) as Readonly<
+            BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
+          >;
+          let measuredLeaf = leaf;
+          let receiver = directReceiver;
+          let wrapped = false;
+          if (isLayoutComponent(leaf.type)) {
+            // One transparent known description is enough for the 164 receipt:
+            // snapshot both layers and replay the paired root's current receiver.
+            // A second description would need a recursive receipt path.
+            measuredLeaf = prepareLayoutComponent(leaf, { receiverToken: directReceiver });
+            if (isLayoutComponent(measuredLeaf.type)) return;
+            const preparedReceiver = getPrimitiveReceiverToken(measuredLeaf);
+            if (!preparedReceiver) return;
+            receiver = preparedReceiver;
+            wrapped = true;
+          }
+          const paired = getPrimitiveDefinition(measuredLeaf.type);
+          const emptyRectangle = !wrapped && measuredLeaf.type === Rectangle &&
+            !Object.hasOwn(measuredLeaf.props, 'children');
+          if (!emptyRectangle && !(paired?.measureIntrinsic && paired.measure)) return;
+          if (!appendPreparedProgramSnapshot(snapshot, getPrimitiveProgramProps(leaf)) ||
+            !appendPreparedStyleSnapshot(snapshot, directStyle) ||
+            wrapped && !appendPreparedProgramSnapshot(snapshot, getPrimitiveProgramProps(measuredLeaf))) return;
+          snapshot.push(index, leaf.type, leaf.key, wrapped, measuredLeaf.type, measuredLeaf.key);
+          receivers.push(receiver);
+        }
+        return { snapshot, receivers };
+      } finally {
+        GLOBAL_STATE.primitiveReceiverToken = previous;
+      }
+    })),
+  ); } catch (error) {
+    if (error instanceof UnsupportedResponsiveMeasurement) return undefined;
+    throw error;
+  }
+}
+
+function appendPreparedProgramSnapshot(
+  snapshot: unknown[],
+  props: Readonly<Record<PropertyKey, unknown>>,
+  omitChildren = false,
+): boolean {
+  const keys = Reflect.ownKeys(props);
+  let count = 0;
+  for (let index = 0; index < keys.length; index++) if (!omitChildren || keys[index] !== 'children') count++;
+  snapshot.push(count);
+  for (let index = 0; index < keys.length; index++) {
+    const key = keys[index];
+    if (omitChildren && key === 'children') continue;
+    const value = props[key];
+    if (typeof value === 'function' || value !== null && typeof value === 'object' && !isSignal(value)) return false;
+    snapshot.push(key, value);
+  }
+  return true;
+}
+
+function appendPreparedStyleSnapshot(snapshot: unknown[], style: Readonly<Record<PropertyKey, unknown>>): boolean {
+  const keys = Reflect.ownKeys(style);
+  snapshot.push(keys.length);
+  for (let index = 0; index < keys.length; index++) {
+    const key = keys[index];
+    const value = style[key];
+    if (typeof value === 'function' || value !== null && typeof value === 'object') return false;
+    snapshot.push(key, value);
+  }
+  return true;
+}
+
+function measureFlexChild(
+  child: PibblElement<any>, constraints: Constraints,
+  style: Readonly<BoxStyle & Record<string, unknown>>, token: object,
+  measurement: FlexMeasurementInput, region?: LayoutRegion, query?: PreparedQuery, constrainedProvider = false,
+  parentMainAxis?: 'row' | 'column', ordinaryProvider = false,
+): MeasureResult {
+  const measuredRoot = !query && isLayoutComponent(child.type) && (constrainedProvider || ordinaryProvider || parentMainAxis !== undefined) ?
+    prepareLayoutComponent(child) : child;
+  // `style` is the direct-placement normalized style, including the described
+  // Flex root's forwarded values. Do not reread authored component props here:
+  // signals or callbacks there would describe a different phase.
+  const rootAxis = style.flexDirection === 'column' || style.flexDirection === 'column-reverse' ? 'column' : 'row';
+  const contributionReceiver = parentMainAxis !== undefined && measuredRoot.type === Flex && rootAxis === parentMainAxis ?
+    getPrimitiveReceiverToken(measuredRoot) : undefined;
+  // The prepared-row cache is a normal final-size result. A same-axis
+  // contribution has a distinct native result contract and must bypass it.
+  if (contributionReceiver) {
+    const previousContribution = requestedIntrinsicContribution;
+    requestedIntrinsicContribution = { receiver: contributionReceiver, axis: parentMainAxis!, normalOwner: true };
+    try {
+      if (region) recordWasmMeasurement();
+      return measurement.measureElement(child, constraints);
+    } finally {
+      requestedIntrinsicContribution = previousContribution;
+    }
+  }
+  // A direct paired primitive keeps the original descriptor as the receiver
+  // boundary. A described row uses the same parent-region entry, but only after a
+  // conservative structural snapshot has established fresh direct-child receiver
+  // paths for receipt replay on a later transaction.
+  if (region && !query && isLayoutComponent(child.type)) {
+    const prepared = preparedRowMeasurement(child, style);
+    if (prepared) {
+      return measurePreparedLayoutElement(child, constraints, measurement.service, {
+        cache: region,
+        token,
+        key: JSON.stringify(['prepared-row', allocationStructuralRevision(), measurementStyle(style), constraints]),
+        recordMeasurement: recordWasmMeasurement,
+      }, prepared.snapshot, prepared.receivers);
+    }
+  }
+  const definition = (constrainedProvider || ordinaryProvider) && !query ? getPrimitiveDefinition(measuredRoot.type) : undefined;
+  if (measuredRoot.type !== Text && !isKnownLayoutType(measuredRoot.type) && definition?.measure && (definition.measureIntrinsic || ordinaryProvider)) return measureConstrainedIntrinsicElement(child, constraints, measurement.service, region ? { cache: region, token, key: JSON.stringify([allocationStructuralRevision(), measurementStyle(style), constraints]), recordMeasurement: recordWasmMeasurement } : undefined);
+  const content = region && child.type === Text ? prepareLayoutTextContent(
+    child.props, { receiverToken: getPrimitiveReceiverToken(child) },
+  ) : undefined;
+  const intrinsic = region && !query ? intrinsicTextSnapshot(child, style, constraints) : undefined;
+  const cacheable = !query && (content !== undefined && genericTextFont(style) || intrinsic !== undefined);
+  const key = cacheable ? JSON.stringify([content, intrinsic, measurementStyle(style), constraints]) : undefined;
+  const cached = key ? region!.readMeasurement(token, key) : undefined;
+  if (cached) return { status: 'measured', size: cached };
+  if (region) recordWasmMeasurement();
+  const result = measurement.measureElement(child, constraints);
+  if (key && result.status === 'measured') region!.writeMeasurement(token, key, result.size);
+  return result;
 }
 
 function collectLines(
@@ -724,17 +2552,13 @@ function resolveFlexibleLengths(
   gap: number,
 ): void {
   const gapSpace = Math.max(0, line.items.length - 1) * gap;
-  const baseOuter = line.items.reduce(
-    (total, item) => total + item.baseMain + item.paddingMain,
-    0,
-  );
   const hypotheticalOuter = line.items.reduce(
     (total, item) => total +
       clamp(item.baseMain, item.minMain, item.maxMain) + item.paddingMain,
     0,
   );
   const growing = hypotheticalOuter + gapSpace < mainSize;
-  const initialFree = mainSize - gapSpace - baseOuter;
+  let initialOuter = gapSpace;
   const frozen = new Set<FlexItem>();
   for (const item of line.items) {
     item.targetMain = item.baseMain;
@@ -747,7 +2571,10 @@ function resolveFlexibleLengths(
       item.targetMain = hypothetical;
       frozen.add(item);
     }
+    initialOuter += item.targetMain + item.paddingMain;
   }
+  const initialFree = mainSize - initialOuter;
+  if (!Number.isFinite(initialFree)) throw new Error('Flex numeric overflow during allocation');
 
   while (frozen.size < line.items.length) {
     const fixed = line.items.reduce(
@@ -761,8 +2588,12 @@ function resolveFlexibleLengths(
     const rawFactor = growing ?
       unfrozen.reduce((total, item) => total + item.grow, 0) :
       unfrozen.reduce((total, item) => total + item.shrink, 0);
-    const scaledFactor = growing ? rawFactor :
-      unfrozen.reduce((total, item) => total + item.shrink * item.baseMain, 0);
+    const maxFactor = unfrozen.reduce((max, item) => Math.max(max, growing ? item.grow : item.shrink), 0);
+    const maxBasis = growing ? 1 : unfrozen.reduce((max, item) => Math.max(max, item.baseMain), 0);
+    const weight = (item: FlexItem) => maxFactor === 0 || maxBasis === 0 ? 0 :
+      ((growing ? item.grow : item.shrink) / maxFactor) *
+      (growing ? 1 : item.baseMain / maxBasis);
+    const scaledFactor = unfrozen.reduce((total, item) => total + weight(item), 0);
     if (scaledFactor === 0) {
       for (const item of unfrozen) {
         item.targetMain = clamp(item.baseMain, item.minMain, item.maxMain);
@@ -776,9 +2607,9 @@ function resolveFlexibleLengths(
     }
     const violations: { item: FlexItem; amount: number }[] = [];
     for (const item of unfrozen) {
-      const share = growing ? item.grow / scaledFactor :
-        item.shrink * item.baseMain / scaledFactor;
+      const share = weight(item) / scaledFactor;
       const candidate = item.baseMain + free * share;
+      if (!Number.isFinite(candidate)) throw new Error('Flex numeric overflow during allocation');
       const clamped = clamp(candidate, item.minMain, item.maxMain);
       item.targetMain = clamped;
       if (clamped !== candidate) {
@@ -847,8 +2678,7 @@ function distributeAlignment(
   }
   if (free < 0) {
     if (alignment === 'flex-end') return { start: free, between: 0 };
-    if (alignment === 'center' || alignment === 'space-around' ||
-      alignment === 'space-evenly') {
+    if (alignment === 'center') {
       return { start: free / 2, between: 0 };
     }
     return { start: 0, between: 0 };
@@ -870,39 +2700,206 @@ function distributeAlignment(
   return { start: 0, between: 0 };
 }
 
+function prepareKnownStructuralBaseline(
+  item: FlexItem,
+  container: Readonly<LayoutBox>,
+  measurement: FlexMeasurementInput,
+  parentSlot?: PreparedLayoutSlot,
+  lastSource = false,
+): PreparedKnownBaseline | undefined {
+  const alignment = lastSource ? 'last-baseline' : 'first-baseline';
+  const root = item.baselineRoot ?? item.child;
+  if (root.type !== Flex && root.type !== Flow && root.type !== Grid) return;
+  const style = item.normalized as Readonly<FlexStyle>;
+  const staticOwner = root.type === Flex && style.position === 'static';
+  const content = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
+  const slot = preflightKnownLayout(item.child, item.normalized, content, item.receiverToken, item.layoutOccurrence, parentSlot, 'row',
+    staticOwner ? { deferStaticContainingDescendants: true } : undefined);
+  if (!slot) throw childDiagnostic(item.child, 'alignItems', alignment, container,
+    'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the selected known layout root did not prepare its allocation');
+  const direction = style.layoutDirection ?? getLayoutDirection();
+  const plan = root.type === Flex ?
+    peekPreparedFlexPlan(slot, content, direction) :
+    peekPreparedLayoutPlan(slot, content, direction);
+  if (!plan) throw childDiagnostic(item.child, 'alignItems', alignment, container,
+    'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the selected known layout root has no current settled allocation');
+  return { slot, offset: readPreparedKnownBaseline(plan, root.type === Flex ? 'flex' : root.type === Flow ? 'flow' : 'grid', measurement, direction,
+    root.type === Flex && (style.flexWrap ?? 'nowrap') !== 'nowrap', lastSource) };
+}
+
+/** Reads current prepared source-order placements without a second layout pass. */
+function readPreparedKnownBaseline(
+  plan: PreparedLayoutPlan,
+  kind: 'flex' | 'flow' | 'grid',
+  measurement: FlexMeasurementInput,
+  direction: 'ltr' | 'rtl',
+  wrapped: boolean,
+  lastSource: boolean,
+): number {
+  const alignment = lastSource ? 'last-baseline' : 'first-baseline';
+  const content = plan.content;
+  // Native Flow and Grid retain declared record order. Flex's current native
+  // first/final-line proof establishes membership without inferring pixel lines.
+  const flexPlan = kind === 'flex' ? plan as PreparedFlexLayoutPlan : undefined;
+  const lineCount = wrapped ? lastSource ? flexPlan!.region.lastWrapLineCount() : flexPlan!.region.firstWrapLineCount() : undefined;
+  const pending = flexPlan ? deferredStaticState(flexPlan) : undefined;
+  const step = lastSource ? -1 : 1;
+  for (let index = lastSource ? plan.children.length - 1 : 0; index >= 0 && index < plan.children.length; index += step) {
+    if (pending?.slots[index]) continue;
+    const source = plan.children[index];
+    const placement = plan.placements[index];
+    const prepared = peekPreNormalizedStyle(placement.element);
+    if (!prepared) throw new Error('Known Flex baseline selection requires settled child inputs.');
+    const selectedStyle = prepared.style as Readonly<FlexStyle>;
+    if (selectedStyle.position === 'absolute') continue;
+    // Skipping absolute/deferred slots preserves in-flow source order. The
+    // selected endpoint is native record zero or the final native record, and
+    // therefore belongs to the validated corresponding endpoint line.
+    if (lineCount === 0) throw new Error('Structural baseline source has no native endpoint-line membership.');
+    const receiver = getPrimitiveReceiverToken(placement.element);
+    const root = isLayoutComponent(source.type) ? prepareLayoutComponent(source, { receiverToken: receiver }) : placement.element;
+    const usedWidth = 'usedWidth' in placement ? placement.usedWidth : undefined;
+    const usedHeight = 'usedHeight' in placement ? placement.usedHeight : undefined;
+    if (typeof usedWidth !== 'number' || !Number.isFinite(usedWidth) || usedWidth < 0 ||
+        typeof usedHeight !== 'number' || !Number.isFinite(usedHeight) || usedHeight < 0) {
+      throw new Error('Prepared known baseline placement is missing settled content geometry.');
+    }
+    const allocation = { x: 0, y: 0, width: usedWidth, height: usedHeight };
+    const insets = normalizeBoxInsets(selectedStyle, childContext(source, content));
+    let offset = allocation.height;
+    if (root.type === Flex || root.type === Flow || root.type === Grid) {
+      const slot = getElementMetadata(placement.element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
+      const childDirection = selectedStyle.layoutDirection ?? direction;
+      const nested = root.type === Flex ?
+        slot && peekPreparedFlexPlan(slot, allocation, childDirection) :
+        slot && peekPreparedLayoutPlan(slot, allocation, childDirection);
+      if (!nested) throw childDiagnostic(source, 'alignItems', alignment, content,
+        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected known layout root requires its current prepared allocation');
+      offset = readPreparedKnownBaseline(nested, root.type === Flex ? 'flex' : root.type === Flow ? 'flow' : 'grid', measurement, childDirection,
+        root.type === Flex && (selectedStyle.flexWrap ?? 'nowrap') !== 'nowrap', lastSource);
+    } else {
+      const definition = getPrimitiveDefinition(root.type);
+      if (!definition || isKnownLayoutType(root.type)) throw childDiagnostic(source, 'alignItems', alignment, content,
+        'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: selected structural source must resolve to a primitive or prepared known layout root');
+      if (definition.measureBaselines) {
+        const measurementChild = clonePibblElement(root);
+        setPreNormalizedStyle(measurementChild, selectedStyle, root, getPrimitiveReceiverToken(root) ?? receiver, prepared.query);
+        if (prepared.query) setPreparedBaselineOwner(measurementChild, content);
+        // Read under the actual current root receiver; retain no aggregate result.
+        const result = measureBaselineElement(measurementChild, allocation, measurement.service);
+        if (result.status === 'unsupported') throw childDiagnostic(source, 'measureBaselines', 'unsupported', content,
+          `${alignment} alignment requires a baseline result: ${result.reason}`);
+        offset = lastSource ? result.last : result.first;
+      }
+    }
+    const layoutY = kind === 'flex' ? (placement as FlexPlacement).layoutY : placement.box.y;
+    if (!Number.isFinite(layoutY)) throw new Error('Prepared known baseline placement has no finite physical y origin.');
+    return layoutY + insets.top + offset;
+  }
+  if (lineCount !== undefined && lineCount !== 0) throw new Error('Empty structural baseline source disagrees with native endpoint-line membership.');
+  return content.height;
+}
+
+function assertSupportedBaselineFlex(
+  options: Readonly<ReturnType<typeof normalizeFlexOptions>>,
+  items: readonly FlexItem[],
+  container: Readonly<LayoutBox>,
+  mounted: boolean,
+): void {
+  const alignment = options[FLEX_LAST_BASELINE] ? 'last-baseline' : 'first-baseline';
+  if (!mounted || !nativeLayout || !isRowDirection(options.flexDirection)) {
+    throw optionDiagnostic('alignItems', alignment, container, 'requires mounted experimental horizontal Flex');
+  }
+  for (const item of items) {
+    const style = item.normalized;
+    const baselineRoot = isLayoutComponent(item.child.type) ?
+      prepareLayoutComponent(item.child, { receiverToken: item.receiverToken }) : item.child;
+    if (baselineRoot !== item.child) item.baselineRoot = baselineRoot;
+    if (baselineRoot.type === Flex || baselineRoot.type === Flow || baselineRoot.type === Grid) {
+      if (item.crossAuto || !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
+        throw childDiagnostic(item.child, 'alignItems', alignment, container,
+          'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: a structural baseline requires settled finite known-layout geometry');
+      }
+      continue;
+    }
+    const textLeaf = baselineRoot.type === Text;
+    const textStyle = style as Readonly<TextStyle>;
+    const fontSize = textLeaf ? /(?:^| )(\d+(?:\.\d+)?)px(?:\s*\/\s*(?:normal|\d+(?:\.\d+)?(?:px|%)?))?\s+\S/.exec(String(textStyle.font ?? '13px sans-serif')) : null;
+    const supportedTextLeaf = !textLeaf || (
+      fontSize !== null && Number.isFinite(Number(fontSize[1])) && Number(fontSize[1]) > 0 &&
+      typeof (textStyle.lineHeight ?? 13) === 'number' &&
+      Number.isFinite(textStyle.lineHeight ?? 13) &&
+      (textStyle.lineHeight ?? 13) >= 0 &&
+      (textStyle.wrap === undefined || typeof textStyle.wrap === 'boolean')
+    );
+    const sharesBaseline = item.alignSelf === 'auto' && !item.autoCrossBefore && !item.autoCrossAfter;
+    if (!getPrimitiveDefinition(baselineRoot.type) || isKnownLayoutType(baselineRoot.type) || isLayoutComponent(baselineRoot.type) || (!supportedTextLeaf && sharesBaseline) ||
+        (style.position !== undefined && style.position !== 'static' && style.position !== 'relative') || (item.crossAuto && item.alignSelf !== 'stretch') ||
+        !Number.isFinite(item.targetMain) || item.targetMain < 0 || !Number.isFinite(item.preferredCross) || item.preferredCross < item.paddingCross) {
+      throw childDiagnostic(item.child, 'alignItems', alignment, container, 'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: requires primitive roots with settled finite content boxes and no absolute position');
+    }
+  }
+}
+
+function isRowDirection(direction: unknown): boolean {
+  return direction === undefined || direction === 'row' || direction === 'row-reverse';
+}
+function isColumnDirection(direction: unknown): boolean {
+  return direction === 'column' || direction === 'column-reverse';
+}
+
 function normalizeFlexOptions(
   style: Readonly<FlexStyle>,
   container: Readonly<LayoutBox>,
 ) {
-  const flexDirection = supported(style.flexDirection ?? 'row', ['row', 'column'], 'flexDirection', container);
-  const flexWrap = supported(style.flexWrap ?? 'nowrap', ['nowrap', 'wrap'], 'flexWrap', container);
+  const layoutDirection = style.layoutDirection ?? getLayoutDirection();
+  if (layoutDirection !== 'ltr' && !(nativeLayout && layoutDirection === 'rtl')) {
+    throw optionDiagnostic('layoutDirection', layoutDirection, container);
+  }
+  const flexDirection = style.flexDirection ?? 'row';
+  if (flexDirection !== 'row' && flexDirection !== 'column' &&
+      !(nativeLayout && (flexDirection === 'row-reverse' || flexDirection === 'column-reverse'))) {
+    throw optionDiagnostic('flexDirection', flexDirection, container, 'uses an unsupported flex direction in this build');
+  }
+  const flexWrap = style.flexWrap ?? 'nowrap';
+  if (flexWrap !== 'nowrap' && flexWrap !== 'wrap' && !(nativeLayout && flexWrap === 'wrap-reverse')) {
+    throw optionDiagnostic('flexWrap', flexWrap, container, 'uses an unsupported flex wrap in this build');
+  }
   const justifyContent = supported(
-    style.justifyContent ?? 'flex-start',
+    normalizeLogicalAlignment(style.justifyContent ?? 'flex-start', flexDirection === 'row-reverse' || flexDirection === 'column-reverse'),
     ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'],
     'justifyContent',
     container,
   );
+  const requestedAlignItems = normalizeLogicalAlignment((style as Readonly<Partial<ResolvedFlexStyle>>)[FLEX_LAST_BASELINE] ? 'last-baseline' : (style as Readonly<Partial<ResolvedFlexStyle>>)[FLEX_BASELINE_GROUP] ? 'first-baseline' : style.alignItems ?? 'stretch', flexWrap === 'wrap-reverse');
   const alignItems = supported(
-    style.alignItems ?? 'stretch',
-    ['stretch', 'flex-start', 'flex-end', 'center'],
+    requestedAlignItems,
+    nativeLayout ? ['stretch', 'flex-start', 'flex-end', 'center', 'first-baseline', 'last-baseline'] : ['stretch', 'flex-start', 'flex-end', 'center'],
     'alignItems',
     container,
   );
   const alignContent = supported(
-    style.alignContent ?? 'stretch',
+    normalizeLogicalAlignment(style.alignContent ?? 'stretch', flexWrap === 'wrap-reverse'),
     ['stretch', 'flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'],
     'alignContent',
     container,
   );
-  const gap = nonnegativeGap(style.gap ?? 0, 'gap', container);
+  const gap = style.gap ?? 0;
+  const columnGap = nonnegativeGap(gap, 'gap', container, container.width);
+  const rowGap = typeof gap === 'number' ? columnGap : nonnegativeGap(gap, 'gap', container, container.height);
   return {
+    layoutDirection,
     flexDirection: flexDirection as FlexDirection,
     flexWrap: flexWrap as FlexWrap,
     justifyContent: justifyContent as MainAlignment,
-    alignItems: alignItems as CrossAlignment,
+    // Yoga resolves baseline alignment on column axes to logical flex-start
+    // before placement. It neither measures nor forms a vertical baseline group.
+    alignItems: alignItems === 'first-baseline' ? 'flex-start' : alignItems === 'last-baseline' ? (isRowDirection(flexDirection) ? 'flex-start' : 'flex-end') : alignItems as CrossAlignment,
+    [FLEX_BASELINE_GROUP]: (alignItems === 'first-baseline' || alignItems === 'last-baseline') && isRowDirection(flexDirection),
+    [FLEX_LAST_BASELINE]: alignItems === 'last-baseline' && isRowDirection(flexDirection),
     alignContent: alignContent as CrossAlignment | MainAlignment,
-    rowGap: nonnegativeGap(style.rowGap ?? gap, 'rowGap', container),
-    columnGap: nonnegativeGap(style.columnGap ?? gap, 'columnGap', container),
+    rowGap: style.rowGap === undefined ? rowGap : nonnegativeGap(style.rowGap, 'rowGap', container, container.height),
+    columnGap: style.columnGap === undefined ? columnGap : nonnegativeGap(style.columnGap, 'columnGap', container, container.width),
   };
 }
 
@@ -920,11 +2917,15 @@ function nonnegativeGap(
   value: unknown,
   property: string,
   container: Readonly<LayoutBox>,
+  reference: number,
 ): number {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+  const resolved = nativeLayout && isPercentage(value)
+    ? resolveScalarSizingLength(value as Percentage, reference, property, { component: 'Flex', algorithm: 'flex', constraints: constraintsFor(container) })
+    : value;
+  if (typeof resolved !== 'number' || !Number.isFinite(resolved) || resolved < 0) {
     throw optionDiagnostic(property, value, container);
   }
-  return value;
+  return resolved;
 }
 
 function nonnegativeFactor(
@@ -943,6 +2944,37 @@ function nonnegativeFactor(
     );
   }
   return value;
+}
+
+function resolveIntrinsicMainBound(
+  value: NonNullable<BoxStyle['minWidth']>,
+  minimum: number | undefined,
+  maximum: number | undefined,
+  property: 'minWidth' | 'maxWidth' | 'minHeight' | 'maxHeight',
+  reference: number,
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): number {
+  if (minimum === undefined || maximum === undefined) {
+    throw childDiagnostic(child, property, value, container, 'requires a direct finite horizontal Flex intrinsic-sizing owner');
+  }
+  const request = normalizeSizingLength(value, {
+    reference, property, context: childContext(child, container), allowAuto: false, allowIntrinsic: true,
+  });
+  return resolveIntrinsicMainBasis(request!, minimum, maximum, child, container);
+}
+
+function resolveIntrinsicMainBasis(
+  request: NormalizedSizingLength,
+  minimum: number,
+  maximum: number,
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): number {
+  if (request.kind === 'min-content') return minimum;
+  if (request.kind === 'max-content') return maximum;
+  if (request.kind === 'fit-content') return Math.min(maximum, Math.max(minimum, request.limit));
+  throw childDiagnostic(child, 'flexBasis', request, container, 'requires min-content, max-content or fit-content');
 }
 
 function resolveBasis(
@@ -977,7 +3009,7 @@ function resolveItemLength(
   child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): number {
-  const resolved = resolveLength(value, reference, property, childContext(child, container));
+  const resolved = resolveScalarSizingLength(value, reference, property, childContext(child, container));
   if (resolved === undefined || resolved < 0) {
     throw childDiagnostic(
       child,
@@ -1002,12 +3034,21 @@ function resolveOptionalBound(
   return resolveItemLength(value, reference, property, child, container);
 }
 
+function normalizeLogicalAlignment(value: string, reversed: boolean): string {
+  if (value === 'start') return reversed ? 'flex-end' : 'flex-start';
+  if (value === 'end') return reversed ? 'flex-start' : 'flex-end';
+  return value;
+}
+
 function normalizeItemAlignment(
   value: LayoutItemStyle['alignSelf'],
   child: PibblElement<any>,
   container: Readonly<LayoutBox>,
+  reverseCross = false,
 ): CrossAlignment | 'auto' {
   if (value === undefined || value === 'auto') return 'auto';
+  if (value === 'start') return reverseCross ? 'flex-end' : 'flex-start';
+  if (value === 'end') return reverseCross ? 'flex-start' : 'flex-end';
   if (value === 'stretch' || value === 'flex-start' ||
     value === 'flex-end' || value === 'center') return value;
   throw childDiagnostic(
@@ -1036,11 +3077,135 @@ function alignmentOffset(
   return 0;
 }
 
+
+function finiteRelativePlacement(
+  value: number,
+  property: 'left' | 'top',
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): number {
+  if (!Number.isFinite(value)) {
+    throw childDiagnostic(child, property, value, container, 'resolved relative placement arithmetic must remain finite');
+  }
+  return value;
+}
+
+function assertSupportedAbsoluteFlexPosition(
+  child: PibblElement<any>,
+  style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
+  container: Readonly<LayoutBox>,
+  direction: 'ltr' | 'rtl',
+  query: PreparedQuery | undefined,
+  naturalWidth = false,
+  naturalHeight = false,
+): void {
+  if (isKnownLayoutType(child.type) || isLayoutComponent(child.type)) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute layout children and nested containing blocks are not supported in this slice');
+  }
+  if (!nativeLayout) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute requires experimental Flex');
+  }
+  const automaticWidth = style.width === undefined || style.width === 'auto';
+  const automaticHeight = style.height === undefined || style.height === 'auto';
+  if ((!automaticWidth && !isAbsoluteSizeInput(style.width)) ||
+      (!automaticHeight && !isAbsoluteSizeInput(style.height))) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires finite nonnegative numeric or percentage dimensions, or admitted automatic dimensions');
+  }
+  if (style.aspectRatio !== undefined && automaticWidth === automaticHeight) {
+    throw childDiagnostic(child, 'aspectRatio', style.aspectRatio, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute aspectRatio currently requires exactly one automatic axis and one finite numeric or percentage axis');
+  }
+  if (style.aspectRatio === undefined && ((!naturalWidth && automaticWidth && (absoluteLeftInset(style, direction) === undefined || absoluteRightInset(style, direction) === undefined)) ||
+      (!naturalHeight && automaticHeight && (style.top === undefined || style.bottom === undefined)))) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: automatic absolute size requires opposing insets on its axis');
+  }
+  if (style.alignSelf !== undefined) {
+    throw childDiagnostic(child, 'alignSelf', style.alignSelf, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently uses parent alignItems only');
+  }
+  validateAbsoluteBound(style.minWidth, 'minWidth', child, container);
+  validateAbsoluteBound(style.maxWidth, 'maxWidth', child, container);
+  validateAbsoluteBound(style.minHeight, 'minHeight', child, container);
+  validateAbsoluteBound(style.maxHeight, 'maxHeight', child, container);
+  if (query || style.flexBasis !== undefined && style.flexBasis !== 'auto' ||
+      (style.flexGrow !== undefined && style.flexGrow !== 0) || (style.flexShrink !== undefined && style.flexShrink !== 0) ||
+      style.boxSizing !== undefined || style.padding !== undefined || style.paddingStart !== undefined || style.paddingEnd !== undefined ||
+      style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined || hasFlexMargin(style)) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute excludes nonzero flex factors, margins, and child box decoration in this slice');
+  }
+}
+
+function validateAbsoluteBound(
+  value: unknown,
+  property: 'minWidth' | 'maxWidth' | 'minHeight' | 'maxHeight',
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): void {
+  if (value === undefined) return;
+  if (!isAbsoluteSizeInput(value)) {
+    throw childDiagnostic(child, property, value, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute size bounds currently require nonnegative finite numbers or percentages');
+  }
+}
+
+function isAbsoluteSizeInput(value: unknown): boolean {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 || isPercentage(value);
+}
+
+function resolveAbsoluteSize(
+  value: unknown,
+  property: 'width' | 'height' | 'minWidth' | 'maxWidth' | 'minHeight' | 'maxHeight',
+  reference: number,
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): number | 'auto' | undefined {
+  if (!isPercentage(value)) return value as number | 'auto' | undefined;
+  const resolved = resolveScalarSizingLength(value as Percentage, reference, property, childContext(child, container))!;
+  if (resolved < 0) throw childDiagnostic(child, property, value, container, 'absolute sizes must resolve to nonnegative finite numbers');
+  return resolved;
+}
+
+// Read effective edges without rewriting authored inputs used by exact forwarding.
+function absoluteLeftInset(style: Readonly<LayoutItemStyle>, direction: 'ltr' | 'rtl') {
+  const logical = direction === 'rtl' ? style.insetEnd : style.insetStart;
+  return logical === undefined ? style.left : logical;
+}
+
+function absoluteRightInset(style: Readonly<LayoutItemStyle>, direction: 'ltr' | 'rtl') {
+  const logical = direction === 'rtl' ? style.insetStart : style.insetEnd;
+  return logical === undefined ? style.right : logical;
+}
+
+function resolveFlexInset(
+  value: unknown,
+  property: 'left' | 'right' | 'top' | 'bottom',
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): number | undefined {
+  if (value === undefined) return;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (isPercentage(value)) {
+    return resolveScalarSizingLength(value as Percentage, property === 'left' || property === 'right' ? container.width : container.height,
+      property, childContext(child, container));
+  }
+  throw childDiagnostic(child, property, value, container, 'currently requires a finite numeric inset or a signed decimal percentage');
+}
+
+function assertSupportedRelativeFlexPosition(
+  child: PibblElement<any>,
+  style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
+  _options: Readonly<Pick<ResolvedFlexStyle, 'flexDirection' | 'flexWrap' | 'layoutDirection'>>,
+  container: Readonly<LayoutBox>,
+): void {
+  const position = style.position;
+  if (!nativeLayout || (position !== 'static' && position !== 'relative')) {
+    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: uses an unsupported Flex placement mode');
+  }
+}
+
 function rejectUnsupportedItemFields(
   child: PibblElement<any>,
   style: Readonly<Record<string, unknown>>,
   container: Readonly<LayoutBox>,
 ): void {
+  if (!nativeLayout && hasFlexMargin(style)) throw childDiagnostic(child, 'margin', style.margin, container, 'margins require the experimental Flex engine');
   for (let propertyIndex = 0; propertyIndex < unsupportedProperties.length; propertyIndex++) {
     const property = unsupportedProperties[propertyIndex];
     if (style[property] !== undefined) {
@@ -1053,6 +3218,35 @@ function rejectUnsupportedItemFields(
       );
     }
   }
+}
+
+function hasFlexMargin(style: Readonly<Record<string, unknown>>): boolean {
+  return style.margin !== undefined || style.marginTop !== undefined || style.marginRight !== undefined ||
+    style.marginBottom !== undefined || style.marginLeft !== undefined ||
+    style.marginStart !== undefined || style.marginEnd !== undefined;
+}
+function allocatedMargin(value: unknown, property: string, child: PibblElement<any>, container: Readonly<LayoutBox>): number {
+  if (nativeLayout && isPercentage(value)) {
+    return resolveScalarSizingLength(value as Percentage, container.width, property, childContext(child, container))!;
+  }
+  return numericMargin(value, property, child, container);
+}
+function numericMargin(value: unknown, property: string, child: PibblElement<any>, container: Readonly<LayoutBox>): number {
+  if (value === undefined) return 0;
+  if (typeof value !== 'number' || !Number.isFinite(value)) throw childDiagnostic(child, property, value, container, 'margin must be a finite number in logical Canvas units');
+  return value;
+}
+
+function hasEmptyRectangleMinimum(
+  child: PibblElement<any>,
+  style: Readonly<Record<string, unknown>>,
+  query: PreparedQuery | undefined,
+  percentageSizes = false,
+): boolean {
+  return nativeLayout && child.type === Rectangle &&
+    !Object.hasOwn(child.props, 'children') && !query &&
+    (typeof style.width === 'number' && Number.isFinite(style.width) && style.width >= 0 || percentageSizes && isPercentage(style.width)) &&
+    (typeof style.height === 'number' && Number.isFinite(style.height) && style.height >= 0 || percentageSizes && isPercentage(style.height));
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
@@ -1072,6 +3266,7 @@ function optionDiagnostic(
   property: string,
   value: unknown,
   container: Readonly<LayoutBox>,
+  reason = 'uses an unsupported flex value',
 ) {
   return layoutDiagnostic({
     component: 'Flex',
@@ -1079,7 +3274,7 @@ function optionDiagnostic(
     value,
     algorithm: 'flex',
     constraints: constraintsFor(container),
-    reason: 'uses an unsupported flex value',
+    reason,
   });
 }
 

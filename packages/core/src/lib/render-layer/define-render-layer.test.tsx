@@ -8,7 +8,7 @@ import {
   type PibblRenderLayerInteractionSnapshot,
   type PibblRenderLayerTarget,
 } from "../../index.js";
-import { pibbl } from "../pibbl.js";
+import { pibblSync as pibbl } from "../../sync.js";
 import { clearSharedState, getPibblInstance } from "../global-state.js";
 import {
   installSchedulerDriverForTest,

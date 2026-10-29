@@ -1,19 +1,7 @@
 import { peekNativeFilterPool } from './render-filter-boundary';
 import { dropShadow, grayscale, hueRotate, opacity, brightness } from '@pibbl/core/filters';
-import {
-  Group,
-  Image,
-  Path,
-  Rectangle,
-  Text,
-  pibbl,
-  createElement,
-  definePrimitive,
-  type PibblController,
-  type PibblNode,
-  type RenderingContext2D,
-  type SystemStyle,
-} from '@pibbl/core';
+import { Group, Image, Path, Rectangle, Text, createElement, definePrimitive, type PibblController, type PibblNode, type RenderingContext2D, type SystemStyle } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../sync.js";
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clearSharedState, getPibblInstance } from '../global-state.js';
 import { assertNativeCanvasFilter } from '../../filters/native-canvas-filter.js';

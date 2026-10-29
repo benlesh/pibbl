@@ -1,3 +1,4 @@
+import { loadComponentExample } from "./component-example";
 import { learningExampleCatalog } from "./learning-catalog";
 import type {
   LearningExampleCatalogEntry,
@@ -102,6 +103,7 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/01-canvas-scene.example.tsx",
+      exportName: "DiagramEditor",
     },
     load: () => import("./tutorials/diagram-editor/01-canvas-scene.example"),
   },
@@ -114,6 +116,7 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/02-first-node.example.tsx",
+      exportName: "DiagramEditor",
     },
     load: () => import("./tutorials/diagram-editor/02-first-node.example"),
   },
@@ -126,6 +129,7 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/03-connect-nodes.example.tsx",
+      exportName: "DiagramEditor",
     },
     load: () => import("./tutorials/diagram-editor/03-connect-nodes.example"),
   },
@@ -138,6 +142,7 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/04-reusable-node.example.tsx",
+      exportName: "DiagramEditor",
     },
     load: () => import("./tutorials/diagram-editor/04-reusable-node.example"),
   },
@@ -150,6 +155,7 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/05-editor-chrome.example.tsx",
+      exportName: "DiagramEditor",
     },
     load: () => import("./tutorials/diagram-editor/05-editor-chrome.example"),
   },
@@ -162,6 +168,7 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/06-selection.example.tsx",
+      exportName: "DiagramEditor",
     },
     load: () => import("./tutorials/diagram-editor/06-selection.example"),
   },
@@ -174,6 +181,7 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/07-dragging.example.tsx",
+      exportName: "DiagramEditor",
     },
     load: () => import("./tutorials/diagram-editor/07-dragging.example"),
   },
@@ -186,6 +194,7 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/08-pan-and-zoom.example.tsx",
+      exportName: "DiagramEditor",
     },
     load: () => import("./tutorials/diagram-editor/08-pan-and-zoom.example"),
   },
@@ -198,6 +207,7 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/09-viewport-and-layer.example.tsx",
+      exportName: "DiagramEditor",
     },
     load: () =>
       import("./tutorials/diagram-editor/09-viewport-and-layer.example"),
@@ -211,6 +221,7 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/10-filters.example.tsx",
+      exportName: "DiagramEditor",
     },
     load: () => import("./tutorials/diagram-editor/10-filters.example"),
   },
@@ -223,6 +234,7 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/11-keyboard-interaction.example.tsx",
+      exportName: "KeyboardInteractionExample",
     },
     load: () =>
       import("./tutorials/diagram-editor/11-keyboard-interaction.example"),
@@ -236,17 +248,26 @@ const drafts = [
     canvas: { width: 960, height: 600 },
     source: {
       path: "packages/scenarios/src/tutorials/diagram-editor/12-finished-editor.example.tsx",
+      exportName: "FinishedEditorExample",
     },
     load: () => import("./tutorials/diagram-editor/12-finished-editor.example"),
   },
-] satisfies readonly TutorialSnapshotCatalogEntry[];
+] as const;
 
 /**
  * Executable tutorial snapshots available in the Studio workbench.
  *
  * @see {@link TutorialSnapshotCatalogEntry}
  */
-export const tutorialSnapshotCatalog = validateTutorialSnapshotCatalog(drafts);
+export const tutorialSnapshotCatalog = validateTutorialSnapshotCatalog(
+  drafts.map((draft) => ({
+    ...draft,
+    load: () =>
+      loadComponentExample(draft.load(), {
+        exportName: draft.source.exportName,
+      }),
+  })),
+);
 
 /**
  * Finds a tutorial's executable snapshot by slug, or returns undefined.
@@ -296,9 +317,9 @@ export async function loadTutorialSnapshot(
   entry: TutorialSnapshotCatalogEntry,
 ): Promise<LearningExampleModule> {
   const module = await entry.load();
-  if (typeof module.default !== "function") {
+  if (typeof module.mount !== "function") {
     throw new Error(
-      `Tutorial snapshot "${entry.slug}" has no default mount function.`,
+      `Tutorial snapshot "${entry.slug}" has no selected component host.`,
     );
   }
   return module;

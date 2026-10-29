@@ -1,24 +1,7 @@
 import { signalObserversForTest } from "../../../test/support/signal-observer";
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  computed,
-  pibbl,
-  createElement,
-  defineAnimation,
-  marker,
-  parallel,
-  repeat,
-  sequence,
-  signal,
-  spring,
-  stepper,
-  drive,
-  tween,
-  usePlayback,
-  wait,
-  type PibblAnimationProgram,
-  type PibblNode,
-} from '../../index';
+import { computed, createElement, defineAnimation, marker, parallel, repeat, sequence, signal, spring, stepper, drive, tween, usePlayback, wait, type PibblAnimationProgram, type PibblNode } from "../../index";
+import { pibblSync as pibbl } from "../../sync.js";
 import { clearSharedState } from '../global-state';
 import { getSignalNode } from '../signals/graph';
 import {

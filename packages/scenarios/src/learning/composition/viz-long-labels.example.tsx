@@ -4,10 +4,8 @@ import {
   Overlay,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type WritableSignal,
 } from "@pibbl/core";
 import {
@@ -287,12 +285,10 @@ function Scene() {
     </>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizLongLabelsExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

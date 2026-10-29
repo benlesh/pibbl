@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   Circle,
   useSignal,
   usePlayback,
@@ -17,6 +17,7 @@ import {
   type PibblKeyframesOptions,
   type PibblSpringOptions,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const canvas = document.createElement("canvas");
 canvas.width = 420;
@@ -55,5 +56,5 @@ function Scene() {
   });
   return <Circle style={{ radius: 22, left: x, top: y, fill: "#b83970" }} />;
 }
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

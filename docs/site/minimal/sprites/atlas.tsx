@@ -1,4 +1,5 @@
-import { pibbl, signal, usePlayback, drive, repeat } from "@pibbl/core";
+import {  signal, usePlayback, drive, repeat } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   Sprite,
   type SpriteFrame,
@@ -50,7 +51,7 @@ async function mount() {
     usePlayback(repeat(drive(frame, animation), { iterations: Infinity }));
     return <Sprite {...props} frame={frame} style={style} />;
   }
-  const app = pibbl(canvas, <Scene />);
+  const app = pibblSync(canvas, <Scene />);
   release = () => {
     app.dispose();
     sheet.dispose();

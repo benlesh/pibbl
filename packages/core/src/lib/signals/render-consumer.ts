@@ -1,11 +1,15 @@
+import type { PibblInstance } from '../types.js';
+import { invalidateAllocationInputs } from '../layout/allocation-revision.js';
 import {
   recordRendererConsumerCreated,
   recordRendererConsumerReleased,
   recordRendererEdgeCreated,
   recordRendererEdgeReleased,
   recordRendererEdgeReused,
+  recordSignalInputInvalidation,
   recordLazyRendererConsumerCreated,
   type SignalDependencyCollector,
+  type SignalDependencyRoleInput,
   type SignalNode,
   withSignalTracking,
 } from './graph.js';
@@ -21,6 +25,8 @@ import {
   type SignalDependencyConsumer,
 } from './edge.js';
 
+const allocationDependencyRoles = 1 | 2 | 4 | 64; // structure, layout, measurement, unknown
+
 export interface SignalRenderConsumer {
   readonly debugName: string;
   readonly releaseCount: number;
@@ -28,6 +34,7 @@ export interface SignalRenderConsumer {
 }
 
 export interface SignalRenderConsumerOptions {
+  layoutOwner?: PibblInstance;
   debugName: string;
   invalidate(): void;
 }
@@ -71,22 +78,21 @@ export function createSignalRenderConsumer(
     disposed: false,
     releaseCount: 0,
     renderInvalidation: true,
-    addDependency(node): void {
+    addDependency(node, role?: SignalDependencyRoleInput): void {
       if (!state.collecting) return;
-      const cursor = state.collectionCursor;
-      if (
-        cursor?.source === node &&
-        cursor.collectionGeneration !== state.collectionGeneration
-      ) {
-        cursor.collectionGeneration = state.collectionGeneration;
-        cursor.collectionKind = 'reused';
-        state.collectionCursor = cursor.consumerNext;
-        return;
-      }
-      collectReactiveDependency(state, node);
+      collectReactiveDependency(state, node, role);
     },
-    notify(): void {
-      if (state.disposed || state.dirty) return;
+    notify(_node, dependencyRoles = 64): void {
+      if (state.disposed) return;
+      recordSignalInputInvalidation(dependencyRoles);
+      // Paint, transforms, and interaction retain allocation geometry. Mixed
+      // dependencies still invalidate when any structural/metric role is present.
+      if ((dependencyRoles & allocationDependencyRoles) !== 0) {
+        // Only layout/measurement roles can be checked by a frozen descriptor
+        // fingerprint. Structure and unknown values can replace that descriptor.
+        invalidateAllocationInputs(options.layoutOwner, (dependencyRoles & (1 | 64)) !== 0 ? 'structural' : 'metric');
+      }
+      if (state.dirty) return;
       state.dirty = true;
       options.invalidate();
     },
@@ -98,7 +104,9 @@ export function createSignalRenderConsumer(
       return state.releaseCount;
     },
     markClean(): void {
-      if (!state.disposed) state.dirty = false;
+      if (!state.disposed) {
+        state.dirty = false;
+      }
     },
   };
 
@@ -155,7 +163,7 @@ export function collectComponentSignalReads<T>(
   let collector: SignalDependencyCollector;
   if (state === undefined) {
     collector = {
-      addDependency(node: SignalNode<unknown>): void {
+      addDependency(node: SignalNode<unknown>, role?: SignalDependencyRoleInput): void {
         if (committed) return;
         if (state === undefined) {
           const options = createOptions();
@@ -166,7 +174,7 @@ export function collectComponentSignalReads<T>(
           recordLazyRendererConsumerCreated();
           beginConsumerCollection(state);
         }
-        state.addDependency(node);
+        state.addDependency(node, role);
       },
     };
   } else {
@@ -238,6 +246,7 @@ function commitCollectedDependencies(state: ConsumerState): void {
     onlyEdge.sourceLinked &&
     onlyEdge.collectionKind === 'reused'
   ) {
+    onlyEdge.dependencyRoles = onlyEdge.collectedDependencyRoles;
     recordRendererEdgeReused();
     onlyEdge.observedVersion = onlyEdge.source!.version;
     onlyEdge.collectionKind = undefined;

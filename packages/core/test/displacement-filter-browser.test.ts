@@ -1,4 +1,5 @@
-import { createElement, pibbl, defineTexture, FocusManagement, Group, Rectangle, useTexture } from '@pibbl/core';
+import { createElement, defineTexture, FocusManagement, Group, Rectangle, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { blur, brightness, displacement, opacity } from '@pibbl/core/filters';
 import { describe, expect, it } from 'vitest';
 import { getPibblInstance } from '../src/lib/global-state';

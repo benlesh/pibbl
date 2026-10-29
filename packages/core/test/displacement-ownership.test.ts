@@ -1,4 +1,5 @@
-import { createElement, pibbl, defineTexture, Group, Layer, Rectangle, signal, useTexture } from '@pibbl/core';
+import { createElement, defineTexture, Group, Layer, Rectangle, signal, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { displacement } from '@pibbl/core/filters';
 import { afterEach, expect, it, vi } from 'vitest';
 import { DisplacementGpu } from '../src/filters/displacement-gpu';

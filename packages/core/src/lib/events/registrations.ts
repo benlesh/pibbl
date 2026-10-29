@@ -1,3 +1,4 @@
+import { registerLayoutSuspensionResource, unregisterLayoutSuspensionResource, isLayoutComponentSuspended, isLayoutInstanceSuspended } from '../layout/participation.js';
 import type { PibblHitTestOutput } from './paint-entry.js';
 import type { isBackendEventTargetLive, useBackendEventTarget } from '../../internal.js';
 import { PIBBL_EVENT_DEFINITIONS } from "./event-definitions.js";
@@ -45,6 +46,8 @@ export type PibblNormalizedHandlers = Partial<
  * @see {@link isBackendEventTargetLive}
  */
 export interface PibblEventTargetRegistration {
+  /** @internal Withdraws published interaction while preserving mount-owned resources. */
+  suspendLayout(): void;
   /** Selects the kind of geometry, material, or result. See {@link PibblEventTargetRegistration}. */
   readonly kind: "target";
   /** Mount or runtime resource owning this registration. See {@link PibblInstance}. */
@@ -115,6 +118,8 @@ export interface PibblEventTargetRegistration {
 }
 
 export interface PibblEventListenerRegistration {
+  /** @internal Withdraws listeners while preserving mount-owned resources. */
+  suspendLayout(): void;
   readonly kind: "listener";
   readonly owner: PibblInstance;
   readonly component: PibblComponentRefs<any>;
@@ -152,6 +157,7 @@ export function createTarget(
   const publicTarget = createPublicTarget(() => target);
   Object.assign(target, {
     kind: "target" as const,
+    suspendLayout: suspendTargetLayout,
     owner,
     component,
     slot,
@@ -170,6 +176,7 @@ export function createTarget(
     keyboardNavigationPoints: undefined,
     live: false,
   });
+  registerLayoutSuspensionResource(component, target);
   return target;
 }
 
@@ -279,11 +286,35 @@ function updateTargetRegistration(
   target.owner.paintEntries.add(paintEntry);
   target.owner.eventRoot.targets.add(target);
   updateNativeOwnership(target);
+  if (isLayoutComponentSuspended(target.component) || isLayoutInstanceSuspended(target.owner)) { target.suspendLayout(); return; }
   target.owner.eventRoot.focusPolicy?.observeTarget(target);
   target.owner.eventRoot.onTargetUpdate?.(target);
 }
 
+function suspendTargetLayout(this: PibblEventTargetRegistration): void {
+  if (!this.live) return;
+  if (this.paintEntry) this.owner.paintEntries.delete(this.paintEntry);
+  this.owner.regions.delete(this);
+  this.owner.eventRoot.targets.delete(this);
+  this.owner.eventRoot.focusPolicy?.removeTarget(this);
+  this.owner.eventRoot.onNodeRelease?.(this);
+  this.paintEntry = undefined;
+  this.live = false;
+  clearPointerCapturesForTarget(this);
+}
+
+function suspendListenerLayout(this: PibblEventListenerRegistration): void {
+  if (!this.live) return;
+  const entries = this.owner.eventRoot.listenersByComponent.get(this.component.id);
+  entries?.delete(this);
+  if (entries?.size === 0) this.owner.eventRoot.listenersByComponent.delete(this.component.id);
+  this.owner.eventRoot.onNodeRelease?.(this);
+  this.live = false;
+  clearPointerCapturesForTarget(this);
+}
+
 export function releaseTarget(target: PibblEventTargetRegistration): void {
+  unregisterLayoutSuspensionResource(target.component, target);
   if (target.live) {
     if (target.paintEntry) target.owner.paintEntries.delete(target.paintEntry);
     target.owner.eventRoot.targets.delete(target);
@@ -306,6 +337,7 @@ export function createListener(
   const publicTarget = createPublicTarget(() => listener);
   Object.assign(listener, {
     kind: "listener",
+    suspendLayout: suspendListenerLayout,
     owner,
     component,
     slot,
@@ -319,6 +351,7 @@ export function createListener(
     ownedNativeTypesHigh: 0,
     live: false,
   });
+  registerLayoutSuspensionResource(component, listener);
   return listener;
 }
 
@@ -358,10 +391,12 @@ export function updateListener(
   }
   registrations.add(listener);
   listener.live = true;
+  if (isLayoutComponentSuspended(listener.component) || isLayoutInstanceSuspended(listener.owner)) { listener.suspendLayout(); return; }
   updateNativeOwnership(listener);
 }
 
 export function releaseListener(listener: PibblEventListenerRegistration): void {
+  unregisterLayoutSuspensionResource(listener.component, listener);
   if (listener.live) {
     const registrations = listener.owner.eventRoot.listenersByComponent.get(
       listener.component.id,

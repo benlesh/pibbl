@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pibbl · Loading motion study</title>
+<link rel="stylesheet" href="study.css">
+</head>
+<body>
+<main>
+  <header><a href="../pibbl-big-bubbles/">← Logo kit</a><p class="eyebrow">PIBBL / MOTION STUDY 08</p><h1>A little play.<br>Then everything clicks.</h1><p class="intro">A hoist, a slide, contagious giggles, and a pyramid catch. Three shapes learning to work together.</p></header>
+  <p><a href="poses.html" style="color:#287140;font-weight:600">Explore the contact & balance pose board →</a></p>
+  <section class="workspace" aria-label="Animation preview and controls">
+    <div class="preview" id="preview">
+      <div class="preview-top"><span class="badge" id="phase" role="status">Loading</span><button class="quiet" id="theme" aria-pressed="false">Dark background</button></div>
+      <svg id="stage" viewBox="0 0 640 450" role="img" aria-label="Pibbl loading animation"><title>Pibbl loading animation</title></svg>
+      <div class="steps" aria-label="Animation sequence"><span data-phase="loading" class="active">01 Play</span><span data-phase="forming">02 Form the P</span><span data-phase="bloom">03 Bloom</span><span data-phase="complete">04 Hold</span></div>
+    </div>
+    <aside>
+      <h2>Try the transition</h2><p>Let it loop, then tell it that loading is done. It will finish the current encounter before assembling the P.</p>
+      <div class="buttons"><button id="ready" class="primary">Ready — form the logo</button><button id="restart">Restart loading</button><button id="pause" aria-pressed="false">Pause</button><button id="sequence">Play whole sequence</button></div>
+      <label for="scrub">Explore the loop <output id="beat">An invitation</output></label><input id="scrub" type="range" min="0" max="999" step="1" value="0"><p class="hint">Drag to pause and inspect an encounter. Resume to keep playing.</p>
+      <h2 class="timing">Make it feel right</h2>
+      <label for="loop">Playful loop <output id="loop-value">11 s</output></label><input id="loop" type="range" min="6000" max="11000" step="500" value="11000">
+      <label for="settle">Settle into P <output id="settle-value">1.6 s</output></label><input id="settle" type="range" min="1000" max="2500" step="100" value="1600">
+      <label for="burst">Bubble release <output id="burst-value">0.45 s</output></label><input id="burst" type="range" min="200" max="900" step="50" value="450">
+      <label for="stagger">Between bubbles <output id="stagger-value">30 ms</output></label><input id="stagger" type="range" min="0" max="75" step="5" value="30">
+      <button id="copy" class="quiet save">Copy timing settings</button><p class="hint" id="copy-status">Timing changes apply on the next transition.</p>
+      <label class="check"><input id="floor" type="checkbox"> Show the invisible floor</label>
+      <label class="check"><input id="still" type="checkbox"> Still preview / reduced motion</label>
+    </aside>
+  </section>
+  <footer><p>One motion idea to iterate on. The final bubble positions and colors come directly from the approved kit.</p><p>SVG preview with a shared, seekable motion score for a future Pibbl renderer.</p></footer>
+</main>
+<script type="module" src="study.js?v=8"></script>
+</body>
+</html>

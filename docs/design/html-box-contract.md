@@ -63,7 +63,11 @@ Render collects candidate registrations. Root publication precedes transaction
 finish callbacks that commit focus metadata: in scheduled rendering this is the
 start of Complete, while direct private renders finish synchronously. No extra
 frame loop is created. Application callbacks cannot publish partially rendered
-HTML focus candidates. Publication failure clears affected HTML, reports through
+HTML focus candidates. Before retiring hosts, mutating DOM or invoking any HTML
+mount/update callback, publication validates every candidate's finite CSS matrix,
+logical and CSS border corners/extents, and visible clip-local inverse transforms.
+An invalid later candidate therefore cannot invoke an earlier host's updater.
+This does not roll back Canvas pixels already drawn. Publication failure clears affected HTML, reports through
 the scheduler, and leaves other roots able to finish.
 
 Layers retain instance-local HTML records and compose their current outer

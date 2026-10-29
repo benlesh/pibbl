@@ -20,8 +20,8 @@ describe("consolidated package entries", () => {
   it("keeps Three as an adapter with the application's renderer peer", () => {
     expect(manifest("three").peerDependencies).toEqual({ "@pibbl/core": manifest("core").version, three: "^0.186.0" });
   });
-  it("keeps text and Three versions and exact core peers in lockstep", () => {
-    for (const name of ["three", "text"]) {
+  it("keeps optional package versions and exact core peers in lockstep", () => {
+    for (const name of ["three", "text", "layout"]) {
       expect(manifest(name).version).toBe(manifest("core").version);
       expect(manifest(name).peerDependencies["@pibbl/core"]).toBe(manifest("core").version);
     }

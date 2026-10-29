@@ -5,10 +5,8 @@ import {
   Overlay,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
 } from "@pibbl/core";
 import {
@@ -378,19 +376,14 @@ type Config = {
   readonly threshold?: number;
 };
 
-export default function mount(
-  canvas: HTMLCanvasElement,
-  config: Config = {},
-): PibblController {
-  return pibbl(
-    canvas,
+export function VizThresholdSegmentsExample(config: Config = {}) {
+  return (
     <FocusManagement>
       <Scene
         onSegments={config.onSegments}
         records={config.data ?? data}
         initialThreshold={config.threshold ?? 338}
       />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

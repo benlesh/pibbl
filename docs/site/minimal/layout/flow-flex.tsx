@@ -2,13 +2,14 @@ import {
   Flex,
   Flow,
   Rectangle,
-  pibbl,
+
   type FlexItemStyle,
   type FlexProps,
   type FlexStyle,
   type FlowProps,
   type FlowStyle,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const flexItem: FlexItemStyle = { flexGrow: 1, flexBasis: 60 };
 const flexStyle: FlexStyle = {
@@ -70,5 +71,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(canvas, <Flow {...flowProps} style={flowStyle} />);
+const app = pibblSync(canvas, <Flow {...flowProps} style={flowStyle} />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

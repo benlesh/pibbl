@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from 'vitest';
-import { Group, Rectangle, drive, pibbl, signal, tween } from '@pibbl/core';
+import { Group, Rectangle, drive, signal, tween } from '@pibbl/core';
+import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { PhysicsWorld2D, dynamicBody2D, pibblPhysicsBody2D, type PibblPhysicsBodyHandle2D } from '@pibbl/core/physics/2d';
 import { clearSharedState } from '../../packages/core/src/lib/global-state';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../../packages/core/src/lib/scheduler/testing';

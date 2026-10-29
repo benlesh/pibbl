@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   Rectangle,
   Text,
   type PibblConfig,
@@ -8,6 +8,7 @@ import {
   type PibblFixedViewportConfig,
   type PibblResponsiveViewportConfig,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const fit: PibblFit = "contain";
 const pixelRatio: PibblPixelRatio = "device";
@@ -38,13 +39,13 @@ const scene = (
   </>
 );
 let config: PibblConfig = fixed;
-let controller = pibbl(canvas, scene, config);
+let controller = pibblSync(canvas, scene, config);
 const button = document.createElement("button");
 button.textContent = "Use responsive viewport";
 button.onclick = () => {
   controller.dispose();
   config = config === fixed ? responsive : fixed;
-  controller = pibbl(canvas, scene, config);
+  controller = pibblSync(canvas, scene, config);
   button.textContent =
     config === fixed ? "Use responsive viewport" : "Use fixed viewport";
 };

@@ -1,27 +1,5 @@
-import {
-  Absolute,
-  Flow,
-  Flex,
-  Grid,
-  Group,
-  Layer,
-  Overlay,
-  Rectangle,
-  Text,
-  pibbl,
-  useCanvasContext,
-  useLayoutBox,
-  useConst,
-  definePrimitive,
-  measureElement,
-  signal,
-  type BoxStyle,
-  type PibblController,
-  type PibblNode,
-  type LayoutBox,
-  type LayoutItemStyle,
-  type SystemStyle,
-} from '@pibbl/core';
+import { Absolute, Flow, Flex, Grid, Group, Layer, Overlay, Rectangle, Text, useCanvasContext, useLayoutBox, useConst, definePrimitive, measureElement, signal, type BoxStyle, type PibblController, type PibblNode, type LayoutBox, type LayoutItemStyle, type SystemStyle } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../sync.js";
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getPibblInstance } from '../global-state.js';
 import { executeRender } from '../execute-render.js';

@@ -1,4 +1,4 @@
-import { dropShadow } from '@pibbl/core/filters';
+import { dropShadow } from "@pibbl/core/filters";
 /** @jsxImportSource @pibbl/core */
 // Adapted from Three.js "webgl_instancing_raycast":
 // https://github.com/mrdoob/three.js/blob/dev/examples/webgl_instancing_raycast.html
@@ -9,12 +9,10 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
   type PibblNode,
-} from '@pibbl/core';
-import { defineThreeLayer } from '@pibbl/three';
+} from "@pibbl/core";
+import { defineThreeLayer } from "@pibbl/three";
 import {
   Color,
   HemisphereLight,
@@ -27,10 +25,10 @@ import {
   Raycaster,
   Scene,
   Vector2,
-} from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+} from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-type MissBehavior = 'pass-through' | 'block' | 'target-layer';
+type MissBehavior = "pass-through" | "block" | "target-layer";
 
 interface InstancingProps {
   readonly onBlockedInstance: () => void;
@@ -51,16 +49,16 @@ interface InstancingResources {
 }
 
 const MISS_BEHAVIORS: readonly MissBehavior[] = [
-  'pass-through',
-  'block',
-  'target-layer',
+  "pass-through",
+  "block",
+  "target-layer",
 ];
 const INSTANCE_COUNT = 22;
 const LAYER_X = 90;
 const LAYER_Y = 58;
 const LAYER_WIDTH = 540;
 const LAYER_HEIGHT = 300;
-const HOVER_COLOR = new Color('#ffffff');
+const HOVER_COLOR = new Color("#ffffff");
 const TEMP_COLOR = new Color();
 
 function colorForInstance(index: number, target = new Color()): Color {
@@ -121,12 +119,12 @@ const ThreeInstancingLayer = defineThreeLayer<
     const camera = new PerspectiveCamera(46, 1, 0.1, 100);
     camera.position.set(0, 0, 8.8);
     camera.lookAt(0, 0, 0);
-    scene.add(new HemisphereLight('#e0f2fe', '#172554', 2.7));
+    scene.add(new HemisphereLight("#e0f2fe", "#172554", 2.7));
 
     const instances = new InstancedMesh(
       new IcosahedronGeometry(0.42, 0),
       new MeshPhongMaterial({
-        color: '#ffffff',
+        color: "#ffffff",
         shininess: 56,
       }),
       INSTANCE_COUNT,
@@ -144,8 +142,8 @@ const ThreeInstancingLayer = defineThreeLayer<
     const registered = new Mesh(
       new IcosahedronGeometry(0.72, 1),
       new MeshPhongMaterial({
-        color: '#ffd166',
-        emissive: '#5b2500',
+        color: "#ffd166",
+        emissive: "#5b2500",
         shininess: 92,
       }),
     );
@@ -159,13 +157,13 @@ const ThreeInstancingLayer = defineThreeLayer<
       orbit.enablePan = false;
       orbit.minDistance = 6;
       orbit.maxDistance = 12;
-      element.addEventListener('pointermove', (event) => {
+      element.addEventListener("pointermove", (event) => {
         highlightInstance(
           resources,
           instanceAtPointer(resources, event, element),
         );
       });
-      element.addEventListener('pointerdown', (event) => {
+      element.addEventListener("pointerdown", (event) => {
         if (instanceAtPointer(resources, event, element) !== undefined) {
           resources.props.onBlockedInstance();
         }
@@ -184,7 +182,7 @@ const ThreeInstancingLayer = defineThreeLayer<
       props: initialProps,
     };
     controls.update();
-    controls.addEventListener('change', () =>
+    controls.addEventListener("change", () =>
       resources.props.onCameraChanged(),
     );
     return resources;
@@ -208,7 +206,7 @@ const ThreeInstancingLayer = defineThreeLayer<
         handlers: {
           onClick: props.onRegisteredTarget,
         },
-        cursor: 'pointer',
+        cursor: "pointer",
         keyboardFocusable: true,
       },
     ];
@@ -245,11 +243,11 @@ function tiles(onTile: () => void): PibblNode {
           top: 8 + row * 80,
           width: 70,
           height: 70,
-          fill: index % 2 ? '#183b61' : '#224f75',
-          stroke: '#4d7898',
+          fill: index % 2 ? "#183b61" : "#224f75",
+          stroke: "#4d7898",
           strokeWidth: 1,
           cornerRadius: 6,
-          cursor: 'pointer',
+          cursor: "pointer",
         }}
         onClick={onTile}
       />
@@ -263,10 +261,10 @@ function clipPath(): Path2D {
   return path;
 }
 
-function ThreeInstancingExample() {
+export function ThreeInstancingExample() {
   const state = useSignal({
-    missBehavior: 'pass-through' as MissBehavior,
-    lastResolution: 'none',
+    missBehavior: "pass-through" as MissBehavior,
+    lastResolution: "none",
     tileClicks: 0,
     threeClicks: 0,
     blockedInputs: 0,
@@ -276,21 +274,21 @@ function ThreeInstancingExample() {
   const recordTile = () =>
     state.update((current) => ({
       ...current,
-      lastResolution: 'Pibbl tile',
+      lastResolution: "Pibbl tile",
       tileClicks: current.tileClicks + 1,
     }));
   const recordBlocked = () =>
     state.update((current) => ({
       ...current,
-      lastResolution: 'Three blocked',
+      lastResolution: "Three blocked",
       blockedInputs: current.blockedInputs + 1,
     }));
   const recordTarget = () =>
     state.update((current) => ({
       ...current,
-      lastResolution: 'Three target',
+      lastResolution: "Three target",
       threeClicks: current.threeClicks + 1,
-      trace: [...current.trace, 'target'],
+      trace: [...current.trace, "target"],
     }));
   const cyclePolicy = () =>
     state.update((current) => ({
@@ -300,7 +298,7 @@ function ThreeInstancingExample() {
           (MISS_BEHAVIORS.indexOf(current.missBehavior) + 1) %
             MISS_BEHAVIORS.length
         ]!,
-      lastResolution: 'Toolbar',
+      lastResolution: "Toolbar",
     }));
   const clip = clipPath();
 
@@ -310,21 +308,20 @@ function ThreeInstancingExample() {
         {tiles(recordTile)}
         <Group
           onClickCapture={() =>
-            state.update((current) => ({ ...current, trace: ['capture'] }))
+            state.update((current) => ({ ...current, trace: ["capture"] }))
           }
           onClick={() =>
             state.update((current) => ({
               ...current,
-              trace: [...current.trace, 'bubble'],
+              trace: [...current.trace, "bubble"],
             }))
           }
           style={{
             filter: dropShadow({
-              
               offsetX: 12,
               offsetY: 8,
               blurRadius: 6,
-              color: 'rgb(2 8 23 / 82%)',
+              color: "rgb(2 8 23 / 82%)",
             }),
           }}
         >
@@ -352,11 +349,11 @@ function ThreeInstancingExample() {
             top: 48,
             width: 204,
             height: 58,
-            fill: '#f8fafc',
-            stroke: '#0f172a',
+            fill: "#f8fafc",
+            stroke: "#0f172a",
             strokeWidth: 2,
             cornerRadius: 9,
-            cursor: 'pointer',
+            cursor: "pointer",
           }}
           onClick={cyclePolicy}
         />
@@ -365,9 +362,9 @@ function ThreeInstancingExample() {
           style={{
             left: 360,
             top: 71,
-            fill: '#0f172a',
-            font: '700 13px monospace',
-            textAlign: 'center',
+            fill: "#0f172a",
+            font: "700 13px monospace",
+            textAlign: "center",
           }}
         >
           {`MISS · ${state.get().missBehavior}`}
@@ -377,20 +374,20 @@ function ThreeInstancingExample() {
           style={{
             left: 360,
             top: 94,
-            fill: '#334155',
-            font: '10px monospace',
-            textAlign: 'center',
+            fill: "#334155",
+            font: "10px monospace",
+            textAlign: "center",
           }}
         >
-          {`${state.get().lastResolution} · ${state.get().trace.join(' → ') || 'no trace'}`}
+          {`${state.get().lastResolution} · ${state.get().trace.join(" → ") || "no trace"}`}
         </Text>
         <Text
           pointerEvents="none"
           style={{
             left: 20,
             top: 404,
-            fill: '#e2e8f0',
-            font: '700 11px monospace',
+            fill: "#e2e8f0",
+            font: "700 11px monospace",
           }}
         >
           {`Pibbl ${state.get().tileClicks} · TARGET ${state.get().threeClicks} · BLOCK ${state.get().blockedInputs} · CAMERA ${state.get().cameraChanges}`}
@@ -398,8 +395,4 @@ function ThreeInstancingExample() {
       </Group>
     </FocusManagement>
   );
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <ThreeInstancingExample />, { pixelRatio: 1 });
 }

@@ -1,9 +1,5 @@
-import {
-  Rectangle,
-  pibbl,
-  type PibblComponent,
-  type PibblNode,
-} from '@pibbl/core';
+import { Rectangle, type PibblComponent, type PibblNode } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../sync.js";
 import { jsxDEV } from '@pibbl/core/jsx-dev-runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

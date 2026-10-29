@@ -1,7 +1,7 @@
 import type { HtmlBox } from '../components/html-box.js';
 import type { GStyle } from '../components/g.js';
 import type { HtmlFocusRegion } from '../focus/html-focus-region.js';
-import type { PibblClippingStackEntry, PibblInstance, PibblInteractionLayer } from '../types.js';
+import type { PibblClippingStackEntry, PibblComponentRefs, PibblInstance, PibblInteractionLayer } from '../types.js';
 import type { LayoutBox } from '../layout/types.js';
 
 /**
@@ -94,6 +94,7 @@ export interface HtmlBoxRegistration {
   onFocusChange?: (state: Readonly<HtmlBoxFocusState>) => void;
 }
 export interface HtmlBoxSlot {
+  readonly component: PibblComponentRefs<any>;
   readonly owner: PibblInstance;
   readonly mount: HtmlMountCallback<unknown>;
   region: HtmlFocusRegion & { content: HTMLDivElement | undefined; rootBounds: Readonly<LayoutBox> | undefined; active: boolean };

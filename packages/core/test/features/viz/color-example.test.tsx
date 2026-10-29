@@ -1,8 +1,13 @@
 import { userEvent } from "vitest/browser";
 import { expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-color-encodings.example.js";
+import { VizColorEncodingsExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-color-encodings.example.js";
 import { testRuntime } from "./support/runtime.js";
 import { tab, tapTouchLogicalPoint } from "../../support/user-input.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
 
 const values = [
   337.9, 338.34, 340.07, 340.93, 341.45, 341.36, 339.45, 337.67, 336.25, 336.14,

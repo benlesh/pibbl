@@ -1,5 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import { Circle, Group, pibbl, signal } from "@pibbl/core";
+import { Circle, Group, signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   PhysicsDebug2D,
   PhysicsWorld2D,

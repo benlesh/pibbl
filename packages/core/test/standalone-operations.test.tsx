@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import { afterEach, expect, it, vi } from 'vitest';
 import * as core from '@pibbl/core';
 import * as physics from '@pibbl/core/physics/2d';
@@ -14,7 +15,7 @@ it('provides fixed boolean, nullable, and array contracts for all five world que
   driver.install();
   let world!: physics.PibblPhysicsWorldHandle2D;
   function Capture() { world = physics.pibblPhysicsWorld2D(); }
-  mount = core.pibbl(createCanvas(),
+  mount = __pibblSyncTest(createCanvas(),
     <physics.PhysicsWorld2D gravity={[0, 0]}>
       <Capture />
       <core.Circle physics={physics.staticBody2D()} style={{ radius: 5 }} />
@@ -68,7 +69,7 @@ it('animates spring and generic tween targets without a type selector', () => {
       }),
     });
   }
-  mount = core.pibbl(createCanvas(), <Probe />);
+  mount = __pibblSyncTest(createCanvas(), <Probe />);
   driver.flush(0);
   driver.flush(10);
   driver.flush(60);
@@ -91,7 +92,7 @@ it('accepts a custom animation factory using the hook-owned endpoints', () => {
       }),
     });
   }
-  mount = core.pibbl(createCanvas(), <Probe />);
+  mount = __pibblSyncTest(createCanvas(), <Probe />);
   driver.flush(0);
   driver.flush(10);
   driver.flush(60);
@@ -112,7 +113,7 @@ it('reuses definitions across independent targets without changing playback endp
     const playback = core.usePlayback(core.drive(playbackOutput, definition));
     play = () => playback.play();
   }
-  mount = core.pibbl(createCanvas(), <Probe />);
+  mount = __pibblSyncTest(createCanvas(), <Probe />);
   driver.flush(0);
   play();
   driver.flush(10);

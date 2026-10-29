@@ -1,8 +1,13 @@
 import { expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
-import mount from "../../../../scenarios/src/learning/composition/viz-size-symbols.example.js";
+import { VizSizeSymbolsExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-size-symbols.example.js";
 import { testRuntime } from "./support/runtime.js";
 import { tab } from "../../support/user-input.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
 
 const rows = [
   { state: "CA", change: -75423 },

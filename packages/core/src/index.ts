@@ -151,7 +151,7 @@ export {
   type SvgPathOptions,
 } from './lib/geometry/svg-path.js';
 export type { RoundedCornerPathOptions } from './lib/geometry/rounded-corners.js';
-export { pibbl } from './lib/pibbl.js';
+export { pibbl, prepareLayoutEngine } from './lib/pibbl.js';
 export {
   batch,
   computed,
@@ -232,6 +232,13 @@ export {
 } from './lib/layout/flex.js';
 export {
   Grid,
+  minmax,
+  repeatTracks,
+  autoFillTracks,
+  autoFitTracks,
+  type GridTrackBreadth,
+  type GridMinMaxTrack,
+  type GridRepeatTrack,
   type GridProps,
   type GridStyle,
   type GridTrack,
@@ -269,6 +276,7 @@ export type {
   CursorStyle,
   EdgeValues,
   FlexItemStyle,
+  FlexMargin,
   GridItemStyle,
   ImgStyle,
   LayoutItemStyle,
@@ -283,6 +291,7 @@ export type {
   Percentage,
   RoundedCornerStyle,
 } from './lib/style/types.js';
+export { fitContent, type FitContent, type SizingKeyword, type SizingLength } from './lib/style/sizing-length.js';
 export {
   LayoutDiagnostic,
   layoutDiagnostic,
@@ -347,6 +356,12 @@ export type {
   PrimitiveRender,
   FillStyle,
   MeasureInput,
+  IntrinsicAxisConstraints,
+  IntrinsicConstraints,
+  IntrinsicMeasureInput,
+  IntrinsicSizesResult,
+  BaselineMeasureInput,
+  BaselinesResult,
   MeasureResult,
   PixelGridAlignment,
   NormalizedStyle,
@@ -432,4 +447,7 @@ export type {
   PibblRecordedFrame,
   PibblFrameRecording,
   PibblGifExportOptions,
+  PibblRenderCompletion,
 } from './lib/recording/types.js';
+
+export { defineLayoutComponent } from './lib/layout/define-layout-component.js';

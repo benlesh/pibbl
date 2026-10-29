@@ -18,6 +18,7 @@ void main() { uv = vec2((p.x + 1.) * .5, 1. - (p.y + 1.) * .5); gl_Position = ve
 export interface ReflectionSettings {
   readonly opacity: number; readonly threshold: number; readonly softness: number;
   readonly direction: readonly [number, number];
+  readonly depth?: number;
 }
 export type ReflectionLight = { readonly color: string } | { readonly image: HTMLImageElement | ImageBitmap } | { readonly raster: BorrowedTextureRaster };
 export interface ReflectionWarp { readonly map: BorrowedTextureRaster; readonly strength: number; readonly region: ReflectionCoordinates['region']; }
@@ -80,7 +81,7 @@ export class ReflectionGpu {
     this.callbacks.onContextRestored?.();
   };
 
-  constructor(private readonly callbacks: Readonly<ReflectionGpuCallbacks> = {}) {
+  constructor(private readonly callbacks: Readonly<ReflectionGpuCallbacks> = {}, private readonly fragment = fragmentSource) {
     this.canvas.addEventListener('webglcontextlost', this.onContextLost);
     this.canvas.addEventListener('webglcontextrestored', this.onContextRestored);
   }
@@ -101,7 +102,7 @@ export class ReflectionGpu {
     let fragment: WebGLShader | undefined;
     let program: WebGLProgram | null = null;
     try {
-      fragment = compile(gl, gl.FRAGMENT_SHADER, fragmentSource);
+      fragment = compile(gl, gl.FRAGMENT_SHADER, this.fragment);
       program = gl.createProgram();
       if (!program) throw new Error('Could not allocate reflection program.');
       gl.attachShader(program, vertex); gl.attachShader(program, fragment); gl.linkProgram(program);
@@ -172,6 +173,7 @@ export class ReflectionGpu {
     placement('warpOrigin','warpSize','warpRotation',warp?.map.placement??map.placement,warp?.region??coordinates.region,warp?.map.width??map.width,warp?.map.height??map.height);
     gl.uniform2f(uniform('warpStrength'),(warp?.strength??0)*coordinates.density/source.width,(warp?.strength??0)*coordinates.density/source.height);
     gl.uniform2f(uniform('direction'),settings.direction[0],settings.direction[1]);
+    gl.uniform1f(uniform('depth'),settings.depth ?? 0);
     gl.uniform1f(uniform('opacity'),settings.opacity); gl.uniform1f(uniform('threshold'),settings.threshold); gl.uniform1f(uniform('softness'),settings.softness);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
     if(this.isContextLost) throw new Error('Reflection WebGL2 context was lost.');

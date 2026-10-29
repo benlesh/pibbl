@@ -1,34 +1,44 @@
-import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@pibbl/core/filters';
 import {
+  blur,
+  brightness,
+  contrast,
+  dropShadow,
+  grayscale,
+  hueRotate,
+  invert,
+  opacity,
+  saturate,
+  sepia,
+} from "@pibbl/core/filters";
+import {
+  useConst,
   Circle,
-  pibbl,
   Group,
   Rectangle,
   SvgPath,
   Text,
-  type PibblController,
+  useCanvasContext,
   type PibblFilter,
 } from "@pibbl/core";
 
 const SAMPLE_WIDTH = 160;
 
 const FILTER_SAMPLES = [
-  { label: "BLUR", detail: "4px", filter: blur({  radius: 4 }) },
+  { label: "BLUR", detail: "4px", filter: blur({ radius: 4 }) },
   {
     label: "BRIGHTNESS",
     detail: "135%",
-    filter: brightness({  amount: 1.35 }),
+    filter: brightness({ amount: 1.35 }),
   },
   {
     label: "CONTRAST",
     detail: "150%",
-    filter: contrast({  amount: 1.5 }),
+    filter: contrast({ amount: 1.5 }),
   },
   {
     label: "DROP SHADOW",
     detail: "8px 7px 4px",
     filter: dropShadow({
-      
       offsetX: 8,
       offsetY: 7,
       blurRadius: 4,
@@ -38,32 +48,32 @@ const FILTER_SAMPLES = [
   {
     label: "GRAYSCALE",
     detail: "100%",
-    filter: grayscale({  amount: 1 }),
+    filter: grayscale({ amount: 1 }),
   },
   {
     label: "HUE ROTATE",
     detail: "120deg",
-    filter: hueRotate({  degrees: 120 }),
+    filter: hueRotate({ degrees: 120 }),
   },
   {
     label: "INVERT",
     detail: "100%",
-    filter: invert({  amount: 1 }),
+    filter: invert({ amount: 1 }),
   },
   {
     label: "OPACITY",
     detail: "55%",
-    filter: opacity({  amount: 0.55 }),
+    filter: opacity({ amount: 0.55 }),
   },
   {
     label: "SATURATE",
     detail: "200%",
-    filter: saturate({  amount: 2 }),
+    filter: saturate({ amount: 2 }),
   },
   {
     label: "SEPIA",
     detail: "100%",
-    filter: sepia({  amount: 1 }),
+    filter: sepia({ amount: 1 }),
   },
 ] satisfies readonly {
   label: string;
@@ -72,10 +82,9 @@ const FILTER_SAMPLES = [
 }[];
 
 const ORDERED_FILTERS = [
-  grayscale({  amount: 0.35 }),
-  contrast({  amount: 1.4 }),
+  grayscale({ amount: 0.35 }),
+  contrast({ amount: 1.4 }),
   dropShadow({
-    
     offsetX: 7,
     offsetY: 6,
     blurRadius: 3,
@@ -84,7 +93,6 @@ const ORDERED_FILTERS = [
 ] satisfies readonly PibblFilter[];
 
 const NESTED_SHADOW = dropShadow({
-  
   offsetX: 7,
   offsetY: 6,
   blurRadius: 3,
@@ -228,9 +236,9 @@ function CompositeTile({
     mode === "array" ? (
       <Group style={{ filter: ORDERED_FILTERS }}>{artwork}</Group>
     ) : (
-      <Group style={{ filter: blur({  radius: 1.5 }) }}>
+      <Group style={{ filter: blur({ radius: 1.5 }) }}>
         <Group style={{ filter: NESTED_SHADOW }}>
-          <Group style={{ filter: hueRotate({  degrees: 155 }) }}>
+          <Group style={{ filter: hueRotate({ degrees: 155 }) }}>
             {artwork}
           </Group>
         </Group>
@@ -352,7 +360,8 @@ function createSharedGradient(canvas: HTMLCanvasElement): CanvasGradient {
   return gradient;
 }
 
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  const gradient = createSharedGradient(canvas);
-  return pibbl(canvas, <FilterGallery gradient={gradient} />);
+export function FiltersExample() {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  const gradient = useConst(() => createSharedGradient(canvas));
+  return <FilterGallery gradient={gradient} />;
 }

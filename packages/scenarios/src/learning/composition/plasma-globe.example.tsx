@@ -1,20 +1,19 @@
 /** @jsxImportSource @pibbl/core */
 import {
-  pibbl,
+  useCanvasContext,
   Circle,
   Path,
-  PathGeometry,
-  flattenPath,
   Clip,
   Rectangle,
   Text,
   Group,
   FocusManagement,
+  PathGeometry,
+  flattenPath,
   useSignal,
   useConst,
   useReaction,
   type PibblPointerEvent,
-  type PibblController,
 } from "@pibbl/core";
 import {
   useTexture,
@@ -641,6 +640,7 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
     </FocusManagement>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <PlasmaGlobe canvas={canvas} />);
+export function PlasmaGlobeExample() {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  return <PlasmaGlobe canvas={canvas} />;
 }

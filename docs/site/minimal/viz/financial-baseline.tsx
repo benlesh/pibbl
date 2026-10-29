@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   BaselineSeries,
   LinearScale,
@@ -29,9 +30,8 @@ const props: BaselineSeriesProps<(typeof prices)[number]> = {
   baseline: 100,
   style,
 };
-export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(
-    canvas,
+export function FinancialBaselineExample() {
+  return (
     <LinearScale id="time" domain={[0, 4]} range={[16, 300]}>
       <LinearScale id="price" domain={[94, 106]} range={[180, 16]}>
         <BaselineSeries
@@ -44,6 +44,13 @@ export default function mount(canvas: HTMLCanvasElement) {
           style={props.style}
         />
       </LinearScale>
-    </LinearScale>,
+    </LinearScale>
   );
 }
+
+const canvas = document.createElement("canvas");
+canvas.width = 320;
+canvas.height = 220;
+document.body.append(canvas);
+const app = pibblSync(canvas, <FinancialBaselineExample />);
+window.addEventListener("pagehide", () => app.dispose(), { once: true });

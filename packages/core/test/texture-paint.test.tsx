@@ -1,13 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
-import {
-  pibbl,
-  defineTexture,
-  useTexture,
-  Rectangle,
-  Text,
-  Layer,
-  signal,
-} from "@pibbl/core";
+import { defineTexture, useTexture, Rectangle, Text, Layer, signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,

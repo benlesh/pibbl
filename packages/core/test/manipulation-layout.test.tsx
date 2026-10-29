@@ -1,21 +1,5 @@
-import {
-  Flex,
-  Flow,
-  Grid,
-  ManipulationFrame,
-  Rectangle,
-  ResizeHandles,
-  pibbl,
-  signal,
-  useConst,
-  useLayoutBox,
-  useManipulation,
-  type BoxStyle,
-  type PibblController,
-  type PibblNode,
-  type FlexItemStyle,
-  type GridItemStyle,
-} from '@pibbl/core';
+import { Flex, Flow, Grid, ManipulationFrame, Rectangle, ResizeHandles, signal, useConst, useLayoutBox, useManipulation, type BoxStyle, type PibblController, type PibblNode, type FlexItemStyle, type GridItemStyle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it } from 'vitest';
 import { commands } from 'vitest/browser';
 

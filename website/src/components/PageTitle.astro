@@ -1,0 +1,6 @@
+---
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+const isHome = Astro.url.pathname === '/';
+---
+
+{isHome ? <h1 id="_top" class="home-page-title sr-only">{Astro.locals.starlightRoute.entry.data.title}</h1> : <Default />}

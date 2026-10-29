@@ -1739,6 +1739,11 @@ const canvasSurfaceMetadata: ScenarioMetadata = {
         "The logical viewport follows the CSS content box, the backing remains 2×, and identity survives the responsive resize.",
     },
     {
+      action: "Choose Show fractional, then Resize fractional.",
+      expected:
+        "The logical viewport remains 101.5 × 47.25 while CSS sizes 201.25 × 100.5 then 240.75 × 120.25 produce rounded 302 × 151 then 361 × 180 backing stores at 1.5×, without changing component identity.",
+    },
+    {
       action: "Move over the Canvas center.",
       expected:
         "The reported coordinates use logical units rather than physical backing pixels.",
@@ -1746,7 +1751,7 @@ const canvasSurfaceMetadata: ScenarioMetadata = {
   ],
   knownLimitations: [
     "Projection alignment is centered and not configurable in this release.",
-    "The laboratory uses numeric pixel ratio 2 for deterministic evidence; default mounts use the live device ratio.",
+    "The laboratory uses explicit numeric pixel ratios 2 and 1.5 for deterministic evidence; default mounts use the live device ratio.",
   ],
   learningOrder: 150,
   visibility: "test-laboratory",
@@ -2280,6 +2285,8 @@ export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState
       { id: "resize-fixed", label: "Resize fixed" },
       { id: "show-responsive", label: "Show responsive" },
       { id: "resize-responsive", label: "Resize responsive" },
+      { id: "show-fractional", label: "Show fractional" },
+      { id: "resize-fractional", label: "Resize fractional" },
     ],
     source: {
       id: "canvas-surface-example",

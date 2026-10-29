@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Resize handles",
+    "description": "Interaction · the green block becomes editable."
+  },
+  {
+    "name": "Angle geometry",
+    "description": "Geometry · a measured corner in the empty triangle."
+  },
+  {
+    "name": "Woven texture",
+    "description": "Textures · fine diagonal threads on the green block."
+  },
+  {
+    "name": "Motion path",
+    "description": "Animation · keyframes travel through the negative space."
+  },
+  {
+    "name": "Tiny dataviz",
+    "description": "Visualization · a rising chart between the pieces."
+  },
+  {
+    "name": "Particle bloom",
+    "description": "Particles · the curved bowl breaks into playful dots."
+  },
+  {
+    "name": "Layer stack",
+    "description": "Composition · three translucent planes in the stem."
+  },
+  {
+    "name": "Bézier craft",
+    "description": "Paths · a curve and its control handles fill the gap."
+  },
+  {
+    "name": "Spring energy",
+    "description": "Animation + physics · a spring lives inside the stem."
+  },
+  {
+    "name": "Faceted bowl",
+    "description": "Geometry + Three.js · a mesh within the violet curve."
+  }
+]

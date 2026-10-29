@@ -5,10 +5,8 @@ import {
   Overlay,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
 } from "@pibbl/core";
 import {
@@ -324,15 +322,10 @@ function Scene({ rows }: { rows: readonly Datum[] }) {
     </>
   );
 }
-export default function mount(
-  canvas: HTMLCanvasElement,
-  config: Config = {},
-): PibblController {
-  return pibbl(
-    canvas,
+export function VizSizeSymbolsExample(config: Config = {}) {
+  return (
     <FocusManagement>
       <Scene rows={config.data ?? data} />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

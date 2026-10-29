@@ -1,4 +1,5 @@
-import { Rectangle, pibbl, useEventListener, type PibblController, type PibblEvent } from '@pibbl/core';
+import { Rectangle, useEventListener, type PibblController, type PibblEvent } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { createEventTrace } from '../../../tooling/agent-verification/events';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';

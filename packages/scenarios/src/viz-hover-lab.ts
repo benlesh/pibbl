@@ -1,6 +1,11 @@
 import { batch, signal } from "@pibbl/core";
-import mount from "./learning/composition/viz-hover-comparison.example.js";
+import { VizHoverComparisonExample as mountComponent } from "./learning/composition/viz-hover-comparison.example.js";
 import type { ScenarioDefinition } from "./types.js";
+import { createExampleMount } from "./example-host";
+
+const mount = createExampleMount(mountComponent, { config: {
+      viewport: "responsive" } });
+
 type Fixture = NonNullable<Parameters<typeof mount>[1]>;
 type PipelineEvidence = {
   generation: number; operation: "weighted-mean"; units: "score"; rounding: "none";

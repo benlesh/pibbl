@@ -47,7 +47,7 @@ export const topics = {
   visualization: {
     title: "Data visualization",
     match:
-      /visualization|scale|axis|series|domain|nearest|interpolat|pie-|hover-card/,
+      /visualization|scale|axis|series|domain|nearest|interpolat|pie-|hover-|chart-|financial-|ohlcv|session-vwap/,
   },
   "external-renderers": {
     title: "External renderers and Three.js",
@@ -74,6 +74,7 @@ export function topicFor(id) {
 }
 const entryImports = {
   root: "@pibbl/core",
+  sync: "@pibbl/core/sync",
   machines: "@pibbl/core/machines",
   machineAnimation: "@pibbl/core/machines/animation",
   sprites: "@pibbl/core/sprites",

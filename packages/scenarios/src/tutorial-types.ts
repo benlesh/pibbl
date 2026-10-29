@@ -1,4 +1,8 @@
-import type { getTutorialSnapshotBySlug, getWorkbenchEntryBySlug, loadTutorialSnapshot } from './tutorial-catalog.js';
+import type {
+  getTutorialSnapshotBySlug,
+  getWorkbenchEntryBySlug,
+  loadTutorialSnapshot,
+} from "./tutorial-catalog.js";
 import type {
   LearningExampleModule,
   WorkbenchSourceMetadata,
@@ -32,6 +36,8 @@ export interface TutorialSnapshotMetadata extends WorkbenchSourceMetadata {
   readonly source: {
     /** Path recorded or configured by this scenario. See {@link TutorialSnapshotMetadata}. */
     readonly path: string;
+    /** Named root component selected by the tutorial host. See {@link WorkbenchSourceMetadata}. */
+    readonly exportName: string;
   };
 }
 

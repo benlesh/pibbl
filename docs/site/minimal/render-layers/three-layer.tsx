@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   defineThreeLayer,
   type PibblThreeLayerContext,
@@ -107,7 +108,7 @@ const definition: PibblThreeLayerDefinition<BoxProps, BoxResources> = {
 };
 
 const BoxLayer = defineThreeLayer(definition);
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <BoxLayer tint="#0f766e" style={{ width: 320, height: 220 }} />,
 );

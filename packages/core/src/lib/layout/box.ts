@@ -1,10 +1,12 @@
+import { contentBoxStyle, borderBoxPaddingFloor } from './box-sizing.js';
 import {
   layoutDiagnostic,
   type LayoutDiagnosticContext,
 } from '../style/diagnostics.js';
-import { normalizeEdges } from '../style/normalize.js';
-import { resolveLength } from '../style/resolve-length.js';
-import type { BoxStyle, Length, ResolvedBoxStyle } from '../style/types.js';
+import { normalizeBoxInsets } from './box-insets.js';
+import { resolveScalarSizingLength } from '../style/sizing-length.js';
+import type { BoxStyle, ResolvedBoxStyle } from '../style/types.js';
+import type { SizingLength } from '../style/sizing-length.js';
 import type { Constraints } from './types.js';
 
 /**
@@ -33,11 +35,24 @@ export function resolveBox(
     constraints,
   };
   validateConstraints(constraints, diagnosticContext);
-  const padding = normalizeEdges(style.padding, 'padding', diagnosticContext);
+  const ratio = style.aspectRatio;
+  if (ratio !== undefined && (!Number.isFinite(ratio) || ratio <= 0)) throw layoutDiagnostic({ ...diagnosticContext, property: 'aspectRatio', value: ratio, reason: 'must be finite and positive' });
+  const paddingFloor = borderBoxPaddingFloor(style);
+  if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: constraints.maxWidth, height: constraints.maxHeight, context: diagnosticContext });
+  const padding = normalizeBoxInsets(style, diagnosticContext);
 
+  let width = style.width, height = style.height;
+  const widthAutomatic = width === undefined || width === 'auto';
+  const heightAutomatic = height === undefined || height === 'auto';
+  let vertical: { border: number; content: number } | undefined;
+  if (ratio !== undefined && widthAutomatic && !heightAutomatic) {
+    vertical = resolveAxis('height', height, style.minHeight, style.maxHeight,
+      constraints.minHeight, constraints.maxHeight, padding.top, padding.bottom, diagnosticContext, paddingFloor);
+    width = paddingFloor ? Math.max(0, vertical.border * ratio - padding.left - padding.right) : vertical.content * ratio;
+  }
   const horizontal = resolveAxis(
     'width',
-    style.width,
+    width,
     style.minWidth,
     style.maxWidth,
     constraints.minWidth,
@@ -45,10 +60,14 @@ export function resolveBox(
     padding.left,
     padding.right,
     diagnosticContext,
+    paddingFloor,
   );
-  const vertical = resolveAxis(
+  if (ratio !== undefined && !widthAutomatic && heightAutomatic) {
+    height = paddingFloor ? Math.max(0, horizontal.border / ratio - padding.top - padding.bottom) : horizontal.content / ratio;
+  }
+  vertical ??= resolveAxis(
     'height',
-    style.height,
+    height,
     style.minHeight,
     style.maxHeight,
     constraints.minHeight,
@@ -56,6 +75,7 @@ export function resolveBox(
     padding.top,
     padding.bottom,
     diagnosticContext,
+    paddingFloor,
   );
 
   return {
@@ -76,14 +96,15 @@ export function resolveBox(
 
 function resolveAxis(
   axis: 'width' | 'height',
-  specified: Length | undefined,
-  specifiedMinimum: Exclude<Length, 'auto'> | undefined,
-  specifiedMaximum: Exclude<Length, 'auto'> | undefined,
+  specified: SizingLength | undefined,
+  specifiedMinimum: Exclude<SizingLength, 'auto'> | undefined,
+  specifiedMaximum: Exclude<SizingLength, 'auto'> | undefined,
   constraintMinimum: number,
   constraintMaximum: number,
   paddingStart: number,
   paddingEnd: number,
   context: Readonly<LayoutDiagnosticContext>,
+  paddingFloor: boolean,
 ): { border: number; content: number } {
   const minimumProperty = axis === 'width' ? 'minWidth' : 'minHeight';
   const maximumProperty = axis === 'width' ? 'maxWidth' : 'maxHeight';
@@ -123,7 +144,7 @@ function resolveAxis(
   const resolved =
     specified === undefined
       ? undefined
-      : resolveLength(specified, constraintMaximum, axis, context);
+      : resolveScalarSizingLength(specified, constraintMaximum, axis, context);
   let content: number;
   if (resolved === undefined) {
     if (!Number.isFinite(constraintMaximum)) {
@@ -156,10 +177,11 @@ function resolveAxis(
     axis,
     context,
   );
-  const border = Math.min(
+  const constrainedBorder = Math.min(
     constraintMaximum,
     Math.max(constraintMinimum, paddedContent),
   );
+  const border = paddingFloor ? Math.max(padding, constrainedBorder) : constrainedBorder;
   return {
     border: requireFiniteArithmetic(border, axis, context),
     content: Math.max(
@@ -186,12 +208,12 @@ function requireFiniteArithmetic(
 }
 
 function resolveAllocationLength(
-  value: Exclude<Length, 'auto'>,
+  value: Exclude<SizingLength, 'auto'>,
   reference: number,
   property: string,
   context: Readonly<LayoutDiagnosticContext>,
 ): number {
-  const resolved = resolveLength(value, reference, property, context)!;
+  const resolved = resolveScalarSizingLength(value, reference, property, context)!;
   if (resolved < 0) {
     throw layoutDiagnostic({
       ...context,

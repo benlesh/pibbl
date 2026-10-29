@@ -1,5 +1,17 @@
-import { pibbl, Circle, Rectangle, Text } from "@pibbl/core";
-import { closestPoint, defineSeries, HoverCard, HoverData, type HoverBounds, type HoverCardProps, type HoverCardStyle, type HoverDataProps, type HoverPlacement, LinearScale } from "@pibbl/core/viz";
+import {  Circle, Rectangle, Text } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
+import {
+  closestPoint,
+  defineSeries,
+  HoverCard,
+  HoverData,
+  type HoverBounds,
+  type HoverCardProps,
+  type HoverCardStyle,
+  type HoverDataProps,
+  type HoverPlacement,
+  LinearScale,
+} from "@pibbl/core/viz";
 
 const data = [{ x: 2, y: 3, label: "Peak" }];
 const query = closestPoint({
@@ -52,7 +64,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <>
     <Rectangle style={{ width: 320, height: 220, fill: "#f8fafc" }} />
@@ -63,7 +75,7 @@ const app = pibbl(
       range="width"
       style={{ width: 320, height: 220 }}
     >
-      <LinearScale id="y"  domain={[0, 6]} range="height" reverse>
+      <LinearScale id="y" domain={[0, 6]} range="height" reverse>
         <HoverData {...hover} />
       </LinearScale>
     </LinearScale>

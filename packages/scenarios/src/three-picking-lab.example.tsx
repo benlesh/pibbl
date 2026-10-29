@@ -1,5 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import { pibbl, Rectangle } from '@pibbl/core';
+import { Rectangle } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import { defineThreeLayer } from '@pibbl/three';
 import { BoxGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene } from 'three';
 import type { ScenarioDefinition } from './types';
@@ -65,7 +66,7 @@ export const threePickingScenario: ScenarioDefinition<ThreePickingState> = {
       targets() { return [{ object: mesh, handlers: { onClick() { state = { ...state, threeClicks: state.threeClicks + 1 }; publish(); } } }]; },
       dispose() { mesh.geometry.dispose(); mesh.material.dispose(); },
     });
-    const runtime = pibbl(canvas, <>
+    const runtime = pibblSync(canvas, <>
       <Rectangle style={{ width: 400, height: 300, fill: '#2563eb' }} onClick={() => { state = { ...state, canvasClicks: state.canvasClicks + 1 }; publish(); }} />
       <Layer style={{ width: 400, height: 300 }} />
     </>, { pixelRatio: 1 });

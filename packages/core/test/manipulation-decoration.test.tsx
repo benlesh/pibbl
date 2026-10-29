@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import * as Pibbl from '@pibbl/core';
 import { afterEach, expect, it } from 'vitest';
 import type { PibblController, PibblNode } from '@pibbl/core';
@@ -92,7 +93,7 @@ it('paints a 24 CSS-pixel connector perpendicular to a nonuniformly transformed 
     );
   }
 
-  controller = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
+  controller = __pibblSyncTest(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
 
   const transform = new DOMMatrix()
@@ -150,7 +151,7 @@ it('omits both optional rotation decorations when explicitly disabled', async ()
       <Pibbl.RotationHandle controller={manipulation} style={{ connector: false, arc: false }} />
     </Pibbl.ManipulationFrame>;
   }
-  controller = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
+  controller = __pibblSyncTest(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
 
   expect(pixels(canvas, (r, g, b, a) => r > 220 && g < 50 && b < 50 && a > 180)).toHaveLength(0);
@@ -177,7 +178,7 @@ it('renders an opt-in blue guide arc with symmetric fading around the rotation h
       />
     </Pibbl.ManipulationFrame>;
   }
-  controller = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
+  controller = __pibblSyncTest(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
 
   const pivot = new DOMPoint(160, 140);

@@ -5,7 +5,6 @@ import {
   Rectangle,
   Path,
   Text,
-  pibbl,
   useCanvasContext,
   useLayoutBox,
   useAnimatedValue,
@@ -14,7 +13,6 @@ import {
   useReaction,
   useRef,
   useSignal,
-  type PibblController,
   type PibblLogicalMouseEvent,
   type PibblPointerEvent,
   type PibblWheelEvent,
@@ -25,13 +23,13 @@ import {
   LinearScale,
   ReferenceLine,
   TradingTimeScale,
+  OhlcBarSeries,
+  BaselineSeries,
+  PlotSeries,
   formatNumber,
   padLinearDomain,
   niceLinearDomain,
   linearTicks,
-  OhlcBarSeries,
-  BaselineSeries,
-  PlotSeries,
   interpolateNumericRange,
 } from "@pibbl/core/viz";
 import {
@@ -1087,12 +1085,10 @@ function Desk() {
     </>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function FinancialExecutionJournalExample() {
+  return (
     <FocusManagement>
       <Desk />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

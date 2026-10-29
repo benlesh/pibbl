@@ -1,6 +1,6 @@
-import { Arc, pibbl, useSignal, Rectangle, type PibblController } from "@pibbl/core";
+import { Arc, Rectangle, useSignal } from "@pibbl/core";
 
-function ArcStudy() {
+export function ArcStudy() {
   const active = useSignal(false);
 
   return [
@@ -22,8 +22,4 @@ function ArcStudy() {
       onClick={() => active.update((value) => !value)}
     />,
   ];
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <ArcStudy />);
 }

@@ -1,6 +1,6 @@
-import { Circle, pibbl, useSignal, Rectangle, type PibblController } from "@pibbl/core";
+import { Circle, Rectangle, useSignal } from "@pibbl/core";
 
-function CircleStudy() {
+export function CircleStudy() {
   const active = useSignal(false);
 
   return [
@@ -20,8 +20,4 @@ function CircleStudy() {
       onClick={() => active.update((value) => !value)}
     />,
   ];
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <CircleStudy />);
 }

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { pibbl } from '../pibbl.js';
+import { pibblSync as pibbl } from "../../sync.js";
 import { executeRender } from '../execute-render.js';
 import { clearSharedState, getPibblInstance } from '../global-state.js';
 import { mountPibbl } from '../mount-pibbl.js';

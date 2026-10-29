@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   CandlestickSeries,
   LinearScale,
@@ -86,7 +87,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 180;
 document.body.append(canvas, button, result);
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <UTCScale id="time" domain={[data[0]!.time, data[1]!.time]} range={[30, 290]}>
     <LinearScale id="price" domain={[98, 110]} range={[145, 20]}>

@@ -1,15 +1,13 @@
 import {
-  pibbl,
-  useSignal,
   Rectangle,
   Text,
-  type PibblController,
+  useSignal,
   type PibblLogicalMouseEvent,
 } from "@pibbl/core";
 function mouseSummary(event: PibblLogicalMouseEvent): string {
   return `${event.type} at ${Math.round(event.x)},${Math.round(event.y)} button=${event.button} buttons=${event.buttons} detail=${event.detail}`;
 }
-function MouseBoundariesAndAuxiliaryClickStudy() {
+export function MouseBoundariesAndAuxiliaryClickStudy() {
   const inside = useSignal(false);
   const auxiliaryCount = useSignal(0);
   const trace = useSignal<readonly string[]>([]);
@@ -143,7 +141,4 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
         : "Move into and out of the cobalt card, then middle-click it."}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <MouseBoundariesAndAuxiliaryClickStudy />);
 }

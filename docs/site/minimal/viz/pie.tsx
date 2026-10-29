@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   PieLabel,
   PieLayout,
@@ -68,5 +69,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(canvas, <PieLayout {...layout} />);
+const app = pibblSync(canvas, <PieLayout {...layout} />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

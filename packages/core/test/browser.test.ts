@@ -1,5 +1,6 @@
 import * as PIBBL_ROOT from '@pibbl/core';
-import { pibbl, Rectangle } from '@pibbl/core';
+import { Rectangle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { jsx, jsxs } from '@pibbl/core/jsx-runtime';
 import { jsxDEV } from '@pibbl/core/jsx-dev-runtime';
 import { page } from 'vitest/browser';

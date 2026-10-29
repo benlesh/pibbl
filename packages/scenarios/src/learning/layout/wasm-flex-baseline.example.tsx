@@ -1,0 +1,333 @@
+import {
+  Flex, Group, Rectangle, Text, FocusManagement, definePrimitive, defineLayoutComponent, signal, computed,
+  useCanvasContext, useLayoutBox, useConst, useReaction, untracked,
+  type Signal, type SystemStyle, type LayoutBox, type PibblNode, type PibblResponsiveStyle, type BaselineMeasureInput, type BaselinesResult,
+} from "@pibbl/core";
+
+type Name = "A" | "B" | "C" | "MA" | "MB" | "WA" | "WB" | "WC" | "WD" | "NA" | "NB" | "NC" | "FA" | "FB" | "KA" | "KB" | "KWA" | "KWB" | "SA" | "SB" | "SBadge";
+type WrappedAlign = "flex-start" | "flex-end" | "center" | "space-between" | "space-around" | "space-evenly" | "stretch";
+type FinalBoxSelf = "auto" | "flex-end" | "center" | "flex-start" | "stretch";
+type KnownSource = "direct" | "described" | "nested" | "empty";
+type KnownDirection = "row" | "row-reverse" | "column" | "column-reverse";
+interface CardProps { id: Name; label: string; font: string; first: number | Signal<number> }
+interface CardStyle extends SystemStyle {
+  width?: number; height?: number | "auto"; aspectRatio?: number; fill?: string;
+  flexBasis?: number; flexGrow?: number; flexShrink?: number;
+  position?: "static" | "relative" | "absolute"; left?: number; top?: number; bottom?: number;
+  minWidth?: number; minHeight?: number; marginLeft?: number | "auto"; marginTop?: number | "auto"; marginBottom?: number | "auto"; alignSelf?: FinalBoxSelf;
+}
+type ResolvedCardStyle = CardStyle & { width: number; height: number };
+
+function createBaselineContent() {
+  const second = signal(30), owner = signal(180), paint = signal("#426b61"), mainAuto = signal(false), layoutDirection = signal<"ltr" | "rtl">("ltr");
+  const mainMargin = computed(() => mainAuto.get() ? "auto" as const : 0);
+  const mainLabel = computed(() => mainAuto.get() ? "Auto" : "Start");
+  const directionLabel = computed(() => layoutDirection.get().toUpperCase());
+  const reverse = signal(false), flexDirection = computed(() => reverse.get() ? "row-reverse" as const : "row" as const);
+  const reverseLabel = computed(() => reverse.get() ? "Reverse" : "Row");
+  const crossMode = signal<"off" | "top" | "bottom" | "both">("off");
+  const crossTop = computed(() => crossMode.get() === "top" || crossMode.get() === "both" ? "auto" as const : 0);
+  const crossBottom = computed(() => crossMode.get() === "bottom" || crossMode.get() === "both" ? "auto" as const : 0);
+  const crossLabel = computed(() => crossMode.get() === "off" ? "Cross" : crossMode.get());
+  const measuredHeight = signal(20), aspectBox = signal(false), knownFirst = signal(12), knownRelative = signal<"off" | "top" | "bottom">("off"), knownSource = signal<KnownSource>("direct"), knownDirection = signal<KnownDirection>("row"), knownWrappedMode = signal<"nowrap" | "wrap" | "wrap-reverse">("nowrap"), staticFirst = signal(12), staticRelative = signal(false), staticNested = signal(false), staticEnabled = signal(false);
+  const finalBoxSelf = signal<FinalBoxSelf>("auto");
+  const finalBoxSelfLabel = computed(() => `Self ${finalBoxSelf.get()}`);
+  const queryMode = signal<"off" | "narrow" | "wide">("off");
+  const queryHeight = computed(() => measuredHeight.get() + 10);
+  const finalBoxWidth = computed(() => queryMode.get() === "wide" ? 160 : 120);
+  const finalBoxHeight = computed(() => queryMode.get() === "off" ? "auto" as const : 20);
+  const aspectValue = computed(() => queryMode.get() === "off" && aspectBox.get() ? 2 : undefined);
+  const measuredFirst = computed(() => (queryMode.get() === "wide" ? queryHeight.get() : queryMode.get() === "narrow" || aspectBox.get() ? 20 : measuredHeight.get()) - 8);
+  const measuredFirstLabel = computed(() => String(measuredFirst.get()));
+  const measuredHeightLabel = computed(() => `Measured height ${measuredHeight.get()}`);
+  const knownLabel = computed(() => `Known leaf ${knownFirst.get()}`);
+  const knownNumber = computed(() => String(knownFirst.get()));
+  const knownRelativeLabel = computed(() => `Relative ${knownRelative.get()}`);
+  const knownWrappedLabel = computed(() => `Tree ${knownWrappedMode.get()}`);
+  const knownSourceLabel = computed(() => `Source ${knownSource.get()}`);
+  const knownDirectionLabel = computed(() => `Inner ${knownDirection.get().replace("column", "col").replace("-reverse", " rev")}`);
+  const staticFirstLabel = computed(() => `Static first ${staticFirst.get()}`);
+  const staticRelativeLabel = computed(() => staticRelative.get() ? "Static top" : "Static off");
+  const staticNestedLabel = computed(() => staticNested.get() ? "Static nested" : "Static direct");
+  const knownLeafStyle = computed<CardStyle>(() => ({ width: 40, height: 20, flexBasis: knownDirection.get() === "column" || knownDirection.get() === "column-reverse" ? 20 : 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248", position: knownRelative.get() === "off" ? "static" : "relative", top: knownRelative.get() === "top" ? 10 : undefined, bottom: knownRelative.get() === "bottom" ? 10 : undefined }));
+  const aspectLabel = computed(() => aspectBox.get() ? "Aspect 2" : "Aspect off");
+  const finalBoxStyle = computed<CardStyle>(() => ({
+    width:40,height:finalBoxHeight.get(),minWidth:0,minHeight:0,flexGrow:0,flexShrink:0,
+    aspectRatio:aspectValue.get(),fill:"#426b61",alignSelf:finalBoxSelf.get(),
+    when:queryMode.get() === "off" ? undefined : [{query:{minWidth:140},style:{height:queryHeight}}],
+  }));
+  const queryLabel = computed(() => queryMode.get() === "off" ? "Query off" : queryMode.get() === "narrow" ? "Query narrow" : "Query wide");
+  let finalBoxMeasureCalls = 0, finalBoxBaselineCalls = 0;
+  const textFont = signal("10px monospace");
+  const textFitPolicy = signal(false);
+  const textInsets = signal(false);
+  const textPadding = computed(() => textInsets.get() ? {left:5,right:7,top:10,bottom:4} : 0);
+  const textBorder = computed(() => textInsets.get() ? {left:3,right:2,top:6,bottom:8} : 0);
+  const textInsetsLabel = computed(() => textInsets.get() ? "Text insets on" : "Text insets off");
+  const relativeShift = signal(false);
+  const relativePosition = computed(() => relativeShift.get() ? "relative" as const : "static" as const);
+  const relativeLabel = computed(() => relativeShift.get() ? "Relative" : "Static");
+  const numericMainMargin = signal(10);
+  const numericCrossMode = signal<"off" | "top" | "bottom">("off");
+  const wrappedAutoCross = signal<"off" | "top" | "bottom" | "both">("off");
+  const wrappedAutoLabel = computed(() => `Auto cross ${wrappedAutoCross.get()}`);
+  const numericPanelHeight = computed(() => wrappedAutoCross.get() === "off" ? 60 : 100);
+  const numericTop = computed(() => wrappedAutoCross.get() === "top" || wrappedAutoCross.get() === "both" ? "auto" as const : numericCrossMode.get() === "top" ? 30 : 0);
+  const numericBottom = computed(() => wrappedAutoCross.get() === "bottom" || wrappedAutoCross.get() === "both" ? "auto" as const : numericCrossMode.get() === "bottom" ? 10 : 0);
+  const numericCrossLabel = computed(() => `Cross ${numericCrossMode.get()}`);
+  const numericMainLabel = computed(() => `Main margin ${numericMainMargin.get()}`);
+  const wrappedD = signal(20), wrappedDLabel = computed(() => `D ${wrappedD.get()}`);
+  const wrappedProfile = signal(false), wrappedRowGap = signal<number | "10%">(0), wrappedAlign = signal<WrappedAlign>("flex-start"), wrappedReverse = signal(false);
+  const wrappedMainGap = computed(() => wrappedProfile.get() ? 10 : 0);
+  const wrappedWrap = computed(() => wrappedReverse.get() ? "wrap-reverse" as const : "wrap" as const);
+  const wrappedWidth = computed(() => wrappedProfile.get() ? 110 : 100);
+  const wrappedProfileLabel = computed(() => wrappedProfile.get() ? "Policy" : "Profile");
+  const wrappedGapLabel = computed(() => `Gap ${wrappedRowGap.get()}`);
+  const wrappedWrapLabel = computed(() => wrappedReverse.get() ? "Revwrap" : "Wrap");
+  const wrappedAlignLabel = computed(() => {
+    const value = wrappedAlign.get();
+    return value === "flex-start" ? "start" : value === "flex-end" ? "end" : value === "space-between" ? "between" : value === "space-around" ? "around" : value === "space-evenly" ? "evenly" : value;
+  });
+  const toggleWrappedProfile = () => {
+    if (!wrappedProfile.get() && wrappedRowGap.get() === 0) wrappedRowGap.set(8);
+    wrappedProfile.update(value => !value);
+  };
+  const textWrap = signal(false), textReflow = signal(false);
+  const textWords = computed(() => textWrap.get() ? textReflow.get() ? "Ag Ag Ag" : "Ag Ag Ag Ag" : "Ag");
+  const textWidth = computed(() => textWrap.get() ? textReflow.get() ? 28 : 40 : 70);
+  const textLineHeight = computed(() => textWrap.get() ? textReflow.get() ? 14 : 10 : 13);
+  const textPanelHeight = computed(() => textWrap.get() ? textReflow.get() ? 48 : 36 : 36);
+  const textWrapLabel = computed(() => textWrap.get() ? textReflow.get() ? "Wrapped Text: three lines — click to restore" : "Wrapped Text: two lines — click to restore" : "Automatic Text first baseline — click to wrap");
+  const textReflowLabel = computed(() => textWrap.get() && !textReflow.get() ? "Reflow → three lines" : "Reflow after wrap");
+  const displayedTextFont = computed(() => textFitPolicy.get() ? '10px "Pibbl App Font", serif' : textFont.get());
+  const displayedTextBaseline = computed(() => textFitPolicy.get() ? "middle" as const : "top" as const);
+  const displayedTextFit = computed(() => textFitPolicy.get() ? "ellipsis" as const : "visible" as const);
+  const displayedTextOverflow = computed(() => textFitPolicy.get() ? "clip" as const : "visible" as const);
+  const displayedTextWords = computed(() => textFitPolicy.get() ? "Ag baseline fitting string" : textWords.get());
+  const displayedTextWidth = computed(() => textFitPolicy.get() ? 40 : textWidth.get());
+  const displayedTextHeight = computed(() => textFitPolicy.get() ? "auto" as const : textPanelHeight.get());
+  const displayedTextWrap = computed(() => textFitPolicy.get() ? false : textWrap.get());
+  const textFitPolicyLabel = computed(() => textFitPolicy.get() ? "Plain Text" : "Fit middle");
+  const textHits: string[] = [];
+  const secondLabel = computed(() => String(second.get()));
+  const guide = computed(() => 210 + Math.max(0,12,second.get(),24));
+  const boxes = new Map<Name, LayoutBox>(), stamps = new Map<Name, number>();
+  const allocations = new Map<Name, LayoutBox>(), calls = { A: 0, B: 0 };
+  const hits: Name[] = [], focused: Name[] = [];
+  let serial = 0, basis = new DOMMatrix();
+  const CanvasBasis = definePrimitive<{ children: PibblNode }>((props, _style, context) => { basis = context.getTransform(); return props.children; });
+  function renderCard(props: CardProps, style: Readonly<ResolvedCardStyle>) {
+    const box = useLayoutBox(), matrix = useCanvasContext().getTransform();
+    const first = typeof props.first === "number" ? props.first : props.first.get();
+    const point = basis.inverse().transformPoint({ x: matrix.e, y: matrix.f });
+    const stamp = useConst(() => ++serial);
+    boxes.set(props.id, { x: point.x, y: point.y, width: box.width, height: box.height });
+    stamps.set(props.id, stamp);
+    return <>
+      <Rectangle keyboardFocusable onFocus={() => focused.push(props.id)} onClick={() => hits.push(props.id)} style={{ width: box.width, height: box.height, fill: style.fill, cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 4, top: first, textBaseline: "alphabetic", font: props.font, fill: "#ffffff" }}>{props.label}</Text>
+    </>;
+  }
+  const resolveStyle = (style: Readonly<CardStyle>, context: { allocation: Readonly<LayoutBox> }): ResolvedCardStyle => ({ ...style, alignSelf: undefined, marginLeft: undefined, marginTop: undefined, marginBottom: undefined, width: context.allocation.width, height: context.allocation.height });
+  const BaselineCard = definePrimitive<CardProps, CardStyle, CardStyle, ResolvedCardStyle>(renderCard, {
+    resolveStyle,
+    measureBaselines(input: BaselineMeasureInput<CardProps, CardStyle>): BaselinesResult {
+      if (input.props.id === "A" || input.props.id === "B") calls[input.props.id]++;
+      allocations.set(input.props.id, { ...input.allocation });
+      const first = typeof input.props.first === "number" ? input.props.first : input.props.first.get();
+      return { status: "measured", first, last: first };
+    },
+  });
+  const FinalBoxCard = definePrimitive<CardProps, CardStyle, CardStyle, ResolvedCardStyle>(renderCard, {
+    resolveStyle,
+    measure: () => { finalBoxMeasureCalls++; return {status:"measured",size:{width:40,height:measuredHeight.get()}}; },
+    measureBaselines: ({allocation}) => {
+      if (finalBoxSelf.get() !== "auto") throw new Error("explicit alignSelf must not query the final-box baseline");
+      finalBoxBaselineCalls++;
+      allocations.set("FA", {...allocation});
+      const first = allocation.height - 8;
+      return {status:"measured",first,last:first};
+    },
+  });
+  const BottomCard = definePrimitive<CardProps, CardStyle, CardStyle, ResolvedCardStyle>(renderCard, { resolveStyle });
+  const DescribedFinalBox = defineLayoutComponent((props: Omit<CardProps, "label"> & { readonly label: string | Signal<string>; readonly style: PibblResponsiveStyle<CardStyle> | Signal<CardStyle> }) =>
+    <FinalBoxCard key="final-root" id={props.id} label={props.label} font={props.font} first={props.first} style={props.style} />,
+  );
+  const renderKnownLeaf = () => <BaselineCard key="known-leaf" id="KA" label={knownNumber} font="12px monospace" first={knownFirst} style={knownLeafStyle} />;
+  const renderKnownDecoration = () => <Rectangle key="known-decoration" pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, width: 40, height: 20, fill: "#e7e5df" }} />;
+  const KnownDescribedLeaf = defineLayoutComponent((props: { readonly style: Signal<CardStyle> }) => <BaselineCard key="known-leaf" id="KA" label={knownNumber} font="12px monospace" first={knownFirst} style={props.style} />);
+  function renderKnownRoot() {
+    const direction = knownDirection.get(), source = knownSource.get();
+    if (source === "empty") return <Flex key="known" style={{ width: 40, height: direction === "row" || direction === "row-reverse" ? 20 : 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: "nowrap", alignItems: "flex-start" }} children={null} />;
+    if (source === "described") return <Flex key="known" style={{ width: 40, height: direction === "row" || direction === "row-reverse" ? 20 : 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: "nowrap", alignItems: "flex-start" }}>{renderKnownDecoration()}<KnownDescribedLeaf key="known-leaf" style={knownLeafStyle} /></Flex>;
+    if (source === "nested") return <Flex key="known" style={{ width: 40, height: direction === "row" || direction === "row-reverse" ? 20 : 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: "nowrap", alignItems: "flex-start" }}><Flex key="known-inner" style={{ width: 40, height: direction === "row" || direction === "row-reverse" ? 20 : 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: "nowrap", alignItems: "flex-start" }}>{renderKnownDecoration()}{renderKnownLeaf()}</Flex></Flex>;
+    return <Flex key="known" style={{ width: 40, height: direction === "row" || direction === "row-reverse" ? 20 : 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: "nowrap", alignItems: "flex-start" }}>{renderKnownDecoration()}{renderKnownLeaf()}</Flex>;
+  }
+  const KnownRoot = defineLayoutComponent(() => renderKnownRoot());
+  const staticLeafStyle = computed<CardStyle>(() => ({ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, fill: "#8a3248", position: staticRelative.get() ? "relative" : "static", top: staticRelative.get() ? 10 : undefined }));
+  const staticLeaf = <BaselineCard key="static-leaf" id="SA" label={computed(() => String(staticFirst.get()))} font="12px monospace" first={staticFirst} style={staticLeafStyle} />;
+  const staticBadge = <BottomCard key="static-badge" id="SBadge" label="" font="10px sans-serif" first={0} style={{ position: "absolute", left: 0, top: 0, width: 8, height: 8, fill: "#d9a744" }} />;
+  function renderStaticOwner() {
+    return staticNested.get()
+      ? <Flex key="static-outer" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, position: "static", flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}><Flex key="static-inner" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, position: "static", flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}>{staticLeaf}{staticBadge}</Flex></Flex>
+      : <Flex key="static-owner" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, position: "static", flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}>{staticLeaf}{staticBadge}</Flex>;
+  }
+  const StaticRoot = defineLayoutComponent(() => <Flex style={{ left: 28, top: 780, width: 100, height: 80, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
+    {renderStaticOwner()}
+    <BaselineCard key="static-peer" id="SB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+  </Flex>);
+  const StaticPanel = () => staticEnabled.get() ? <StaticRoot /> : null;
+  const staticEnabledLabel = computed(() => staticEnabled.get() ? "Static live" : "Run static test");
+  const KnownWrappedDescribedLeaf = defineLayoutComponent((props: { readonly style: Signal<CardStyle> }) => <BaselineCard key="known-wrap-leaf" id="KWA" label={knownNumber} font="12px monospace" first={knownFirst} style={props.style} />);
+  function renderKnownWrappedRoot() {
+    const direction = knownDirection.get(), source = knownSource.get(), mode = knownWrappedMode.get(), vertical = direction === "column" || direction === "column-reverse";
+    const leaf = <BaselineCard key="known-wrap-leaf" id="KWA" label={knownNumber} font="12px monospace" first={knownFirst} style={knownLeafStyle} />;
+    const tails = <><Rectangle key="known-wrap-d" pointerEvents="none" style={{ width: vertical ? 20 : 40, height: vertical ? 40 : 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#e7e5df" }} /><Rectangle key="known-wrap-e" pointerEvents="none" style={{ width: vertical ? 20 : 40, height: vertical ? 40 : 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#e7e5df" }} /></>;
+    if (source === "empty") return <Flex key="known-wrap" style={{ width: mode === "nowrap" ? 40 : 80, height: mode === "nowrap" ? vertical ? 40 : 20 : 80, minWidth: 0, minHeight: 0, flexBasis: mode === "nowrap" ? 40 : 80, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: mode, alignItems: "flex-start", alignContent: "flex-start" }} children={null} />;
+    if (source === "described") return <Flex key="known-wrap" style={{ width: mode === "nowrap" ? 40 : 80, height: mode === "nowrap" ? vertical ? 40 : 20 : 80, minWidth: 0, minHeight: 0, flexBasis: mode === "nowrap" ? 40 : 80, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: mode, alignItems: "flex-start", alignContent: "flex-start" }}><KnownWrappedDescribedLeaf key="known-wrap-leaf" style={knownLeafStyle} />{tails}</Flex>;
+    if (source === "nested") return <Flex key="known-wrap" style={{ width: mode === "nowrap" ? 40 : 80, height: mode === "nowrap" ? vertical ? 40 : 20 : 80, minWidth: 0, minHeight: 0, flexBasis: mode === "nowrap" ? 40 : 80, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: mode, alignItems: "flex-start", alignContent: "flex-start" }}><Flex key="known-wrap-inner" style={{ width: mode === "nowrap" ? 40 : 80, height: mode === "nowrap" ? vertical ? 40 : 20 : 80, minWidth: 0, minHeight: 0, flexBasis: mode === "nowrap" ? 40 : 80, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: mode, alignItems: "flex-start", alignContent: "flex-start" }}>{leaf}{tails}</Flex></Flex>;
+    return <Flex key="known-wrap" style={{ width: mode === "nowrap" ? 40 : 80, height: mode === "nowrap" ? vertical ? 40 : 20 : 80, minWidth: 0, minHeight: 0, flexBasis: mode === "nowrap" ? 40 : 80, flexGrow: 0, flexShrink: 0, flexDirection: direction, flexWrap: mode, alignItems: "flex-start", alignContent: "flex-start" }}>{leaf}{tails}</Flex>;
+  }
+  const KnownWrappedRoot = defineLayoutComponent(() => renderKnownWrappedRoot());
+  function renderContent() {
+    return <>
+      <Rectangle style={{ width: 760, height: 900, fill: "#f3f0e8" }} />
+      <Text style={{ left: 28, top: 24, font: "bold 24px sans-serif", fill: "#19375b" }}>WASM · first baseline</Text>
+      <Text style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}>Pure providers report baseline offsets from the final allocation.</Text>
+      <Rectangle onClick={() => second.update(value => value === 30 ? 34 : 30)} style={{ left: 28, top: 96, width: 200, height: 36, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 40, top: 106, font: "14px sans-serif", fill: "#ffffff" }}>Move B baseline</Text>
+      <Rectangle onClick={() => owner.update(value => value === 180 ? 240 : 180)} style={{ left: 244, top: 96, width: 200, height: 36, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 256, top: 106, font: "14px sans-serif", fill: "#ffffff" }}>Resize owner</Text>
+      <Rectangle onClick={() => paint.update(value => value === "#426b61" ? "#6e3e79" : "#426b61")} style={{ left: 460, top: 96, width: 200, height: 36, fill: "#6e3e79", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 472, top: 106, font: "14px sans-serif", fill: "#ffffff" }}>Paint indicator</Text>
+      <Rectangle pointerEvents="none" style={{ left: 460, top: 144, width: 200, height: 8, fill: paint }} />
+      <Rectangle onClick={() => textFont.update(value => value === "10px monospace" ? "16px monospace" : "10px monospace")} style={{ left: 676, top: 96, width: 56, height: 36, fill: "#a63758", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 684, top: 106, font: "12px sans-serif", fill: "#ffffff" }}>Text</Text>
+      <Rectangle onClick={() => mainAuto.update(value => !value)} style={{ left: 676, top: 144, width: 56, height: 36, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 682, top: 154, font: "11px sans-serif", fill: "#ffffff" }}>{mainLabel}</Text>
+      <Rectangle onClick={() => crossMode.update(value => value === "off" ? "top" : value === "top" ? "bottom" : value === "bottom" ? "both" : "off")} style={{ left: 676, top: 190, width: 56, height: 28, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 679, top: 198, font: "10px sans-serif", fill: "#ffffff" }}>{crossLabel}</Text>
+      <Rectangle onClick={() => layoutDirection.update(value => value === "ltr" ? "rtl" : "ltr")} style={{ left: 676, top: 226, width: 56, height: 28, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 682, top: 234, font: "10px sans-serif", fill: "#ffffff" }}>{directionLabel}</Text>
+      <Rectangle onClick={() => reverse.update(value => !value)} style={{ left: 676, top: 262, width: 56, height: 28, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 679, top: 270, font: "10px sans-serif", fill: "#ffffff" }}>{reverseLabel}</Text>
+      <Rectangle onClick={() => wrappedD.update(value => value === 20 ? 26 : 20)} style={{ left: 676, top: 300, width: 56, height: 36, fill: "#a63758", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 682, top: 310, font: "10px sans-serif", fill: "#ffffff" }}>{wrappedDLabel}</Text>
+      <Rectangle onClick={() => wrappedAlign.update(value => value === "flex-start" ? "flex-end" : value === "flex-end" ? "center" : value === "center" ? "space-between" : value === "space-between" ? "space-around" : value === "space-around" ? "space-evenly" : value === "space-evenly" ? "stretch" : "flex-start")} style={{ left: 676, top: 348, width: 56, height: 28, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 679, top: 356, font: "9px sans-serif", fill: "#ffffff" }}>{wrappedAlignLabel}</Text>
+      <Rectangle onClick={() => wrappedRowGap.update(value => value === 0 ? 8 : value === 8 ? 12 : value === 12 ? "10%" : 0)} style={{ left: 676, top: 390, width: 56, height: 28, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 679, top: 398, font: "9px sans-serif", fill: "#ffffff" }}>{wrappedGapLabel}</Text>
+      <Rectangle onClick={toggleWrappedProfile} style={{ left: 676, top: 432, width: 56, height: 22, fill: "#a63758", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 679, top: 438, font: "9px sans-serif", fill: "#ffffff" }}>{wrappedProfileLabel}</Text>
+      <Rectangle onClick={() => wrappedReverse.update(value => !value)} style={{ left: 676, top: 470, width: 56, height: 28, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 679, top: 478, font: "9px sans-serif", fill: "#ffffff" }}>{wrappedWrapLabel}</Text>
+      <Text pointerEvents="none" style={{ left: 28, top: 160, font: "14px sans-serif", fill: "#475569" }}>A/B supply offsets. C has no provider and uses its bottom edge.</Text>
+      <FocusManagement><Flex style={{ left: 28, top: 210, width: owner, height: 80, flexDirection: "row", flexWrap: "wrap", alignContent: "flex-start", alignItems: "first-baseline" }}>
+        <BaselineCard key="A" id="A" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#426b61" }} />
+        <BaselineCard key="B" id="B" label={secondLabel} font="20px sans-serif" first={second} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+        <BottomCard key="C" id="C" label="24" font="14px serif" first={24} style={{ width: 40, height: 24, flexBasis: 40, flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#a63758" }} />
+      </Flex></FocusManagement>
+      <Rectangle pointerEvents="none" style={{ left: 28, top: guide, width: owner, height: 1, fill: "#d16642", opacity: .6 }} />
+      <Flex style={{ left: 28, top: 270, width: finalBoxWidth, height: 40, alignItems: "first-baseline" }}>
+        <DescribedFinalBox key="FA" id="FA" label={measuredFirstLabel} font="12px monospace" first={measuredFirst} style={finalBoxStyle} />
+        <BaselineCard key="FB" id="FB" label="30" font="20px sans-serif" first={30} style={{ width:40,height:40,minWidth:0,minHeight:0,flexGrow:0,flexShrink:0,fill:"#19375b" }} />
+      </Flex>
+      <Rectangle onClick={() => measuredHeight.update(value => value === 20 ? 30 : 20)} style={{left:180,top:278,width:150,height:30,fill:"#426b61",cursor:"pointer"}} />
+      <Text pointerEvents="none" style={{left:188,top:287,font:"11px sans-serif",fill:"#ffffff"}}>{measuredHeightLabel}</Text>
+      <Rectangle onClick={() => aspectBox.update(value => !value)} style={{left:350,top:278,width:100,height:30,fill:"#426b61",cursor:"pointer"}} />
+      <Text pointerEvents="none" style={{left:358,top:287,font:"11px sans-serif",fill:"#ffffff"}}>{aspectLabel}</Text>
+      <Rectangle onClick={() => queryMode.update(value => value === "off" ? "narrow" : value === "narrow" ? "wide" : "off")} style={{left:460,top:300,width:160,height:28,fill:"#a63758",cursor:"pointer"}} />
+      <Text pointerEvents="none" style={{left:470,top:308,font:"11px sans-serif",fill:"#ffffff"}}>{queryLabel}</Text>
+      <Rectangle onClick={() => finalBoxSelf.update(value => value === "auto" ? "flex-end" : value === "flex-end" ? "center" : value === "center" ? "flex-start" : value === "flex-start" ? "stretch" : "auto")} style={{left:180,top:310,width:150,height:18,fill:"#6e3e79",cursor:"pointer"}} />
+      <Text pointerEvents="none" style={{left:188,top:313,font:"10px sans-serif",fill:"#ffffff"}}>{finalBoxSelfLabel}</Text>
+      <Flex style={{ left: 460, top: 340, width: 100, height: 40, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
+        <KnownRoot key="known" />
+        <BaselineCard key="known-peer" id="KB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+      </Flex>
+      <Rectangle onClick={() => knownFirst.update(value => value === 12 ? 22 : 12)} style={{ left: 576, top: 340, width: 84, height: 28, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 582, top: 348, font: "10px sans-serif", fill: "#ffffff" }}>{knownLabel}</Text>
+      <Rectangle onClick={() => knownRelative.update(value => value === "off" ? "top" : value === "top" ? "bottom" : "off")} style={{ left: 576, top: 372, width: 84, height: 24, fill: "#6e3e79", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 581, top: 379, font: "9px sans-serif", fill: "#ffffff" }}>{knownRelativeLabel}</Text>
+      <Rectangle onClick={() => knownSource.update(value => value === "direct" ? "described" : value === "described" ? "nested" : value === "nested" ? "empty" : "direct")} style={{ left: 576, top: 404, width: 84, height: 22, fill: "#a63758", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 581, top: 410, font: "9px sans-serif", fill: "#ffffff" }}>{knownSourceLabel}</Text>
+      <Rectangle onClick={() => knownDirection.update(value => value === "row" ? "row-reverse" : value === "row-reverse" ? "column" : value === "column" ? "column-reverse" : "row")} style={{ left: 576, top: 432, width: 84, height: 22, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 581, top: 438, font: "9px sans-serif", fill: "#ffffff" }}>{knownDirectionLabel}</Text>
+      <Text pointerEvents="none" style={{ left: 460, top: 410, font: "10px sans-serif", fill: "#475569" }}>First in-flow source</Text>
+      <Text pointerEvents="none" style={{ left: 460, top: 185, font: "12px sans-serif", fill: "#475569" }}>Cross auto takes over alignment.</Text>
+      <Flex style={{ left: 460, top: 210, width: 160, height: 80, flexDirection, flexWrap: "nowrap", layoutDirection, alignItems: "first-baseline" }}>
+        <BaselineCard key="MA" id="MA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: mainMargin, marginTop: crossTop, marginBottom: crossBottom, fill: "#426b61" }} />
+        <BaselineCard key="MB" id="MB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+      </Flex>
+      <Text pointerEvents="none" style={{ left: 28, top: 330, font: "14px sans-serif", fill: "#475569" }}>Click the cards at their new positions. Tab follows A → B → C.</Text>
+      <Text pointerEvents="none" style={{ left: 460, top: 440, font: "12px sans-serif", fill: "#475569" }}>Wrapped baselines</Text>
+      <Flex style={{ left: 460, top: 460, width: wrappedWidth, height: 120, flexDirection, layoutDirection, flexWrap: wrappedWrap, alignItems: "first-baseline", alignContent: wrappedAlign, columnGap: wrappedMainGap, rowGap: wrappedRowGap }}>
+        <BaselineCard key="WA" id="WA" label="12" font="12px monospace" first={12} style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248" }} />
+        <BaselineCard key="WB" id="WB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+        <BaselineCard key="WC" id="WC" label="8" font="12px monospace" first={8} style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#8a3248" }} />
+        <BaselineCard key="WD" id="WD" label={wrappedDLabel} font="14px sans-serif" first={wrappedD} style={{ width: 40, height: 30, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#426b61" }} />
+      </Flex>
+      <Text pointerEvents="none" style={{ left: 28, top: 650, font: "12px sans-serif", fill: "#475569" }}>Wrapping keeps the first source as the baseline.</Text>
+      <Flex style={{ left: 28, top: 680, width: 140, height: 80, flexDirection: "row", flexWrap: "nowrap", alignItems: "first-baseline" }}>
+        <KnownWrappedRoot key="known-wrap" />
+        <BaselineCard key="known-wrap-peer" id="KWB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+      </Flex>
+      <Rectangle onClick={() => knownWrappedMode.update(value => value === "nowrap" ? "wrap" : value === "wrap" ? "wrap-reverse" : "nowrap")} style={{ left: 180, top: 680, width: 104, height: 28, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 188, top: 689, font: "10px sans-serif", fill: "#ffffff" }}>{knownWrappedLabel}</Text>
+      <Text pointerEvents="none" style={{ left: 28, top: 760, font: "12px sans-serif", fill: "#475569" }}>Static owner keeps the baseline while its badge stays at the outer origin.</Text>
+      <StaticPanel />
+      <Rectangle onClick={() => staticEnabled.update(value => !value)} style={{ left: 150, top: 824, width: 110, height: 28, fill: "#19375b", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 157, top: 832, font: "10px sans-serif", fill: "#ffffff" }}>{staticEnabledLabel}</Text>
+      <Rectangle onClick={() => staticFirst.update(value => value === 12 ? 22 : 12)} style={{ left: 150, top: 780, width: 100, height: 28, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 156, top: 788, font: "10px sans-serif", fill: "#ffffff" }}>{staticFirstLabel}</Text>
+      <Rectangle onClick={() => staticRelative.update(value => !value)} style={{ left: 260, top: 780, width: 100, height: 28, fill: "#6e3e79", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 267, top: 788, font: "10px sans-serif", fill: "#ffffff" }}>{staticRelativeLabel}</Text>
+      <Rectangle onClick={() => staticNested.update(value => !value)} style={{ left: 370, top: 780, width: 110, height: 28, fill: "#a63758", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 377, top: 788, font: "10px sans-serif", fill: "#ffffff" }}>{staticNestedLabel}</Text>
+      <Flex style={{ left: 28, top: 530, width: 120, height: numericPanelHeight, flexWrap: wrappedWrap, alignItems: "first-baseline", alignContent: "stretch" }}>
+        <BaselineCard key="NA" id="NA" label="12" font="12px monospace" first={12} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, position: relativePosition, left: 6, top: 10, marginLeft: numericMainMargin, marginTop: numericTop, marginBottom: numericBottom, fill: "#426b61" }} />
+        <BaselineCard key="NB" id="NB" label="30" font="20px sans-serif" first={30} style={{ width: 40, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#19375b" }} />
+        <BaselineCard key="NC" id="NC" label="8" font="12px monospace" first={8} style={{ width: 60, height: 20, flexBasis: 60, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: "#a63758" }} />
+      </Flex>
+      <Rectangle onClick={() => numericMainMargin.update(value => value === 10 ? 20 : 10)} style={{ left: 180, top: 540, width: 150, height: 34, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 188, top: 549, font: "12px sans-serif", fill: "#ffffff" }}>{numericMainLabel}</Text>
+      <Rectangle onClick={() => numericCrossMode.update(value => value === "off" ? "top" : value === "top" ? "bottom" : "off")} style={{ left: 350, top: 540, width: 100, height: 34, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 356, top: 549, font: "11px sans-serif", fill: "#ffffff" }}>{numericCrossLabel}</Text>
+      <Rectangle onClick={() => { numericCrossMode.set("off"); wrappedAutoCross.update(value => value === "off" ? "top" : value === "top" ? "bottom" : value === "bottom" ? "both" : "off"); }} style={{ left: 180, top: 584, width: 150, height: 32, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 188, top: 593, font: "12px sans-serif", fill: "#ffffff" }}>{wrappedAutoLabel}</Text>
+      <Rectangle onClick={() => relativeShift.update(value => !value)} style={{ left: 350, top: 584, width: 100, height: 32, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 360, top: 593, font: "12px sans-serif", fill: "#ffffff" }}>{relativeLabel}</Text>
+      <Text pointerEvents="none" style={{ left: 28, top: 360, font: "14px sans-serif", fill: "#475569" }}>Text uses live Canvas metrics.</Text>
+      <Text onClick={() => { textFont.set("10px monospace"); textReflow.set(false); textWrap.update(value => !value); }} style={{ left: 28, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textWrapLabel}</Text>
+      <Rectangle onClick={() => textFitPolicy.update(value => !value)} style={{ left: 220, top: 414, width: 104, height: 28, fill: "#a63758", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 228, top: 422, font: "11px sans-serif", fill: "#ffffff" }}>{textFitPolicyLabel}</Text>
+      <Rectangle onClick={() => textInsets.update(value => !value)} style={{ left: 340, top: 414, width: 110, height: 28, fill: "#426b61", cursor: "pointer" }} />
+      <Text pointerEvents="none" style={{ left: 348, top: 422, font: "11px sans-serif", fill: "#ffffff" }}>{textInsetsLabel}</Text>
+      <Text onClick={() => { if (textWrap.get()) textReflow.set(true); }} style={{ left: 340, top: 386, font: "13px sans-serif", fill: "#475569", cursor: "pointer" }}>{textReflowLabel}</Text>
+      <Group onClick={(event) => { if (event.target !== event.currentTarget) textHits.push("text"); }}>
+        <Flex style={{ left: 28, top: 404, width: 180, height: textPanelHeight, flexDirection: "row", flexWrap: "wrap", alignContent: "flex-start", alignItems: "first-baseline" }}>
+          <Text key="text-small" style={{ width: 100, height: displayedTextHeight, flexBasis: displayedTextWidth, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: displayedTextFont, padding: textPadding, borderWidth: textBorder, lineHeight: textLineHeight, textBaseline: displayedTextBaseline, wrap: displayedTextWrap, fit: displayedTextFit, overflow: displayedTextOverflow, fill: "#426b61" }}>{displayedTextWords}</Text>
+          <Text key="text-large" style={{ width: 90, height: 32, flexBasis: 90, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, cursor: "pointer", font: "20px sans-serif", textBaseline: displayedTextBaseline, wrap: false, fit: "visible", overflow: "visible", fill: "#a63758" }}>Ag</Text>
+        </Flex>
+      </Group>
+    </>;
+  }
+  const children = renderContent();
+  return {
+    node: <CanvasBasis>{children}</CanvasBasis>,
+    read: () => JSON.stringify({ owner: owner.get(), first: second.get(), textFont: textFont.get(), textFitPolicy: textFitPolicy.get(), textWrap: textWrap.get(), textReflow: textReflow.get(), queryMode: queryMode.get(), queryWidth: finalBoxWidth.get(), describedRoot: true, knownFirst: knownFirst.get(), knownRelative: knownRelative.get(), knownSource: knownSource.get(), knownDirection: knownDirection.get(), knownWrappedMode: knownWrappedMode.get(), staticFirst: staticFirst.get(), staticRelative: staticRelative.get(), staticNested: staticNested.get(), staticEnabled: staticEnabled.get(), selfMode: finalBoxSelf.get(), finalBoxBaselineCalls, mainAuto: mainAuto.get(), crossMode: crossMode.get(), reverse: reverse.get(), layoutDirection: layoutDirection.get(), wrappedD: wrappedD.get(), wrappedProfile: wrappedProfile.get(), wrappedGap: wrappedRowGap.get(), wrappedAlign: wrappedAlign.get(), wrappedReverse: wrappedReverse.get(), textHits, calls, finalBoxMeasureCalls, allocations: Object.fromEntries(allocations), boxes: Object.fromEntries(boxes), stamps: Object.fromEntries(stamps), hits, focused, basis }),
+  };
+}
+export function WasmFlexBaselineExample() {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  const diagnostics = (globalThis as typeof globalThis & { __PIBBL_LAYOUT_DIAGNOSTICS__?: () => unknown }).__PIBBL_LAYOUT_DIAGNOSTICS__;
+  if (!diagnostics) return <Text style={{ left: 28, top: 24, font: "18px sans-serif", fill: "#19375b" }}>This example needs the experimental layout build.</Text>;
+  const content = useConst(createBaselineContent);
+  useReaction(() => {
+    const panel = document.createElement("pre"); panel.style.cssText = "font:12px monospace;white-space:pre-wrap;overflow-wrap:anywhere;min-width:0;max-width:100%;box-sizing:border-box;padding:12px;background:#e7e5df;color:#19375b";
+    canvas.insertAdjacentElement("afterend", panel);
+    const refresh = () => { panel.textContent = untracked(content.read); };
+    refresh(); const timer = window.setInterval(refresh, 100);
+    return () => { window.clearInterval(timer); panel.remove(); };
+  }, []);
+  return content.node;
+}

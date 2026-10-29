@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   defineParticleEffect2D,
   particleRange,
@@ -46,7 +47,10 @@ burstButton.addEventListener("click", () => activeSystem?.emit("spark", burst));
 
 function App() {
   const options: PibblParticleSystemOptions = { seed: 7, autoplay: true };
-  const system: PibblParticleSystem<"spark"> = useParticleSystem(effect, options);
+  const system: PibblParticleSystem<"spark"> = useParticleSystem(
+    effect,
+    options,
+  );
   activeSystem = system;
   const status: PibblParticleSystemStatus = system.status.get();
   const execution: PibblParticleExecution = system.execution.get();
@@ -72,5 +76,5 @@ function App() {
   );
 }
 
-const app = pibbl(canvas, <App />);
+const app = pibblSync(canvas, <App />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

@@ -5,11 +5,9 @@ import {
   Overlay,
   Rectangle,
   Text,
-  pibbl,
   resolveSignalValue,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
   type SignalValue,
 } from "@pibbl/core";
@@ -393,15 +391,10 @@ function Scene({ input }: { input: SignalValue<readonly Observation[]> }) {
   );
 }
 
-export default function mount(
-  canvas: HTMLCanvasElement,
-  config: Config = {},
-): PibblController {
-  return pibbl(
-    canvas,
+export function VizSmallMultiplesExample(config: Config = {}) {
+  return (
     <FocusManagement>
       <Scene input={config.data ?? observations} />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

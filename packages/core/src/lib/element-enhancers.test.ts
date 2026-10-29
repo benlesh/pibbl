@@ -14,7 +14,7 @@ import { Flow } from './layout/flow';
 import { Flex } from './layout/flex';
 import { Grid } from './layout/grid';
 import { Layer } from './components/layer';
-import { pibbl } from './pibbl';
+import { pibblSync as pibbl } from "../sync.js";
 import {
   appendElementEnhancer,
   getElementEnhancerDescriptors,

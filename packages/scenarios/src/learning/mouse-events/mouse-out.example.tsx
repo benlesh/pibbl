@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function MouseOutStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function MouseOutStudy() {
   const departures = useSignal(0);
   const inside = useSignal(false);
   return [
@@ -48,7 +48,4 @@ function MouseOutStudy() {
       }}
     >{`DEPARTURES / ${departures.get()}`}</Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <MouseOutStudy />);
 }

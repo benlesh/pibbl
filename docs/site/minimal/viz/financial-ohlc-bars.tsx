@@ -1,3 +1,5 @@
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   LinearScale,
   OhlcBarSeries,
@@ -88,3 +90,10 @@ export function FinancialOhlcBars() {
     </UTCScale>
   );
 }
+
+const canvas = document.createElement("canvas");
+canvas.width = 120;
+canvas.height = 120;
+document.body.append(canvas);
+const app = pibblSync(canvas, <FinancialOhlcBars />);
+window.addEventListener("pagehide", () => app.dispose(), { once: true });

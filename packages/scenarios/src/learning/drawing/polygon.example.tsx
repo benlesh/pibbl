@@ -1,6 +1,6 @@
-import { pibbl, useSignal, Polygon, Rectangle, type PibblController } from "@pibbl/core";
+import { Polygon, Rectangle, useSignal } from "@pibbl/core";
 
-function PolygonStudy() {
+export function PolygonStudy() {
   const active = useSignal(false);
 
   return [
@@ -25,8 +25,4 @@ function PolygonStudy() {
       onClick={() => active.update((value) => !value)}
     />,
   ];
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <PolygonStudy />);
 }

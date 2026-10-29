@@ -1,5 +1,18 @@
-import { pibbl, Circle } from "@pibbl/core";
-import { PlotSeries, PointSeries, ScaleAdjust, type PlotKeyAccessor, type PlotSeriesProps, type PointAccessor, type PointMarkStyle, type PointSeriesProps, type PointSeriesStyle, type PointStyleResolver, LinearScale } from "@pibbl/core/viz";
+import {  Circle } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
+import {
+  PlotSeries,
+  PointSeries,
+  ScaleAdjust,
+  type PlotKeyAccessor,
+  type PlotSeriesProps,
+  type PointAccessor,
+  type PointMarkStyle,
+  type PointSeriesProps,
+  type PointSeriesStyle,
+  type PointStyleResolver,
+  LinearScale,
+} from "@pibbl/core/viz";
 
 type Datum = { id: string; x: number; y: number; important: boolean };
 const data: readonly Datum[] = [
@@ -36,7 +49,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <LinearScale
     id="x"
@@ -45,7 +58,7 @@ const app = pibbl(
     range="width"
     style={{ width: 320, height: 220 }}
   >
-    <LinearScale id="y"  domain={[0, 4]} range="height" reverse>
+    <LinearScale id="y" domain={[0, 4]} range="height" reverse>
       <PointSeries {...points} />
       <PlotSeries {...plot} />
     </LinearScale>

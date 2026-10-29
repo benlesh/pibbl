@@ -73,7 +73,9 @@ either as the current result unless a fresh run reproduces it.
 ## Current runtime model
 
 - `pibbl(canvas, root, config?)` owns at most one live mount per Canvas and
-  returns a stable controller with idempotent `dispose()`.
+  returns a Promise for a stable controller with idempotent `dispose()`.
+  `prepareLayoutEngine()` prewarms the shared external WASM module; the separate
+  `@pibbl/core/sync` entry provides `pibblSync()` for synchronous embedded startup.
 - One realm scheduler coalesces roots, managed Layers, animation, 2D physics,
   and external render layers into Begin, Advance, Commit, Plan, Render, and
   Complete phases.
@@ -154,6 +156,41 @@ Read exact contracts before changing these areas:
 - `docs/design/mouse-interaction-contract.md`
 - `docs/design/event-resource-ownership.md`
 - `docs/design/runtime-resource-ownership.md`
+
+## API design working agreement
+
+Before adding or changing a public API, read
+[the API design guidance](docs/design/api-design-guidance.md). It consolidates
+the maintainer's recurring feedback; apply it alongside the argument and
+fixed-return-contract rules below. It does not authorize unrelated API migrations
+or supersede current runtime contracts.
+
+- Start with concise application code and exact public signatures/results. State
+  what is added, changed, or removed, why existing composition is insufficient,
+  and whether core changes are needed. Present material public design choices
+  before implementation; honor existing acceptance and explicit authorization
+  without adding another approval round.
+- Optimize for human and agent readability: semantic names, explicit reads and
+  writes, clear units, useful defaults, and little ceremony. Prefer typed named
+  keys over numeric positions when callers select semantic roles.
+- Compose reusable calculations, definitions, signals, styles, events, and
+  rendering. Give shared algorithms with one return contract typed strategy
+  functions; give distinct operations distinct names. Avoid duplicate reactive,
+  animation, event, or resource systems and speculative framework wrappers.
+- Apps should pay only for what they use. Prefer standalone named exports over
+  namespace utility objects or string-dispatched algorithm registries. Keep
+  optional work lazy, optional imports inert, and unused heavy dependencies out
+  of consumer bundles; verify these claims with appropriate evidence.
+- Define ownership, update timing, mutation/cache invalidation, cancellation,
+  failure, and cleanup. Hooks must release resources on unmount. Preserve the
+  inexpensive path when optional capabilities are unused.
+- For changes in the authorized scope, migrate affected consumers, exports,
+  declarations, examples, and docs together. Do not keep confusing aliases merely
+  to preserve an obsolete design; follow any explicit compatibility requirement.
+- Deliver a focused public-API slice first. Before feature completion, supply
+  complete linked JSDoc, minimal runnable examples, and a compelling composition
+  with meaningful data, labels, units, and interaction where applicable. A
+  showcase must make the reusable public capability clear.
 
 ## Function arguments: targets and named options
 
@@ -333,6 +370,16 @@ Exact implemented contracts and records live in:
 - `docs/architecture/style-and-layout-architecture.md`
 - `docs/superpowers/plans/2026-08-17-style-and-layout-implementation.md`
 - `docs/project-plans/003-first-class-style-and-layout.md`
+
+## Studio example authoring
+
+Learning examples and tutorial snapshots export descriptive named components.
+Their catalog metadata selects `source.exportName` and owns optional surface
+configuration and HTML-overlay setup. Studio awaits mounting the selected component
+with `pibbl`, disposes it before rerunning, and owns the Canvas host lifetime. Do
+not add default component exports or per-example `mount` wrappers. Keep component
+state and resource cleanup in ordinary Pibbl hooks; deterministic labs may use the
+shared private synchronous example host to supply fixtures through component props.
 
 ## Shipped JSX component authoring
 
