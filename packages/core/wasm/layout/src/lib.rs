@@ -1,4 +1,6 @@
 //! Experimental region-owned f64 Flex allocator. No rendering or scheduling.
+mod grid;
+mod tree;
 use std::cell::RefCell;
 const STRIDE: usize = 10; // basis, min, max, padding, grow, shrink, result, frozen/offset, margin before, margin after
 // base, min value/unit, max value/unit, target, effective min, effective max.
@@ -85,6 +87,8 @@ pub extern "C" fn resize(handle: u32, generation: u32, count: usize) -> *mut f64
 }
 #[no_mangle]
 pub extern "C" fn dispose() {
+    tree::dispose_all_trees();
+    grid::dispose_all_grids();
     ARENAS.with(|pool| {
         let mut pool = pool.borrow_mut();
         pool.closed = true;
@@ -102,7 +106,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v19() -> u32 { 19 }
+pub extern "C" fn layout_abi_v21() -> u32 { 21 }
 
 /// Returns the source-record count in the current native first wrap line.
 /// `NaN` means no current wrapped membership is available; a successful empty

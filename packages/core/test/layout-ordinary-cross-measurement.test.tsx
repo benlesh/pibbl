@@ -5,7 +5,7 @@ import {
   useCanvasContext, useConst, useLayoutBox,
 } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
@@ -22,7 +22,7 @@ for (const [label, axis, wrap, described] of [
   ['direct column nowrap', 'column', 'nowrap', false],
   ['described column nowrap', 'column', 'nowrap', true],
 ] as const) {
-  it.runIf(experimentalLayout)(`uses an ordinary measure-only ${label} result before cross-auto placement`, async () => {
+  it.runIf(nativeLayout)(`uses an ordinary measure-only ${label} result before cross-auto placement`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const margin = signal<0 | 'auto'>(0), natural = signal(label === 'direct column nowrap' ? 200 : 20), peerFill = signal('#426b61');
     const hits: string[] = [];
@@ -98,7 +98,7 @@ for (const [label, extra] of [
   ['custom font', { font: '10px CustomFont' }],
   ['ellipsis fit', { fit: 'ellipsis' as const }],
 ] as const) {
-  it.runIf(experimentalLayout)(`keeps ordinary wrapped Text ${label} sizing when a column side margin becomes auto`, async () => {
+  it.runIf(nativeLayout)(`keeps ordinary wrapped Text ${label} sizing when a column side margin becomes auto`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const marginLeft = signal<0 | 'auto'>(0), words = signal('longunbrokenwordlongunbrokenword'), peerFill = signal('#426b61');
     const hits: string[] = [];

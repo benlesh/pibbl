@@ -14,10 +14,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => {
   for (const controller of controllers.splice(0)) controller.dispose();
   document.body.replaceChildren();
@@ -39,7 +39,7 @@ interface BaselineProps { readonly name: 'A' | 'B' | 'C' | 'D'; readonly first: 
 
 type CrossPolicy = 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly' | 'stretch';
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'distributes fixed wrapped first-baseline lines through numeric cross gaps and every align-content policy',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -195,7 +195,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'excludes automatic cross-margin leaves from wrapped first-baseline queries while retaining their physical line extent and stretch absorption',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -312,7 +312,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses physical cross edges for wrap-reverse first-baseline automatic margins without reflecting an automatic leaf',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -385,7 +385,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'keeps wrapped first-baseline line geometry while static and relative leaves use existing final physical placement',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -473,7 +473,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'converts a fixed border-box first-baseline provider from content offsets to an outer wrapped line',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

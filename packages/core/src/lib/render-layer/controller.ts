@@ -1,4 +1,5 @@
 import { GLOBAL_STATE, getCurrentPibblInstance } from "../global-state.js";
+import { registerLayoutSuspensionResource, unregisterLayoutSuspensionResource } from "../layout/participation.js";
 import { getCurrentWorldTransform } from "../render-target.js";
 import {
   queueFrameCompletion,
@@ -174,6 +175,10 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       clippingStack: [],
       resolveLocal: (x, y, output) => this.resolveLocal(x, y, output),
     };
+    const suspensionResource = {
+      suspendLayout: () => this.instance.paintEntries.delete(this.resolverEntry),
+    };
+    registerLayoutSuspensionResource(refs, suspensionResource);
     assertCapability();
     this.canvas = new OffscreenCanvas(1, 1);
     const controller = this;
@@ -189,7 +194,10 @@ export class RenderLayerController<Props, Resources, Target extends object> {
         controller.invalidate(true);
       },
     });
-    refs.teardowns.add(() => this.dispose());
+    refs.teardowns.add(() => {
+      unregisterLayoutSuspensionResource(refs, suspensionResource);
+      this.dispose();
+    });
   }
 
   render(
@@ -524,10 +532,49 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       transform: this.resolverTransform,
       clippingStack: this.resolverEntry.clippingStack,
     } as StagedInteraction<Target>;
-    for (const target of this.committedTargets.values()) {
-      this.applyResolverGeometry(target, interaction);
-      this.instance.eventRoot.focusPolicy?.observeTarget(target);
-      this.observeTransactionalFocusTarget(target);
+    if (this.committedPolicy.pointerEvents !== "none") {
+      for (const descriptor of this.committedTargetDescriptors) {
+        if (descriptor.pointerEvents === "none") continue;
+        const target = this.committedTargets.get(descriptor.target);
+        if (!target) continue;
+        // Hidden participation releases the registration while retaining this
+        // controller's committed bitmap and interaction snapshot. Re-register
+        // it on the first visible traversal so it regains paint, target, and
+        // focus ownership without forcing the external renderer to repaint.
+        if (!target.live) {
+          updateTarget(
+            target,
+            descriptor.handlers ?? {},
+            {
+              path: new Path2D(),
+              cursor: descriptor.cursor,
+              keyboardFocusable: descriptor.keyboardFocusable,
+              keyboardNavigationBounds: descriptor.keyboardNavigationBounds,
+            },
+            true,
+          );
+        }
+        this.applyResolverGeometry(target, interaction);
+        this.instance.eventRoot.focusPolicy?.observeTarget(target);
+        this.observeTransactionalFocusTarget(target);
+      }
+    }
+    if (
+      this.committedPolicy.pointerEvents !== "none" &&
+      this.committedPolicy.missBehavior === "target-layer" &&
+      !this.layerTarget.live
+    ) {
+      updateTarget(
+        this.layerTarget,
+        { onClick: STRUCTURAL_CLICK_ELIGIBILITY },
+        {
+          path: new Path2D(),
+          keyboardFocusable: this.committedPolicy.keyboardFocusable,
+          keyboardNavigationBounds:
+            this.committedPolicy.keyboardNavigationBounds,
+        },
+        true,
+      );
     }
     if (this.layerTarget.live) {
       this.applyResolverGeometry(this.layerTarget, interaction);

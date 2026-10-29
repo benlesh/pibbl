@@ -27,6 +27,20 @@ const transactionProvisions = new WeakMap<
 /** @internal Immutable input reads captured for replay into a current receiver. */
 export type ReceiverInputProvisionReceipt = readonly { readonly node: SignalNode<unknown>; readonly roles: number }[];
 
+interface ReceiverReadObserver {
+  readonly read: (node: SignalNode<unknown>) => void;
+  readonly parent: ReceiverReadObserver | undefined;
+}
+let receiverReadObserver: ReceiverReadObserver | undefined;
+
+/** Observe provisioned reads for cache validation without acquiring receiver edges. */
+export function observeReceiverInputReads<T>(read: (node: SignalNode<unknown>) => void, callback: () => T): T {
+  const previous = receiverReadObserver;
+  receiverReadObserver = { read, parent: previous };
+  try { return callback(); }
+  finally { receiverReadObserver = previous; }
+}
+
 export function withReceiverInputProvision<T>(
   transaction: PibblRenderTransaction | undefined,
   receiver: object | undefined,
@@ -75,6 +89,7 @@ function runReceiverInputProvision<T>(
   let provision: ReceiverInputProvision | undefined;
   const collector: SignalDependencyCollector = {
     addDependency(node, role: SignalDependencyRoleInput = 'unknown'): void {
+      for (let observer = receiverReadObserver; observer; observer = observer.parent) observer.read(node);
       if (provision === undefined) {
         provision = createProvision(transaction, receiver);
       }

@@ -13,15 +13,15 @@ import {
   useLayoutBox,
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'keeps a described Card handoff receiver-scoped while an opaque measured Owner paints its returned subtree normally',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -107,7 +107,7 @@ for (const axis of ['row', 'column'] as const) for (const fixture of [
   { available: 100, leaf: 400, queries: [100, 200] },
   { available: 200, leaf: 800, queries: [200, 400] },
 ]) {
-  it.runIf(experimentalLayout)(`preserves native finite recursive percentage-owner phases for a known ${axis} chain at ${fixture.available}`, async () => {
+  it.runIf(nativeLayout)(`preserves native finite recursive percentage-owner phases for a known ${axis} chain at ${fixture.available}`, async () => {
     const row = axis === 'row', baseline = snapshotWasmLayoutDiagnostics();
     const queries: number[] = [], painted: number[] = [];
     const natural = signal(40);
@@ -174,7 +174,7 @@ for (const axis of ['row', 'column'] as const) for (const fixture of [
   });
 }
 
-for (const axis of ['row', 'column'] as const) for (const branches of [1, 2]) it.runIf(experimentalLayout)(`continues finite native owner phases through two known ${axis} descriptors with ${branches} branches`, async () => {
+for (const axis of ['row', 'column'] as const) for (const branches of [1, 2]) it.runIf(nativeLayout)(`continues finite native owner phases through two known ${axis} descriptors with ${branches} branches`, async () => {
   const row = axis === 'row', baseline = snapshotWasmLayoutDiagnostics();
   const queries: number[] = [], widths: number[] = [];
   const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>((_props, style) => {
@@ -213,7 +213,7 @@ const stagedKnownOwnerCases = [
 ] as const;
 
 for (const axis of ['row', 'column'] as const) for (const owner of stagedKnownOwnerCases) for (const bound of ['cap', 'floor'] as const) for (const kind of ['numeric', 'paired'] as const) {
-  it.runIf(experimentalLayout)(`measures a described ${kind} ${axis} Card through the staged ${bound} owner branch: ${owner.name}`, () => {
+  it.runIf(nativeLayout)(`measures a described ${kind} ${axis} Card through the staged ${bound} owner branch: ${owner.name}`, () => {
     const row = axis === 'row';
     const natural = bound === 'cap' ? 80 : 20;
     const queries: number[] = [];
@@ -253,7 +253,7 @@ for (const axis of ['row', 'column'] as const) for (const owner of stagedKnownOw
 }
 
 for (const axis of ['row', 'column'] as const) for (const owner of stagedKnownOwnerCases.slice(1, 4)) for (const bound of ['cap', 'floor'] as const) for (const kind of ['numeric', 'paired'] as const) {
-  it.runIf(experimentalLayout)(`places a described ${kind} ${axis} Card with staged ${bound} bounds under external${owner.available}`, async () => {
+  it.runIf(nativeLayout)(`places a described ${kind} ${axis} Card with staged ${bound} bounds under external${owner.available}`, async () => {
     const row = axis === 'row';
     const natural = bound === 'cap' ? 80 : 20;
     const baseline = snapshotWasmLayoutDiagnostics();

@@ -5,10 +5,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -32,7 +32,7 @@ type Box = Readonly<{ x: number; y: number; width: number; height: number; stamp
 type First = number | { get(): number };
 const fixed = (width: number, height: number, fill: string): Style & { readonly width: number; readonly height: number } => ({ width, height, minWidth: 0, minHeight: 0, flexBasis: width, flexGrow: 0, flexShrink: 0, fill });
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses static known Flex content for the baseline while its absolute badge anchors to the non-static outer owner',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -100,7 +100,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout).each([false, true])(
+it.runIf(nativeLayout).each([false, true])(
   'keeps a nested static badge anchored to the nearest non-static owner (absolute first: %s)',
   async absoluteFirst => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -141,7 +141,7 @@ it.runIf(experimentalLayout).each([false, true])(
 );
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'finalizes a transparent static Flex root only after its outer first-baseline origin is known',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -195,7 +195,7 @@ it.runIf(experimentalLayout)(
 );
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'releases pending static structural plans when late absolute measurement fails and recovers on a fresh mount',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

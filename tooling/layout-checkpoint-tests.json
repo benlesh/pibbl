@@ -89,5 +89,15 @@
   "packages/core/test/layout-flex-last-baseline-structural.test.tsx",
   "packages/core/test/layout-intrinsic-sizing.test.tsx",
   "packages/core/test/layout-intrinsic-text-sizing.test.tsx",
-  "packages/core/test/layout-intrinsic-border-box-sizing.test.tsx"
+  "packages/core/test/layout-intrinsic-border-box-sizing.test.tsx",
+  "packages/core/test/layout-intrinsic-main-bounds.test.tsx",
+  "packages/core/test/layout-negative-margin-conformance.test.tsx",
+  "packages/core/test/layout-participation.test.tsx",
+  "packages/core/test/layout-general-measurement.test.tsx",
+  "packages/core/test/layout-native-grid-ownership.test.tsx",
+  "packages/core/test/layout-root-invalidation.test.tsx",
+  "packages/core/test/layout-workspace-evidence.test.tsx",
+  "packages/core/test/layout-grid-coupled-measurement.test.tsx",
+  "packages/core/src/lib/layout/flex-allocation-cache.test.ts",
+  "packages/layout/test"
 ]

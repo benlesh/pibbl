@@ -16,11 +16,11 @@ import {
   useLayoutBox,
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
@@ -34,7 +34,7 @@ type BoxRecord = Readonly<{ x: number; y: number; width: number; height: number;
 for (const family of ['text', 'provider', 'known'] as const)
   for (const flexDirection of ['column', 'column-reverse'] as const)
     for (const layoutDirection of ['ltr', 'rtl'] as const) {
-      it.runIf(experimentalLayout)(`keeps ${family} ${flexDirection}/${layoutDirection} intrinsic cross geometry stable through physical auto margins`, async () => {
+      it.runIf(nativeLayout)(`keeps ${family} ${flexDirection}/${layoutDirection} intrinsic cross geometry stable through physical auto margins`, async () => {
         const baseline = snapshotWasmLayoutDiagnostics();
         const left = signal<0 | 'auto'>(0);
         const right = signal<0 | 'auto'>(0);

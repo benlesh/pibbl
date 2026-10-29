@@ -1,3 +1,4 @@
+import { isLayoutComponentSuspended, isLayoutInstanceSuspended } from '../layout/participation.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
 import type { PibblClippingStackEntry, PibblEventRoot, PibblInstance, PibblInteractionLayer, PibblRenderTransaction } from '../types.js';
@@ -159,7 +160,13 @@ export class HtmlService implements HtmlBridge {
     };
     walk(rootInstance, new DOMMatrix(), [], 1);
     const desired = new Set(projections.map(p => p.registration.slot));
-    for (const slot of this.live) if (!desired.has(slot)) this.retire(slot);
+    for (const slot of this.live) if (!desired.has(slot)) {
+      if (!slot.owner.mainTeardowns.closed && (isLayoutComponentSuspended(slot.component) || isLayoutInstanceSuspended(slot.owner))) {
+        slot.region.active = false;
+        this.root.focusPolicy?.removeHtmlFocusRegion?.(slot.region);
+        if (slot.shell) { slot.shell.inert = true; slot.shell.style.visibility = 'hidden'; }
+      } else this.retire(slot);
+    }
     if (projections.length) this.ensureDOM();
     if (this.viewport) this.viewport.hidden = false;
     for (const [index, projection] of projections.entries()) this.apply(projection, index);

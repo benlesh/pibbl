@@ -15,10 +15,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -28,7 +28,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
   }));
 }
 
-it.runIf(experimentalLayout).each([false, true])(
+it.runIf(nativeLayout).each([false, true])(
   'measures a described paired leaf and preserves conservative function-input caching (interactive sibling: %s)',
   async (interactiveSibling) => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -158,7 +158,7 @@ it.runIf(experimentalLayout).each([false, true])(
   },
 );
 
-it.runIf(experimentalLayout)('preserves cycle detection through a described paired leaf query', () => {
+it.runIf(nativeLayout)('preserves cycle detection through a described paired leaf query', () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>(() => null, {
     resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),

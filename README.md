@@ -21,6 +21,7 @@ installed through the `latest` or `next` npm tag.
 - `@pibbl/core` contains the Canvas runtime and optional feature subpaths.
 - `@pibbl/three` integrates ordinary Three.js scenes.
 - `@pibbl/text` provides text shaping and outlines.
+- `@pibbl/layout` provides an owned standalone layout tree and Yoga migration analysis.
 
 ## Quick start
 

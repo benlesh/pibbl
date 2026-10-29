@@ -5,7 +5,7 @@ import {
   useCanvasContext, useConst, useLayoutBox,
 } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
@@ -19,7 +19,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
 
 type Box = Readonly<{ x: number; y: number; width: number; height: number; stamp: number }>;
 for (const family of ['Flow', 'Grid'] as const) for (const flexWrap of ['nowrap', 'wrap'] as const) {
-  it.runIf(experimentalLayout)(`measures ${family} before ${flexWrap} row cross-auto placement`, async () => {
+  it.runIf(nativeLayout)(`measures ${family} before ${flexWrap} row cross-auto placement`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const marginTop = signal<0 | 'auto'>(0), ownerWidth = signal(180), peerFill = signal('#426b61');
     const hits: string[] = [];
@@ -77,7 +77,7 @@ for (const family of ['Flow', 'Grid'] as const) for (const flexWrap of ['nowrap'
 }
 
 for (const family of ['Flow', 'Grid'] as const) {
-  it.runIf(experimentalLayout)(`measures ${family} before column cross-auto placement`, async () => {
+  it.runIf(nativeLayout)(`measures ${family} before column cross-auto placement`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const marginLeft = signal<0 | 'auto'>(0), ownerWidth = signal(180), peerFill = signal('#426b61');
     const hits: string[] = [];
@@ -132,7 +132,7 @@ for (const family of ['Flow', 'Grid'] as const) {
   });
 }
 
-for (const family of ['Absolute', 'Overlay'] as const) it.runIf(experimentalLayout)(`keeps ${family} automatic cross size behind its missing pure-query prerequisite`, async () => {
+for (const family of ['Absolute', 'Overlay'] as const) it.runIf(nativeLayout)(`keeps ${family} automatic cross size behind its missing pure-query prerequisite`, async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const errors: unknown[] = [];
   const receive = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
@@ -156,7 +156,7 @@ for (const family of ['Absolute', 'Overlay'] as const) it.runIf(experimentalLayo
 });
 
 for (const flexWrap of ['nowrap', 'wrap'] as const) {
-  it.runIf(experimentalLayout)(`measures a described paired leaf before ${flexWrap} row cross-auto placement`, async () => {
+  it.runIf(nativeLayout)(`measures a described paired leaf before ${flexWrap} row cross-auto placement`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const marginTop = signal<0 | 'auto'>(0), ownerWidth = signal(180), peerFill = signal('#426b61');
     const hits: string[] = [];

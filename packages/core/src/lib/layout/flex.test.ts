@@ -4,14 +4,14 @@ import { Text } from '../components/text';
 import type { Length } from '../style/types';
 import type { PibblElement, SystemStyle } from '../types';
 import { Flex, layoutFlex } from './flex';
-import { measureElement, type CanvasMeasurementService } from './measure';
+import { measureElement, measureIntrinsicElement, type CanvasMeasurementService } from './measure';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
 import { prepareLayoutEngineSync } from './wasm/embedded';
-import { experimentalLayout } from './wasm/region';
+import { nativeLayout } from './wasm/region';
 
 beforeAll(() => {
-  if (experimentalLayout) prepareLayoutEngineSync();
+  if (nativeLayout) prepareLayoutEngineSync();
 });
 
 const service: CanvasMeasurementService = {
@@ -38,6 +38,40 @@ function item(style: Record<string, unknown>) {
 }
 
 describe('CSS-compatible flex geometry', () => {
+  it('applies numeric intrinsic bounds and rejects percentage bounds without an owner', () => {
+    const bounded = measureIntrinsicElement(createElement(Flex, {
+      style: { width: 'auto', height: 'auto' },
+      children: [createElement(Rectangle, {
+        style: { width: 10, height: 5, minWidth: 20, maxHeight: 3 },
+      })],
+    }), {
+      minWidth: 0,
+      maxWidth: 200,
+      minHeight: 0,
+      maxHeight: 100,
+    }, service);
+
+    expect(bounded).toEqual({
+      status: 'measured',
+      minContent: { width: 20, height: 3 },
+      maxContent: { width: 20, height: 3 },
+    });
+    expect(measureIntrinsicElement(createElement(Flex, {
+      style: { width: 'auto', height: 'auto' },
+      children: [createElement(Rectangle, {
+        style: { width: 10, height: 5, minWidth: '50%' },
+      })],
+    }), {
+      minWidth: 0,
+      maxWidth: 200,
+      minHeight: 0,
+      maxHeight: 100,
+    }, service)).toEqual({
+      status: 'unsupported',
+      reason: expect.stringMatching(/percentage child sizes/i),
+    });
+  });
+
   it('measures nested auto flex content without rendering children', () => {
     const nested = createElement(Flex, {
       style: { width: 'auto', height: 'auto', columnGap: 5 },
@@ -436,12 +470,13 @@ describe('CSS-compatible flex geometry', () => {
   });
 
   it('requires explicit main-axis minimums and rejects unsupported values', () => {
-    expect(() => layoutFlex(
+    const place = () => layoutFlex(
       { x: 0, y: 0, width: 100, height: 20 },
       [createElement(Text, { children: 'opaque minimum', style: { width: 20, height: 10, flexBasis: 'auto' } })],
-      {},
-      measurement,
-    )).toThrowError(/minWidth.*explicit/i);
+      {}, measurement,
+    );
+    if (nativeLayout) expect(place()).toEqual([{ x: 0, y: 0, width: 20, height: 10 }]);
+    else expect(place).toThrowError(/minWidth.*explicit/i);
     for (const style of [
       { flexDirection: 'diagonal' },
       { flexWrap: 'diagonal' },
@@ -462,7 +497,7 @@ describe('CSS-compatible flex geometry', () => {
     ['infinite', Number.POSITIVE_INFINITY],
     ['not-a-number', Number.NaN],
   ])('validates the %s Flex gap in the selected build', (_label, gap) => {
-    if (experimentalLayout && gap === '10%') {
+    if (nativeLayout && gap === '10%') {
       expect(layoutFlex({x:0,y:0,width:100,height:20},[],{gap},measurement)).toEqual([]);
       return;
     }
@@ -475,7 +510,7 @@ describe('CSS-compatible flex geometry', () => {
   });
 
   it.each([
-    [{ flexWrap: 'wrap' }, experimentalLayout ? /finite numeric row width/i : /nowrap/i],
+    [{ flexWrap: 'wrap' }, nativeLayout ? /finite main allocation/i : /nowrap/i],
     [{}, /grow/i],
     [{}, /percentage/i],
   ] as const)('rejects allocation-dependent intrinsic measurement %#', (
@@ -505,7 +540,7 @@ describe('CSS-compatible flex geometry', () => {
   void createElement(Flex, { style: { flexDirection: 'diagonal' }, children: [] });
 });
 
-it.runIf(!experimentalLayout)('retains explicit normal-build reverse-direction diagnostics', () => {
+it.runIf(!nativeLayout)('retains explicit normal-build reverse-direction diagnostics', () => {
   expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [], { flexDirection: 'row-reverse' }, measurement)).toThrow(/unsupported flex direction/);
   expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [], { flexDirection: 'column-reverse' }, measurement)).toThrow(/unsupported flex direction/);
   expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [], { flexWrap: 'wrap-reverse' }, measurement)).toThrow(/unsupported flex wrap/);

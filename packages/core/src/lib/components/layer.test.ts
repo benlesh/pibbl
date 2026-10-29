@@ -1192,7 +1192,7 @@ describe('layer', () => {
 
     it('only re-renders when props change', async () => {
       let renderCount = 0;
-      const countedRect = definePrimitive<RectangleProps, RectStyle>((props, style) => {
+      const countedRect = definePrimitive<RectangleProps, SystemStyle & Pick<RectStyle, 'fill'> & { left: number; top: number; width: number; height: number }>((props, style) => {
         renderCount++;
         return createElement(Rectangle, {
           ...props,

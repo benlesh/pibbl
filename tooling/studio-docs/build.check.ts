@@ -612,6 +612,7 @@ assert.deepEqual(
     "Create custom components and primitives",
     "Integrate with React",
     "Troubleshoot JSX",
+    "Standalone layout migration",
   ],
 );
 assert.equal(

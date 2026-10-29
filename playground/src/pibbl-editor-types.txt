@@ -394,16 +394,17 @@ export interface MeshTransformOptions {
 
   declare const pibblFilterBrand: unique symbol;
   export interface PibblFilter { readonly [pibblFilterBrand]: true }
-  export interface SystemStyle { transition?: PibblTransitionBinding; custom?: unknown; filter?: PibblFilter | readonly PibblFilter[] }
+  export interface SystemStyle { layoutParticipation?: 'normal' | 'hidden' | 'contents'; transition?: PibblTransitionBinding; custom?: unknown; filter?: PibblFilter | readonly PibblFilter[] }
   export interface PibblPhysics2DPropExtension {}
   type PrimitiveReservedKey = 'key' | 'style';
   type UnionKeys<T> = T extends unknown ? keyof T : never;
   export type PrimitiveProgramProps<P> = 0 extends (1 & P) ? P : Extract<UnionKeys<P>, PrimitiveReservedKey> extends never ? P : never;
   type RequiredKeys<T> = T extends unknown ? { [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never }[keyof T] : never;
   type StyleField<S> = [RequiredKeys<S>] extends [never] ? { style?: SignalValue<S | undefined> } : { style: SignalValue<S> };
-  type AllocationValue = `${number}%` | 'auto';
+  type AllocationValue = Exclude<SizingLength, number | 'stretch'>;
+  type StretchSizingValue<S> = S extends unknown ? S[Extract<keyof S, 'width' | 'height' | 'minWidth' | 'maxWidth' | 'minHeight' | 'maxHeight' | 'flexBasis'>] : never;
   type DeclaredStyleValue<S> = S extends unknown ? S[Exclude<keyof S, 'custom'>] : never;
-  type RequiresResolver<S> = [Extract<DeclaredStyleValue<S>, AllocationValue>] extends [never] ? false : true;
+  type RequiresResolver<S> = [Extract<DeclaredStyleValue<S>, AllocationValue> | Extract<StretchSizingValue<S>, 'stretch'>] extends [never] ? false : true;
   export type SpecifiedStyle<S extends SystemStyle> = Readonly<S>;
   export type NormalizedStyle<S extends SystemStyle> = Readonly<S>;
   export type ResolvedStyle<S extends SystemStyle> = Readonly<S>;
@@ -446,7 +447,7 @@ export interface MeshTransformOptions {
   declare const fitContentBrand: unique symbol;
   export interface FitContent { readonly limit: number | Percentage; readonly [fitContentBrand]: true }
   export type SizingKeyword = 'min-content' | 'max-content';
-  export type SizingLength = Length | SizingKeyword | FitContent;
+  export type SizingLength = Length | SizingKeyword | FitContent | 'stretch';
   export function fitContent(limit: number | Percentage): FitContent;
   export interface RoundedCornerStyle { cornerRadius?: Exclude<Length, 'auto'>; cornerRadii?: readonly (Exclude<Length, 'auto'> | null | undefined)[] }
   export interface RoundedCornerPathOptions { cornerRadius?: number; cornerRadii?: readonly (number | null | undefined)[] }
@@ -457,10 +458,11 @@ export interface MeshTransformOptions {
   export interface Constraints { minWidth: number; maxWidth: number; minHeight: number; maxHeight: number }
   export interface StyleResolutionContext { allocation: Readonly<LayoutBox>; percentageBasis: Readonly<LayoutBox>; constraints: Readonly<Constraints>; component: string; algorithm: 'render-dispatch' }
   export interface BoxStyle extends SystemStyle {
+    aspectRatio?: number;
     boxSizing?: 'content-box' | 'border-box';
     width?: SizingLength; height?: SizingLength;
-    minWidth?: Exclude<Length, 'auto'>; maxWidth?: Exclude<Length, 'auto'>;
-    minHeight?: Exclude<Length, 'auto'>; maxHeight?: Exclude<Length, 'auto'>;
+    minWidth?: Exclude<SizingLength, 'auto'>; maxWidth?: Exclude<SizingLength, 'auto'>;
+    minHeight?: Exclude<SizingLength, 'auto'>; maxHeight?: Exclude<SizingLength, 'auto'>;
     padding?: EdgeValues<number | Percentage>;
     paddingStart?: number | Percentage; paddingEnd?: number | Percentage;
     borderWidth?: EdgeValues;
@@ -580,8 +582,15 @@ export interface MeshTransformOptions {
   export interface FlowProps extends PibblEventHandlers { children: PibblNodeInput }
   export interface FlexStyle extends BoxStyle, LayoutItemStyle { layoutDirection?: 'ltr' | 'rtl'; flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse'; flexWrap?: 'nowrap' | 'wrap' | 'wrap-reverse'; justifyContent?: 'start' | 'end' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; alignItems?: 'first-baseline' | 'last-baseline' | 'start' | 'end' | 'stretch' | 'flex-start' | 'flex-end' | 'center'; alignContent?: 'start' | 'end' | 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; gap?: number | Percentage; rowGap?: number | Percentage; columnGap?: number | Percentage }
   export interface FlexProps extends PibblEventHandlers { children: PibblNodeInput }
-  export type GridTrack = number | `${number}%` | `${number}fr`;
-  export interface GridStyle extends BoxStyle, LayoutItemStyle { gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
+  export type GridTrackBreadth = number | `${number}%` | `${number}fr` | SizingKeyword | FitContent | 'auto';
+  export interface GridMinMaxTrack { readonly kind: 'minmax'; readonly min: GridTrackBreadth; readonly max: GridTrackBreadth }
+  export interface GridRepeatTrack { readonly kind: 'repeat'; readonly count: number | 'auto-fill' | 'auto-fit'; readonly tracks: readonly GridTrack[] }
+  export type GridTrack = GridTrackBreadth | GridMinMaxTrack | GridRepeatTrack;
+  export function minmax(options: { readonly min: GridTrackBreadth; readonly max: GridTrackBreadth }): GridMinMaxTrack;
+  export function repeatTracks(tracks: Iterable<GridTrack>, options: { readonly count: number }): GridRepeatTrack;
+  export function autoFillTracks(...tracks: GridTrack[]): GridRepeatTrack;
+  export function autoFitTracks(...tracks: GridTrack[]): GridRepeatTrack;
+  export interface GridStyle extends BoxStyle, LayoutItemStyle { gridAutoFlow?: 'row' | 'column' | 'row dense' | 'column dense'; gridAutoColumns?: GridTrack | readonly GridTrack[]; gridAutoRows?: GridTrack | readonly GridTrack[]; gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
   export interface GridProps extends PibblEventHandlers { children: PibblNodeInput }
 
   export interface CanvasMeasurementService { measureText(text: string, font: string): TextMetrics; measureTextAtBaseline?(text: string, options: Readonly<{ font: string; textBaseline: CanvasTextBaseline }>): TextMetrics }

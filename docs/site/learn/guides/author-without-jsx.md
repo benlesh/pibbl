@@ -95,7 +95,9 @@ function Poster({ initialMessage }: PosterProps): PibblNode {
   );
 }
 
-export async function mount(canvas: HTMLCanvasElement): Promise<PibblController> {
+export async function mount(
+  canvas: HTMLCanvasElement,
+): Promise<PibblController> {
   return await pibbl(canvas, createElement(Poster, { initialMessage: "None" }));
 }
 

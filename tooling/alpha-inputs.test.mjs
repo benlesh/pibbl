@@ -4,7 +4,7 @@ import { alphaInputHash, needsAlphaPublish } from './alpha-inputs.mjs';
 
 const entry = (path, id = 'a'.repeat(40)) => `100644 blob ${id}\t${path}\0`;
 const hash = alphaInputHash(entry('packages/core/src/index.ts'));
-const released = () => Array.from({ length: 4 }, () => ({ version: '0.0.3-alpha.10.1', pibblAlphaInputHash: hash }));
+const released = () => Array.from({ length: 5 }, () => ({ version: '0.0.3-alpha.10.1', pibblAlphaInputHash: hash }));
 
 test('alpha inputs ignore presentation-only changes but include package and build changes', () => {
   for (const path of ['docs/site/index.md', 'website/src/main.ts', 'playground/src/main.ts', 'packages/scenarios/src/example.tsx', 'games/example.ts']) {

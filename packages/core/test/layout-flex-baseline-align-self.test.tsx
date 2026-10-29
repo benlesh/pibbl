@@ -13,10 +13,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => {
   for (const controller of controllers.splice(0)) controller.dispose();
   document.body.replaceChildren();
@@ -41,7 +41,7 @@ interface BaselineProps {
   readonly first: number | ReturnType<typeof signal<number>>;
 }
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'treats auto as the only first-baseline member while explicit alignSelf values use ordinary wrapped-line placement',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -155,7 +155,7 @@ it.runIf(experimentalLayout)(
 );
 
 
-for (const [top, bottom, endY, startY, oldHit, newHit] of [[0,0,80,100,85,105], [5,10,85,90,87,107]] as const) it.runIf(experimentalLayout)(
+for (const [top, bottom, endY, startY, oldHit, newHit] of [[0,0,80,100,85,105], [5,10,85,90,87,107]] as const) it.runIf(nativeLayout)(
   `keeps inherited baselines physical while explicit self alignment follows wrap-reverse cross placement with margins ${top}/${bottom}`,
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

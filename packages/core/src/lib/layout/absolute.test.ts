@@ -2,18 +2,60 @@ import { compileNativeFilters, type NativePreparedFilter } from '../../filters/n
 import { invert } from '@pibbl/core/filters';
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
+import { Text } from '../components/text';
 import { pibblSync as pibbl } from "../../sync.js";
 import { useSignal } from '../hooks/use-signal';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import { componentTest } from '../test-utils/component-test';
-import type { PibblNode, SystemStyle } from '../types';
+import type { CanvasMeasurementService, PibblNode, SystemStyle } from '../types';
 import { Overlay, placeOverlayChild } from './overlay';
 import { Absolute, placeAbsoluteChild } from './absolute';
 import { Flow } from './flow';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
+import { measureIntrinsicElement } from './measure';
+import { fitContent } from '../style/sizing-length';
+
+const intrinsicService: CanvasMeasurementService = {
+  measureText: value => ({ width: value.length * 10 } as TextMetrics),
+};
 
 describe('absolute layout', () => {
+  it('mounts Text direct children with intrinsic widths and dependent wrapped heights', async () => {
+    const canvas = await componentTest(createElement(Absolute, {
+      style: { width: 160, height: 80 },
+      children: [
+        createElement(Text, { children: 'alpha beta', style: { width: 'min-content', height: 'auto', wrap: true, font: '10px monospace', lineHeight: 10, fill: 'red' } }),
+        createElement(Text, { children: 'alpha beta', style: { left: 50, width: fitContent(35), minWidth: 20, maxWidth: 30, height: 'auto', wrap: true, font: '10px monospace', lineHeight: 10, fill: 'blue' } }),
+      ],
+    }), { width: 160, height: 80 });
+    const pixels = canvas.element.getContext('2d')!.getImageData(0, 0, 160, 80).data;
+    expect(pixels.some((value, index) => index % 4 === 3 && value > 0)).toBe(true);
+  });
+
+  it('provides paired declared-child contributions with insets and Absolute offsets', () => {
+    const children = [
+      createElement(Text, { children: 'aa bb', style: { wrap: true } }),
+      createElement(Rectangle, { style: { left: 5, top: 3, width: 30, height: 20, padding: 2 } }),
+    ];
+    const constraints = { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 100 };
+
+    expect(measureIntrinsicElement(createElement(Absolute, {
+      style: { width: 'auto', height: 'auto' }, children,
+    }), constraints, intrinsicService)).toEqual({
+      status: 'measured',
+      minContent: { width: 39, height: 27 },
+      maxContent: { width: 50, height: 27 },
+    });
+    expect(measureIntrinsicElement(createElement(Overlay, {
+      style: { width: 'auto', height: 'auto' }, children,
+    }), constraints, intrinsicService)).toEqual({
+      status: 'measured',
+      minContent: { width: 34, height: 26 },
+      maxContent: { width: 50, height: 24 },
+    });
+  });
+
   it('places from parent-owned left/top', () => {
     const child = createElement(Rectangle, {
       style: {

@@ -8,10 +8,10 @@ import type { PibblElement } from '../src/lib/types';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createElement } from '../src/lib/element/create-element';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout } from '../src/lib/layout/wasm/region';
+import { nativeLayout } from '../src/lib/layout/wasm/region';
 
 beforeAll(() => {
-  if (experimentalLayout) prepareLayoutEngineSync();
+  if (nativeLayout) prepareLayoutEngineSync();
 });
 
 const service = {

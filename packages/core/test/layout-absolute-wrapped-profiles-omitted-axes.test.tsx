@@ -2,16 +2,16 @@ import { afterEach, beforeAll, expect, it } from 'vitest';
 import { Flex, Rectangle, Text, definePrimitive, signal, type BoxStyle, type FlexItemStyle, type PibblResponsiveStyle, type RectStyle, type SystemStyle, useCanvasContext, useLayoutBox } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 type Style = BoxStyle & FlexItemStyle;
 type Resolved = SystemStyle & { readonly width: number; readonly height: number };
 
-it.runIf(experimentalLayout)('keeps admitted absolute sizing profiles measurable when wrapped axes are omitted', async () => {
+it.runIf(nativeLayout)('keeps admitted absolute sizing profiles measurable when wrapped axes are omitted', async () => {
   type Mode = 'bounds' | 'paired' | 'aspect' | 'provider-width' | 'provider-height' | 'text-height' | 'text-width' | 'text-both';
   type RectItem = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics(), mode = signal<Mode>('bounds');

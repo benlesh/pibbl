@@ -9,7 +9,7 @@ if (!version || valid(version) !== version || extra.length) {
 
 // Validate the complete release set before changing any manifest. Preparation
 // does not create commits or tags, push, or publish packages.
-const manifests = ['core', 'three', 'text', 'pibbl'].map(name => {
+const manifests = ['core', 'three', 'text', 'layout', 'pibbl'].map(name => {
   const path = resolve('packages', name, 'package.json');
   const manifest = JSON.parse(readFileSync(path, 'utf8'));
   if (manifest.name !== (name === 'pibbl' ? 'pibbl' : `@pibbl/${name}`) || manifest.private) {

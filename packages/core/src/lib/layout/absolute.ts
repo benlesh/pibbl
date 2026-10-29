@@ -1,5 +1,6 @@
-import { allocatedContentBoxStyle } from './box-sizing.js';
-import { experimentalLayout } from './wasm/region.js';
+import { participatingLayoutChildren, layoutParticipationPlan, type LayoutParticipationSource } from './participation.js';
+import { allocatedContentBoxStyle, contentBoxStyle } from './box-sizing.js';
+import { nativeLayout } from './wasm/region.js';
 import { registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, takePreparedChildStyle, type PreparedLayoutPlan } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { ResponsiveStylePreparation, getStyleMeasurementMode, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
@@ -8,6 +9,8 @@ import { EMPTY_STYLE } from '../style/empty-style.js';
 import { materializeContainerChildren } from '../element/children.js';
 import { clonePibblElement } from '../element/create-element.js';
 import {
+  getElementMetadata,
+  setElementMetadata,
   getPrimitiveDefinition,
   getChildPrimitiveReceiverToken,
   setPlacementConsumed,
@@ -16,7 +19,7 @@ import { resolvePrimitiveStyleInput } from '../element/resolve-primitive-inputs.
 import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { normalizeBoxInsets, hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
-import { resolveScalarSizingLength } from '../style/sizing-length.js';
+import { isFitContent, isIntrinsicSizingValue, resolveScalarSizingLength } from '../style/sizing-length.js';
 import {
   extractSystemFilter,
   setPreNormalizedStyle, setAllocatedContentSize,
@@ -28,18 +31,23 @@ import type {
   ResolvedBoxStyle,
 } from '../style/types.js';
 import type {
+  IntrinsicMeasureInput,
+  IntrinsicSizesResult,
+  CanvasMeasurementService,
   PibblNodeInput,
   PibblRenderTransaction,
   RenderingContext2D,
   StyleResolutionContext,
   SystemStyle,
 } from '../types.js';
+import { measureElement, measureIntrinsicElement } from './measure.js';
+import { canvasMeasurementService } from './canvas-measurement.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import {
   type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
-import { pushLayoutBox } from './context.js';
+import { pushLayoutBox, resolvePositionedContainingBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { resolveBox } from './box.js';
 import {
@@ -70,8 +78,12 @@ export interface AbsoluteProps extends PibblStructuralEventProps {
   children: PibblNodeInput;
 }
 
+// Parent input is private metadata, not a recursively validated resolved value.
+const ABSOLUTE_CONTAINING_BOX_STYLE = Symbol('pibbl.absolute-containing-box-style');
+
 interface ResolvedAbsoluteStyle extends SystemStyle {
   box: ResolvedBoxStyle;
+  [ABSOLUTE_CONTAINING_BOX_STYLE]: Readonly<AbsoluteStyle>;
   overflow: 'visible' | 'clip';
 }
 
@@ -88,7 +100,7 @@ function renderAbsolute(
   ctx: RenderingContext2D,
 ) {
   wireStructuralEvents(props);
-  const ordinaryChildren = experimentalLayout ? undefined : prepareLayoutChildren(props.children, 'Absolute');
+  const ordinaryChildren = nativeLayout ? undefined : prepareLayoutChildren(props.children, 'Absolute');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -98,10 +110,17 @@ function renderAbsolute(
     width: content.width,
     height: content.height,
   });
-  const releaseLayout = pushLayoutBox(localContent);
+  const releaseLayout = pushLayoutBox(localContent, {
+    logicalOffset: content,
+    containingBlock: resolvePositionedContainingBox(
+      style[ABSOLUTE_CONTAINING_BOX_STYLE],
+      localContent,
+      'Absolute',
+    ),
+  });
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
 
-  const prepared = experimentalLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
+  const prepared = nativeLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
   const children = prepared?.children ?? ordinaryChildren ?? prepareLayoutChildren(props.children, 'Absolute');
   let placementIndex = 0;
   let occurrence = 0;
@@ -112,7 +131,7 @@ function renderAbsolute(
       const placement = prepared ? prepared.placements[placementIndex++] : resolveAbsoluteChildPlacement(localContent, child, getChildPrimitiveReceiverToken(
         GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, occurrence++,
       ));
-      if (experimentalLayout && !prepared) preparePlacedKnownLayout(placement.element, childOccurrence);
+      if (nativeLayout && !prepared) preparePlacedKnownLayout(placement.element, childOccurrence);
       return placement;
     },
     style.overflow,
@@ -137,20 +156,126 @@ export const Absolute = definePrimitive<
 >(renderAbsolute, {
   childInput: 'structural',
   resolveStyle: (style, context) => {
-    if (experimentalLayout && hasPercentageBoxPadding(style)) {
+    if (nativeLayout && hasPercentageBoxPadding(style)) {
       style = resolveAllocatedInsets(style, { width: context.percentageBasis.width,
         context: { ...context, component: 'Absolute', algorithm: 'absolute' } });
     }
     return {
       box: resolveContainerBox(style, context, 'Absolute', 'absolute'),
+      [ABSOLUTE_CONTAINING_BOX_STYLE]: style,
       overflow: style.overflow ?? 'visible',
     };
   },
+  measureIntrinsic: (input) => measureUnionIntrinsic(input, 'Absolute'),
 });
 
-if (experimentalLayout) registerKnownLayoutPreflight(Absolute, (element, _style, content, receiver, slot) => {
+/** Pure paired intrinsic contributions for stacking known layout owners. */
+export function measureUnionIntrinsic<S extends SystemStyle>(
+  input: IntrinsicMeasureInput<{ readonly children: PibblNodeInput }, S>,
+  receiver: LayoutReceiver,
+): IntrinsicSizesResult {
+  const owner = {
+    x: 0,
+    y: 0,
+    width: intrinsicMaximum(input.constraints.width),
+    height: intrinsicMaximum(input.constraints.height),
+  };
+  const children = materializeLayoutChildren(input.props.children, receiver);
+  let minWidth = 0, minHeight = 0, maxWidth = 0, maxHeight = 0;
+  for (let index = 0; index < children.length; index++) {
+    const child = children[index]!;
+    const receiverToken = getChildPrimitiveReceiverToken(
+      GLOBAL_STATE.renderTransaction,
+      GLOBAL_STATE.primitiveReceiverToken,
+      index,
+    );
+    const prepared = prepareDirectChildStyle(child, receiverToken, owner);
+    let style = preparedStyleValue(prepared) as Readonly<BoxStyle & LayoutItemStyle>;
+    if (hasIntrinsicUnionPercentage(style)) {
+      return { status: 'unsupported', reason: `${receiver} intrinsic percentage child sizes require a definite owner allocation` };
+    }
+    if (style.boxSizing !== undefined) {
+      style = contentBoxStyle(style, {
+        width: owner.width,
+        height: owner.height,
+        context: { component: child.type.name || 'Anonymous', algorithm: `${receiver} intrinsic measurement`, constraints: {
+          minWidth: 0, maxWidth: owner.width, minHeight: 0, maxHeight: owner.height,
+        } },
+      });
+    }
+    assertSupportedChildPosition(receiver, child, style, false, false);
+    const insets = normalizeBoxInsets(style, {
+      component: child.type.name || 'Anonymous', algorithm: `${receiver} intrinsic measurement`,
+      constraints: { minWidth: 0, maxWidth: owner.width, minHeight: 0, maxHeight: owner.height },
+    });
+    let measured: IntrinsicSizesResult;
+    if (typeof style.width === 'number' && typeof style.height === 'number') {
+      measured = {
+        status: 'measured',
+        minContent: { width: style.width, height: style.height },
+        maxContent: { width: style.width, height: style.height },
+      };
+    } else {
+      const measuredChild = clonePibblElement(child);
+      setPreNormalizedStyle(measuredChild, style, child, receiverToken, preparedStyleQuery(prepared));
+      measured = measureIntrinsicElement(measuredChild, {
+        minWidth: 0, maxWidth: owner.width, minHeight: 0, maxHeight: owner.height,
+      }, input.service);
+      if (measured.status !== 'measured') return measured;
+    }
+    const minimumWidth = (typeof style.width === 'number' ? style.width : measured.minContent.width) + insets.left + insets.right;
+    const maximumWidth = (typeof style.width === 'number' ? style.width : measured.maxContent.width) + insets.left + insets.right;
+    const minimumHeight = (typeof style.height === 'number' ? style.height : measured.minContent.height) + insets.top + insets.bottom;
+    const maximumHeight = (typeof style.height === 'number' ? style.height : measured.maxContent.height) + insets.top + insets.bottom;
+    const left = intrinsicOffset(receiver === 'Absolute' ? style.left : undefined, 'left', receiver);
+    const top = intrinsicOffset(receiver === 'Absolute' ? style.top : undefined, 'top', receiver);
+    if (left.status === 'unsupported') return { status: 'unsupported', reason: left.reason };
+    if (top.status === 'unsupported') return { status: 'unsupported', reason: top.reason };
+    minWidth = Math.max(minWidth, left.value + minimumWidth);
+    minHeight = Math.max(minHeight, top.value + minimumHeight);
+    maxWidth = Math.max(maxWidth, left.value + maximumWidth);
+    maxHeight = Math.max(maxHeight, top.value + maximumHeight);
+  }
+  return { status: 'measured', minContent: { width: minWidth, height: minHeight }, maxContent: { width: maxWidth, height: maxHeight } };
+}
+
+function intrinsicMaximum(constraint: IntrinsicMeasureInput<{ readonly children: PibblNodeInput }>['constraints']['width']): number {
+  return constraint.kind === 'bounded' ? constraint.max : Number.MAX_SAFE_INTEGER;
+}
+
+function hasIntrinsicUnionPercentage(style: Readonly<BoxStyle & LayoutItemStyle>): boolean {
+  return hasPercentageBoxPadding(style) || intrinsicPercentage(style.width) || intrinsicPercentage(style.height) ||
+    intrinsicPercentage(style.minWidth) || intrinsicPercentage(style.maxWidth) ||
+    intrinsicPercentage(style.minHeight) || intrinsicPercentage(style.maxHeight) ||
+    intrinsicPercentage(style.left) || intrinsicPercentage(style.top);
+}
+
+function intrinsicPercentage(value: unknown): boolean {
+  return typeof value === 'string' && value.endsWith('%');
+}
+
+function intrinsicOffset(
+  value: LayoutItemStyle['left'] | undefined,
+  property: 'left' | 'top',
+  receiver: LayoutReceiver,
+): Readonly<{ status: 'measured'; value: number }> | Readonly<{ status: 'unsupported'; reason: string }> {
+  if (value === undefined) return { status: 'measured', value: 0 };
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return { status: 'unsupported', reason: `${receiver} intrinsic ${property} offset must be finite and numeric` };
+  }
+  return { status: 'measured', value: Math.max(0, value) };
+}
+
+if (nativeLayout) registerKnownLayoutPreflight(Absolute, (element, style, content, receiver, slot) => {
   const previous = GLOBAL_STATE.primitiveReceiverToken;
   GLOBAL_STATE.primitiveReceiverToken = receiver;
+  const releaseLayout = pushLayoutBox(content, {
+    containingBlock: resolvePositionedContainingBox(
+      style as Readonly<AbsoluteStyle>,
+      content,
+      'Absolute',
+    ),
+  });
   try {
     const children = prepareLayoutChildren(element.props.children, 'Absolute');
     const placements = new Array<{ box: LayoutBox; element: PibblElement<any> }>(children.length);
@@ -160,7 +285,10 @@ if (experimentalLayout) registerKnownLayoutPreflight(Absolute, (element, _style,
     const plan: PreparedLayoutPlan = { content, children, placements };
     prepareKnownLayoutDescendants(plan, slot);
     stagePreparedLayoutPlan(slot, plan);
-  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
+  } finally {
+    releaseLayout();
+    GLOBAL_STATE.primitiveReceiverToken = previous;
+  }
 });
 
 /** @internal Resolves a layout container without inspecting its children. */
@@ -189,7 +317,7 @@ function resolveAbsoluteChildPlacement(
   let style = preparedStyleValue(prepared) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
-  if (experimentalLayout && GLOBAL_STATE.currentPibblInstance && getStyleMeasurementMode() === undefined && hasPercentageBoxPadding(style)) {
+  if (nativeLayout && GLOBAL_STATE.currentPibblInstance && getStyleMeasurementMode() === undefined && hasPercentageBoxPadding(style)) {
     style = resolveAllocatedInsets(style, { width: container.width, context: childDiagnosticContext(child, container, 'absolute') });
   }
   // Absolute retains legacy left/top placement but never accepts Flex's explicit mode.
@@ -244,9 +372,12 @@ export function resolveDirectChildBox(
   child: PibblElement<any>,
   algorithm: string,
   style: Readonly<SystemStyle> = normalizeDirectChildStyle(child, undefined, container),
+  service?: CanvasMeasurementService,
 ): ResolvedBoxStyle {
+  const boxStyle = style as Readonly<BoxStyle>;
+  if (hasIntrinsicDirectLength(boxStyle)) return resolveIntrinsicDirectChildBox(container, child, algorithm, boxStyle, service);
   return resolveLayoutBox(
-    style as Readonly<BoxStyle>,
+    boxStyle,
     {
       allocation: container,
       percentageBasis: container,
@@ -263,6 +394,65 @@ export function resolveDirectChildBox(
     algorithm,
     true,
   );
+}
+
+function hasIntrinsicDirectLength(style: Readonly<BoxStyle>): boolean {
+  return isIntrinsicSizingValue(style.width) || isIntrinsicSizingValue(style.height) ||
+    isIntrinsicSizingValue(style.minWidth) || isIntrinsicSizingValue(style.maxWidth) ||
+    isIntrinsicSizingValue(style.minHeight) || isIntrinsicSizingValue(style.maxHeight);
+}
+
+function resolveIntrinsicDirectChildBox(container: Readonly<LayoutBox>, child: PibblElement<any>, algorithm: string, style: Readonly<BoxStyle>, service?: CanvasMeasurementService): ResolvedBoxStyle {
+  const context = childDiagnosticContext(child, container, algorithm);
+  const measurement = service ?? (GLOBAL_STATE.renderContext ? canvasMeasurementService(GLOBAL_STATE.renderContext) : undefined);
+  if (!measurement) throw layoutDiagnostic({ ...context, property: 'width', value: style.width, reason: 'intrinsic sizing requires a Canvas measurement service' });
+  const pairedChild = clonePibblElement(child);
+  setPreNormalizedStyle(pairedChild, style, child);
+  const paired = measureIntrinsicElement(pairedChild, { minWidth: 0, maxWidth: container.width, minHeight: 0, maxHeight: container.height }, measurement);
+  if (paired.status !== 'measured') throw layoutDiagnostic({ ...context, property: 'width', value: style.width, reason: `intrinsic measurement is required but unsupported: ${paired.reason}` });
+  let width = intrinsicDirectLength(style.width, paired.minContent.width, paired.maxContent.width, container.width, 'width', context);
+  const minWidth = intrinsicDirectLength(style.minWidth, paired.minContent.width, paired.maxContent.width, container.width, 'minWidth', context);
+  const maxWidth = intrinsicDirectLength(style.maxWidth, paired.minContent.width, paired.maxContent.width, container.width, 'maxWidth', context);
+  let height = intrinsicDirectLength(style.height, paired.minContent.height, paired.maxContent.height, container.height, 'height', context);
+  const minHeight = intrinsicDirectLength(style.minHeight, paired.minContent.height, paired.maxContent.height, container.height, 'minHeight', context);
+  const maxHeight = intrinsicDirectLength(style.maxHeight, paired.minContent.height, paired.maxContent.height, container.height, 'maxHeight', context);
+  if (width !== undefined) {
+    const minimum = minWidth ?? scalarDirectBound(style.minWidth, container.width, 'minWidth', context) ?? 0;
+    const maximum = maxWidth ?? scalarDirectBound(style.maxWidth, container.width, 'maxWidth', context) ?? Number.POSITIVE_INFINITY;
+    width = Math.min(maximum, Math.max(minimum, width));
+  }
+  if (height === undefined && width !== undefined) {
+    const measuredChild = clonePibblElement(child);
+    setPreNormalizedStyle(measuredChild, { ...style, boxSizing: 'content-box', width, minWidth: undefined, maxWidth: undefined } as Readonly<BoxStyle>, child);
+    const measured = measureElement(measuredChild, { minWidth: width, maxWidth: width, minHeight: 0, maxHeight: container.height }, measurement);
+    if (measured.status !== 'measured') throw layoutDiagnostic({ ...context, property: 'height', value: style.height ?? 'auto', reason: `constrained measurement is required but unsupported: ${measured.reason}` });
+    height = measured.size.height;
+  }
+  const insets = normalizeBoxInsets(style, context);
+  const horizontal = style.boxSizing === 'border-box' ? insets.left + insets.right : 0;
+  const vertical = style.boxSizing === 'border-box' ? insets.top + insets.bottom : 0;
+  return resolveLayoutBox({ ...style,
+    width: width === undefined ? style.width : width + horizontal,
+    height: height === undefined ? style.height : height + vertical,
+    minWidth: minWidth === undefined ? style.minWidth : minWidth + horizontal,
+    maxWidth: maxWidth === undefined ? style.maxWidth : maxWidth + horizontal,
+    minHeight: minHeight === undefined ? style.minHeight : minHeight + vertical,
+    maxHeight: maxHeight === undefined ? style.maxHeight : maxHeight + vertical,
+  }, { allocation: container, percentageBasis: container, constraints: { minWidth: 0, maxWidth: container.width, minHeight: 0, maxHeight: container.height }, component: child.type.name || 'Anonymous', algorithm: 'render-dispatch' }, child.type.name || 'Anonymous', algorithm, true);
+}
+
+function intrinsicDirectLength(value: BoxStyle['width'], minimum: number, maximum: number, reference: number, property: string, context: Parameters<typeof resolveScalarSizingLength>[3]): number | undefined {
+  if (value === 'min-content') return minimum;
+  if (value === 'max-content') return maximum;
+  if (isFitContent(value)) {
+    const limit = resolveScalarSizingLength(value.limit, reference, property, context)!;
+    return Math.min(maximum, Math.max(minimum, limit));
+  }
+  return undefined;
+}
+
+function scalarDirectBound(value: BoxStyle['width'] | undefined, reference: number, property: string, context: Parameters<typeof resolveScalarSizingLength>[3]): number | undefined {
+  return value === undefined || isIntrinsicSizingValue(value) ? undefined : resolveScalarSizingLength(value, reference, property, context);
 }
 
 /** @internal Normalizes a descriptor without resolving or invoking its callback. */
@@ -328,26 +518,52 @@ export function placeDirectChildren(
   },
   overflow: 'visible' | 'clip',
 ): PibblElement<any>[] {
+  const participation = layoutParticipationPlan(children);
+  if (participation) {
+    const renderSequence = (sequence: readonly LayoutParticipationSource[], insideContents: boolean): PibblElement<any>[] => {
+      const occurrences = new Map<Function, number>();
+      const result: PibblElement<any>[] = [];
+      for (const node of sequence) {
+        const child = node.element;
+        const occurrence = child.key === undefined ? occurrences.get(child.type) ?? 0 : 0;
+        if (child.key === undefined) occurrences.set(child.type, occurrence + 1);
+        let element: PibblElement<any>, box: LayoutBox;
+        if (node.children) {
+          element = clonePibblElement(child);
+          setElementMetadata(element, { ...getElementMetadata(element), layoutContentsChildren: renderSequence(node.children, true) });
+          box = { x: 0, y: 0, width: contentBox.width, height: contentBox.height };
+        } else if (node.hidden) {
+          element = child;
+          box = { x: 0, y: 0, width: 0, height: 0 };
+        } else {
+          const placement = place(child, occurrence);
+          box = 'box' in placement ? placement.box : placement;
+          element = 'box' in placement ? placement.element : child;
+        }
+        result.push(placeChild({ element, box,
+          clipInChildSpace: overflow === 'clip' && !insideContents ? {
+            x: contentBox.x - box.x, y: contentBox.y - box.y,
+            width: contentBox.width, height: contentBox.height,
+          } : undefined,
+          identityHint: createPlacementIdentityHint(child, occurrence),
+        }));
+      }
+      return result;
+    };
+    return renderSequence(participation, false);
+  }
   const occurrences = new Map<Function, number>();
   const placed: PibblElement<any>[] = [];
   for (const child of children) {
-    const occurrence = child.key === undefined ?
-      occurrences.get(child.type) ?? 0 :
-      0;
-    if (child.key === undefined) {
-      occurrences.set(child.type, occurrence + 1);
-    }
+    const occurrence = child.key === undefined ? occurrences.get(child.type) ?? 0 : 0;
+    if (child.key === undefined) occurrences.set(child.type, occurrence + 1);
     const placement = place(child, occurrence);
     const box = 'box' in placement ? placement.box : placement;
     const element = 'box' in placement ? placement.element : child;
-    placed.push(placeChild({
-      element,
-      box,
+    placed.push(placeChild({ element, box,
       clipInChildSpace: overflow === 'clip' ? {
-        x: contentBox.x - box.x,
-        y: contentBox.y - box.y,
-        width: contentBox.width,
-        height: contentBox.height,
+        x: contentBox.x - box.x, y: contentBox.y - box.y,
+        width: contentBox.width, height: contentBox.height,
       } : undefined,
       identityHint: createPlacementIdentityHint(child, occurrence),
     }));
@@ -362,9 +578,9 @@ export function materializeLayoutChildren(
 ): readonly PibblElement<any>[] {
   // Placement identity owns layout sibling keys. Deferring its check preserves
   // fail-closed teardown when a later duplicate follows an acquired child.
-  return materializeContainerChildren(children, receiver, {
+  return participatingLayoutChildren(materializeContainerChildren(children, receiver, {
     validateKeys: false,
-  });
+  }));
 }
 
 /** @internal Shares one direct sequence between an occurrence's measurement and paint. */

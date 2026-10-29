@@ -10,6 +10,8 @@ import type { PibblElement } from '../element/types.js';
 import type { PibblRenderTransaction, SystemStyle } from '../types.js';
 import type { ResponsiveStylePreparation } from '../style/responsive.js';
 import type { LayoutBox } from './types.js';
+import { releaseLayoutTopology, stageLayoutTopology, type LayoutTopologySlot } from './topology.js';
+export { snapshotLayoutTopology } from './topology.js';
 
 type PreparedStyle = Readonly<SystemStyle> | ResponsiveStylePreparation<Readonly<SystemStyle>>;
 export interface KnownLayoutPreflightOptions { readonly deferStaticContainingDescendants?: boolean; }
@@ -62,6 +64,7 @@ export function preflightKnownLayout(element: PibblElement<any>, style: Readonly
     });
     slot = created; entries.set(key, slot);
   }
+  stageLayoutTopology(transaction, slot, parentSlot);
   preflight(root, style, content, rootReceiver, slot, parentMainAxis, options);
   return slot;
   } finally { visiting.delete(source); }
@@ -79,7 +82,7 @@ export interface PreparedLayoutPlan {
   pending?: PreparedPlanPending;
 }
 export interface PreparedFlexLayoutPlan extends PreparedLayoutPlan { readonly region: LayoutRegion; readonly cached: boolean; readonly revision: number; readonly placements: { box: LayoutBox; layoutY: number; usedWidth: number; usedHeight: number; element: PibblElement<any> }[]; }
-export class PreparedLayoutSlot {
+export class PreparedLayoutSlot implements LayoutTopologySlot {
   region: LayoutRegion | undefined;
   private boundaryOwner: PibblComponentRefs<any> | undefined;
   claimBoundary(): void {
@@ -95,12 +98,12 @@ export class PreparedLayoutSlot {
   private readonly rootType: Function;
   private readonly rootKey: string | undefined;
   private readonly release: () => void;
-  constructor(private readonly owner: PibblInstance, options: { rootType: Function; rootKey?: string; release: () => void }) {
+  constructor(readonly topologyOwner: PibblInstance, options: { rootType: Function; rootKey?: string; release: () => void }) {
     this.rootType = options.rootType; this.rootKey = options.rootKey; this.release = options.release;
   }
   matchesRoot(root: PibblElement<any>): boolean { return this.rootType === root.type && this.rootKey === root.key; }
-  acquire(): LayoutRegion { return this.region ??= new LayoutRegion(this.owner); }
-  dispose(): void { const region = this.region; this.region = undefined; this.boundaryOwner = undefined; try { this.disposeChildren(); region?.dispose(); } finally { this.release(); } }
+  acquire(): LayoutRegion { return this.region ??= new LayoutRegion(this.topologyOwner); }
+  dispose(): void { const region = this.region; this.region = undefined; this.boundaryOwner = undefined; try { this.disposeChildren(); region?.dispose(); } finally { releaseLayoutTopology(this); this.release(); } }
   claim(region: LayoutRegion): void {
     if (this.region !== region) throw new Error('Prepared layout region is stale.');
     adoptMountedLayoutRegion(region, () => { if (this.region === region) { this.region = undefined; this.disposeChildren(); this.release(); } });
@@ -182,7 +185,7 @@ export function hasPreparedChildStyles(): boolean {
 }
 
 
-const boundaryChildren = new WeakMap<PibblRenderTransaction, Map<PreparedLayoutSlot, { children: readonly PibblElement<any>[]; direction: 'ltr' | 'rtl'; claimed: boolean }>>();
+const boundaryChildren = new WeakMap<PibblRenderTransaction, Map<PreparedLayoutSlot, { children: readonly PibblElement<any>[]; direction: 'ltr' | 'rtl'; claimed: boolean; needsAllocationParent: boolean }>>();
 export function stagePreparedBoundaryChildren(slot: PreparedLayoutSlot, children: readonly PibblElement<any>[]): void {
   const transaction = GLOBAL_STATE.renderTransaction!;
   let pending = boundaryChildren.get(transaction);
@@ -192,15 +195,39 @@ export function stagePreparedBoundaryChildren(slot: PreparedLayoutSlot, children
     transaction.onFinish(() => { for (const [slot, entry] of owned) if (!entry.claimed) slot.dispose(); owned.clear(); boundaryChildren.delete(transaction); });
   }
   if (pending.has(slot)) throw new Error('Duplicate known layout boundary during preparation.');
-  pending.set(slot, { children, direction: getLayoutDirection(), claimed: false });
+  let needsAllocationParent = false;
+  const numericPlans = plans.get(transaction);
+  for (let index = 0; index < children.length; index++) {
+    const childSlot = getElementMetadata(children[index])?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
+    if (childSlot && (numericPlans?.has(childSlot) || pending.get(childSlot)?.needsAllocationParent)) {
+      needsAllocationParent = true;
+      break;
+    }
+  }
+  pending.set(slot, { children, direction: getLayoutDirection(), claimed: false, needsAllocationParent });
 }
 export function takePreparedBoundaryChildren(element: PibblElement<any>): readonly PibblElement<any>[] | undefined {
   const transaction = GLOBAL_STATE.renderTransaction;
   const slot = getElementMetadata(element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
   if (!transaction || !slot) return;
   const entry = boundaryChildren.get(transaction)?.get(slot);
-  if (!entry || entry.claimed || entry.direction !== getLayoutDirection()) throw new Error('Prepared boundary children are stale.');
+  // A retained Layer root may carry the previous transaction's private slot.
+  // Only a plan staged in this transaction can be claimed; otherwise prepare anew.
+  if (!entry) return;
+  if (entry.claimed || entry.direction !== getLayoutDirection()) throw new Error('Prepared boundary children are stale.');
   entry.claimed = true; slot.claimBoundary(); return entry.children;
+}
+
+/**
+ * Whether a staged raster boundary contains a settled numeric layout plan.
+ * Opaque descendants deliberately do not count: they retain the scheduler's
+ * child-first ownership path until they are themselves prepared.
+ */
+export function preparedBoundaryNeedsAllocationParent(element: PibblElement<any>): boolean {
+  const transaction = GLOBAL_STATE.renderTransaction;
+  const slot = getElementMetadata(element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
+  if (!transaction || !slot) return false;
+  return plans.get(transaction)?.has(slot) === true || boundaryChildren.get(transaction)?.get(slot)?.needsAllocationParent === true;
 }
 /** A clean Layer keeps the mounted descendants that already own these plans. */
 export function retainPreparedBoundarySubtree(element: PibblElement<any>): void {
@@ -209,7 +236,7 @@ export function retainPreparedBoundarySubtree(element: PibblElement<any>): void 
   if (!transaction || !slot) return;
   retainPreparedSubtree(slot, plans.get(transaction), boundaryChildren.get(transaction));
 }
-function retainPreparedSubtree(parent: PreparedLayoutSlot, pending: Map<PreparedLayoutSlot, { plan: PreparedLayoutPlan; direction: 'ltr' | 'rtl'; claimed: boolean }> | undefined, boundaries: Map<PreparedLayoutSlot, { children: readonly PibblElement<any>[]; direction: 'ltr' | 'rtl'; claimed: boolean }> | undefined): void {
+function retainPreparedSubtree(parent: PreparedLayoutSlot, pending: Map<PreparedLayoutSlot, { plan: PreparedLayoutPlan; direction: 'ltr' | 'rtl'; claimed: boolean }> | undefined, boundaries: Map<PreparedLayoutSlot, { children: readonly PibblElement<any>[]; direction: 'ltr' | 'rtl'; claimed: boolean; needsAllocationParent: boolean }> | undefined): void {
   for (const entries of parent.children.values()) for (const child of entries.values()) {
     const entry = pending?.get(child);
     if (entry) entry.claimed = true;

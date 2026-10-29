@@ -15,10 +15,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -35,7 +35,7 @@ interface FinalStyle extends SystemStyle {
 }
 interface FinalProps { readonly name: 'A' | 'B' | 'C'; readonly height?: number | ReturnType<typeof signal<number>>; }
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'settles a direct ordinary provider width before its automatic cross size and first baseline',
   async () => {
     const naturalHeight = signal(20);
@@ -91,7 +91,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'derives a fixed first-baseline content box from final main allocation and aspect ratio',
   async () => {
     const allocations: LayoutBox[] = [];
@@ -131,7 +131,7 @@ it.runIf(experimentalLayout)(
 );
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'fails before baseline or paint when a settled direct final-cross measurement is unsupported',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -162,7 +162,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'aligns an automatic-height generic Text leaf from live Canvas baseline metrics and preserves its glyph hit target',
   async () => {
     const hits: string[] = []; const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 80; document.body.append(canvas);
@@ -194,7 +194,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses each resolved Canvas textBaseline for a custom-family ellipsis final-box baseline',
   async () => {
     const words = signal('this app family text is deliberately longer than its settled box');
@@ -230,7 +230,7 @@ it.runIf(experimentalLayout)(
 for (const [fit, textBaseline] of [
   ['clip', 'top'], ['squish', 'hanging'], ['clip', 'middle'],
   ['squish', 'alphabetic'], ['clip', 'ideographic'], ['squish', 'bottom'],
-] as const) it.runIf(experimentalLayout)(
+] as const) it.runIf(nativeLayout)(
   `uses a resolved ${fit} Text line with ${textBaseline} Canvas baseline for first-baseline placement`,
   async () => {
     const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 80; document.body.append(canvas);
@@ -251,7 +251,7 @@ for (const [fit, textBaseline] of [
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'rejects an ellipsis allocation that resolves no rendered baseline line before paint',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics(); const errors: unknown[] = [];
@@ -270,7 +270,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the current finite Flex content selection for a direct responsive first-baseline provider',
   async () => {
     const ownerWidth = signal(100);
@@ -338,7 +338,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'remeasures a stable custom-family Text baseline when its application-owned face becomes available',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

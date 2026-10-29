@@ -19,12 +19,12 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
 
 beforeAll(() => {
-  if (experimentalLayout) prepareLayoutEngineSync();
+  if (nativeLayout) prepareLayoutEngineSync();
 });
 
 afterEach(() => {
@@ -46,7 +46,7 @@ function clickCanvas(canvas: HTMLCanvasElement, x: number, y: number): void {
   }
 }
 
-it.runIf(experimentalLayout)('keeps a direct absolute Flex child out of sibling allocation but in source paint order', async () => {
+it.runIf(nativeLayout)('keeps a direct absolute Flex child out of sibling allocation but in source paint order', async () => {
   type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
   const left = signal(12);
@@ -136,7 +136,7 @@ it.runIf(experimentalLayout)('keeps a direct absolute Flex child out of sibling 
 });
 
 
-it.runIf(experimentalLayout)('retains absolute padding-box geometry through an Absolute-hosted known Flex preflight', async () => {
+it.runIf(nativeLayout)('retains absolute padding-box geometry through an Absolute-hosted known Flex preflight', async () => {
   type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const boxes = new Map<string, { x: number; y: number; width: number; height: number }>();
 
@@ -177,7 +177,7 @@ it.runIf(experimentalLayout)('retains absolute padding-box geometry through an A
   ]);
 });
 
-it.runIf(experimentalLayout)('keeps absolute direct children out of automatic Flex intrinsic measurement', () => {
+it.runIf(nativeLayout)('keeps absolute direct children out of automatic Flex intrinsic measurement', () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const owner = createElement(Flex, {
     style: { width: 160, flexDirection: 'row', alignItems: 'flex-start' },
@@ -197,7 +197,7 @@ it.runIf(experimentalLayout)('keeps absolute direct children out of automatic Fl
 });
 
 
-it.runIf(experimentalLayout)('uses Flex alignment only on an absolute axis with no physical inset', async () => {
+it.runIf(nativeLayout)('uses Flex alignment only on an absolute axis with no physical inset', async () => {
   type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
   const left = signal<number | undefined>(undefined);
@@ -281,7 +281,7 @@ it.runIf(experimentalLayout)('uses Flex alignment only on an absolute axis with 
 });
 
 
-it.runIf(experimentalLayout)('centers an overflowing no-inset absolute child for distributed main alignment', async () => {
+it.runIf(nativeLayout)('centers an overflowing no-inset absolute child for distributed main alignment', async () => {
   let worldBox: { x: number; y: number; width: number; height: number } | undefined;
   function Wide({ style: _style }: { readonly style: RectStyle & FlexItemStyle }) {
     const box = useLayoutBox();
@@ -300,7 +300,7 @@ it.runIf(experimentalLayout)('centers an overflowing no-inset absolute child for
 });
 
 
-it.runIf(experimentalLayout)('derives a fixed absolute child size from opposing physical insets without changing Flex siblings', async () => {
+it.runIf(nativeLayout)('derives a fixed absolute child size from opposing physical insets without changing Flex siblings', async () => {
   type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
   const ownerWidth = signal(204);
@@ -376,7 +376,7 @@ it.runIf(experimentalLayout)('derives a fixed absolute child size from opposing 
 });
 
 
-it.runIf(experimentalLayout).each([false, true])('resolves automatic Rectangle dimensions before paint and hit testing, forwarded=%s', async forwarded => {
+it.runIf(nativeLayout).each([false, true])('resolves automatic Rectangle dimensions before paint and hit testing, forwarded=%s', async forwarded => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const ownerWidth = signal(204), ownerHeight = signal(104);
   const hits: string[] = [];
@@ -406,7 +406,7 @@ it.runIf(experimentalLayout).each([false, true])('resolves automatic Rectangle d
 });
 
 
-it.runIf(experimentalLayout).each(['ltr', 'rtl'] as const)('clamps omitted derived dimensions to zero while preserving %s inset precedence', async direction => {
+it.runIf(nativeLayout).each(['ltr', 'rtl'] as const)('clamps omitted derived dimensions to zero while preserving %s inset precedence', async direction => {
   let worldBox: { x: number; y: number; width: number; height: number } | undefined;
   function Empty({ style: _style }: { readonly style: BoxStyle & FlexItemStyle }) {
     const box = useLayoutBox(), transform = useCanvasContext().getTransform();
@@ -422,7 +422,7 @@ it.runIf(experimentalLayout).each(['ltr', 'rtl'] as const)('clamps omitted deriv
   expect(worldBox).toEqual({ x: direction === 'ltr' ? 122 : 82, y: 62, width: 0, height: 0 });
 });
 
-it.runIf(experimentalLayout)('clamps fixed absolute numeric dimensions before LTR left and RTL right placement without consuming sibling slots', async () => {
+it.runIf(nativeLayout)('clamps fixed absolute numeric dimensions before LTR left and RTL right placement without consuming sibling slots', async () => {
   type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
   const direction = signal<'ltr' | 'rtl'>('ltr');
@@ -489,7 +489,7 @@ it.runIf(experimentalLayout)('clamps fixed absolute numeric dimensions before LT
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('clamps opposing-inset automatic absolute axes before resizing and RTL right placement', async () => {
+it.runIf(nativeLayout)('clamps opposing-inset automatic absolute axes before resizing and RTL right placement', async () => {
   type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
   const width = signal(204);
@@ -567,7 +567,7 @@ it.runIf(experimentalLayout)('clamps opposing-inset automatic absolute axes befo
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('derives exactly one automatic absolute axis from a finite outer aspect ratio without intrinsic measurement', async () => {
+it.runIf(nativeLayout)('derives exactly one automatic absolute axis from a finite outer aspect ratio without intrinsic measurement', async () => {
   type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
   const axis = signal<'width' | 'height'>('width');
@@ -661,7 +661,7 @@ it.runIf(experimentalLayout)('derives exactly one automatic absolute axis from a
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('applies absolute aspect derivation before bounds and lets opposing insets override its automatic axis', async () => {
+it.runIf(nativeLayout)('applies absolute aspect derivation before bounds and lets opposing insets override its automatic axis', async () => {
   type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const mode = signal<'bound' | 'insets'>('bound');
   const boxes = new Map<string, { x: number; y: number; width: number; height: number }>();
@@ -705,7 +705,7 @@ it.runIf(experimentalLayout)('applies absolute aspect derivation before bounds a
 });
 
 
-it.runIf(experimentalLayout)('measures one automatic absolute width with unbounded horizontal availability and exact declared height', async () => {
+it.runIf(nativeLayout)('measures one automatic absolute width with unbounded horizontal availability and exact declared height', async () => {
   type AbsoluteProviderStyle = BoxStyle & FlexItemStyle;
   type Resolved = SystemStyle & { readonly width: number; readonly height: number };
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -745,23 +745,23 @@ it.runIf(experimentalLayout)('measures one automatic absolute width with unbound
 
   ownerWidth.set(244);
   await nextFrame();
-  expect(calls).toBe(2);
-  expect(constraints).toEqual([[0, Infinity, 20, 20], [0, Infinity, 20, 20]]);
-  expect(snapshotWasmLayoutDiagnostics().measuredLeaves).toBe(initial.measuredLeaves + 1);
+  expect(calls).toBe(1);
+  expect(constraints).toEqual([[0, Infinity, 20, 20]]);
+  expect(snapshotWasmLayoutDiagnostics().measuredLeaves).toBe(initial.measuredLeaves);
   clickCanvas(canvas, 170, 15);
   expect(hits).toEqual(['absolute', 'absolute']);
   paint.set('#6e3e79');
   await nextFrame();
-  expect(calls).toBe(2);
-  expect(snapshotWasmLayoutDiagnostics().measuredLeaves).toBe(initial.measuredLeaves + 1);
+  expect(calls).toBe(1);
+  expect(snapshotWasmLayoutDiagnostics().measuredLeaves).toBe(initial.measuredLeaves);
 
   jobs.set(6);
   await nextFrame();
-  expect(constraints).toEqual([[0, Infinity, 20, 20], [0, Infinity, 20, 20], [0, Infinity, 20, 20]]);
+  expect(constraints).toEqual([[0, Infinity, 20, 20], [0, Infinity, 20, 20]]);
   clickCanvas(canvas, 110, 15);
   expect(hits).toEqual(['absolute', 'absolute', 'absolute']);
   const resized = snapshotWasmLayoutDiagnostics();
-  expect(resized.measuredLeaves).toBe(initial.measuredLeaves + 2);
+  expect(resized.measuredLeaves).toBe(initial.measuredLeaves + 1);
   expect(resized.nodeCreates).toBe(initial.nodeCreates);
 
   visible.set(false);
@@ -788,7 +788,7 @@ it.runIf(experimentalLayout)('measures one automatic absolute width with unbound
 });
 
 
-it.runIf(experimentalLayout)('owns a natural-width measurement cache without creating an absolute-only native line item', async () => {
+it.runIf(nativeLayout)('owns a natural-width measurement cache without creating an absolute-only native line item', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const paint = signal('#a63758');
   let calls = 0;
@@ -813,7 +813,7 @@ it.runIf(experimentalLayout)('owns a natural-width measurement cache without cre
 });
 
 
-it.runIf(experimentalLayout)('measures one automatic absolute height at exact finite width through a paired primitive provider', async () => {
+it.runIf(nativeLayout)('measures one automatic absolute height at exact finite width through a paired primitive provider', async () => {
   type AbsoluteProviderStyle = BoxStyle & FlexItemStyle & {
     readonly width?: number; readonly height?: number | 'auto';
     readonly minWidth?: number; readonly minHeight?: number;
@@ -893,7 +893,7 @@ it.runIf(experimentalLayout)('measures one automatic absolute height at exact fi
 });
 
 
-it.runIf(experimentalLayout)('queries an automatic absolute height at declared width before minimum and maximum width clamps', async () => {
+it.runIf(nativeLayout)('queries an automatic absolute height at declared width before minimum and maximum width clamps', async () => {
   type ProviderStyle = BoxStyle & FlexItemStyle;
   type Resolved = SystemStyle & { readonly width: number; readonly height: number };
   const constraints: Array<readonly [number, number, number, number]> = [];
@@ -928,7 +928,7 @@ it.runIf(experimentalLayout)('queries an automatic absolute height at declared w
 });
 
 
-it.runIf(experimentalLayout)('keeps finite absolute Flex placement physical while every main direction changes', async () => {
+it.runIf(nativeLayout)('keeps finite absolute Flex placement physical while every main direction changes', async () => {
   type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -1034,7 +1034,7 @@ it.runIf(experimentalLayout)('keeps finite absolute Flex placement physical whil
   ]);
 });
 
-it.runIf(experimentalLayout)('settles opposing-inset automatic and fixed numeric bounds through all finite nowrap Flex directions', async () => {
+it.runIf(nativeLayout)('settles opposing-inset automatic and fixed numeric bounds through all finite nowrap Flex directions', async () => {
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -1099,7 +1099,7 @@ it.runIf(experimentalLayout)('settles opposing-inset automatic and fixed numeric
   expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes); expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas); expect(snapshotWasmLayoutDiagnostics().cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('derives one automatic absolute aspect axis across finite nowrap main directions', async () => {
+it.runIf(nativeLayout)('derives one automatic absolute aspect axis across finite nowrap main directions', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
@@ -1149,7 +1149,7 @@ it.runIf(experimentalLayout)('derives one automatic absolute aspect axis across 
   expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });
 
-it.runIf(experimentalLayout)('keeps paired absolute provider constraints and ownership through every finite nowrap direction', async () => {
+it.runIf(nativeLayout)('keeps paired absolute provider constraints and ownership through every finite nowrap direction', async () => {
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type ProviderStyle = BoxStyle & FlexItemStyle;
   type Resolved = SystemStyle & { readonly width: number; readonly height: number };

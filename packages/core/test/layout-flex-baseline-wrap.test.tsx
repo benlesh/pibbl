@@ -15,10 +15,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => {
   for (const controller of controllers.splice(0)) controller.dispose();
   document.body.replaceChildren();
@@ -38,7 +38,7 @@ interface BaselineStyle extends SystemStyle {
 }
 interface BaselineProps { readonly name: string; readonly first: number | ReturnType<typeof signal<number>>; }
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'shares first baselines within each finite wrapped row while retaining source identity and cleanup',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -115,7 +115,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'keeps wrapped first-baseline lines physical across row reversal and writing direction',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -201,7 +201,7 @@ it.runIf(experimentalLayout)(
 );
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses final main growth and an automatic main margin for fixed generic Text in a wrapped first-baseline line',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -304,7 +304,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'measures a wrapped first-baseline provider at its final oversized-item shrink allocation',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -360,7 +360,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'places a numeric main margin after wrapped first-baseline allocation without replacing its final-width baseline query',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -429,7 +429,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'accounts for numeric first-baseline cross margins in the physical line ascent and descent without changing provider content height',
   async () => {
     for (const edge of ['marginTop', 'marginBottom'] as const) {

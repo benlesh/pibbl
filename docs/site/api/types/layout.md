@@ -24,9 +24,12 @@ symbols:
     FlowProps,
     FlowStyle,
     GridItemStyle,
+    GridMinMaxTrack,
     GridProps,
+    GridRepeatTrack,
     GridStyle,
     GridTrack,
+    GridTrackBreadth,
     IntrinsicAxisConstraints,
     IntrinsicConstraints,
     IntrinsicMeasureInput,
@@ -108,7 +111,7 @@ layout resolution and pure measurement.
 
 `EdgeValues<T extends number | Percentage = number>` supplies one scalar or
 independent physical edges; omitted sides resolve to zero. `padding` uses
-`EdgeValues<number | Percentage>`. Experimental allocated Flex children and
+`EdgeValues<number | Percentage>`. Native allocated Flex children and
 mounted own-style Flow, Grid, Absolute and Overlay resolution use the containing
 owner width for every padding percentage, including top/bottom, before border-box
 conversion. Unallocated pure measurement and upstream child preparation without
@@ -133,7 +136,7 @@ root ratio sizing remain outside this contract.
 `FlexItemStyle` is the direct-child participation style consumed by a `Flex`
 parent; it does not create a CSS cascade.
 
-In experimental layout, a primitive leaf in a finite LTR or RTL
+In native layout, a primitive leaf in a finite LTR or RTL
 `Flex` of any main direction and wrapping mode may choose `position: "static"` or `"relative"`. Static retains its
 ordinary Flex slot and ignores insets. Relative retains that slot, then applies
 `left`/`right`/`top`/`bottom` once to final geometry. Numbers stay physical;
@@ -145,7 +148,7 @@ also supports wrapped parents when it remains internally nowrap, declares finite
 numeric width/height, zero grow/shrink and auto or omitted basis. Other layout
 families remain outside this admission.
 
-Experimental direct Flex children in any main direction and wrapping mode may also select `position: "absolute"`
+Native direct Flex children in any main direction and wrapping mode may also select `position: "absolute"`
 with finite numeric or percentage width/height or automatic/omitted axes paired with both
 finite physical insets on each automatic axis. With a positive finite
 `aspectRatio`, exactly one automatic axis may instead derive from the declared
@@ -230,18 +233,36 @@ and last visible lines at final allocation. Last-baseline alignment remains subs
 `GridItemStyle` is the direct-child placement style consumed by an explicit
 `Grid` parent.
 
+## GridMinMaxTrack
+
+An immutable named minimum/maximum breadth pair created by
+[`minmax`](#/api/functions/grid-tracks).
+
 ## GridProps
 
 `GridProps` accepts recursive `PibblNode` children for explicit-track grid layout.
 
+## GridRepeatTrack
+
+An immutable track list with a fixed positive repeat count or an automatic
+fill/fit policy, created by the [track constructors](#/api/functions/grid-tracks).
+
 ## GridStyle
 
-`GridStyle` configures the declared box and explicit tracks for `Grid`; CSS
-auto-placement and advanced intrinsic sizing are not supported.
+`GridStyle` configures declared tracks, implicit tracks, and sparse or dense
+auto-placement. The native engine supports intrinsic and bounded
+tracks, fixed repetition, and automatic fill/fit repetition. See
+[Grid track definitions](#/api/functions/grid-tracks).
 
 ## GridTrack
 
-`GridTrack` describes one explicit Grid track in Pibbl's supported subset.
+`GridTrack` describes a numeric, percentage, fractional, intrinsic, bounded, or
+repeated track. Automatic repetitions use the finite owning axis.
+
+## GridTrackBreadth
+
+A fixed logical length, percentage, fraction, intrinsic keyword, automatic breadth,
+or branded `FitContent` bound accepted by a Grid track.
 
 ## IntrinsicAxisConstraints
 
@@ -465,7 +486,7 @@ are `number | Percentage` in experimental Flex. They map through inherited
 direction, or a child Flex’s explicit direction. Logical edges override physical
 edges and the uniform `margin` shorthand; zero is explicit and property order
 does not matter. Signed percentages use the containing Flex content width.
-Other layout families and normal JavaScript Flex reject these margins.
+Other unsupported layout-family profiles reject these margins.
 
 `BoxStyle.paddingStart` and `.paddingEnd` are nonnegative `number | Percentage`
 values in experimental box layout. They override the mapped physical `padding`
@@ -493,6 +514,7 @@ owner supports horizontal min/max-content contributions.
 ## SizingLength
 
 [`Length`](#length), [`SizingKeyword`](#sizingkeyword), or
-[`FitContent`](#fitcontent). Used for width, height and flex basis; it does not
+[`FitContent`](#fitcontent), or `stretch`. Used for width, height, their bounds,
+and flex basis; it does not
 widen padding, positions, gaps or radii. See [`fitContent`](#/api/functions/fit-content)
-for the current experimental owner boundary.
+for the current native owner boundary.

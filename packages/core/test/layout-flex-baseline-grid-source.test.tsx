@@ -5,10 +5,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -29,7 +29,7 @@ type Box = Readonly<{ x: number; y: number; width: number; height: number; stamp
 type First = number | { get(): number };
 const fixed = (width: number, height: number, fill: string): Style & { readonly width: number; readonly height: number } => ({ width, height, minWidth: 0, minHeight: 0, flexBasis: width, flexGrow: 0, flexShrink: 0, fill });
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the first declared Grid cell as the structural first-baseline source instead of visual row order',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -86,7 +86,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the settled Grid content bottom when it has no declared source cell',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -113,7 +113,7 @@ it.runIf(experimentalLayout)(
 );
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the allocated content box of a spanning first declared cell through a described Grid root',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

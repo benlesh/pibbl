@@ -3,7 +3,7 @@ import { WasmFlexTextExample } from '../../scenarios/src/learning/layout/wasm-fl
 import { afterEach, expect, it } from 'vitest';
 import { createElement, measureElement, Flex, Rectangle, Text, type PibblController } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout } from '../src/lib/layout/wasm/region';
+import { nativeLayout } from '../src/lib/layout/wasm/region';
 
 let controller: PibblController | undefined;
 afterEach(() => {
@@ -13,7 +13,7 @@ afterEach(() => {
 });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
-it.runIf(experimentalLayout)('protects a direct wrapped Text word by default and retains the explicit zero escape', async () => {
+it.runIf(nativeLayout)('protects a direct wrapped Text word by default and retains the explicit zero escape', async () => {
   const target = document.createElement('canvas');
   target.width = 400;
   target.height = 100;
@@ -40,7 +40,7 @@ it.runIf(experimentalLayout)('protects a direct wrapped Text word by default and
   expect(pixel(Math.ceil(wordWidth) + 5, 60)).toEqual([66, 107, 97, 255]);
 });
 
-it.runIf(experimentalLayout)('shows automatic and explicit-zero Text rows in the public learning example', async () => {
+it.runIf(nativeLayout)('shows automatic and explicit-zero Text rows in the public learning example', async () => {
   const target = document.createElement('canvas');
   target.width = 760; target.height = 460;
   document.body.append(target);
@@ -71,7 +71,7 @@ it.runIf(experimentalLayout)('shows automatic and explicit-zero Text rows in the
 
 const service = { measureText: (value: string) => ({ width: value.length * 10 } as TextMetrics) };
 const measurement = { service, measureElement: (element: Parameters<typeof measureElement>[0], constraints: Parameters<typeof measureElement>[1]) => measureElement(element, constraints, service) };
-it.runIf(experimentalLayout).each([
+it.runIf(nativeLayout).each([
   { name: 'does not treat flexBasis as a width cap', limits: {}, expected: 80 },
   { name: 'caps the minimum at a numeric specified width', limits: { width: 30 }, expected: 30 },
   { name: 'caps the minimum at numeric maxWidth', limits: { maxWidth: 25 }, expected: 25 },
@@ -83,7 +83,7 @@ it.runIf(experimentalLayout).each([
   expect(boxes[0].width).toBe(expected);
   expect(boxes[1].x).toBe(expected);
 });
-it.runIf(experimentalLayout)('keeps clipped Text outside the bounded automatic minimum', () => {
+it.runIf(nativeLayout)('keeps clipped Text outside the bounded automatic minimum', () => {
   expect(() => layoutFlex({ x: 0, y: 0, width: 50, height: 30 }, [
     createElement(Text, { children: 'unbreakable', style: { flexBasis: 20, flexShrink: 1, wrap: true, height: 10, fit: 'clip' } }),
   ], {}, measurement)).toThrow(/explicit main-axis minimum/);

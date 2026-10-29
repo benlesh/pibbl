@@ -74,6 +74,7 @@ export function topicFor(id) {
 }
 const entryImports = {
   root: "@pibbl/core",
+  sync: "@pibbl/core/sync",
   machines: "@pibbl/core/machines",
   machineAnimation: "@pibbl/core/machines/animation",
   sprites: "@pibbl/core/sprites",

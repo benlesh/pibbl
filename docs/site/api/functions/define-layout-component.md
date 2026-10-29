@@ -65,7 +65,7 @@ and its returned root retain their ordinary type/key identity and cleanup rules.
 An ordinary component remains opaque to intrinsic measurement.
 
 This initial capability uses existing measurement support: a finite-width nowrap
-column containing wrapped Text is supported in the experimental layout lane.
+column containing wrapped Text is supported by the default native layout engine.
 Nested Cards below known nowrap-column roots use that same settled-width path,
 with each description prepared once per receiver and transaction. Descriptor cycles
 retain the existing cyclic-measurement diagnostic. A finite LTR forward nowrap row may also query a described root with both

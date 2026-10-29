@@ -1,7 +1,7 @@
 import { Absolute, definePrimitive, type BoxStyle, type SystemStyle, Flex, Flow, Grid, Overlay, Rectangle, Text, signal, type FlexItemStyle, type FlexStyle, type PibblNode, type PibblController, type RectStyle } from "@pibbl/core";
 import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it } from 'vitest';
-import { snapshotWasmLayoutDiagnostics, experimentalLayout } from '../src/lib/layout/wasm/region';
+import { snapshotWasmLayoutDiagnostics, nativeLayout } from '../src/lib/layout/wasm/region';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
 
 let controller: PibblController | undefined;
@@ -54,11 +54,12 @@ describe('explicit direct-Flex position modes', () => {
     ['Grid', <Grid style={{ width: 200, height: 100, gridTemplateColumns: [200], gridTemplateRows: [100] }}><Rectangle style={positioned} /></Grid>],
     ['wrapped Flex owner', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Flex style={{ ...positioned, flexShrink: 1 }}><Rectangle style={{ width: 10, height: 10 }} /></Flex></Flex>],
     ['wrap-reverse static Flex owner', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap-reverse' }}><Flex style={{ ...positioned, position: 'static', flexShrink: 1 }}><Rectangle style={{ width: 10, height: 10 }} /></Flex></Flex>],
-  ] as const)('rejects relative placement in %s outside the finite nowrap contract', (_name, node) => {
-    expect(mount(node)).toThrow(!experimentalLayout && _name === 'wrap-reverse static Flex owner' ? 'unsupported flex wrap' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  ] as const)('applies the runtime placement contract for %s', (_name, node) => {
+    if (nativeLayout && (_name === 'wrapped Flex owner' || _name === 'wrap-reverse static Flex owner')) expect(mount(node)).not.toThrow();
+    else expect(mount(node)).toThrow(!nativeLayout && _name === 'wrap-reverse static Flex owner' ? 'unsupported flex wrap' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
 
-  it.runIf(!experimentalLayout)('rejects relative column placement in the normal runtime', () => {
+  it.runIf(!nativeLayout)('rejects relative column placement in the normal runtime', () => {
     expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={positioned} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
   it('rejects right and bottom without an explicit mode instead of dropping them', () => {
@@ -78,7 +79,7 @@ describe('explicit direct-Flex position modes', () => {
 
 
 describe('physical percentage placement validation', () => {
-  it.runIf(experimentalLayout).each(['static', 'relative'] as const)('validates %s inset values even when they do not move a static box', position => {
+  it.runIf(nativeLayout).each(['static', 'relative'] as const)('validates %s inset values even when they do not move a static box', position => {
     for (const inset of [{ left: 'auto' as never }, { right: Infinity }, { top: '10%%' as never }, { bottom: ('1' + '0'.repeat(309) + '%') as never }]) {
       expect(mount(<Flex style={{ width: 200, height: 100 }}><Rectangle style={{ width: 30, height: 20, minWidth: 0, minHeight: 0, position, ...inset }} /></Flex>)).toThrow();
     }
@@ -97,11 +98,12 @@ describe('bounded direct-Flex absolute admission', () => {
     ['wrapped layout owner RTL', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap', layoutDirection: 'rtl' }}><Flex style={fixed}>{null}</Flex></Flex>],
     ['wrapped layout owner reversed', <Flex style={{ width: 200, height: 100, flexDirection: 'row-reverse', flexWrap: 'wrap' }}><Flex style={fixed}>{null}</Flex></Flex>],
     ['layout child', <Flex style={{ width: 200, height: 100 }}><Flex style={fixed}>{null}</Flex></Flex>],
-  ] as const)('rejects absolute participation in %s outside the bounded contract', (_name, node) => {
-    expect(mount(node)).toThrow(!experimentalLayout && (_name === 'wrapped layout owner wrap-reverse' || _name === 'wrapped layout owner RTL' || _name === 'wrapped layout owner reversed')
+  ] as const)('applies the runtime absolute participation contract for %s', (_name, node) => {
+    if (nativeLayout && _name === 'Grid') { expect(mount(node)).not.toThrow(); return; }
+    expect(mount(node)).toThrow(!nativeLayout && (_name === 'wrapped layout owner wrap-reverse' || _name === 'wrapped layout owner RTL' || _name === 'wrapped layout owner reversed')
       ? /uses an unsupported flex/ : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
-  it.runIf(experimentalLayout).each([
+  it.runIf(nativeLayout).each([
     ['unpaired automatic width', { ...fixed, width: 'auto' as const }],
     ['nonfinite horizontal anchor', { ...fixed, left: Infinity }],
     ['malformed horizontal percentage', { ...fixed, left: '10%%' as never }],
@@ -109,15 +111,15 @@ describe('bounded direct-Flex absolute admission', () => {
   ])('keeps unsupported wrapped absolute %s diagnosed', (_name, style) => {
     expect(mount(<Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={style} /></Flex>)).toThrow(_name.includes('horizontal anchor') ? 'currently requires a finite numeric inset' : _name.includes('percentage') ? 'unsupported length value' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
-  it.runIf(!experimentalLayout)('rejects column absolute participation in the normal runtime', () => {
+  it.runIf(!nativeLayout)('rejects column absolute participation in the normal runtime', () => {
     expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={fixed} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
-  it.runIf(experimentalLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('keeps unpaired automatic axes and ambiguous aspect sizing outside expanded %s absolute placement', flexDirection => {
+  it.runIf(nativeLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('keeps unpaired automatic axes and ambiguous aspect sizing outside expanded %s absolute placement', flexDirection => {
     for (const style of [{ ...fixed, width: 'auto' as const }, { ...fixed, aspectRatio: 2 }, { ...fixed, width: 'auto' as const, height: 'auto' as const, aspectRatio: 2 }]) {
       expect(mount(<Flex style={{ width: 200, height: 100, flexDirection }}><Rectangle style={style} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
     }
   });
-  it.runIf(experimentalLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('requires paired natural providers in %s before measurement', flexDirection => {
+  it.runIf(nativeLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('requires paired natural providers in %s before measurement', flexDirection => {
     let calls = 0;
     const Leaf = definePrimitive<{}, BoxStyle & FlexItemStyle, BoxStyle & FlexItemStyle, SystemStyle & { width: number; height: number }>(() => null, {
       resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
@@ -128,19 +130,21 @@ describe('bounded direct-Flex absolute admission', () => {
     }
     expect(calls).toBe(0);
   });
-  it('rejects an opaque static Flex handoff when no declarative containing-block metadata exists', () => {
+  it('inherits the logical containing block through an opaque static Flex handoff', () => {
     function OpaqueStatic({ style }: { readonly style: FlexStyle & FlexItemStyle }) {
       return <Flex style={style}><Rectangle style={fixed} /></Flex>;
     }
-    expect(mount(<Flex style={{ width: 200, height: 100 }}>
+    const render = mount(<Flex style={{ width: 200, height: 100 }}>
       <OpaqueStatic style={{
         position: 'static', width: 80, height: 60,
         minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
         flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start',
       }} />
-    </Flex>)).toThrow(experimentalLayout ? 'static containing-block inheritance requires a direct declarative Flex chain' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+    </Flex>);
+    if (nativeLayout) expect(render).not.toThrow();
+    else expect(render).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
-  it.runIf(experimentalLayout).each(['unsupported','throwing'] as const)('releases an absolute natural-width provider after %s measurement', mode => {
+  it.runIf(nativeLayout).each(['unsupported','throwing'] as const)('releases an absolute natural-width provider after %s measurement', mode => {
     const baseline = snapshotWasmLayoutDiagnostics();
     let rendered = 0;
     const Leaf = definePrimitive<{}, BoxStyle & FlexItemStyle, BoxStyle & FlexItemStyle, SystemStyle>(() => { rendered++; return null; }, {
@@ -181,45 +185,51 @@ describe('static containing-block direction boundary', () => {
   it.each([
     ['growing static child in column parent', 'column' as const, 'row' as const],
     ['growing column static child in row parent', 'row' as const, 'column' as const],
-  ])('rejects %s instead of extending static containing ownership', (_name, outerDirection, innerDirection) => {
-    expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: outerDirection, flexWrap: 'nowrap' }}>
+  ])('applies static containing ownership for %s', (_name, outerDirection, innerDirection) => {
+    const render = mount(<Flex style={{ width: 200, height: 100, flexDirection: outerDirection, flexWrap: 'nowrap' }}>
       <Flex style={{ position: 'static', width: 80, height: 60, minWidth: 0, minHeight: 0, flexGrow: 1, flexShrink: 0,
         flexDirection: innerDirection, flexWrap: 'nowrap', alignItems: 'flex-start' }}>
         <Rectangle style={absolute} />
       </Flex>
-    </Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+    </Flex>);
+    if (nativeLayout) expect(render).not.toThrow();
+    else expect(render).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
 });
 
 
 describe('bounded absolute wrapped Text height', () => {
   const style = { position: 'absolute' as const, width: 40, height: 'auto' as const, left: 12, bottom: 10, minWidth: 0, minHeight: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10 };
-  it.runIf(experimentalLayout).each([
+  it.runIf(nativeLayout).each([
     ['ellipsized fit', { ...style, fit: 'ellipsis' as const }],
     ['clipped fit', { ...style, fit: 'clip' as const }],
     ['squished fit', { ...style, fit: 'squish' as const }],
-    ['clipped overflow', { ...style, overflow: 'clip' as const }],
     ['custom font', { ...style, font: '10px AppFont' }],
     ['both automatic axes', { ...style, width: 'auto' as const }],
   ])('rejects natural Text height with %s', (_name, textStyle) => {
     expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={textStyle}>aaaa aaaa</Text></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+  it.runIf(nativeLayout)('measures natural Text height with clipped overflow', () => {
+    expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={{ ...style, overflow: 'clip' }}>aaaa aaaa</Text></Flex>)).not.toThrow();
   });
 });
 
 
 describe('bounded absolute natural Text width', () => {
   const style = { position: 'absolute' as const, width: 'auto' as const, height: 20, right: 18, top: 8, minWidth: 0, minHeight: 0, flexShrink: 0, wrap: false, font: '10px monospace' };
-  it.runIf(experimentalLayout).each([
+  it.runIf(nativeLayout).each([
     ['wrapped', { ...style, wrap: true }],
     ['clipped fit', { ...style, fit: 'clip' as const }],
     ['ellipsized fit', { ...style, fit: 'ellipsis' as const }],
-    ['clipped overflow', { ...style, overflow: 'clip' as const }],
     ['custom font', { ...style, font: '10px AppFont' }],
     ['wrapped both automatic axes', { ...style, height: 'auto' as const, wrap: true }],
   ])('rejects natural Text width with %s', (_name, textStyle) => {
     expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={textStyle}>aaaa aaaa</Text></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
-  it.runIf(experimentalLayout)('rejects responsive Text width measurement', () => {
+  it.runIf(nativeLayout)('measures natural Text width with clipped overflow', () => {
+    expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={{ ...style, overflow: 'clip' }}>aaaa aaaa</Text></Flex>)).not.toThrow();
+  });
+  it.runIf(nativeLayout)('rejects responsive Text width measurement', () => {
     expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={{ ...style, when: [{ query: { minWidth: 0 }, style: { fill: '#a63758' } }] }}>aaaa aaaa</Text></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
 });
@@ -227,7 +237,7 @@ describe('bounded absolute natural Text width', () => {
 
 describe('bounded both-auto Text measurement', () => {
   const style = { position: 'absolute' as const, width: 'auto' as const, height: 'auto' as const, right: 18, bottom: 10, minWidth: 0, minHeight: 0, flexShrink: 0, wrap: false, font: '10px monospace' };
-  it.runIf(experimentalLayout).each([
+  it.runIf(nativeLayout).each([
     ['both-auto aspect', { ...style, aspectRatio: 2 }],
     ['horizontal pair with natural height', { ...style, left: 12 }],
     ['vertical pair with natural width', { ...style, top: 8 }],
@@ -248,13 +258,14 @@ describe('logical inset boundary', () => {
     ['Grid absolute child', <Grid style={{ width: 200, height: 100, gridTemplateColumns: [200], gridTemplateRows: [100] }}><Rectangle style={{ position: 'absolute', width: 30, height: 20, ...logical }} /></Grid>],
     ['Overlay absolute child', <Overlay style={{ width: 200, height: 100 }}><Rectangle style={{ position: 'absolute', width: 30, height: 20, ...logical }} /></Overlay>],
   ] as const)('diagnoses logical insets outside direct absolute Flex in %s', (_name, node) => {
-    expect(mount(node)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+    if (nativeLayout && _name === 'Grid absolute child') expect(mount(node)).not.toThrow();
+    else expect(mount(node)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
 });
 
 
 describe('logical absolute inset validation', () => {
-  it.runIf(experimentalLayout).each([
+  it.runIf(nativeLayout).each([
     ['null start', { insetStart: null as never }],
     ['null end', { insetEnd: null as never }],
     ['automatic start', { insetStart: 'auto' as never }],

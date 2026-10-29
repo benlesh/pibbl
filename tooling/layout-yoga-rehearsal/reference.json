@@ -579,7 +579,7 @@
           "width": 0,
           "height": 80,
           "flexBasis": 0,
-          "flexGrow": 1e+30,
+          "flexGrow": 1e30,
           "flexShrink": 0,
           "minWidth": 0,
           "maxWidth": 1000000
@@ -588,7 +588,7 @@
           "width": 0,
           "height": 80,
           "flexBasis": 0,
-          "flexGrow": 2e+30,
+          "flexGrow": 2e30,
           "flexShrink": 0,
           "minWidth": 0,
           "maxWidth": 1000000

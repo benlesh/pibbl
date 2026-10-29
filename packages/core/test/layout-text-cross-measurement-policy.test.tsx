@@ -5,7 +5,7 @@ import {
   useCanvasContext, useConst,
 } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
@@ -26,7 +26,7 @@ const policies = [
 ] as const;
 
 for (const [name, policy, cacheable] of policies) {
-  it.runIf(experimentalLayout)(`measures ${name} Text before a row cross auto margin`, async () => {
+  it.runIf(nativeLayout)(`measures ${name} Text before a row cross auto margin`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const marginTop = signal<0 | 'auto'>(0), words = signal('alphabetalphabetalphabet'), peerFill = signal('#426b61');
     const hits: string[] = [], draws: Array<{ x: number; y: number; text: string; maximum?: number }> = [];
@@ -115,7 +115,7 @@ const columnPolicies = [
 ] as const;
 
 for (const [name, policy, cacheable] of columnPolicies) {
-  it.runIf(experimentalLayout)(`measures ${name} before a column cross auto margin`, async () => {
+  it.runIf(nativeLayout)(`measures ${name} before a column cross auto margin`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const marginLeft = signal<0 | 'auto'>(0), words = signal('alpha beta'), peerFill = signal('#426b61');
     const hits: string[] = [], draws: Array<{ x: number; y: number; text: string }> = [];

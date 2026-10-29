@@ -6,10 +6,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -21,7 +21,7 @@ interface LeafStyle extends SystemStyle { width?: number; height?: number; minWi
 interface LeafProps { readonly name: 'A' | 'B'; readonly first: number | ReturnType<typeof signal<number>>; }
 type Box = Readonly<{ x: number; y: number; width: number; height: number; stamp: number }>;
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'propagates a transparent described primitive root into first-baseline membership and detaches its receiver inputs on removal',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -87,7 +87,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'invalidates a described-root baseline cache when only its fresh scalar root props change',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -139,7 +139,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'measures a wrapped transparent described provider at its final width before first-baseline placement',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

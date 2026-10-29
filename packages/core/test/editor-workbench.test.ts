@@ -42,6 +42,7 @@ describe("Studio editor declaration libraries", () => {
       "file:///node_modules/@pibbl/core/sprites/formats/texture-packer.d.ts",
       "file:///node_modules/@pibbl/core/sprites/index.d.ts",
       "file:///node_modules/@pibbl/core/index.d.ts",
+      "file:///node_modules/@pibbl/core/sync.d.ts",
       "file:///node_modules/@pibbl/core/filters.d.ts",
       "file:///node_modules/@pibbl/core/jsx-runtime.d.ts",
       "file:///node_modules/@pibbl/core/jsx-dev-runtime.d.ts",

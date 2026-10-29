@@ -649,3 +649,12 @@ does not close the migration gate or claim general Yoga baseline parity.
 The probe stays outside the fixed corpus. Compile it against the same pinned
 checkout and source list as the other C++ probes above. Source SHA256:
 `a480debfe4f9c9349d1ef7f68163e511e0c5cebb98434357752b2b14411eebaf`.
+
+## Standalone migration analysis
+
+`tsx tooling/layout-yoga-rehearsal/analyze-migration.mts INPUT.json OUTPUT.json`
+checks an owned Yoga 3.2 tree description against the versioned standalone
+`@pibbl/layout` conversion profile. It reports unsupported source properties and
+does not run a geometry comparison. The input must state explicit source styles;
+implicit Yoga defaults, errata, reference-baseline flags, and callbacks require
+migration review rather than silent conversion.

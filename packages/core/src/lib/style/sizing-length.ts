@@ -15,7 +15,7 @@ export interface FitContent {
 }
 
 /** Sizing-only value; padding and insets retain {@link Length}. See {@link FitContent}, {@link SizingKeyword}. */
-export type SizingLength = Length | SizingKeyword | FitContent;
+export type SizingLength = Length | SizingKeyword | FitContent | 'stretch';
 
 /** A scalar result or an owner-resolved intrinsic sizing request. */
 export type NormalizedSizingLength =
@@ -70,6 +70,10 @@ export function resolveScalarSizingLength(
   property: string,
   context: Readonly<LayoutDiagnosticContext> = {},
 ): number | undefined {
+  if (value === 'stretch') {
+    if (reference !== undefined && Number.isFinite(reference) && reference >= 0) return reference;
+    throw layoutDiagnostic({ ...context, property, value, reason: 'stretch requires a finite owning allocation' });
+  }
   if (isIntrinsicSizingValue(value)) {
     throw layoutDiagnostic({
       ...context,
@@ -99,6 +103,10 @@ export function normalizeSizingLength(
   if (value === 'min-content' || value === 'max-content') {
     if (!options.allowIntrinsic) throw unsupported(options, value, 'intrinsic sizing requires a measuring layout owner');
     return { kind: value };
+  }
+  if (value === 'stretch') {
+    const resolved = resolveScalarSizingLength(value, options.reference, options.property, context)!;
+    return { kind: 'length', value: resolved };
   }
   const resolved = resolveLength(value, options.reference, options.property, context);
   if (resolved === undefined) {

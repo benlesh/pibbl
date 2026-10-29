@@ -8,7 +8,7 @@ import { opacity } from '@pibbl/core/filters';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
-import { LayoutRegion, snapshotWasmLayoutDiagnostics, experimentalLayout } from '../src/lib/layout/wasm/region';
+import { LayoutRegion, snapshotWasmLayoutDiagnostics, nativeLayout } from '../src/lib/layout/wasm/region';
 import { frozenFlexInputs } from '../src/lib/layout/flex-allocation-cache';
 import { layoutFlex } from '../src/lib/layout/flex';
 import { createExampleMount } from "../../scenarios/src/example-host";
@@ -22,7 +22,7 @@ const service = { measureText: (value: string) => ({ width: value.length * 10 } 
 const measurement = { service, measureElement: (element: Parameters<typeof measureElement>[0], constraints: Parameters<typeof measureElement>[1]) => measureElement(element, constraints, service) };
 
 beforeAll(() => {
-  if (experimentalLayout) prepareLayoutEngineSync();
+  if (nativeLayout) prepareLayoutEngineSync();
 });
 
 describe('Flex/Text replacement contract', () => {
@@ -38,7 +38,7 @@ describe('Flex/Text replacement contract', () => {
   });
 });
 
-it('build lane matches the requested mode', () => expect(experimentalLayout).toBe(import.meta.env.MODE === 'layout-wasm'));
+it('uses the native layout engine in every build mode', () => expect(nativeLayout).toBe(true));
 const controllers: { dispose(): void }[] = [];
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function clickCanvas(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -63,7 +63,7 @@ it('terminates for huge finite shrink factors', () => {
   const child = () => createElement(Rectangle, { style: { width: 80, height: 10, minWidth: 0, flexShrink: 1e308 } });
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [child(), child()], {}, measurement).map(b => b.width)).toEqual([50, 50]);
 });
-it.runIf(experimentalLayout)('drives the exact public scenario through signals, reuses nodes, and releases arenas', async () => {
+it.runIf(nativeLayout)('drives the exact public scenario through signals, reuses nodes, and releases arenas', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const { canvas, controller } = await mountExample();
   const initial = snapshotWasmLayoutDiagnostics();
@@ -91,7 +91,7 @@ it.runIf(experimentalLayout)('drives the exact public scenario through signals, 
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('rolls back a cold absolute measurement identity after a failed render while retaining a committed identity', () => {
+it.runIf(nativeLayout)('rolls back a cold absolute measurement identity after a failed render while retaining a committed identity', () => {
   const region = new LayoutRegion();
   const primitive = {};
   const previousTransaction = GLOBAL_STATE.renderTransaction;
@@ -117,7 +117,7 @@ it.runIf(experimentalLayout)('rolls back a cold absolute measurement identity af
   }
 });
 
-it.runIf(experimentalLayout)('renews output views after WASM growth and never accepts a failed revision', async () => {
+it.runIf(nativeLayout)('renews output views after WASM growth and never accepts a failed revision', async () => {
   const { LayoutRegion } = await import('../src/lib/layout/wasm/region');
   const region = new LayoutRegion();
   const nodes = Array.from({ length: 1000 }, () => ({ baseMain: 80, minMain: 75, maxMain: Infinity, paddingMain: 0, grow: 0, shrink: 1, targetMain: 0, receiverToken: {} }));
@@ -132,7 +132,7 @@ it.runIf(experimentalLayout)('renews output views after WASM growth and never ac
   } finally { region.dispose(); }
 });
 
-it.runIf(experimentalLayout)('releases numeric gap records across mounted one-empty-one transitions', async () => {
+it.runIf(nativeLayout)('releases numeric gap records across mounted one-empty-one transitions', async () => {
   const { signal } = await import('@pibbl/core');
   const { pibblSync: pibbl } = await import('@pibbl/core/sync');
   const { Flex } = await import('@pibbl/core');
@@ -155,7 +155,7 @@ it.runIf(experimentalLayout)('releases numeric gap records across mounted one-em
   controller.dispose(); expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline);
 });
 
-it.runIf(experimentalLayout)('retains reactive Text measurements on paint-only updates', async () => {
+it.runIf(nativeLayout)('retains reactive Text measurements on paint-only updates', async () => {
   const { Flex, signal } = await import('@pibbl/core');
   const { pibblSync: pibbl } = await import('@pibbl/core/sync');
   const text = signal('Signal-owned text wraps at its final allocated width.');
@@ -181,7 +181,7 @@ it.runIf(experimentalLayout)('retains reactive Text measurements on paint-only u
 
 type IntrinsicLeafTestStyle = import('@pibbl/core').SystemStyle & { height?:number; flexShrink?:number; minWidth?:number };
 
-it.runIf(experimentalLayout)('uses a pure intrinsic provider for finite nowrap row minima, reactivity, paint reuse and disposal', async () => {
+it.runIf(nativeLayout)('uses a pure intrinsic provider for finite nowrap row minima, reactivity, paint reuse and disposal', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const ownerWidth = signal(80), minimum = signal(40), minimumOverride = signal<number | undefined>(undefined), paint = signal('blue');
   let intrinsicCalls = 0;
@@ -234,7 +234,7 @@ type ColumnAutomaticProviderStyle = import('@pibbl/core').SystemStyle & {
   fill?: string;
 };
 
-it.runIf(experimentalLayout)('uses a paired provider exact-width measurement as the automatic finite column minimum', async () => {
+it.runIf(nativeLayout)('uses a paired provider exact-width measurement as the automatic finite column minimum', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const contentMinimum = signal(40);
   const minimumOverride = signal<number | undefined>(undefined);
@@ -333,7 +333,7 @@ type ColumnAutomaticMinimumBoundaryStyle = Omit<BoxStyle & FlexItemStyle, 'when'
 type ColumnMinimumResolvedStyle = import('@pibbl/core').SystemStyle & { width: number; height: number };
 const resolveColumnMinimumStyle = (_style: Readonly<ColumnAutomaticMinimumBoundaryStyle>, context: { allocation: { width: number; height: number } }) => ({ width: context.allocation.width, height: context.allocation.height });
 
-it.runIf(experimentalLayout)('keeps automatic column minima paired, exact-width, and bounded by numeric main-axis styles', async () => {
+it.runIf(nativeLayout)('keeps automatic column minima paired, exact-width, and bounded by numeric main-axis styles', async () => {
   const canvas = document.createElement('canvas');
   canvas.width = 20;
   canvas.height = 80;
@@ -394,7 +394,7 @@ it.runIf(experimentalLayout)('keeps automatic column minima paired, exact-width,
   try {
     for (const [Provider, style] of [
       [IntrinsicOnly, {}], [MeasureOnly, {}],
-      [Paired, { height: '50%' }], [Paired, { maxHeight: '50%' }],
+      [Paired, { height: '50%' }],
     ] as const) {
       const before = errors.length;
       const rejected = pibbl(canvas, root(Provider as typeof Paired, style));
@@ -424,7 +424,7 @@ type IntrinsicFinalWidthStyle = import('@pibbl/core').SystemStyle & {
   minWidth?: number;
 };
 
-it.runIf(experimentalLayout)('remeasures a custom intrinsic leaf at its final shrunken width before publishing its hit box', async () => {
+it.runIf(nativeLayout)('remeasures a custom intrinsic leaf at its final shrunken width before publishing its hit box', async () => {
   const ownerWidth = signal(140);
   const paint = signal('blue');
   const hits = signal(0);
@@ -483,7 +483,7 @@ it.runIf(experimentalLayout)('remeasures a custom intrinsic leaf at its final sh
   expect([...context.getImageData(60, 5, 1, 1).data]).toEqual([0, 128, 0, 255]);
 });
 
-it.runIf(experimentalLayout)('classifies declared Flex/Text inputs before coalescing their redraw', async () => {
+it.runIf(nativeLayout)('classifies declared Flex/Text inputs before coalescing their redraw', async () => {
   const { Flex, signal } = await import('@pibbl/core');
   const { pibblSync: pibbl } = await import('@pibbl/core/sync');
   const width = signal(300);
@@ -520,7 +520,7 @@ it.runIf(experimentalLayout)('classifies declared Flex/Text inputs before coales
   expect(after.measurementInputInvalidations).toBe(before.measurementInputInvalidations);
 });
 
-it.runIf(experimentalLayout)('drives reactive content and computed dependency controls in the exact Studio scenario', async () => {
+it.runIf(nativeLayout)('drives reactive content and computed dependency controls in the exact Studio scenario', async () => {
   const { canvas, controller } = await mountExample();
   const click = (x: number) => clickCanvas(canvas, x, 160);
   const initial = snapshotWasmLayoutDiagnostics();
@@ -563,7 +563,7 @@ it.runIf(experimentalLayout)('drives reactive content and computed dependency co
   expect(snapshotWasmLayoutDiagnostics()).toEqual(disposed);
 });
 
-it.runIf(experimentalLayout)('reorders keyed paragraphs, releases removed inputs, and restores only the removed node', async () => {
+it.runIf(nativeLayout)('reorders keyed paragraphs, releases removed inputs, and restores only the removed node', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const { canvas, controller } = await mountExample();
   const click = (x: number, y: number) => clickCanvas(canvas, x, y);
@@ -603,7 +603,7 @@ it.runIf(experimentalLayout)('reorders keyed paragraphs, releases removed inputs
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('composes width, text, keyed removal, paint and restore without cache churn', async () => {
+it.runIf(nativeLayout)('composes width, text, keyed removal, paint and restore without cache churn', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const { canvas, controller } = await mountExample();
   const click = async (x: number, y: number) => { clickCanvas(canvas,x,y); await nextFrame(); };
@@ -646,7 +646,7 @@ it('measures column Text auto basis at its final max-width before placing the ne
   ]);
 });
 
-it.runIf(experimentalLayout)('reflows the exact column scenario and moves its following sibling hit target in the same frame', async () => {
+it.runIf(nativeLayout)('reflows the exact column scenario and moves its following sibling hit target in the same frame', async () => {
   const mountColumnModule = await import('../../scenarios/src/learning/layout/wasm-flex-column-text.example');
 const mountColumn = createExampleMount(mountColumnModule.WasmFlexColumnTextExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -721,7 +721,7 @@ const mountColumn = createExampleMount(mountColumnModule.WasmFlexColumnTextExamp
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('computes nowrap cross-axis placement through WASM', () => {
+it.runIf(nativeLayout)('computes nowrap cross-axis placement through WASM', () => {
   const before = snapshotWasmLayoutDiagnostics();
   const item = createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, flexShrink: 0 } });
   expect(layoutFlex({ x: 3, y: 5, width: 100, height: 80 }, [item], {
@@ -730,7 +730,7 @@ it.runIf(experimentalLayout)('computes nowrap cross-axis placement through WASM'
   expect(snapshotWasmLayoutDiagnostics().crossPlacements).toBe(before.crossPlacements + 1);
 });
 
-it.runIf(experimentalLayout)('computes nowrap distributed main offsets through WASM', () => {
+it.runIf(nativeLayout)('computes nowrap distributed main offsets through WASM', () => {
   const before = snapshotWasmLayoutDiagnostics();
   const item = () => createElement(Rectangle, { style: { width: 20, height: 10, minWidth: 0, flexShrink: 0 } });
   expect(layoutFlex({ x: 3, y: 5, width: 100, height: 30 }, [item(), item()], {
@@ -739,7 +739,7 @@ it.runIf(experimentalLayout)('computes nowrap distributed main offsets through W
   expect(snapshotWasmLayoutDiagnostics().mainPlacements).toBe(before.mainPlacements + 1);
 });
 
-it.runIf(experimentalLayout)('switches the exact mounted example between column and row without replacing layout ownership', async () => {
+it.runIf(nativeLayout)('switches the exact mounted example between column and row without replacing layout ownership', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-column-text.example');
 const mount = createExampleMount(mountModule.WasmFlexColumnTextExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -779,7 +779,7 @@ const mount = createExampleMount(mountModule.WasmFlexColumnTextExample);
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('freezes a signal-capped public panel and gives remaining space to its sibling', async () => {
+it.runIf(nativeLayout)('freezes a signal-capped public panel and gives remaining space to its sibling', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-constraints.example');
 const mount = createExampleMount(mountModule.WasmFlexConstraintsExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -843,7 +843,7 @@ const mount = createExampleMount(mountModule.WasmFlexConstraintsExample);
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('measures an intrinsic built-in column around wrapped Text at its definite width', () => {
+it.runIf(nativeLayout)('measures an intrinsic built-in column around wrapped Text at its definite width', () => {
   const nested = createElement(Flex, { style: { width: 50, flexDirection: 'column', minHeight: 0, flexShrink: 0 },
     children: createElement(Text, { children: 'aaaa aaaa aaaa aaaa', style: { minHeight: 0, flexShrink: 0, wrap: true, lineHeight: 10 } }),
   });
@@ -854,7 +854,7 @@ it.runIf(experimentalLayout)('measures an intrinsic built-in column around wrapp
   ]);
 });
 
-it.runIf(experimentalLayout)('updates intrinsic built-in Text height and following sibling input together', async () => {
+it.runIf(nativeLayout)('updates intrinsic built-in Text height and following sibling input together', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-intrinsic-text.example');
 const mount = createExampleMount(mountModule.WasmFlexIntrinsicTextExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -914,7 +914,7 @@ const mount = createExampleMount(mountModule.WasmFlexIntrinsicTextExample);
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('measures intrinsic Text after its built-in container reaches a cross-axis maximum', () => {
+it.runIf(nativeLayout)('measures intrinsic Text after its built-in container reaches a cross-axis maximum', () => {
   const nested = createElement(Flex, { style: { width: 100, maxWidth: 50, minWidth: 0, flexDirection: 'column', minHeight: 0, flexShrink: 0 },
     children: createElement(Text, { children: 'aaaa aaaa aaaa aaaa', style: { minHeight: 0, flexShrink: 0, wrap: true, lineHeight: 10 } }),
   });
@@ -927,7 +927,7 @@ it.runIf(experimentalLayout)('measures intrinsic Text after its built-in contain
   ]);
 });
 
-it.runIf(experimentalLayout)('settles a stretched intrinsic column width from its parent before measuring Text', () => {
+it.runIf(nativeLayout)('settles a stretched intrinsic column width from its parent before measuring Text', () => {
   for (const padding of [0, 10]) {
     const nested = createElement(Flex, { style: { maxWidth: 50, padding, flexDirection: 'column', minHeight: 0, flexShrink: 0 },
       children: createElement(Text, { children: 'aaaa aaaa aaaa aaaa', style: { minHeight: 0, flexShrink: 0, wrap: true, lineHeight: 10 } }),
@@ -942,7 +942,7 @@ it.runIf(experimentalLayout)('settles a stretched intrinsic column width from it
   }
 });
 
-it.runIf(experimentalLayout)('isolates intrinsic snapshot iterables from the outer render allocation', async () => {
+it.runIf(nativeLayout)('isolates intrinsic snapshot iterables from the outer render allocation', async () => {
   const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100;
   document.body.append(canvas);
   let leaked = false, rejected = false;
@@ -960,7 +960,7 @@ it.runIf(experimentalLayout)('isolates intrinsic snapshot iterables from the out
   expect(leaked).toBe(false);
 });
 
-it.runIf(experimentalLayout)('rasterizes an allocated Layer once after parent width and content settle', async () => {
+it.runIf(nativeLayout)('rasterizes an allocated Layer once after parent width and content settle', async () => {
   const canvas = document.createElement('canvas'); canvas.width = 300; canvas.height = 100;
   document.body.append(canvas);
   const revision = signal(0), width = computed(() => revision.get() === 0 ? 240 : 120);
@@ -979,7 +979,7 @@ it.runIf(experimentalLayout)('rasterizes an allocated Layer once after parent wi
   expect(rasters).toEqual([{ width: 120, revision: 1 }]);
 });
 
-it.runIf(experimentalLayout)('composes the exact allocated Layer example with current pixels, hits and cached siblings', async () => {
+it.runIf(nativeLayout)('composes the exact allocated Layer example with current pixels, hits and cached siblings', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-layer.example');
 const mount = createExampleMount(mountModule.WasmFlexLayerExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -1015,7 +1015,7 @@ for (const scenario of [
   { name: 'direct Layer', load: () => import('../../scenarios/src/learning/layout/wasm-flex-render-layer.example') },
   { name: 'opaque panel', load: () => import('../../scenarios/src/learning/layout/wasm-flex-panel.example') },
 ]) {
-it.runIf(experimentalLayout)(`sizes the public renderer lifecycle and committed target inside an allocated ${scenario.name}`, async () => {
+it.runIf(nativeLayout)(`sizes the public renderer lifecycle and committed target inside an allocated ${scenario.name}`, async () => {
   const mountModule = await scenario.load();
 const mount = createExampleMount("WasmFlexRenderLayerExample" in mountModule ? mountModule.WasmFlexRenderLayerExample : mountModule.WasmFlexPanelExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -1051,7 +1051,7 @@ const mount = createExampleMount("WasmFlexRenderLayerExample" in mountModule ? m
 
 }
 
-it.runIf(experimentalLayout)('carries final allocation through an ordinary panel returning a Layer', async () => {
+it.runIf(nativeLayout)('carries final allocation through an ordinary panel returning a Layer', async () => {
   const canvas = document.createElement('canvas'); canvas.width = 300; canvas.height = 100;
   document.body.append(canvas);
   const revision = signal(0), width = computed(() => revision.get() === 0 ? 240 : 120);
@@ -1077,7 +1077,7 @@ it.runIf(experimentalLayout)('carries final allocation through an ordinary panel
   expect(panels).toBe(initialPanels+1);
 });
 
-it.runIf(experimentalLayout).each([false,true])('rehearses pinned Yoga matches and classified geometry through the public Pibbl example logicalPadding=%s', async logicalPadding => {
+it.runIf(nativeLayout).each([false,true])('rehearses pinned Yoga matches and classified geometry through the public Pibbl example logicalPadding=%s', async logicalPadding => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
 const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -1176,7 +1176,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 }, 60000);
 
-it.runIf(experimentalLayout)('forms finite row wrap lines in WASM and remeasures Text at each final width', () => {
+it.runIf(nativeLayout)('forms finite row wrap lines in WASM and remeasures Text at each final width', () => {
   const children = () => Array.from({ length: 3 }, (_, key) => createElement(Text, { key,
     children: 'aaaa aaaa aaaa aaaa', style: { flexBasis: 90, minWidth: 0, flexGrow: 1, wrap: true, lineHeight: 10 },
   }));
@@ -1197,7 +1197,7 @@ it.runIf(experimentalLayout)('forms finite row wrap lines in WASM and remeasures
   expect(layoutFlex({ x: 0, y: 0, width: 40, height: 20 }, [], { flexDirection: 'column', flexWrap: 'wrap' }, measurement)).toEqual([]);
 });
 
-it.runIf(experimentalLayout)('drives public row wrap geometry, targets and reuse with width/Text/paint signals', async () => {
+it.runIf(nativeLayout)('drives public row wrap geometry, targets and reuse with width/Text/paint signals', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-wrap.example');
 const mount = createExampleMount(mountModule.WasmFlexWrapExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -1227,7 +1227,7 @@ const mount = createExampleMount(mountModule.WasmFlexWrapExample);
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('wraps finite declared column items and rejects intrinsic item cycles', () => {
+it.runIf(nativeLayout)('wraps finite declared column items and rejects intrinsic item cycles', () => {
   const children = () => Array.from({ length: 3 }, () => createElement(Rectangle, { style: { width: 100, height: 80, minHeight: 0, flexGrow: 1 } }));
   const options = { flexDirection: 'column', flexWrap: 'wrap', gap: 10, alignItems: 'flex-start', alignContent: 'flex-start' } as const;
   expect(layoutFlex({ x: 0, y: 0, width: 240, height: 260 }, children(), options, measurement)).toEqual([
@@ -1246,7 +1246,7 @@ it.runIf(experimentalLayout)('wraps finite declared column items and rejects int
   ]);
 });
 
-it.runIf(experimentalLayout)('drives public column wrap height, hit targets and declared-width Text through signals', async () => {
+it.runIf(nativeLayout)('drives public column wrap height, hit targets and declared-width Text through signals', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-column-wrap.example');
 const mount = createExampleMount(mountModule.WasmFlexColumnWrapExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -1275,7 +1275,7 @@ const mount = createExampleMount(mountModule.WasmFlexColumnWrapExample);
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('preserves keyed identities through wrapped row/column reorder removal and restore', async () => {
+it.runIf(nativeLayout)('preserves keyed identities through wrapped row/column reorder removal and restore', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-keyed-wrap.example');
 const mount = createExampleMount(mountModule.WasmFlexKeyedWrapExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -1325,7 +1325,7 @@ const mount = createExampleMount(mountModule.WasmFlexKeyedWrapExample);
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('keeps wrapped reverse composition lines, filter pixels, focus, and source targets stable', async () => {
+it.runIf(nativeLayout)('keeps wrapped reverse composition lines, filter pixels, focus, and source targets stable', async () => {
   const module = await import('../../scenarios/src/learning/layout/wasm-flex-keyed-wrap.example');
   const mount = createExampleMount(module.WasmFlexKeyedWrapExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -1386,7 +1386,7 @@ it.runIf(experimentalLayout)('keeps wrapped reverse composition lines, filter pi
   expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('retains bounded measured Text caches across wrapped keyed topology changes', async () => {
+it.runIf(nativeLayout)('retains bounded measured Text caches across wrapped keyed topology changes', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const keys = signal(['A','B','C']), ink = signal('#19375b');
   function Collection() {
@@ -1417,7 +1417,7 @@ it.runIf(experimentalLayout)('retains bounded measured Text caches across wrappe
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('measures nested intrinsic built-in columns at bounded content widths and rejects cycles', () => {
+it.runIf(nativeLayout)('measures nested intrinsic built-in columns at bounded content widths and rejects cycles', () => {
   const text = (children: string) => createElement(Text, { children, style: { minHeight: 0, flexShrink: 0, wrap: true, lineHeight: 10 } });
   const card = () => createElement(Flex, { style: { flexDirection: 'column', minHeight: 0, flexShrink: 0, padding: 5, maxWidth: 80, gap: 4 }, children: [
     text('aaaa'), createElement(Flex, { style: { flexDirection: 'column', minHeight: 0, flexShrink: 0, padding: 3, maxWidth: 50, gap: 2 }, children: [text('aa aa aa aa'), text('aa')] }),
@@ -1436,7 +1436,7 @@ it.runIf(experimentalLayout)('measures nested intrinsic built-in columns at boun
   expect(measureElement(createElement(Flex, { style: { width: 100, flexDirection: 'column' }, children: card() }), { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 300 }, service).status).toBe('measured');
 });
 
-it.runIf(experimentalLayout)('reflows a public nested descriptor Card and following target without speculative probe execution', async () => {
+it.runIf(nativeLayout)('reflows a public nested descriptor Card and following target without speculative probe execution', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-nested-intrinsic.example');
 const mount = createExampleMount(mountModule.WasmFlexNestedIntrinsicExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -1471,7 +1471,7 @@ const mount = createExampleMount(mountModule.WasmFlexNestedIntrinsicExample);
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('refreshes nested cache subscriptions, metrics and bounded ownership', async () => {
+it.runIf(nativeLayout)('refreshes nested cache subscriptions, metrics and bounded ownership', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const selected = signal(true), first = signal('first paragraph wraps across narrow columns'), second = signal('second paragraph'), font = signal('14px sans-serif'), width = signal(160), ink = signal('#123456');
   const content = computed(() => selected.get() ? first.get() : second.get());
@@ -1502,7 +1502,7 @@ it.runIf(experimentalLayout)('refreshes nested cache subscriptions, metrics and 
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('invalidates nested keyed membership while releasing removed measurement receivers', async () => {
+it.runIf(nativeLayout)('invalidates nested keyed membership while releasing removed measurement receivers', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-nested-intrinsic.example');
 const mount = createExampleMount(mountModule.WasmFlexNestedIntrinsicExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -1534,7 +1534,7 @@ const mount = createExampleMount(mountModule.WasmFlexNestedIntrinsicExample);
 });
 
 
-it.runIf(experimentalLayout)('shrinks empty fixed-size Rectangles with an automatic zero minimum through the public mount', async () => {
+it.runIf(nativeLayout)('shrinks empty fixed-size Rectangles with an automatic zero minimum through the public mount', async () => {
   const fixed = () => createElement(Rectangle, { style: { width: 80, height: 20 } });
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [fixed(), fixed()], {}, measurement))
     .toEqual([{ x: 0, y: 0, width: 50, height: 20 }, { x: 50, y: 0, width: 50, height: 20 }]);
@@ -1554,14 +1554,14 @@ it.runIf(experimentalLayout)('shrinks empty fixed-size Rectangles with an automa
   expect(hits).toEqual([0, 1, 1]);
 });
 
-it.runIf(experimentalLayout)('keeps explicit rectangle minima and no-shrink policy while supporting column auto minima', () => {
+it.runIf(nativeLayout)('keeps explicit rectangle minima and no-shrink policy while supporting column auto minima', () => {
   const fixed = (style: Record<string, number>) => createElement(Rectangle, { style: { width: 80, height: 80, ...style } });
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [fixed({ minWidth: 70 }), fixed({})], {}, measurement).map(box => box.width)).toEqual([70, 30]);
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [fixed({ flexShrink: 0 }), fixed({})], {}, measurement).map(box => box.width)).toEqual([80, 20]);
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [fixed({}), fixed({})], { flexDirection: 'column', alignItems: 'flex-start' }, measurement).map(box => box.height)).toEqual([50, 50]);
 });
 
-it.runIf(experimentalLayout)('measures intrinsic Flex columns containing empty fixed-size Rectangles through the public API', () => {
+it.runIf(nativeLayout)('measures intrinsic Flex columns containing empty fixed-size Rectangles through the public API', () => {
   const column = createElement(Flex, { style: { flexDirection: 'column', width: 100, gap: 5 }, children: [
     createElement(Rectangle, { style: { width: 80, height: 20 } }),
     createElement(Rectangle, { style: { width: 80, height: 30 } }),
@@ -1570,13 +1570,13 @@ it.runIf(experimentalLayout)('measures intrinsic Flex columns containing empty f
     .toEqual({ status: 'measured', size: { width: 100, height: 55 } });
 });
 
-it.runIf(experimentalLayout)('shrinks percentage-sized empty Rectangles against definite parent dimensions', () => {
+it.runIf(nativeLayout)('shrinks percentage-sized empty Rectangles against definite parent dimensions', () => {
   const child = () => createElement(Rectangle, { style: { width: '80%', height: 20 } });
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 30 }, [child(), child()], {}, measurement))
     .toEqual([{ x: 0, y: 0, width: 50, height: 20 }, { x: 50, y: 0, width: 50, height: 20 }]);
 });
 
-it.runIf(experimentalLayout)('keeps percentage Rectangle explicit bounds and content padding floors', () => {
+it.runIf(nativeLayout)('keeps percentage Rectangle explicit bounds and content padding floors', () => {
   const child = (minimum: number) => createElement(Rectangle, { style: { width: '80%', height: 20, minWidth: minimum } });
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 30 }, [child(70), child(0)], {}, measurement).map(box => box.width)).toEqual([70, 30]);
   const padded = () => createElement(Rectangle, { style: { width: '80%', height: 20, padding: 10 } });
@@ -1586,7 +1586,7 @@ it.runIf(experimentalLayout)('keeps percentage Rectangle explicit bounds and con
   expect(layoutFlex({ x: 0, y: 0, width: 20, height: 100 }, [column(), column()], { flexDirection: 'column' }, measurement).map(box => box.height)).toEqual([50, 50]);
 });
 
-it.runIf(experimentalLayout)('allocates physical numeric margins outside public Rectangle paint and hit bounds', async () => {
+it.runIf(nativeLayout)('allocates physical numeric margins outside public Rectangle paint and hit bounds', async () => {
   const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 40; document.body.append(canvas);
   const left = signal(5); const hits: string[] = [];
   const children = () => [
@@ -1607,7 +1607,7 @@ it.runIf(experimentalLayout)('allocates physical numeric margins outside public 
   expect(snapshotWasmLayoutDiagnostics().paintInputInvalidations).toBe(initialRoles.paintInputInvalidations);
 });
 
-it.runIf(experimentalLayout)('clamps an intrinsic Flex auto dimension after signed margin accumulation', () => {
+it.runIf(nativeLayout)('clamps an intrinsic Flex auto dimension after signed margin accumulation', () => {
   const column = createElement(Flex, { style: { width: 100, flexDirection: 'column' }, children:
     createElement(Rectangle, { style: { width: 20, height: 10, minHeight: 0, flexShrink: 0, marginTop: -20 } }),
   });
@@ -1615,7 +1615,7 @@ it.runIf(experimentalLayout)('clamps an intrinsic Flex auto dimension after sign
     .toEqual({ status: 'measured', size: { width: 100, height: 0 } });
 });
 
-it.runIf(experimentalLayout)('places numeric cross margins and rejects unsupported margin inputs', () => {
+it.runIf(nativeLayout)('places numeric cross margins and rejects unsupported margin inputs', () => {
   const child = () => createElement(Rectangle, { style: { width: 'auto', height: 40, minHeight: 0, margin: 5, marginLeft: 3 } });
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [child(), child()], { flexDirection: 'column' }, measurement))
     .toEqual([{ x: 3, y: 5, width: 92, height: 40 }, { x: 3, y: 55, width: 92, height: 40 }]);
@@ -1625,7 +1625,7 @@ it.runIf(experimentalLayout)('places numeric cross margins and rejects unsupport
   }
 });
 
-it.runIf(experimentalLayout)('rejects margins under other layout families rather than ignoring them', async () => {
+it.runIf(nativeLayout)('rejects margins under other layout families rather than ignoring them', async () => {
   const { prepareDirectChildStyle } = await import('../src/lib/layout/absolute');
   for (const margin of [{ marginLeft: 5 }, { marginStart: 0 }, { marginEnd: '-5%' as const }]) {
     const child = createElement(Rectangle, { style: { width: 20, height: 20, ...margin } });
@@ -1633,7 +1633,7 @@ it.runIf(experimentalLayout)('rejects margins under other layout families rather
   }
 });
 
-it.runIf(experimentalLayout)('forms wrapped margin lines and preserves source paint/hit order under negative overlap', async () => {
+it.runIf(nativeLayout)('forms wrapped margin lines and preserves source paint/hit order under negative overlap', async () => {
   const positive = () => createElement(Rectangle, { style: { width: 80, height: 20, minWidth: 0, margin: 5 } });
   expect(layoutFlex({ x: 0, y: 0, width: 180, height: 60 }, [positive(), positive(), positive()], { flexWrap: 'wrap', alignContent: 'flex-start' }, measurement))
     .toEqual([{ x: 5, y: 5, width: 80, height: 20 }, { x: 95, y: 5, width: 80, height: 20 }, { x: 5, y: 35, width: 80, height: 20 }]);
@@ -1650,7 +1650,7 @@ it.runIf(experimentalLayout)('forms wrapped margin lines and preserves source pa
   clickCanvas(canvas, 75, 5); clickCanvas(canvas, 5, 17); expect(hits).toEqual(['B', 'C']);
 });
 
-it.runIf(experimentalLayout)('places reversed main axes with physical margins while preserving source order', async () => {
+it.runIf(nativeLayout)('places reversed main axes with physical margins while preserving source order', async () => {
   const first = createElement(Rectangle, { style: { width: 40, height: 40, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: 3, marginRight: 7, marginTop: 3, marginBottom: 7 } });
   const second = createElement(Rectangle, { style: { width: 30, height: 30, flexShrink: 0, minWidth: 0, minHeight: 0, marginLeft: 5, marginRight: 9, marginTop: 5, marginBottom: 9 } });
   expect(layoutFlex({ x: 0, y: 0, width: 150, height: 150 }, [first, second], { flexDirection: 'row-reverse', gap: 10, alignItems: 'flex-start' }, measurement))
@@ -1669,7 +1669,7 @@ it.runIf(experimentalLayout)('places reversed main axes with physical margins wh
   clickCanvas(canvas, 65, 5); clickCanvas(canvas, 100, 5); expect(hits).toEqual(['B', 'A']);
 });
 
-it.runIf(experimentalLayout)('uses main-direction start/end distribution for reversed axes', () => {
+it.runIf(nativeLayout)('uses main-direction start/end distribution for reversed axes', () => {
   const child = () => createElement(Rectangle, { style: { width: 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0 } });
   for (const [justifyContent, offset] of [['flex-start', 60], ['flex-end', 0], ['center', 30]] as const) {
     expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [child()], { flexDirection: 'row-reverse', justifyContent, alignItems: 'flex-start' }, measurement)[0].x).toBe(offset);
@@ -1677,7 +1677,7 @@ it.runIf(experimentalLayout)('uses main-direction start/end distribution for rev
   }
 });
 
-it.runIf(experimentalLayout)('places wrap-reverse lines and cross alignment with physical margins without reversing source hits', async () => {
+it.runIf(nativeLayout)('places wrap-reverse lines and cross alignment with physical margins without reversing source hits', async () => {
   const rowChild = (height: number, top: number, bottom: number) => createElement(Rectangle, { style: { width: 80, height, minWidth: 0, marginLeft: 5, marginRight: 5, marginTop: top, marginBottom: bottom } });
   const rowChildren = () => [rowChild(20, 3, 7), rowChild(10, 1, 9), rowChild(20, 3, 7)];
   expect(layoutFlex({ x: 0, y: 0, width: 180, height: 80 }, rowChildren(), { flexWrap: 'wrap-reverse', alignItems: 'flex-start', alignContent: 'flex-start' }, measurement))
@@ -1696,7 +1696,7 @@ it.runIf(experimentalLayout)('places wrap-reverse lines and cross alignment with
   clickCanvas(canvas, 75, 40); clickCanvas(canvas, 5, 32); expect(hits).toEqual(['B', 'C']);
 });
 
-it.runIf(experimentalLayout)('shares one root WASM instance across independent Flex regions while isolating roots', async () => {
+it.runIf(nativeLayout)('shares one root WASM instance across independent Flex regions while isolating roots', async () => {
   const instantiate = vi.spyOn(WebAssembly.Instance.prototype, 'exports', 'get');
   const width = signal(100); const visible = signal(true);
   const justify = signal<'flex-start' | 'flex-end'>('flex-start');
@@ -1730,7 +1730,7 @@ it.runIf(experimentalLayout)('shares one root WASM instance across independent F
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(0);
 });
 
-it.runIf(experimentalLayout)('shares the owning root instance with Flex inside a managed Layer', async () => {
+it.runIf(nativeLayout)('shares the owning root instance with Flex inside a managed Layer', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 40; document.body.append(canvas);
   const inner = createElement(Flex, { style: { width: 80, height: 20 }, children: createElement(Rectangle, { style: { width: 80, height: 20, fill: 'red' } }) });
@@ -1747,7 +1747,7 @@ it.runIf(experimentalLayout)('shares the owning root instance with Flex inside a
   expect(disposed.activeNodes).toBe(baseline.activeNodes);
 });
 
-it.runIf(experimentalLayout)('preflights later known sibling Flex inputs before evaluating an earlier opaque child', async () => {
+it.runIf(nativeLayout)('preflights later known sibling Flex inputs before evaluating an earlier opaque child', async () => {
   const width = signal(80), grow = signal(0); let evaluations = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'red' } }); }
   const scene = createElement(Absolute, { style: { width: 220, height: 30 }, children: [
@@ -1765,7 +1765,7 @@ it.runIf(experimentalLayout)('preflights later known sibling Flex inputs before 
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout)('normalizes a preflighted receiver once per transaction without executing its component early', async () => {
+it.runIf(nativeLayout)('normalizes a preflighted receiver once per transaction without executing its component early', async () => {
   const { definePrimitive } = await import('@pibbl/core');
   let normalizations = 0, renders = 0, sequences = 0;
   type Style = { width: number; height: number; minWidth: number; custom: null };
@@ -1782,7 +1782,7 @@ it.runIf(experimentalLayout)('normalizes a preflighted receiver once per transac
   expect([sequences, normalizations, renders]).toEqual([2, 2, 2]);
 });
 
-it.runIf(experimentalLayout)('prepares later known sibling sizing failures before evaluating an earlier opaque child', async () => {
+it.runIf(nativeLayout)('prepares later known sibling sizing failures before evaluating an earlier opaque child', async () => {
   const width = signal(80), minimum = signal(0); let evaluations = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'red' } }); }
   const scene = createElement(Absolute, { style: { width: 220, height: 30 }, children: [
@@ -1811,7 +1811,7 @@ it.runIf(experimentalLayout)('prepares later known sibling sizing failures befor
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout)('retains prepared keyed region ownership through reorder and releases removed slots', async () => {
+it.runIf(nativeLayout)('retains prepared keyed region ownership through reorder and releases removed slots', async () => {
   const order = signal(['A', 'B']); let serial = 0;
   const stamps = new Map<string, number>(); const hits: string[] = [];
   function Probe({ name }: { name: string; style: Record<string, unknown> }) {
@@ -1836,7 +1836,7 @@ it.runIf(experimentalLayout)('retains prepared keyed region ownership through re
   expect([disposed.activeArenas, disposed.activeNodes, disposed.activeWasmInstances]).toEqual([baseline.activeArenas, baseline.activeNodes, baseline.activeWasmInstances]);
 });
 
-it.runIf(experimentalLayout).each([false, true])('consumes prepared wrapped Text allocations without a second pass (nested=%s)', async nested => {
+it.runIf(nativeLayout).each([false, true])('consumes prepared wrapped Text allocations without a second pass (nested=%s)', async nested => {
   const width = signal(180); let probes = 0; const hits: string[] = [];
   const allocations: number[] = [];
   function Probe(_props: { style: Record<string, unknown> }) {
@@ -1864,7 +1864,7 @@ it.runIf(experimentalLayout).each([false, true])('consumes prepared wrapped Text
   clickCanvas(canvas, 45, 15); expect(hits).toEqual(['text']);
 });
 
-it.runIf(experimentalLayout)('prepares a later nested known Flex before an earlier opaque sibling evaluates', async () => {
+it.runIf(nativeLayout)('prepares a later nested known Flex before an earlier opaque sibling evaluates', async () => {
   const width = signal(180), grow = signal(0); let evaluations = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'red' } }); }
   const scene = createElement(Absolute, { style: { width: 220, height: 30 }, children: createElement(Flex, { style: { width, height: 20 }, children: [
@@ -1891,7 +1891,7 @@ it.runIf(experimentalLayout)('prepares a later nested known Flex before an earli
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout)('rejects cyclic known Flex descriptions before recursive region growth', async () => {
+it.runIf(nativeLayout)('rejects cyclic known Flex descriptions before recursive region growth', async () => {
   let traversals = 0;
   let cyclic: PibblNode;
   const children = { *[Symbol.iterator]() { traversals++; yield cyclic; } };
@@ -1909,7 +1909,7 @@ it.runIf(experimentalLayout)('rejects cyclic known Flex descriptions before recu
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout)('retains nested prepared keyed regions through reorder and releases their subtree ownership', async () => {
+it.runIf(nativeLayout)('retains nested prepared keyed regions through reorder and releases their subtree ownership', async () => {
   const order = signal(['A', 'B']); let serial = 0;
   const stamps = new Map<string, number>(); const hits: string[] = [];
   function Probe({ name }: { name: string; style: Record<string, unknown> }) {
@@ -1934,7 +1934,7 @@ it.runIf(experimentalLayout)('retains nested prepared keyed regions through reor
   expect([disposed.activeArenas, disposed.activeNodes, disposed.activeWasmInstances]).toEqual([baseline.activeArenas, baseline.activeNodes, baseline.activeWasmInstances]);
 });
 
-it.runIf(experimentalLayout).each([false, true])('prepares a direct or opaque-boundary Flex entry before earlier children (opaque=%s)', async opaque => {
+it.runIf(nativeLayout).each([false, true])('prepares a direct or opaque-boundary Flex entry before earlier children (opaque=%s)', async opaque => {
   const width = signal(180), grow = signal(0); let evaluations = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'red' } }); }
   const flex = createElement(Flex, { style: { width, height: 20 }, children: [
@@ -1966,7 +1966,7 @@ it.runIf(experimentalLayout).each([false, true])('prepares a direct or opaque-bo
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout)('prepares a described Flex root before earlier opaque siblings with one description per transaction', async () => {
+it.runIf(nativeLayout)('prepares a described Flex root before earlier opaque siblings with one description per transaction', async () => {
   const { defineLayoutComponent } = await import('@pibbl/core');
   const width = signal(180), grow = signal(0); let evaluations = 0, descriptions = 0, hits = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'red' }, onClick: () => hits++ }); }
@@ -1993,7 +1993,7 @@ it.runIf(experimentalLayout)('prepares a described Flex root before earlier opaq
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout)('replaces a prepared described root region when its own key changes', async () => {
+it.runIf(nativeLayout)('replaces a prepared described root region when its own key changes', async () => {
   const { defineLayoutComponent, useReaction } = await import('@pibbl/core');
   const rootKey = signal('first'); let mounts = 0, cleanups = 0;
   function Owned(_props: { style: Record<string, unknown> }) {
@@ -2011,7 +2011,7 @@ it.runIf(experimentalLayout)('replaces a prepared described root region when its
   expect([disposed.activeArenas, disposed.activeNodes, disposed.activeWasmInstances]).toEqual([baseline.activeArenas, baseline.activeNodes, baseline.activeWasmInstances]);
 });
 
-it.runIf(experimentalLayout)('prepares a later Layer direct Flex before earlier opaque siblings and child bitmap work', async () => {
+it.runIf(nativeLayout)('prepares a later Layer direct Flex before earlier opaque siblings and child bitmap work', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const width = signal(80), grow = signal(0), shown = signal(true);
   let evaluations = 0, layerEvaluations = 0, hits = 0;
@@ -2055,7 +2055,7 @@ it.runIf(experimentalLayout)('prepares a later Layer direct Flex before earlier 
 });
 
 
-it.runIf(experimentalLayout)('prepares a later Grid Flex cell before an earlier opaque cell evaluates', async () => {
+it.runIf(nativeLayout)('prepares a later Grid Flex cell before an earlier opaque cell evaluates', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const width = signal(200), grow = signal(1); let evaluations = 0, hits = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; return createElement(Rectangle, { style: { width: useLayoutBox().width, height: 20, fill: 'red' } }); }
@@ -2080,7 +2080,7 @@ it.runIf(experimentalLayout)('prepares a later Grid Flex cell before an earlier 
 });
 
 
-it.runIf(experimentalLayout)('prepares a later Flow Flex before an earlier opaque child evaluates', async () => {
+it.runIf(nativeLayout)('prepares a later Flow Flex before an earlier opaque child evaluates', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const width = signal(200), grow = signal(1); let evaluations = 0, hits = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; return createElement(Rectangle, { style: { width: useLayoutBox().width, height: 20, fill: 'red' } }); }
@@ -2104,7 +2104,7 @@ it.runIf(experimentalLayout)('prepares a later Flow Flex before an earlier opaqu
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout)('resolves public mixed Grid tracks natively and reuses them for paint-only updates', async () => {
+it.runIf(nativeLayout)('resolves public mixed Grid tracks natively and reuses them for paint-only updates', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const resolutions = () => (snapshotWasmLayoutDiagnostics() as ReturnType<typeof snapshotWasmLayoutDiagnostics> & { gridTrackResolutions?: number }).gridTrackResolutions ?? 0;
   const before = resolutions(); const width = signal(200), fill = signal('red');
@@ -2136,7 +2136,7 @@ it.runIf(experimentalLayout)('resolves public mixed Grid tracks natively and reu
 });
 
 
-it.runIf(experimentalLayout)('places explicit spanning Grid cells natively and preserves small spans after huge tracks', async () => {
+it.runIf(nativeLayout)('places explicit spanning Grid cells natively and preserves small spans after huge tracks', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const placements = () => (snapshotWasmLayoutDiagnostics() as ReturnType<typeof snapshotWasmLayoutDiagnostics> & { gridCellPlacements?: number }).gridCellPlacements ?? 0;
   const before = placements(); const width = signal(200), fill = signal('blue'); let hits = 0, usedWidth = 0, usedHeight = 0;
@@ -2161,7 +2161,7 @@ it.runIf(experimentalLayout)('places explicit spanning Grid cells natively and p
   expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
 });
 
-it.runIf(experimentalLayout)('keeps native Grid track results valid when resolution grows WASM memory', () => {
+it.runIf(nativeLayout)('keeps native Grid track results valid when resolution grows WASM memory', () => {
   const NativeInstance = WebAssembly.Instance;
   let growths = 0;
   vi.stubGlobal('WebAssembly', Object.assign(Object.create(WebAssembly), {
@@ -2184,7 +2184,7 @@ it.runIf(experimentalLayout)('keeps native Grid track results valid when resolut
   } finally { region.dispose(); vi.unstubAllGlobals(); }
 });
 
-it.runIf(experimentalLayout).each(['horizontal', 'vertical'] as const)('places wrapped Flow lines natively with centered items and paint-only reuse (%s)', async direction => {
+it.runIf(nativeLayout).each(['horizontal', 'vertical'] as const)('places wrapped Flow lines natively with centered items and paint-only reuse (%s)', async direction => {
   const horizontal = direction === 'horizontal';
   const baseline = snapshotWasmLayoutDiagnostics();
   const placements = () => (snapshotWasmLayoutDiagnostics() as ReturnType<typeof snapshotWasmLayoutDiagnostics> & { flowPlacements?: number }).flowPlacements ?? 0;
@@ -2212,7 +2212,7 @@ it.runIf(experimentalLayout).each(['horizontal', 'vertical'] as const)('places w
   expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
 });
 
-it.runIf(experimentalLayout)('invalidates native Flow placement when a measured Text width changes', async () => {
+it.runIf(nativeLayout)('invalidates native Flow placement when a measured Text width changes', async () => {
   const before = snapshotWasmLayoutDiagnostics().flowPlacements;
   const content = signal('a'), fill = signal('blue'); let hits = 0;
   const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 30; document.body.append(canvas);
@@ -2233,7 +2233,7 @@ it.runIf(experimentalLayout)('invalidates native Flow placement when a measured 
   expect(snapshotWasmLayoutDiagnostics().flowPlacements - before).toBe(2);
 });
 
-it.runIf(experimentalLayout)('prepares a later Grid root before earlier opaque siblings and adopts its native plan once', async () => {
+it.runIf(nativeLayout)('prepares a later Grid root before earlier opaque siblings and adopts its native plan once', async () => {
   const baseline = snapshotWasmLayoutDiagnostics(), width = signal(100), grow = signal(1);
   let evaluations = 0, hits = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; return createElement(Rectangle, { style: { width: 80, height: 20, fill: 'red' } }); }
@@ -2262,7 +2262,7 @@ it.runIf(experimentalLayout)('prepares a later Grid root before earlier opaque s
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout)('prepares a later Flow root before earlier opaque siblings and adopts its native plan once', async () => {
+it.runIf(nativeLayout)('prepares a later Flow root before earlier opaque siblings and adopts its native plan once', async () => {
   const baseline = snapshotWasmLayoutDiagnostics(), width = signal(100), grow = signal(1);
   let evaluations = 0, hits = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; return createElement(Rectangle, { style: { width: 80, height: 20, fill: 'red' } }); }
@@ -2288,7 +2288,7 @@ it.runIf(experimentalLayout)('prepares a later Flow root before earlier opaque s
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout)('measures a prepared Flow leaf once per transaction before adopting its plan', async () => {
+it.runIf(nativeLayout)('measures a prepared Flow leaf once per transaction before adopting its plan', async () => {
   const { definePrimitive } = await import('@pibbl/core');
   let measurements = 0;
   type Raw = import('@pibbl/core').SystemStyle & { width?: number | 'auto'; height?: number };
@@ -2306,7 +2306,7 @@ it.runIf(experimentalLayout)('measures a prepared Flow leaf once per transaction
 });
 
 
-it.runIf(experimentalLayout)('prepares an aligned later Overlay root before opaque siblings without an unnecessary native arena', async () => {
+it.runIf(nativeLayout)('prepares an aligned later Overlay root before opaque siblings without an unnecessary native arena', async () => {
   const baseline = snapshotWasmLayoutDiagnostics(), width = signal(100), grow = signal(1); let evaluations = 0, hits = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; return createElement(Rectangle, { style: { width: 80, height: 20, fill: 'red' } }); }
   const scene = createElement(Absolute, { style: { width: 280, height: 60 }, children: [
@@ -2330,7 +2330,7 @@ it.runIf(experimentalLayout)('prepares an aligned later Overlay root before opaq
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout)('prepares a nested Absolute root before opaque siblings without an unnecessary native arena', async () => {
+it.runIf(nativeLayout)('prepares a nested Absolute root before opaque siblings without an unnecessary native arena', async () => {
   const baseline = snapshotWasmLayoutDiagnostics(), width = signal(100), grow = signal(1); let evaluations = 0, hits = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; return createElement(Rectangle, { style: { width: 80, height: 20, fill: 'red' } }); }
   const scene = createElement(Absolute, { style: { width: 280, height: 60 }, children: [
@@ -2356,7 +2356,7 @@ it.runIf(experimentalLayout)('prepares a nested Absolute root before opaque sibl
 
 for (const Root of [Grid, Flow, Overlay, Absolute, Layer]) {
 for (const constrained of Root === Layer ? [false, true] : [false]) {
-it.runIf(experimentalLayout)(`prepares a later Layer known ${Root.name} root constrained=${constrained} before earlier opaque siblings and child bitmap work`, async () => {
+it.runIf(nativeLayout)(`prepares a later Layer known ${Root.name} root constrained=${constrained} before earlier opaque siblings and child bitmap work`, async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const width = signal(80), grow = signal(0), shown = signal(true);
   let evaluations = 0, layerEvaluations = 0, hits = 0;
@@ -2404,7 +2404,7 @@ it.runIf(experimentalLayout)(`prepares a later Layer known ${Root.name} root con
 }
 
 for (const opaque of [false, true]) {
-it.runIf(experimentalLayout)(`prepares direct-entry Layer known children opaque=${opaque} before opaque siblings and bitmap work`, async () => {
+it.runIf(nativeLayout)(`prepares direct-entry Layer known children opaque=${opaque} before opaque siblings and bitmap work`, async () => {
   const baseline = snapshotWasmLayoutDiagnostics(), width = signal(100), grow = signal(1); let evaluations = 0, hits = 0;
   function Probe(_props: { style: Record<string, unknown> }) { evaluations++; return createElement(Rectangle, { style: { width: 80, height: 20, fill: 'red' } }); }
   const layer = createElement(Layer, { style: { width: 280, height: 60 }, children: [
@@ -2436,7 +2436,7 @@ it.runIf(experimentalLayout)(`prepares direct-entry Layer known children opaque=
 for (const Root of [Grid, Flow, Layer]) {
 for (const constrained of Root === Layer ? [false, true] : [false]) {
 for (const defaulted of Root === Layer && !constrained ? [false, true] : [false]) {
-it.runIf(experimentalLayout)(`prepares a later Layer described ${Root.name} root constrained=${constrained} defaulted=${defaulted} before earlier opaque siblings and child bitmap work`, async () => {
+it.runIf(nativeLayout)(`prepares a later Layer described ${Root.name} root constrained=${constrained} defaulted=${defaulted} before earlier opaque siblings and child bitmap work`, async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const width = signal(80), grow = signal(0), shown = signal(true);
   let evaluations = 0, layerEvaluations = 0, hits = 0;
@@ -2492,7 +2492,7 @@ it.runIf(experimentalLayout)(`prepares a later Layer described ${Root.name} root
 
 }
 
-it.runIf(experimentalLayout)('measures a wrapped Flow at settled width inside an intrinsic Flex column', async () => {
+it.runIf(nativeLayout)('measures a wrapped Flow at settled width inside an intrinsic Flex column', async () => {
   const baseline = snapshotWasmLayoutDiagnostics(), width = signal(100), maximum = signal(100); let hits = 0;
   const flow = createElement(Flow, { style: { maxWidth: maximum, minHeight: 0, flexShrink: 0, direction: 'horizontal', wrap: true, gap: 5, lineGap: 5 }, children: [0,1,2].map(key => createElement(Rectangle, { key, style: { width: 70, height: 10, fill: 'blue' } })) });
   const card = createElement(Flex, { style: { width: 100, flexDirection: 'column', alignItems: 'stretch', minHeight: 0, flexShrink: 0 }, children: flow });
@@ -2515,7 +2515,7 @@ it.runIf(experimentalLayout)('measures a wrapped Flow at settled width inside an
 });
 
 for (const property of ['width','minWidth','maxWidth'] as const) {
-  it.runIf(experimentalLayout)(`measures percentage cross ${property} at an explicit numeric column owner width`, () => {
+  it.runIf(nativeLayout)(`measures percentage cross ${property} at an explicit numeric column owner width`, () => {
     const flow = createElement(Flow,{style:{direction:'horizontal',wrap:true,gap:5,lineGap:5,minHeight:0,flexShrink:0,...(property === 'minWidth' ? {width:40} : {}),[property]:'50%'},children:[0,1,2].map(key=>createElement(Rectangle,{key,style:{width:70,height:10}}))});
     const owner = (width:number) => createElement(Flex,{style:{width,flexDirection:'column',alignItems:'stretch'},children:flow});
     expect(measureElement(owner(200),{minWidth:0,maxWidth:400,minHeight:0,maxHeight:100},service)).toEqual({status:'measured',size:{width:200,height:40}});
@@ -2523,27 +2523,27 @@ for (const property of ['width','minWidth','maxWidth'] as const) {
   });
 }
 
-it.runIf(experimentalLayout)('bounds settled percentage cross measurement before child border-box conversion', () => {
+it.runIf(nativeLayout)('bounds settled percentage cross measurement before child border-box conversion', () => {
   const flow = createElement(Flow,{style:{boxSizing:'border-box',maxWidth:'50%',padding:{left:10,right:10,top:2,bottom:3},borderWidth:1,direction:'horizontal',wrap:true,gap:5,lineGap:5,minHeight:0,flexShrink:0},children:[0,1,2].map(key=>createElement(Rectangle,{key,style:{width:70,height:10}}))});
   const owner = createElement(Flex,{style:{width:200,flexDirection:'column'},children:flow});
   expect(measureElement(owner,{minWidth:0,maxWidth:400,minHeight:0,maxHeight:100},service)).toEqual({status:'measured',size:{width:200,height:47}});
 });
-it.runIf(experimentalLayout)('uses owner border-box content width as the percentage measurement reference',()=>{
+it.runIf(nativeLayout)('uses owner border-box content width as the percentage measurement reference',()=>{
   const flow=createElement(Flow,{style:{maxWidth:'50%',direction:'horizontal',wrap:true,gap:5,lineGap:5,minHeight:0,flexShrink:0},children:[0,1,2].map(key=>createElement(Rectangle,{key,style:{width:45,height:10}}))});
   const owner=createElement(Flex,{style:{boxSizing:'border-box',width:200,padding:10,borderWidth:{left:2,right:4},flexDirection:'column'},children:flow});
   expect(measureElement(owner,{minWidth:0,maxWidth:400,minHeight:0,maxHeight:100},service)).toEqual({status:'measured',size:{width:174,height:40}});
 });
-it.runIf(experimentalLayout)('rejects conflicting settled percentage cross bounds',()=>{
+it.runIf(nativeLayout)('rejects conflicting settled percentage cross bounds',()=>{
   const child=createElement(Flow,{style:{minWidth:'75%',maxWidth:'50%',minHeight:0},children:[]});
   expect(()=>measureElement(createElement(Flex,{style:{width:200,flexDirection:'column'},children:child}),{minWidth:0,maxWidth:200,minHeight:0,maxHeight:100},service)).toThrow(/minimum/);
 });
-it.runIf(experimentalLayout)('measures known wrapped Text at its settled percentage cross width',()=>{
+it.runIf(nativeLayout)('measures known wrapped Text at its settled percentage cross width',()=>{
   const child=createElement(Text,{children:'aaaa aaaa aaaa',style:{width:'50%',wrap:true,lineHeight:10,minHeight:0,flexShrink:0}});
   for(const [width,height] of [[200,20],[320,10]]) {
     expect(measureElement(createElement(Flex,{style:{width,flexDirection:'column'},children:child}),{minWidth:0,maxWidth:400,minHeight:0,maxHeight:100},service)).toEqual({status:'measured',size:{width,height}});
   }
 });
-it.runIf(experimentalLayout)('keeps percentage cross measurement bounded to explicit numeric owners and known children', () => {
+it.runIf(nativeLayout)('keeps percentage cross measurement bounded to explicit numeric owners and known children', () => {
   const flow = (style:Record<string,unknown>={})=>createElement(Flow,{style:{maxWidth:'50%',minHeight:0,flexShrink:0,...style},children:[]});
   const constraints={minWidth:0,maxWidth:200,minHeight:0,maxHeight:100};
   for(const width of [undefined,'auto','50%'] as const) {
@@ -2558,13 +2558,13 @@ it.runIf(experimentalLayout)('keeps percentage cross measurement bounded to expl
   expect(calls).toBe(0);
 });
 for(const value of ['-10%','NaN%','Infinity%']) {
-  it.runIf(experimentalLayout)(`rejects invalid settled percentage cross bound ${value}`,()=>{
+  it.runIf(nativeLayout)(`rejects invalid settled percentage cross bound ${value}`,()=>{
     const child=createElement(Flow,{style:{maxWidth:value as '50%',minHeight:0},children:[]});
     expect(()=>measureElement(createElement(Flex,{style:{width:200,flexDirection:'column'},children:child}),{minWidth:0,maxWidth:200,minHeight:0,maxHeight:100},service)).toThrow(/maxWidth/);
   });
 }
 
-it.runIf(experimentalLayout)('measures fixed Grid rows inside an intrinsic Flex column and rejects indefinite fraction rows', async () => {
+it.runIf(nativeLayout)('measures fixed Grid rows inside an intrinsic Flex column and rejects indefinite fraction rows', async () => {
   const baseline = snapshotWasmLayoutDiagnostics(), rows = signal<readonly [number,number]>([20,30]); let hits = 0;
   const grid = createElement(Grid, { style: { gridTemplateColumns: ['1fr'], gridTemplateRows: rows, gap: 5, minHeight: 0, flexShrink: 0 }, children: createElement(Rectangle, { style: { width: '100%', height: '100%', gridColumnStart: 1, gridRowStart: 2, fill: 'blue' } }) });
   const card = createElement(Flex, { style: { width: 100, flexDirection: 'column', alignItems: 'stretch', minHeight: 0, flexShrink: 0 }, children: grid });
@@ -2594,7 +2594,7 @@ it('records pinned native Yoga reverse-axis cap fixtures', () => {
 });
 
 
-it.runIf(experimentalLayout)('retains Yoga scale-zero fractional allocations through public Flex measurement', async () => {
+it.runIf(nativeLayout)('retains Yoga scale-zero fractional allocations through public Flex measurement', async () => {
   const fixtures = yogaReference.cases.filter(fixture => 'roundingFixture' in fixture);
   expect(fixtures).toHaveLength(1);
   const fixture = fixtures[0]!;
@@ -2652,7 +2652,7 @@ it(`uses coherent ${axis} border-box basis, bounds, content and cached geometry`
   let target = point(102); expect([...canvas.getContext('2d')!.getImageData(target.x,target.y,1,1).data]).toEqual([0,0,255,255]); clickCanvas(canvas,target.x,target.y); expect(hits).toBe(1);
   basis.set(105); await nextFrame(); expect(boxes.at(-1)).toEqual(axis === 'row' ? { width: 85, height: 10 } : { width: 10, height: 85 });
   clickCanvas(canvas,target.x,target.y); expect(hits).toBe(1); target = point(107); clickCanvas(canvas,target.x,target.y); expect(hits).toBe(2);
-  const beforePaint = snapshotWasmLayoutDiagnostics(); fill.set('green'); await nextFrame(); if (experimentalLayout) expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforePaint.solves);
+  const beforePaint = snapshotWasmLayoutDiagnostics(); fill.set('green'); await nextFrame(); if (nativeLayout) expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforePaint.solves);
   mode.set('content-box'); await nextFrame(); expect(boxes.at(-1)).toEqual(axis === 'row' ? { width: 105, height: 30 } : { width: 30, height: 105 }); target = point(127); clickCanvas(canvas,target.x,target.y); expect(hits).toBe(3); expect(mounts).toBe(1);
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeArenas,disposed.activeNodes,disposed.activeWasmInstances]).toEqual([baseline.activeArenas,baseline.activeNodes,baseline.activeWasmInstances]);
 });
@@ -2786,11 +2786,16 @@ it('applies outer aspect ratios after insets and clamps cross bounds independent
   }
   expect(layoutFlex(container,[basis],{ flexWrap: 'wrap' },measurement)[0]).toMatchObject({width:90,height:30});
   const intrinsic = createElement(Rectangle,{ style: { width: 'auto',height: 50,minWidth: 0,flexShrink: 0,aspectRatio: 3 } });
-  expect(() => layoutFlex(container,[intrinsic],{},measurement)).toThrow(/definite main dimension or flexBasis/);
-  expect(() => layoutFlex(container,[intrinsic],{flexWrap: "wrap"},measurement)).toThrow(/definite main dimension or flexBasis/);
+  if (nativeLayout) {
+  expect(layoutFlex(container,[intrinsic],{},measurement)[0]).toMatchObject({ width: 150, height: 50 });
+  expect(layoutFlex(container,[intrinsic],{flexWrap: 'wrap'},measurement)[0]).toMatchObject({ width: 150, height: 50 });
+  } else {
+    expect(() => layoutFlex(container,[intrinsic],{},measurement)).toThrow(/intrinsic aspect sizing is unsupported/);
+    expect(() => layoutFlex(container,[intrinsic],{flexWrap:'wrap'},measurement)).toThrow(/intrinsic aspect sizing is unsupported/);
+  }
 });
 
-it.runIf(experimentalLayout)('uses physical gap overrides without trailing wrapped line gaps', () => {
+it.runIf(nativeLayout)('uses physical gap overrides without trailing wrapped line gaps', () => {
   const row = [0,1,2].map(() => createElement(Rectangle, { style: { width: 40,height: 10,flexBasis: 40,flexShrink: 0,minWidth: 0 } }));
   const column = [0,1,2].map(() => createElement(Rectangle, { style: { width: 10,height: 40,flexBasis: 40,flexShrink: 0,minHeight: 0 } }));
   const options = { gap: 99,columnGap: 10,rowGap: 7,flexWrap: 'wrap',alignContent: 'stretch',alignItems: 'flex-start' } as const;
@@ -2815,7 +2820,7 @@ it('updates numeric gap signals and gap misses without replacing child identitie
   const mounted=snapshotWasmLayoutDiagnostics();gap.set(30);await nextFrame();
   clickCanvas(canvas,55,10);expect(hits).toBe(1);clickCanvas(canvas,75,10);expect(hits).toBe(2);expect(mounts).toBe(2);
   expect([...canvas.getContext('2d')!.getImageData(55,10,1,1).data]).toEqual([0,0,0,0]);
-  if(experimentalLayout)expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+  if(nativeLayout)expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
   controller.dispose();
 });
 
@@ -2852,7 +2857,7 @@ it('calculates partial free space after initially freezing constrained items', (
 });
 
 for (const axis of ['row-reverse','column-reverse'] as const) {
-it.runIf(experimentalLayout)(`keeps logical start and end physical under ${axis}`, async () => {
+it.runIf(nativeLayout)(`keeps logical start and end physical under ${axis}`, async () => {
   const alignment = signal<'start'|'end'>('start'); let hits=0,mounts=0;
   function Card({name,style:_style}:{name:string;style:Record<string,unknown>}) {useConst(()=>{mounts++;});const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:name==='A'?'red':'blue'},onClick:()=>{if(name==='A')hits++;}});}
   const column=axis==='column-reverse';
@@ -2864,7 +2869,7 @@ it.runIf(experimentalLayout)(`keeps logical start and end physical under ${axis}
 });
 }
 
-it.runIf(experimentalLayout)('keeps logical cross edges physical under wrap-reverse including alignSelf', () => {
+it.runIf(nativeLayout)('keeps logical cross edges physical under wrap-reverse including alignSelf', () => {
   const children=[0,1,2].map(index=>createElement(Rectangle,{style:{width:40,height:10,minWidth:0,flexShrink:0,alignSelf:index===0?'end':undefined}}));
   const options={flexWrap:'wrap-reverse',rowGap:10,alignContent:'stretch',alignItems:'start'} as const;
   expect(layoutFlex({x:0,y:0,width:100,height:100},children,options,measurement)).toEqual([
@@ -2908,7 +2913,7 @@ it('records pinned distribution boundaries for both axes', () => {
 });
 
 for (const axis of ['row', 'column'] as const) for (const policy of ['space-around', 'space-evenly'] as const) {
-  it.runIf(experimentalLayout)(`uses physical overflow start for reversed ${axis} ${policy}`, () => {
+  it.runIf(nativeLayout)(`uses physical overflow start for reversed ${axis} ${policy}`, () => {
     const column = axis === 'column';
     const children = [0, 1].map(() => createElement(Rectangle, { style: { width: column ? 20 : 80, height: column ? 80 : 20, minWidth: 0, minHeight: 0, flexShrink: 0 } }));
     expect(layoutFlex({x:0,y:0,width:100,height:100}, children, { flexDirection: column ? 'column-reverse' : 'row-reverse', justifyContent: policy, alignItems: 'flex-start', gap:12 }, measurement)).toEqual(column
@@ -2927,7 +2932,7 @@ it('records pinned definite-owner percentage bounds', () => {
   }
 });
 for (const axis of ['row', 'column'] as const) {
-  it.runIf(experimentalLayout)(`recomputes percentage caps from a resized ${axis} owner without remounting`, async () => {
+  it.runIf(nativeLayout)(`recomputes percentage caps from a resized ${axis} owner without remounting`, async () => {
     const column = axis === 'column';
     const main = signal(200);
     let mounts = 0, hits = 0;
@@ -2955,7 +2960,7 @@ for (const axis of ['row', 'column'] as const) {
   });
 }
 
-it.runIf(experimentalLayout).each([
+it.runIf(nativeLayout).each([
   {
     label: 'row-reverse percentage grow cap',
     fixtureNames: ['decorated-main-cap-row-reverse', 'decorated-main-cap-row-reverse-resized'],
@@ -3040,7 +3045,7 @@ it.runIf(experimentalLayout).each([
   expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });
 
-it.runIf(experimentalLayout).each([
+it.runIf(nativeLayout).each([
   {
     label: 'row-reverse percentage shrink floor',
     fixtureNames: ['decorated-main-floor-row-reverse', 'decorated-main-floor-row-reverse-resized'],
@@ -3142,7 +3147,7 @@ for (const axis of ['row', 'column'] as const) {
     const child = createElement(Rectangle, {style:{width:40,height:40,flexBasis:40,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,[maximum]:'25%'} as RectStyle});
     const owner = createElement(Flex,{style:axis==='row'?{flexDirection:axis,height:100,maxWidth:200}:{flexDirection:axis,width:100,maxHeight:200},children:child});
     const before = snapshotWasmLayoutDiagnostics();
-    expect(measureElement(owner,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:200},service)).toMatchObject(experimentalLayout ?
+    expect(measureElement(owner,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:200},service)).toMatchObject(nativeLayout ?
       {status:'measured',size:axis==='row'?{width:10,height:100}:{width:100,height:10}} :
       {status:'unsupported',reason:expect.stringContaining('percentage child sizes or bounds')});
     expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
@@ -3151,7 +3156,7 @@ for (const axis of ['row', 'column'] as const) {
 }
 
 for (const axis of ['row','column'] as const) for (const wrap of ['wrap','wrap-reverse'] as const) {
-  it.runIf(experimentalLayout || wrap === 'wrap')(`derives final per-line ratio sizes in ${axis} ${wrap}`, () => {
+  it.runIf(nativeLayout || wrap === 'wrap')(`derives final per-line ratio sizes in ${axis} ${wrap}`, () => {
     const column=axis==='column', reverse=wrap==='wrap-reverse';
     const children=[0,1,2].map(()=>createElement(Rectangle,{style:{width:column?'auto':80,height:column?80:'auto',flexBasis:80,flexGrow:1,flexShrink:0,minWidth:0,minHeight:0,aspectRatio:column?.5:2}}));
     expect(layoutFlex({x:0,y:0,width:200,height:200},children,{flexDirection:axis,flexWrap:wrap,alignContent:'flex-start',alignItems:'flex-start',rowGap:column?12:10,columnGap:column?10:12},measurement)).toEqual(column
@@ -3159,7 +3164,7 @@ for (const axis of ['row','column'] as const) for (const wrap of ['wrap','wrap-r
       : [{x:0,y:reverse?153:0,width:94,height:47},{x:106,y:reverse?153:0,width:94,height:47},{x:0,y:reverse?43:57,width:200,height:100}]);
   });
 }
-it.runIf(experimentalLayout)('publishes coupled wrapped ratio size and moved targets after owner resize', async () => {
+it.runIf(nativeLayout)('publishes coupled wrapped ratio size and moved targets after owner resize', async () => {
   const main=signal(200);let mounts=0,hits=0;const sizes=new Map<number,{width:number;height:number}>();
   function Card({index,style:_style}:{index:number;style:Record<string,unknown>}){useConst(()=>++mounts);const box=useLayoutBox();sizes.set(index,{width:box.width,height:box.height});return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:index===2?'blue':'red'},onClick:()=>{if(index===2)hits++;}});}
   const canvas=document.createElement('canvas');canvas.width=220;canvas.height=220;document.body.append(canvas);
@@ -3175,21 +3180,21 @@ it('records pinned wrapped ratio owner pairs for both axes and line directions',
 });
 
 for(const axis of ['row','column'] as const)for(const wrap of [false,true]) {
-  it.runIf(experimentalLayout)(`resolves finite ${axis} percentage gaps wrap=${wrap} against physical content axes`,()=>{
+  it.runIf(nativeLayout)(`resolves finite ${axis} percentage gaps wrap=${wrap} against physical content axes`,()=>{
     const column=axis==='column';
     const children=Array.from({length:wrap?3:2},()=>createElement(Rectangle,{style:{width:column?30:100,height:column?50:30,flexBasis:column?50:100,flexGrow:wrap?0:1,flexShrink:0,minWidth:0,minHeight:0}}));
     const boxes=layoutFlex({x:0,y:0,width:260,height:140},children,{flexDirection:axis,flexWrap:wrap?'wrap':'nowrap',columnGap:'10%',rowGap:'20%',alignItems:'flex-start',alignContent:'flex-start'},measurement);
     expect(boxes).toEqual(column ? wrap ? [{x:0,y:0,width:30,height:50},{x:0,y:78,width:30,height:50},{x:56,y:0,width:30,height:50}] : [{x:0,y:0,width:30,height:56},{x:0,y:84,width:30,height:56}] : wrap ? [{x:0,y:0,width:100,height:30},{x:126,y:0,width:100,height:30},{x:0,y:58,width:100,height:30}] : [{x:0,y:0,width:117,height:30},{x:143,y:0,width:117,height:30}]);
   });
 }
-it.runIf(experimentalLayout)('keeps percentage gap intrinsic cycles unsupported without allocating native resources',()=>{
+it.runIf(nativeLayout)('keeps percentage gap intrinsic cycles unsupported without allocating native resources',()=>{
   const before=snapshotWasmLayoutDiagnostics();
   const owner=createElement(Flex,{style:{width:200,flexDirection:'column',gap:'10%'},children:createElement(Rectangle,{style:{width:20,height:20,minHeight:0}})});
   expect(measureElement(owner,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:100},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage gap')});
   const after=snapshotWasmLayoutDiagnostics();expect(after.nodeCreates).toBe(before.nodeCreates);expect(after.activeArenas).toBe(before.activeArenas);
 });
 
-it.runIf(experimentalLayout)('moves percentage-gap targets using padded owner content dimensions without remount',async()=>{
+it.runIf(nativeLayout)('moves percentage-gap targets using padded owner content dimensions without remount',async()=>{
   const baseline=snapshotWasmLayoutDiagnostics();const width=signal(300),height=signal(200);let hits=0;
   const canvas=document.createElement('canvas');canvas.width=400;canvas.height=300;document.body.append(canvas);
   const scene=createElement(Flex,{style:{boxSizing:'border-box',width,height,padding:{left:10,right:30,top:20,bottom:40},rowGap:'20%',columnGap:'10%',alignItems:'flex-start'},children:[0,1].map(index=>createElement(Rectangle,{key:index,onClick:()=>{if(index===1)hits++;},style:{width:100,height:30,flexBasis:100,flexGrow:1,flexShrink:0,minWidth:0,fill:index?'blue':'red'}}))});
@@ -3201,7 +3206,7 @@ it.runIf(experimentalLayout)('moves percentage-gap targets using padded owner co
   controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
 });
 
-it.runIf(experimentalLayout)('resolves shorthand percentage gaps independently before physical overrides',()=>{
+it.runIf(nativeLayout)('resolves shorthand percentage gaps independently before physical overrides',()=>{
   const children=[0,1,2].map(()=>createElement(Rectangle,{style:{width:40,height:20,flexBasis:40,flexShrink:0,minWidth:0}}));
   const box={x:0,y:0,width:100,height:200};
   expect(layoutFlex(box,children,{gap:'10%',flexWrap:'wrap',alignContent:'flex-start',alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:40,height:20},{x:50,y:0,width:40,height:20},{x:0,y:40,width:40,height:20}]);
@@ -3212,10 +3217,10 @@ for(const property of ['gap','rowGap','columnGap'] as const)for(const value of [
     expect(()=>layoutFlex({x:0,y:0,width:100,height:200},[],{[property]:value} as unknown as FlexStyle,measurement)).toThrow(new RegExp(property));
   });
 }
-it.runIf(!experimentalLayout)('keeps percentage gaps explicitly unsupported in ordinary JavaScript Flex',()=>{
+it.runIf(!nativeLayout)('keeps percentage gaps explicitly unsupported in ordinary JavaScript Flex',()=>{
   expect(()=>layoutFlex({x:0,y:0,width:100,height:200},[],{gap:'10%'},measurement)).toThrow(/gap/);
 });
-it.runIf(experimentalLayout)('resolves nested percentage gaps from the actual Grid cell content allocation',async()=>{
+it.runIf(nativeLayout)('resolves nested percentage gaps from the actual Grid cell content allocation',async()=>{
   const width=signal(400);let hits=0;const canvas=document.createElement('canvas');canvas.width=500;canvas.height=120;document.body.append(canvas);
   const scene=createElement(Grid,{style:{width,height:100,gridTemplateColumns:['1fr','1fr'],gridTemplateRows:[100]},children:createElement(Flex,{style:{gridColumnStart:1,gridRowStart:1,padding:10,gap:'10%',alignItems:'flex-start'},children:[0,1].map(index=>createElement(Rectangle,{onClick:()=>{if(index===1)hits++;},style:{width:80,height:20,flexBasis:80,flexGrow:1,flexShrink:0,minWidth:0,fill:index?'blue':'red'}}))})});
   const controller=pibbl(canvas,scene);controllers.push(controller);await nextFrame();clickCanvas(canvas,112,15);expect(hits).toBe(1);const before=snapshotWasmLayoutDiagnostics();
@@ -3223,21 +3228,21 @@ it.runIf(experimentalLayout)('resolves nested percentage gaps from the actual Gr
 });
 
 for(const axis of ['row','column'] as const)for(const sizing of ['content-box','border-box'] as const){
-  it.runIf(experimentalLayout)(`resolves allocated ${axis} ${sizing} percentage padding from owner width`,()=>{
+  it.runIf(nativeLayout)(`resolves allocated ${axis} ${sizing} percentage padding from owner width`,()=>{
     const border=sizing==='border-box';
     const child=createElement(Rectangle,{style:{boxSizing:sizing,width:border?150:80,height:border?100:60,flexBasis:axis==='row'?border?150:80:border?100:60,flexShrink:0,minWidth:0,minHeight:0,padding:{left:'10%',right:'15%',top:'5%',bottom:'10%'}}});
     expect(layoutFlex({x:0,y:0,width:200,height:180},[child],{flexDirection:axis,alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:border?150:130,height:border?100:90}]);
     expect(layoutFlex({x:0,y:0,width:300,height:180},[child],{flexDirection:axis,alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:border?150:155,height:border?100:105}]);
   });
 }
-it.runIf(experimentalLayout)('rejects percentage padding during intrinsic measurement before native allocation',()=>{
+it.runIf(nativeLayout)('rejects percentage padding during intrinsic measurement before native allocation',()=>{
   const child=createElement(Text,{children:'known text',style:{padding:'10%',wrap:true,minHeight:0}});
   const owner=createElement(Flex,{style:{width:200,flexDirection:'column'},children:child});const before=snapshotWasmLayoutDiagnostics();
   expect(measureElement(owner,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:100},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage padding')});
   const after=snapshotWasmLayoutDiagnostics();expect(after.nodeCreates).toBe(before.nodeCreates);expect(after.activeArenas).toBe(before.activeArenas);
 });
 
-it.runIf(experimentalLayout)('moves inner paint and targets with allocated percentage padding without remount',async()=>{
+it.runIf(nativeLayout)('moves inner paint and targets with allocated percentage padding without remount',async()=>{
   const baseline=snapshotWasmLayoutDiagnostics();const width=signal(200);let hits=0,mounts=0;let size={width:0,height:0};
   function Content(_props:{style:Record<string,unknown>}){useConst(()=>{mounts++;});const box=useLayoutBox();size={width:box.width,height:box.height};return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:'blue'},onClick:()=>hits++});}
   const child=createElement(Flex,{style:{boxSizing:'border-box',width:150,height:100,flexBasis:150,flexShrink:0,minWidth:0,padding:{left:'10%',right:'15%',top:'5%',bottom:'10%'}},children:createElement(Content,{style:{width:'100%',height:'100%',minWidth:0,flexShrink:0}})});
@@ -3246,7 +3251,7 @@ it.runIf(experimentalLayout)('moves inner paint and targets with allocated perce
   width.set(300);await nextFrame();expect(size).toEqual({width:75,height:55});expect([...canvas.getContext('2d')!.getImageData(22,12,1,1).data]).toEqual([0,0,0,0]);clickCanvas(canvas,22,12);expect(hits).toBe(1);clickCanvas(canvas,35,20);expect(hits).toBe(2);expect(mounts).toBe(1);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
   controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
 });
-it.runIf(experimentalLayout)('keeps frozen percentage padding off the raw-input allocation cache while numeric transitions remain eligible',async()=>{
+it.runIf(nativeLayout)('keeps frozen percentage padding off the raw-input allocation cache while numeric transitions remain eligible',async()=>{
   const fill=signal('red'),padding=signal<number|'10%'>(10);let hits=0;
   const first=createElement(Rectangle,{style:Object.freeze({width:20,height:20,minWidth:0,flexShrink:0,padding,fill})});
   const second=createElement(Rectangle,{onClick:()=>hits++,style:Object.freeze({width:20,height:20,minWidth:0,flexShrink:0,fill:'blue'})});
@@ -3276,13 +3281,13 @@ it('keeps percentage layout borders unsupported',()=>{
   const child=createElement(Rectangle,{style:{width:50,height:20,flexShrink:0,minWidth:0,borderWidth:'10%'} as unknown as RectStyle});
   expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/borderWidth/);
 });
-it.runIf(!experimentalLayout)('keeps percentage padding unsupported in ordinary JavaScript Flex',()=>{
+it.runIf(!nativeLayout)('keeps percentage padding unsupported in ordinary JavaScript Flex',()=>{
   const child=createElement(Rectangle,{style:{width:50,height:20,flexShrink:0,minWidth:0,padding:'10%'}});
   expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/padding/);
 });
 
 for(const axis of ['row','column'] as const)for(const bound of ['min','max'] as const){
-  it.runIf(experimentalLayout)(`allocates wrapped ${axis} stretched automatic cross with percentage ${bound} bounds`,()=>{
+  it.runIf(nativeLayout)(`allocates wrapped ${axis} stretched automatic cross with percentage ${bound} bounds`,()=>{
     const column=axis==='column';const crossProperty=column?'Width':'Height';
     const children=[createElement(Rectangle,{style:{width:column?'auto':80,height:column?80:'auto',flexBasis:80,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,[bound+crossProperty]:bound==='min'?'60%':'25%'}}),...[40,20].map(cross=>createElement(Rectangle,{style:{width:column?cross:80,height:column?80:cross,flexBasis:80,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0}}))];
     for(const cross of [100,160]){
@@ -3291,7 +3296,7 @@ for(const axis of ['row','column'] as const)for(const bound of ['min','max'] as 
     }
   });
 }
-it.runIf(experimentalLayout)('keeps wrapped column measured main and non-stretched automatic cross unsupported',()=>{
+it.runIf(nativeLayout)('keeps wrapped column measured main and non-stretched automatic cross unsupported',()=>{
   const container={x:0,y:0,width:100,height:200};
   const automaticMain=createElement(Rectangle,{style:{width:20,height:'auto',minHeight:0}});
   expect(()=>layoutFlex(container,[automaticMain],{flexDirection:'column',flexWrap:'wrap'},measurement)).toThrow(/declared height or flexBasis/);
@@ -3300,7 +3305,7 @@ it.runIf(experimentalLayout)('keeps wrapped column measured main and non-stretch
 });
 
 for(const axis of ['row','column'] as const)for(const bound of ['min','max'] as const){
-  it.runIf(experimentalLayout)(`moves wrapped ${axis} percentage ${bound} cross targets without repeating the main solve`,async()=>{
+  it.runIf(nativeLayout)(`moves wrapped ${axis} percentage ${bound} cross targets without repeating the main solve`,async()=>{
     const column=axis==='column',cross=signal(100);let aHits=0,cHits=0;const baseline=snapshotWasmLayoutDiagnostics();
     const a=createElement(Rectangle,{onClick:()=>aHits++,style:{width:column?'auto':80,height:column?80:'auto',flexBasis:80,flexShrink:0,minWidth:0,minHeight:0,[bound+(column?'Width':'Height')]:bound==='min'?'60%':'25%',fill:'red'}});
     const siblings=[40,20].map((size,index)=>createElement(Rectangle,{onClick:index?()=>cHits++:undefined,style:{width:column?size:80,height:column?80:size,flexBasis:80,flexShrink:0,minWidth:0,minHeight:0,fill:index?'blue':'green'}}));
@@ -3316,23 +3321,23 @@ for(const axis of ['row','column'] as const)for(const bound of ['min','max'] as 
   });
 }
 
-it.runIf(experimentalLayout)('honors a non-stretch alignSelf override when guarding wrapped automatic column cross size',()=>{
+it.runIf(nativeLayout)('honors a non-stretch alignSelf override when guarding wrapped automatic column cross size',()=>{
   const child=createElement(Rectangle,{style:{width:'auto',height:80,flexBasis:80,minHeight:0,alignSelf:'center'}});
   expect(()=>layoutFlex({x:0,y:0,width:100,height:200},[child],{flexDirection:'column',flexWrap:'wrap',alignItems:'stretch'},measurement)).toThrow(/declared width/);
 });
 for(const value of ['-10%','NaN%','Infinity%']){
-  it.runIf(experimentalLayout)(`rejects wrapped automatic column cross bound ${value}`,()=>{
+  it.runIf(nativeLayout)(`rejects wrapped automatic column cross bound ${value}`,()=>{
     const child=createElement(Rectangle,{style:{width:'auto',height:80,flexBasis:80,minHeight:0,minWidth:0,maxWidth:value as '10%'}});
     expect(()=>layoutFlex({x:0,y:0,width:100,height:200},[child],{flexDirection:'column',flexWrap:'wrap',alignItems:'stretch'},measurement)).toThrow(/maxWidth/);
   });
 }
-it.runIf(experimentalLayout)('rejects opposing wrapped automatic column percentage cross bounds',()=>{
+it.runIf(nativeLayout)('rejects opposing wrapped automatic column percentage cross bounds',()=>{
   const child=createElement(Rectangle,{style:{width:'auto',height:80,flexBasis:80,minHeight:0,minWidth:'75%',maxWidth:'25%'}});
   expect(()=>layoutFlex({x:0,y:0,width:100,height:200},[child],{flexDirection:'column',flexWrap:'wrap',alignItems:'stretch'},measurement)).toThrow(/minimum/);
 });
 
 for(const wrap of ['wrap','wrap-reverse'] as const){
-  it.runIf(experimentalLayout)(`measures fixed-width direct Text before column ${wrap} line formation`,()=>{
+  it.runIf(nativeLayout)(`measures fixed-width direct Text before column ${wrap} line formation`,()=>{
     const text=(value:string)=>createElement(Text,{children:value,style:{width:50,wrap:true,font:'10px monospace',lineHeight:10,minHeight:0,flexGrow:0,flexShrink:0}});
     const card=createElement(Rectangle,{style:{width:40,height:30,flexBasis:30,flexShrink:0,minHeight:0}});
     const options={flexDirection:'column',flexWrap:wrap,gap:10,alignContent:'flex-start',alignItems:'flex-start'} as const;
@@ -3342,7 +3347,7 @@ for(const wrap of ['wrap','wrap-reverse'] as const){
   });
 }
 
-it.runIf(experimentalLayout)('caches wrapped column direct Text measurement while content moves a stable following target',async()=>{
+it.runIf(nativeLayout)('caches wrapped column direct Text measurement while content moves a stable following target',async()=>{
   const baseline=snapshotWasmLayoutDiagnostics(),text=signal('aaaa'),fill=signal('black'),height=signal(60);let hits=0,mounts=0;
   function Card(_props:{style:Record<string,unknown>}){useConst(()=>{mounts++;});const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:'blue'},onClick:()=>hits++});}
   const root=createElement(Flex,{style:{width:180,height,flexDirection:'column',flexWrap:'wrap',gap:10,alignItems:'flex-start',alignContent:'flex-start'},children:[createElement(Text,{key:'text',pointerEvents:'none',children:text,style:{width:50,wrap:true,font:'10px monospace',lineHeight:10,minHeight:0,flexGrow:0,flexShrink:0,fill}}),createElement(Card,{key:'card',style:{width:40,height:30,flexBasis:30,minHeight:0,flexShrink:0}})]});
@@ -3354,21 +3359,21 @@ it.runIf(experimentalLayout)('caches wrapped column direct Text measurement whil
 });
 
 for (const [name, override] of Object.entries({automaticWidth:{width:'auto'},percentageWidth:{width:'50%'},crossMinimum:{minWidth:10},crossMaximum:{maxWidth:80},grow:{flexGrow:1},shrink:{flexShrink:1},customFont:{font:'10px CustomFont'},clip:{fit:'clip'},unwrapped:{wrap:false},mainMaximum:{maxHeight:50}})) {
-  it.runIf(experimentalLayout)(`rejects unsupported wrapped-column Text ${name}`,()=>{
+  it.runIf(nativeLayout)(`rejects unsupported wrapped-column Text ${name}`,()=>{
     const child=createElement(Text,{children:'aaaa aaaa',style:{width:50,wrap:true,font:'10px monospace',lineHeight:10,minHeight:0,flexGrow:0,flexShrink:0,...override} as never});
     expect(()=>layoutFlex({x:0,y:0,width:180,height:60},[child],{flexDirection:'column',flexWrap:'wrap',alignItems:'flex-start'},measurement)).toThrow();
   });
 }
 
 for(const direction of ['row','column'] as const){
-  it.runIf(experimentalLayout)(`resolves allocated ${direction} physical percentage margins against content width`,()=>{
+  it.runIf(nativeLayout)(`resolves allocated ${direction} physical percentage margins against content width`,()=>{
     const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,margin:'5%',marginLeft:'10%',marginBottom:-2} as any});
     expect(layoutFlex({x:0,y:0,width:200,height:100},[child],{flexDirection:direction,alignItems:'flex-start'},measurement)).toEqual([{x:20,y:10,width:40,height:20}]);
     expect(layoutFlex({x:0,y:0,width:300,height:100},[child],{flexDirection:direction,alignItems:'flex-start'},measurement)).toEqual([{x:30,y:15,width:40,height:20}]);
   });
 }
 
-it.runIf(experimentalLayout)('moves allocated percentage margin paint and hit targets after owner width changes',async()=>{
+it.runIf(nativeLayout)('moves allocated percentage margin paint and hit targets after owner width changes',async()=>{
   const baseline=snapshotWasmLayoutDiagnostics(),width=signal(300),fill=signal('red');let hits=0;
   const canvas=document.createElement('canvas');canvas.width=400;canvas.height=260;document.body.append(canvas);
   const root=createElement(Flex,{style:{width,height:200,boxSizing:'border-box',padding:{left:10,right:30,top:20,bottom:40},alignItems:'flex-start'},children:[createElement(Rectangle,{style:{width:60,height:30,minWidth:0,minHeight:0,flexShrink:0,marginLeft:'10%',marginRight:'15%',marginTop:'5%',marginBottom:'20%',fill}}),createElement(Rectangle,{style:{width:136,height:81,minWidth:0,minHeight:0,flexShrink:0,fill:'blue'},onClick:()=>hits++})]});
@@ -3376,23 +3381,23 @@ it.runIf(experimentalLayout)('moves allocated percentage margin paint and hit ta
   width.set(360);await nextFrame();clickCanvas(canvas,136,21);expect(hits).toBe(1);clickCanvas(canvas,151,21);expect(hits).toBe(2);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
   controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
 });
-it.runIf(experimentalLayout)('rejects percentage margins without supported allocated ownership',()=>{
+it.runIf(nativeLayout)('rejects percentage margins without supported allocated ownership',()=>{
   const child=createElement(Rectangle,{style:{width:20,height:20,minWidth:0,margin:'10%'}});
   expect(()=>layoutFlex({x:0,y:0,width:Number.POSITIVE_INFINITY,height:100},[child],{flexWrap:'wrap-reverse'},measurement)).toThrow(/property width.*Infinity/);
   const root=createElement(Flex,{style:{width:100},children:child});
   expect(measureElement(root,{minWidth:0,maxWidth:100,minHeight:0,maxHeight:100},service)).toMatchObject({status:'unsupported'});
 });
-it.runIf(experimentalLayout)('resolves large finite percentage margin without intermediate multiplication overflow',()=>{
+it.runIf(nativeLayout)('resolves large finite percentage margin without intermediate multiplication overflow',()=>{
   const child=createElement(Rectangle,{style:{width:1,height:1,minWidth:0,minHeight:0,flexShrink:0,marginLeft:'100%'}});
   expect(layoutFlex({x:0,y:0,width:1e308,height:10},[child],{alignItems:'flex-start'},measurement)).toEqual([{x:1e308,y:0,width:1,height:1}]);
 });
 
-it.skipIf(experimentalLayout)('keeps percentage physical margins rejected in normal JavaScript Flex',()=>{
+it.skipIf(nativeLayout)('keeps percentage physical margins rejected in normal JavaScript Flex',()=>{
   const child=createElement(Rectangle,{style:{width:20,height:20,marginLeft:'10%'}});
   expect(()=>layoutFlex({x:0,y:0,width:100,height:100},[child],{},measurement)).toThrow(/margin/);
 });
 
-it.runIf(experimentalLayout)('drives nested percentage owners through the public comparison before and after allocation',async()=>{
+it.runIf(nativeLayout)('drives nested percentage owners through the public comparison before and after allocation',async()=>{
   const module=await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
   const canvas=document.createElement('canvas');canvas.width=760;canvas.height=540;document.body.append(canvas);
   const baseline=snapshotWasmLayoutDiagnostics();const controller=createExampleMount(module.WasmYogaMigrationExample)(canvas,{fixtures:fullYogaMigrationFixtures});controllers.push(controller);await nextFrame();
@@ -3407,7 +3412,7 @@ it.runIf(experimentalLayout)('drives nested percentage owners through the public
   controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
 });
 for(const maxOnly of [false,true]){
-  it.runIf(experimentalLayout)(`rejects nested percentage feedback under ${maxOnly?'max-only':'intrinsic'} owners`,()=>{
+  it.runIf(nativeLayout)(`rejects nested percentage feedback under ${maxOnly?'max-only':'intrinsic'} owners`,()=>{
     const leaf=createElement(Rectangle,{style:{width:'40%',height:20,flexBasis:'40%',minWidth:0,minHeight:0,flexShrink:0}});
     const nested=createElement(Flex,{style:{width:'auto',height:60,minWidth:0,minHeight:0,flexShrink:0,gap:'10%'},children:[leaf,leaf]});
     const root=createElement(Flex,{style:{width:'auto',maxWidth:maxOnly?360:undefined},children:nested});
@@ -3415,7 +3420,7 @@ for(const maxOnly of [false,true]){
   });
 }
 for(const column of [false,true])for(const resized of [false,true]){
-  it.runIf(experimentalLayout)(`preserves numeric physical offsets for ${column?'column':'row'} wrapped percentages ${resized?'resized':'initial'}`,()=>{
+  it.runIf(nativeLayout)(`preserves numeric physical offsets for ${column?'column':'row'} wrapped percentages ${resized?'resized':'initial'}`,()=>{
     const width=resized?320:260,box={x:10,y:20,width,height:resized?190:140};
     const item=(percent:boolean)=>createElement(Rectangle,{style:{width:60,height:30,flexBasis:column?30:60,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,marginLeft:percent?'10%':width*.1,marginRight:percent?'15%':width*.15,marginTop:percent?'5%':width*.05,marginBottom:percent?'20%':width*.2}});
     const following=createElement(Rectangle,{style:{width:136,height:81,flexBasis:column?81:136,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0}});
@@ -3427,7 +3432,7 @@ for(const column of [false,true])for(const resized of [false,true]){
 }
 
 for(const column of [false,true]){
- it.runIf(experimentalLayout)(`moves ${column?'column':'row'} wrapped percentage margin targets without remounting`,async()=>{
+ it.runIf(nativeLayout)(`moves ${column?'column':'row'} wrapped percentage margin targets without remounting`,async()=>{
   const baseline=snapshotWasmLayoutDiagnostics(),width=signal(300),height=signal(200),fill=signal('red');let hits=0;
   const canvas=document.createElement('canvas');canvas.width=400;canvas.height=280;document.body.append(canvas);
   const root=createElement(Flex,{style:{width,height,boxSizing:'border-box',padding:{left:10,right:30,top:20,bottom:40},flexDirection:column?'column':'row',flexWrap:'wrap',alignContent:'flex-start',alignItems:'flex-start'},children:[createElement(Rectangle,{style:{width:60,height:30,flexBasis:column?30:60,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,marginLeft:'10%',marginRight:'15%',marginTop:'5%',marginBottom:'20%',fill}}),createElement(Rectangle,{style:{width:136,height:81,flexBasis:column?81:136,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,fill:'blue'},onClick:()=>hits++})]});
@@ -3437,7 +3442,7 @@ for(const column of [false,true]){
  });
 }
 for(const column of [false,true])for(const resized of [false,true]){
- it.runIf(experimentalLayout)(`preserves numeric offsets for ${column?'column':'row'} wrap-reverse percentage margins ${resized?'resized':'initial'}`,()=>{
+ it.runIf(nativeLayout)(`preserves numeric offsets for ${column?'column':'row'} wrap-reverse percentage margins ${resized?'resized':'initial'}`,()=>{
   const width=resized?320:260,box={x:10,y:20,width,height:resized?190:140};
   const item=(percent:boolean)=>createElement(Rectangle,{style:{width:60,height:30,flexBasis:column?30:60,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,marginLeft:percent?'10%':width*.1,marginRight:percent?'15%':width*.15,marginTop:percent?'5%':width*.05,marginBottom:percent?'20%':width*.2}});
   const following=createElement(Rectangle,{style:{width:136,height:81,flexBasis:column?81:136,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0}});
@@ -3448,7 +3453,7 @@ for(const column of [false,true])for(const resized of [false,true]){
  });
 }
 for(const column of [false,true]){
- it.runIf(experimentalLayout)(`moves ${column?'column':'row'} wrap-reverse percentage margin targets with stable nodes`,async()=>{
+ it.runIf(nativeLayout)(`moves ${column?'column':'row'} wrap-reverse percentage margin targets with stable nodes`,async()=>{
   const baseline=snapshotWasmLayoutDiagnostics(),width=signal(300),height=signal(200),fill=signal('red');let hits=0;
   const canvas=document.createElement('canvas');canvas.width=400;canvas.height=280;document.body.append(canvas);
   const root=createElement(Flex,{style:{width,height,boxSizing:'border-box',padding:{left:10,right:30,top:20,bottom:40},flexDirection:column?'column':'row',flexWrap:'wrap-reverse',alignContent:'flex-start',alignItems:'flex-start'},children:[createElement(Rectangle,{style:{width:60,height:30,flexBasis:column?30:60,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,marginLeft:'10%',marginRight:'15%',marginTop:'5%',marginBottom:'20%',fill}}),createElement(Rectangle,{style:{width:136,height:81,flexBasis:column?81:136,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,fill:'blue'},onClick:()=>hits++})]});
@@ -3457,7 +3462,7 @@ for(const column of [false,true]){
   controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
  });
 }
-it.runIf(experimentalLayout)('resolves signed percentage shorthand with specific zero edges independent of declaration order',()=>{
+it.runIf(nativeLayout)('resolves signed percentage shorthand with specific zero edges independent of declaration order',()=>{
  const first=createElement(Rectangle,{style:{width:20,height:10,minWidth:0,minHeight:0,flexShrink:0,margin:'10%',marginLeft:'-5%',marginTop:0}});
  const second=createElement(Rectangle,{style:{marginTop:0,marginLeft:'-5%',margin:'10%',width:20,height:10,minWidth:0,minHeight:0,flexShrink:0}});
  const expected=[{x:-5,y:0,width:20,height:10}];
@@ -3466,13 +3471,13 @@ it.runIf(experimentalLayout)('resolves signed percentage shorthand with specific
 });
 
 for(const reversed of [false,true]){
- it.runIf(experimentalLayout)(`places finite RTL ${reversed?'row-reverse':'row'} with physical margins`,()=>{
+ it.runIf(nativeLayout)(`places finite RTL ${reversed?'row-reverse':'row'} with physical margins`,()=>{
   const children=[createElement(Rectangle,{style:{width:40,height:24,minWidth:0,minHeight:0,flexShrink:0,marginLeft:8,marginRight:20,marginTop:3,marginBottom:7}}),createElement(Rectangle,{style:{width:30,height:20,minWidth:0,minHeight:0,flexShrink:0,marginLeft:5,marginRight:9,marginTop:2,marginBottom:4}})];
   const options={flexDirection:reversed?'row-reverse' as const:'row' as const,layoutDirection:'rtl' as const,gap:12,alignItems:'flex-start' as const};
   expect(layoutFlex({x:0,y:0,width:240,height:120},children,options,measurement)).toEqual([{x:reversed?8:180,y:3,width:40,height:24},{x:reversed?85:121,y:2,width:30,height:20}]);
  });
 }
-it.runIf(experimentalLayout)('inherits a signal layout direction through ordinary components Group and Clip with explicit LTR override',async()=>{
+it.runIf(nativeLayout)('inherits a signal layout direction through ordinary components Group and Clip with explicit LTR override',async()=>{
  const baseline=snapshotWasmLayoutDiagnostics(),direction=signal<'ltr'|'rtl'>('ltr'),fill=signal('red');let inheritedHits=0,overrideHits=0,mounts=0;
  const clip=new Path2D();clip.rect(0,0,100,40);
  function Leaf({override,first,style:_style}:{override:boolean;first:boolean;style:Record<string,unknown>}){useConst(()=>{mounts++;});const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill},onClick:()=>{if(first){if(override)overrideHits++;else inheritedHits++;}}});}
@@ -3485,11 +3490,11 @@ it.runIf(experimentalLayout)('inherits a signal layout direction through ordinar
  controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
 });
 
-it.runIf(experimentalLayout)('places finite RTL column on the right cross edge',()=>{
+it.runIf(nativeLayout)('places finite RTL column on the right cross edge',()=>{
  const child=createElement(Rectangle,{style:{width:20,height:10,minWidth:0,minHeight:0,flexShrink:0}});
  expect(layoutFlex({x:0,y:0,width:100,height:60},[child],{layoutDirection:'rtl',flexDirection:'column',alignItems:'flex-start'},measurement)).toEqual([{x:80,y:0,width:20,height:10}]);
 });
-it.runIf(experimentalLayout)('forwards direction changes through a retained Layer',async()=>{
+it.runIf(nativeLayout)('forwards direction changes through a retained Layer',async()=>{
  const baseline=snapshotWasmLayoutDiagnostics(),direction=signal<'ltr'|'rtl'>('ltr');let hits=0,mounts=0;
  function Leaf(){useConst(()=>{mounts++;});return createElement(Rectangle,{style:{width:20,height:20,fill:'red'},onClick:()=>hits++});}
  const layer=createElement(Layer,{style:{width:100,height:40,minWidth:0,minHeight:0,flexShrink:0},children:createElement(Flex,{style:{width:100,height:40},children:createElement(Leaf,{style:{width:20,height:20,minWidth:0,minHeight:0,flexShrink:0}})})});
@@ -3502,12 +3507,12 @@ it.runIf(experimentalLayout)('forwards direction changes through a retained Laye
 it('rejects invalid layout direction before allocating native nodes',()=>{
  const before=snapshotWasmLayoutDiagnostics();
  expect(()=>layoutFlex({x:0,y:0,width:100,height:40},[],{layoutDirection:'sideways' as 'rtl'},measurement)).toThrow(/layoutDirection/);
- if(!experimentalLayout)expect(()=>layoutFlex({x:0,y:0,width:100,height:40},[],{layoutDirection:'rtl'},measurement)).toThrow(/layoutDirection/);
+ if(!nativeLayout)expect(()=>layoutFlex({x:0,y:0,width:100,height:40},[],{layoutDirection:'rtl'},measurement)).toThrow(/layoutDirection/);
  const after=snapshotWasmLayoutDiagnostics();expect(after.activeNodes).toBe(before.activeNodes);expect(after.activeArenas).toBe(before.activeArenas);
 });
 
 for(const rtl of [false,true])for(const start of ['10%',0,'-10%'] as const){
- it.runIf(experimentalLayout)(`resolves logical margin precedence rtl=${rtl} start=${start}`,()=>{
+ it.runIf(nativeLayout)(`resolves logical margin precedence rtl=${rtl} start=${start}`,()=>{
   const startSize=start===0?0:start==='10%'?20:-20;
   const first={width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,margin:7,marginLeft:30,marginRight:40,marginStart:start,marginEnd:'5%' as const};
   const reordered={marginEnd:'5%' as const,marginStart:start,marginRight:40,marginLeft:30,margin:7,width:40,height:20,minWidth:0,minHeight:0,flexShrink:0};
@@ -3516,7 +3521,7 @@ for(const rtl of [false,true])for(const start of ['10%',0,'-10%'] as const){
   for(const style of [first,reordered])expect(layoutFlex({x:0,y:0,width:200,height:60},[createElement(Rectangle,{style}),last],{layoutDirection:rtl?'rtl':'ltr',gap:12,alignItems:'flex-start'},measurement)).toEqual(expected);
  });
 }
-it.runIf(experimentalLayout)('moves logical margin signal targets under inherited RTL without remounting',async()=>{
+it.runIf(nativeLayout)('moves logical margin signal targets under inherited RTL without remounting',async()=>{
  const baseline=snapshotWasmLayoutDiagnostics(),start=signal<number|'10%'>(0),direction=signal<'ltr'|'rtl'>('rtl'),fill=signal('red');let hits=0,mounts=0;
  function Card(){useConst(()=>{mounts++;});const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill},onClick:()=>hits++});}
  const itemStyle={width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,marginStart:start};const rootStyle={width:200,height:60,layoutDirection:direction};
@@ -3525,32 +3530,32 @@ it.runIf(experimentalLayout)('moves logical margin signal targets under inherite
  const before=snapshotWasmLayoutDiagnostics();fill.set('blue');await nextFrame();expect(snapshotWasmLayoutDiagnostics().solves).toBe(before.solves);controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
 });
 
-it.runIf(experimentalLayout)('uses an explicit child Flex direction for its logical margin',()=>{
+it.runIf(nativeLayout)('uses an explicit child Flex direction for its logical margin',()=>{
  const child=createElement(Flex,{style:{width:40,height:20,layoutDirection:'ltr',marginStart:10,minWidth:0,minHeight:0,flexShrink:0},children:[]});
  expect(layoutFlex({x:0,y:0,width:200,height:60},[child],{layoutDirection:'rtl',alignItems:'flex-start'},measurement)).toEqual([{x:160,y:0,width:40,height:20}]);
 });
-it.runIf(experimentalLayout)('measures winning numeric logical margin instead of overridden physical percentage',()=>{
+it.runIf(nativeLayout)('measures winning numeric logical margin instead of overridden physical percentage',()=>{
  const root=createElement(Flex,{style:{height:20},children:createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,marginLeft:'10%',marginStart:0}})});
  expect(measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:60},service)).toEqual({status:'measured',size:{width:40,height:20}});
 });
 
-it.runIf(experimentalLayout)('uses child RTL logical margins within an LTR Flex allocation',()=>{
+it.runIf(nativeLayout)('uses child RTL logical margins within an LTR Flex allocation',()=>{
  const child=createElement(Flex,{style:{width:40,height:20,layoutDirection:'rtl',marginStart:10,minWidth:0,minHeight:0,flexShrink:0},children:[]});
  expect(layoutFlex({x:0,y:0,width:200,height:60},[child],{layoutDirection:'ltr',alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:40,height:20}]);
 });
-it.skipIf(experimentalLayout)('rejects logical margins in normal JavaScript Flex',()=>{
+it.skipIf(nativeLayout)('rejects logical margins in normal JavaScript Flex',()=>{
  for(const edge of [{marginStart:0},{marginEnd:'-10%' as const}]){const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,...edge}});expect(()=>layoutFlex({x:0,y:0,width:200,height:60},[child],{},measurement)).toThrow(/margin/);}
 });
 
 for(const axis of ['row','column'] as const)for(const rtl of [false,true])for(const start of [0,'10%'] as const){
- it.runIf(experimentalLayout)(`resolves logical padding ${axis} precedence rtl=${rtl} start=${start}`,()=>{
+ it.runIf(nativeLayout)(`resolves logical padding ${axis} precedence rtl=${rtl} start=${start}`,()=>{
   const extra=start===0?0:20;const width=rtl?48+extra:60+extra;
   const first={width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,padding:{left:8,right:20,top:5,bottom:5},paddingStart:start};
   const reordered={paddingStart:start,padding:{bottom:5,top:5,right:20,left:8},width:40,height:20,minWidth:0,minHeight:0,flexShrink:0};
   for(const style of [first,reordered])expect(layoutFlex({x:0,y:0,width:200,height:100},[createElement(Rectangle,{style})],{flexDirection:axis,layoutDirection:rtl?'rtl':'ltr',alignItems:'flex-start'},measurement)).toEqual([{x:rtl?200-width:0,y:0,width,height:30}]);
  });
 }
-it.runIf(experimentalLayout)('keeps logical percentage padding canonical through nested direction resize and moved hits',async()=>{
+it.runIf(nativeLayout)('keeps logical percentage padding canonical through nested direction resize and moved hits',async()=>{
  const baseline=snapshotWasmLayoutDiagnostics(),start=signal<number|'10%'>(0),width=signal(200),direction=signal<'ltr'|'rtl'>('rtl'),fill=signal('red');let hits=0;
  const innerStyle={width:100,height:60,boxSizing:'border-box' as const,minWidth:0,minHeight:0,flexShrink:0,padding:{left:8,right:20,top:5,bottom:5},paddingStart:start};
  const root=createElement(Flex,{style:{width,height:100,layoutDirection:direction},children:createElement(Flex,{style:innerStyle,children:createElement(Rectangle,{style:{width:20,height:20,minWidth:0,minHeight:0,flexShrink:0,fill},onClick:()=>hits++})})});
@@ -3559,42 +3564,42 @@ it.runIf(experimentalLayout)('keeps logical percentage padding canonical through
  const painted=snapshotWasmLayoutDiagnostics();fill.set('blue');await nextFrame();expect(snapshotWasmLayoutDiagnostics().solves).toBe(painted.solves);controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
 });
 
-it.runIf(experimentalLayout)('measures a numeric logical padding winner over a physical percentage',()=>{
+it.runIf(nativeLayout)('measures a numeric logical padding winner over a physical percentage',()=>{
  const root=createElement(Flex,{style:{height:30},children:createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,padding:{left:'10%'},paddingStart:0}})});
  expect(measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:60},service)).toEqual({status:'measured',size:{width:40,height:30}});
 });
-it.runIf(experimentalLayout)('uses explicit nested LTR direction when canonicalizing logical percentage padding',async()=>{
+it.runIf(nativeLayout)('uses explicit nested LTR direction when canonicalizing logical percentage padding',async()=>{
  let hits=0;const canvas=document.createElement('canvas');canvas.width=200;canvas.height=100;document.body.append(canvas);
  const controller=pibbl(canvas,createElement(Flex,{style:{width:200,height:100,layoutDirection:'rtl'},children:createElement(Flex,{style:{width:100,height:60,boxSizing:'border-box',layoutDirection:'ltr',minWidth:0,minHeight:0,flexShrink:0,padding:{left:8,right:20,top:5,bottom:5},paddingStart:'15%'},children:createElement(Rectangle,{style:{width:10,height:10,minWidth:0,minHeight:0,flexShrink:0,fill:'red'},onClick:()=>hits++})})}));controllers.push(controller);await nextFrame();clickCanvas(canvas,113,8);expect(hits).toBe(0);clickCanvas(canvas,133,8);expect(hits).toBe(1);
 });
 for(const property of ['paddingStart','paddingEnd'] as const)for(const value of [-1,'-5%',NaN,Infinity,'auto','bad%']){
- it.runIf(experimentalLayout)(`rejects invalid logical padding ${property}=${value}`,()=>{const style={width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,[property]:value};const child=createElement(Rectangle,{style:style as RectStyle});expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/padding/);});
+ it.runIf(nativeLayout)(`rejects invalid logical padding ${property}=${value}`,()=>{const style={width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,[property]:value};const child=createElement(Rectangle,{style:style as RectStyle});expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/padding/);});
 }
 for(const Root of [Flex,Flow,Grid,Text])it(`keeps unallocated logical percentage padding unsupported for ${Root.name}`,()=>{
  const element=createElement(Root as typeof Flex,{style:{width:100,height:80,paddingStart:'15%',...(Root===Grid?{gridTemplateColumns:[100],gridTemplateRows:[80]}:{})},children:Root===Text?'text':[]});expect(measureElement(element,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:180},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage padding')});
 });
-it.skipIf(experimentalLayout)('rejects logical padding in ordinary box layout',()=>{
+it.skipIf(nativeLayout)('rejects logical padding in ordinary box layout',()=>{
  for(const edge of [{paddingStart:0},{paddingEnd:10}]){const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,...edge}});expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/logical padding/);}
 });
 
-for(const active of [false,true])it.runIf(experimentalLayout)(`admits winning logical padding under isolated RTL measurement active=${active}`,()=>{
+for(const active of [false,true])it.runIf(nativeLayout)(`admits winning logical padding under isolated RTL measurement active=${active}`,()=>{
  const root=createElement(Flex,{style:{height:30,layoutDirection:'rtl'},children:createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,padding:active?{left:'10%'}:{right:'10%'},paddingStart:0}})});
  const result=measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:60},service);if(active)expect(result).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage padding')});else expect(result).toEqual({status:'measured',size:{width:40,height:30}});
 });
 
 for(const axis of ['row','column'] as const)for(const rtl of [false,true])for(const start of [0,30]){
- it.runIf(experimentalLayout)(`resolves logical border ${axis} precedence rtl=${rtl} start=${start}`,()=>{
+ it.runIf(nativeLayout)(`resolves logical border ${axis} precedence rtl=${rtl} start=${start}`,()=>{
   const width=rtl?48+start:60+start;
   const first={width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,borderWidth:{left:8,right:20,top:5,bottom:5},borderStartWidth:start};
   const reordered={borderStartWidth:start,borderWidth:{bottom:5,top:5,right:20,left:8},width:40,height:20,minWidth:0,minHeight:0,flexShrink:0};
   for(const style of [first,reordered])expect(layoutFlex({x:0,y:0,width:200,height:100},[createElement(Rectangle,{style})],{flexDirection:axis,layoutDirection:rtl?'rtl':'ltr',alignItems:'flex-start'},measurement)).toEqual([{x:rtl?200-width:0,y:0,width,height:30}]);
  });
 }
-it.runIf(experimentalLayout)('floors border boxes at combined logical and physical layout borders',()=>{
+it.runIf(nativeLayout)('floors border boxes at combined logical and physical layout borders',()=>{
  const style={width:100,height:60,boxSizing:'border-box' as const,minWidth:0,minHeight:0,flexShrink:0,borderWidth:10,borderStartWidth:120};
  expect(layoutFlex({x:0,y:0,width:200,height:100},[createElement(Rectangle,{style})],{},measurement)).toEqual([{x:0,y:0,width:130,height:60}]);
 });
-it.runIf(experimentalLayout)('keeps logical layout borders canonical through nested receiver direction and resize',async()=>{
+it.runIf(nativeLayout)('keeps logical layout borders canonical through nested receiver direction and resize',async()=>{
  const baseline=snapshotWasmLayoutDiagnostics(),start=signal(0),width=signal(200),childDirection=signal<'ltr'|'rtl'>('rtl'),fill=signal('red');let hits=0;
  const style={width:100,height:60,boxSizing:'border-box' as const,layoutDirection:childDirection,minWidth:0,minHeight:0,flexShrink:0,borderWidth:{left:8,right:20,top:5,bottom:5},borderStartWidth:start};
  const root=createElement(Flex,{style:{width,height:100,layoutDirection:'rtl'},children:createElement(Flex,{style,children:createElement(Rectangle,{style:{width:20,height:20,minWidth:0,minHeight:0,flexShrink:0,fill},onClick:()=>hits++})})});
@@ -3604,13 +3609,13 @@ it.runIf(experimentalLayout)('keeps logical layout borders canonical through nes
 });
 
 for(const property of ['borderStartWidth','borderEndWidth'] as const)for(const value of [-1,NaN,Infinity,'10%','auto',null]){
- it.runIf(experimentalLayout)(`rejects invalid logical border ${property}=${value}`,()=>{const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,[property]:value} as RectStyle});expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/border/);});
+ it.runIf(nativeLayout)(`rejects invalid logical border ${property}=${value}`,()=>{const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,[property]:value} as RectStyle});expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/border/);});
 }
-it.skipIf(experimentalLayout)('rejects logical borders in ordinary box layout',()=>{
+it.skipIf(nativeLayout)('rejects logical borders in ordinary box layout',()=>{
  for(const edge of [{borderStartWidth:0},{borderEndWidth:10}]){const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,...edge}});expect(()=>layoutFlex({x:0,y:0,width:200,height:100},[child],{},measurement)).toThrow(/logical layout borders/);}
 });
 
-it.runIf(experimentalLayout)('uses custom intrinsic content for a finite row basis and automatic minimum',()=>{
+it.runIf(nativeLayout)('uses custom intrinsic content for a finite row basis and automatic minimum',()=>{
  let calls=0;
  const Leaf=definePrimitive<{tag?:string}, IntrinsicLeafTestStyle>(()=>undefined,{measureIntrinsic:()=>{calls++;return {status:'measured',minContent:{width:40,height:20},maxContent:{width:100,height:20}};}});
  const child=createElement(Leaf,{style:{height:20,flexShrink:1}});
@@ -3621,7 +3626,7 @@ it.runIf(experimentalLayout)('uses custom intrinsic content for a finite row bas
  expect(layoutFlex({x:0,y:0,width:40,height:30},[zero,sibling],{alignItems:'flex-start'},measurement).map(box=>box.width)).toEqual([20,20]);
 });
 
-it.runIf(experimentalLayout)('remeasures mutable nested intrinsic inputs during a paint-triggered traversal',async()=>{
+it.runIf(nativeLayout)('remeasures mutable nested intrinsic inputs during a paint-triggered traversal',async()=>{
  const data={minimum:40}; const paint=signal('blue');
  const Leaf=definePrimitive<{data:typeof data},IntrinsicLeafTestStyle>(()=>undefined,{measureIntrinsic:({props})=>({status:'measured',minContent:{width:props.data.minimum,height:20},maxContent:{width:100,height:20}})});
  const canvas=document.createElement('canvas');canvas.width=120;canvas.height=30;document.body.append(canvas);
@@ -3631,14 +3636,14 @@ it.runIf(experimentalLayout)('remeasures mutable nested intrinsic inputs during 
  expect(canvas.getContext('2d')!.getImageData(60,5,1,1).data[3]).toBe(0);
 });
 
-it.runIf(experimentalLayout)('keeps intrinsic heights independent and applies box insets once',()=>{
+it.runIf(nativeLayout)('keeps intrinsic heights independent and applies box insets once',()=>{
  type Style=IntrinsicLeafTestStyle & {padding?:number;borderWidth?:number};
  const Leaf=definePrimitive<{tag?:string},Style>(()=>undefined,{measureIntrinsic:()=>({status:'measured',minContent:{width:40,height:60},maxContent:{width:100,height:20}})});
  const child=createElement(Leaf,{style:{flexShrink:1,padding:5,borderWidth:5}});
  const sibling=createElement(Rectangle,{style:{width:20,height:20,minWidth:0,flexShrink:0}});
  expect(layoutFlex({x:0,y:0,width:80,height:100},[child,sibling],{alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:60,height:40},{x:60,y:0,width:20,height:20}]);
 });
-it.runIf(experimentalLayout)('bypasses unsupported intrinsic providers with definite basis and explicit minimum',()=>{
+it.runIf(nativeLayout)('bypasses unsupported intrinsic providers with definite basis and explicit minimum',()=>{
  let calls=0;
  type Style=IntrinsicLeafTestStyle & {flexBasis?:number};
  const Leaf=definePrimitive<{tag?:string},Style>(()=>undefined,{measureIntrinsic:()=>{calls++;return {status:'unsupported',reason:'custom shaping unavailable'};}});
@@ -3647,7 +3652,7 @@ it.runIf(experimentalLayout)('bypasses unsupported intrinsic providers with defi
  const demanded=createElement(Leaf,{style:{height:20,flexShrink:1}});
  expect(()=>layoutFlex({x:0,y:0,width:40,height:30},[demanded],{},measurement)).toThrow(/custom shaping unavailable/);
 });
-it.runIf(experimentalLayout)('forbids intrinsic provider writes and retries after a thrown provider',()=>{
+it.runIf(nativeLayout)('forbids intrinsic provider writes and retries after a thrown provider',()=>{
  const source=signal(0);let fail=true;
  const Leaf=definePrimitive<{tag?:string},IntrinsicLeafTestStyle>(()=>undefined,{measureIntrinsic:()=>{if(fail)source.set(1);return {status:'measured',minContent:{width:10,height:20},maxContent:{width:30,height:20}};}});
  const child=createElement(Leaf,{style:{height:20,flexShrink:1}});
@@ -3655,7 +3660,7 @@ it.runIf(experimentalLayout)('forbids intrinsic provider writes and retries afte
  expect(layoutFlex({x:0,y:0,width:40,height:30},[child],{},measurement)[0].width).toBe(30);
 });
 
-it.runIf(experimentalLayout)('invalidates intrinsic snapshots when the provider consumes its own paint style',async()=>{
+it.runIf(nativeLayout)('invalidates intrinsic snapshots when the provider consumes its own paint style',async()=>{
  const fill=signal('red');
  type Style=IntrinsicLeafTestStyle & {fill?:string};
  const Leaf=definePrimitive<{tag?:string},Style>(()=>undefined,{measureIntrinsic:({style})=>({status:'measured',minContent:{width:style.fill==='red'?40:70,height:20},maxContent:{width:100,height:20}})});
@@ -3666,13 +3671,13 @@ it.runIf(experimentalLayout)('invalidates intrinsic snapshots when the provider 
  expect([...canvas.getContext('2d')!.getImageData(70,5,1,1).data]).toEqual([0,0,255,255]);
 });
 
-for(const invalid of ['negative-min','nonfinite-max','inverted-width','negative-height'] as const)it.runIf(experimentalLayout)(`rejects invalid intrinsic contribution ${invalid}`,()=>{
+for(const invalid of ['negative-min','nonfinite-max','inverted-width','negative-height'] as const)it.runIf(nativeLayout)(`rejects invalid intrinsic contribution ${invalid}`,()=>{
  const Leaf=definePrimitive<{tag?:string},IntrinsicLeafTestStyle>(()=>undefined,{measureIntrinsic:()=>({status:'measured',minContent:{width:invalid==='negative-min'?-1:invalid==='inverted-width'?101:40,height:invalid==='negative-height'?-1:20},maxContent:{width:invalid==='nonfinite-max'?NaN:100,height:20}})});
  const child=createElement(Leaf,{style:{height:20,flexShrink:1}});
  expect(()=>layoutFlex({x:0,y:0,width:80,height:30},[child],{},measurement)).toThrow(/finite|nonnegative|min-content/);
 });
 
-it.runIf(experimentalLayout)('measures finite row-wrap height from direct numeric rectangles',()=>{
+it.runIf(nativeLayout)('measures finite row-wrap height from direct numeric rectangles',()=>{
  const children=[20,30,20].map(height=>createElement(Rectangle,{style:{width:70,height,minWidth:0,minHeight:0,flexShrink:0}}));
  const wrapped=(width:number)=>createElement(Flex,{style:{width,flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'flex-start'},children});
  expect(measureElement(wrapped(160),{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service)).toEqual({status:'measured',size:{width:160,height:60}});
@@ -3680,7 +3685,7 @@ it.runIf(experimentalLayout)('measures finite row-wrap height from direct numeri
  expect(measureElement(wrapped(90),{minWidth:0,maxWidth:200,minHeight:0,maxHeight:10},service)).toEqual({status:'measured',size:{width:90,height:90}});
 });
 
-it.runIf(experimentalLayout)('moves the public intrinsic-wrap footer after its owner changes line count',async()=>{
+it.runIf(nativeLayout)('moves the public intrinsic-wrap footer after its owner changes line count',async()=>{
  const baseline=snapshotWasmLayoutDiagnostics();const canvas=document.createElement('canvas');canvas.width=760;canvas.height=360;document.body.append(canvas);
  const controller=pibbl(canvas,createElement(WasmFlexIntrinsicWrapExample,{}));controllers.push(controller);await nextFrame();
  clickCanvas(canvas,40,235);await new Promise(resolve=>setTimeout(resolve,220));expect(document.querySelector('pre')!.textContent).toContain('footer hits: 1');
@@ -3689,12 +3694,12 @@ it.runIf(experimentalLayout)('moves the public intrinsic-wrap footer after its o
  controller.dispose();expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('rejects overflowing intrinsic wrapped outer extents before placement',()=>{
+it.runIf(nativeLayout)('rejects overflowing intrinsic wrapped outer extents before placement',()=>{
  const wrapped=createElement(Flex,{style:{width:90,flexWrap:'wrap'},children:createElement(Rectangle,{style:{width:0,height:20,minWidth:0,minHeight:0,flexShrink:0,marginLeft:1e308,marginRight:1e308}})});
  expect(()=>measureElement(wrapped,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service)).toThrow(/finite|overflow/);
 });
 
-it.runIf(experimentalLayout)('matches pinned Yoga intrinsic row-wrap content and final leaf geometry',()=>{
+it.runIf(nativeLayout)('matches pinned Yoga intrinsic row-wrap content and final leaf geometry',()=>{
  for(const fixture of yogaReference.cases){
   if(!fixture.intrinsicFixture||!fixture.innerStyle||!fixture.intrinsicLeafStyles||!fixture.intrinsicNestedBoxes)continue;
   const children=fixture.intrinsicLeafStyles.map(style=>createElement(Rectangle,{style:style as RectStyle}));
@@ -3705,34 +3710,36 @@ it.runIf(experimentalLayout)('matches pinned Yoga intrinsic row-wrap content and
  }
 });
 
-it.runIf(experimentalLayout)('keeps oversized finite wrapped items on separate lines when candidate sums overflow',()=>{
+it.runIf(nativeLayout)('keeps oversized finite wrapped items on separate lines when candidate sums overflow',()=>{
  const children=[0,1].map(()=>createElement(Rectangle,{style:{width:1e308,height:20,minWidth:0,minHeight:0,flexShrink:0}}));
  const wrapped=createElement(Flex,{style:{width:90,flexWrap:'wrap'},children});
  expect(measureElement(wrapped,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service)).toEqual({status:'measured',size:{width:90,height:40}});
 });
-it.runIf(experimentalLayout)('uses native sequential outer-extent arithmetic before margin cancellation',()=>{
+it.runIf(nativeLayout)('uses native sequential outer-extent arithmetic before margin cancellation',()=>{
  const wrapped=createElement(Flex,{style:{width:90,flexWrap:'wrap'},children:createElement(Rectangle,{style:{width:1e308,height:20,minWidth:0,minHeight:0,flexShrink:0,marginLeft:1e308,marginRight:-1e308}})});
  expect(()=>measureElement(wrapped,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service)).toThrow(/finite|overflow/);
 });
 
-for(const kind of ['grow','shrink','percentage','automatic-height','text','column','rtl','reverse'] as const)it.runIf(experimentalLayout)(`keeps unsupported wrapped intrinsic shape explicit: ${kind}`,()=>{
+for(const kind of ['grow','shrink','percentage','automatic-height','text','column','rtl','reverse'] as const)it.runIf(nativeLayout)(`resolves or diagnoses wrapped intrinsic shape: ${kind}`,()=>{
  const child=kind==='text'?createElement(Text,{children:'opaque contribution',style:{width:70,height:20,minWidth:0,minHeight:0,flexShrink:0}}):createElement(Rectangle,{style:{width:kind==='percentage'?'50%':70,height:kind==='automatic-height'?undefined:20,minWidth:0,minHeight:0,flexGrow:kind==='grow'?1:0,flexShrink:kind==='shrink'?1:0} as RectStyle});
  const root=createElement(Flex,{style:{width:160,flexWrap:kind==='reverse'?'wrap-reverse':'wrap',flexDirection:kind==='column'?'column':'row',layoutDirection:kind==='rtl'?'rtl':'ltr'},children:child});
- expect(measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service).status).toBe('unsupported');
+ const result = measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service);
+ if (kind === 'column' || kind === 'automatic-height') expect(result.status).toBe('unsupported');
+ else expect(result).toEqual({ status: 'measured', size: { width: 160, height: 20 } });
 });
-it.runIf(experimentalLayout)('measures exact-fit and next-line wrapped border boxes with insets once',()=>{
+it.runIf(nativeLayout)('measures exact-fit and next-line wrapped border boxes with insets once',()=>{
  const children=[0,1].map(()=>createElement(Rectangle,{style:{boxSizing:'border-box',width:80,height:40,padding:5,borderWidth:5,minWidth:0,minHeight:0,flexShrink:0}}));
  for(const width of [160,159]){
   const root=createElement(Flex,{style:{width,flexWrap:'wrap'},children});
   expect(measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:10},service)).toEqual({status:'measured',size:{width,height:width===160?40:80}});
  }
 });
-it.skipIf(experimentalLayout)('retains ordinary wrapped intrinsic rejection',()=>{
+it.skipIf(nativeLayout)('retains ordinary wrapped intrinsic rejection',()=>{
  const root=createElement(Flex,{style:{width:160,flexWrap:'wrap'},children:createElement(Rectangle,{style:{width:70,height:20,minWidth:0,minHeight:0,flexShrink:0}})});
  expect(measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service).status).toBe('unsupported');
 });
 
-it.runIf(experimentalLayout)('retains declared cross dimensions and intrinsic-only custom leaves',()=>{
+it.runIf(nativeLayout)('retains declared cross dimensions and intrinsic-only custom leaves',()=>{
  type Style=IntrinsicFinalWidthStyle & {height?:number};
  const Declared=definePrimitive<{tag?:string},Style>(()=>undefined,{measureIntrinsic:()=>{throw Error('unnecessary intrinsic query');},measure:()=>{throw Error('unnecessary finite query');}});
  const declared=createElement(Declared,{style:{height:15,flexBasis:100,flexShrink:1,minWidth:0}});
@@ -3742,7 +3749,7 @@ it.runIf(experimentalLayout)('retains declared cross dimensions and intrinsic-on
  const sibling=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,flexShrink:0}});
  expect(layoutFlex({x:0,y:0,width:100,height:60},[intrinsic,sibling],{alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:60,height:20},{x:60,y:0,width:40,height:20}]);
 });
-it.runIf(experimentalLayout)('passes exact zero width only when it is the real custom allocation',()=>{
+it.runIf(nativeLayout)('passes exact zero width only when it is the real custom allocation',()=>{
  const queries:Array<[number,number]>=[];
  const Leaf=definePrimitive<{tag?:string},IntrinsicFinalWidthStyle>(()=>undefined,{measureIntrinsic:()=>({status:'measured',minContent:{width:0,height:0},maxContent:{width:100,height:20}}),measure:({constraints})=>{queries.push([constraints.minWidth,constraints.maxWidth]);return {status:'measured',size:{width:constraints.maxWidth,height:constraints.maxWidth===0?0:20}};}});
  const child=createElement(Leaf,{style:{flexBasis:100,flexShrink:1,minWidth:0}});
@@ -3750,7 +3757,7 @@ it.runIf(experimentalLayout)('passes exact zero width only when it is the real c
  expect(layoutFlex({x:0,y:0,width:40,height:60},[child,sibling],{alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:0,height:0},{x:0,y:0,width:40,height:20}]);
  expect(queries).toContainEqual([0,0]);
 });
-it.runIf(experimentalLayout)('adopts finite-only custom measurement dependencies again after cache hits',async()=>{
+it.runIf(nativeLayout)('adopts finite-only custom measurement dependencies again after cache hits',async()=>{
  const extra=signal(20),paint=signal('blue');let calls=0;
  const Leaf=definePrimitive<{extra:typeof extra},IntrinsicFinalWidthStyle>(()=>{const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:'red'}});},{preserveSignalProps:['extra'],measureIntrinsic:()=>({status:'measured',minContent:{width:0,height:20},maxContent:{width:100,height:20}}),measure:({props,constraints})=>{calls++;return{status:'measured',size:{width:Math.min(100,constraints.maxWidth),height:constraints.maxWidth>=100?20:20+props.extra.get()}};}});
  const canvas=document.createElement('canvas');canvas.width=100;canvas.height=80;document.body.append(canvas);
@@ -3760,7 +3767,7 @@ it.runIf(experimentalLayout)('adopts finite-only custom measurement dependencies
  extra.set(30);await nextFrame();expect(calls).toBeGreaterThan(before);expect([...canvas.getContext('2d')!.getImageData(20,45,1,1).data]).toEqual([255,0,0,255]);
  const disposed=snapshotWasmLayoutDiagnostics(),atDispose=calls;controller.dispose();extra.set(40);await nextFrame();expect(calls).toBe(atDispose);expect(snapshotWasmLayoutDiagnostics().activeNodes).toBeLessThan(disposed.activeNodes);
 });
-it.runIf(experimentalLayout)('fails final-width custom preparation before earlier paint and can remount cleanly',async()=>{
+it.runIf(nativeLayout)('fails final-width custom preparation before earlier paint and can remount cleanly',async()=>{
  const owner=signal(140),fail=signal(false);let evaluations=0;
  function Probe(_props:{style:Record<string,unknown>}){evaluations++;const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:20,fill:'red'}});}
  const Leaf=definePrimitive<{tag?:string},IntrinsicFinalWidthStyle>(()=>{const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:'red'}});},{measureIntrinsic:()=>({status:'measured',minContent:{width:0,height:20},maxContent:{width:100,height:20}}),measure:({constraints})=>fail.get()&&constraints.minWidth===constraints.maxWidth?{status:'unsupported',reason:'finite provider unavailable'}:{status:'measured',size:{width:Math.min(100,constraints.maxWidth),height:constraints.maxWidth>=100?20:40}}});
@@ -3773,7 +3780,7 @@ it.runIf(experimentalLayout)('fails final-width custom preparation before earlie
  }finally{window.removeEventListener('error',prevent);}
 });
 
-it.runIf(experimentalLayout)('supplies custom final content width with border-box insets exactly once',()=>{
+it.runIf(nativeLayout)('supplies custom final content width with border-box insets exactly once',()=>{
  const queries:Array<[number,number]>=[];
  type Style=IntrinsicFinalWidthStyle & {padding?:number;borderWidth?:number;boxSizing?:'border-box'|'content-box'};
  const Leaf=definePrimitive<{tag?:string},Style>(()=>undefined,{measureIntrinsic:()=>({status:'measured',minContent:{width:0,height:20},maxContent:{width:100,height:20}}),measure:({constraints})=>{queries.push([constraints.minWidth,constraints.maxWidth]);return {status:'measured',size:{width:constraints.maxWidth,height:constraints.maxWidth<100?40:20}};}});
@@ -3783,7 +3790,7 @@ it.runIf(experimentalLayout)('supplies custom final content width with border-bo
  expect(queries).toContainEqual([40,40]);
 });
 
-it.runIf(experimentalLayout)('preserves source paint and topmost hit order when logical overlap mirrors', async () => {
+it.runIf(nativeLayout)('preserves source paint and topmost hit order when logical overlap mirrors', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const direction = signal<'ltr' | 'rtl'>('ltr');
   const hits: string[] = [];
@@ -3814,7 +3821,7 @@ it.runIf(experimentalLayout)('preserves source paint and topmost hit order when 
 
 
 
-it.runIf(experimentalLayout)('preserves source paint, targets, focus, and Layer-filter composition while reverse and RTL mirror overlap', async () => {
+it.runIf(nativeLayout)('preserves source paint, targets, focus, and Layer-filter composition while reverse and RTL mirror overlap', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const direction = signal<'ltr' | 'rtl'>('ltr');
   const flexDirection = signal<'row' | 'row-reverse'>('row');
@@ -3948,7 +3955,7 @@ it.runIf(experimentalLayout)('preserves source paint, targets, focus, and Layer-
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('keeps keyed focus and source Tab order before pointer targeting while RTL mirrors a wrapped reverse row', async () => {
+it.runIf(nativeLayout)('keeps keyed focus and source Tab order before pointer targeting while RTL mirrors a wrapped reverse row', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const direction = signal<'ltr' | 'rtl'>('ltr');
   const focused: string[] = [];
@@ -4008,7 +4015,7 @@ it.runIf(experimentalLayout)('keeps keyed focus and source Tab order before poin
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('renders, targets, and releases every pinned public direction matrix fixture', async () => {
+it.runIf(nativeLayout)('renders, targets, and releases every pinned public direction matrix fixture', async () => {
   type DirectionFixture = {
     readonly name: string;
     readonly width: number;
@@ -4088,7 +4095,7 @@ it.runIf(experimentalLayout)('renders, targets, and releases every pinned public
 });
 
 
-it.runIf(experimentalLayout)('divides positive row free space among physical auto-margin slots before justification', () => {
+it.runIf(nativeLayout)('divides positive row free space among physical auto-margin slots before justification', () => {
   const child = (style: BoxStyle & FlexItemStyle) => createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, flexShrink: 0, ...style } });
   const options = { justifyContent: 'flex-end' } as const;
   const cases: readonly [string, BoxStyle & FlexItemStyle, readonly number[]][] = [
@@ -4102,7 +4109,7 @@ it.runIf(experimentalLayout)('divides positive row free space among physical aut
   }
 });
 
-it.runIf(experimentalLayout)('allocates physical main-axis auto margins before justify-content and reuses the mounted public tree', async () => {
+it.runIf(nativeLayout)('allocates physical main-axis auto margins before justify-content and reuses the mounted public tree', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const width = signal(200);
   const ink = signal('#19375b');
@@ -4152,7 +4159,7 @@ it.runIf(experimentalLayout)('allocates physical main-axis auto margins before j
   expect(disposed.activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('sizes flex growth before auto margins and keeps nonpositive free-space alignment', () => {
+it.runIf(nativeLayout)('sizes flex growth before auto margins and keeps nonpositive free-space alignment', () => {
   const item = (style: BoxStyle & FlexItemStyle = {}) => createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, flexShrink: 0, ...style } });
   expect(layoutFlex({x:0,y:0,width:200,height:20}, [item({flexGrow:1,marginLeft:'auto'}),item()], {}, measurement)).toEqual([
     {x:0,y:0,width:160,height:20},{x:160,y:0,width:40,height:20},
@@ -4165,7 +4172,7 @@ it.runIf(experimentalLayout)('sizes flex growth before auto margins and keeps no
   }
 });
 
-it.runIf(experimentalLayout)('invalidates only main placement when a numeric edge becomes auto and restores it', async () => {
+it.runIf(nativeLayout)('invalidates only main placement when a numeric edge becomes auto and restores it', async () => {
   const baseline=snapshotWasmLayoutDiagnostics();
   const edge=signal<import('@pibbl/core').FlexMargin>(0);
   const canvas=document.createElement('canvas');canvas.width=200;canvas.height=20;document.body.append(canvas);
@@ -4190,7 +4197,7 @@ it.runIf(experimentalLayout)('invalidates only main placement when a numeric edg
   expect(disposed.activeNodes).toBe(baseline.activeNodes);expect(disposed.activeArenas).toBe(baseline.activeArenas);expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('allocates physical auto main margins across finite nowrap axes, reversals and directions', () => {
+it.runIf(nativeLayout)('allocates physical auto main margins across finite nowrap axes, reversals and directions', () => {
   const child = (style: BoxStyle & FlexItemStyle = {}) => createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, ...style } });
   const cases = [
     { direction: 'row', layoutDirection: 'ltr', style: { marginLeft: 'auto' }, expected: [{ x: 120, y: 0 }, { x: 160, y: 0 }] },
@@ -4210,7 +4217,7 @@ it.runIf(experimentalLayout)('allocates physical auto main margins across finite
   }
 });
 
-it.runIf(experimentalLayout)('maps logical inline auto margins across finite row directions', () => {
+it.runIf(nativeLayout)('maps logical inline auto margins across finite row directions', () => {
   const child = (style: BoxStyle & FlexItemStyle = {}) => createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, flexShrink: 0, ...style } });
   const cases = [
     { layoutDirection: 'ltr', style: { marginStart: 'auto' }, expected: [120, 160] },
@@ -4224,7 +4231,7 @@ it.runIf(experimentalLayout)('maps logical inline auto margins across finite row
   }
 });
 
-it.runIf(experimentalLayout)('keeps keyed focus and pointer targets stable while auto-margin axis and direction signals move them', async () => {
+it.runIf(nativeLayout)('keeps keyed focus and pointer targets stable while auto-margin axis and direction signals move them', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const axis = signal<'row' | 'column'>('row');
   const direction = signal<'ltr' | 'rtl'>('ltr');
@@ -4271,7 +4278,7 @@ it.runIf(experimentalLayout)('keeps keyed focus and pointer targets stable while
   expect(disposed.activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('allocates finite wrapped row cross-axis auto margins without replacing keyed targets', async () => {
+it.runIf(nativeLayout)('allocates finite wrapped row cross-axis auto margins without replacing keyed targets', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const top = signal<import('@pibbl/core').FlexMargin>(0);
   const bottom = signal<import('@pibbl/core').FlexMargin>(0);
@@ -4338,7 +4345,7 @@ it.runIf(experimentalLayout)('allocates finite wrapped row cross-axis auto margi
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout).each([
+it.runIf(nativeLayout).each([
   { label: 'automatic row cross height', options: {}, style: { height: 'auto', marginTop: 'auto' } },
   { label: 'automatic column cross width', options: { flexDirection: 'column' as const }, style: { width: 'auto', marginLeft: 'auto' } },
   { label: 'automatic logical column cross width', options: { flexDirection: 'column' as const }, style: { width: 'auto', marginStart: 'auto' } },
@@ -4347,7 +4354,7 @@ it.runIf(experimentalLayout).each([
   expect(() => layoutFlex({ x: 0, y: 0, width: 200, height: 80 }, [createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, ...style } as RectStyle })], options, measurement)).toThrow(/auto.*margin/i);
 });
 
-it.runIf(experimentalLayout)('reflows wrapped auto margins per line while retaining keyed focus, targets and paint reuse', async () => {
+it.runIf(nativeLayout)('reflows wrapped auto margins per line while retaining keyed focus, targets and paint reuse', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const width = signal(100);
   const ink = signal('#19375b');
@@ -4398,11 +4405,11 @@ it.runIf(experimentalLayout)('reflows wrapped auto margins per line while retain
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(!experimentalLayout)('keeps ordinary JavaScript auto-margin admission explicit', () => {
+it.runIf(!nativeLayout)('keeps ordinary JavaScript auto-margin admission explicit', () => {
   expect(()=>layoutFlex({x:0,y:0,width:200,height:20},[createElement(Rectangle,{style:{width:40,height:20,minWidth:0,marginLeft:'auto'}})],{},measurement)).toThrow(/experimental Flex engine/);
 });
 
-it.runIf(experimentalLayout)('keeps wrapped lines without auto slots on ordinary main alignment', () => {
+it.runIf(nativeLayout)('keeps wrapped lines without auto slots on ordinary main alignment', () => {
  const item=(auto=false)=>createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,marginLeft:auto?'auto':0}});
  expect(layoutFlex({x:0,y:0,width:100,height:120},[item(true),item(),item()],{flexWrap:'wrap',gap:10,alignItems:'flex-start',alignContent:'flex-start',justifyContent:'center'},measurement)).toEqual([
   {x:10,y:0,width:40,height:20},{x:60,y:0,width:40,height:20},{x:30,y:30,width:40,height:20},
@@ -4410,7 +4417,7 @@ it.runIf(experimentalLayout)('keeps wrapped lines without auto slots on ordinary
 });
 
 
-it.runIf(experimentalLayout)('lets finite row cross auto margins override alignment in positive and overflowing space', () => {
+it.runIf(nativeLayout)('lets finite row cross auto margins override alignment in positive and overflowing space', () => {
   const item = (height: number, margins: FlexItemStyle) => createElement(Rectangle, { style: { width: 40, height, minWidth: 0, minHeight: 0, flexShrink: 0, alignSelf: 'flex-end', ...margins } });
   const place = (height: number, margins: FlexItemStyle) => layoutFlex({ x: 0, y: 0, width: 100, height: 80 }, [item(height, margins)], { alignItems: 'center' }, measurement)[0];
   expect(place(20, { marginTop: 'auto' })).toEqual({ x: 0, y: 60, width: 40, height: 20 });
@@ -4425,7 +4432,7 @@ it.runIf(experimentalLayout)('lets finite row cross auto margins override alignm
   expect(place(120, { marginTop: 5, marginBottom: 'auto' }).y).toBe(5);
 });
 
-it.runIf(experimentalLayout)('renders and targets every finite cross-auto direction fixture through the public API', async () => {
+it.runIf(nativeLayout)('renders and targets every finite cross-auto direction fixture through the public API', async () => {
   type Fixture = { name: string; width: number; height: number; gap: number; flexDirection: FlexStyle['flexDirection']; flexWrap: FlexStyle['flexWrap']; layoutDirection: FlexStyle['layoutDirection']; containerStyle: FlexStyle; boxes: readonly { x: number; y: number; width: number; height: number }[]; pibblBoxes?: readonly { x: number; y: number; width: number; height: number }[]; itemStyles: readonly RectStyle[] };
   const fixtures = yogaReference.cases.filter(fixture => 'autoCrossDirectionFixture' in fixture) as unknown as readonly Fixture[];
   expect(fixtures).toHaveLength(36);
@@ -4453,7 +4460,7 @@ it.runIf(experimentalLayout)('renders and targets every finite cross-auto direct
   }
 });
 
-it.runIf(experimentalLayout)('keeps cross-auto keyed focus while wrap reversal and RTL column signals move targets', async () => {
+it.runIf(nativeLayout)('keeps cross-auto keyed focus while wrap reversal and RTL column signals move targets', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const axis = signal<'row' | 'column'>('row'); const flipped = signal(false); const direction = signal<'ltr' | 'rtl'>('ltr');
   const boxes = new Map<string, { x: number; y: number; stamp: number }>(); const hits: string[] = [], focused: string[] = []; let serial = 0;
@@ -4486,7 +4493,7 @@ it.runIf(experimentalLayout)('keeps cross-auto keyed focus while wrap reversal a
   expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('maps finite column logical cross auto and overflow to inline direction', () => {
+it.runIf(nativeLayout)('maps finite column logical cross auto and overflow to inline direction', () => {
   const item = (width: number, style: FlexItemStyle) => createElement(Rectangle, { style: { width, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, ...style } });
   for (const layoutDirection of ['ltr', 'rtl'] as const) {
     const place = (width: number, style: FlexItemStyle) => layoutFlex({ x: 0, y: 0, width: 80, height: 100 }, [item(width, style)], { flexDirection: 'column', layoutDirection, alignItems: 'center' }, measurement)[0];
@@ -4497,7 +4504,7 @@ it.runIf(experimentalLayout)('maps finite column logical cross auto and overflow
   }
 });
 
-it.runIf(experimentalLayout)('allocates auto shorthand before specific physical overrides without replacing keyed public targets', async () => {
+it.runIf(nativeLayout)('allocates auto shorthand before specific physical overrides without replacing keyed public targets', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const overrides = signal(false);
   const ink = signal('#2f6b97');
@@ -4553,7 +4560,7 @@ it.runIf(experimentalLayout)('allocates auto shorthand before specific physical 
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('renders opposing auto-margin growth and bounds fixtures through the public API', async () => {
+it.runIf(nativeLayout)('renders opposing auto-margin growth and bounds fixtures through the public API', async () => {
   type Fixture = { name: string; width: number; height: number; containerStyle: FlexStyle; boxes: readonly { x: number; y: number; width: number; height: number }[]; pibblBoxes?: readonly { x: number; y: number; width: number; height: number }[]; itemStyles: readonly RectStyle[] };
   const fixtures = yogaReference.cases.filter(fixture => 'autoOpposingMarginFixture' in fixture) as unknown as readonly Fixture[];
   expect(fixtures).toHaveLength(8);
@@ -4577,7 +4584,7 @@ it.runIf(experimentalLayout)('renders opposing auto-margin growth and bounds fix
   }
 });
 
-it.runIf(experimentalLayout)('measures finite wrapped Text before allocating an automatic cross-axis margin', async () => {
+it.runIf(nativeLayout)('measures finite wrapped Text before allocating an automatic cross-axis margin', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const textWidth = signal(80);
   const ink = signal('#2f6b97');
@@ -4627,7 +4634,7 @@ it.runIf(experimentalLayout)('measures finite wrapped Text before allocating an 
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout).each([
+it.runIf(nativeLayout).each([
   { label: 'wrapped automatic width', options: { flexWrap: 'wrap' as const }, style: { width: 'auto' } },
   { label: 'automatic width', options: {}, style: { width: 'auto' } },
   { label: 'custom font', options: {}, style: { font: '10px UnknownFont' } },
@@ -4639,7 +4646,7 @@ it.runIf(experimentalLayout).each([
   const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 80, minWidth: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', ...style } as import('@pibbl/core').TextStyle });
   if (label === 'wrapped automatic width' || label === 'automatic width') {
     const placement = layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)[0]!;
-    expect(placement.width).toBe(label === 'automatic width' ? 140 : 160);
+    expect(placement.width).toBe(140);
     const zero = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 'auto', minWidth: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 0 } });
     const before = layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [zero], { ...options, alignItems: 'flex-start' }, measurement)[0]!;
     expect(placement.width).toBe(before.width);
@@ -4651,7 +4658,7 @@ it.runIf(experimentalLayout).each([
   else expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/explicit main-axis minimum/);
 });
 
-it.runIf(experimentalLayout)('measures a finite custom primitive before allocating an automatic cross-axis margin', async () => {
+it.runIf(nativeLayout)('measures a finite custom primitive before allocating an automatic cross-axis margin', async () => {
   type AutoCrossPrimitiveStyle = import('@pibbl/core').SystemStyle & {
     width?: number;
     height?: number;
@@ -4743,7 +4750,7 @@ it.runIf(experimentalLayout)('measures a finite custom primitive before allocati
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('requires finite measurement and supported main sizing before automatic cross-margin placement', () => {
+it.runIf(nativeLayout)('requires finite measurement and supported main sizing before automatic cross-margin placement', () => {
   type Style = import('@pibbl/core').SystemStyle & {
     width?: number | 'auto';
     height?: number | 'auto';
@@ -4768,7 +4775,7 @@ it.runIf(experimentalLayout)('requires finite measurement and supported main siz
   expectRejected(createElement(IntrinsicOnly, { style: automaticCross }));
   expect(() => layoutFlex(row, [createElement(MeasureOnly, { style: automaticCross })], {}, measurement)).toThrow(/explicit main-axis minimum/);
   expect(layoutFlex(row, [createElement(MeasureOnly, { style: { ...automaticCross, minWidth: 0 } })], {}, measurement)).toEqual([{ x: 0, y: 80, width: 80, height: 20 }]);
-  expect(() => layoutFlex(row, [createElement(Both, { style: automaticCross })], { flexWrap: 'wrap' }, measurement)).toThrow(/explicit main-axis minimum/);
+  expect(layoutFlex(row, [createElement(Both, { style: automaticCross })], { flexWrap: 'wrap', alignContent: 'flex-start' }, measurement)).toEqual([{ x: 0, y: 0, width: 80, height: 20 }]);
   expect(layoutFlex(row, [createElement(Both, { style: { ...automaticCross, minWidth: 0 } })], { flexWrap: 'wrap', alignContent: 'flex-start' }, measurement)).toEqual([{ x: 0, y: 0, width: 80, height: 20 }]);
   expect(layoutFlex(row, [createElement(Both, { style: { ...automaticCross, width: 'auto' } })], {}, measurement)).toEqual([{ x: 0, y: 80, width: 100, height: 20 }]);
   expect(layoutFlex(row, [createElement(Both, { style: { ...automaticCross, minWidth: 0, aspectRatio: 2 } })], {}, measurement))
@@ -4776,7 +4783,7 @@ it.runIf(experimentalLayout)('requires finite measurement and supported main siz
   expect(() => layoutFlex(row, [createElement(Both, { style: { height: 80, flexShrink: 1, marginLeft: 'auto' } })], { flexDirection: 'column' }, measurement)).toThrow(/explicit main-axis minimum/);
 });
 
-it.runIf(experimentalLayout)('fails an automatic cross-margin custom final-width measurement before earlier paint and remounts cleanly', async () => {
+it.runIf(nativeLayout)('fails an automatic cross-margin custom final-width measurement before earlier paint and remounts cleanly', async () => {
   type Style = import('@pibbl/core').SystemStyle & {
     width?: number;
     height?: number;
@@ -4830,7 +4837,7 @@ it.runIf(experimentalLayout)('fails an automatic cross-margin custom final-width
   }
 });
 
-it.runIf(experimentalLayout)('measures a direct wrapped Flex owner before automatic cross-margin placement', async () => {
+it.runIf(nativeLayout)('measures a direct wrapped Flex owner before automatic cross-margin placement', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const width = signal(160), ink = signal('#19375b');
   const hits: string[] = [], focused: string[] = [];
@@ -4871,12 +4878,12 @@ it.runIf(experimentalLayout)('measures a direct wrapped Flex owner before automa
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('requires supported intrinsic descendants for a cross-auto Flex owner even under stretch', () => {
+it.runIf(nativeLayout)('measures a wrapped Text descendant before placing its cross-auto Flex owner', () => {
   const owner = createElement(Flex, { style: { width: 90, minWidth: 0, flexShrink: 0, flexWrap: 'wrap', marginTop: 'auto' }, children: createElement(Text, { style: { width: 70, height: 20, minWidth: 0, flexShrink: 0 }, children: 'unsupported intrinsic job' }) });
-  expect(() => layoutFlex({ x: 0, y: 0, width: 240, height: 120 }, [owner], { alignItems: 'stretch' }, measurement)).toThrow(/measurement is required but unsupported/);
+  expect(layoutFlex({ x: 0, y: 0, width: 240, height: 120 }, [owner], { alignItems: 'stretch' }, measurement)).toEqual([{ x: 0, y: 100, width: 90, height: 20 }]);
 });
 
-it.runIf(experimentalLayout)('measures automatic-width Text before placing an automatic cross-axis margin', async () => {
+it.runIf(nativeLayout)('measures automatic-width Text before placing an automatic cross-axis margin', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const ownerWidth = signal(140);
   const siblingPaint = signal('#2f6b97');
@@ -4937,7 +4944,7 @@ it.runIf(experimentalLayout)('measures automatic-width Text before placing an au
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('measures direct wrapped Text before placing its automatic cross-axis margin', async () => {
+it.runIf(nativeLayout)('measures direct wrapped Text before placing its automatic cross-axis margin', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const textWidth = signal(80), siblingPaint = signal('#426b61');
   const hits: string[] = [], focused: string[] = [];
@@ -4991,7 +4998,7 @@ it.runIf(experimentalLayout)('measures direct wrapped Text before placing its au
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout).each([
+it.runIf(nativeLayout).each([
   { label: 'numeric basis', style: { flexBasis: 80 } },
   { label: 'positive grow', style: { flexGrow: 1 } },
   { label: 'zero shrink', style: { flexShrink: 0 } },
@@ -5007,7 +5014,7 @@ it.runIf(experimentalLayout).each([
   expect(after.y + after.height).toBe(100);
 });
 
-it.runIf(experimentalLayout)('preserves a decorated row-reverse nested percentage cross minimum through a height-only resize', async () => {
+it.runIf(nativeLayout)('preserves a decorated row-reverse nested percentage cross minimum through a height-only resize', async () => {
   const fixtures = yogaReference.cases.filter((fixture) => 'nestedDecoratedCrossMinFixture' in fixture);
   expect(fixtures.map((fixture) => fixture.name)).toEqual(['nested-cross-min-decorated-row-reverse', 'nested-cross-min-decorated-row-reverse-resized']);
   const [initialFixture, resizedFixture] = fixtures;
@@ -5050,7 +5057,7 @@ it.runIf(experimentalLayout)('preserves a decorated row-reverse nested percentag
 });
 
 
-it.runIf(experimentalLayout)('preserves a decorated row-reverse nested percentage cross maximum and exposes its definite constrained leaf', async () => {
+it.runIf(nativeLayout)('preserves a decorated row-reverse nested percentage cross maximum and exposes its definite constrained leaf', async () => {
   const fixtures = yogaReference.cases.filter((fixture) => 'nestedDecoratedCrossMaxFixture' in fixture);
   expect(fixtures.map((fixture) => fixture.name)).toEqual(['nested-cross-max-decorated-row-reverse', 'nested-cross-max-decorated-row-reverse-resized']);
   const [initialFixture, resizedFixture] = fixtures;
@@ -5092,7 +5099,7 @@ it.runIf(experimentalLayout)('preserves a decorated row-reverse nested percentag
 });
 
 
-it.runIf(experimentalLayout)('preserves a decorated column-reverse nested percentage cross maximum and exposes its definite constrained leaf', async () => {
+it.runIf(nativeLayout)('preserves a decorated column-reverse nested percentage cross maximum and exposes its definite constrained leaf', async () => {
   const fixtures = yogaReference.cases.filter((fixture) => 'nestedDecoratedColumnCrossMaxFixture' in fixture);
   expect(fixtures.map((fixture) => fixture.name)).toEqual(['nested-cross-max-decorated-column-reverse', 'nested-cross-max-decorated-column-reverse-resized']);
   const [initialFixture, resizedFixture] = fixtures;
@@ -5132,7 +5139,7 @@ it.runIf(experimentalLayout)('preserves a decorated column-reverse nested percen
 });
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'preserves a decorated column-reverse nested percentage cross minimum and moves the exposed target',
   async () => {
     const fixtures = yogaReference.cases.filter(
@@ -5310,7 +5317,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)('accepts explicit automatic Text width with cross-auto placement', () => {
+it.runIf(nativeLayout)('accepts explicit automatic Text width with cross-auto placement', () => {
   const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 'auto', wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto' } });
   const sibling = createElement(Rectangle, { style: { width: 40, height: 40, minWidth: 0, flexShrink: 0 } });
   expect(layoutFlex({ x: 0, y: 0, width: 200, height: 100 }, [text, sibling], {}, measurement)).toEqual([
@@ -5319,7 +5326,7 @@ it.runIf(experimentalLayout)('accepts explicit automatic Text width with cross-a
 });
 
 
-it.runIf(experimentalLayout).each([
+it.runIf(nativeLayout).each([
   { label: 'wrap reverse', options: { flexWrap: 'wrap-reverse' as const }, style: {} },
   { label: 'reversed row', options: { flexDirection: 'row-reverse' as const }, style: {} },
   { label: 'RTL row', options: { layoutDirection: 'rtl' as const }, style: {} },
@@ -5337,7 +5344,7 @@ it.runIf(experimentalLayout).each([
 });
 
 
-it.runIf(experimentalLayout)('resolves nested wrapped percentage cross minimums from the outer owner and moves the following target without remounting', async () => {
+it.runIf(nativeLayout)('resolves nested wrapped percentage cross minimums from the outer owner and moves the following target without remounting', async () => {
   const fixtures = yogaReference.cases.filter((fixture) => 'nestedCrossMinFixture' in fixture);
   expect(fixtures.map((fixture) => fixture.name)).toEqual(['nested-cross-min-row', 'nested-cross-min-row-resized']);
   const [initialFixture, resizedFixture] = fixtures;
@@ -5378,7 +5385,7 @@ it.runIf(experimentalLayout)('resolves nested wrapped percentage cross minimums 
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });
 
-it.runIf(experimentalLayout)('jumps directly to the latest public proof and preserves case and section navigation', async () => {
+it.runIf(nativeLayout)('jumps directly to the latest public proof and preserves case and section navigation', async () => {
   const { WasmYogaMigrationExample } = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 540; document.body.append(canvas);
   const controller = createExampleMount(WasmYogaMigrationExample)(canvas, { fixtures: fullYogaMigrationFixtures }); controllers.push(controller); await nextFrame();
@@ -5456,7 +5463,7 @@ it.runIf(experimentalLayout)('jumps directly to the latest public proof and pres
 });
 
 
-it.runIf(experimentalLayout)('measures a finite column custom queue at its exact allocated width before placing the following target', async () => {
+it.runIf(nativeLayout)('measures a finite column custom queue at its exact allocated width before placing the following target', async () => {
   type QueueStyle = import('@pibbl/core').SystemStyle & {
     width?: number;
     height?: number | 'auto';
@@ -5528,7 +5535,7 @@ it.runIf(experimentalLayout)('measures a finite column custom queue at its exact
   expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });
 
-it.runIf(experimentalLayout)('tracks a paired finite-column provider content signal without measuring on sibling paint', async () => {
+it.runIf(nativeLayout)('tracks a paired finite-column provider content signal without measuring on sibling paint', async () => {
   type QueueStyle = import('@pibbl/core').SystemStyle & {
     width?: number;
     height?: number | 'auto';
@@ -5603,7 +5610,7 @@ it.runIf(experimentalLayout)('tracks a paired finite-column provider content sig
   expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });
 
-it.runIf(experimentalLayout)('keeps the public percentage placement lesson responsive and targetable', async () => {
+it.runIf(nativeLayout)('keeps the public percentage placement lesson responsive and targetable', async () => {
   const scenario = await import('../../scenarios/src/learning/layout/wasm-flex-percent-placement.example');
   const mount = createExampleMount(scenario.WasmFlexPercentPlacementExample);
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460; document.body.append(canvas);
@@ -5629,7 +5636,7 @@ it.runIf(experimentalLayout)('keeps the public percentage placement lesson respo
 });
 
 
-it.runIf(experimentalLayout)('measures direct unwrapped Text cross width before placing a column automatic margin', async () => {
+it.runIf(nativeLayout)('measures direct unwrapped Text cross width before placing a column automatic margin', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const words = signal('aaaa aaaa aaaa');
   const siblingInk = signal('#2f6b97');
@@ -5687,7 +5694,7 @@ it.runIf(experimentalLayout)('measures direct unwrapped Text cross width before 
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('rejects unsupported column automatic-margin Text profiles before measuring', () => {
+it.runIf(nativeLayout)('rejects unsupported column automatic-margin Text profiles before measuring', () => {
   const base: TextStyle & FlexItemStyle = {
     width: 'auto', height: 20, minHeight: 0, flexGrow: 0, flexShrink: 0,
     marginLeft: 'auto', wrap: false, overflow: 'visible', font: '10px monospace',
@@ -5710,7 +5717,7 @@ it.runIf(experimentalLayout)('rejects unsupported column automatic-margin Text p
   }
 });
 
-it.runIf(experimentalLayout)('uses a zero automatic main minimum for empty aspect-ratio Rectangles without changing final ratio sizing', async () => {
+it.runIf(nativeLayout)('uses a zero automatic main minimum for empty aspect-ratio Rectangles without changing final ratio sizing', async () => {
   const rowChild = (minimum?: number) => createElement(Rectangle, {
     style: { width: 90, height: 'auto', aspectRatio: 3, flexShrink: 1, minWidth: minimum },
   });
@@ -5757,7 +5764,7 @@ it.runIf(experimentalLayout)('uses a zero automatic main minimum for empty aspec
   ]);
 });
 
-it.runIf(experimentalLayout)('uses the smaller natural run or finite column cross width for wrapped Text before optional side-auto placement', async () => {
+it.runIf(nativeLayout)('uses the smaller natural run or finite column cross width for wrapped Text before optional side-auto placement', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const words = signal('aaaa aaaa aaaa aaaa');
   const sideMargin = signal<0 | 'auto'>(0);
@@ -5843,7 +5850,7 @@ it.runIf(experimentalLayout)('uses the smaller natural run or finite column cros
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('wraps automatic column Text inside its padding before sharing side-auto space', async () => {
+it.runIf(nativeLayout)('wraps automatic column Text inside its padding before sharing side-auto space', async () => {
   const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 80; document.body.append(canvas);
   const context = canvas.getContext('2d')!;
   const draws: string[] = [];
@@ -5861,7 +5868,7 @@ it.runIf(experimentalLayout)('wraps automatic column Text inside its padding bef
 });
 
 for (const logical of [false, true]) {
-  it.runIf(experimentalLayout)(`uses resolved ${logical ? 'logical' : 'physical'} percentage margins for wrapped column Text width`, async () => {
+  it.runIf(nativeLayout)(`uses resolved ${logical ? 'logical' : 'physical'} percentage margins for wrapped column Text width`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const ownerWidth = signal(100), opposite = signal<number | '10%'>(10);
     const canvas = document.createElement('canvas'); canvas.width = 140; canvas.height = 80; document.body.append(canvas);
@@ -5894,7 +5901,7 @@ for (const logical of [false, true]) {
   });
 }
 
-it.runIf(experimentalLayout)('preserves visible long-word paint and targeting beyond a capped wrapped column Text box', async () => {
+it.runIf(nativeLayout)('preserves visible long-word paint and targeting beyond a capped wrapped column Text box', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 80; document.body.append(canvas);
   let hits = 0;

@@ -5,10 +5,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -18,7 +18,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
 interface Style extends SystemStyle { width?: number; height?: number; minWidth?: number; minHeight?: number; flexBasis?: number; flexGrow?: number; flexShrink?: number; position?: 'absolute'; left?: number; top?: number; fill?: string; }
 type Box = Readonly<{ x: number; y: number; width: number; height: number; stamp: number }>;
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses a direct known Flex descendant baseline while skipping its absolute decoration',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -67,7 +67,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the first direct known Flex descendant content bottom when no provider reports a baseline',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -92,7 +92,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'keeps a known Flex structural baseline at its unshifted source origin while its selected child moves relatively',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

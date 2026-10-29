@@ -6,10 +6,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -17,7 +17,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
   for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { clientX: bounds.left + x, clientY: bounds.top + y, bubbles: true, button: 0 }));
 }
 
-it.runIf(experimentalLayout)('measures direct wrapped Text absolute height in every finite nowrap direction without joining flow', async () => {
+it.runIf(nativeLayout)('measures direct wrapped Text absolute height in every finite nowrap direction without joining flow', async () => {
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type FlowStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   type AbsoluteTextStyle = PibblResponsiveStyle<TextStyle & FlexItemStyle>;
@@ -89,7 +89,7 @@ it.runIf(experimentalLayout)('measures direct wrapped Text absolute height in ev
     expect(afterDispose.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('reuses a stable plain absolute Text measurement until its width or content changes, then releases it on removal', async () => {
+it.runIf(nativeLayout)('reuses a stable plain absolute Text measurement until its width or content changes, then releases it on removal', async () => {
   type FlowStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   type AbsoluteTextStyle = PibblResponsiveStyle<TextStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -150,7 +150,7 @@ it.runIf(experimentalLayout)('reuses a stable plain absolute Text measurement un
   expect(afterDispose.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('keeps paired insets and aspect sizing ahead of bounded direct Text measurement', async () => {
+it.runIf(nativeLayout)('keeps paired insets and aspect sizing ahead of bounded direct Text measurement', async () => {
   type AbsoluteTextStyle = PibblResponsiveStyle<TextStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 204; canvas.height = 104; document.body.append(canvas);

@@ -4,6 +4,8 @@ import { Rectangle } from '../components/rect.js';
 import { Text } from '../components/text.js';
 import type { PibblElement } from '../element/types.js';
 import { isSignal, untracked } from '../signals/graph.js';
+import { getSignalNode } from '../signals/graph.js';
+import type { AllocationInputState } from './allocation-revision.js';
 import type { LayoutBox } from './types.js';
 
 export interface AllocationSettings {
@@ -25,31 +27,36 @@ export interface CachedFlexPlacement {
   readonly usedWidth: number;
   readonly usedHeight: number;
 }
+type SignalVersionNode = Readonly<{ version: number }>;
+type MetricDependency = Readonly<{ node: WeakRef<SignalVersionNode>; version: number }>;
 
 /** One scalar snapshot; its input identity is weak and never owns descriptors. */
 export class FlexAllocationCache {
   private input: WeakRef<object> | undefined;
-  private revision = -1;
+  private state: AllocationInputState | undefined;
+  private dependencies: readonly MetricDependency[] | undefined;
   private width = 0;
   private height = 0;
   private settings: AllocationSettings | undefined;
   private placements: readonly CachedFlexPlacement[] | undefined;
 
-  read(input: unknown, revision: number, box: Readonly<LayoutBox>, settings: AllocationSettings) {
+  read(input: unknown, state: AllocationInputState, box: Readonly<LayoutBox>, settings: AllocationSettings) {
     const previous = this.settings;
-    if (!previous || this.input?.deref() !== input || this.revision !== revision ||
+    if (!previous || this.input?.deref() !== input || this.state?.structural !== state.structural ||
         box.width !== this.width || box.height !== this.height ||
         previous.layoutDirection !== settings.layoutDirection || previous.flexDirection !== settings.flexDirection || previous.flexWrap !== settings.flexWrap ||
         previous.justifyContent !== settings.justifyContent || previous.alignItems !== settings.alignItems ||
         previous[FLEX_BASELINE_GROUP] !== settings[FLEX_BASELINE_GROUP] || previous[FLEX_LAST_BASELINE] !== settings[FLEX_LAST_BASELINE] ||
         previous.alignContent !== settings.alignContent || previous.rowGap !== settings.rowGap ||
         previous.columnGap !== settings.columnGap) return;
+    if (this.state.metric !== state.metric && !sameMetricDependencies(this.dependencies)) return;
     return this.placements;
   }
 
-  store(input: object, revision: number, box: Readonly<LayoutBox>, settings: AllocationSettings, placements: readonly CachedFlexPlacement[]) {
+  store(input: object, state: AllocationInputState, box: Readonly<LayoutBox>, settings: AllocationSettings, placements: readonly CachedFlexPlacement[], dependencies: readonly SignalVersionNode[] = []) {
     this.input = new WeakRef(input);
-    this.revision = revision;
+    this.state = state;
+    this.dependencies = dependencies.map(node => ({ node: new WeakRef(node), version: node.version }));
     this.width = box.width;
     this.height = box.height;
     this.settings = {
@@ -64,9 +71,25 @@ export class FlexAllocationCache {
   }
 }
 
+function sameMetricDependencies(dependencies: readonly MetricDependency[] | undefined): boolean {
+  if (!dependencies) return false;
+  for (let index = 0; index < dependencies.length; index++) {
+    const dependency = dependencies[index]!;
+    const node = dependency.node.deref();
+    if (!node || node.version !== dependency.version) return false;
+  }
+  return true;
+}
+
+/** Captures only declared frozen metric signals; opaque components never participate. */
+export function frozenFlexMetricDependencies(input: unknown): readonly SignalVersionNode[] | undefined {
+  const dependencies: SignalVersionNode[] = [];
+  return frozenFlexInputs(input, dependencies) ? dependencies : undefined;
+}
+
 // This proof runs only on a miss. Never invoke accessors, freeze caller values,
 // infer an ordinary component's purity, or traverse signal implementation state.
-export function frozenFlexInputs(input: unknown): input is readonly PibblElement<any>[] {
+export function frozenFlexInputs(input: unknown, dependencies?: SignalVersionNode[]): input is readonly PibblElement<any>[] {
   if (!Array.isArray(input) || !Object.isFrozen(input)) return false;
   return untracked(() => {
     const visiting = new Set<object>();
@@ -84,9 +107,13 @@ export function frozenFlexInputs(input: unknown): input is readonly PibblElement
         const field = fields[key];
         if (!('value' in field)) return false;
         if (key === 'style') {
-          if (!frozenStyle(field.value, visiting)) return false;
+          if (!frozenStyle(field.value, visiting, dependencies)) return false;
         } else if (key === 'children') {
-          if (type.value !== Text || !frozenMetricValue(field.value, visiting)) return false;
+          if (type.value !== Text || !frozenMetricValue(field.value, visiting, dependencies)) return false;
+        } else if (key === 'pointerEvents' || key === 'keyboardFocusable' || key === 'keyboardNavigationBounds') {
+          // Interaction inputs resolve during normal paint traversal and do not
+          // change the cached parent allocation.
+          continue;
         } else if (!(key.startsWith('on') && typeof field.value === 'function') &&
                    !scalar(field.value)) return false;
       }
@@ -110,7 +137,7 @@ function plainFrozenRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && Object.isFrozen(value) &&
     (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
 }
-function frozenStyle(value: unknown, visiting: Set<object>): boolean {
+function frozenStyle(value: unknown, visiting: Set<object>, dependencies?: SignalVersionNode[]): boolean {
   if (value === undefined) return true;
   if (!plainFrozenRecord(value)) return false;
   const fields = Object.getOwnPropertyDescriptors(value);
@@ -119,7 +146,7 @@ function frozenStyle(value: unknown, visiting: Set<object>): boolean {
     if (!('value' in field) || key === 'when' || key === 'custom' || key === 'transition') return false;
     // These values affect pixels only and are resolved anew by the receiver.
     if (key === 'fill' || key === 'stroke' || key === 'opacity' || key === 'filter') continue;
-    if (!frozenMetricValue(field.value, visiting)) return false;
+    if (!frozenMetricValue(field.value, visiting, dependencies)) return false;
     // Cached placements carry used sizes, not canonical owner-relative padding.
     // Keep percentage padding on the normal receiver-owned allocation path.
     if (key === 'paddingStart' || key === 'paddingEnd' || key === 'borderStartWidth' || key === 'borderEndWidth') return false;
@@ -127,9 +154,12 @@ function frozenStyle(value: unknown, visiting: Set<object>): boolean {
   }
   return true;
 }
-function frozenMetricValue(value: unknown, visiting: Set<object>): boolean {
+function frozenMetricValue(value: unknown, visiting: Set<object>, dependencies?: SignalVersionNode[]): boolean {
   if (scalar(value)) return true;
-  if (isSignal(value)) return frozenMetricValue(value.get(), visiting);
+  if (isSignal(value)) {
+    dependencies?.push(getSignalNode(value));
+    return frozenMetricValue(value.get(), visiting, dependencies);
+  }
   if (!value || typeof value !== 'object' || !Object.isFrozen(value) || visiting.has(value)) return false;
   if (!Array.isArray(value) && !plainFrozenRecord(value)) return false;
   visiting.add(value);
@@ -137,7 +167,7 @@ function frozenMetricValue(value: unknown, visiting: Set<object>): boolean {
     const fields = Object.getOwnPropertyDescriptors(value);
     for (const key of Object.keys(fields)) {
       const field = fields[key];
-      if (!('value' in field) || !frozenMetricValue(field.value, visiting)) return false;
+      if (!('value' in field) || !frozenMetricValue(field.value, visiting, dependencies)) return false;
     }
     return true;
   } finally { visiting.delete(value); }

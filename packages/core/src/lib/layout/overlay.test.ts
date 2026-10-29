@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
+import { Text } from '../components/text';
 import { pibblSync as pibbl } from "../../sync.js";
 import { useLayoutBox } from '../hooks/use-layout-box';
 import { componentTest } from '../test-utils/component-test';
@@ -7,8 +8,21 @@ import type { SystemStyle } from '../types';
 import { Overlay, placeOverlayChild } from './overlay';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
+import { fitContent } from '../style/sizing-length';
 
 describe('overlay layout', () => {
+  it('mounts direct Text intrinsic widths with constrained wrapped height', async () => {
+    const canvas = await componentTest(createElement(Overlay, {
+      style: { width: 140, height: 60, alignItems: 'start', justifyItems: 'start' },
+      children: createElement(Text, {
+        children: 'alpha beta',
+        style: { width: fitContent(35), minWidth: 20, maxWidth: 30, height: 'auto', wrap: true, font: '10px monospace', lineHeight: 10, fill: 'red' },
+      }),
+    }), { width: 140, height: 60 });
+    const pixels = canvas.element.getContext('2d')!.getImageData(0, 0, 140, 60).data;
+    expect(pixels.some((value, index) => index % 4 === 3 && value > 0)).toBe(true);
+  });
+
   it('centers a definite child in the shared content box', () => {
     const child = createElement(Rectangle, {
       style: {

@@ -2,15 +2,15 @@ import { afterEach, beforeAll, expect, it } from 'vitest';
 import { Flex, FocusManagement, Rectangle, signal, type FlexItemStyle, type PibblResponsiveStyle, type RectStyle, useCanvasContext, useConst, useLayoutBox } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void { const bounds = canvas.getBoundingClientRect(); for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { clientX: bounds.left + x, clientY: bounds.top + y, bubbles: true, button: 0 })); }
 
-it.runIf(experimentalLayout)('resolves physical percentage absolute insets from the direct Flex padding box before sizing and placement', async () => {
+it.runIf(nativeLayout)('resolves physical percentage absolute insets from the direct Flex padding box before sizing and placement', async () => {
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type Mode = 'left-top' | 'right-bottom' | 'paired-bounds' | 'aspect' | 'overflow';
   type Style = PibblResponsiveStyle<RectStyle & FlexItemStyle>;

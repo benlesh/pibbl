@@ -6,10 +6,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -25,7 +25,7 @@ type Box = Readonly<{ x: number; y: number; width: number; height: number; stamp
 type Last = number | { get(): number };
 const fixed = (width: number, height: number, fill: string): Style => ({ width, height, minWidth: 0, minHeight: 0, flexBasis: width, flexGrow: 0, flexShrink: 0, fill });
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the last declared in-flow primitive of a described known Flex root, skipping an absolute decoration and retaining receiver-owned last dependencies',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -74,7 +74,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'takes a Flow last source and a Grid last declared cell rather than their visual first records',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -124,7 +124,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the settled structural content bottom as the last-baseline fallback when Flow and Grid have no in-flow source',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -148,7 +148,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses only the last native wrapped line when a known Flex root contributes its final declared last baseline',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

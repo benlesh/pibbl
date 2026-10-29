@@ -186,7 +186,7 @@ render deepest-first before ancestor composition; clean sibling Layer trees
 retain their cached bitmaps. A parent placement-only change may reuse a clean
 child bitmap.
 
-In the experimental `layout-wasm` build, a managed Canvas Layer under an active
+In the default native layout engine, a managed Canvas Layer under an active
 parent layout allocation records a weak parent allocation dependency. The allocation
 context remains active through ordinary components, Group and Clip; it does not
 require direct Layer placement or speculative execution of a reusable component. Eligible pending Canvas work in

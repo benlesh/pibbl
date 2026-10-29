@@ -23,7 +23,7 @@ export async function checkNpmPublishingAuth({ env = process.env, request = fetc
   }), 'GitHub identity');
   if (typeof identity.value !== 'string' || !identity.value) throw new Error('GitHub did not return an identity token.');
   secrets.push(identity.value);
-  for (const name of ['@pibbl/core', '@pibbl/three', '@pibbl/text', 'pibbl']) {
+  for (const name of ['@pibbl/core', '@pibbl/three', '@pibbl/text', '@pibbl/layout', 'pibbl']) {
     const exchange = await read(await request(`https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/${encodeURIComponent(name)}`, {
       method: 'POST',
       headers: { Accept: 'application/json', Authorization: `Bearer ${identity.value}` },

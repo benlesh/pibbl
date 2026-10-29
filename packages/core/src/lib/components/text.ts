@@ -16,6 +16,7 @@ import type { ResolvedTextStyle, TextStyle } from '../style/types.js';
 import {
   CanvasMeasurementService,
   MeasureResult,
+  IntrinsicSizesResult,
   RenderingContext2D,
 } from '../types.js';
 import type { Constraints } from '../layout/types.js';
@@ -189,6 +190,7 @@ export const Text = definePrimitive<
       constraints,
       service,
     ),
+  measureIntrinsic: ({ props, style, service }) => measureTextIntrinsic(props, style, service),
   measureBaselines: ({ props, style, allocation, service }) =>
     measureTextBaselines(
       materializeTextContent(props),
@@ -248,6 +250,20 @@ function measureTextBaselines(
     };
   }
   return { status: 'measured' as const, first, last };
+}
+
+/** Width contributions and their respective natural heights share Text's existing wrap policy. */
+function measureTextIntrinsic(props: Readonly<TextProps>, style: Readonly<TextStyle>, service: CanvasMeasurementService): IntrinsicSizesResult {
+  const text = prepareLayoutTextContent(props, {});
+  const font = style.font ?? '13px sans-serif';
+  const maximum = style.wrap ? measureLayoutTextNaturalRun(text, { font, service }) : service.measureText(text, font).width;
+  const minimum = style.wrap ? measureLayoutTextMinimumWidth(props, { font, service }) : maximum;
+  const intrinsicStyle = { ...style, width: undefined, height: undefined, fit: 'visible' as const };
+  const minResult = measureTextStyle(text, intrinsicStyle, { minWidth: 0, maxWidth: minimum, minHeight: 0, maxHeight: Infinity }, service);
+  const maxResult = measureTextStyle(text, intrinsicStyle, { minWidth: 0, maxWidth: maximum, minHeight: 0, maxHeight: Infinity }, service);
+  if (minResult.status !== 'measured') return minResult;
+  if (maxResult.status !== 'measured') return maxResult;
+  return { status: 'measured', minContent: { width: minimum, height: minResult.size.height }, maxContent: { width: maximum, height: maxResult.size.height } };
 }
 
 function measureTextStyle(

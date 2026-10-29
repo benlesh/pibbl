@@ -2948,50 +2948,58 @@
       "id": "position.containing-block",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "no explicit Yoga-style override; bounded nearest-owner inheritance through direct static Flex chains is covered by the positioning capability",
-      "status": "missing",
-      "unresolvedPolicy": "Implementation direction is authorized; containing-block semantics for transformed and boxless ancestors need exact definitions.",
+      "current": "Positioned Flex, Absolute, Overlay, Flow and Grid select their padding box; static owners pass the nearest logical box through opaque wrappers. Normal/contents Group transforms preserve world geometry without creating a containing block.",
+      "status": "experimental",
+      "unresolvedPolicy": "No additional policy within this implemented alpha contract; aggregate release verification remains separate.",
       "evidence": {
         "positive": [],
         "negative": [],
         "interaction": [],
         "yogaCases": [],
-        "missing": [
-          "transformed ancestor",
-          "boxless ancestor",
-          "absolute descendants"
-        ]
-      }
+        "missing": []
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-containing-block.test.tsx",
+        "packages/core/src/lib/layout/context.ts"
+      ]
     },
     {
       "id": "participation.hidden-and-contents",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "absent",
-      "status": "missing",
-      "unresolvedPolicy": "Hidden resource retention and contents event/identity behavior need a contract.",
+      "current": "Hidden and contents participation preserves logical identity and event ancestry, suspends descendant work and interaction/focus/HTML projection, and retains resources until real removal.",
+      "status": "experimental",
+      "unresolvedPolicy": "No additional policy within this implemented alpha contract; aggregate release verification remains separate.",
       "evidence": {
         "positive": [],
         "negative": [],
         "interaction": [],
         "yogaCases": [],
-        "missing": ["identity", "events", "clips", "visibility changes"]
-      }
+        "missing": []
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-participation.test.tsx",
+        "packages/core/test/layout-workspace-evidence.test.tsx"
+      ]
     },
     {
       "id": "overflow-sizing",
       "target": "preserve",
       "group": "measurement-and-intrinsic",
-      "current": "visible/clip",
-      "status": "partial",
-      "unresolvedPolicy": "Yoga scroll-sizing translation requires a migration policy; this does not add scrolling interaction.",
+      "current": "Visible and clip preserve natural intrinsic contributions and content-based automatic Text minima; clipping affects presentation rather than creating a scroll-sizing container. Yoga scroll conversion fails closed.",
+      "status": "experimental",
+      "unresolvedPolicy": "No additional policy within this implemented alpha contract; aggregate release verification remains separate.",
       "evidence": {
         "positive": ["visible/clip"],
         "negative": [],
         "interaction": [],
         "yogaCases": [],
-        "missing": ["intrinsic size", "automatic minimum interaction"]
-      }
+        "missing": []
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-general-measurement.test.tsx",
+        "packages/layout/src/lib/yoga32.ts"
+      ]
     },
     {
       "id": "measurement.custom-leaf",
@@ -3086,7 +3094,7 @@
       "id": "reactivity.incremental-layout",
       "target": "beyond",
       "group": "reactivity-and-publication",
-      "current": "root-owned shared WASM instance, isolated generational regions, bounded prepared Flex/Grid/Flow roots, arena-free Overlay/Absolute/Layer plans and native Grid/Flow numeric kernels",
+      "current": "root-owned shared WASM instance, isolated generational regions, bounded prepared Flex/Grid/Flow roots, transaction-committed known-root topology, arena-free Overlay/Absolute/Layer plans and native Grid/Flow numeric kernels",
       "status": "experimental",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
@@ -3094,6 +3102,8 @@
         "tooling/test-wasm-wrapped-collections.mjs",
         "tooling/test-built-layout-lifecycle.mjs",
         "tooling/layout-preflight-lab.mjs",
+        "packages/core/src/lib/layout/topology.ts",
+        "packages/core/test/layout-root-invalidation.test.tsx",
         "docs/project-plans/010-layout-engine-rework.md"
       ],
       "evidence": {
@@ -3107,7 +3117,8 @@
           "registered known Layer children and Grid/Flow entry Flex placements carry exact receiver plans into traversal",
           "mounted Grid tracks/cell areas and resolved Flow line/wrap placement use the existing root-owned arena protocol",
           "known Grid/Flow roots adopt the original native plan; Overlay stages aligned host placements without a native arena",
-          "Layer admits pure described known roots using cached primitive receiver and actual root sizing"
+          "Layer admits pure described known roots using cached primitive receiver and actual root sizing",
+          "known prepared roots stage a root-owned parent topology that commits only after successful traversal and releases on disposal"
         ],
         "negative": [
           "failed known-layout preparation releases provisional regions",
@@ -3120,7 +3131,7 @@
         ],
         "yogaCases": [],
         "missing": [
-          "complete role-aware prepared graph",
+          "general role-aware prepared graph beyond known preflight roots",
           "minimal visit proof",
           "all-family root-wide prepared graph and batched topology revisions"
         ]
@@ -3130,7 +3141,7 @@
       "id": "geometry.transactional-publication",
       "target": "preserve",
       "group": "reactivity-and-publication",
-      "current": "bounded known Flex/Grid/Flow/Overlay/Absolute/Layer preparation and finite root-wide HTML projection preflight; general matching publication remains incomplete",
+      "current": "bounded known Flex/Grid/Flow/Overlay/Absolute/Layer preparation, transaction-scoped immutable layout geometry receipts, and finite root-wide HTML projection preflight; general matching publication remains incomplete",
       "status": "experimental",
       "evidence": {
         "positive": [
@@ -3138,7 +3149,8 @@
           "normal traversal adopts prepared regions without another allocation pass",
           "all pending HTML numeric projection work settles before host DOM mutation or callbacks",
           "Grid/Flow settle existing placements before known Flex child preflight; Layer transfers plans across child-instance raster boundary",
-          "direct and opaque-entry Layers prepare known children before raster work; nested boundaries retain both numeric and boundary plans"
+          "direct and opaque-entry Layers prepare known children before raster work; nested boundaries retain both numeric and boundary plans",
+          "successful transactions atomically adopt one immutable root geometry receipt; failed transactions discard staged geometry"
         ],
         "negative": [
           "later known Flex factor/sizing failures prevent earlier opaque evaluation",
@@ -3156,7 +3168,8 @@
         "missing": [
           "general staged geometry across all layout families",
           "nonthrowing matching Canvas/hit/focus/HTML adoption",
-          "fallible publication preflight beyond bounded Flex and HTML numeric geometry"
+          "fallible publication preflight beyond bounded Flex and HTML numeric geometry",
+          "general atomic ledger adoption across all layout families"
         ]
       },
       "evidenceRefs": [
@@ -3165,6 +3178,8 @@
         "tooling/layout-preflight-lab.mjs",
         "docs/project-plans/010-layout-engine-rework.md",
         "packages/core/test/html-box-layers.test.tsx",
+        "packages/core/src/lib/layout/geometry-publication.ts",
+        "packages/core/test/layout-geometry-publication.test.tsx",
         "docs/design/html-box-contract.md"
       ]
     },
@@ -3339,20 +3354,22 @@
       "id": "grid.implicit-tracks-and-auto-placement",
       "target": "beyond",
       "group": "grid-beyond-yoga",
-      "current": "absent",
-      "status": "missing",
+      "current": "Native sparse/dense row/column placement, implicit tracks, mixed explicit starts/spans, automatic fill/fit repetitions and exact Grid arena ownership are implemented.",
+      "status": "experimental",
       "evidence": {
         "positive": [],
         "negative": [],
         "interaction": [],
         "yogaCases": [],
-        "missing": [
-          "dense/sparse",
-          "auto-fill/fit",
-          "overflow",
-          "mixed explicit items"
-        ]
-      }
+        "missing": []
+      },
+      "evidenceRefs": [
+        "packages/core/src/lib/layout/grid.test.ts",
+        "packages/core/test/layout-grid-coupled-measurement.test.tsx",
+        "packages/core/test/layout-native-grid-ownership.test.tsx",
+        "packages/core/test/layout-workspace-evidence.test.tsx"
+      ],
+      "unresolvedPolicy": "No additional policy within this implemented alpha contract; aggregate release verification remains separate."
     },
     {
       "id": "intrinsic-size-vocabulary",
@@ -3378,20 +3395,21 @@
       "id": "migration.owned-tree-snapshots",
       "target": "beyond",
       "group": "migration-and-conformance",
-      "current": "no public equivalent",
-      "status": "missing",
-      "unresolvedPolicy": "Implementation direction is authorized; standalone tree ownership, mutation, calculate/snapshot, and dispose contracts need exact definitions.",
+      "current": "Public @pibbl/layout owns native nodes, topology, immutable geometry snapshots, changed boxes and explicit disposal through a no-Canvas core friend entry; v21 native capability verification is in progress.",
+      "status": "experimental",
+      "unresolvedPolicy": "Final native ABI verification remains in progress.",
       "evidence": {
         "positive": [],
         "negative": [],
         "interaction": [],
         "yogaCases": [],
-        "missing": [
-          "standalone host migration",
-          "Pibbl screen migration",
-          "no Canvas runtime import"
-        ]
-      }
+        "missing": ["Final v21 packed and native lifecycle verification"]
+      },
+      "evidenceRefs": [
+        "packages/layout/src/lib/tree.ts",
+        "packages/layout/test/native-tree.test.ts",
+        "tooling/verify-packed-layout-package.mjs"
+      ]
     },
     {
       "id": "migration.versioned-yoga-conversion",
@@ -3468,5 +3486,25 @@
     "Subgrid and masonry",
     "A drop-in Yoga Node compatibility API",
     "Automatic accessibility, rich text editing, or scrolling widgets"
-  ]
+  ],
+  "integratedImplementation": {
+    "asOf": "2026-10-29",
+    "state": "native-default-verified",
+    "delivery": "Maintainer superseded numbered slices with one integrated implementation batch. Historical capability statuses below are not a current feature-count or a release claim.",
+    "evidenceRefs": [
+      "packages/core/test/layout-general-measurement.test.tsx",
+      "packages/core/test/layout-grid-coupled-measurement.test.tsx",
+      "packages/core/test/layout-participation.test.tsx",
+      "packages/core/test/layout-native-grid-ownership.test.tsx",
+      "packages/core/test/layout-root-invalidation.test.tsx",
+      "packages/core/test/layout-workspace-evidence.test.tsx",
+      "packages/layout/test",
+      "docs/site/learn/guides/standalone-layout-migration.md"
+    ],
+    "remainingReleaseEvidence": [
+      "The full uninterrupted aggregate trust command remains unclaimed; source browser shards, normal-built layout checks, native tests, package gates and static verification passed",
+      "Reconcile historical capability evidence and unsupported profiles with the implementation",
+      "Native default is implemented; general prepared-graph and shared geometry publication admission remain incomplete"
+    ]
+  }
 }

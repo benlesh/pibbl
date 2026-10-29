@@ -92,9 +92,39 @@ export default defineConfig(({ mode }) => ({
     ...(mode === "built" ? [assertBuiltCore()] : []),
   ],
   resolve: {
-    alias:
-      mode === "built"
-        ? []
+    alias: [
+      { find: /^@pibbl\/text$/, replacement: fileURLToPath(new URL("./packages/text/dist/index.mjs", import.meta.url)) },
+      { find: /^@pibbl\/scenarios$/, replacement: fileURLToPath(new URL("./packages/scenarios/src/index.ts", import.meta.url)) },
+      { find: /^@pibbl\/scenarios\/(.+)$/, replacement: fileURLToPath(new URL("./packages/scenarios/src/", import.meta.url)) + "$1.ts" },
+      ...(mode === "built"
+        ? [
+            // Workspace package symlinks may target another checkout. Built-mode
+            // tests must exercise this checkout's published core output.
+            {
+              find: /^@pibbl\/core\/internal\/layout$/,
+              replacement: fileURLToPath(
+                new URL("./packages/core/dist/layout-kernel.mjs", import.meta.url),
+              ),
+            },
+            {
+              find: /^@pibbl\/core\/sync$/,
+              replacement: fileURLToPath(
+                new URL("./packages/core/dist/sync.mjs", import.meta.url),
+              ),
+            },
+            {
+              find: /^@pibbl\/core\/filters$/,
+              replacement: fileURLToPath(
+                new URL("./packages/core/dist/filters.mjs", import.meta.url),
+              ),
+            },
+            {
+              find: /^@pibbl\/core$/,
+              replacement: fileURLToPath(
+                new URL("./packages/core/dist/index.mjs", import.meta.url),
+              ),
+            },
+          ]
         : [
             { find: /^@pibbl\/core\/viz\/inspection$/, replacement: fileURLToPath(new URL("./packages/core/src/features/viz/inspection.ts", import.meta.url)) },
             { find: /^@pibbl\/core\/filters$/, replacement: fileURLToPath(new URL("./packages/core/src/filters.ts", import.meta.url)) },
@@ -106,6 +136,12 @@ export default defineConfig(({ mode }) => ({
               find: /^@pibbl\/core\/viz$/,
               replacement: fileURLToPath(
                 new URL("./packages/core/src/features/viz/index.ts", import.meta.url),
+              ),
+            },
+            {
+              find: /^@pibbl\/core\/internal\/layout$/,
+              replacement: fileURLToPath(
+                new URL("./packages/core/src/layout-kernel.ts", import.meta.url),
               ),
             },
             {
@@ -177,7 +213,8 @@ export default defineConfig(({ mode }) => ({
                 new URL("./packages/core/src/features/physics/2d.ts", import.meta.url),
               ),
             },
-          ],
+          ]),
+    ],
   },
   test: {
     ...(process.env.GITHUB_ACTIONS === "true"

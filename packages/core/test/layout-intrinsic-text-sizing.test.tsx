@@ -15,11 +15,11 @@ import {
   type SystemStyle,
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region.js';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region.js';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded.js';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); vi.restoreAllMocks(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 const near = (actual: number, expected: number, label: string) => expect(Math.abs(actual - expected), label).toBeLessThan(1e-4);
@@ -31,7 +31,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
 type TailStyle = SystemStyle & BoxStyle & FlexItemStyle;
 type TailBox = Readonly<{ x: number; y: number; width: number; height: number; stamp: number }>;
 
-it.runIf(experimentalLayout)('uses Canvas natural runs and word floors for direct Text min/max/fit-content requests in every horizontal direction', async () => {
+it.runIf(nativeLayout)('uses Canvas natural runs and word floors for direct Text min/max/fit-content requests in every horizontal direction', async () => {
   const variants = [
     ['row', 'ltr', false], ['row-reverse', 'ltr', true],
     ['row', 'rtl', true], ['row-reverse', 'rtl', false],
@@ -86,7 +86,7 @@ it.runIf(experimentalLayout)('uses Canvas natural runs and word floors for direc
   }
 });
 
-it.runIf(experimentalLayout)('preserves leading spaces in unwrapped intrinsic runs and handles an empty run', async () => {
+it.runIf(nativeLayout)('preserves leading spaces in unwrapped intrinsic runs and handles an empty run', async () => {
   const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 40; document.body.append(canvas);
   const context = canvas.getContext('2d')!; context.font = '10px monospace';
   const words = signal('   alpha beta'); let tailX = -1;

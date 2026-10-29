@@ -79,14 +79,20 @@ target geometry without creating scrolling.
 
 ### Adjust one direct Flex child without moving its siblings
 
-In experimental layout, a finite row-nowrap Flex can reserve a child's usual
+In native layout, a finite row-nowrap Flex can reserve a child's usual
 slot and then adjust only that child with `position: "relative"`. The four
 physical insets are finite numbers. LTR uses `left` before `right`; RTL uses
 `right` before `left`; `top` uses precedence over `bottom`.
 
 ```tsx
 <Flex
-  style={{ width: 160, height: 60, flexDirection: "row", flexWrap: "nowrap", gap: 10 }}
+  style={{
+    width: 160,
+    height: 60,
+    flexDirection: "row",
+    flexWrap: "nowrap",
+    gap: 10,
+  }}
 >
   <Rectangle
     style={{
@@ -100,7 +106,9 @@ physical insets are finite numbers. LTR uses `left` before `right`; RTL uses
       fill: "tomato",
     }}
   />
-  <Rectangle style={{ width: 50, height: 20, flexGrow: 0, flexShrink: 0, fill: "gold" }} />
+  <Rectangle
+    style={{ width: 50, height: 20, flexGrow: 0, flexShrink: 0, fill: "gold" }}
+  />
 </Flex>
 ```
 

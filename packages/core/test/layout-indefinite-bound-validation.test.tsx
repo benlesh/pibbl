@@ -1,12 +1,12 @@
 import { beforeAll, expect, it, vi } from 'vitest';
 import { createElement, definePrimitive, Flex, measureElement, type FlexStyle, type Length, type SystemStyle } from '@pibbl/core';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 
 const service = { measureText: () => ({ width: 0 }) as TextMetrics };
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 
-it.runIf(experimentalLayout)('validates percentage bounds before rejecting an indefinite containing axis without evaluating providers or allocating resources', () => {
+it.runIf(nativeLayout)('validates percentage bounds before rejecting an indefinite containing axis without evaluating providers or allocating resources', () => {
   interface Style extends SystemStyle { width?: number; height?: number; minWidth?: Exclude<Length, 'auto'>; maxWidth?: Exclude<Length, 'auto'>; minHeight?: Exclude<Length, 'auto'>; maxHeight?: Exclude<Length, 'auto'>; flexBasis?: number; flexGrow?: number; flexShrink?: number }
   const measure = vi.fn(() => ({ status: 'measured' as const, size: { width: 40, height: 20 } }));
   const Leaf = definePrimitive<{}, Style, Style, SystemStyle>(() => undefined, { resolveStyle: () => ({}), measure });

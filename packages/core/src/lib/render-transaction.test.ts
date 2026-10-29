@@ -53,3 +53,13 @@ it("delivers failed completion after failure cleanup without publishing", () => 
   transaction.finish(false);
   expect(calls).toEqual(["cleanup:false", "observer:false"]);
 });
+
+it("preflights all geometry before any publication and fails closed", () => {
+  const calls: string[] = [];
+  const transaction = new RootRenderTransaction();
+  transaction.onPublish(() => calls.push("publish"));
+  transaction.onPreflight(() => { calls.push("validate"); throw new Error("geometry"); });
+  transaction.onFinish(success => calls.push(`finish:${success}`));
+  expect(() => transaction.finish(true)).toThrow("geometry");
+  expect(calls).toEqual(["validate", "finish:false"]);
+});

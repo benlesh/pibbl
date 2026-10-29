@@ -32,7 +32,7 @@ test('alpha publishing rejects stable versions and never promotes latest', () =>
 require('node:fs').appendFileSync(process.env.CALL_LOG, JSON.stringify(process.argv.slice(2)) + '\\n');\n`, { mode: 0o755 });
     }
     const manifests = version => {
-      for (const name of ['core', 'three', 'text', 'pibbl']) {
+      for (const name of ['core', 'three', 'text', 'layout', 'pibbl']) {
         const dir = join(root, 'packages', name);
         mkdirSync(dir, { recursive: true });
         writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: name === 'pibbl' ? name : `@pibbl/${name}`, version }));
@@ -45,8 +45,8 @@ require('node:fs').appendFileSync(process.env.CALL_LOG, JSON.stringify(process.a
     run();
     const calls = readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
     const publishes = calls.filter(args => args[0] === 'publish');
-    assert.equal(publishes.length, 4);
-    for (const name of ['core', 'three', 'text', 'pibbl']) assert.equal(JSON.parse(readFileSync(join(root, 'packages', name, 'package.json'))).pibblAlphaInputHash, 'a'.repeat(64));
+    assert.equal(publishes.length, 5);
+    for (const name of ['core', 'three', 'text', 'layout', 'pibbl']) assert.equal(JSON.parse(readFileSync(join(root, 'packages', name, 'package.json'))).pibblAlphaInputHash, 'a'.repeat(64));
     for (const args of publishes) assert.equal(args.at(-1), 'alpha');
     assert.ok(calls.every(args => args[0] !== 'dist-tag'));
     writeFileSync(log, '');

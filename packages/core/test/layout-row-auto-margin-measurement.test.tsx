@@ -5,7 +5,7 @@ import {
   useCanvasContext, useConst, useLayoutBox,
 } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
@@ -17,7 +17,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
   }));
 }
 
-it.runIf(experimentalLayout)('measures an unwrapped row Text height before a top auto margin without changing its settled main slot', async () => {
+it.runIf(nativeLayout)('measures an unwrapped row Text height before a top auto margin without changing its settled main slot', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const margin = signal<0 | 'auto'>(0), peerFill = signal('#426b61');
   const hits: string[] = [];
@@ -69,7 +69,7 @@ it.runIf(experimentalLayout)('measures an unwrapped row Text height before a top
   ]);
 });
 
-it.runIf(experimentalLayout)('measures a paired wrapped-row leaf before line-local top-auto placement and keeps final-width ownership stable', async () => {
+it.runIf(nativeLayout)('measures a paired wrapped-row leaf before line-local top-auto placement and keeps final-width ownership stable', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const margin = signal<0 | 'auto'>(0), ownerWidth = signal(180), peerFill = signal('#426b61');
   const hits: string[] = [], queries: number[][] = [];
@@ -123,7 +123,7 @@ it.runIf(experimentalLayout)('measures a paired wrapped-row leaf before line-loc
 });
 
 
-it.runIf(experimentalLayout)('measures a known Flex root before line-local top-auto placement in a wrapped row', async () => {
+it.runIf(nativeLayout)('measures a known Flex root before line-local top-auto placement in a wrapped row', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const margin = signal<0 | 'auto'>(0), ownerWidth = signal(180), peerFill = signal('#426b61');
   const hits: string[] = [];

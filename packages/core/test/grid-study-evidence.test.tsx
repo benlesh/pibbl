@@ -3,7 +3,7 @@ import { afterEach, beforeAll, expect, it } from 'vitest';
 import { createExampleMount } from '../../scenarios/src/example-host';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import {
-  experimentalLayout,
+  nativeLayout,
   snapshotWasmLayoutDiagnostics,
 } from '../src/lib/layout/wasm/region';
 
@@ -11,7 +11,7 @@ const mountGridStudy = createExampleMount(GridStudy);
 let controller: { dispose(): void } | undefined;
 
 beforeAll(() => {
-  if (experimentalLayout) prepareLayoutEngineSync();
+  if (nativeLayout) prepareLayoutEngineSync();
 });
 
 afterEach(() => {

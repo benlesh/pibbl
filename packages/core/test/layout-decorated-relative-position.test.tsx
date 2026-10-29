@@ -12,12 +12,12 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
 
 beforeAll(() => {
-  if (experimentalLayout) prepareLayoutEngineSync();
+  if (nativeLayout) prepareLayoutEngineSync();
 });
 
 afterEach(() => {
@@ -39,7 +39,7 @@ function clickCanvas(canvas: HTMLCanvasElement, x: number, y: number): void {
   }
 }
 
-it.runIf(experimentalLayout)('keeps decorated Flex static and relative insets in the content box', async () => {
+it.runIf(nativeLayout)('keeps decorated Flex static and relative insets in the content box', async () => {
   type PlacementStyle = RectStyle & FlexItemStyle;
   const baseline = snapshotWasmLayoutDiagnostics();
   const mode = signal<'static' | 'relative'>('static');

@@ -156,7 +156,7 @@ let schedulerTraceExclusive = false;
 
 setSignalGraphPlanWorkNotifier(syncSignalGraphPlanWork);
 
-// Experimental managed Canvas Layers may depend on a parent layout allocation.
+// Managed Canvas Layers may depend on a parent layout allocation.
 // Weak ownership follows the existing Layer lifetime, not a second scheduler.
 const allocationParents = new WeakMap<PibblInstance, PibblInstance>();
 let allocationParentCount = 0;
@@ -190,7 +190,7 @@ export function requestInstanceRender(
     pendingUpdateParents: false,
   },
 ): number {
-  if (!request.signalInput) invalidateAllocationInputs();
+  if (!request.signalInput) invalidateAllocationInputs(instance);
   const revision = ++nextWorkRevision;
   const target = shouldDeferNewFrameWork()
     ? nextInstanceWork

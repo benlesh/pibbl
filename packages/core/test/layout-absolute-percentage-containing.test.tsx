@@ -2,14 +2,14 @@ import { afterEach, beforeAll, expect, it } from 'vitest';
 import { Flex, Rectangle, signal, type FlexItemStyle, type FlexStyle, type PibblResponsiveStyle, type RectStyle, useCanvasContext, useLayoutBox } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
-it.runIf(experimentalLayout)('forwards percentage absolute insets unchanged and resolves them through static or relative direct Flex ownership once', async () => {
+it.runIf(nativeLayout)('forwards percentage absolute insets unchanged and resolves them through static or relative direct Flex ownership once', async () => {
   type LeafStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   type OwnerStyle = PibblResponsiveStyle<FlexStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -33,7 +33,7 @@ it.runIf(experimentalLayout)('forwards percentage absolute insets unchanged and 
 });
 
 
-it.runIf(experimentalLayout)('forwards signal-owned physical percentage absolute insets once through a direct function leaf', async () => {
+it.runIf(nativeLayout)('forwards signal-owned physical percentage absolute insets once through a direct function leaf', async () => {
   type Style = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const left = signal<`${number}%`>('10%'), top = signal<`${number}%`>('20%'); const boxes = new Map<string, { x: number; y: number; width: number; height: number }>();
   function Probe({ style: _style }: { readonly style: Style }) { const box = useLayoutBox(), matrix = useCanvasContext().getTransform(); boxes.set('absolute', { x: matrix.e, y: matrix.f, width: box.width, height: box.height }); return <Rectangle style={{ width: box.width, height: box.height, fill: '#a63758' }} />; }
@@ -44,7 +44,7 @@ it.runIf(experimentalLayout)('forwards signal-owned physical percentage absolute
 });
 
 
-it.runIf(experimentalLayout)('maps logical insets through the receiving Flex direction while static ownership inherits an outer padding box', async () => {
+it.runIf(nativeLayout)('maps logical insets through the receiving Flex direction while static ownership inherits an outer padding box', async () => {
   type Style = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
   const mode = signal<'static' | 'relative'>('static'), writing = signal<'ltr' | 'rtl'>('rtl');

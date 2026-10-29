@@ -49,7 +49,48 @@ it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])('rejects older or incomplete lay
 });
 
 
-const abiV19Exports: WebAssembly.ModuleExportDescriptor[] = [
+const abiV21Exports: WebAssembly.ModuleExportDescriptor[] = [
+  { name: 'grid_v2_auto_fit_keep', kind: 'function' },
+  { name: 'grid_v2_collapse_auto_fit', kind: 'function' },
+  { name: 'standalone_tree_measure_kind', kind: 'function' },
+
+  { name: 'grid_v2_resize_contributions', kind: 'function' },
+  { name: 'grid_v2_apply_contributions', kind: 'function' },
+
+  { name: 'standalone_tree_resize_grid', kind: 'function' },
+  { name: 'grid_v2_assigned_columns', kind: 'function' },
+  { name: 'grid_v2_assigned_rows', kind: 'function' },
+  { name: 'grid_v2_assign_cells', kind: 'function' },
+  { name: 'grid_v2_create', kind: 'function' },
+  { name: 'grid_v2_dispose', kind: 'function' },
+  { name: 'grid_v2_generation', kind: 'function' },
+  { name: 'grid_v2_place_cells', kind: 'function' },
+  { name: 'grid_v2_resize_cells', kind: 'function' },
+  { name: 'grid_v2_resize_tracks', kind: 'function' },
+  { name: 'grid_v2_resolve_tracks', kind: 'function' },
+  { name: 'standalone_tree_box_count', kind: 'function' },
+  { name: 'standalone_tree_box_height', kind: 'function' },
+  { name: 'standalone_tree_box_id', kind: 'function' },
+  { name: 'standalone_tree_box_width', kind: 'function' },
+  { name: 'standalone_tree_box_x', kind: 'function' },
+  { name: 'standalone_tree_box_y', kind: 'function' },
+  { name: 'standalone_tree_create', kind: 'function' },
+  { name: 'standalone_tree_dispose', kind: 'function' },
+  { name: 'standalone_tree_generation', kind: 'function' },
+  { name: 'standalone_tree_measure_count', kind: 'function' },
+  { name: 'standalone_tree_measure_height_max', kind: 'function' },
+  { name: 'standalone_tree_measure_height_min', kind: 'function' },
+  { name: 'standalone_tree_measure_node', kind: 'function' },
+  { name: 'standalone_tree_measure_width_max', kind: 'function' },
+  { name: 'standalone_tree_measure_width_min', kind: 'function' },
+  { name: 'standalone_tree_prepare', kind: 'function' },
+  { name: 'standalone_tree_prepare_settled_measurements', kind: 'function' },
+  { name: 'standalone_tree_replace', kind: 'function' },
+  { name: 'standalone_tree_resize_children', kind: 'function' },
+  { name: 'standalone_tree_resize_measurements', kind: 'function' },
+  { name: 'standalone_tree_resize_nodes', kind: 'function' },
+  { name: 'standalone_tree_solve', kind: 'function' },
+
   { name: 'memory', kind: 'memory' }, { name: 'solve', kind: 'function' }, { name: 'dispose', kind: 'function' },
   { name: 'arena_create', kind: 'function' }, { name: 'arena_generation', kind: 'function' }, { name: 'arena_dispose', kind: 'function' },
   { name: 'resize_grid', kind: 'function' }, { name: 'resolve_grid_tracks', kind: 'function' },
@@ -59,15 +100,15 @@ const abiV19Exports: WebAssembly.ModuleExportDescriptor[] = [
   { name: 'prepare_intrinsic_main_queries', kind: 'function' },
   { name: 'resize_intrinsic_main', kind: 'function' }, { name: 'resolve_intrinsic_main', kind: 'function' }, { name: 'intrinsic_main_result', kind: 'function' }, { name: 'intrinsic_main_contribution', kind: 'function' },
   { name: 'resolve_intrinsic_main_known_owner', kind: 'function' }, { name: 'intrinsic_main_auto_free', kind: 'function' }, { name: 'place_main_auto_staged', kind: 'function' },
-  { name: 'place_wrap_first_baseline', kind: 'function' }, { name: 'place_first_baseline', kind: 'function' }, { name: 'layout_abi_v19', kind: 'function' }, { name: 'last_wrap_line_count', kind: 'function' }, { name: 'place_last_baseline', kind: 'function' }, { name: 'place_wrap_last_baseline', kind: 'function' }, { name: 'first_wrap_line_count', kind: 'function' },
+  { name: 'place_wrap_first_baseline', kind: 'function' }, { name: 'place_first_baseline', kind: 'function' }, { name: 'layout_abi_v21', kind: 'function' }, { name: 'last_wrap_line_count', kind: 'function' }, { name: 'place_last_baseline', kind: 'function' }, { name: 'place_wrap_last_baseline', kind: 'function' }, { name: 'first_wrap_line_count', kind: 'function' },
 ];
 
-it.each(['last_wrap_line_count', 'place_last_baseline', 'place_wrap_last_baseline', 'first_wrap_line_count', 'place_wrap_first_baseline', 'place_first_baseline', 'prepare_intrinsic_main_queries', 'resize_intrinsic_main', 'resolve_intrinsic_main', 'intrinsic_main_result', 'intrinsic_main_contribution', 'resolve_intrinsic_main_known_owner', 'intrinsic_main_auto_free', 'place_main_auto_staged'])(
-  'rejects ABI v19 when %s is absent',
+it.each(['standalone_tree_prepare_settled_measurements', 'grid_v2_assign_cells', 'grid_v2_create', 'grid_v2_dispose', 'grid_v2_generation', 'grid_v2_place_cells', 'grid_v2_resize_cells', 'grid_v2_resize_tracks', 'grid_v2_resolve_tracks', 'standalone_tree_box_count', 'standalone_tree_box_height', 'standalone_tree_box_id', 'standalone_tree_box_width', 'standalone_tree_box_x', 'standalone_tree_box_y', 'standalone_tree_create', 'standalone_tree_dispose', 'standalone_tree_generation', 'standalone_tree_measure_count', 'standalone_tree_measure_height_max', 'standalone_tree_measure_height_min', 'standalone_tree_measure_node', 'standalone_tree_measure_width_max', 'standalone_tree_measure_width_min', 'standalone_tree_prepare', 'standalone_tree_replace', 'standalone_tree_resize_children', 'standalone_tree_resize_measurements', 'standalone_tree_resize_nodes', 'standalone_tree_solve', 'last_wrap_line_count', 'place_last_baseline', 'place_wrap_last_baseline', 'first_wrap_line_count', 'place_wrap_first_baseline', 'place_first_baseline', 'prepare_intrinsic_main_queries', 'resize_intrinsic_main', 'resolve_intrinsic_main', 'intrinsic_main_result', 'intrinsic_main_contribution', 'resolve_intrinsic_main_known_owner', 'intrinsic_main_auto_free', 'place_main_auto_staged'])(
+  'rejects ABI v21 when %s is absent',
   async absent => {
     vi.resetModules();
     const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
-    vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(abiV19Exports.filter(entry => entry.name !== absent));
+    vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(abiV21Exports.filter(entry => entry.name !== absent));
     expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
     expect(hasReadyLayoutModule()).toBe(false);
   },
@@ -77,7 +118,7 @@ it.each(['last_wrap_line_count', 'place_last_baseline', 'place_wrap_last_baselin
 it('rejects the complete previous ABI before accepting current native final-line membership', async () => {
   vi.resetModules();
   const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
-  const prior = abiV19Exports.filter(entry => entry.name !== 'last_wrap_line_count').map(entry => entry.name === 'layout_abi_v19' ? { ...entry, name: 'layout_abi_v18' } : entry);
+  const prior = abiV21Exports.map(entry => entry.name === 'layout_abi_v21' ? { ...entry, name: 'layout_abi_v20' } : entry);
   vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(prior);
   expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
   expect(hasReadyLayoutModule()).toBe(false);

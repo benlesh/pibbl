@@ -1,3 +1,5 @@
+import { isKnownLayoutType } from '../layout/prepared-root.js';
+import { nativeLayout } from '../layout/wasm/region.js';
 import { allocatedContentBoxStyle } from '../layout/box-sizing.js';
 import { resolveTransitionBinding } from '../transitions/binding.js';
 import { type PreparedQuery } from './responsive.js';
@@ -167,9 +169,10 @@ export function resolveElementStyle<
       definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;
   const positioning = normalized as Readonly<PositioningStyle>;
-  assertExplicitPositionBoundary(positioning, forwarded, isPlacementConsumed(element), context);
-  const hasLeft = positioning.left !== undefined;
-  const hasTop = positioning.top !== undefined;
+  const staticLayout = nativeLayout && positioning.position === 'static' && isKnownLayoutType(element.type);
+  if (!staticLayout) assertExplicitPositionBoundary(positioning, forwarded, isPlacementConsumed(element), context);
+  const hasLeft = !staticLayout && positioning.left !== undefined;
+  const hasTop = !staticLayout && positioning.top !== undefined;
   let positioned = resolved;
   if (definition.backend === CANVAS_2D_BACKEND.token && (hasLeft || hasTop)) {
     const standalone = resolveStandalonePosition(normalized, context);
@@ -260,6 +263,7 @@ function assertResolvedValue(
   seen: Set<object>,
   opaqueProperties: ReadonlySet<string>,
 ): void {
+  if (opaqueProperties.has(property)) return;
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) {
       throw unresolvedDiagnostic(property, value, context, 'must be finite');

@@ -22,18 +22,22 @@ import type {
 } from './types.js';
 import { GLOBAL_STATE } from './global-state.js';
 import { withSignalWriteForbidden } from './signals/graph.js';
+import type { SizingLength } from './style/sizing-length.js';
 
 type DeclaresWhen<S> = S extends unknown ? 'when' extends keyof S ? true : false : never;
 type PrimitiveStyleGuard<S, N, R> = true extends DeclaresWhen<S> | DeclaresWhen<N> | DeclaresWhen<R> ? {
   readonly 'Pibbl: style.when is framework-owned; remove when from the primitive style type': never;
 } : unknown;
 
-type AllocationValue = `${number}%` | 'auto';
+// Any nonnumeric sizing syntax depends on allocation or an intrinsic owner.
+// A primitive must normalize it before its render program receives the style.
+type AllocationValue = Exclude<SizingLength, number | 'stretch'>;
+type StretchSizingValue<S> = S extends unknown ? S[Extract<keyof S, 'width' | 'height' | 'minWidth' | 'maxWidth' | 'minHeight' | 'maxHeight' | 'flexBasis'>] : never;
 type DeclaredStyleValue<S> = S extends unknown
   ? S[Exclude<keyof S, 'custom'>]
   : never;
 type RequiresResolver<S> = [
-  Extract<DeclaredStyleValue<S>, AllocationValue>,
+  Extract<DeclaredStyleValue<S>, AllocationValue> | Extract<StretchSizingValue<S>, 'stretch'>,
 ] extends [never] ? false : true;
 type PrimitiveCapabilitiesInput<
   P,

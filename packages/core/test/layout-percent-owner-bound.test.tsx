@@ -1,16 +1,16 @@
 import { afterEach, beforeAll, expect, it } from 'vitest';
 import { defineLayoutComponent, definePrimitive, Flex, measureElement, Rectangle, type FlexStyle, type PibblController, type SystemStyle } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
 for (const axis of ['row', 'column'] as const) for (const available of [200, Infinity]) for (const own of ['maximum', 'minimum', 'mixed'] as const) {
-  it.runIf(experimentalLayout)(`resolves a ${axis} owner's percentage ${own} before its leaf percentage phases at ${available}`, async () => {
+  it.runIf(nativeLayout)(`resolves a ${axis} owner's percentage ${own} before its leaf percentage phases at ${available}`, async () => {
     const row = axis === 'row', baseline = snapshotWasmLayoutDiagnostics();
     const queries: number[] = [], allocated: number[] = [];
     const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>((_props, style) => {
@@ -44,7 +44,7 @@ for (const axis of ['row', 'column'] as const) for (const available of [200, Inf
   });
 }
 
-it.runIf(experimentalLayout)('validates own bound syntax, sign, arithmetic and resolved conflicts before provider evaluation', () => {
+it.runIf(nativeLayout)('validates own bound syntax, sign, arithmetic and resolved conflicts before provider evaluation', () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   let calls = 0;
   const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle>(() => null, {

@@ -6,17 +6,17 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
 type ProviderStyle = BoxStyle & FlexItemStyle;
 type ResolvedProviderStyle = SystemStyle & { readonly width: number; readonly height: number };
 
-it.runIf(experimentalLayout)('keeps every admitted anchored absolute sizing profile out of a hard wrapped Flex line', async () => {
+it.runIf(nativeLayout)('keeps every admitted anchored absolute sizing profile out of a hard wrapped Flex line', async () => {
   type Mode = 'bounds' | 'paired' | 'aspect' | 'provider-width' | 'provider-height' | 'text-height' | 'text-width' | 'text-both';
   type ProbeStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();

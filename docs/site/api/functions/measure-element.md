@@ -51,7 +51,7 @@ const result = measureElement(element, constraints, measurementService);
 [`Constraints`](#/api/types/layout#constraints) and a [`CanvasMeasurementService`](#/api/types/layout#canvasmeasurementservice) describe the call; its result is a [`MeasureResult`](#/api/types/layout#measureresult). Use declared boxes for ordinary layout rather than assuming visual primitives
 have intrinsic dimensions.
 
-In the experimental layout build, an omitted/automatic-width LTR, unwrapped
+In the default native layout engine, an omitted/automatic-width LTR, unwrapped
 `Flex` can use equal finite `minWidth` and `maxWidth` as an exact row width.
 Definite-main, declared-cross children can then resolve percentage `minWidth` and
 `maxWidth`; the result has that exact width and its natural cross size. Exact

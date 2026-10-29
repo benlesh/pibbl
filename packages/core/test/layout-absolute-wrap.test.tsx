@@ -6,10 +6,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
@@ -18,7 +18,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
   for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { clientX: bounds.left + x, clientY: bounds.top + y, bubbles: true, button: 0 }));
 }
 
-it.runIf(experimentalLayout)('keeps a direct wrapped absolute child out of Flex lines while retaining source order, identity, and cleanup', async () => {
+it.runIf(nativeLayout)('keeps a direct wrapped absolute child out of Flex lines while retaining source order, identity, and cleanup', async () => {
   type Style = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
   const ownerWidth = signal(164);

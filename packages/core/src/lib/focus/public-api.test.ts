@@ -229,6 +229,13 @@ describe('public Pibbl API', () => {
       'Text',
       'VerticalLine',
       'Wedge',
+      'autoFillTracks',
+      'autoFitTracks',
+      'defineLayoutComponent',
+      'fitContent',
+      'minmax',
+      'prepareLayoutEngine',
+      'repeatTracks',
       'affineTransform',
       'arcBendTransform',
       'batch',
@@ -313,7 +320,7 @@ describe('public Pibbl API', () => {
       'wait',
       'wipe',
       'zoom',
-    ]);
+    ].sort());
 
     expect('useEvent' in PIBBL_CORE_ROOT).toBe(false);
     expect(PIBBL_CORE_ROOT.useEventListener).toBeTypeOf('function');

@@ -2,7 +2,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { canvas, controllers } from './helpers.js';
 let restore = () => {};
 afterEach(() => restore());
-it('keeps imports inert, compiles sync once and isolates mutable layout memories', async () => {
+it('keeps imports inert, compiles sync once, and isolates default-native layout memories', async () => {
   const compile = vi.spyOn(WebAssembly, 'compile');
   const NativeModule = WebAssembly.Module, NativeInstance = WebAssembly.Instance;
   let modules = 0;
@@ -23,12 +23,9 @@ it('keeps imports inert, compiles sync once and isolates mutable layout memories
   const first = pibblSync(canvas(), root), second = pibblSync(canvas(), root); controllers.push(first,second);
   driver.flush(0);
   expect(modules).toBe(1);
-  const wasm = import.meta.env.MODE === 'layout-wasm';
-  expect(memories).toHaveLength(wasm ? 2 : 0);
-  if (wasm) {
-    const [a,b] = memories;
-    expect(a).not.toBe(b); expect(a.buffer).not.toBe(b.buffer);
-  }
+  expect(memories).toHaveLength(2);
+  const [a,b] = memories;
+  expect(a).not.toBe(b); expect(a.buffer).not.toBe(b.buffer);
   expect(fetch).not.toHaveBeenCalled();
   first.dispose();
   const {GLOBAL_STATE} = await import('../../src/lib/global-state.js');

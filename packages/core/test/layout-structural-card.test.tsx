@@ -2,12 +2,12 @@ import { WasmFlexNestedIntrinsicExample } from '../../scenarios/src/learning/lay
 import { afterEach, expect, it } from 'vitest';
 import { defineLayoutComponent, Flex, Text, Rectangle, signal, measureElement, useConst, useReaction, useCanvasContext, useLayoutBox, type FlexStyle, type PibblController } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout } from '../src/lib/layout/wasm/region';
+import { nativeLayout } from '../src/lib/layout/wasm/region';
 
 let controller: PibblController | undefined;
 afterEach(() => { controller?.dispose(); controller = undefined; document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-it.runIf(experimentalLayout)('prepares a reusable Card once and moves its footer geometry and target with text', async () => {
+it.runIf(nativeLayout)('prepares a reusable Card once and moves its footer geometry and target with text', async () => {
   const target = document.createElement('canvas'); target.width = 400; target.height = 400;
   document.body.append(target);
   const title = signal('One short title');
@@ -47,7 +47,7 @@ it.runIf(experimentalLayout)('prepares a reusable Card once and moves its footer
   click(moved + 5); expect(hits).toBe(1);
 });
 
-it.runIf(experimentalLayout)('exposes the reusable Card in the nested public example', async () => {
+it.runIf(nativeLayout)('exposes the reusable Card in the nested public example', async () => {
   const target = document.createElement('canvas'); target.width = 760; target.height = 460;
   document.body.append(target);
   controller = pibblSync(target, <WasmFlexNestedIntrinsicExample />);
@@ -123,7 +123,7 @@ it('keeps Card identity while a changed root key remounts owned descendants', as
   expect(cleanups).toBe(2);
 });
 
-it.runIf(experimentalLayout)('settles a structural Card root width before measuring its automatic height', async () => {
+it.runIf(nativeLayout)('settles a structural Card root width before measuring its automatic height', async () => {
   const target = document.createElement('canvas'); target.width = 400; target.height = 400;
   document.body.append(target);
   const width = signal(180);
@@ -155,7 +155,7 @@ it.runIf(experimentalLayout)('settles a structural Card root width before measur
   expect(descriptions).toBe(2);
 });
 
-it.runIf(experimentalLayout)('measures nested structural Cards once each at their settled widths', async () => {
+it.runIf(nativeLayout)('measures nested structural Cards once each at their settled widths', async () => {
   const target = document.createElement('canvas'); target.width = 400; target.height = 400;
   document.body.append(target);
   const width = signal(180);
@@ -196,7 +196,7 @@ it.runIf(experimentalLayout)('measures nested structural Cards once each at thei
   expect([outerDescriptions, innerDescriptions]).toEqual([3, 3]);
 });
 
-it.runIf(experimentalLayout)('keeps the existing measurement cycle guard across structural preparation clones', () => {
+it.runIf(nativeLayout)('keeps the existing measurement cycle guard across structural preparation clones', () => {
   let root = <Flex style={{ width: 164, flexDirection: 'column', minHeight: 0, flexShrink: 0 }}>{null}</Flex>;
   const Cyclic = defineLayoutComponent(() => root);
   root = <Flex style={{ width: 164, flexDirection: 'column', minHeight: 0, flexShrink: 0 }}><Cyclic /></Flex>;

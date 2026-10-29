@@ -2,10 +2,10 @@ import { afterEach, beforeAll, expect, it } from 'vitest';
 import { Flex, Rectangle, definePrimitive, signal, type LayoutBox, type SystemStyle, useCanvasContext, useConst, useLayoutBox } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void { const bounds = canvas.getBoundingClientRect(); for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { clientX: bounds.left + x, clientY: bounds.top + y, bubbles: true, button: 0 })); }
@@ -13,7 +13,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void { const bo
 interface Style extends SystemStyle { width?: number; height?: number | 'auto'; minWidth?: number; minHeight?: number; flexBasis?: number; flexGrow?: number; flexShrink?: number; alignSelf?: 'stretch' | 'flex-start'; fill?: string; padding?: { top: number; bottom: number }; }
 interface Props { readonly name: 'A' | 'B' | 'C'; }
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the allocated wrapped-line extent for a padded stretched opt-out without querying its baseline',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

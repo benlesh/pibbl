@@ -16,11 +16,11 @@ import {
   type SystemStyle,
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region.js';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region.js';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded.js';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
@@ -31,7 +31,7 @@ const invalidPadding: BoxStyle = { padding: fitContent(20) };
 void typeFixture; void invalidPadding;
 type PairProps = { readonly minimum: Signal<number>; readonly maximum: Signal<number>; readonly id: string; readonly onHit: () => void };
 
-it.runIf(experimentalLayout)('uses direct paired min/max contributions for min-content and bounded fit-content bases', async () => {
+it.runIf(nativeLayout)('uses direct paired min/max contributions for min-content and bounded fit-content bases', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   let serial = 0; const stamps = new Map<string, number>();
   const boxes = new Map<string, { x: number; y: number; width: number; height: number }>();
@@ -84,7 +84,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
 }
 
 
-it.runIf(experimentalLayout)('allocates intrinsic bases through numeric grow, shrink and bounds in all horizontal directions', async () => {
+it.runIf(nativeLayout)('allocates intrinsic bases through numeric grow, shrink and bounds in all horizontal directions', async () => {
   const variants = [
     ['row', 'ltr', false], ['row-reverse', 'ltr', true],
     ['row', 'rtl', true], ['row-reverse', 'rtl', false],

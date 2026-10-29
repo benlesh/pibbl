@@ -1,3 +1,4 @@
+import { beginLayoutGeometry } from './layout/geometry-publication.js';
 import { RootRenderTransaction } from './render-transaction.js';
 import {
   clearTempState,
@@ -94,6 +95,7 @@ export function executeRender(
     GLOBAL_STATE.currentPibblInstance = pibblInstance;
     for (const service of pibblInstance.optionalServices.values()) service.beginRender?.();
     GLOBAL_STATE.renderTransaction = renderTransaction;
+    beginLayoutGeometry(pibblInstance, renderTransaction);
     GLOBAL_STATE.currentPibblInstance.renderTimestamp = activeFrameSnapshot.logicalTime;
     GLOBAL_STATE.canvas = canvas;
     const rootNode = arguments.length >= 3 && updatedRoot !== NO_PENDING_ROOT ?

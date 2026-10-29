@@ -1,15 +1,15 @@
 import { afterEach, beforeAll, expect, it } from 'vitest';
 import { definePrimitive, Flex, measureElement, Rectangle, signal, Text, type PibblController, type FlexStyle, type PibblNode, type PibblElement, type PibblResponsiveStyle, type MeasureResult, type SystemStyle } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 const service = { measureText: () => { throw new Error('Numeric provider must not shape text.'); } };
 const controllers: PibblController[] = [];
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 
-for (const axis of ['row', 'column'] as const) it.runIf(experimentalLayout)(`uses the initial max envelope for a paired ${axis} leaf query before the later native percentage cap`, async () => {
+for (const axis of ['row', 'column'] as const) it.runIf(nativeLayout)(`uses the initial max envelope for a paired ${axis} leaf query before the later native percentage cap`, async () => {
   const row = axis === 'row';
   const before = snapshotWasmLayoutDiagnostics();
   const natural = signal(80), owner = signal(200);
@@ -71,7 +71,7 @@ const phases = [
   { name: 'min-and-max', min: 160, max: 160, available: Infinity, cap: 160, floor: 160, queryCap: 40, queryFloor: 160 },
 ];
 for (const axis of ['row', 'column'] as const) for (const phase of phases) for (const bound of ['cap', 'floor'] as const) {
-  it.runIf(experimentalLayout)(`keeps measured ${axis} ${bound} query and continuation phases separate: ${phase.name}`, () => {
+  it.runIf(nativeLayout)(`keeps measured ${axis} ${bound} query and continuation phases separate: ${phase.name}`, () => {
     const row = axis === 'row', natural = bound === 'cap' ? 80 : 20;
     const before = snapshotWasmLayoutDiagnostics(), queries: number[] = [];
     const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>(() => null, {
@@ -103,7 +103,7 @@ for (const axis of ['row', 'column'] as const) for (const phase of phases) for (
 }
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'releases the native query arena for paired-leaf failure, unsupported and cyclic callback outcomes',
   () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -152,7 +152,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses every paired leaf’s own finite cross constraint and rejects out-of-profile direct children before callbacks',
   () => {
     const baseline = snapshotWasmLayoutDiagnostics();

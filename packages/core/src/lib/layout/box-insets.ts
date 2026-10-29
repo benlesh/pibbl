@@ -1,5 +1,5 @@
 import { getLayoutDirection } from './context.js';
-import { experimentalLayout } from './wasm/region.js';
+import { nativeLayout } from './wasm/region.js';
 import { normalizeEdges } from '../style/normalize.js';
 import { layoutDiagnostic, type LayoutDiagnosticContext } from '../style/diagnostics.js';
 import { resolveLength } from '../style/resolve-length.js';
@@ -17,6 +17,14 @@ export function normalizeBoxInsets(style: Readonly<BoxStyle>, context: Readonly<
     throw layoutDiagnostic({ ...context, property: 'borderWidth', value: style.borderWidth, reason: 'combined padding and border insets must be finite' });
   }
   return { top, right, bottom, left };
+}
+
+/** @internal Resolves padding only for positioned containing-box coordinates. */
+export function normalizePaddingInsets(
+  style: Readonly<BoxStyle>,
+  context: Readonly<LayoutDiagnosticContext>,
+): Edges {
+  return numericPadding(style, context);
 }
 
 /** Internal admission check; no inferred percentage reference. */
@@ -91,7 +99,7 @@ function receiverDirection(style: Readonly<BoxStyle>, inherited?: 'ltr' | 'rtl')
   return (style as Readonly<BoxStyle & { layoutDirection?: 'ltr' | 'rtl' }>).layoutDirection ?? inherited ?? getLayoutDirection();
 }
 function requireLogicalPadding(style: Readonly<BoxStyle>, context: Readonly<LayoutDiagnosticContext>): void {
-  if (!experimentalLayout) throw layoutDiagnostic({ ...context, property: style.paddingStart !== undefined ? 'paddingStart' : 'paddingEnd', value: style.paddingStart ?? style.paddingEnd, reason: 'logical padding requires the experimental layout engine' });
+  if (!nativeLayout) throw layoutDiagnostic({ ...context, property: style.paddingStart !== undefined ? 'paddingStart' : 'paddingEnd', value: style.paddingStart ?? style.paddingEnd, reason: 'logical padding requires the experimental layout engine' });
 }
 function validatePaddingInput(value: BoxStyle['padding'], context: Readonly<LayoutDiagnosticContext>): void {
   if (value === undefined || typeof value === 'number' || typeof value === 'string' ||
@@ -122,7 +130,7 @@ function numericPaddingEdge(value: unknown, property: string, context: Readonly<
 
 function numericBorder(style: Readonly<BoxStyle>, context: Readonly<LayoutDiagnosticContext>, inheritedDirection?: 'ltr' | 'rtl'): Edges {
   if (style.borderStartWidth === undefined && style.borderEndWidth === undefined) return normalizeEdges(style.borderWidth, 'borderWidth', context);
-  if (!experimentalLayout) throw layoutDiagnostic({ ...context, property: style.borderStartWidth !== undefined ? 'borderStartWidth' : 'borderEndWidth', value: style.borderStartWidth !== undefined ? style.borderStartWidth : style.borderEndWidth, reason: 'logical layout borders require the experimental layout engine' });
+  if (!nativeLayout) throw layoutDiagnostic({ ...context, property: style.borderStartWidth !== undefined ? 'borderStartWidth' : 'borderEndWidth', value: style.borderStartWidth !== undefined ? style.borderStartWidth : style.borderEndWidth, reason: 'logical layout borders require the experimental layout engine' });
   const direction = receiverDirection(style, inheritedDirection);
   const logicalLeft = direction === 'rtl' ? style.borderEndWidth : style.borderStartWidth;
   const logicalRight = direction === 'rtl' ? style.borderStartWidth : style.borderEndWidth;

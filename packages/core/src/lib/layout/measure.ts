@@ -1,5 +1,6 @@
+import { allocationOwner, setAllocationOwner } from './allocation-revision.js';
 import { isFitContent } from '../style/sizing-length.js';
-import { captureReceiverInputProvision, replayReceiverInputProvision, withReceiverInputProvision, type ReceiverInputProvisionReceipt } from '../signals/input-provision.js';
+import { observeReceiverInputReads, captureReceiverInputProvision, replayReceiverInputProvision, withReceiverInputProvision, type ReceiverInputProvisionReceipt } from '../signals/input-provision.js';
 import type { BoxStyle } from '../style/types.js';
 import { hasPercentageBoxPadding } from './box-insets.js';
 import { contentBoxStyle } from './box-sizing.js';
@@ -82,8 +83,24 @@ export interface PrimitiveMeasurementEntry {
   readonly result: IntrinsicSizesResult | MeasureResult | BaselinesResult;
   readonly mode: 'intrinsic' | 'finite' | 'baseline';
   readonly dependencies: readonly SignalNode<unknown>[];
+  readonly dependencyVersions?: readonly number[];
   readonly inputSnapshot: readonly unknown[] | undefined;
   readonly receiverReceipts?: readonly ConstrainedMeasurementReceipt[];
+}
+function measurementDependenciesUnchanged(entry: PrimitiveMeasurementEntry): boolean {
+  const versions = entry.dependencyVersions;
+  if (!versions || versions.length !== entry.dependencies.length) return false;
+  for (let index = 0; index < versions.length; index++) {
+    const node = entry.dependencies[index]!;
+    node.validate?.();
+    if (node.version !== versions[index]) return false;
+  }
+  return true;
+}
+function measurementDependencyVersions(dependencies: readonly SignalNode<unknown>[]): number[] {
+  const versions: number[] = [];
+  for (let index = 0; index < dependencies.length; index++) versions.push(dependencies[index]!.version);
+  return versions;
 }
 interface PrimitiveMeasurementCache {
   readPrimitiveMeasurement(token: object, key: string): PrimitiveMeasurementEntry | undefined;
@@ -203,14 +220,15 @@ export function measureBaselineElement(
     let receivers = transaction && intrinsicTransactions.get(transaction);
     let entries = options && receivers?.get(options.token);
     let entry = options && (entries?.get(key) ?? options.cache.readPrimitiveMeasurement(options.token, key));
-    if (!entry || entry.mode !== 'baseline' || entry.props !== source.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot)) {
+    if (!entry || !measurementDependenciesUnchanged(entry) || entry.mode !== 'baseline' || entry.props !== source.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot)) {
       options?.recordMeasurement();
       const dependencies: SignalNode<unknown>[] = [];
-      const result = withSignalTracking({ addDependency(node) { if (!dependencies.includes(node)) dependencies.push(node); } }, () =>
+      const addDependency = (node: SignalNode<unknown>) => { if (!dependencies.includes(node)) dependencies.push(node); };
+      const result = observeReceiverInputReads(addDependency, () => withSignalTracking({ addDependency }, () =>
         withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
           measureBaselineInput(element, allocation, constraints, service),
-        )));
-      entry = { props: source.props, key, result, mode: 'baseline', dependencies, inputSnapshot };
+        ))));
+      entry = { props: source.props, key, result, mode: 'baseline', dependencies, dependencyVersions: measurementDependencyVersions(dependencies), inputSnapshot };
       if (options && transaction && inputSnapshot && result.status === 'measured') {
         if (!receivers) { receivers = new WeakMap(); intrinsicTransactions.set(transaction, receivers); }
         if (!entries) { entries = new Map(); receivers.set(options.token, entries); }
@@ -309,7 +327,7 @@ function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly
     let entries = options && receivers?.get(options.token);
     let entry = options && (entries?.get(key) ?? options.cache.readPrimitiveMeasurement(options.token, key));
     const entryMode = intrinsic ? 'intrinsic' : 'finite';
-    if (!entry || entry.mode !== entryMode || entry.props !== element.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot) || prepared && entry.receiverReceipts === undefined) {
+    if (!entry || !measurementDependenciesUnchanged(entry) || entry.mode !== entryMode || entry.props !== element.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot) || prepared && entry.receiverReceipts === undefined) {
       options?.recordMeasurement();
       const dependencies: SignalNode<unknown>[] = [];
       const trace: ConstrainedMeasurementTrace | undefined = prepared ? {
@@ -319,9 +337,10 @@ function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly
         measureElementInternal(element, constraints, service, context, true) :
         measureElementInternal(element, constraints, service, context, false, true),
       ));
-      const result = withSignalTracking({ addDependency(node) { if (!dependencies.includes(node)) dependencies.push(node); } }, () =>
-        trace ? withConstrainedMeasurementTrace(trace, evaluate) : evaluate());
-      entry = { props: element.props, key, result, mode: entryMode, dependencies, inputSnapshot,
+      const addDependency = (node: SignalNode<unknown>) => { if (!dependencies.includes(node)) dependencies.push(node); };
+      const result = observeReceiverInputReads(addDependency, () => withSignalTracking({ addDependency }, () =>
+        trace ? withConstrainedMeasurementTrace(trace, evaluate) : evaluate()));
+      entry = { props: element.props, key, result, mode: entryMode, dependencies, dependencyVersions: measurementDependencyVersions(dependencies), inputSnapshot,
         ...(trace?.cacheable ? { receiverReceipts: trace.receipts } : {}) };
       if (options && transaction && inputSnapshot && result.status === 'measured' && (!trace || trace.cacheable)) {
         if (!receivers) { receivers = new WeakMap(); intrinsicTransactions.set(transaction, receivers); }
@@ -521,6 +540,7 @@ function measureElementInternal(
 
 /** @internal Shared pure measurement preparation; never lends a mounted render context. */
 export function withIsolatedRenderState<T>(work: () => T): T {
+  const previousAllocationOwner = setAllocationOwner(allocationOwner());
   const snapshot = {
     currentPibblInstance: GLOBAL_STATE.currentPibblInstance,
     componentRefs: GLOBAL_STATE.componentRefs,
@@ -549,6 +569,7 @@ export function withIsolatedRenderState<T>(work: () => T): T {
     return work();
   } finally {
     Object.assign(GLOBAL_STATE, snapshot);
+    setAllocationOwner(previousAllocationOwner);
   }
 }
 

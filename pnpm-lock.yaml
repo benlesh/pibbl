@@ -192,6 +192,12 @@ importers:
         specifier: 0.28.20
         version: 0.28.20
 
+  packages/layout:
+    devDependencies:
+      '@pibbl/core':
+        specifier: workspace:*
+        version: link:../core
+
   packages/pibbl:
     dependencies:
       '@pibbl/core':

@@ -80,6 +80,8 @@ export type EdgeValues<T extends number | Percentage = number> =
  * @see {@link RectStyle}
  */
 export interface BoxStyle extends SystemStyle {
+  /** Positive finite width/height ratio. A declared definite axis derives the automatic axis before its bounds; boxSizing selects content or border geometry. See {@link resolveBox}. */
+  aspectRatio?: number;
   /** Selects whether dimensions, bounds and Flex basis include padding and layout borders. Defaults to content-box.
    * Border-box content floors at zero and the outer box floors at total axis padding plus layout borders.
    * Painted stroke widths remain independent. See {@link ResolvedBoxStyle}.
@@ -89,14 +91,14 @@ export interface BoxStyle extends SystemStyle {
   width?: SizingLength;
   /** Vertical extent in the units of the containing geometry or surface. See {@link SizingLength}. */
   height?: SizingLength;
-  /** Minimum permitted width. See {@link Length}. */
-  minWidth?: Exclude<Length, 'auto'>;
-  /** Maximum permitted width. See {@link Length}. */
-  maxWidth?: Exclude<Length, 'auto'>;
+  /** Minimum permitted horizontal width. Finite horizontal Flex intrinsic owners also accept intrinsic sizing requests; automatic remains invalid. See {@link SizingLength}. */
+  minWidth?: Exclude<SizingLength, 'auto'>;
+  /** Maximum permitted horizontal width. Finite horizontal Flex intrinsic owners also accept intrinsic sizing requests; automatic remains invalid. See {@link SizingLength}. */
+  maxWidth?: Exclude<SizingLength, 'auto'>;
   /** Minimum permitted height. See {@link Length}. */
-  minHeight?: Exclude<Length, 'auto'>;
+  minHeight?: Exclude<SizingLength, 'auto'>;
   /** Maximum permitted height. See {@link Length}. */
-  maxHeight?: Exclude<Length, 'auto'>;
+  maxHeight?: Exclude<SizingLength, 'auto'>;
   /** Padding inside layout borders. Experimental allocated Flex percentages use owner content width for every edge. See {@link EdgeValues}, {@link Percentage}. */
   padding?: EdgeValues<number | Percentage>;
   /** Nonnegative inline-start padding overriding its physical padding edge. Experimental percentages require an allocated Flex owner and use its content width. See {@link BoxStyle}. */

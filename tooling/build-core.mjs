@@ -5,18 +5,16 @@ import { resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../packages/core/', import.meta.url));
-const experimental = process.argv.includes('--layout-wasm');
-const output = experimental ? '.layout-wasm-package/dist' : 'dist';
-const defines = { __PIBBL_LAYOUT_WASM__: String(experimental) };
-const entries = ['index', 'sync', 'internal', 'types', 'filters', 'jsx-runtime', 'jsx-dev-runtime'];
+const privateOutput = process.argv.includes('--layout-wasm');
+const output = privateOutput ? '.layout-wasm-package/dist' : 'dist';
+const entries = ['index', 'sync', 'internal', 'layout-kernel', 'types', 'filters', 'jsx-runtime', 'jsx-dev-runtime'];
 const features = ['machines/index', 'machines/animation', 'sprites/index', 'sprites/formats/aseprite', 'sprites/formats/texture-packer', 'particles/index', 'viz/index', 'viz/inspection', 'textures/index', 'physics/2d', 'physics/2d-geometry', 'physics/2d-testing'];
-// Preserve module boundaries and one shared runtime; only the private upstream
-// engine is bundled. Root/geometry entry graphs never reach its initialization.
+// Preserve module boundaries and one shared runtime. Root/geometry entry graphs
+// never reach native layout initialization until a layout owner is needed.
 const graph = await build({
   absWorkingDir: root,
   entryPoints: [...entries, ...features.map(entry => `features/${entry}`)].map(entry => `src/${entry}.ts`),
   bundle: true, splitting: true, format: 'esm', platform: 'neutral', target: 'esnext',
-  define: defines,
   external: ['@dimforge/rapier2d-compat'],
   outdir: output, write: false, metafile: true, logLevel: 'silent',
 });
@@ -25,14 +23,9 @@ await build({
   entryPoints: Object.keys(graph.metafile.inputs).map(path => resolve(root, path)),
   outbase: 'src', outdir: output, bundle: false, format: 'esm', platform: 'neutral',
   target: 'esnext', sourcemap: true, logLevel: 'warning',
-  define: defines,
   plugins: [{
     name: 'private-rapier-engine',
     setup(builder) {
-      builder.onLoad({ filter: /lib\/layout\/wasm\/region\.ts$/ }, async ({ path }) => ({
-        contents: (await readFile(path, 'utf8')).replace('const buildEnvironment = import.meta.env;', 'const buildEnvironment = undefined;'),
-        loader: 'ts',
-      }));
       builder.onLoad({ filter: /features\/physics\/lib\/2d\/world\/rapier\.ts$/ }, async ({ path }) => ({
         contents: (await readFile(path, 'utf8')).replace('"@dimforge/rapier2d-compat"', '"./rapier-engine.js"'),
         loader: 'ts',

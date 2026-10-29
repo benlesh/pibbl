@@ -6,17 +6,17 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
 type Style = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
 type Box = { x: number; y: number; width: number; height: number; stamp: number };
 
-it.runIf(experimentalLayout)('maps direct absolute logical insets to the receiving Flex direction before physical placement and admitted sizing', async () => {
+it.runIf(nativeLayout)('maps direct absolute logical insets to the receiving Flex direction before physical placement and admitted sizing', async () => {
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type Mode = 'fixed' | 'paired' | 'aspect' | 'provider';
   type PrimitiveStyle = BoxStyle & FlexItemStyle;
@@ -65,7 +65,7 @@ it.runIf(experimentalLayout)('maps direct absolute logical insets to the receivi
   expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('forwards logical absolute inset signals exactly once and keeps zero logical precedence over physical insets', async () => {
+it.runIf(nativeLayout)('forwards logical absolute inset signals exactly once and keeps zero logical precedence over physical insets', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const direction = signal<'ltr' | 'rtl'>('ltr');
   const start = signal<'10%' | 0>('10%');
@@ -85,7 +85,7 @@ it.runIf(experimentalLayout)('forwards logical absolute inset signals exactly on
 });
 
 
-it.runIf(experimentalLayout)('consumes a forwarded logical style signal once while its edge and owner direction change', async () => {
+it.runIf(nativeLayout)('consumes a forwarded logical style signal once while its edge and owner direction change', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const direction = signal<'ltr' | 'rtl'>('ltr'), ownerWidth = signal(204);
   const authored = signal<Style>({ position: 'absolute', width: 50, height: 20, left: 30, right: 30, insetStart: 0, top: 8, minWidth: 0, minHeight: 0 });

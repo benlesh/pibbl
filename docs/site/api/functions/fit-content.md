@@ -22,7 +22,7 @@ main axis. The selected content width is
 `min(maxContent.width, max(minContent.width, limit))`; min-content may exceed the
 limit. Explicit numeric maximum bounds remain hard clamps during allocation.
 
-In the experimental layout build, direct paired-measurable children of finite
+In the default native layout engine, direct paired-measurable children of finite
 horizontal nowrap Flex owners, and built-in Canvas Text in those owners, can use this value as `width` or `flexBasis`.
 A non-auto flex basis takes precedence over width. Existing growth, shrinkage and
 numeric bounds apply after the intrinsic basis is selected. Final cross size uses

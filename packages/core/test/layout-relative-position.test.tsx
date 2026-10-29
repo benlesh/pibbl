@@ -13,12 +13,12 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
 
 beforeAll(() => {
-  if (experimentalLayout) prepareLayoutEngineSync();
+  if (nativeLayout) prepareLayoutEngineSync();
 });
 
 afterEach(() => {
@@ -40,7 +40,7 @@ function clickCanvas(canvas: HTMLCanvasElement, x: number, y: number): void {
   }
 }
 
-it.runIf(experimentalLayout)('keeps static and relative Flex insets coherent across slots, focus, and hits', async () => {
+it.runIf(nativeLayout)('keeps static and relative Flex insets coherent across slots, focus, and hits', async () => {
   type PlacementStyle = RectStyle & FlexItemStyle;
 
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -176,7 +176,7 @@ it.runIf(experimentalLayout)('keeps static and relative Flex insets coherent acr
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('positions direct Rectangle receivers once while preserving the next slot', async () => {
+it.runIf(nativeLayout)('positions direct Rectangle receivers once while preserving the next slot', async () => {
   const mode = signal<'static' | 'relative'>('static');
   const hits: string[] = [];
   const canvas = document.createElement('canvas'); canvas.width = 160; canvas.height = 60; document.body.append(canvas);
@@ -195,7 +195,7 @@ it.runIf(experimentalLayout)('positions direct Rectangle receivers once while pr
 });
 
 
-it.runIf(experimentalLayout)('forwards a direct-Flex relative style exactly once through a function child', async () => {
+it.runIf(nativeLayout)('forwards a direct-Flex relative style exactly once through a function child', async () => {
   const mode = signal<'static' | 'relative'>('static');
   const hits: string[] = [];
   function Forwarded({ style }: { readonly style: PibblResponsiveStyle<RectStyle & FlexItemStyle> }) {
@@ -215,7 +215,7 @@ it.runIf(experimentalLayout)('forwards a direct-Flex relative style exactly once
 });
 
 
-it.runIf(experimentalLayout)('consumes forwarded mode and opposite-only insets once', async () => {
+it.runIf(nativeLayout)('consumes forwarded mode and opposite-only insets once', async () => {
   function Forwarded({ style }: { readonly style: PibblResponsiveStyle<RectStyle & FlexItemStyle> }) {
     return <Rectangle style={{ ...style, fill: '#19375b' }} />;
   }
@@ -232,7 +232,7 @@ it.runIf(experimentalLayout)('consumes forwarded mode and opposite-only insets o
   expect([...canvas.getContext('2d')!.getImageData(63, 11, 1, 1).data]).toEqual([0, 0, 0, 0]);
 });
 
-it.runIf(experimentalLayout)('preserves physical static and relative final boxes through all finite nowrap main directions', async () => {
+it.runIf(nativeLayout)('preserves physical static and relative final boxes through all finite nowrap main directions', async () => {
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type Directionality = 'ltr' | 'rtl';
   type PlacementStyle = RectStyle & FlexItemStyle;

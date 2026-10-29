@@ -1,5 +1,5 @@
 import { hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
-import { experimentalLayout } from './wasm/region.js';
+import { nativeLayout } from './wasm/region.js';
 import { registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { getStyleMeasurementMode, preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -24,8 +24,9 @@ import {
   placeDirectChildren,
   resolveContainerBox,
   resolveDirectChildBox,
+  measureUnionIntrinsic,
 } from './absolute.js';
-import { pushLayoutBox } from './context.js';
+import { pushLayoutBox, resolvePositionedContainingBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import type { LayoutBox } from './types.js';
@@ -57,8 +58,12 @@ export interface OverlayProps extends PibblStructuralEventProps {
   children: PibblNodeInput;
 }
 
+// Parent input is private metadata, not a recursively validated resolved value.
+const OVERLAY_CONTAINING_BOX_STYLE = Symbol('pibbl.overlay-containing-box-style');
+
 interface ResolvedOverlayStyle extends SystemStyle {
   box: ResolvedBoxStyle;
+  [OVERLAY_CONTAINING_BOX_STYLE]: Readonly<OverlayStyle>;
   overflow: 'visible' | 'clip';
   alignItems: OverlayAlignment;
   justifyItems: OverlayAlignment;
@@ -70,7 +75,7 @@ function renderOverlay(
   ctx: RenderingContext2D,
 ) {
   wireStructuralEvents(props);
-  const ordinaryChildren = experimentalLayout ? undefined : prepareLayoutChildren(props.children, 'Overlay');
+  const ordinaryChildren = nativeLayout ? undefined : prepareLayoutChildren(props.children, 'Overlay');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -80,12 +85,19 @@ function renderOverlay(
     width: content.width,
     height: content.height,
   });
-  const releaseLayout = pushLayoutBox(localContent);
+  const releaseLayout = pushLayoutBox(localContent, {
+    logicalOffset: content,
+    containingBlock: resolvePositionedContainingBox(
+      style[OVERLAY_CONTAINING_BOX_STYLE],
+      localContent,
+      'Overlay',
+    ),
+  });
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
 
-  const prepared = experimentalLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
+  const prepared = nativeLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
   const children = prepared?.children ?? ordinaryChildren ?? prepareLayoutChildren(props.children, 'Overlay');
-  const placements = prepared?.placements ?? (experimentalLayout ? prepareOverlayPlacements(children, localContent, style) : undefined);
+  const placements = prepared?.placements ?? (nativeLayout ? prepareOverlayPlacements(children, localContent, style) : undefined);
   let placementIndex = 0;
   let occurrence = 0;
   return placeDirectChildren(
@@ -93,7 +105,7 @@ function renderOverlay(
     localContent,
     (child, childOccurrence) => {
       const placement = placements ? placements[placementIndex++] : resolveOverlayChildPlacement(localContent, child, style, getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, occurrence++));
-      if (experimentalLayout && !prepared) preparePlacedKnownLayout(placement.element, childOccurrence);
+      if (nativeLayout && !prepared) preparePlacedKnownLayout(placement.element, childOccurrence);
       return placement;
     },
     style.overflow,
@@ -118,17 +130,19 @@ export const Overlay = definePrimitive<
 >(renderOverlay, {
   childInput: 'structural',
   resolveStyle: (style, context) => {
-    if (experimentalLayout && hasPercentageBoxPadding(style)) {
+    if (nativeLayout && hasPercentageBoxPadding(style)) {
       style = resolveAllocatedInsets(style, { width: context.percentageBasis.width,
         context: { ...context, component: 'Overlay', algorithm: 'overlay' } });
     }
     return {
       box: resolveContainerBox(style, context, 'Overlay', 'overlay'),
+      [OVERLAY_CONTAINING_BOX_STYLE]: style,
       overflow: style.overflow ?? 'visible',
       alignItems: style.alignItems ?? 'stretch',
       justifyItems: style.justifyItems ?? 'stretch',
     };
   },
+  measureIntrinsic: (input) => measureUnionIntrinsic(input, 'Overlay'),
 });
 
 function prepareOverlayPlacements(children: readonly PibblElement<any>[], content: Readonly<LayoutBox>, alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>>): { box: LayoutBox; element: PibblElement<any> }[] {
@@ -138,16 +152,26 @@ function prepareOverlayPlacements(children: readonly PibblElement<any>[], conten
   }
   return placements;
 }
-if (experimentalLayout) registerKnownLayoutPreflight(Overlay, (element, style, content, receiver, slot) => {
+if (nativeLayout) registerKnownLayoutPreflight(Overlay, (element, style, content, receiver, slot) => {
   // The registry owns this structural slot; Overlay needs no numeric arena.
   const previous = GLOBAL_STATE.primitiveReceiverToken;
   GLOBAL_STATE.primitiveReceiverToken = receiver;
+  const releaseLayout = pushLayoutBox(content, {
+    containingBlock: resolvePositionedContainingBox(
+      style as Readonly<OverlayStyle>,
+      content,
+      'Overlay',
+    ),
+  });
   try {
     const children = prepareLayoutChildren(element.props.children, 'Overlay');
     const plan: PreparedLayoutPlan = { content, children, placements: prepareOverlayPlacements(children, content, style as Readonly<OverlayStyle>) };
     prepareKnownLayoutDescendants(plan, slot);
     stagePreparedLayoutPlan(slot, plan);
-  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
+  } finally {
+    releaseLayout();
+    GLOBAL_STATE.primitiveReceiverToken = previous;
+  }
 });
 
 export function placeOverlayChild(
@@ -168,7 +192,7 @@ function resolveOverlayChildPlacement(
   let item = preparedStyleValue(prepared) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
-  if (experimentalLayout && GLOBAL_STATE.currentPibblInstance && getStyleMeasurementMode() === undefined && hasPercentageBoxPadding(item)) {
+  if (nativeLayout && GLOBAL_STATE.currentPibblInstance && getStyleMeasurementMode() === undefined && hasPercentageBoxPadding(item)) {
     item = resolveAllocatedInsets(item, { width: container.width, context: { component: child.type.name || 'Anonymous', algorithm: 'overlay' } });
   }
   assertSupportedChildPosition('Overlay', child, item, false, false);

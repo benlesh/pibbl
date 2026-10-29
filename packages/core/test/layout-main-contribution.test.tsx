@@ -1,16 +1,16 @@
 import { afterEach, beforeAll, expect, it } from 'vitest';
 import { defineLayoutComponent, definePrimitive, Flex, measureElement, Rectangle, signal, type FlexStyle, type PibblController, type SystemStyle } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
 for (const axis of ['row', 'column'] as const) for (const maximum of [160, '75%'] as const) for (const described of [false, true]) {
-  it.runIf(experimentalLayout)(`keeps a ${described ? 'described' : 'direct'} ${axis} owner's main contribution distinct from final content under max${maximum}`, async () => {
+  it.runIf(nativeLayout)(`keeps a ${described ? 'described' : 'direct'} ${axis} owner's main contribution distinct from final content under max${maximum}`, async () => {
     const row = axis === 'row', baseline = snapshotWasmLayoutDiagnostics();
     const queries: number[] = [], allocated: number[] = [];
     const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>((_props, style) => {
@@ -56,7 +56,7 @@ for (const axis of ['row', 'column'] as const) for (const maximum of [160, '75%'
   });
 }
 
-it.runIf(experimentalLayout)('keeps query roles separate across parent direction changes and provider-only updates', async () => {
+it.runIf(nativeLayout)('keeps query roles separate across parent direction changes and provider-only updates', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const direction = signal<'row' | 'column'>('column'), natural = signal(80);
   const queries: number[] = [], allocated: number[] = [];

@@ -2,11 +2,18 @@ import type { PibblRenderTransaction } from "./types.js";
 
 /** Root-wide publications and ordinary commit callbacks precede completion observers. */
 export class RootRenderTransaction implements PibblRenderTransaction {
+  private preflights = new Set<() => void>();
   private publications = new Set<() => void>();
   private callbacks = new Set<(success: boolean) => void>();
   private afterFinishCallbacks = new Set<(success: boolean) => void>();
   private result: boolean | undefined;
   private afterFinishDelivered = false;
+
+  onPreflight(callback: () => void): void {
+    if (this.result !== undefined) {
+      if (this.result) callback();
+    } else this.preflights.add(callback);
+  }
 
   onPublish(callback: () => void): void {
     if (this.result !== undefined) {
@@ -30,6 +37,13 @@ export class RootRenderTransaction implements PibblRenderTransaction {
   finish(success: boolean): void {
     if (this.result !== undefined) return;
     const errors: unknown[] = [];
+    if (success) {
+      for (const preflight of this.preflights) {
+        try { preflight(); }
+        catch (error) { errors.push(error); success = false; break; }
+      }
+    }
+    this.preflights.clear();
     if (success) {
       for (const publish of this.publications) {
         try {

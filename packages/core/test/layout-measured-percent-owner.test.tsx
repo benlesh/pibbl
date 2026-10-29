@@ -17,11 +17,11 @@ import {
   type Signal,
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 const service = { measureText: (value: string) => ({ width: value.length * 10 }) as TextMetrics };
@@ -30,7 +30,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
   for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: bounds.left + x, clientY: bounds.top + y }));
 }
 
-for (const axis of ['row', 'column'] as const) it.runIf(experimentalLayout)(`stages a nonexact ${axis} percentage cap from provisional owner geometry into final Flex placement`, async () => {
+for (const axis of ['row', 'column'] as const) it.runIf(nativeLayout)(`stages a nonexact ${axis} percentage cap from provisional owner geometry into final Flex placement`, async () => {
   const horizontal = axis === 'row';
   const row = (fill: string | Signal<string>, hits?: string[]) => <Flex key="row" style={{ width: horizontal ? 'auto' : 20, height: horizontal ? 20 : 'auto', maxWidth: horizontal ? 160 : undefined, maxHeight: horizontal ? undefined : 160, minWidth: 0, minHeight: 0, flexBasis: 20, flexGrow: 0, flexShrink: 0, flexDirection: axis, flexWrap: 'nowrap', alignItems: 'flex-start' }}>
     <Rectangle key="A" onClick={() => hits?.push('A')} style={{ width: horizontal ? 80 : 20, height: horizontal ? 20 : 80, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, maxWidth: horizontal ? '25%' : undefined, maxHeight: horizontal ? undefined : '25%', fill: '#b63d3d', cursor: 'pointer' }} />
@@ -74,7 +74,7 @@ const ownerCases = [
   { name: 'min-and-max', min: 160, max: 160, available: Infinity, cap: [160, 40], floor: [160, 80] },
 ];
 for (const axis of ['row', 'column'] as const) for (const fixture of ownerCases) for (const bound of ['cap', 'floor'] as const) {
-  it.runIf(experimentalLayout)(`measures staged percentage ${bound}: ${axis}, ${fixture.name}`, () => {
+  it.runIf(nativeLayout)(`measures staged percentage ${bound}: ${axis}, ${fixture.name}`, () => {
     const horizontal = axis === 'row';
     const root = <Flex style={{ width: horizontal ? 'auto' : 20, height: horizontal ? 20 : 'auto',
       minWidth: horizontal ? fixture.min : undefined, maxWidth: horizontal ? fixture.max : undefined,
@@ -99,7 +99,7 @@ for (const axis of ['row', 'column'] as const) for (const fixture of ownerCases)
 }
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'rejects unsupported staged percentage inputs before callbacks and releases every transient native resource',
   () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -155,7 +155,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)('rebuilds staged bounds for reordered, removed and signal-updated numeric children', async () => {
+it.runIf(nativeLayout)('rebuilds staged bounds for reordered, removed and signal-updated numeric children', async () => {
   const before = snapshotWasmLayoutDiagnostics(), order = signal<'normal' | 'reverse' | 'only-b'>('normal');
   const limit = signal<Percentage>('25%'), hits: string[] = [];
   const a = <Rectangle key="A" onClick={() => hits.push('A')} style={{ width: 80, height: 20, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, maxWidth: limit, fill: '#b63d3d' }} />;
@@ -187,7 +187,7 @@ it.runIf(experimentalLayout)('rebuilds staged bounds for reordered, removed and 
 });
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'stages numeric percentage bounds through a described Flex owner, including a paired owner measurement callback',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

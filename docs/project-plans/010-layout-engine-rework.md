@@ -1,6 +1,59 @@
-# 010 — Experimental layout engine rework
+# 010 — Native layout engine rework
 
-## Current checkpoint and single next slice — 2026-10-28
+## Native-default implementation batch — 2026-10-29
+
+The native layout engine is now the default runtime path. Applications do not
+select an experimental layout build or a private layout package. The maintainer
+superseded the numbered-slice workflow: implement the remaining work together,
+then verify it. The numbered checkpoints below are historical. They do not
+select the next task or describe the current implementation.
+
+This batch adds shared intrinsic sizing across layout families, final-width Grid
+row measurement, native implicit/automatic Grid tracks and placement, aspect-ratio
+box inference, hidden/contents participation with retained resource ownership,
+root-scoped role-aware invalidation, exact native Grid teardown, and the standalone
+`@pibbl/layout` owned-tree and versioned Yoga conversion package.
+
+The runnable integrated example is
+`http://127.0.0.1:5192/#/examples/layout/wasm-layout-workspace`.
+It combines automatic Grid, nested Flex and Flow, Text reflow, keyboard/click
+targets, and preserved sidebar/card identities through resize and hide/restore.
+Its public automated interaction test passes. Headless Studio interaction and
+wide/narrow rendering checks also pass without page errors.
+
+Current Node24.15.0/pnpm11.21.0/Chromium verification covers all 38 browser
+shards after focused repairs: 594 files passed and 3 skipped; 5,469 tests passed
+and 20 skipped, with no remaining failures or unhandled errors. The final
+normal-built layout run passed 7 suites: 445 tests passed, 8 pending, 0 failed.
+The native Rust suite passed all 73 tests. The 150,619-byte WASM artifact passed
+source-fingerprint and binary-integrity checks; SHA256 is
+`585f7d5369b8ef0c1c4b4fcc9d1c7c9f32f1836b03c1305316ef07e622cfb83a`.
+
+TypeScript, ESLint, repository formatting, documentation/catalog checks, all 13
+release-tooling tests, the normal published-core build, normal native package
+smoke, packed standalone-layout consumer, and normal Studio production build
+passed. Browser verification used the repository's sharded discovery and
+`corepack pnpm@11.21.0 --config.verify-deps-before-run=false exec vitest run
+--browser.headless --maxWorkers=1 --shard=N/38`, with repaired shards rerun.
+These are fresh proportional checks, not a claim that the complete `trust`
+command ran uninterrupted.
+
+The native-default transition is implemented and verified; unrestricted Yoga
+parity is not claimed. Root-owned known-layout topology now commits parent-edge
+batches and releases empty owners. Logical geometry receipts publish immutable
+scalar-node snapshots and changed boxes only after successful preflight. They do
+not complete a general role-aware dependency graph, minimal-visit propagation,
+or unified Canvas/hit/focus/HTML geometry adoption. Those architectural
+requirements remain open in the capability manifest.
+
+Final default-mode repairs preserve nested measurement dependencies during cache
+validation, avoid retaining component resources in geometry snapshots, restore
+standalone Layer scheduling and failure isolation, and defer allocation-dependent
+Layer redraws only when actual parent allocation or prepared numeric descendants
+require it. Retained Layer metadata from a previous transaction is prepared anew;
+current-transaction duplicate or mismatched plans still reject.
+
+## Historical checkpoint and slice record
 
 Public lesson companion for142–144: physical percentage placement combines
 natural-height wrapping Text, a toggled static/relative card and an absolute

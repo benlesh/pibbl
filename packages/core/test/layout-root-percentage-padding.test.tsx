@@ -15,7 +15,7 @@ import {
   useLayoutBox,
 } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
@@ -26,7 +26,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
 }
 
 for (const family of ['Absolute', 'Overlay'] as const) {
-  it.runIf(experimentalLayout)(`resolves root ${family} percentage padding from the 200px allocation`, async () => {
+  it.runIf(nativeLayout)(`resolves root ${family} percentage padding from the 200px allocation`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const padding = signal<0 | 20 | '10%'>(0), width = signal(200), fill = signal('#8a3248');
     const boxes = new Map<string, LayoutBox>();

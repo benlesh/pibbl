@@ -183,6 +183,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/rendered-series-inspection.md",
   "docs/site/api/functions/financial-series.md",
   "docs/site/api/functions/fit-content.md",
+  "docs/site/api/functions/grid-tracks.md",
   "docs/site/api/functions/interpolate-x.md",
   "docs/site/api/functions/linear-interpolation.md",
 
@@ -324,6 +325,9 @@ const currentMarkdownPaths = [
   "packages/core/src/features/particles/README.md",
   "packages/core/src/features/physics/README.md",
   "packages/three/README.md",
+  "packages/layout/README.md",
+  "docs/site/api/functions/grid-tracks.md",
+  "docs/site/learn/guides/standalone-layout-migration.md",
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
@@ -4171,7 +4175,10 @@ export async function verifyMutationProbes() {
     ["lifecycle", nonJsx.replace("useSignal(", "missingSignal(")],
     [
       "mount",
-      nonJsx.replace("return await pibbl(canvas,", "return await missingMount(canvas,"),
+      nonJsx.replace(
+        "return await pibbl(canvas,",
+        "return await missingMount(canvas,",
+      ),
     ],
     [
       "disposal",

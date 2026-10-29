@@ -9,7 +9,8 @@
       { "name": "Fragment", "importPath": "@pibbl/core/jsx-runtime" },
       { "name": "jsx", "importPath": "@pibbl/core/jsx-runtime" },
       { "name": "jsxs", "importPath": "@pibbl/core/jsx-runtime" },
-      { "name": "JSX", "importPath": "@pibbl/core/jsx-runtime" }
+      { "name": "JSX", "importPath": "@pibbl/core/jsx-runtime" },
+      { "name": "pibblSync", "importPath": "@pibbl/core/sync" }
     ],
     "notes": [
       "Compiler output is shown explicitly for inspection; application code normally uses automatic JSX or createElement."

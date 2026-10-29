@@ -6,14 +6,14 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
-it.runIf(experimentalLayout)('keeps direct finite static and relative Flex containing blocks correct across parent and child nowrap directions', async () => {
+it.runIf(nativeLayout)('keeps direct finite static and relative Flex containing blocks correct across parent and child nowrap directions', async () => {
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type OwnerStyle = PibblResponsiveStyle<FlexStyle & FlexItemStyle>;
   type ProbeStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
@@ -67,7 +67,7 @@ it.runIf(experimentalLayout)('keeps direct finite static and relative Flex conta
   expect(after.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('preserves wrapped fixed Flex owner slots while static inherits and relative applies physical final offsets in every parent direction', async () => {
+it.runIf(nativeLayout)('preserves wrapped fixed Flex owner slots while static inherits and relative applies physical final offsets in every parent direction', async () => {
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type OwnerStyle = PibblResponsiveStyle<FlexStyle & FlexItemStyle>;
   type ProbeStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;

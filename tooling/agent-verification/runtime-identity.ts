@@ -1,4 +1,4 @@
-import { pibbl } from '../../packages/core/src/lib/pibbl';
+import { pibblSync as pibbl } from '../../packages/core/src/sync';
 import { snapshotRealmScheduler } from '../../packages/core/src/lib/scheduler/realm-scheduler';
 import { version } from '../../packages/core/package.json';
 

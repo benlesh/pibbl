@@ -25,16 +25,17 @@ const layoutPropertyKeys = [
     'gridColumnStart', 'gridColumnSpan', 'gridRowStart', 'gridRowSpan',
   ] as const;
 
-type ResolvedPhysicsShapeStyle2D = Readonly<PhysicsShape2DStyle>;
-type ResolvedCapsuleStyle2D = Omit<Readonly<Capsule2DStyle>, 'start' | 'end'> & {
+type LayoutProperty = typeof layoutPropertyKeys[number];
+type ResolvedPhysicsShapeStyle2D = Omit<Readonly<PhysicsShape2DStyle>, LayoutProperty>;
+type ResolvedCapsuleStyle2D = Omit<Readonly<Capsule2DStyle>, 'start' | 'end' | LayoutProperty> & {
   readonly start: PibblPhysicsVector2;
   readonly end: PibblPhysicsVector2;
 };
-type ResolvedSegmentStyle2D = Omit<Readonly<Segment2DStyle>, 'start' | 'end'> & {
+type ResolvedSegmentStyle2D = Omit<Readonly<Segment2DStyle>, 'start' | 'end' | LayoutProperty> & {
   readonly start: PibblPhysicsVector2;
   readonly end: PibblPhysicsVector2;
 };
-type ResolvedChainStyle2D = Omit<Readonly<Chain2DStyle>, 'points'> & {
+type ResolvedChainStyle2D = Omit<Readonly<Chain2DStyle>, 'points' | LayoutProperty> & {
   readonly points: readonly PibblPhysicsVector2[];
 };
 
@@ -85,7 +86,7 @@ export const PhysicsShape2D = definePrimitive<
   PhysicsShape2DProps,
   PhysicsShape2DStyle,
   PhysicsShape2DStyle,
-  PhysicsShape2DStyle
+  ResolvedPhysicsShapeStyle2D
 >(renderPhysicsShape2D, { resolveStyle: resolvePhysicsShapeStyle });
 
 /**

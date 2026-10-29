@@ -1,11 +1,12 @@
-import { getLayoutDirection } from '../layout/context.js';
+import { getLayoutDirection, hasParentLayoutAllocation } from '../layout/context.js';
+import { registerLayoutSuspensionResource, unregisterLayoutSuspensionResource } from '../layout/participation.js';
 import { isLayoutComponent, prepareLayoutComponent } from '../layout/define-layout-component.js';
-import { isKnownLayoutType, registerKnownLayoutPreflight, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedBoundaryChildren, takePreparedBoundaryChildren, retainPreparedBoundarySubtree } from '../layout/prepared-root.js';
+import { isKnownLayoutType, registerKnownLayoutPreflight, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedBoundaryChildren, takePreparedBoundaryChildren, preparedBoundaryNeedsAllocationParent, retainPreparedBoundarySubtree } from '../layout/prepared-root.js';
 import { prepareLayoutChildren, prepareDirectChildStyle, resolveContainerBox } from '../layout/absolute.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
-import { experimentalLayout } from '../layout/wasm/region.js';
+import { nativeLayout } from '../layout/wasm/region.js';
 import { definePrimitive } from '../define-primitive.js';
 import { materializeContainerChildren } from '../element/children.js';
 import { clonePibblElement, createElement } from '../element/create-element.js';
@@ -101,8 +102,8 @@ function renderLayer(
   const { width = canvas.width, height = canvas.height } = style;
   const componentRefs = GLOBAL_STATE.componentRefs!;
   let preparedBoundary = componentRefs.element;
-  let preparedChildren = experimentalLayout ? takePreparedBoundaryChildren(preparedBoundary) : undefined;
-  if (experimentalLayout && !preparedChildren) {
+  let preparedChildren = nativeLayout ? takePreparedBoundaryChildren(preparedBoundary) : undefined;
+  if (nativeLayout && !preparedChildren) {
     const slot = preflightKnownLayout(preparedBoundary, style, { x: 0, y: 0, width, height }, GLOBAL_STATE.primitiveReceiverToken);
     // Keep transaction metadata off the application-owned reusable descriptor.
     preparedBoundary = clonePibblElement(preparedBoundary);
@@ -110,6 +111,7 @@ function renderLayer(
     preparedChildren = takePreparedBoundaryChildren(preparedBoundary);
   }
   const materializedChildren = preparedChildren ?? materializeContainerChildren(props.children, 'Layer');
+  const needsPreparedAllocationParent = nativeLayout && preparedBoundaryNeedsAllocationParent(preparedBoundary);
   const nextRoot = createPrivateLayerRoot(materializedChildren);
   const parentInstance = getCurrentPibblInstance();
   const parentSurface = getSurfaceSnapshot(parentInstance);
@@ -147,7 +149,12 @@ function renderLayer(
       focusRenderRevision: undefined,
       retainedTree: undefined,
     } satisfies LayerSlot;
+    const suspensionResource = {
+      suspendLayout: () => parentInstance.paintEntries.delete(interactionLayer),
+    };
+    registerLayoutSuspensionResource(componentRefs, suspensionResource);
     componentRefs.teardowns.add(() => {
+      unregisterLayoutSuspensionResource(componentRefs, suspensionResource);
       setInstanceAllocationParent(childInstance);
       childInstance.eventParent = undefined;
       parentInstance.paintEntries.delete(interactionLayer);
@@ -158,7 +165,8 @@ function renderLayer(
   const slot = componentRefs.refs[0] as LayerSlot;
   const offscreenCanvas = slot.canvas;
   const layerPibbl = getPibblInstance(offscreenCanvas);
-  if (experimentalLayout) setInstanceAllocationParent(layerPibbl, parentInstance);
+  if (nativeLayout) setInstanceAllocationParent(layerPibbl,
+    hasParentLayoutAllocation() || needsPreparedAllocationParent ? parentInstance : undefined);
   const layoutDirection = getLayoutDirection();
   const directionChanged = slot.layoutDirection !== layoutDirection;
   const dimensionsChanged = slot.logicalWidth !== width ||
@@ -218,7 +226,7 @@ function renderLayer(
       throw error;
     }
   } else {
-    if (experimentalLayout) retainPreparedBoundarySubtree(preparedBoundary);
+    if (nativeLayout) retainPreparedBoundarySubtree(preparedBoundary);
     parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerPibbl);
   }
   const renderedFocusPolicy = parentInstance.eventRoot.focusPolicy;
@@ -261,7 +269,7 @@ export const Layer = definePrimitive<
   resolveStyle: resolveLayerStyle,
 });
 
-if (experimentalLayout) registerKnownLayoutPreflight(Layer, (element, _style, content, receiver, slot) => {
+if (nativeLayout) registerKnownLayoutPreflight(Layer, (element, _style, content, receiver, slot) => {
   const previous = GLOBAL_STATE.primitiveReceiverToken;
   GLOBAL_STATE.primitiveReceiverToken = receiver;
   try {

@@ -16,7 +16,7 @@ const alpha = process.argv.includes('--alpha');
 if (alpha && !process.argv.includes('--pack-only')) requirePublishingNpm();
 const root = resolve(import.meta.dirname, '..');
 const output = resolve(root, 'dist/npm');
-const packages = ['core', 'three', 'text', 'pibbl'].map(directory => {
+const packages = ['core', 'three', 'text', 'layout', 'pibbl'].map(directory => {
   const path = resolve(root, 'packages', directory);
   const manifest = JSON.parse(readFileSync(resolve(path, 'package.json'), 'utf8'));
   assert.equal(manifest.name, directory === 'pibbl' ? 'pibbl' : `@pibbl/${directory}`);

@@ -18,7 +18,7 @@ import {
   useLayoutBox,
 } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
@@ -29,7 +29,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
 }
 
 for (const variant of ['direct explicit RTL', 'described inherited RTL'] as const) {
-  it.runIf(experimentalLayout)(`resolves a raw logical percentage child inset in mounted Flow through ${variant}`, async () => {
+  it.runIf(nativeLayout)(`resolves a raw logical percentage child inset in mounted Flow through ${variant}`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const width = signal(200), fill = signal('#8a3248');
     let box: (LayoutBox & { stamp: number }) | undefined, serial = 0, hits = 0;

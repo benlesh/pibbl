@@ -18,7 +18,7 @@ import {
   useLayoutBox,
 } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
@@ -29,7 +29,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
 }
 
 for (const parent of ['Flow', 'Absolute', 'Overlay', 'Grid'] as const) {
-  it.runIf(experimentalLayout)(`resolves ${parent} raw child percentage padding from its actual containing content width`, async () => {
+  it.runIf(nativeLayout)(`resolves ${parent} raw child percentage padding from its actual containing content width`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const padding = signal<0 | 20 | 16 | '10%'>(0), ownerWidth = signal(200), fill = signal('#8a3248');
     const boxes = new Map<string, LayoutBox>();

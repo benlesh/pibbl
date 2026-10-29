@@ -3,7 +3,7 @@ import { afterEach, expect, it } from "vitest";
 import { Flex, Rectangle, signal, type PibblController } from "@pibbl/core";
 import { pibblSync } from "@pibbl/core/sync";
 import {
-  experimentalLayout,
+  nativeLayout,
   snapshotWasmLayoutDiagnostics,
 } from "../src/lib/layout/wasm/region";
 
@@ -25,7 +25,7 @@ function canvas() {
 const pixel = (target: HTMLCanvasElement, x: number) =>
   Array.from(target.getContext("2d")!.getImageData(x, 10, 1, 1).data);
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   "repaints a receiver without revisiting its unchanged parent allocation records",
   async () => {
     const target = canvas();
@@ -93,7 +93,7 @@ it("observes an in-place authored width change when a paint signal schedules ren
 });
 
 
-it.runIf(experimentalLayout)('exposes the bounded frozen allocation proof through the existing public example', async () => {
+it.runIf(nativeLayout)('exposes the bounded frozen allocation proof through the existing public example', async () => {
   const target = canvas(); target.width = 760; target.height = 460;
   const baseline = snapshotWasmLayoutDiagnostics();
   controller = pibblSync(target, <WasmFlexTextExample />);
@@ -124,7 +124,7 @@ it.runIf(experimentalLayout)('exposes the bounded frozen allocation proof throug
 });
 
 
-it.runIf(experimentalLayout)('keeps frozen accessor styles on the conservative path', async () => {
+it.runIf(nativeLayout)('keeps frozen accessor styles on the conservative path', async () => {
   const target = canvas();
   const fill = signal('#19375b');
   let width = 60;

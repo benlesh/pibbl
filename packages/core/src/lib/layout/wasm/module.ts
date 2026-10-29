@@ -29,7 +29,45 @@ export function hasReadyLayoutModule(): boolean { return compiled !== undefined;
 export function publishLayoutModule(module: WebAssembly.Module): void {
   if (compiled) return;
   const exports = WebAssembly.Module.exports(module);
-  if (!exports.some(entry => entry.name === 'layout_abi_v19' && entry.kind === 'function') ||
+  if (!exports.some(entry => entry.name === 'grid_v2_auto_fit_keep' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_collapse_auto_fit' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_measure_kind' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_resize_contributions' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_apply_contributions' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_resize_grid' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_assigned_columns' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_assigned_rows' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_assign_cells' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_create' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_dispose' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_generation' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_place_cells' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_resize_cells' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_resize_tracks' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'grid_v2_resolve_tracks' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_box_count' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_box_height' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_box_id' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_box_width' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_box_x' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_box_y' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_create' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_dispose' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_generation' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_measure_count' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_measure_height_max' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_measure_height_min' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_measure_node' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_measure_width_max' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_measure_width_min' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_prepare' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_prepare_settled_measurements' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_replace' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_resize_children' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_resize_measurements' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_resize_nodes' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'standalone_tree_solve' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'layout_abi_v21' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'last_wrap_line_count' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'first_wrap_line_count' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'prepare_intrinsic_main_queries' && entry.kind === 'function') ||

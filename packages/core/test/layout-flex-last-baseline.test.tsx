@@ -14,10 +14,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => {
   for (const controller of controllers.splice(0)) controller.dispose();
   vi.restoreAllMocks();
@@ -52,7 +52,7 @@ interface LeafProps {
   readonly rejectQuery?: boolean;
 }
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'aligns direct finite leaves by their last baseline at the safe cross end across row directions and wrapping',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -143,7 +143,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'excludes explicit self alignment and automatic cross margins from last-baseline membership',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -189,7 +189,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)('invalidates frozen placements when first and last baseline modes change during paint', async () => {
+it.runIf(nativeLayout)('invalidates frozen placements when first and last baseline modes change during paint', async () => {
   const fill = signal('#a63758'), hits: string[] = [];
   const a = <Rectangle onClick={() => hits.push('A')} style={Object.freeze({ width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill })} />;
   const b = <Rectangle style={Object.freeze({ width: 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#19375b' })} />;
@@ -207,7 +207,7 @@ it.runIf(experimentalLayout)('invalidates frozen placements when first and last 
   expect(pixel(4,24)).toEqual([166,55,88,255]); expect(pixel(4,64)[3]).toBe(0);
 });
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'aligns the actual last visible wrapped Text line at the safe end through reflow and preserves its glyph target',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -253,7 +253,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the current finite responsive selection for a direct provider last baseline',
   async () => {
     const ownerWidth = signal(100), selectedHeight = signal(30), boxes = new Map<string, LayoutBox>(), allocations: LayoutBox[] = [], hits: string[] = [];
@@ -290,7 +290,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'keeps wrap-reverse last baseline groups physical and falls back to a missing provider bottom edge',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics(), boxes = new Map<string, LayoutBox>(), hits: string[] = [];

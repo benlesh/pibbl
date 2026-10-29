@@ -4,7 +4,7 @@ import {
   type PibblController, type SystemStyle, type FlexStyle, useCanvasContext, useConst, useLayoutBox,
 } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
@@ -28,7 +28,7 @@ const rowProfiles = [
 ] as const;
 
 for (const [name, flexWrap, main] of rowProfiles) {
-  it.runIf(experimentalLayout)(`keeps row ${name} Text main sizing while a cross auto margin uses the final measured height`, async () => {
+  it.runIf(nativeLayout)(`keeps row ${name} Text main sizing while a cross auto margin uses the final measured height`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const words = signal('alpha beta gamma');
     const marginTop = signal<0 | 'auto'>(0);
@@ -113,7 +113,7 @@ for (const [name, height, flexBasis] of [
   ['automatic-height/numeric-basis', 'auto', 40],
   ['automatic-height/automatic-basis', 'auto', 'auto'],
 ] as const) {
-  it.runIf(experimentalLayout)(`keeps column ${name} Text main allocation while a finite measured cross width takes an auto margin`, async () => {
+  it.runIf(nativeLayout)(`keeps column ${name} Text main allocation while a finite measured cross width takes an auto margin`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const words = signal('aaaa aaaa');
     const marginLeft = signal<0 | 'auto'>(0);
@@ -175,7 +175,7 @@ for (const [name, height, flexBasis] of [
 }
 
 for (const words of ['aaaa aaaa', 'aaaa aaaa aaaa aaaa'] as const) {
-  it.runIf(experimentalLayout)(`keeps Slice178 wrapped Text line membership in column-reverse RTL while physical right auto moves ${words.length === 9 ? 'short' : 'long'} content`, async () => {
+  it.runIf(nativeLayout)(`keeps Slice178 wrapped Text line membership in column-reverse RTL while physical right auto moves ${words.length === 9 ? 'short' : 'long'} content`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const marginRight = signal<0 | 'auto'>(0);
     const hits: string[] = [];

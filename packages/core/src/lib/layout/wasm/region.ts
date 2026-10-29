@@ -2,17 +2,14 @@
 import type { PrimitiveMeasurementEntry } from '../measure.js';
 import type { FlexAllocationCache } from '../flex-allocation-cache.js';
 import { readyLayoutModule } from './module.js';
+import { GridV2Region, type GridV2Cell, type GridV2Kernel } from '../grid-kernel.js';
 import { GLOBAL_STATE } from '../../global-state.js';
 import { signalGraphSnapshot } from '../../signals/graph.js';
 import type { PibblComponentRefs, PibblInstance } from '../../types.js';
 
-/** Internal build lane; deliberately no application engine selector. */
-declare const __PIBBL_LAYOUT_WASM__: boolean;
-const buildEnvironment = import.meta.env;
-export const experimentalLayout =
-  (typeof __PIBBL_LAYOUT_WASM__ !== 'undefined' && __PIBBL_LAYOUT_WASM__) ||
-  buildEnvironment?.MODE === 'layout-wasm';
-const counters = { flowPlacements: 0, gridCellPlacements: 0, gridTrackResolutions: 0, lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measurementSolves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, activeWasmInstances: 0, wasmInstanceCreates: 0, frames: 0, allocationPasses: 0, allocationItemVisits: 0, allocationCacheHits: 0 };
+/** Native layout is the supported engine for every build. */
+export const nativeLayout = true;
+const counters = { activeGridArenas: 0, gridArenaCreates: 0, flowPlacements: 0, gridCellPlacements: 0, gridTrackResolutions: 0, lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measurementSolves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, activeWasmInstances: 0, wasmInstanceCreates: 0, frames: 0, allocationPasses: 0, allocationItemVisits: 0, allocationCacheHits: 0 };
 export function snapshotWasmLayoutDiagnostics() {
   const signals = signalGraphSnapshot();
   return {
@@ -26,7 +23,7 @@ export function snapshotWasmLayoutDiagnostics() {
     unknownInputInvalidations: signals.unknownInputInvalidations,
   };
 }
-if (experimentalLayout) {
+if (nativeLayout) {
   // Dev inspector only. Not a supported package export or signal dependency.
   Object.defineProperty(globalThis, '__PIBBL_LAYOUT_DIAGNOSTICS__', {
     configurable: true, value: snapshotWasmLayoutDiagnostics,
@@ -74,6 +71,7 @@ const rootOwners = new WeakMap<PibblInstance, RootLayoutOwner>();
 class RootLayoutOwner {
   private exports: Kernel | undefined;
   private handles = new Map<number, number>();
+  private readonly grids = new Set<GridV2Region>();
   private teardown: (() => void) | undefined;
   constructor(private readonly mount?: PibblInstance) {
     if (mount?.mainTeardowns.closed) throw new Error('Cannot allocate layout for a disposed root.');
@@ -87,6 +85,13 @@ class RootLayoutOwner {
   get kernel(): Kernel {
     if (!this.exports) throw new Error('The root layout instance is disposed.');
     return this.exports;
+  }
+  createGrid(): GridV2Region {
+    const grid = new GridV2Region(this.kernel as unknown as GridV2Kernel, () => {
+      if (this.grids.delete(grid)) counters.activeGridArenas--;
+    });
+    this.grids.add(grid); counters.activeGridArenas++; counters.gridArenaCreates++;
+    return grid;
   }
   has(handle: number, generation: number): boolean { return this.handles.get(handle) === generation && generation !== 0; }
   create(): { handle: number; generation: number } {
@@ -119,7 +124,17 @@ class RootLayoutOwner {
       this.teardown = undefined;
     }
     // A trap can leave Rust RefCell borrows locked; do not re-enter that instance.
-    if (!trapped) kernel.dispose();
+    let errors: unknown[] | undefined;
+    for (const grid of this.grids) {
+      try { if (trapped) grid.abandon(); else grid.dispose(); }
+      catch (error) { (errors ??= []).push(error); }
+    }
+    this.grids.clear();
+    if (!trapped) {
+      try { kernel.dispose(); } catch (error) { (errors ??= []).push(error); }
+    }
+    if (errors?.length === 1) throw errors[0];
+    if (errors?.length) throw new AggregateError(errors, 'Native layout disposal failed.');
   }
 }
 function acquireRootOwner(mount?: PibblInstance): RootLayoutOwner {
@@ -395,6 +410,16 @@ export interface NumericGridCell { columnStart: number; columnSpan: number; rowS
 interface GridCellCache { revision: number; cells: readonly NumericGridCell[]; boxes: { x: number; y: number; width: number; height: number }[]; }
 export type NumericGridTrack = Readonly<{ kind: 'fixed'; value: number }> | Readonly<{ kind: 'percentage' | 'fraction'; factor: number }>;
 interface GridTrackCache { tracks: readonly NumericGridTrack[]; bound: number; gap: number; values: number[]; }
+interface GridV2TrackCache { records: readonly number[]; bound: number; gap: number; values: number[]; }
+interface GridV2ContributionCache { records: readonly number[]; gap: number; }
+interface GridV2CellCache {
+  revision: number;
+  cells: readonly GridV2Cell[];
+  flow: 0 | 1 | 2 | 3;
+  columnGap: number;
+  rowGap: number;
+  boxes: readonly { x: number; y: number; width: number; height: number }[];
+}
 function sameGridTracks(a: readonly NumericGridTrack[], b: readonly NumericGridTrack[]): boolean {
   if (a.length !== b.length) return false;
   for (let index = 0; index < a.length; index++) {
@@ -403,7 +428,13 @@ function sameGridTracks(a: readonly NumericGridTrack[], b: readonly NumericGridT
   }
   return true;
 }
+function sameNumbers(a: readonly number[], b: readonly number[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let index = 0; index < a.length; index++) if (a[index] !== b[index]) return false;
+  return true;
+}
 export class LayoutRegion {
+  private gridV2: GridV2Region | undefined;
   private flowCache: FlowCache | undefined;
   placeFlow(items: readonly NumericFlowItem[], options: FlowOptions): readonly { x: number; y: number; width: number; height: number }[] {
     const kernel = this.ensureOwner(); const cached = this.flowCache, prior = cached?.options;
@@ -439,6 +470,11 @@ export class LayoutRegion {
   private gridCells: GridCellCache | undefined;
   private gridColumns: GridTrackCache | undefined;
   private gridRows: GridTrackCache | undefined;
+  private gridV2Columns: GridV2TrackCache | undefined;
+  private gridV2Rows: GridV2TrackCache | undefined;
+  private gridV2ColumnContributions: GridV2ContributionCache | undefined;
+  private gridV2RowContributions: GridV2ContributionCache | undefined;
+  private gridV2Cells: GridV2CellCache | undefined;
   resolveGridTracks(tracks: readonly NumericGridTrack[], options: { bound: number; gap: number; axis: 'columns' | 'rows' }): number[] {
     const kernel = this.ensureOwner();
     const cached = options.axis === 'columns' ? this.gridColumns : this.gridRows;
@@ -493,6 +529,58 @@ export class LayoutRegion {
       return boxes;
     } catch (error) { return this.fail(error); }
   }
+  /** V2 Grid records remain region-owned so paint-only work reuses native geometry. */
+  resolveGridV2Tracks(records: readonly number[], options: { bound: number; gap: number; axis: 0 | 1 }): readonly number[] {
+    const cached = options.axis === 0 ? this.gridV2Columns : this.gridV2Rows;
+    if (cached && cached.bound === options.bound && cached.gap === options.gap && sameNumbers(cached.records, records)) return cached.values;
+    try {
+      const values = this.gridV2Region().tracks(records, options.bound, options.gap, options.axis) as number[];
+      const entry: GridV2TrackCache = { records: records.slice(), bound: options.bound, gap: options.gap, values };
+      if (options.axis === 0) {
+        this.gridV2Columns = entry;
+        this.gridV2ColumnContributions = undefined;
+      } else {
+        this.gridV2Rows = entry;
+        this.gridV2RowContributions = undefined;
+      }
+      this.gridRevision++; counters.gridTrackResolutions++;
+      return values;
+    } catch (error) { return this.fail(error); }
+  }
+  /** Fresh native track values after Grid contributions; the prior JS snapshot is stale. */
+  snapshotGridV2Tracks(axis: 0 | 1): readonly number[] {
+    try {
+      return this.gridV2Region().resolvedTracks(axis);
+    } catch (error) {
+      return this.fail(error);
+    }
+  }
+  applyGridV2Contributions(records: readonly number[], gap: number, axis: 0 | 1): void {
+    if (records.length === 0) return;
+    const cached = axis === 0 ? this.gridV2ColumnContributions : this.gridV2RowContributions;
+    if (cached && cached.gap === gap && sameNumbers(cached.records, records)) return;
+    try {
+      this.gridV2Region().contributions(records, gap, axis);
+      const entry = { records: records.slice(), gap };
+      if (axis === 0) this.gridV2ColumnContributions = entry; else this.gridV2RowContributions = entry;
+      this.gridRevision++; counters.gridTrackResolutions++;
+    } catch (error) { this.fail(error); }
+  }
+  placeGridV2Cells(cells: readonly GridV2Cell[], flow: 0 | 1 | 2 | 3, columnGap: number, rowGap: number): readonly { x: number; y: number; width: number; height: number }[] {
+    const cached = this.gridV2Cells;
+    let equal = cached?.revision === this.gridRevision && cached.flow === flow && cached.columnGap === columnGap && cached.rowGap === rowGap && cached.cells.length === cells.length;
+    if (equal) for (let index = 0; index < cells.length; index++) {
+      const left = cached!.cells[index]!, right = cells[index]!;
+      if (left.columnStart !== right.columnStart || left.columnSpan !== right.columnSpan || left.rowStart !== right.rowStart || left.rowSpan !== right.rowSpan) { equal = false; break; }
+    }
+    if (equal) return cached!.boxes;
+    try {
+      const boxes = this.gridV2Region().cells(cells, flow, columnGap, rowGap);
+      this.gridV2Cells = { revision: this.gridRevision, cells: cells.map(cell => ({ ...cell })), flow, columnGap, rowGap, boxes };
+      counters.gridCellPlacements++;
+      return boxes;
+    } catch (error) { return this.fail(error); }
+  }
   private cachedAllocation: FlexAllocationCache | undefined;
   private layoutOwner: RootLayoutOwner | undefined;
   private handle = 0;
@@ -510,6 +598,11 @@ export class LayoutRegion {
       this.handle = region.handle; this.generation = region.generation;
     }
     return this.layoutOwner.kernel;
+  }
+  /** Region-owned Grid arena; it shares this root's WebAssembly instance. */
+  gridV2Region(): GridV2Region {
+    if (!this.gridV2) { this.ensureOwner(); this.gridV2 = this.layoutOwner!.createGrid(); }
+    return this.gridV2;
   }
   private fail(error: unknown): never {
     if (error instanceof WebAssembly.RuntimeError) this.layoutOwner?.dispose(true);
@@ -785,6 +878,7 @@ export class LayoutRegion {
     return this.crossResults;
   }
   dispose(): void {
+    this.gridV2?.dispose(); this.gridV2 = undefined;
     this.hasAbsoluteMeasurements = false;
     this.flowCache = undefined;
     this.allocationCache = undefined; this.gridColumns = undefined; this.gridRows = undefined; this.gridCells = undefined; this.gridRevision = 0;

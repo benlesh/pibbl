@@ -177,3 +177,27 @@ it('combines finite asymmetric layout borders and padding once in both sizing mo
   expect(() => resolveBox({ borderWidth: { left: Infinity } }, constraints)).toThrow(/borderWidth.left.*finite/);
   expect(() => resolveBox({ borderWidth: Number.MAX_VALUE, padding: Number.MAX_VALUE }, constraints)).toThrow(/combined padding and border insets must be finite/);
 });
+
+
+it.each([
+  [{ width: 100, height: 'auto', aspectRatio: 2 }, 100, 50],
+  [{ width: 'auto', height: 40, aspectRatio: 2 }, 80, 40],
+  [{ width: 100, height: 'auto', maxWidth: 60, aspectRatio: 2 }, 60, 30],
+  [{ width: 100, height: 40, aspectRatio: 2 }, 100, 40],
+  [{ boxSizing: 'border-box', width: 100, height: 'auto', padding: 10, borderWidth: 5, aspectRatio: 2 }, 100, 50],
+] as const)('resolves aspect ratio from the final definite axis: %j', (style, width, height) => {
+  const result = resolveBox(style, constraints);
+  expect(result.borderBox.width).toBe(width);
+  expect(result.borderBox.height).toBe(height);
+});
+it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('rejects an invalid box aspect ratio %s', aspectRatio => {
+  expect(() => resolveBox({ width: 100, aspectRatio }, constraints)).toThrow(/aspectRatio/);
+});
+
+it('fills the finite outer allocation for stretch instead of adding padding twice', () => {
+  for (const boxSizing of ['content-box', 'border-box'] as const) {
+    const box = resolveBox({ boxSizing, width: 'stretch', height: 20, padding: 10 }, { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 80 });
+    expect(box.borderBox.width).toBe(100);
+    expect(box.contentBox.width).toBe(80);
+  }
+});

@@ -11,7 +11,7 @@ test('prepares all published versions and exact peers without changing the priva
   try {
     const write = (path, value) => writeFileSync(path, JSON.stringify(value));
     write(join(root, 'package.json'), { private: true, version: '0.0.0' });
-    for (const name of ['core', 'three', 'text', 'pibbl']) {
+    for (const name of ['core', 'three', 'text', 'layout', 'pibbl']) {
       mkdirSync(join(root, 'packages', name), { recursive: true });
       write(join(root, 'packages', name, 'package.json'), {
         name: name === 'pibbl' ? 'pibbl' : `@pibbl/${name}`, version: '0.0.1',
@@ -21,7 +21,7 @@ test('prepares all published versions and exact peers without changing the priva
     const run = version => execFileSync(process.execPath, [script, version], { cwd: root, stdio: 'pipe' });
     for (const version of ['0.1.0-beta.0', '0.1.0']) {
       run(version);
-      for (const name of ['core', 'three', 'text', 'pibbl']) {
+      for (const name of ['core', 'three', 'text', 'layout', 'pibbl']) {
         const value = JSON.parse(readFileSync(join(root, 'packages', name, 'package.json')));
         assert.equal(value.version, version);
         if (name === 'pibbl') assert.equal(value.dependencies['@pibbl/core'], `workspace:${version}`);

@@ -5,7 +5,7 @@ import {
   useCanvasContext, useConst, useLayoutBox,
 } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
@@ -15,7 +15,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
   for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: bounds.left + x, clientY: bounds.top + y }));
 }
 
-for (const [label, flexBasis, flexGrow, finalHeight] of [['basis', 40, 0, 40], ['grow', 40, 1, 100]] as const) it.runIf(experimentalLayout)(`uses the final ${label} column main target for a paired cross query before side-auto placement`, async () => {
+for (const [label, flexBasis, flexGrow, finalHeight] of [['basis', 40, 0, 40], ['grow', 40, 1, 100]] as const) it.runIf(nativeLayout)(`uses the final ${label} column main target for a paired cross query before side-auto placement`, async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const margin = signal<0 | 'auto'>(0);
   const fills = signal('#8a3248');
@@ -70,7 +70,7 @@ for (const [label, flexBasis, flexGrow, finalHeight] of [['basis', 40, 0, 40], [
 });
 
 for (const [label, flexBasis, flexGrow, expectedY] of [['basis', 40, 0, 40], ['grow', 'auto', 1, 100]] as const) {
-  it.runIf(experimentalLayout)(`measures a ${label} known Flex root at its final column height before side-auto placement`, async () => {
+  it.runIf(nativeLayout)(`measures a ${label} known Flex root at its final column height before side-auto placement`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const margin = signal<0 | 'auto'>(0), width = signal(40);
     const hits: string[] = [];
@@ -125,7 +125,7 @@ const textProfiles = [
   ['max-sixty', { flexBasis: 40, flexGrow: 0, flexShrink: 0, maxWidth: 60 }, 40],
 ] as const;
 for (const [label, main, expectedFooterY] of textProfiles) {
-  it.runIf(experimentalLayout)(`keeps column Text ${label} main allocation while auto cross margins use its final measured width`, async () => {
+  it.runIf(nativeLayout)(`keeps column Text ${label} main allocation while auto cross margins use its final measured width`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const margin = signal<0 | 'auto'>(0), hits: string[] = [];
     const words = signal('alpha beta gamma');
@@ -160,7 +160,7 @@ for (const [label, main, expectedFooterY] of textProfiles) {
 }
 
 
-it.runIf(experimentalLayout)('fails an unsupported exact final column cross query before painting, releases ownership, and permits a remount', async () => {
+it.runIf(nativeLayout)('fails an unsupported exact final column cross query before painting, releases ownership, and permits a remount', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const available = signal(false);
   let paints = 0;

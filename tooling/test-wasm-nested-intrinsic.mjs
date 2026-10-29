@@ -138,6 +138,7 @@ try {
       assert.equal(receipt.finalWidthIntrinsicProvider, true, 'Installed custom intrinsic leaves must remeasure at their settled finite width and update hit geometry');
       assert.equal(receipt.directionMatrix, true, 'Installed package must honor the finite logical-edge direction and wrap matrix');
       assert.equal(receipt.autoMargins, true, 'Installed package must honor finite physical auto margins and their alignment precedence');
+      assert.equal(receipt.negativeMarginConformance, true, 'Installed package must preserve finite signed-margin allocation, overflow targets, source order, paint identity, and cleanup');
       assert.equal(receipt.ownerCrossAuto, true, 'Installed package must measure direct wrapped Flex owners before automatic cross-margin placement');
       assert.equal(receipt.automaticTextCrossWidth, true, 'Installed package must settle automatic-width Text before automatic cross-margin placement');
       assert.equal(receipt.wrappedTextCrossAuto, true, 'Installed package must settle wrapped Text before cross-auto placement in its final line');

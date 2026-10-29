@@ -1,16 +1,16 @@
 import { afterEach, beforeAll, expect, it } from 'vitest';
 import { Flex, Grid, Rectangle, defineLayoutComponent, definePrimitive, measureElement, signal, useConst, useCanvasContext, useLayoutBox, type PibblResponsiveStyle, type SystemStyle, type FlexStyle, type RectStyle, type PibblController } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
 for (const axis of ['row', 'column'] as const) for (const mode of ['start', 'both'] as const) {
-  it.runIf(experimentalLayout)(`treats ${axis} ${mode} auto main margins as zero for pure contribution, then allocates final free space`, async () => {
+  it.runIf(nativeLayout)(`treats ${axis} ${mode} auto main margins as zero for pure contribution, then allocates final free space`, async () => {
     const row = axis === 'row';
     const minimum = 200;
     const firstStyle: RectStyle = row ? {
@@ -73,7 +73,7 @@ for (const axis of ['row', 'column'] as const) for (const mode of ['start', 'bot
 }
 
 
-it.runIf(experimentalLayout)('keeps automatic physical main margins out of pure size, across finite and unbounded availability', () => {
+it.runIf(nativeLayout)('keeps automatic physical main margins out of pure size, across finite and unbounded availability', () => {
   for (const axis of ['row', 'column'] as const) for (const maximum of [200, Number.POSITIVE_INFINITY]) {
     const row = axis === 'row';
     const owner = <Flex style={{
@@ -98,7 +98,7 @@ it.runIf(experimentalLayout)('keeps automatic physical main margins out of pure 
     .toEqual({ status: 'unsupported', reason: expect.stringMatching(/percentage margin/i) });
 });
 
-it.runIf(experimentalLayout)('reuses direct automatic-margin targets while an owner minimum changes final free space', async () => {
+it.runIf(nativeLayout)('reuses direct automatic-margin targets while an owner minimum changes final free space', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const minimum = signal(200), hits: string[] = [];
   const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 80; document.body.append(canvas);
@@ -128,7 +128,7 @@ it.runIf(experimentalLayout)('reuses direct automatic-margin targets while an ow
 });
 
 for (const axis of ['row', 'column'] as const) {
-  it.runIf(experimentalLayout)(`treats a physical ${axis} cross auto margin as zero for pure size, then places it in the final cross owner`, async () => {
+  it.runIf(nativeLayout)(`treats a physical ${axis} cross auto margin as zero for pure size, then places it in the final cross owner`, async () => {
     const row = axis === 'row';
     const firstStyle: RectStyle = row
       ? { width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, marginTop: 'auto' }
@@ -201,7 +201,7 @@ for (const axis of ['row', 'column'] as const) for (const profile of [
   { name: 'overflow', cross: 20, expected: 0, margins: { before: 'auto' as const, after: undefined } },
   { name: 'numeric opposite', cross: 200, expected: 150, margins: { before: 'auto' as const, after: 10 } },
 ]) {
-  it.runIf(experimentalLayout)(`keeps ${axis} ${profile.name} cross auto margins out of pure contribution and applies final cross placement`, async () => {
+  it.runIf(nativeLayout)(`keeps ${axis} ${profile.name} cross auto margins out of pure contribution and applies final cross placement`, async () => {
     const row = axis === 'row';
     const firstStyle: RectStyle = row ? {
       width: 40, height: 40, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0,
@@ -262,7 +262,7 @@ for (const axis of ['row', 'column'] as const) for (const profile of [
 }
 
 
-it.runIf(experimentalLayout)('normalizes shorthand, paired-provider cross, logical known-owner, and wrapped numeric auto margins after their existing admissions succeed', () => {
+it.runIf(nativeLayout)('normalizes shorthand, paired-provider cross, logical known-owner, and wrapped numeric auto margins after their existing admissions succeed', () => {
   const service = { measureText: () => { throw new Error('No text.'); } };
   const rowConstraints = { minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: 20, maxHeight: 20 };
   const direct = (edge: Partial<RectStyle>) => <Flex style={{ width: 'auto', height: 20, flexDirection: 'row', flexWrap: 'nowrap', layoutDirection: 'ltr', alignItems: 'flex-start', flexGrow: 0, flexShrink: 0 }}>
@@ -313,7 +313,7 @@ it.runIf(experimentalLayout)('normalizes shorthand, paired-provider cross, logic
 });
 
 
-it.runIf(experimentalLayout)('keeps a paired provider’s pure cross query and final logical/main plus physical/cross auto placement coherent', async () => {
+it.runIf(nativeLayout)('keeps a paired provider’s pure cross query and final logical/main plus physical/cross auto placement coherent', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const natural = signal(20);
   const calls: number[] = [];
@@ -373,7 +373,7 @@ it.runIf(experimentalLayout)('keeps a paired provider’s pure cross query and f
   expect(calls.length).toBe(afterDispose);
 });
 
-it.runIf(experimentalLayout)('measures a paired provider at exact column height before a physical side auto margin absorbs cross free space', async () => {
+it.runIf(nativeLayout)('measures a paired provider at exact column height before a physical side auto margin absorbs cross free space', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const natural = signal(40);
   const calls: (readonly [number, number, number, number])[] = [];
@@ -449,7 +449,7 @@ it.runIf(experimentalLayout)('measures a paired provider at exact column height 
   expect(calls.length).toBe(afterDispose);
 });
 
-it.runIf(experimentalLayout)('fails a required column provider cross query before paint, releases ownership, and permits an explicit remount', async () => {
+it.runIf(nativeLayout)('fails a required column provider cross query before paint, releases ownership, and permits an explicit remount', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const available = signal(false);
   let paints = 0;
@@ -495,7 +495,7 @@ it.runIf(experimentalLayout)('fails a required column provider cross query befor
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout).each([false, true])('measures a %s known row Flex at exact column height before side auto-margin placement', async described => {
+it.runIf(nativeLayout).each([false, true])('measures a %s known row Flex at exact column height before side auto-margin placement', async described => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const childWidth = signal(40);
   const autoMargin = signal<0 | 'auto'>(0);
@@ -554,7 +554,7 @@ it.runIf(experimentalLayout).each([false, true])('measures a %s known row Flex a
 });
 
 
-it.runIf(experimentalLayout)('keeps a side-auto known row mounted while its natural width overflows the finite column owner', async () => {
+it.runIf(nativeLayout)('keeps a side-auto known row mounted while its natural width overflows the finite column owner', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const width = signal(200);
   const hits: string[] = [];
@@ -588,7 +588,7 @@ it.runIf(experimentalLayout)('keeps a side-auto known row mounted while its natu
 });
 
 
-it.runIf(experimentalLayout)('measures fixed Grid tracks before placing a side-auto known Grid root', async () => {
+it.runIf(nativeLayout)('measures fixed Grid tracks before placing a side-auto known Grid root', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const hits: string[] = [];
   const grid = () => <Grid style={{ width: 'auto', height: 40, minWidth: 0, minHeight: 0, flexBasis: 'auto', flexGrow: 0, flexShrink: 0, marginLeft: 'auto', gridTemplateColumns: [40, 20], gridTemplateRows: [40] }}>
@@ -617,7 +617,7 @@ it.runIf(experimentalLayout)('measures fixed Grid tracks before placing a side-a
   ]);
 });
 
-it.runIf(experimentalLayout)('fails a side-auto Grid with fractional intrinsic tracks before it paints', async () => {
+it.runIf(nativeLayout)('fails a side-auto Grid with fractional intrinsic tracks before it paints', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const grid = <Grid style={{ width: 'auto', height: 40, minWidth: 0, minHeight: 0, flexBasis: 'auto', flexGrow: 0, flexShrink: 0, marginLeft: 'auto', gridTemplateColumns: ['1fr'], gridTemplateRows: [40] }}>
     <Rectangle style={{ width: 40, height: 40, gridColumnStart: 1, gridRowStart: 1, fill: '#8a3248' }} />
@@ -647,7 +647,7 @@ it.runIf(experimentalLayout)('fails a side-auto Grid with fractional intrinsic t
 });
 
 
-it.runIf(experimentalLayout)('measures settled row main widths before a paired or known automatic cross margin is placed', async () => {
+it.runIf(nativeLayout)('measures settled row main widths before a paired or known automatic cross margin is placed', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const marginTop = signal<0 | 'auto'>(0);
   const errors: unknown[] = [];

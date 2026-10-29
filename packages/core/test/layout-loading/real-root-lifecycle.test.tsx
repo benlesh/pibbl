@@ -6,7 +6,7 @@ const nextFrame = () =>
 
 it('keeps pending real layout roots inert through supersession, caller cancellation and preparation failures, then retries and disposes one live root', async () => {
   const core = await import('@pibbl/core');
-  const { snapshotWasmLayoutDiagnostics, experimentalLayout } = await import('../../src/lib/layout/wasm/region.js');
+  const { snapshotWasmLayoutDiagnostics, nativeLayout } = await import('../../src/lib/layout/wasm/region.js');
   const baseline = snapshotWasmLayoutDiagnostics();
   let releaseDownload!: (response: Response) => void;
   const heldDownload = new Promise<Response>((resolve) => {
@@ -91,7 +91,7 @@ it('keeps pending real layout roots inert through supersession, caller cancellat
   await nextFrame();
   expect([callbacks, mounts, cleanups]).toEqual([1, 1, 0]);
   const mounted = snapshotWasmLayoutDiagnostics();
-  if (experimentalLayout) {
+  if (nativeLayout) {
     expect(mounted.activeNodes).toBeGreaterThan(baseline.activeNodes);
     expect(mounted.activeArenas).toBeGreaterThan(baseline.activeArenas);
     expect(mounted.activeWasmInstances).toBe(baseline.activeWasmInstances + 1);

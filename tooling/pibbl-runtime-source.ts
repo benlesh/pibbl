@@ -5,7 +5,7 @@ import { isAbsolute, resolve, sep } from "node:path";
 const VIRTUAL_RUNTIME_ID = "virtual:pibbl-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const PIBBL_ENTRY_POINT =
-  /^@pibbl\/(?:core(?:\/(?:sync|filters|internal|jsx-runtime|jsx-dev-runtime|particles|textures|viz(?:\/inspection)?|machines(?:\/animation)?|sprites(?:\/formats\/(?:aseprite|texture-packer))?|physics\/2d(?:\/geometry)?))?|three|text)$/;
+  /^@pibbl\/(?:core(?:\/(?:sync|filters|internal(?:\/layout)?|jsx-runtime|jsx-dev-runtime|particles|textures|viz(?:\/inspection)?|machines(?:\/animation)?|sprites(?:\/formats\/(?:aseprite|texture-packer))?|physics\/2d(?:\/geometry)?))?|three|text)$/;
 const THREE_ENTRY_POINT = /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
 
 const threeEntryPoints = new Map([
@@ -66,6 +66,13 @@ function pibblEntryPoints(mode: string): ReadonlyMap<string, string> {
       resolve(
         import.meta.dirname,
         `../packages/core/${directory}/jsx-dev-runtime.${extension}`,
+      ),
+    ],
+    [
+      "@pibbl/core/internal/layout",
+      resolve(
+        import.meta.dirname,
+        `../packages/core/${directory}/layout-kernel.${extension}`,
       ),
     ],
     [

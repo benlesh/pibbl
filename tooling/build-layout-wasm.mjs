@@ -10,6 +10,8 @@ const sources = [
   "Cargo.lock",
   "rust-toolchain.toml",
   "src/lib.rs",
+  "src/grid.rs",
+  "src/tree.rs",
 ];
 const hash = createHash("sha256");
 for (const source of sources)
@@ -17,7 +19,48 @@ for (const source of sources)
 const sourceHash = hash.digest("hex");
 const destination = new URL("src/lib/layout/wasm/bytes.ts", root);
 const requiredLayoutAbiExports = [
-  ['layout_abi_v19', 'function'], ['last_wrap_line_count', 'function'], ['first_wrap_line_count', 'function'],
+  ['grid_v2_auto_fit_keep', 'function'],
+  ['grid_v2_collapse_auto_fit', 'function'],
+  ['standalone_tree_measure_kind', 'function'],
+
+  ['grid_v2_resize_contributions', 'function'],
+  ['grid_v2_apply_contributions', 'function'],
+
+  ['standalone_tree_resize_grid', 'function'],
+  ['grid_v2_assigned_columns', 'function'],
+  ['grid_v2_assigned_rows', 'function'],
+  ['grid_v2_assign_cells', 'function'],
+  ['grid_v2_create', 'function'],
+  ['grid_v2_dispose', 'function'],
+  ['grid_v2_generation', 'function'],
+  ['grid_v2_place_cells', 'function'],
+  ['grid_v2_resize_cells', 'function'],
+  ['grid_v2_resize_tracks', 'function'],
+  ['grid_v2_resolve_tracks', 'function'],
+  ['standalone_tree_box_count', 'function'],
+  ['standalone_tree_box_height', 'function'],
+  ['standalone_tree_box_id', 'function'],
+  ['standalone_tree_box_width', 'function'],
+  ['standalone_tree_box_x', 'function'],
+  ['standalone_tree_box_y', 'function'],
+  ['standalone_tree_create', 'function'],
+  ['standalone_tree_dispose', 'function'],
+  ['standalone_tree_generation', 'function'],
+  ['standalone_tree_measure_count', 'function'],
+  ['standalone_tree_measure_height_max', 'function'],
+  ['standalone_tree_measure_height_min', 'function'],
+  ['standalone_tree_measure_node', 'function'],
+  ['standalone_tree_measure_width_max', 'function'],
+  ['standalone_tree_measure_width_min', 'function'],
+  ['standalone_tree_prepare', 'function'],
+  ['standalone_tree_prepare_settled_measurements', 'function'],
+  ['standalone_tree_replace', 'function'],
+  ['standalone_tree_resize_children', 'function'],
+  ['standalone_tree_resize_measurements', 'function'],
+  ['standalone_tree_resize_nodes', 'function'],
+  ['standalone_tree_solve', 'function'],
+
+  ['layout_abi_v21', 'function'], ['last_wrap_line_count', 'function'], ['first_wrap_line_count', 'function'],
   ['prepare_intrinsic_main_queries', 'function'],
   ['resize_intrinsic_main', 'function'], ['resolve_intrinsic_main', 'function'], ['intrinsic_main_result', 'function'], ['intrinsic_main_contribution', 'function'],
   ['resolve_intrinsic_main_known_owner', 'function'], ['intrinsic_main_auto_free', 'function'], ['place_main_auto_staged', 'function'],
@@ -34,7 +77,7 @@ function assertLayoutArtifact(bytes) {
   const exports = WebAssembly.Module.exports(module);
   for (const [name, kind] of requiredLayoutAbiExports) {
     if (!exports.some(entry => entry.name === name && entry.kind === kind))
-      throw new Error(`Layout WASM ABI v19 is missing ${kind} export ${name}.`);
+      throw new Error(`Layout WASM ABI v21 is missing ${kind} export ${name}.`);
   }
 }
 if (process.argv.includes("--check")) {

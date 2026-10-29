@@ -3,9 +3,9 @@ import { Flex, Rectangle, definePrimitive, signal, useCanvasContext, useConst, u
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { measureElement } from '../src/lib/layout/measure';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 type LeafStyle = BoxStyle & LayoutItemStyle;
@@ -18,7 +18,7 @@ const cases = [
   ['column-reverse','rtl','wrap',60,40,0,40], ['column-reverse','rtl','wrap-reverse',0,40,40,40],
 ] as const;
 const baselineCases = [...cases.map(value => ['first-baseline', ...value] as const), ...cases.map(value => ['last-baseline', ...value] as const)];
-it.runIf(experimentalLayout).each(baselineCases)('column %s falls back to ordinary cross placement: %s %s %s', async (alignment,flexDirection,layoutDirection,flexWrap,ax,ay,bx,by) => {
+it.runIf(nativeLayout).each(baselineCases)('column %s falls back to ordinary cross placement: %s %s %s', async (alignment,flexDirection,layoutDirection,flexWrap,ax,ay,bx,by) => {
   const before = snapshotWasmLayoutDiagnostics(), width = signal(40), boxes = new Map<string, {x:number;y:number;width:number;height:number;stamp:number}>(), hits:string[]=[];
   let serial=0, calls=0;
   const Leaf = definePrimitive<{name:string},LeafStyle,LeafStyle,SystemStyle & {width:number;height:number}>((props) => {
@@ -45,7 +45,7 @@ it.runIf(experimentalLayout).each(baselineCases)('column %s falls back to ordina
   width.set(40);await frame();expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(disposed.nodeCreates);
 });
 
-it.runIf(experimentalLayout)('pure column first-baseline resolves as flex-start without a mounted baseline group', () => {
+it.runIf(nativeLayout)('pure column first-baseline resolves as flex-start without a mounted baseline group', () => {
   let calls = 0;
   const Leaf = definePrimitive<{name:string},LeafStyle,LeafStyle,SystemStyle & {width:number;height:number}>((_props) => null, {
     resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),

@@ -1,5 +1,59 @@
 [
   {
+    "id": "grid-tracks",
+    "title": "Grid track constructors",
+    "description": "Build fixed, repeated, auto-fill, and auto-fit grid track definitions.",
+    "source": "grid-tracks.ts",
+    "environment": "typecheck",
+    "symbols": [
+      { "name": "minmax", "importPath": "@pibbl/core" },
+      { "name": "repeatTracks", "importPath": "@pibbl/core" },
+      { "name": "autoFillTracks", "importPath": "@pibbl/core" },
+      { "name": "autoFitTracks", "importPath": "@pibbl/core" },
+      { "name": "GridMinMaxTrack", "importPath": "@pibbl/core" },
+      { "name": "GridRepeatTrack", "importPath": "@pibbl/core" },
+      { "name": "GridTrack", "importPath": "@pibbl/core" },
+      { "name": "GridTrackBreadth", "importPath": "@pibbl/core" }
+    ],
+    "notes": ["Displays immutable track definitions in the document."]
+  },
+  {
+    "id": "intrinsic-types",
+    "title": "Intrinsic sizing contracts",
+    "description": "Typecheck paired intrinsic sizes, baseline results, and fit-content sizing values.",
+    "source": "intrinsic-types.ts",
+    "environment": "typecheck",
+    "symbols": [
+      { "name": "fitContent", "importPath": "@pibbl/core" },
+      { "name": "BaselineMeasureInput", "importPath": "@pibbl/core" },
+      { "name": "BaselinesResult", "importPath": "@pibbl/core" },
+      { "name": "FitContent", "importPath": "@pibbl/core" },
+      { "name": "FlexMargin", "importPath": "@pibbl/core" },
+      { "name": "IntrinsicAxisConstraints", "importPath": "@pibbl/core" },
+      { "name": "IntrinsicConstraints", "importPath": "@pibbl/core" },
+      { "name": "IntrinsicMeasureInput", "importPath": "@pibbl/core" },
+      { "name": "IntrinsicSizesResult", "importPath": "@pibbl/core" },
+      { "name": "SizingKeyword", "importPath": "@pibbl/core" },
+      { "name": "SizingLength", "importPath": "@pibbl/core" }
+    ],
+    "notes": [
+      "Uses the public intrinsic and sizing contracts without relying on runtime internals."
+    ]
+  },
+  {
+    "id": "layout-component",
+    "title": "Inspectable layout component",
+    "description": "Define a pure layout description that a Flex owner can inspect before allocation.",
+    "source": "layout-component.tsx",
+    "environment": "typecheck",
+    "symbols": [
+      { "name": "defineLayoutComponent", "importPath": "@pibbl/core" }
+    ],
+    "notes": [
+      "Creates and disposes a canvas mount with the asynchronous public entrypoint."
+    ]
+  },
+  {
     "id": "absolute-overlay",
     "title": "Absolute and overlay layout",
     "description": "Position a block absolutely and center content within an overlay.",

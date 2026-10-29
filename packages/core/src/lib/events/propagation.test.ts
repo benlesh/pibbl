@@ -495,6 +495,7 @@ function createFixture(eventRoot = createEventRoot()): Fixture {
     listener(componentRef, handlerMap) {
       const listener: PibblEventListenerRegistration = {
         kind: 'listener',
+        suspendLayout() {},
         owner,
         component: componentRef,
         slot: slot++,
@@ -519,6 +520,7 @@ function createFixture(eventRoot = createEventRoot()): Fixture {
     target(handlerMap, componentRef = targetComponent) {
       const target: PibblEventTargetRegistration = {
         kind: 'target',
+        suspendLayout() {},
         owner,
         component: componentRef,
         slot: slot++,

@@ -1,3 +1,4 @@
+import { nativeLayout } from '../src/lib/layout/wasm/region';
 import {
   getLearningExampleLegacyRoutes,
   getLearningExampleRoute,
@@ -1217,11 +1218,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 166 unique, ordered, source-backed routes including financial, scientific, texture, and graph examples", async () => {
+  it("contains 183 unique, ordered, source-backed routes including financial, scientific, texture, and graph examples", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(166);
+    expect(learningExampleCatalog).toHaveLength(183);
     expect(
       learningExampleCatalog
         .filter((entry) =>
@@ -1434,17 +1435,42 @@ describe("learning example catalog", () => {
       ],
       three: ["three-instancing", "three-layer"],
       layout: [
-        "absolute-and-overlay",
-        "flex",
-        "flow",
-        "grid",
-        "responsive-styles",
-        "wasm-flex-text", "wasm-flex-column-text", "wasm-flex-constraints",
-        "wasm-flex-intrinsic-text", "wasm-flex-layer", "wasm-flex-render-layer",
-        "wasm-flex-panel", "wasm-yoga-migration", "wasm-built-lifecycle",
-        "wasm-flex-wrap", "wasm-flex-column-wrap", "wasm-flex-keyed-wrap",
-        "wasm-flex-nested-intrinsic",
-      ],
+  "absolute-and-overlay",
+  "flow",
+  "flex",
+  "grid",
+  "responsive-styles",
+  "wasm-flex-text",
+  "wasm-flex-column-text",
+  "wasm-flex-constraints",
+  "wasm-flex-intrinsic-text",
+  "wasm-flex-layer",
+  "wasm-flex-render-layer",
+  "wasm-flex-panel",
+  "wasm-yoga-migration",
+  "wasm-built-lifecycle",
+  "wasm-flex-wrap",
+  "wasm-flex-column-wrap",
+  "wasm-flex-keyed-wrap",
+  "wasm-flex-nested-intrinsic",
+  "wasm-logical-padding",
+  "wasm-flex-intrinsic-primitive",
+  "wasm-flex-intrinsic-wrap",
+  "wasm-flex-baseline",
+  "wasm-flow-baseline",
+  "wasm-grid-baseline",
+  "wasm-column-baseline-fallback",
+  "wasm-flex-last-baseline",
+  "wasm-flex-aspect-minimum",
+  "wasm-flex-percentage-owner",
+  "wasm-flex-measured-percentage-owner",
+  "wasm-flow-padding",
+  "wasm-flex-intrinsic-sizing",
+  "wasm-flex-intrinsic-bounds",
+  "layout-participation",
+  "wasm-layout-workspace",
+  "wasm-flex-percent-placement"
+],
       "events-and-interaction": [
         "click",
         "context-menu",
@@ -1882,7 +1908,7 @@ describe("learning example catalog", () => {
     }
   });
 
-  it("contains exactly the five canonical layout lessons", async () => {
+  it("contains the six canonical layout lessons", async () => {
     const layouts = learningExampleCatalog.filter(
       (entry) => entry.section === "layout" && !entry.slug.startsWith("wasm-"),
     );
@@ -1892,6 +1918,7 @@ describe("learning example catalog", () => {
       "flex",
       "grid",
       "responsive-styles",
+      "layout-participation",
     ]);
     expect(layouts.map(getLearningExampleRoute)).toEqual([
       "#/examples/layout/absolute-and-overlay",
@@ -1899,6 +1926,7 @@ describe("learning example catalog", () => {
       "#/examples/layout/flex",
       "#/examples/layout/grid",
       "#/examples/layout/responsive-styles",
+      "#/examples/layout/layout-participation",
     ]);
     for (const entry of layouts) {
       expect(entry.objectives).toHaveLength(2);
@@ -1941,7 +1969,7 @@ describe("learning example catalog", () => {
     {
       slug: "grid",
       clearPoint: [360, 76] as const,
-      contentPoint: [620, 220] as const,
+      contentPoint: [400, 220] as const,
       contentColor: [116, 211, 174, 255],
     },
   ])(
@@ -2492,7 +2520,7 @@ describe("learning example catalog", () => {
     expect(afterLaterPointerMove.centerX).toBeLessThan(500);
   });
 
-  it.each(learningExampleCatalog)(
+  it.each(learningExampleCatalog.filter(entry => nativeLayout || !entry.slug.startsWith("wasm-")))(
     "loads, mounts, paints, and disposes $slug from its canonical source",
     async (entry) => {
       const source = await loadWorkbenchSource(entry);

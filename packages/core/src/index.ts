@@ -232,6 +232,13 @@ export {
 } from './lib/layout/flex.js';
 export {
   Grid,
+  minmax,
+  repeatTracks,
+  autoFillTracks,
+  autoFitTracks,
+  type GridTrackBreadth,
+  type GridMinMaxTrack,
+  type GridRepeatTrack,
   type GridProps,
   type GridStyle,
   type GridTrack,

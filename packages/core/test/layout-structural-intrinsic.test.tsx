@@ -16,10 +16,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -39,7 +39,7 @@ interface BadgeStyle extends SystemStyle {
 }
 type ResolvedBadgeStyle = BadgeStyle & { readonly width: number; readonly height: number };
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'lets a pure structural wrapper contribute a paired provider automatic minimum without losing keyed ownership',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -139,7 +139,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'remeasures a structural paired provider at its settled row width before assigning automatic cross size',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -204,7 +204,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'cleans up a failed structural final-width query before later paint, then remounts and detaches provider inputs',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -318,10 +318,10 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout).each([
+it.runIf(nativeLayout).each([
   { name: 'reverse row', direction: 'row-reverse' as const, aspectRatio: undefined },
   { name: 'aspect sizing', direction: 'row' as const, aspectRatio: 2 },
-])('keeps structural $name outside the initial paired intrinsic envelope', async ({ direction, aspectRatio }) => {
+])('applies paired intrinsic admission for structural $name', async ({ direction, aspectRatio }) => {
   let calls = 0;
   const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>(() => null, {
     resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
@@ -339,13 +339,18 @@ it.runIf(experimentalLayout).each([
   try {
     controllers.push(pibbl(canvas, <Flex style={{ width: 80, height: 40, flexDirection: direction }}><Badge /></Flex>));
     await nextFrame();
-    expect(calls).toBe(0);
-    expect(errors).toHaveLength(1);
-    expect(String(errors[0])).toContain('an explicit main-axis minimum is required');
+    if (direction === 'row-reverse') {
+      expect(calls).toBeGreaterThan(0);
+      expect(errors).toHaveLength(0);
+    } else {
+      expect(calls).toBe(0);
+      expect(errors).toHaveLength(1);
+      expect(String(errors[0])).toContain('an explicit main-axis minimum is required');
+    }
   } finally { window.removeEventListener('error', prevent); }
 });
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'measures a described known Flex root through a paired leaf at the final outer width',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -479,7 +484,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)('releases a standalone native row query before invoking its provider without a Canvas mount', () => {
+it.runIf(nativeLayout)('releases a standalone native row query before invoking its provider without a Canvas mount', () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   type Style = SystemStyle & { flexBasis?: number; flexShrink?: number; minWidth?: number; height?: number | 'auto' };
   const Leaf = definePrimitive<{}, Style, Style, SystemStyle>(() => null, {
@@ -508,7 +513,7 @@ it.runIf(experimentalLayout)('releases a standalone native row query before invo
   expect(after.wasmInstanceCreates).toBe(baseline.wasmInstanceCreates + 1);
 });
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'releases a removed described paired row cache and detaches its provider signal while the parent stays mounted',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -610,7 +615,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout).each([false, true])(
+it.runIf(nativeLayout).each([false, true])(
   'does not cache an untraced nested public measurement (wrapped provider: %s)',
   async (wrappedProvider) => {
     const owner = signal(80);

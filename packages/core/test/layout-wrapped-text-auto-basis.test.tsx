@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { Flex, FocusManagement, Rectangle, Text, signal, type PibblController } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 let controller: PibblController | undefined;
 afterEach(() => { controller?.dispose(); controller = undefined; document.body.replaceChildren(); });
@@ -15,7 +15,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
   }
 }
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the existing natural Text basis and word floor for wrapped row lines before optional cross-auto placement',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

@@ -9,7 +9,7 @@ import type { RectStyle } from '../style/types';
 import { componentTest } from '../test-utils/component-test';
 import type { SystemStyle } from '../types';
 import type { CanvasMeasurementService } from './measure';
-import { measureElement } from './measure';
+import { measureElement, measureIntrinsicElement } from './measure';
 import { Flow, layoutFlow } from './flow';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
@@ -30,6 +30,48 @@ const measurement = {
 };
 
 describe('Pibbl-native flow geometry', () => {
+  it('provides paired intrinsic Flow contributions and measures wrapped heights at each contribution width', () => {
+    const result = measureIntrinsicElement(createElement(Flow, {
+      style: { width: 'auto', height: 'auto', wrap: true, gap: 5 },
+      children: [
+        createElement(Text, { children: 'aa bb', style: { wrap: true } }),
+        createElement(Rectangle, { style: { width: 20, height: 7 } }),
+      ],
+    }), constraints, service);
+
+    expect(result).toEqual({
+      status: 'measured',
+      minContent: { width: 20, height: 33 },
+      maxContent: { width: 75, height: 13 },
+    });
+  });
+
+  it('includes declared child insets without executing opaque children for intrinsic discovery', () => {
+    const result = measureIntrinsicElement(createElement(Flow, {
+      style: { width: 'auto', height: 'auto', gap: 5 },
+      children: [
+        createElement(Rectangle, { style: { width: 10, height: 4, padding: 2 } }),
+        createElement(Rectangle, { style: { width: 10, height: 4, padding: 2 } }),
+      ],
+    }), constraints, service);
+
+    expect(result).toEqual({
+      status: 'measured',
+      minContent: { width: 33, height: 8 },
+      maxContent: { width: 33, height: 8 },
+    });
+  });
+
+  it('rejects percentage child sizes that would need an allocated Flow owner', () => {
+    expect(measureIntrinsicElement(createElement(Flow, {
+      style: { width: 'auto', height: 'auto' },
+      children: createElement(Rectangle, { style: { width: '50%', height: 10 } }),
+    }), constraints, service)).toEqual({
+      status: 'unsupported',
+      reason: expect.stringMatching(/percentage child sizes/i),
+    });
+  });
+
   it('places literal horizontal wrapped lines in source order', () => {
     const children = [
       createElement(Rectangle, { style: { width: 40, height: 20 } }),

@@ -1,7 +1,7 @@
 import { afterEach, expect, it } from 'vitest';
 import { Flex, Rectangle, signal, type PibblController, type RectStyle } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: PibblController[] = [];
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
@@ -12,7 +12,7 @@ for (const profile of [
   { name: 'resolved percentage cross size', style: { height: '50%' }, height: 50, narrowHeight: 40 },
   { name: 'resolved percentage cross bounds', style: { height: 20, minHeight: '50%' }, height: 50, narrowHeight: 40 },
 ] satisfies Array<{ name: string; style: Partial<RectStyle>; height: number; narrowHeight: number }>) {
-  it.runIf(experimentalLayout)(`places auto margins after ${profile.name}, preserving the numeric-zero sizing baseline`, async () => {
+  it.runIf(nativeLayout)(`places auto margins after ${profile.name}, preserving the numeric-zero sizing baseline`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const margin = signal<0 | 'auto'>(0);
     const height = signal(100);

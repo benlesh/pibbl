@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
     ["@pibbl/core/textures", "../packages/core/src/features/textures/index.ts"],
     ["@pibbl/core/viz", "../packages/core/src/features/viz/index.ts"],
     ["@pibbl/core/internal", "../packages/core/src/internal.ts"],
+    ["@pibbl/core/internal/layout", "../packages/core/src/layout-kernel.ts"],
     ["@pibbl/core/sync", "../packages/core/src/sync.ts"],
     ["@pibbl/core/jsx-dev-runtime", "../packages/core/src/jsx-dev-runtime.ts"],
     ["@pibbl/core/jsx-runtime", "../packages/core/src/jsx-runtime.ts"],
@@ -43,7 +44,7 @@ export default defineConfig(({ mode }) => {
     replacement: resolve(import.meta.dirname, path),
   }));
   // Private Studio metadata must stay in this checkout even when node_modules is shared.
-  // Public runtime entries deliberately retain their built-package resolution.
+  // Resolve runtime entries to this checkout's built package output as well.
   const builtStudioAliases = [
     ["@pibbl/scenarios", "../packages/scenarios/src/index.ts"],
     ["@pibbl/scenarios/surface", "../packages/scenarios/src/surface.ts"],
@@ -51,6 +52,12 @@ export default defineConfig(({ mode }) => {
     find: new RegExp(`^${find.replaceAll("/", "\\/")}$`, "u"),
     replacement: resolve(import.meta.dirname, path),
   }));
+  for (const entry of sourceAliases) {
+    builtStudioAliases.push({
+      find: entry.find,
+      replacement: entry.replacement.replace('/src/', '/dist/').replace(/\.ts$/, '.mjs'),
+    });
+  }
   return {
     // Source and private-built lanes run concurrently; their optimizer graphs differ.
     cacheDir: mode === "layout-wasm-built" ? "node_modules/.vite-layout-wasm-built" : undefined,

@@ -4,7 +4,7 @@ import { test } from 'node:test';
 
 const manifest = name => JSON.parse(readFileSync(new URL(`../packages/${name}/package.json`, import.meta.url)));
 test('Pibbl release names and versions are aligned', () => {
-  for (const name of ['core', 'three', 'text', 'pibbl']) {
+  for (const name of ['core', 'three', 'text', 'layout', 'pibbl']) {
     const pkg = manifest(name);
     assert.equal(pkg.name, name === 'pibbl' ? 'pibbl' : `@pibbl/${name}`);
     assert.equal(pkg.version, manifest('core').version);
@@ -18,7 +18,9 @@ test('pibbl forwards every core subpath to one exact core dependency', () => {
   for (const [subpath, entry] of Object.entries(mirror.exports)) {
     if (subpath === './package.json') continue;
     const specifier = '@pibbl/core' + (subpath === '.' ? '' : subpath.slice(1));
-    for (const target of Object.values(entry)) {
+    const targets = typeof entry === 'string' ? [entry] : Object.values(entry);
+    for (const target of targets) {
+      if (target.endsWith('.wasm')) continue;
       const source = readFileSync(new URL(`../packages/pibbl/${target}`, import.meta.url), 'utf8');
       assert.equal(source.trim(), `export * from '${specifier}';`);
     }
@@ -26,7 +28,7 @@ test('pibbl forwards every core subpath to one exact core dependency', () => {
 });
 
 test('root and every published README warn against production use', () => {
-  for (const path of ['README.md', ...['core', 'three', 'text', 'pibbl'].map(name => `packages/${name}/README.md`)]) {
+  for (const path of ['README.md', ...['core', 'three', 'text', 'layout', 'pibbl'].map(name => `packages/${name}/README.md`)]) {
     const introduction = readFileSync(new URL(`../${path}`, import.meta.url), 'utf8').slice(0, 400);
     assert.match(introduction, /ALPHA — NOT FOR PRODUCTION USE/);
   }

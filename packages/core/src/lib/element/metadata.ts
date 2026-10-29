@@ -34,6 +34,7 @@ export interface InternalElementMetadata {
   readonly policyPreparationSource?: PibblElement<any>;
   readonly layoutDescriptionSource?: PibblElement<any>;
   readonly preparedLayoutSlot?: object;
+  readonly layoutContentsChildren?: readonly PibblElement<any>[];
   /** Ancestor padding box expressed in a placed static Flex content coordinate system. */
   readonly absoluteContainingBlock?: Readonly<LayoutBox>;
   identityHint?: unknown;

@@ -5,13 +5,13 @@ import { parse } from 'yaml';
 import { checkNpmPublishingAuth } from './npm-publishing-auth.mjs';
 
 const env = { ACTIONS_ID_TOKEN_REQUEST_URL: 'https://actions.example/token', ACTIONS_ID_TOKEN_REQUEST_TOKEN: 'runner-secret' };
-test('checks all four package exchanges without publishing or disclosing credentials', async () => {
+test('checks all five package exchanges without publishing or disclosing credentials', async () => {
   const calls = [], output = [];
   await checkNpmPublishingAuth({ env, report: line => output.push(line), request: async (url, options) => {
     calls.push({ url: String(url), options });
     return Response.json(calls.length === 1 ? { value: 'identity-secret' } : { token: 'npm-secret' });
   } });
-  assert.equal(calls.length, 5);
+  assert.equal(calls.length, 6);
   assert.equal(new URL(calls[0].url).searchParams.get('audience'), 'npm:registry.npmjs.org');
   assert.equal(calls[0].options.headers.Authorization, 'Bearer runner-secret');
   for (const call of calls.slice(1)) {
@@ -19,7 +19,7 @@ test('checks all four package exchanges without publishing or disclosing credent
     assert.equal(call.options.headers.Authorization, 'Bearer identity-secret');
     assert.ok(call.url.includes('/oidc/token/exchange/package/'));
   }
-  assert.equal(output.length, 4);
+  assert.equal(output.length, 5);
   assert.doesNotMatch(output.join('\n'), /runner-secret|identity-secret|npm-secret/);
 });
 test('reports the registry rejection while redacting credentials', async () => {

@@ -27,23 +27,27 @@ export function contentBoxStyle<S extends BoxStyle & { flexBasis?: SizingLength 
   // scalar outer bounds still canonicalize once below.
   const width = options.mainAxis === 'width' && isIntrinsicSizingValue(style.width) ? undefined :
     nonnegativeLength(style.width, options.width, 'width', options.context);
-  const height = nonnegativeLength(style.height, options.height, 'height', options.context);
-  const minWidth = nonnegativeLength(style.minWidth, options.width, 'minWidth', options.context);
-  const maxWidth = nonnegativeLength(style.maxWidth, options.width, 'maxWidth', options.context);
-  const minHeight = nonnegativeLength(style.minHeight, options.height, 'minHeight', options.context);
-  const maxHeight = nonnegativeLength(style.maxHeight, options.height, 'maxHeight', options.context);
+  const height = options.mainAxis === 'height' && isIntrinsicSizingValue(style.height) ? undefined : nonnegativeLength(style.height, options.height, 'height', options.context);
+  const preserveIntrinsicMinWidth = options.mainAxis === 'width' && isIntrinsicSizingValue(style.minWidth);
+  const preserveIntrinsicMaxWidth = options.mainAxis === 'width' && isIntrinsicSizingValue(style.maxWidth);
+  const minWidth = preserveIntrinsicMinWidth ? undefined : nonnegativeLength(style.minWidth, options.width, 'minWidth', options.context);
+  const maxWidth = preserveIntrinsicMaxWidth ? undefined : nonnegativeLength(style.maxWidth, options.width, 'maxWidth', options.context);
+  const preserveIntrinsicMinHeight = options.mainAxis === 'height' && isIntrinsicSizingValue(style.minHeight);
+  const preserveIntrinsicMaxHeight = options.mainAxis === 'height' && isIntrinsicSizingValue(style.maxHeight);
+  const minHeight = preserveIntrinsicMinHeight ? undefined : nonnegativeLength(style.minHeight, options.height, 'minHeight', options.context);
+  const maxHeight = preserveIntrinsicMaxHeight ? undefined : nonnegativeLength(style.maxHeight, options.height, 'maxHeight', options.context);
   if (minWidth !== undefined && maxWidth !== undefined && minWidth > maxWidth) throw layoutDiagnostic({ ...options.context, property: 'minWidth', value: minWidth, reason: 'minimum must not exceed maximum' });
   if (minHeight !== undefined && maxHeight !== undefined && minHeight > maxHeight) throw layoutDiagnostic({ ...options.context, property: 'minHeight', value: minHeight, reason: 'minimum must not exceed maximum' });
   const result: BoxStyle & { flexBasis?: SizingLength } & CanonicalBox = { ...style, boxSizing: 'content-box' as const, [BORDER_BOX_CONTENT]: true as const,
     width: width === undefined ? style.width : Math.max(0, width-horizontal),
     height: height === undefined ? style.height : Math.max(0, height-vertical),
-    minWidth: minWidth === undefined ? undefined : Math.max(0, minWidth-horizontal),
-    maxWidth: maxWidth === undefined ? undefined : Math.max(0, maxWidth-horizontal),
-    minHeight: minHeight === undefined ? undefined : Math.max(0, minHeight-vertical),
-    maxHeight: maxHeight === undefined ? undefined : Math.max(0, maxHeight-vertical),
+    minWidth: preserveIntrinsicMinWidth ? style.minWidth : minWidth === undefined ? undefined : Math.max(0, minWidth-horizontal),
+    maxWidth: preserveIntrinsicMaxWidth ? style.maxWidth : maxWidth === undefined ? undefined : Math.max(0, maxWidth-horizontal),
+    minHeight: preserveIntrinsicMinHeight ? style.minHeight : minHeight === undefined ? undefined : Math.max(0, minHeight-vertical),
+    maxHeight: preserveIntrinsicMaxHeight ? style.maxHeight : maxHeight === undefined ? undefined : Math.max(0, maxHeight-vertical),
   };
   if (options.mainAxis && style.flexBasis !== undefined && style.flexBasis !== 'auto') {
-    if (options.mainAxis === 'width' && isIntrinsicSizingValue(style.flexBasis)) {
+    if (isIntrinsicSizingValue(style.flexBasis)) {
       result.flexBasis = style.flexBasis;
     } else {
       const basis = nonnegativeLength(style.flexBasis, options.mainAxis === 'width' ? options.width : options.height, 'flexBasis', options.context)!;

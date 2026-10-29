@@ -12,16 +12,16 @@ import {
   type SystemStyle,
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
 for (const axis of ['row', 'column'] as const) for (const described of [false, true]) {
-  it.runIf(experimentalLayout)(`keeps ${described ? 'a described Card' : 'a direct Flex'} ${axis} staged contribution separate from its final minimum owner`, async () => {
+  it.runIf(nativeLayout)(`keeps ${described ? 'a described Card' : 'a direct Flex'} ${axis} staged contribution separate from its final minimum owner`, async () => {
     const row = axis === 'row';
     const baseline = snapshotWasmLayoutDiagnostics();
     const hits: string[] = [];
@@ -128,7 +128,7 @@ for (const axis of ['row', 'column'] as const) for (const described of [false, t
 }
 
 for (const axis of ['row', 'column'] as const) for (const described of [false, true]) {
-  it.runIf(experimentalLayout)(`keeps ${described ? 'a described Card' : 'a direct Flex'} ${axis} numeric basis composition unchanged without staged bounds`, async () => {
+  it.runIf(nativeLayout)(`keeps ${described ? 'a described Card' : 'a direct Flex'} ${axis} numeric basis composition unchanged without staged bounds`, async () => {
     const row = axis === 'row';
     const baseline = snapshotWasmLayoutDiagnostics();
     const hits: string[] = [];
@@ -183,7 +183,7 @@ for (const axis of ['row', 'column'] as const) for (const described of [false, t
 }
 
 for (const axis of ['row', 'column'] as const) for (const described of [false, true]) {
-  it.runIf(experimentalLayout)(`uses the staged native auto margin for ${described ? 'a described Card' : 'a direct Flex'} ${axis} numeric bounds`, async () => {
+  it.runIf(nativeLayout)(`uses the staged native auto margin for ${described ? 'a described Card' : 'a direct Flex'} ${axis} numeric bounds`, async () => {
     const row = axis === 'row';
     const baseline = snapshotWasmLayoutDiagnostics();
     const margin = signal<0 | 'auto'>(0);
@@ -249,7 +249,7 @@ for (const axis of ['row', 'column'] as const) for (const described of [false, t
 }
 
 for (const axis of ['row', 'column'] as const) for (const described of [false, true]) {
-  it.runIf(experimentalLayout)(`uses the staged native auto margin for ${described ? 'a described Card' : 'a direct Flex'} ${axis} paired bounds`, async () => {
+  it.runIf(nativeLayout)(`uses the staged native auto margin for ${described ? 'a described Card' : 'a direct Flex'} ${axis} paired bounds`, async () => {
     const row = axis === 'row';
     const baseline = snapshotWasmLayoutDiagnostics();
     const margin = signal<0 | 'auto'>(0);

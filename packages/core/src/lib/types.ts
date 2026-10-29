@@ -65,6 +65,8 @@ export type {
  * @see {@link PibblTransitionBinding}
  */
 export interface SystemStyle {
+  /** Numeric layout participation. Hidden subtrees retain mounted ownership without geometry or paint; contents retains logical ancestry without owning a box. See {@link SystemStyle}. */
+  layoutParticipation?: 'normal' | 'hidden' | 'contents';
   /** Visibility-transition binding applied to this primitive and its captured descendants. See {@link SystemStyle}. */
   transition?: import("./transitions/binding.js").PibblTransitionBinding;
   /** Application-defined style payload passed through the runtime. See {@link SystemStyle}. */
@@ -658,6 +660,8 @@ export interface PibblEventRoot {
 
 /** @internal Root-wide render completion seam for optional policies. */
 export interface PibblRenderTransaction {
+  /** Validate staged geometry before any fallible resource publication. */
+  onPreflight?(callback: () => void): void;
   onPublish?(callback: () => void): void;
   onFinish(callback: (success: boolean) => void): void;
   /** Run after all finish callbacks have published their committed state. */

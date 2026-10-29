@@ -27,6 +27,10 @@
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.mjs"
     },
+    "./internal/layout": {
+      "types": "./dist/layout-kernel.d.ts",
+      "default": "./dist/layout-kernel.mjs"
+    },
     "./filters": {
       "types": "./dist/filters.d.ts",
       "default": "./dist/filters.mjs"
@@ -110,6 +114,9 @@
       ],
       "internal": [
         "./dist/internal.d.ts"
+      ],
+      "internal/layout": [
+        "./dist/layout-kernel.d.ts"
       ],
       "*": [
         "./dist/*",

@@ -2,12 +2,12 @@ import { WasmFlexTextExample } from '../../scenarios/src/learning/layout/wasm-fl
 import { afterEach, expect, it } from 'vitest';
 import { Flex, Rectangle, Text, signal, type PibblController } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { experimentalLayout } from '../src/lib/layout/wasm/region';
+import { nativeLayout } from '../src/lib/layout/wasm/region';
 
 let controller: PibblController | undefined;
 afterEach(() => { controller?.dispose(); controller = undefined; document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-it.runIf(experimentalLayout)('uses natural Text width for an automatic row basis and then respects its word floor', async () => {
+it.runIf(nativeLayout)('uses natural Text width for an automatic row basis and then respects its word floor', async () => {
   const target = document.createElement('canvas'); target.width = 400; target.height = 100;
   document.body.append(target);
   const context = target.getContext('2d')!;
@@ -38,7 +38,7 @@ it.runIf(experimentalLayout)('uses natural Text width for an automatic row basis
   expect(pixel(Math.ceil(wordWidth) + 5, 60)).toEqual([66, 107, 97, 255]);
 });
 
-it.runIf(experimentalLayout)('exposes natural basis and text changes in the existing comparison example', async () => {
+it.runIf(nativeLayout)('exposes natural basis and text changes in the existing comparison example', async () => {
   const target = document.createElement('canvas'); target.width = 760; target.height = 460;
   document.body.append(target);
   controller = pibblSync(target, <WasmFlexTextExample />);
@@ -65,7 +65,7 @@ it.runIf(experimentalLayout)('exposes natural basis and text changes in the exis
   expect(document.querySelector('pre')?.textContent).toContain('selected: auto minimum sibling');
 });
 
-it.runIf(experimentalLayout)('uses the same leading-space behavior as wrapped Text for its natural basis', async () => {
+it.runIf(nativeLayout)('uses the same leading-space behavior as wrapped Text for its natural basis', async () => {
   const target = document.createElement('canvas'); target.width = 400; target.height = 80;
   document.body.append(target);
   const context = target.getContext('2d')!;

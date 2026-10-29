@@ -18,13 +18,13 @@ import {
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import {
-  experimentalLayout,
+  nativeLayout,
   snapshotWasmLayoutDiagnostics,
 } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
 beforeAll(() => {
-  if (experimentalLayout) prepareLayoutEngineSync();
+  if (nativeLayout) prepareLayoutEngineSync();
 });
 afterEach(() => {
   for (const controller of controllers.splice(0)) controller.dispose();
@@ -60,7 +60,7 @@ interface BaselineProps {
 
 }
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'aligns direct fixed primitive leaves on their measured first baseline without losing ownership',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -162,7 +162,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the bottom edge only when a direct fixed leaf omits the baseline capability',
   async () => {
     const boxes = new Map<string, LayoutBox>();
@@ -189,7 +189,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'fails before paint when a declared baseline provider is unsupported', async () => {
     const paints = vi.fn();
     const Bad = definePrimitive<{}, BaselineStyle, BaselineStyle, BaselineStyle & { width: number; height: number }>(() => { paints(); }, {
@@ -212,7 +212,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)('rejects invalid baseline results and impure providers before paint with exact cleanup', async () => {
+it.runIf(nativeLayout)('rejects invalid baseline results and impure providers before paint with exact cleanup', async () => {
   const writeProbe = signal(0);
   const failures: readonly { name: string; provide: () => BaselinesResult; message: RegExp }[] = [
     { name: 'NaN', provide: () => ({status:'measured',first:NaN,last:0}), message: /baselines must be finite/ },
@@ -243,7 +243,7 @@ it.runIf(experimentalLayout)('rejects invalid baseline results and impure provid
   }
 });
 
-it.runIf(!experimentalLayout)('keeps first-baseline alignment explicitly experimental without evaluating providers', async () => {
+it.runIf(!nativeLayout)('keeps first-baseline alignment explicitly experimental without evaluating providers', async () => {
   const measureBaselines=vi.fn(()=>({status:'measured' as const,first:12,last:12})), paints=vi.fn(), errors:unknown[]=[];
   const Bad=definePrimitive<{},BaselineStyle,BaselineStyle,BaselineStyle&{width:number;height:number}>(()=>{paints();},{resolveStyle:(style,context)=>({...style,width:context.allocation.width,height:context.allocation.height}),measureBaselines});
   const canvas=document.createElement('canvas');canvas.width=120;canvas.height=60;document.body.append(canvas);
@@ -252,7 +252,7 @@ it.runIf(!experimentalLayout)('keeps first-baseline alignment explicitly experim
 });
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'aligns fixed unwrapped Text leaves from their live Canvas top-baseline metrics',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -345,7 +345,7 @@ it.runIf(experimentalLayout)(
 );
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'aligns direct wrapped Text leaves on their first live Canvas baseline while preserving visible last-line glyph hits',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -418,7 +418,7 @@ it.runIf(experimentalLayout)(
 );
 
 for (const edge of ['marginLeft', 'marginRight'] as const) {
-  it.runIf(experimentalLayout)(`places first-baseline ${edge} automatic margins after its zero-margin control`, async () => {
+  it.runIf(nativeLayout)(`places first-baseline ${edge} automatic margins after its zero-margin control`, async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
     const margin = signal<0 | 'auto'>(0);
     const boxes = new Map<string, LayoutBox>();
@@ -465,7 +465,7 @@ for (const edge of ['marginLeft', 'marginRight'] as const) {
 
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'preserves first-baseline cross placement while RTL reverses only finite row main slots',
   async () => {
     for (const direction of ['ltr', 'rtl'] as const) {
@@ -522,7 +522,7 @@ it.runIf(experimentalLayout)(
 );
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'keeps first-baseline offsets while row-reverse composes with LTR and RTL main placement',
   async () => {
     for (const direction of ['ltr', 'rtl'] as const) {
@@ -579,7 +579,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'keeps a decorated fixed Text leaf on its content baseline and paints its glyphs at the content inset',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -668,7 +668,7 @@ it('paints and targets standalone Text at its numeric padding and border content
   controller.dispose();
 });
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'lifts allocated percentage and logical decoration baselines from content coordinates without changing provider allocations',
   async () => {
     const ownerWidth = signal(100);
@@ -714,12 +714,12 @@ it.runIf(experimentalLayout)(
     expect(boxes.get('C')).toEqual({ x: 0, y: 50, width: 60, height: 20 });
     expect(allocations.filter(box => box.width === 40 && box.height === 20)).toHaveLength(2);
     expect(calls.get('A')).toBe((initialCalls.get('A') ?? 0) + 1);
-    expect(calls.get('B')).toBe((initialCalls.get('B') ?? 0) + 1);
-    expect(calls.get('C')).toBe((initialCalls.get('C') ?? 0) + 1);
+    expect(calls.get('B')).toBe(initialCalls.get('B'));
+    expect(calls.get('C')).toBe(initialCalls.get('C'));
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the decorated content bottom, rather than the outer bottom, as a missing baseline fallback',
   async () => {
     const boxes = new Map<string, LayoutBox>();

@@ -5,10 +5,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -32,7 +32,7 @@ type Box = Readonly<{ x: number; y: number; width: number; height: number; stamp
 type First = number | { get(): number };
 const fixed = (width: number, height: number, fill: string): Style & { readonly width: number; readonly height: number } => ({ width, height, minWidth: 0, minHeight: 0, flexBasis: width, flexGrow: 0, flexShrink: 0, fill });
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the settled first in-flow Flow source for an outer baseline while preserving relative paint-only movement',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -80,7 +80,7 @@ it.runIf(experimentalLayout)(
 );
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses an empty Flow content bottom as the settled outer baseline fallback',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -113,7 +113,7 @@ it.runIf(experimentalLayout)(
 );
 
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses the source-first settled Flow child across directions and wrapping, including described content padding',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

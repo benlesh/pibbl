@@ -5,11 +5,11 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
 let serial = 0;
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -28,7 +28,7 @@ const Leaf = definePrimitive<{ readonly first: number; readonly capture: (box: B
   measureBaselines: ({ props }) => ({ status: 'measured' as const, first: props.first, last: props.first }),
 });
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses only a native first-wrap-line source child for finite wrapped known Flex baseline selection',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

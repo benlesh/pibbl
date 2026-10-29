@@ -2,15 +2,15 @@ import { afterEach, beforeAll, expect, it } from 'vitest';
 import { Flex, FocusManagement, Rectangle, signal, type FlexItemStyle, type PibblResponsiveStyle, type RectStyle, useCanvasContext, useConst, useLayoutBox } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void { const rect = canvas.getBoundingClientRect(); for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { clientX: rect.left + x, clientY: rect.top + y, bubbles: true, button: 0 })); }
 
-it.runIf(experimentalLayout)('keeps wrapped primitive static slots while relative physical offsets move final paint once in every main direction', async () => {
+it.runIf(nativeLayout)('keeps wrapped primitive static slots while relative physical offsets move final paint once in every main direction', async () => {
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type ProbeStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();

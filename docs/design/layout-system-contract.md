@@ -1,7 +1,9 @@
 # Pibbl layout-system contract
 
-Status: current implemented contract, updated for external render-layer layout
-participation on 2026-09-28.
+Status: current implemented contract. The native layout engine is the default
+runtime path. The integrated native section below supersedes earlier dated
+admission limits where it expands them. Release verification remains separate
+from the implemented contract.
 
 Pibbl provides dedicated `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid`
 components. They arrange direct branded `PibblElement` children into declared
@@ -483,13 +485,13 @@ order.
 
 ## Flow
 
-Experimental mounted Flow retains style validation and pure measurement in JS,
-then resolves source-order line formation, wrapping, gaps/line gaps, and cross
+Mounted Flow retains style validation and pure measurement where its contract
+requires it, then resolves source-order line formation, wrapping, gaps/line gaps, and cross
 alignment natively in its root-owned region. Horizontal and vertical mappings
 preserve the same boxes. Numeric-only cache snapshots include resolved item sizes,
 alignment and all placement options, so measured-size changes invalidate placement
-while paint-only updates reuse it. There is no experimental native failure fallback.
-Ordinary builds and pure measurement/layout helpers retain their existing JS path.
+while paint-only updates reuse it. Native failures do not fall back to a second
+allocation engine.
 
 `Flow` is Pibbl-native sequential layout rather than CSS inline formatting.
 
@@ -568,9 +570,10 @@ cross-axis width before that basis and following-sibling positions are resolved.
 factors are normalized before distribution; nonfinite intermediate allocations
 fail instead of publishing invalid geometry.
 
-An explicitly experimental `layout-wasm` Studio/test build, and the unpublished
-`layout-wasm-built` local Studio lane, use the same public
-Flex surface with a private f64 WASM allocator and main/cross-axis placement.
+The default native layout engine uses the same public Flex surface with a private
+f64 WASM allocator and main/cross-axis placement. The unpublished
+`layout-wasm-built` local lane is retained only for isolated built-artifact
+verification.
 It supports nowrap rows/columns, finite row wrap, and finite column wrap with
 declared height/flexBasis and a declared or stretched automatic width; wrapped line formation,
 per-line allocation and line/item offsets run in WASM. Stretched automatic
@@ -638,22 +641,22 @@ existing visible/clip container behavior applies. This follows Text's existing
 literal-space wrapping, not CSS/Unicode line breaking. Custom fonts, responsive
 queries, percentage width/maxWidth, other fitting modes, columns and wrapped Flex
 lines keep the explicit-minimum diagnostic. Intrinsic Flex measurement is unchanged.
-Experimental `row-reverse` and `column-reverse` retain their row/column sizing
+Native `row-reverse` and `column-reverse` retain their row/column sizing
 axis and reverse main-axis placement within each source-formed nowrap/wrapped line.
 Physical leading/trailing margins follow that direction. `flex-start`/`flex-end`
 are relative to its main direction; cross line stacking stays forward. Source
 traversal, identity, paint/event priority and tab order do not reverse. Text is not
 mirrored. Main placement runs in WASM; flipping only main direction reuses unchanged
 allocation and same-axis measurement data, with direction included in placement
-cache keys. Normal JavaScript Flex retains its unsupported-direction diagnostic.
-Experimental `wrap-reverse` reverses cross-line placement and within-line cross
+cache keys. Unsupported direction profiles retain their layout diagnostic.
+Native `wrap-reverse` reverses cross-line placement and within-line cross
 start/end alignment, including combination with reverse main direction. Physical
 cross margins follow that selected cross direction; line membership, identities,
 source paint/event priority and tab order stay unchanged. Same-membership line flips
 reuse allocation/measurement and main placement, rerunning cross placement only.
 Experimental Flex additionally supports inherited `layoutDirection`, as specified below.
 
-The experimental allocator also supports direct-item numeric physical
+The native allocator also supports direct-item numeric physical
 `margin`, `marginTop`, `marginRight`, `marginBottom` and `marginLeft`. Values are
 finite logical Canvas units, default zero; a specific edge overrides the uniform
 `margin`. Negative margins may overlap siblings or protrude beyond the parent;
@@ -664,7 +667,7 @@ shifted border box. Margin-only space is not interactive. Auto intrinsic dimensi
 clamp the final signed accumulation at zero, without clamping individual margins.
 Margin receiver inputs are layout roles. Finite row/column wrapping includes
 margins in line formation and line cross extents, including negative overlap.
-Other layout families reject these fields; normal JavaScript Flex retains its diagnostic.
+Other unsupported layout-family profiles retain their diagnostic.
 Finite allocated nowrap, wrap and wrap-reverse Flex rows and columns also accept percentage physical
 margins. All four edges resolve against the actual parent content width, including
 top/bottom; e.g. outer300 with L10/R30 padding gives content260, so L10%=26 and
@@ -685,7 +688,7 @@ inputs and bounds retain their validation; signed leading/trailing margins occup
 separate slots. Allocation and main/cross placement run in the same kernel; output
 border boxes and both source/built loading forms use the matching artifact.
 
-Mounted experimental Flex regions share one lazy mutable WASM instance owned by
+Mounted native Flex regions share one lazy mutable WASM instance owned by
 the top-level Canvas root, including regions inside managed Layers. Each region
 owns a separate generational native handle and its own records, line data and JS
 caches; releasing a region does not release its peers. Removing all layout content
@@ -696,7 +699,7 @@ re-entering it; stale region caches cannot be reused on the next solve. Retired
 handle generations never wrap. This ownership foundation is not a root-wide
 prepared graph or a transactional geometry-publication guarantee.
 
-In the experimental lane, an Absolute boundary preflights its direct known Flex
+In the native layout path, an Absolute boundary preflights its direct known Flex
 siblings' normalized container options, direct-child position/participation syntax
 and grow/shrink factors before visiting any sibling's ordinary components. It
 shares receiver-owned child sequences and normalized styles within that root
@@ -755,11 +758,11 @@ sizing policy, including nested Layer defaults. Wrapper identity/receiver owns t
 slot and the returned primitive receiver claims it; descriptions run once per
 transaction. Ordinary components remain opaque.
 
-Direct and opaque-entry experimental Layers prepare the same known children before
+Direct and opaque-entry managed Layers prepare the same known children before
 creating or updating their child raster surface. Private transaction clones avoid
 mutating reusable application descriptors. Managed child invalidation routes through
 the owning parent even without an outer layout allocation, so preparation precedes
-child traversal. Normal builds preserve their existing scheduling path.
+child traversal.
 
 A Grid entry settles its existing explicit tracks and cell placements before
 preparing direct known Flex roots from those exact placed clones, receiver tokens
@@ -780,7 +783,8 @@ Flow likewise completes its existing measurement/sequential/wrap placement pass
 before preparing direct known Flex roots. It shares Grid's placed-clone handoff,
 without extra per-item wrapper allocations or a second placement pass. Ordinary
 children remain opaque, and normal traversal claims the same native Flex region.
-Experimental mounted Flow places resolved numeric items in the shared native arena; its JavaScript measurement and ordinary-build/pure-helper paths remain.
+Mounted Flow places resolved numeric items in the shared native arena; bounded
+measurement paths retain their documented measurement rules.
 Known Flow roots also prepare their existing measurement/native placement before
 earlier outer opaque siblings, recursively prepare known placed descendants, and
 render by adopting the same region/plan. Grid and Flow share this known-descendant
@@ -813,28 +817,26 @@ the measuredLeaves counter includes each such leaf request, not each Canvas word
 measurement call. No automatic-minimum cache or performance improvement is claimed.
 Wrapped columns admit only the bounded fixed-width direct Text automatic main
 measurement described above; other automatic measured main bases and non-stretch
-automatic cross widths reject before measurement. Intrinsic wrapped containers remain unsupported;
-normal builds retain the existing solver. This is not a released replacement,
-Yoga parity, or a standalone layout API. See [Plan 010](../project-plans/010-layout-engine-rework.md)
+automatic cross widths reject before measurement. Intrinsic wrapped containers remain unsupported.
+This is not a claim of Yoga parity. See [Plan 010](../project-plans/010-layout-engine-rework.md)
 for limitations and evidence. The lineFormations inspector is a cumulative private
-solve counter, not a complete work or performance metric. The private built artifact preserves ordinary public
-entry names and declarations; normal `dist` remains separate. Public consumer
-evidence covers Bundler/NodeNext types, inert unused imports, finite Text/Layer
-geometry and exact repeated teardown. This is a local symlink consumer, not a
-production loading/distribution policy or packed-consumer release gate.
+solve counter, not a complete work or performance metric. The published artifact
+preserves public entry names and declarations. Public consumer evidence covers
+Bundler/NodeNext types, inert unused imports, finite Text/Layer geometry and
+exact repeated teardown.
 
-Within that experimental lane, numeric item identity follows component type and
+Within this bounded native implementation, numeric item identity follows component type and
 key (or unkeyed occurrence); actual removal ends that identity. Generic-font Text
 measurement caches retain at most two recent content/style/constraint entries per
 item, including on signal-valued content. Measurement cache hits retain the exact
 Text receiver's input provision. Keyed reorder reuses surviving records; removal
 releases the record, its measurement cache, and normal mounted input ownership.
 The wrapped collection scenario exercises data-order changes across row and column
-lines in both source and unpublished built lanes: surviving mounted stamps/numeric
+lines in source and published built modes: surviving mounted stamps/numeric
 records persist, restored keys start new lifetimes, targets follow placement, and
 disposal returns owned nodes/arenas/measurement entries to baseline. Data reorder
 changes source paint order; it does not add CSS order, reversed axes or RTL.
-The experimental lane also measures Text leaves and nested known built-in nowrap
+The bounded native implementation also measures Text leaves and nested known built-in nowrap
 columns, known Flow roots using existing wrap measurement, and Grid roots using
 existing fixed-row sums/gaps (indefinite fraction/percentage rows remain unsupported), in an
 auto-height built-in nowrap column whose width is declared or
@@ -870,7 +872,7 @@ not descriptor references or subscriptions.
 The legacy measuredLeaves inspector counts host measurement entries, including
 these aggregate requests; it is not a complete count of Canvas text metric calls.
 
-Managed Canvas Layers under an active allocation in the experimental lane defer
+Managed Canvas Layers under an active allocation defer
 eligible pending Canvas raster work until the parent has settled allocation. This
 includes Layers returned by ordinary reusable components, which remain opaque to
 intrinsic measurement and execute only in normal traversal. The public
@@ -878,12 +880,12 @@ Layer example verifies one final-size raster, cleared former pixels, moved hit
 geometry and clean sibling bitmap reuse. Renderer-participant work and deferred
 root payloads retain existing scheduling; they do not inherit this guarantee.
 Public `defineRenderLayer` runs its lifecycle inline, so it follows the managed
-Canvas Layer allocation handoff. The experimental renderer-in-Layer example checks
+Canvas Layer allocation handoff. The renderer-in-Layer example checks
 final resize/render widths, committed edge targets and persistent resource lifetime.
 This does not integrate the separate friend-only renderer-work queue.
 
-These are scoped experimental receipts, not a root prepared-tree, custom-font
-revision, or Layer allocation-ordering contract.
+These are scoped implementation receipts, not a complete root prepared-tree,
+custom-font revision, or general Layer allocation-ordering contract.
 
 ## Pure reusable layout descriptions
 
@@ -1107,7 +1109,7 @@ hit order and do not recreate native nodes or rerun numeric allocation.
 to LTR. Explicit LTR overrides an inherited RTL value. Ordinary components,
 Group and Clip are transparent. Layer forwards direction to its child root,
 invalidates a retained bitmap on a change, and restores the prior child-root
-direction after failure. Normal JavaScript Flex rejects RTL.
+direction after failure. Unsupported direction profiles reject RTL.
 
 Effective main reversal is authored main reversal XOR RTL for rows. Effective
 cross reversal is authored wrap reversal XOR RTL for columns. Logical alignment
@@ -1528,7 +1530,7 @@ remains a measurement dependency: at fixed40px width, jobs8→12 changes height
 Columns with automatic/indefinite width, nonzero growth/shrink, missing `minHeight: 0`,
 active cross bounds, responsive queries, aspect ratio, reverse/RTL direction,
 wrapping, providers missing either callback, and opaque components retain their
-existing conservative behavior. Normal JavaScript Flex remains unchanged.
+existing conservative behavior.
 
 ## Experimental main-axis auto margins
 
@@ -2373,12 +2375,13 @@ above the first. The leaf provider's finite ordered-pair contract is unchanged.
 Query failure preserves existing teardown/remount behavior; this adds no retained
 screen rollback or new font ownership contract.
 
-### Experimental intrinsic sizing values
+### Native intrinsic sizing values
 
 `SizingLength` adds sizing-only `min-content`, `max-content`, and immutable branded
 `fitContent(limit)` alongside scalar `Length`. Width, height and flex basis use
-the sizing type; padding, insets, gaps and radii remain scalar. Intrinsic bounds
-and stretch are not yet admitted public values.
+the sizing type; padding, insets, gaps and radii remain scalar. Intrinsic min/max bounds and finite-owner `stretch` are admitted by the
+native engine. Stretch consumes available space after margins and insets;
+an indefinite owning axis raises a diagnostic.
 
 The initial runtime owner is finite horizontal nowrap Flex with a direct paired
 primitive supporting both intrinsic and constrained measurement, no responsive
@@ -2402,8 +2405,7 @@ vertical intrinsic contributions, Grid tracks, or the measurement release gate.
 ### Explicit Canvas Text intrinsic width requests
 
 Finite horizontal nowrap Flex also resolves explicit min-content/max-content or
-fitContent width/basis requests for direct Text. This owner-specific branch does
-not add a general `measureIntrinsic` capability to Text and does not change its
+fitContent width/basis requests for direct Text. This owner-specific branch uses Text's pure `measureIntrinsic` capability and preserves its
 existing automatic/numeric sizing paths. Wrapped min-content is the longest run
 under Text's existing ASCII-space wrapping policy; max-content is the natural
 Canvas advance width with the same leading-space behavior as wrapping. Unwrapped
@@ -2437,3 +2439,60 @@ identity and teardown. `useLayoutBox()` exposes the placed outer allocation;
 pure provider queries receive the content allocation. Arbitrary object-valued
 styles such as an asymmetric padding record remain conservatively uncacheable;
 this handoff does not broaden their measurement-cache admission.
+
+### Native layout engine default — 2026-10-29
+
+The native layout engine is the default runtime path. It prepares one native
+allocation graph for supported mounted layout, retains the public immediate-mode
+Canvas ownership model, and fails closed when an authored contract is outside the
+implemented layout surface. There is no application opt-in, private Studio mode,
+or alternate JavaScript allocation engine for supported native layout behavior.
+
+Earlier references to an “experimental engine”, `layout-wasm`, or a private
+built layout lane record the delivery history that produced this default. They
+are not instructions for applications to select a different runtime. The dated
+checkpoint text remains historical evidence; unsupported behavior remains
+explicitly diagnosed rather than silently falling back.
+
+## Integrated native layout additions — 2026-10-28
+
+This section records the native layout additions that became the default engine.
+It does not claim complete CSS or unrestricted Yoga parity, and it does not close
+aggregate release gates without fresh verification.
+
+Grid supports sparse and dense row/column placement, mixed explicit and implicit
+items, spans, implicit track definitions, intrinsic min/max contributions,
+`minmax`, capped fit-content, and fixed or automatic fill/fit repetitions.
+Track allocation and cell placement run through the native Grid arena. Absolute
+children do not occupy cells or contribute intrinsic track sizes, and preserve
+source paint order. Auto-fit collapses unoccupied repetitions. Invalid numeric
+tracks, placements, generations, and nonfinite measurement results reject.
+
+`style.layoutParticipation` defaults to `normal`. `hidden` removes allocation,
+paint, hit, focus, and HTML projection while retaining mounted component state
+and resources. Hidden components are not invoked; revealing them reuses their
+identity. Disposal still releases each resource exactly once. `contents` removes
+the receiving structural box and assigns its declared children into the parent
+layout. It applies to Group and known built-in layout components; box-dependent
+styles reject. Source wrappers retain event ancestry, Group transforms, and keys.
+Parent clipping applies before the preserved Group transform. Opaque components
+are never evaluated just to discover layout children.
+
+Positioned Flex, Absolute, Overlay, Flow, and Grid establish their padding box
+as the logical containing block, excluding borders. Static owners pass the nearest
+positioned box through ordinary component wrappers, reversed axes, and wrapped
+owners. Normal and contents Groups never establish a containing box. Their
+presentation transforms apply afterward to paint and hit geometry; they do not
+rewrite logical containing-block coordinates or infer a box from descendants.
+
+`overflow: "clip"` has the same natural intrinsic contributions and automatic
+content minimum as `visible`. It clips presentation without creating a scroll
+container or forcing a zero automatic minimum. This rule applies to natural Text
+sizing as well as pure layout contributions. The Yoga converter diagnoses scroll
+sizing instead of substituting clipping or inventing a scrolling API.
+
+`@pibbl/layout` supplies explicitly owned standalone native trees, immutable
+snapshots, changes, measurement callbacks, and versioned Yoga 3.2 conversion and
+analysis. The standalone lifecycle and diagnostic contracts are documented in
+its package and the standalone migration guide. These objects do not mount a
+Canvas or create a second animation scheduler.

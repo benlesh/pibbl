@@ -15,18 +15,18 @@ import {
   type SystemStyle,
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region.js';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region.js';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded.js';
 
 const controllers: PibblController[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); vi.restoreAllMocks(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
 type PairStyle = SystemStyle & BoxStyle & FlexItemStyle;
 type PairProps = { readonly minimum: number; readonly maximum: number };
 
-it.runIf(experimentalLayout)('preserves intrinsic contributions through border-box canonicalization while scalar outer bounds convert once', async () => {
+it.runIf(nativeLayout)('preserves intrinsic contributions through border-box canonicalization while scalar outer bounds convert once', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const limit = signal(80), hits: string[] = [], queries: number[] = [];
   let stamp = 0;

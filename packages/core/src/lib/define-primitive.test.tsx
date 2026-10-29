@@ -19,6 +19,7 @@ import {
 import { setPrimitivePresentation } from './primitive-presentation.js';
 import { useSignal } from './hooks/use-signal.js';
 import { signal } from './signals/graph.js';
+import { fitContent } from './style/sizing-length.js';
 
 const constraints = {
   minWidth: 0,
@@ -408,3 +409,19 @@ function createCanvas(width = 300, height = 150): HTMLCanvasElement {
 function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
 }
+
+
+it('requires primitive resolvers to consume intrinsic sizing literals before render', () => {
+  interface IntrinsicStyle extends SystemStyle { width: 'min-content' | ReturnType<typeof fitContent>; }
+  interface FiniteStyle extends SystemStyle { width: number; }
+  // @ts-expect-error intrinsic layout values are allocation-dependent declarations
+  definePrimitive<{}, IntrinsicStyle>(() => {});
+  const Resolved = definePrimitive<{}, IntrinsicStyle, IntrinsicStyle, FiniteStyle>(
+    (_props, style) => { const width: number = style.width; void width; },
+    { resolveStyle: (_style, context) => ({ width: context.allocation.width }) },
+  );
+  const keyword = <Resolved style={{ width: 'min-content' }} />;
+  const capped = <Resolved style={{ width: fitContent(80) }} />;
+  expect((keyword.props as { style: IntrinsicStyle }).style.width).toBe('min-content');
+  expect((capped.props as { style: IntrinsicStyle }).style.width).toEqual(fitContent(80));
+});

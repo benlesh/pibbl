@@ -5,11 +5,11 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
 let nextStamp = 1;
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -33,7 +33,7 @@ const Leaf = definePrimitive<LeafProps, Style, Style, Style & { readonly width: 
 });
 const fixed = (width: number, height: number, fill: string): Style & { width: number; height: number } => ({ width, height, minWidth: 0, minHeight: 0, flexBasis: width, flexGrow: 0, flexShrink: 0, fill });
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses source-first physical placement for all finite nowrap known Flex directions, including explicit RTL',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -71,7 +71,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses a finite empty known Flex content bottom while skipping absolute decoration',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();
@@ -92,7 +92,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   'uses described known Flex roots, described primitive roots, and recursively prepared sources',
   async () => {
     const baseline = snapshotWasmLayoutDiagnostics();

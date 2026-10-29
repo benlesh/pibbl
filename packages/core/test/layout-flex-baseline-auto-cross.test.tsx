@@ -14,10 +14,10 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
@@ -41,7 +41,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
   for (const type of ['mousedown', 'mouseup', 'click']) canvas.dispatchEvent(new MouseEvent(type, { clientX: bounds.left + x, clientY: bounds.top + y, bubbles: true, button: 0 }));
 }
 
-it.runIf(experimentalLayout)('places first-baseline automatic cross margins after excluding their baseline providers', async () => {
+it.runIf(nativeLayout)('places first-baseline automatic cross margins after excluding their baseline providers', async () => {
   const cases = [
     { name: 'before', style: { marginTop: 'auto' as const }, y: 60 },
     { name: 'after', style: { marginBottom: 'auto' as const }, y: 0 },
@@ -77,7 +77,7 @@ it.runIf(experimentalLayout)('places first-baseline automatic cross margins afte
   }
 });
 
-it.runIf(experimentalLayout)('moves a numeric first-baseline leaf to top-auto without changing identity, and clamps overflow to zero', async () => {
+it.runIf(nativeLayout)('moves a numeric first-baseline leaf to top-auto without changing identity, and clamps overflow to zero', async () => {
   const baseline = snapshotWasmLayoutDiagnostics(), margin = signal<0 | 'auto'>(0), ownerHeight = signal(80), baselineInput = signal(12);
   const boxes = new Map<string, LayoutBox>(), stamps = new Map<string, number>(), hits: string[] = [];
   const baselineCalls = { A: 0, B: 0 }; let serial = 0;

@@ -31,7 +31,7 @@ const basicFlex = (
 
 Explore the [Flex live example](#/examples/layout/flex).
 
-Experimental layout also provides a bounded direct-child placement adjustment
+The native layout engine provides a bounded direct-child placement adjustment
 for a finite Flex allocation in any main direction and wrapping mode.
 Placement supports direct or exactly-forwarded primitive leaves. `position: "static"` keeps the normal
 slot and ignores insets. `position: "relative"` keeps the normal slot, then
@@ -78,11 +78,11 @@ const relativeFlex = (
 ```
 
 The first rectangle still reserves its RTL slot, then shifts 18 units left and
-8 units down; the second remains in its original slot. This is experimental
-layout only. Relative percentages use parent content width/height; wrapped positioned layout owners,
-other layout parents and normal JavaScript Flex remain unsupported.
+8 units down; the second remains in its original slot. Relative percentages use
+parent content width/height; unsupported profiles report their layout diagnostic
+rather than selecting another engine.
 
-Experimental direct children can also use `position: "absolute"` with numeric
+Native direct children can also use `position: "absolute"` with numeric
 width/height and optional numeric or percentage physical insets. Such a child leaves Flex
 allocation while keeping its authored paint, target and focus order:
 
@@ -128,11 +128,11 @@ Automatic axes require the bounded paired, aspect or natural sizing contract.
 Nonnumeric or automatic bounds, direct layout children, child box decoration,
 margins and general nested containing-block selection remain unsupported.
 
-The experimental `layout-wasm` Studio build additionally supports finite numeric
+The native layout engine supports finite numeric
 physical margins in finite rows and columns, with nowrap or wrap. `margin` sets all four edges;
 `marginTop`, `marginRight`, `marginBottom` and `marginLeft` override individual
 edges. Values use logical Canvas units and may be negative. Margins stay outside
-paint and hit bounds. Normal JavaScript Flex and other layout families currently reject these fields. Percentage, auto and logical
+paint and hit bounds. Other unsupported layout-family profiles reject these fields. Percentage, auto and logical
 margins remain unsupported.
 
 ```tsx
@@ -144,17 +144,17 @@ const marginFlex = (
 );
 ```
 
-In that experimental build each painted box is 40 units wide, with a 5-unit
-outer margin on each side. See the [experimental public example](#/examples/layout/wasm-flex-text)
+Each painted box is 40 units wide, with a 5-unit
+outer margin on each side. See the [public example](#/examples/layout/wasm-flex-text)
 and choose Compare Text minimum; the lower right boxes toggle a negative margin and wrapping.
 
-The same experimental build accepts `flexDirection: "row-reverse"` and
+The native layout engine accepts `flexDirection: "row-reverse"` and
 `"column-reverse"`, including finite wrapping. Main-axis placement reverses within
 each line; source keys, paint/hit priority and tab order stay unchanged. Cross-line
 stacking stays forward. `flex-start` and `flex-end` follow the selected main direction.
-The experimental build also accepts `flexWrap: "wrap-reverse"`, including reversed
+The native layout engine also accepts `flexWrap: "wrap-reverse"`, including reversed
 main axes. It reverses cross lines and cross start/end alignment while preserving
-source order. Normal JavaScript Flex retains the forward LTR subset.
+source order. Unsupported direction profiles retain their layout diagnostic.
 Use [Flip axes in the keyed collection example](#/examples/layout/wasm-flex-keyed-wrap)
 to compare placement with its separate Reverse order control. Click either collection heading to flip cross lines.
 
@@ -177,7 +177,7 @@ Supply a definite main dimension or `flexBasis`. Each wrapped line solves its ma
 allocations first, then derives cross sizes; cross bounds may break the ratio.
 Intrinsic main inference remains unsupported.
 
-In experimental layout, a direct empty `Rectangle` with a finite numeric main
+In native layout, a direct empty `Rectangle` with a finite numeric main
 size or basis and an automatic aspect-derived cross size may omit its main
 minimum. Its content minimum is zero, just as with explicit `minWidth: 0` or
 `minHeight: 0`; an explicit numeric floor still wins. This does not add a
@@ -216,12 +216,12 @@ const wrappedRatioFlex = (
 );
 ```
 
-In the experimental build, the first line has two94×47 boxes and the second has
+In native layout, the first line has two94×47 boxes and the second has
 one200×100 box. In the [comparison example](#/examples/layout/wasm-yoga-migration),
 click Next section twice, then Next case + resize to inspect owner resizing and
 row/column reversed wrapping with the same public style.
 
-Experimental intrinsic measurement also accepts percentage child `width`,
+Native intrinsic measurement also accepts percentage child `width`,
 `minWidth` and `maxWidth` in a nowrap column with an explicit numeric content
 width. The measured child must be known Text, Flow, Grid, or a known nowrap
 column. Percentages use the settled owner content width; border-box conversion

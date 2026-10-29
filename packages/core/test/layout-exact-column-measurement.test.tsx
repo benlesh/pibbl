@@ -7,14 +7,14 @@ import {
   type Length,
   type SystemStyle,
 } from "@pibbl/core";
-import { experimentalLayout } from "../src/lib/layout/wasm/region";
+import { nativeLayout } from "../src/lib/layout/wasm/region";
 import { prepareLayoutEngineSync } from "../src/lib/layout/wasm/embedded";
 
 const service = {
   measureText: (value: string) => ({ width: value.length * 10 }) as TextMetrics,
 };
 beforeAll(() => {
-  if (experimentalLayout) prepareLayoutEngineSync();
+  if (nativeLayout) prepareLayoutEngineSync();
 });
 
 interface ExactColumnStyle extends SystemStyle {
@@ -50,7 +50,7 @@ function exactColumnChild(
   });
 }
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   "uses only an exact finite column constraint to resolve child percentage main bounds during Flex measurement",
   () => {
     const measure = vi.fn(() => ({
@@ -112,7 +112,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   "treats an exact zero column height as a definite percentage basis",
   () => {
     const measure = vi.fn(() => ({

@@ -7,17 +7,17 @@ import {
   type Length,
   type SystemStyle,
 } from "@pibbl/core";
-import { experimentalLayout } from "../src/lib/layout/wasm/region";
+import { nativeLayout } from "../src/lib/layout/wasm/region";
 import { prepareLayoutEngineSync } from "../src/lib/layout/wasm/embedded";
 
 const service = {
   measureText: (value: string) => ({ width: value.length * 10 }) as TextMetrics,
 };
 beforeAll(() => {
-  if (experimentalLayout) prepareLayoutEngineSync();
+  if (nativeLayout) prepareLayoutEngineSync();
 });
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   "uses only an exact finite row constraint to resolve child percentage bounds during Flex measurement",
   () => {
     interface ExactStyle extends SystemStyle {
@@ -110,7 +110,7 @@ it.runIf(experimentalLayout)(
   },
 );
 
-it.runIf(experimentalLayout)(
+it.runIf(nativeLayout)(
   "treats an exact zero row width as a definite percentage basis",
   () => {
     interface ExactStyle extends SystemStyle {

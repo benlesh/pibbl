@@ -11,9 +11,24 @@ import {
   captureReceiverInputProvision,
   replayReceiverInputProvision,
   withReceiverInputProvision,
+  observeReceiverInputReads,
 } from './input-provision.js';
 
 describe('receiver input provisions', () => {
+  it('observes nested receiver reads without transferring their dependency ownership', () => {
+    const source = signal(1);
+    const transaction = testTransaction();
+    const observed: unknown[] = [];
+    observeReceiverInputReads(node => observed.push(node), () =>
+      withReceiverInputProvision(transaction, {}, () =>
+        withReceiverInputProvision(transaction, {}, () => source.get())));
+    expect(observed).toHaveLength(1);
+    withReceiverInputProvision(transaction, {}, () => source.get());
+    expect(observed).toHaveLength(1);
+    expect(() => observeReceiverInputReads(() => {}, () => { throw new Error('stop'); })).toThrow('stop');
+    transaction.finish(false);
+  });
+
   it('adopts deduplicated prepass reads into the receiver generation', () => {
     const source = signal(1);
     const receiver = {};

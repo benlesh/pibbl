@@ -2,15 +2,15 @@ import { afterEach, beforeAll, expect, it } from 'vitest';
 import { Flex, Rectangle, definePrimitive, signal, type BoxStyle, type FlexItemStyle, type PibblResponsiveStyle, type RectStyle, type SystemStyle, useCanvasContext, useConst, useLayoutBox } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 type Box = { x: number; y: number; width: number; height: number; stamp: number };
 
-it.runIf(experimentalLayout)('resolves absolute percentage sizes and bounds once from the direct Flex padding box before provider measurement', async () => {
+it.runIf(nativeLayout)('resolves absolute percentage sizes and bounds once from the direct Flex padding box before provider measurement', async () => {
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type Style = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   type MeasuredStyle = BoxStyle & FlexItemStyle;
@@ -61,7 +61,7 @@ it.runIf(experimentalLayout)('resolves absolute percentage sizes and bounds once
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('forwards authored percentage sizes and bounds once through a direct function leaf', async () => {
+it.runIf(nativeLayout)('forwards authored percentage sizes and bounds once through a direct function leaf', async () => {
   type Style = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
   const phase = signal<'object' | 'signals'>('object');

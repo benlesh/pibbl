@@ -2,10 +2,10 @@ import { afterEach, beforeAll, expect, it } from 'vitest';
 import { FocusManagement, Flex, Rectangle, signal, type FlexItemStyle, type FlexStyle, type PibblResponsiveStyle, type RectStyle, useCanvasContext, useConst, useLayoutBox } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
-beforeAll(() => { if (experimentalLayout) prepareLayoutEngineSync(); });
+beforeAll(() => { if (nativeLayout) prepareLayoutEngineSync(); });
 afterEach(() => { for (const controller of controllers.splice(0)) controller.dispose(); document.body.replaceChildren(); });
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function click(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -15,7 +15,7 @@ function click(canvas: HTMLCanvasElement, x: number, y: number): void {
 function pressTab(canvas: HTMLCanvasElement): void { canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true })); }
 
 type Box = { x: number; y: number; width: number; height: number; stamp: number };
-it.runIf(experimentalLayout)('keeps static percentage insets inert and applies relative physical percentages from finite Flex content axes', async () => {
+it.runIf(nativeLayout)('keeps static percentage insets inert and applies relative physical percentages from finite Flex content axes', async () => {
   type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
   type Mode = 'omitted' | 'static' | 'leading' | 'trailing' | 'overflow';
   type Style = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
@@ -65,7 +65,7 @@ it.runIf(experimentalLayout)('keeps static percentage insets inert and applies r
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
-it.runIf(experimentalLayout)('forwards percentage signals through a fixed direct Flex owner while static ownership stays transparent', async () => {
+it.runIf(nativeLayout)('forwards percentage signals through a fixed direct Flex owner while static ownership stays transparent', async () => {
   type OwnerStyle = PibblResponsiveStyle<FlexStyle & FlexItemStyle>;
   type ChildStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();

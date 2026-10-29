@@ -2,13 +2,11 @@
 
 ## Active plan
 
-[010 — Experimental layout engine rework](./010-layout-engine-rework.md) is the
-current user-authorized layout execution plan. Twenty-six experimental delivery
-slices include Flex/Text, bounded nested intrinsic sizing, keyed lifecycle and an
-installed tarball consumer and private reactive input classification. Eight
-consolidation checkpoints are complete; broader
-reactive preparation, Yoga conformance, Grid and release gates remain open. This
-does not close the earlier work below.
+[010 — Native layout engine rework](./010-layout-engine-rework.md) is the
+current user-authorized layout execution plan. The native engine is the default
+runtime path; the numbered delivery slices are historical evidence. Remaining
+work covers native graph hardening, migration/conformance evidence, and release
+gates. This does not close the earlier work below.
 
 [008 — Financial charting](./008-financial-charting.md) records the approved financial delivery.
 [009 — Parameterized textures](./009-parameterized-textures.md) records the user-directed texture library work.

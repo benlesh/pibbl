@@ -1,7 +1,13 @@
 import { afterEach, beforeAll, expect, it } from 'vitest';
 import {
+  Absolute,
+  Group,
   FocusManagement,
   Flex,
+  Flow,
+  Grid,
+  Overlay,
+  type PibblNode,
   Rectangle,
   signal,
   type FlexItemStyle,
@@ -14,12 +20,12 @@ import {
 } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
-import { experimentalLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
+import { nativeLayout, snapshotWasmLayoutDiagnostics } from '../src/lib/layout/wasm/region';
 
 const controllers: { dispose(): void }[] = [];
 
 beforeAll(() => {
-  if (experimentalLayout) prepareLayoutEngineSync();
+  if (nativeLayout) prepareLayoutEngineSync();
 });
 
 afterEach(() => {
@@ -41,7 +47,7 @@ function clickCanvas(canvas: HTMLCanvasElement, x: number, y: number): void {
   }
 }
 
-it.runIf(experimentalLayout)('makes a static nested Flex transparent to the nearest containing Flex while relative and omitted Flex own their local absolute child', async () => {
+it.runIf(nativeLayout)('makes a static nested Flex transparent to the nearest containing Flex while relative and omitted Flex own their local absolute child', async () => {
   type ProbeStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   type OwnerStyle = PibblResponsiveStyle<FlexStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -136,7 +142,7 @@ it.runIf(experimentalLayout)('makes a static nested Flex transparent to the near
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('passes two static Flex boxes to the nearest owner, while a relative middle Flex resets that containing block', async () => {
+it.runIf(nativeLayout)('passes two static Flex boxes to the nearest owner, while a relative middle Flex resets that containing block', async () => {
   type ProbeStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   type OwnerStyle = PibblResponsiveStyle<FlexStyle & FlexItemStyle>;
   const mode = signal<'static' | 'relative'>('static');
@@ -191,7 +197,7 @@ it.runIf(experimentalLayout)('passes two static Flex boxes to the nearest owner,
   expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(staticSnapshot.nodeCreates);
 });
 
-it.runIf(experimentalLayout)('keeps a static decorated Flex transparent when the nearest owner derives paired-inset absolute dimensions', async () => {
+it.runIf(nativeLayout)('keeps a static decorated Flex transparent when the nearest owner derives paired-inset absolute dimensions', async () => {
   type ProbeStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   type OwnerStyle = PibblResponsiveStyle<FlexStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -251,7 +257,7 @@ it.runIf(experimentalLayout)('keeps a static decorated Flex transparent when the
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
 
-it.runIf(experimentalLayout)('keeps a fixed direct static or relative Flex owner stable across wrapped outer allocation while its primitive absolute leaf uses the selected containing box', async () => {
+it.runIf(nativeLayout)('keeps a fixed direct static or relative Flex owner stable across wrapped outer allocation while its primitive absolute leaf uses the selected containing box', async () => {
   type ProbeStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
   type OwnerStyle = PibblResponsiveStyle<FlexStyle & FlexItemStyle>;
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -343,4 +349,146 @@ it.runIf(experimentalLayout)('keeps a fixed direct static or relative Flex owner
   expect(disposed.activeNodes).toBe(baseline.activeNodes);
   expect(disposed.activeArenas).toBe(baseline.activeArenas);
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+it.runIf(nativeLayout)('inherits the positioned layout box through an opaque component wrapper', async () => {
+  let absolute: { x: number; y: number; width: number; height: number } | undefined;
+  function Probe({ style: _style }: { readonly style: PibblResponsiveStyle<RectStyle & FlexItemStyle> }) {
+    const box = useLayoutBox();
+    const matrix = useCanvasContext().getTransform();
+    absolute = { x: matrix.e, y: matrix.f, width: box.width, height: box.height };
+    return <Rectangle style={{ width: box.width, height: box.height, fill: '#a63758' }} />;
+  }
+  function Wrapper({ style: _style }: { readonly style: PibblResponsiveStyle<RectStyle & FlexItemStyle> }) {
+    return <Flex style={{ position: 'static', width: 80, height: 60, alignItems: 'flex-start' }}>
+      <Probe style={{ position: 'absolute', left: 12, top: 8, width: 30, height: 20, minWidth: 0, minHeight: 0 }} />
+    </Flex>;
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = 200; canvas.height = 100; document.body.append(canvas);
+  const controller = pibbl(canvas, <Flex style={{ width: 200, height: 100, alignItems: 'flex-start' }}>
+    <Rectangle style={{ width: 40, height: 20, minWidth: 0, flexShrink: 0 }} />
+    <Wrapper style={{ width: 80, height: 60, minWidth: 0, flexShrink: 0 }} />
+  </Flex>);
+  controllers.push(controller);
+  await nextFrame();
+  expect(absolute).toEqual({ x: 12, y: 8, width: 30, height: 20 });
+});
+
+it.runIf(nativeLayout)('uses a positioned Absolute padding box through an opaque static Flex for right-inset descendants', async () => {
+  type ProbeStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
+  type OwnerStyle = PibblResponsiveStyle<FlexStyle & FlexItemStyle>;
+  let absolute: { x: number; y: number; width: number; height: number } | undefined;
+
+  function Probe({ style: _style }: { readonly style: ProbeStyle }) {
+    const box = useLayoutBox();
+    const matrix = useCanvasContext().getTransform();
+    absolute = { x: matrix.e, y: matrix.f, width: box.width, height: box.height };
+    return <Rectangle style={{ width: box.width, height: box.height, fill: '#a63758' }} />;
+  }
+
+  function StaticCard({ style: _style }: { readonly style: OwnerStyle }) {
+    return <Flex style={{
+      position: 'static', width: 200, height: 80,
+      flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start',
+    }}>
+      <Probe style={{
+        position: 'absolute', right: 0, top: 0,
+        width: 20, height: 10, minWidth: 0, minHeight: 0,
+      }} />
+    </Flex>;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 300; canvas.height = 120; document.body.append(canvas);
+  const controller = pibbl(canvas, <Absolute style={{
+    width: 200, height: 80, boxSizing: 'border-box',
+    padding: { left: 10, right: 20, top: 4, bottom: 6 },
+    borderWidth: { left: 3, right: 7, top: 2, bottom: 8 },
+  }}>
+    <StaticCard style={{ width: 200, height: 80 }} />
+  </Absolute>);
+  controllers.push(controller);
+  await nextFrame();
+
+  // The containing block is the outer padding box: x=3, width=190, y=2.
+  // The static Flex remains transparent, so right: 0 places the 20px leaf at x=173.
+  expect(absolute).toEqual({ x: 173, y: 2, width: 20, height: 10 });
+});
+
+it.runIf(nativeLayout)('gives every positioned layout owner the same padding-box context while preflighting a static known descendant', async () => {
+  type ProbeStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
+  type OwnerStyle = PibblResponsiveStyle<FlexStyle & FlexItemStyle>;
+  let absolute: { x: number; y: number; width: number; height: number } | undefined;
+
+  function Probe({ style: _style }: { readonly style: ProbeStyle }) {
+    const box = useLayoutBox();
+    const matrix = useCanvasContext().getTransform();
+    absolute = { x: matrix.e, y: matrix.f, width: box.width, height: box.height };
+    return <Rectangle style={{ width: box.width, height: box.height, fill: '#a63758' }} />;
+  }
+
+  function StaticCard({ style: _style }: { readonly style: OwnerStyle }) {
+    return <Flex style={{
+      position: 'static', width: 200, height: 80,
+      flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start',
+    }}>
+      <Probe style={{
+        position: 'absolute', right: 0, top: 0,
+        width: 20, height: 10, minWidth: 0, minHeight: 0,
+      }} />
+    </Flex>;
+  }
+
+  for (const owner of ['Absolute', 'Overlay', 'Flow', 'Grid'] as const) {
+    absolute = undefined;
+    const canvas = document.createElement('canvas');
+    canvas.width = 300; canvas.height = 120; document.body.append(canvas);
+    const ownerStyle = {
+      width: 200, height: 80, boxSizing: 'border-box' as const,
+      padding: { left: 10, right: 20, top: 4, bottom: 6 },
+      borderWidth: { left: 3, right: 7, top: 2, bottom: 8 },
+      minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+    };
+    const card = <StaticCard style={{ width: 200, height: 80 }} />;
+    const ownerNode: PibblNode = owner === 'Absolute' ? <Absolute style={ownerStyle}>{card}</Absolute>
+      : owner === 'Overlay' ? <Overlay style={ownerStyle}>{card}</Overlay>
+      : owner === 'Flow' ? <Flow style={ownerStyle}>{card}</Flow>
+      : <Grid style={{ ...ownerStyle, gridTemplateColumns: [160], gridTemplateRows: [68] }}>{card}</Grid>;
+    const node: PibblNode = <Flex style={{
+      width: 300, height: 120,
+      flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start',
+    }}>{ownerNode}</Flex>;
+    const controller = pibbl(canvas, node); controllers.push(controller);
+    await nextFrame();
+    expect(absolute, owner).toEqual({ x: 173, y: 2, width: 20, height: 10 });
+    controller.dispose();
+    controllers.splice(controllers.indexOf(controller), 1);
+    canvas.remove();
+  }
+});
+
+it.runIf(nativeLayout).each(['normal', 'contents'] as const)('keeps a transformed %s Group transparent to logical containing-block selection', async participation => {
+  let geometry: { x: number; y: number; width: number; height: number } | undefined;
+  let hits = 0;
+  function Probe({ style: _style }: { style: PibblResponsiveStyle<RectStyle & FlexItemStyle> }) {
+    const box = useLayoutBox(), matrix = useCanvasContext().getTransform();
+    geometry = { x: matrix.e, y: matrix.f, width: box.width, height: box.height };
+    return <Rectangle onClick={() => hits++} style={{ width: box.width, height: box.height, fill: '#a63758' }} />;
+  }
+  function Wrapper({ style: _style }: { style: PibblResponsiveStyle<RectStyle & FlexItemStyle> }) {
+    return <Group style={{ layoutParticipation: participation, translateX: 11, translateY: 7 }}>
+      <Flex style={{ position: 'static', width: 80, height: 40 }}>
+        <Probe style={{ position: 'absolute', right: 0, top: 0, width: 20, height: 10, minWidth: 0, minHeight: 0 }} />
+      </Flex>
+    </Group>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 300; canvas.height = 120; document.body.append(canvas);
+  const controller = pibbl(canvas, <Absolute style={{ width: 200, height: 80, boxSizing: 'border-box', padding: { left: 10, right: 20, top: 4, bottom: 6 }, borderWidth: { left: 3, right: 7, top: 2, bottom: 8 } }}>
+    <Wrapper style={{ width: 80, height: 40 }} />
+  </Absolute>);
+  controllers.push(controller); await nextFrame();
+  expect(geometry).toEqual({ x: 184, y: 9, width: 20, height: 10 });
+  clickCanvas(canvas, 185, 10); expect(hits).toBe(1);
+  clickCanvas(canvas, 175, 3); expect(hits).toBe(1);
 });
