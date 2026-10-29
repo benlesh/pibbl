@@ -119,12 +119,12 @@ export function autoFitTracks(...tracks: readonly GridTrack[]): GridRepeatTrack 
 }
 
 type GridAlignment = 'stretch' | 'start' | 'center' | 'end';
-type ParsedGridTrack =
+type ParsedGridTrack = (
   | Readonly<{ kind: 'fixed'; value: number }>
   | Readonly<{ kind: 'percentage'; factor: number }>
   | Readonly<{ kind: 'fraction'; factor: number }>
   | Readonly<{ kind: 'intrinsic'; value: 'auto' | SizingKeyword | FitContent }>
-  | Readonly<{ kind: 'minmax'; min: ParsedGridTrack; max: ParsedGridTrack }>;
+  | Readonly<{ kind: 'minmax'; min: ParsedGridTrack; max: ParsedGridTrack }>) & { readonly autoFit?: boolean };
 
 /**
  * Supported geometry and presentation properties for Grid.
@@ -361,16 +361,8 @@ function resolveGridPlacements(
   if (nativeRegion) { const assigned = nativeRegion.gridV2Region().assign(flowCells, options.columns.length, options.rows.length, gridFlowCode(options.gridAutoFlow)).cells; for (let index = 0; index < flowCells.length; index++) { flowCells[index]!.columnStart = assigned[index]!.columnStart; flowCells[index]!.rowStart = assigned[index]!.rowStart; } }
   let expandedColumns = appendImplicitTracks(options.columns, options.autoColumn, maxGridExtent(flowCells, 'column'));
   let expandedRows = appendImplicitTracks(options.rows, options.autoRow, maxGridExtent(flowCells, 'row'));
-  if (nativeRegion && options.autoFitColumns) {
-    const collapsed = nativeRegion.gridV2Region().collapseAutoFit(0, 0);
-    for (let index = 0; index < flowCells.length; index++) flowCells[index]!.columnStart = collapsed.cells[index]!.columnStart;
-    expandedColumns = expandedColumns.filter((_, index) => collapsed.keep[index]);
-  }
-  if (nativeRegion && options.autoFitRows) {
-    const collapsed = nativeRegion.gridV2Region().collapseAutoFit(1, 0);
-    for (let index = 0; index < flowCells.length; index++) flowCells[index]!.rowStart = collapsed.cells[index]!.rowStart;
-    expandedRows = expandedRows.filter((_, index) => collapsed.keep[index]);
-  }
+  if (nativeRegion && options.autoFitColumns) expandedColumns = collapseParsedAutoFit(expandedColumns, flowCells, 'column');
+  if (nativeRegion && options.autoFitRows) expandedRows = collapseParsedAutoFit(expandedRows, flowCells, 'row');
   let columns = nativeRegion ? resolveNativeGridTracks(nativeRegion, expandedColumns, container.width, options.columnGap, 'columns', container) : resolveParsedGridTracks(
     expandedColumns,
     container.width,
@@ -417,6 +409,7 @@ function resolveGridPlacements(
   const nativeBoxes = nativeRegion ? nativeRegion.placeGridV2Cells(flowCells, gridFlowCode(options.gridAutoFlow), options.columnGap, options.rowGap) : undefined;
   const placements: GridPlacement[] = [];
 
+  let flowIndex = 0;
   for (const child of children) {
     const item = nativeItems[placements.length]!;
     const { prepared, receiverToken, columnStart, columnSpan, rowStart, rowSpan } = item;
@@ -431,7 +424,7 @@ function resolveGridPlacements(
       placements.push({ usedWidth: absolute.usedWidth, usedHeight: absolute.usedHeight, box: absolute.box, element: absolute.element });
       continue;
     }
-    const nativeBox = nativeBoxes?.[flowCells.indexOf(item)];
+    const nativeBox = nativeBoxes?.[flowIndex++];
     const area = nativeBox ? { x: container.x + nativeBox.x, y: container.y + nativeBox.y, width: nativeBox.width, height: nativeBox.height } : {
       x: container.x + trackOffset(columns, columnStart - 1, options.columnGap),
       y: container.y + trackOffset(rows, rowStart - 1, options.rowGap),
@@ -549,52 +542,17 @@ export function resolveGridTracks(
 
 
 function assignGridCells(children: readonly PibblElement<any>[], container: Readonly<LayoutBox>, columns: number, rows: number, options: Readonly<ReturnType<typeof normalizeGridOptions>>): GridCell[] {
-  /* The production WASM lane owns this same occupancy pass.  Keeping this
-   * compact compatibility implementation here preserves legacy JS builds. */
-  const occupied = new Set<string>(), result: GridCell[] = [];
-  let cursorColumn = 1, cursorRow = 1;
-  const byColumn = options.gridAutoFlow.startsWith('column');
-  const dense = options.gridAutoFlow.endsWith('dense');
-  for (let index = 0; index < children.length; index++) {
-    const child = children[index]!;
-    const receiverToken = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, index);
-    const prepared = prepareDirectChildStyle(child, receiverToken, container);
-    const normalized = preparedStyleValue(prepared) as GridChildStyle;
-    if (normalized.position !== 'absolute') assertSupportedChildPosition('Grid', child, normalized); rejectUnsupportedItemFields(child, normalized, container);
-    const columnSpan = placementInteger(normalized.gridColumnSpan ?? 1, 'gridColumnSpan', child, container, false);
-    const rowSpan = placementInteger(normalized.gridRowSpan ?? 1, 'gridRowSpan', child, container, false);
-    let columnStart = normalized.gridColumnStart, rowStart = normalized.gridRowStart;
-    if (columnStart === undefined || rowStart === undefined) {
-      let found = false;
-      const startColumn = dense ? 1 : cursorColumn;
-      const startRow = dense ? 1 : cursorRow;
-      /* Searching grows the implicit major axis. A bounded safety cap turns
-       * malformed input into a useful layout diagnostic instead of a hang. */
-      for (let major = 0; major < children.length + columns + rows + 1 && !found; major++) {
-        const rowLimit = Math.max(rows, startRow + major + rowSpan);
-        const columnLimit = Math.max(columns, startColumn + major + columnSpan);
-        if (byColumn) {
-          for (let column = columnStart ?? startColumn; column <= columnLimit && !found; column++) for (let row = rowStart ?? 1; row <= rowLimit && !found; row++) {
-            const c = columnStart ?? column, r = rowStart ?? row;
-            if (freeGridArea(occupied, c, r, columnSpan, rowSpan)) { columnStart = c; rowStart = r; found = true; }
-          }
-        } else {
-          for (let row = rowStart ?? startRow; row <= rowLimit && !found; row++) for (let column = columnStart ?? 1; column <= columnLimit && !found; column++) {
-            const c = columnStart ?? column, r = rowStart ?? row;
-            if (freeGridArea(occupied, c, r, columnSpan, rowSpan)) { columnStart = c; rowStart = r; found = true; }
-          }
-        }
-      }
-      if (!found) throw childDiagnostic(child, 'gridAutoFlow', options.gridAutoFlow, container, 'could not find an implicit grid cell');
+  const cells = prepareGridCells(children, container);
+  const flow = cells.filter(cell => cell.normalized.position !== 'absolute');
+  const region = new LayoutRegion();
+  try {
+    const assigned = region.gridV2Region().assign(flow, columns, rows, gridFlowCode(options.gridAutoFlow)).cells;
+    for (let index = 0; index < flow.length; index++) {
+      flow[index]!.columnStart = assigned[index]!.columnStart;
+      flow[index]!.rowStart = assigned[index]!.rowStart;
     }
-    const c = placementInteger(columnStart, 'gridColumnStart', child, container, false), r = placementInteger(rowStart, 'gridRowStart', child, container, false);
-    /* Explicit starts are allowed to establish implicit tracks. */
-    for(let yy=r;yy<r+rowSpan;yy++)for(let xx=c;xx<c+columnSpan;xx++)occupied.add(`${xx}:${yy}`);
-    cursorColumn = c; cursorRow = r;
-    if (byColumn) cursorRow += rowSpan; else cursorColumn += columnSpan;
-    result.push({ child, prepared, normalized, receiverToken, columnStart:c, columnSpan, rowStart:r, rowSpan });
-  }
-  return result;
+    return cells;
+  } finally { region.dispose(); }
 }
 
 function prepareExplicitGridCells(children: readonly PibblElement<any>[], container: Readonly<LayoutBox>, columns: number, rows: number): GridCell[] {
@@ -629,11 +587,6 @@ function prepareGridCells(children: readonly PibblElement<any>[], container: Rea
   return result;
 }
 
-function freeGridArea(occupied: ReadonlySet<string>, column: number, row: number, columnSpan: number, rowSpan: number): boolean {
-  for (let y = row; y < row + rowSpan; y++) for (let x = column; x < column + columnSpan; x++) if (occupied.has(`${x}:${y}`)) return false;
-  return true;
-}
-
 function maxGridExtent(cells: readonly { columnStart: number; columnSpan: number; rowStart: number; rowSpan: number }[], axis: 'column' | 'row'): number {
   let extent = 0;
   for (let index = 0; index < cells.length; index++) {
@@ -644,7 +597,33 @@ function maxGridExtent(cells: readonly { columnStart: number; columnSpan: number
 }
 function collapseAutoFitTracks(tracks: readonly number[], cells: readonly GridCell[], axis: 'column' | 'row'): number[] { const out=tracks.slice(); for(let index=0;index<out.length;index++){let used=false;for(let cellIndex=0;cellIndex<cells.length;cellIndex++){const cell=cells[cellIndex]!;const start=axis==='column'?cell.columnStart:cell.rowStart,span=axis==='column'?cell.columnSpan:cell.rowSpan;if(start<=index+1&&index+1<start+span){used=true;break}}if(!used)out[index]=0;}return out; }
 
-function isAutoFitOnly(tracks: readonly GridTrack[]): boolean { return tracks.length===1&&typeof tracks[0]==='object'&&tracks[0]!==null&&'kind'in tracks[0]&&(tracks[0] as GridRepeatTrack).kind==='repeat'&&(tracks[0] as GridRepeatTrack).count==='auto-fit'; }
+function containsAutoFit(tracks: readonly GridTrack[]): boolean {
+  for (const track of tracks) if (typeof track === 'object' && track !== null && 'kind' in track && track.kind === 'repeat' &&
+    (track.count === 'auto-fit' || containsAutoFit(track.tracks))) return true;
+  return false;
+}
+
+/** Collapse only automatic-fit tracks; fixed siblings and implicit tracks remain. */
+function collapseParsedAutoFit(tracks: readonly ParsedGridTrack[], cells: GridCell[], axis: 'column' | 'row'): readonly ParsedGridTrack[] {
+  const occupied = new Int32Array(tracks.length + 1);
+  for (const cell of cells) {
+    const start = (axis === 'column' ? cell.columnStart : cell.rowStart) - 1;
+    const span = axis === 'column' ? cell.columnSpan : cell.rowSpan;
+    occupied[start]++; occupied[start + span]--;
+  }
+  const offsets = new Uint32Array(tracks.length + 1), kept: ParsedGridTrack[] = [];
+  let count = 0;
+  for (let index = 0; index < tracks.length; index++) {
+    count += occupied[index]!;
+    if (!tracks[index]!.autoFit || count > 0) kept.push(tracks[index]!);
+    offsets[index + 1] = kept.length;
+  }
+  for (const cell of cells) {
+    if (axis === 'column') cell.columnStart = offsets[cell.columnStart - 1]! + 1;
+    else cell.rowStart = offsets[cell.rowStart - 1]! + 1;
+  }
+  return kept;
+}
 
 function appendImplicitTracks(explicit: readonly ParsedGridTrack[], automatic: ParsedGridTrack, extent: number): readonly ParsedGridTrack[] {
   if (extent <= explicit.length) return explicit;
@@ -758,7 +737,7 @@ function measureGridCellAtSelectedWidth(
   return result.size.height;
 }
 
-function trackNeedsIntrinsic(track: ParsedGridTrack): boolean { return track.kind === 'intrinsic' || track.kind === 'minmax' && trackNeedsIntrinsic(track.min); }
+function trackNeedsIntrinsic(track: ParsedGridTrack): boolean { return track.kind === 'intrinsic' || track.kind === 'minmax' && (trackNeedsIntrinsic(track.min) || trackNeedsIntrinsic(track.max)); }
 function resolveNativeGridTracks(region: LayoutRegion, tracks: readonly ParsedGridTrack[], bound: number, gap: number, axis: 'columns' | 'rows', container: Readonly<LayoutBox>): number[] {
   try { return region.resolveGridV2Tracks(gridTrackRecords(tracks, bound), { bound, gap, axis: axis === 'columns' ? 0 : 1 }) as number[]; }
   catch (error) { if (error instanceof RangeError) throw trackDiagnostic(tracks, axis, container); throw error; }
@@ -883,6 +862,7 @@ function parseGridTracks(
       gap,
     );
   const expanded: GridTrack[] = [];
+  const autoFit = autoRepeatIndex !== -1 && (tracks[autoRepeatIndex] as GridRepeatTrack).count === 'auto-fit' ? new Set<number>() : undefined;
   for (let index = 0; index < tracks.length; index++) {
     expandGridTrack(
       tracks[index]!,
@@ -890,10 +870,11 @@ function parseGridTracks(
       container,
       expanded,
       index === autoRepeatIndex ? autoRepeatCount : undefined,
+      autoFit,
     );
   }
   if (!expanded.length) throw trackDiagnostic(tracks, axis, container);
-  return expanded.map(track => {
+  const parsed: ParsedGridTrack[] = expanded.map(track => {
     if (typeof track === 'number') {
       if (!Number.isFinite(track) || track < 0) {
         throw trackDiagnostic(track, axis, container);
@@ -918,6 +899,7 @@ function parseGridTracks(
       { kind: 'percentage', factor } :
       { kind: 'fraction', factor });
   });
+  return autoFit ? parsed.map((track, index) => autoFit.has(index) ? Object.freeze({ ...track, autoFit: true }) : track) : parsed;
 }
 
 function parseSingleGridTrack(track: GridTrackBreadth, axis: 'columns' | 'rows', container: Readonly<LayoutBox>): ParsedGridTrack {
@@ -931,6 +913,8 @@ function expandGridTrack(
   container: Readonly<LayoutBox>,
   into: GridTrack[],
   resolvedAutoRepeatCount?: number,
+  autoFit?: Set<number>,
+  inheritedAutoFit = false,
 ): void {
   if (typeof track === 'object' && track !== null && 'kind' in track && track.kind === 'repeat') {
     if (!Array.isArray(track.tracks) || !track.tracks.length) throw trackDiagnostic(track, axis, container);
@@ -940,9 +924,10 @@ function expandGridTrack(
       count = resolvedAutoRepeatCount;
     }
     if (!Number.isInteger(count) || count < 0) throw trackDiagnostic(track, axis, container);
-    for (let repeat = 0; repeat < count; repeat++) for (let index = 0; index < track.tracks.length; index++) expandGridTrack(track.tracks[index]!, axis, container, into);
+    for (let repeat = 0; repeat < count; repeat++) for (let index = 0; index < track.tracks.length; index++) expandGridTrack(track.tracks[index]!, axis, container, into, undefined, autoFit, inheritedAutoFit || track.count === 'auto-fit');
     return;
   }
+  if (inheritedAutoFit) autoFit?.add(into.length);
   into.push(track);
 }
 
@@ -1124,63 +1109,17 @@ function measureGridRowsAtSelectedWidth(
   }
   const container = { x: 0, y: 0, width, height: constraints.maxHeight };
   const options = normalizeGridOptions(style, container);
-  if (options.columns.some(trackNeedsIntrinsic)) {
-    return { status: 'unsupported', reason: 'Grid selected-width row measurement requires resolved non-intrinsic columns' };
-  }
   const children = materializeLayoutChildren(childInput, 'Grid');
-  const cells = assignGridCells(children, container, options.columns.length, options.rows.length, options);
-  const columns = resolveParsedGridTracks(
-    appendImplicitTracks(options.columns, options.autoColumn, maxGridExtent(cells.filter((cell) => cell.normalized.position !== 'absolute'), 'column')),
-    width,
-    options.columnGap,
-    'columns',
-    container,
-  );
-  const rows = appendImplicitTracks(options.rows, options.autoRow, maxGridExtent(cells.filter((cell) => cell.normalized.position !== 'absolute'), 'row'));
-  const resolved = new Array<number>(rows.length).fill(0);
-  for (let index = 0; index < rows.length; index++) {
-    const track = rows[index]!;
-    if (track.kind === 'fixed') resolved[index] = track.value;
-    else if (track.kind === 'intrinsic') continue;
-    else if (track.kind === 'minmax') {
-      if (track.min.kind === 'fixed') resolved[index] = track.min.value;
-      else if (track.min.kind === 'intrinsic') continue;
-      else return { status: 'unsupported', reason: 'Grid selected-width row measurement requires non-fractional, non-percentage row minima' };
-    } else {
-      return { status: 'unsupported', reason: 'Grid selected-width row measurement requires non-fractional, non-percentage rows' };
-    }
-  }
-  const measurement: GridMeasurementInput = { service, measureElement: measure };
-  const contributions = gatherGridIntrinsicContributions(
-    rows,
-    cells,
-    measurement,
-    container,
-    'rows',
-    columns,
-    options.columnGap,
-  );
-  for (let offset = 0; offset < contributions.length; offset += 4) {
-    const start = contributions[offset]!;
-    const span = contributions[offset + 1]!;
-    const height = contributions[offset + 2]!;
-    let fixed = Math.max(0, span - 1) * options.rowGap;
-    let eligible = 0;
-    for (let index = start - 1; index < start - 1 + span; index++) {
-      if (trackNeedsIntrinsic(rows[index]!)) eligible++;
-      else fixed += resolved[index]!;
-    }
-    if (!eligible) continue;
-    const contribution = Math.max(0, height - fixed) / eligible;
-    for (let index = start - 1; index < start - 1 + span; index++) {
-      if (trackNeedsIntrinsic(rows[index]!)) {
-        resolved[index] = Math.max(resolved[index]!, contribution);
-      }
-    }
-  }
-  let height = Math.max(0, rows.length - 1) * options.rowGap;
-  for (let index = 0; index < resolved.length; index++) height += resolved[index]!;
-  return { status: 'measured', height };
+  const region = new LayoutRegion();
+  try {
+    // Measurement and rendering use one track/occupancy algorithm. In particular,
+    // a minmax fractional maximum must settle before width-dependent row queries.
+    resolveGridPlacements(container, children, options, { service, measureElement: measure }, region);
+    const rows = region.snapshotGridV2Tracks(1);
+    let height = Math.max(0, rows.length - 1) * options.rowGap;
+    for (let index = 0; index < rows.length; index++) height += rows[index]!;
+    return { status: 'measured', height };
+  } finally { region.dispose(); }
 }
 
 function fixedIntrinsicAxis(tracks: readonly ParsedGridTrack[]): boolean {
@@ -1224,9 +1163,9 @@ function measureGridIntrinsic(input: import('../types.js').IntrinsicMeasureInput
   }
   const children = materializeLayoutChildren(input.props.children, 'Grid');
   const cells = assignGridCells(children, container, options.columns.length, options.rows.length, options);
-  const columns = intrinsicGridAxis(options.columns, cells, 'columns', options.columnGap, container, input.service);
+  const columns = intrinsicGridAxis(appendImplicitTracks(options.columns, options.autoColumn, maxGridExtent(cells.filter(cell => cell.normalized.position !== 'absolute'), 'column')), cells, 'columns', options.columnGap, container, input.service);
   if (columns.status === 'unsupported') return columns;
-  const rows = intrinsicGridAxis(options.rows, cells, 'rows', options.rowGap, container, input.service);
+  const rows = intrinsicGridAxis(appendImplicitTracks(options.rows, options.autoRow, maxGridExtent(cells.filter(cell => cell.normalized.position !== 'absolute'), 'row')), cells, 'rows', options.rowGap, container, input.service);
   if (rows.status === 'unsupported') return rows;
   return {
     status: 'measured',
@@ -1398,8 +1337,8 @@ function normalizeGridOptions(
     rows: parseGridTracks(style.gridTemplateRows, 'rows', container, rowGap),
     autoColumn: nativeLayout ? parseGridTracks([style.gridAutoColumns ?? 'auto'], 'columns', container)[0]! : { kind: 'fixed' as const, value: 0 },
     autoRow: nativeLayout ? parseGridTracks([style.gridAutoRows ?? 'auto'], 'rows', container)[0]! : { kind: 'fixed' as const, value: 0 },
-    autoFitColumns: isAutoFitOnly(style.gridTemplateColumns),
-    autoFitRows: isAutoFitOnly(style.gridTemplateRows),
+    autoFitColumns: containsAutoFit(style.gridTemplateColumns),
+    autoFitRows: containsAutoFit(style.gridTemplateRows),
     layoutDirection: getLayoutDirection(),
     justifyItems,
     alignItems,

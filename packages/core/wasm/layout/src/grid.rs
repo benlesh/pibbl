@@ -165,7 +165,7 @@ fn track_base(record: &[f64], bound: f64) -> Result<f64, ()> {
     let value = match record[0] as u32 {
         0 | 1 | 3 | 4 => breadth(record[0], record[1], bound).ok_or(())?,
         2 => 0.0,
-        5 | 7 => record[3],
+        5 | 7 | 9 => record[3],
         6 => breadth(record[2], record[3], bound).ok_or(())?,
         _ => return Err(()),
     };
@@ -181,6 +181,7 @@ fn track_limit(record: &[f64], bound: f64) -> Result<f64, ()> {
     let maximum = match record[0] as u32 {
         5 => record[5].max(minimum),
         7 => record[5].min(record[1]).max(minimum),
+        9 => record[5].min(bound * record[1] / 100.0).max(minimum),
         6 if record[4] == 2.0 => minimum,
         6 => breadth(record[4], record[5], bound).ok_or(())?.max(minimum),
         _ => minimum,
@@ -248,13 +249,13 @@ pub(crate) fn resolve_tracks(records: &mut [f64], bound: f64, gap: f64) -> Resul
 }
 
 fn contribution_eligible(record: &[f64], maximum: bool) -> bool {
-    if maximum { record[0] == 4.0 || record[0] == 5.0 || record[0] == 7.0 || record[0] == 6.0 && matches!(record[4] as u32, 3 | 4 | 5 | 7) }
-    else { matches!(record[0] as u32, 3 | 4 | 5 | 7) || record[0] == 6.0 && matches!(record[2] as u32, 3 | 4 | 5) }
+    if maximum { record[0] == 4.0 || record[0] == 5.0 || (record[0] == 7.0 || record[0] == 9.0) || record[0] == 6.0 && matches!(record[4] as u32, 3 | 4 | 5 | 7) }
+    else { matches!(record[0] as u32, 3 | 4 | 5 | 7 | 9) || record[0] == 6.0 && matches!(record[2] as u32, 3 | 4 | 5) }
 }
 fn contribution_value(record: &[f64], maximum: bool, bound: f64) -> Result<f64, ()> {
     if maximum {
         match record[0] as u32 {
-            4 => Ok(record[1]), 5 | 7 => Ok(record[5].max(record[3])),
+            4 => Ok(record[1]), 5 | 7 | 9 => Ok(record[5].max(record[3])),
             6 if matches!(record[4] as u32, 3 | 4 | 5 | 7) => Ok(record[5].max(track_base(record, bound)?)),
             _ => track_base(record, bound),
         }
@@ -263,7 +264,7 @@ fn contribution_value(record: &[f64], maximum: bool, bound: f64) -> Result<f64, 
 fn grow_contribution(record: &mut [f64], maximum: bool, amount: f64, bound: f64) -> Result<(), ()> {
     let current = contribution_value(record, maximum, bound)?;
     let slot = if record[0] == 6.0 { if maximum { 5 } else { 3 } }
-        else if record[0] == 5.0 || record[0] == 7.0 { if maximum { 5 } else { 3 } }
+        else if record[0] == 5.0 || (record[0] == 7.0 || record[0] == 9.0) { if maximum { 5 } else { 3 } }
         else { 1 };
     record[slot] = current + amount;
     Ok(())

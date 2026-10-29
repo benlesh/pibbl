@@ -34,6 +34,7 @@ pub(crate) struct TreeStyle {
     pub padding: TreePadding, pub border_left: f64, pub border_right: f64, pub border_top: f64, pub border_bottom: f64,
     pub position: u32, pub box_sizing: u32, pub aspect_ratio: f64,
     pub left: Option<f64>, pub right: Option<f64>, pub top: Option<f64>, pub bottom: Option<f64>,
+    pub left_percent: bool, pub right_percent: bool, pub top_percent: bool, pub bottom_percent: bool,
 }
 
 impl TreeStyle {
@@ -47,7 +48,7 @@ impl TreeStyle {
             || (!self.min_width_percent && !self.max_width_percent && self.min_width > self.max_width)
             || (!self.min_height_percent && !self.max_height_percent && self.min_height > self.max_height)
             || self.basis.is_some_and(|value| !finite_nonnegative(value))
-            || !finite_nonnegative(self.grow) || !finite_nonnegative(self.shrink) || !finite_nonnegative(self.gap) || !finite_nonnegative(self.row_gap) || !finite_nonnegative(self.column_gap)
+            || !finite_nonnegative(self.grow) || !finite_nonnegative(self.shrink) || !finite_nonnegative(self.gap) || (!self.row_gap.is_finite() || self.row_gap < -1.0) || (!self.column_gap.is_finite() || self.column_gap < -1.0)
             || self.wrap > 2 || self.justify > 5 || self.align_items > 6 || self.align_self > 7 || self.align_content > 6 || self.position > 2 || self.box_sizing > 1
             || !self.aspect_ratio.is_finite() || self.aspect_ratio < 0.0
             || !self.margin_left.is_finite() || !self.margin_right.is_finite() || !self.margin_top.is_finite() || !self.margin_bottom.is_finite()
@@ -75,7 +76,22 @@ impl TreeStyle {
         self.min_width_percent = false; self.min_height_percent = false;
         self.max_width_percent = false; self.max_height_percent = false;
         self.basis_percent = false;
-        self.left = self.left.map(|value| value);
+        self.left = self.left.map(|value| resolve(value, self.left_percent, width));
+        self.right = self.right.map(|value| resolve(value, self.right_percent, width));
+        self.top = self.top.map(|value| resolve(value, self.top_percent, height));
+        self.bottom = self.bottom.map(|value| resolve(value, self.bottom_percent, height));
+        self.left_percent = false; self.right_percent = false; self.top_percent = false; self.bottom_percent = false;
+        if self.box_sizing == 1 {
+            let (left, right, top, bottom) = self.padding.resolve(width)?;
+            let horizontal = left + right + self.border_left + self.border_right;
+            let vertical = top + bottom + self.border_top + self.border_bottom;
+            self.width = self.width.map(|value| value + horizontal);
+            self.height = self.height.map(|value| value + vertical);
+            self.min_width += horizontal; self.min_height += vertical;
+            self.max_width += horizontal; self.max_height += vertical;
+            self.basis = self.basis.map(|value| value + if parent_axis.unwrap_or(self.axis) == TreeAxis::Row { horizontal } else { vertical });
+            self.box_sizing = 0;
+        }
         self.validate()
     }
 }
@@ -169,7 +185,7 @@ impl StandaloneTree {
             if min_width.is_finite() || max_width.is_finite() || min_height.is_finite() || max_height.is_finite() { if !min_width.is_finite() || !max_width.is_finite() || !min_height.is_finite() || !max_height.is_finite() || min_width < 0.0 || min_height < 0.0 || min_width > max_width || min_height > max_height || intrinsic[id as usize].replace((min_width, max_width, min_height, max_height)).is_some() { return Err(1); } }
         }
         for node in &self.nodes { if node.measure_key.is_some() && results[node.id as usize].is_none() { return Err(1); } if node.intrinsic_key.is_some() && intrinsic[node.id as usize].is_none() { return Err(1); } }
-        self.solve_node(root, 0.0, 0.0, width, height, width, height, rtl, &results, &intrinsic)?;
+        self.solve_node(root, 0.0, 0.0, width, height, width, height, rtl, &results, &intrinsic, None)?;
         self.dirty = false;
         Ok(&self.boxes)
     }
@@ -193,12 +209,16 @@ impl StandaloneTree {
         Ok(())
     }
 
-    fn solve_node(&mut self, id: u32, x: f64, y: f64, width: f64, height: f64, owner_width: f64, owner_height: f64, rtl: bool, measured: &[Option<(f64, f64)>], intrinsic: &[Option<(f64, f64, f64, f64)>]) -> Result<(), u32> {
+    fn solve_node(&mut self, id: u32, x: f64, y: f64, width: f64, height: f64, owner_width: f64, owner_height: f64, rtl: bool, measured: &[Option<(f64, f64)>], intrinsic: &[Option<(f64, f64, f64, f64)>], containing: Option<TreeBox>) -> Result<(), u32> {
         let mut node = self.nodes.get(id as usize).ok_or(1u32)?.clone();
         let parent_axis = node.parent
             .and_then(|parent| self.nodes.get(parent as usize))
             .map(|parent| parent.style.axis);
         node.style = node.style.resolve_for_owner(owner_width, owner_height, parent_axis)?;
+        let (x, y) = if node.style.position == 0 {
+            (x + if rtl { node.style.right.map(|value| -value).or(node.style.left).unwrap_or(0.0) } else { node.style.left.or(node.style.right.map(|value| -value)).unwrap_or(0.0) },
+             y + node.style.top.or(node.style.bottom.map(|value| -value)).unwrap_or(0.0))
+        } else { (x, y) };
         // Measurement supplies the Flex main contribution, then native Flex
         // owns its final main allocation. Its cross dimension remains the
         // measured natural value unless the child author explicitly supplies
@@ -233,16 +253,17 @@ impl StandaloneTree {
                 resolved_width = (resolved_height * node.style.aspect_ratio).clamp(node.style.min_width, node.style.max_width);
             }
         }
-        if node.style.box_sizing == 1 {
-            resolved_width += node.style.border_left + node.style.border_right;
-            resolved_height += node.style.border_top + node.style.border_bottom;
-        }
         if !resolved_width.is_finite() || !resolved_height.is_finite() { return Err(1); }
         let (padding_left, padding_right, padding_top, padding_bottom) = node.style.padding.resolve(resolved_width)?;
         let content_width = (resolved_width - node.style.border_left - node.style.border_right - padding_left - padding_right).max(0.0);
         let content_height = (resolved_height - node.style.border_top - node.style.border_bottom - padding_top - padding_bottom).max(0.0);
         self.boxes[id as usize] = TreeBox { x, y, width: resolved_width, height: resolved_height };
         if node.children.is_empty() { return Ok(()); }
+        let local_containing = TreeBox { x: x + node.style.border_left, y: y + node.style.border_top,
+            width: (resolved_width - node.style.border_left - node.style.border_right).max(0.0),
+            height: (resolved_height - node.style.border_top - node.style.border_bottom).max(0.0) };
+        let containing = if node.style.position == 1 { containing.unwrap_or(local_containing) } else { local_containing };
+        let flow_children: Vec<u32> = node.children.iter().copied().filter(|&child| self.nodes[child as usize].style.position != 2).collect();
         let origin_x = x + node.style.border_left + padding_left;
         let origin_y = y + node.style.border_top + padding_top;
         let main = if node.style.axis == TreeAxis::Row { content_width } else { content_height };
@@ -254,8 +275,8 @@ impl StandaloneTree {
             grid.rows = expanded_rows;
             let explicit_columns = grid.columns.len() / 7; let explicit_rows = grid.rows.len() / 7;
             if explicit_columns == 0 || explicit_rows == 0 || grid.columns.len() % 7 != 0 || grid.rows.len() % 7 != 0 { return Err(1); }
-            let mut cells = Vec::with_capacity(node.children.len() * 8);
-            for &child in &node.children { let placement = self.nodes.get(child as usize).ok_or(1u32)?.grid_placement; cells.extend_from_slice(&[placement.column_start as f64, placement.column_span as f64, placement.row_start as f64, placement.row_span as f64, 0.0, 0.0, 0.0, 0.0]); }
+            let mut cells = Vec::with_capacity(flow_children.len() * 8);
+            for &child in &flow_children { let placement = self.nodes.get(child as usize).ok_or(1u32)?.grid_placement; cells.extend_from_slice(&[placement.column_start as f64, placement.column_span as f64, placement.row_start as f64, placement.row_span as f64, 0.0, 0.0, 0.0, 0.0]); }
             let (column_count, row_count) = assign_cells(&mut cells, explicit_columns, explicit_rows, grid.flow).map_err(|_| 1u32)?;
             if column_count > explicit_columns { let auto = grid.auto_column.ok_or(2u32)?; for _ in explicit_columns..column_count { grid.columns.extend_from_slice(&auto); } }
             if row_count > explicit_rows { let auto = grid.auto_row.ok_or(2u32)?; for _ in explicit_rows..row_count { grid.rows.extend_from_slice(&auto); } }
@@ -266,12 +287,12 @@ impl StandaloneTree {
             collapse_auto_fit_tracks(&mut grid.columns, &column_auto_fit, &cells, 0).map_err(|_| 1u32)?;
             collapse_auto_fit_tracks(&mut grid.rows, &row_auto_fit, &cells, 1).map_err(|_| 1u32)?;
             let mut column_contributions = Vec::new(); let mut row_contributions = Vec::new();
-            for (index, child) in node.children.iter().copied().enumerate() { let contribution = intrinsic.get(child as usize).and_then(|value| *value).or_else(|| measured.get(child as usize).and_then(|value| *value).map(|(width, height)| (width, width, height, height))); if let Some((min_width, max_width, min_height, max_height)) = contribution { let cell = &cells[index * 8..index * 8 + 8]; column_contributions.extend_from_slice(&[cell[0], cell[1], min_width, max_width]); row_contributions.extend_from_slice(&[cell[2], cell[3], min_height, max_height]); } }
+            for (index, child) in flow_children.iter().copied().enumerate() { let contribution = intrinsic.get(child as usize).and_then(|value| *value).or_else(|| measured.get(child as usize).and_then(|value| *value).map(|(width, height)| (width, width, height, height))); if let Some((min_width, max_width, min_height, max_height)) = contribution { let cell = &cells[index * 8..index * 8 + 8]; column_contributions.extend_from_slice(&[cell[0], cell[1], min_width, max_width]); row_contributions.extend_from_slice(&[cell[2], cell[3], min_height, max_height]); } }
             apply_contributions(&mut grid.columns, &column_contributions, grid.column_gap, content_width).map_err(|_| 1u32)?;
             apply_contributions(&mut grid.rows, &row_contributions, grid.row_gap, content_height).map_err(|_| 1u32)?;
             resolve_tracks(&mut grid.columns, content_width, grid.column_gap).map_err(|_| 1u32)?;
             resolve_tracks(&mut grid.rows, content_height, grid.row_gap).map_err(|_| 1u32)?;
-            for (index, child) in node.children.iter().copied().enumerate() {
+            for (index, child) in flow_children.iter().copied().enumerate() {
                 let cell = &cells[index * 8..index * 8 + 8]; let column = cell[0] as usize - 1; let row = cell[2] as usize - 1; let column_span = cell[1] as usize; let row_span = cell[3] as usize;
                 if column + column_span > column_count || row + row_span > row_count { return Err(1); }
                 let mut child_x = origin_x; let mut child_y = origin_y; let mut child_width = grid.column_gap * (column_span.saturating_sub(1) as f64); let mut child_height = grid.row_gap * (row_span.saturating_sub(1) as f64);
@@ -279,12 +300,13 @@ impl StandaloneTree {
                 for track in 0..row { child_y += grid.rows[track * 7 + 6] + grid.row_gap; }
                 for track in column..column + column_span { child_width += grid.columns[track * 7 + 6]; }
                 for track in row..row + row_span { child_height += grid.rows[track * 7 + 6]; }
-                self.solve_node(child, child_x, child_y, child_width, child_height, content_width, content_height, rtl, measured, intrinsic)?;
+                self.solve_node(child, child_x, child_y, child_width, child_height, content_width, content_height, rtl, measured, intrinsic, Some(containing))?;
             }
+            self.solve_absolute_children(&node, containing, rtl, measured, intrinsic)?;
             return Ok(());
         }
         self.arena.nodes.clear();
-        for &child in &node.children {
+        for &child in &flow_children {
             let child_node = self.nodes.get(child as usize).ok_or(1u32)?;
             if child_node.style.position == 2 { continue; }
             let style = child_node.style.resolve_for_owner(content_width, content_height, Some(node.style.axis))?;
@@ -295,67 +317,101 @@ impl StandaloneTree {
             self.arena.nodes.extend_from_slice(&[basis, minimum, maximum, 0.0, style.grow, style.shrink, basis, 0.0, if node.style.axis == TreeAxis::Row { style.margin_left } else { style.margin_top }, if node.style.axis == TreeAxis::Row { style.margin_right } else { style.margin_bottom }]);
             let _ = cross_preferred;
         }
-        let main_gap = if node.style.axis == TreeAxis::Row { if node.style.column_gap != 0.0 { node.style.column_gap } else { node.style.gap } } else if node.style.row_gap != 0.0 { node.style.row_gap } else { node.style.gap };
-        let cross_gap = if node.style.axis == TreeAxis::Row { if node.style.row_gap != 0.0 { node.style.row_gap } else { node.style.gap } } else if node.style.column_gap != 0.0 { node.style.column_gap } else { node.style.gap };
-        if node.style.wrap == 0 {
+        let main_gap = if node.style.axis == TreeAxis::Row { node.style.column_gap } else { node.style.row_gap };
+        let main_gap = if main_gap >= 0.0 { main_gap } else { node.style.gap };
+        let cross_gap = if node.style.axis == TreeAxis::Row { node.style.row_gap } else { node.style.column_gap };
+        let cross_gap = if cross_gap >= 0.0 { cross_gap } else { node.style.gap };
+        let lines = if node.style.wrap == 0 {
             if allocate(&mut self.arena.nodes, main, main_gap) != 0 || align_main(&mut self.arena.nodes, main, main_gap, node.style.justify, (node.style.reverse ^ (rtl && node.style.axis == TreeAxis::Row)) as u32) != 0 { return Err(1); }
+            if flow_children.is_empty() { Vec::new() } else { vec![(0, flow_children.len())] }
         } else {
             let lines = form_lines(&self.arena.nodes, main, main_gap)?;
-            for &(start, end) in &lines { if allocate(&mut self.arena.nodes[start * STRIDE..end * STRIDE], main, main_gap) != 0 || align_main(&mut self.arena.nodes[start * STRIDE..end * STRIDE], main, main_gap, node.style.justify, (node.style.reverse ^ (rtl && node.style.axis == TreeAxis::Row)) as u32) != 0 { return Err(1); } }
-            self.arena.lines = lines;
-        }
-        // Descendant Flex solves reuse this arena, so freeze every direct placement
-        // before entering the first descendant rather than retaining one record at a time.
-        let mut placements = Vec::with_capacity(node.children.len());
-        let mut flow_index = 0usize;
-        let mut line_index = 0usize;
-        for child in node.children.iter().copied() {
-            let child_node = self.nodes.get(child as usize).ok_or(1u32)?;
-            if child_node.style.position == 2 { continue; }
-            let index = flow_index; flow_index += 1;
-            let target_main = self.arena.nodes[index * STRIDE + 6];
-            let main_offset = self.arena.nodes[index * STRIDE + 7];
-            let child_style = child_node.style.resolve_for_owner(content_width, content_height, Some(node.style.axis))?;
-            let natural_cross = if node.style.axis == TreeAxis::Row { child_style.height.unwrap_or(cross) } else { child_style.width.unwrap_or(cross) };
-            let align = if child_style.align_self == 0 { node.style.align_items } else { child_style.align_self - 1 };
-            let child_cross = if align == 0 && (if node.style.axis == TreeAxis::Row { child_style.height.is_none() } else { child_style.width.is_none() }) { cross } else { natural_cross };
-            let mut cross_offset = match align { 2 => cross - child_cross, 3 => (cross - child_cross) / 2.0, _ => 0.0 };
-            if node.style.wrap != 0 {
-                while line_index + 1 < self.arena.lines.len() && index >= self.arena.lines[line_index].1 { line_index += 1; }
-                let (start, end) = self.arena.lines[line_index];
-                let mut max_cross: f64 = 0.0; for flow in start..end { let line_child = self.nodes.get(node.children[flow] as usize).ok_or(1u32)?; let line_style = line_child.style.resolve_for_owner(content_width, content_height, Some(node.style.axis))?; let natural = measured.get(line_child.id as usize).and_then(|value| *value); max_cross = max_cross.max(if node.style.axis == TreeAxis::Row { line_style.height.or(natural.map(|value| value.1)).unwrap_or(cross) } else { line_style.width.or(natural.map(|value| value.0)).unwrap_or(cross) }); }
-                let prior = if line_index == 0 { 0.0 } else { let mut value: f64 = 0.0; for &(a,b) in &self.arena.lines[..line_index] { let mut maximum: f64 = 0.0; for flow in a..b { let line_child = self.nodes.get(node.children[flow] as usize).ok_or(1u32)?; let line_style = line_child.style.resolve_for_owner(content_width, content_height, Some(node.style.axis))?; let natural = measured.get(line_child.id as usize).and_then(|value| *value); maximum = maximum.max(if node.style.axis == TreeAxis::Row { line_style.height.or(natural.map(|value| value.1)).unwrap_or(cross) } else { line_style.width.or(natural.map(|value| value.0)).unwrap_or(cross) }); } value += maximum + cross_gap; } value };
-                cross_offset += prior;
-                let _ = max_cross;
+            for &(start, end) in &lines {
+                if allocate(&mut self.arena.nodes[start * STRIDE..end * STRIDE], main, main_gap) != 0 || align_main(&mut self.arena.nodes[start * STRIDE..end * STRIDE], main, main_gap, node.style.justify, (node.style.reverse ^ (rtl && node.style.axis == TreeAxis::Row)) as u32) != 0 { return Err(1); }
             }
-            let (child_x, child_y, child_width, child_height) = if node.style.axis == TreeAxis::Row { (origin_x + main_offset, origin_y + cross_offset, target_main, child_cross) } else { (origin_x + cross_offset, origin_y + main_offset, child_cross, target_main) };
-            placements.push((child, child_x, child_y, child_width, child_height));
+            lines
+        };
+        // Compute each line extent once from flow children, before descendant
+        // solves reuse the scratch arena. Absolute source slots never enter it.
+        let mut line_crosses = Vec::with_capacity(lines.len());
+        for &(start, end) in &lines {
+            let mut extent: f64 = if node.style.wrap == 0 { cross } else { 0.0 };
+            for &child in &flow_children[start..end] {
+                let style = self.nodes[child as usize].style.resolve_for_owner(content_width, content_height, Some(node.style.axis))?;
+                let natural = measured[child as usize];
+                let size = if node.style.axis == TreeAxis::Row { style.height.or(natural.map(|value| value.1)).unwrap_or(cross) + style.margin_top + style.margin_bottom }
+                    else { style.width.or(natural.map(|value| value.0)).unwrap_or(cross) + style.margin_left + style.margin_right };
+                extent = extent.max(size);
+            }
+            line_crosses.push(extent);
+        }
+        let used_cross = line_crosses.iter().sum::<f64>() + cross_gap * lines.len().saturating_sub(1) as f64;
+        let free = (cross - used_cross).max(0.0);
+        let mut line_origin = 0.0;
+        let mut line_gap = cross_gap;
+        if node.style.wrap != 0 && !lines.is_empty() {
+            match node.style.align_content {
+                1 => line_origin = free,
+                2 => line_origin = free / 2.0,
+                3 => { let extra = free / lines.len() as f64; for size in &mut line_crosses { *size += extra; } },
+                4 if lines.len() > 1 => line_gap += free / (lines.len() - 1) as f64,
+                5 => { let extra = free / lines.len() as f64; line_origin = extra / 2.0; line_gap += extra; },
+                6 => { let extra = free / (lines.len() + 1) as f64; line_origin = extra; line_gap += extra; },
+                _ => (),
+            }
+        }
+        let reverse_cross = (node.style.wrap == 2) ^ (rtl && node.style.axis == TreeAxis::Column);
+        let mut placements = Vec::with_capacity(flow_children.len());
+        for (line, &(start, end)) in lines.iter().enumerate() {
+            let extent = line_crosses[line];
+            for index in start..end {
+                let child = flow_children[index];
+                let style = self.nodes[child as usize].style.resolve_for_owner(content_width, content_height, Some(node.style.axis))?;
+                let natural = measured[child as usize];
+                let (declared_cross, natural_cross, before, after) = if node.style.axis == TreeAxis::Row {
+                    (style.height, natural.map(|value| value.1), style.margin_top, style.margin_bottom)
+                } else { (style.width, natural.map(|value| value.0), style.margin_left, style.margin_right) };
+                let align = if style.align_self == 0 { node.style.align_items } else { style.align_self - 1 };
+                let child_cross = if align == 0 && declared_cross.is_none() { (extent - before - after).max(0.0) } else { declared_cross.or(natural_cross).unwrap_or(extent) };
+                let local = match align { 2 => extent - child_cross - after, 3 => (extent - child_cross + before - after) / 2.0, _ => before };
+                let cross_offset = if reverse_cross { cross - line_origin - local - child_cross } else { line_origin + local };
+                let target_main = self.arena.nodes[index * STRIDE + 6];
+                let main_offset = self.arena.nodes[index * STRIDE + 7];
+                let (child_x, child_y, child_width, child_height) = if node.style.axis == TreeAxis::Row {
+                    (origin_x + main_offset, origin_y + cross_offset, target_main, child_cross)
+                } else { (origin_x + cross_offset, origin_y + main_offset, child_cross, target_main) };
+                placements.push((child, child_x, child_y, child_width, child_height));
+            }
+            line_origin += extent + line_gap;
         }
         for (child, child_x, child_y, child_width, child_height) in placements {
-            self.solve_node(child, child_x, child_y, child_width, child_height, content_width, content_height, rtl, measured, intrinsic)?;
+            self.solve_node(child, child_x, child_y, child_width, child_height, content_width, content_height, rtl, measured, intrinsic, Some(containing))?;
         }
-        // Absolute descendants are intentionally excluded from Flex allocation.
-        // Their containing block is this positioned owner's padding box.
+        self.solve_absolute_children(&node, containing, rtl, measured, intrinsic)
+    }
+
+    fn solve_absolute_children(&mut self, node: &TreeNode, containing: TreeBox, rtl: bool,
+        measured: &[Option<(f64, f64)>], intrinsic: &[Option<(f64, f64, f64, f64)>]) -> Result<(), u32> {
         for &child in &node.children {
             let child_node = self.nodes.get(child as usize).ok_or(1u32)?;
             if child_node.style.position != 2 { continue; }
-            let style = child_node.style.resolve_for_owner(content_width, content_height, Some(node.style.axis))?;
-            let child_width = style.width.unwrap_or(0.0).clamp(style.min_width, style.max_width);
-            let child_height = style.height.unwrap_or(0.0).clamp(style.min_height, style.max_height);
-            let padding_width = (resolved_width - node.style.border_left - node.style.border_right).max(0.0);
-            let padding_height = (resolved_height - node.style.border_top - node.style.border_bottom).max(0.0);
-            let child_x = if let Some(right) = style.right { x + node.style.border_left + padding_width - right - child_width } else { x + node.style.border_left + style.left.unwrap_or(0.0) };
-            let child_y = if let Some(bottom) = style.bottom { y + node.style.border_top + padding_height - bottom - child_height } else { y + node.style.border_top + style.top.unwrap_or(0.0) };
-            self.solve_node(child, child_x, child_y, child_width, child_height, content_width, content_height, rtl, measured, intrinsic)?;
+            let style = child_node.style.resolve_for_owner(containing.width, containing.height, Some(node.style.axis))?;
+            let natural = measured[child as usize];
+            let width = style.width.or_else(|| match (style.left, style.right) { (Some(left), Some(right)) => Some((containing.width - left - right).max(0.0)), _ => natural.map(|value| value.0) }).unwrap_or(0.0).clamp(style.min_width, style.max_width);
+            let height = style.height.or_else(|| match (style.top, style.bottom) { (Some(top), Some(bottom)) => Some((containing.height - top - bottom).max(0.0)), _ => natural.map(|value| value.1) }).unwrap_or(0.0).clamp(style.min_height, style.max_height);
+            let x = if rtl && style.right.is_some() || style.left.is_none() { containing.x + style.right.map(|right| containing.width - right - width).unwrap_or(0.0) } else { containing.x + style.left.unwrap_or(0.0) };
+            let y = containing.y + style.top.or_else(|| style.bottom.map(|bottom| containing.height - bottom - height)).unwrap_or(0.0);
+            self.solve_node(child, x, y, width, height, containing.width, containing.height, rtl, measured, intrinsic, Some(containing))?;
         }
         Ok(())
     }
+
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn style(axis: TreeAxis) -> TreeStyle { TreeStyle { width: None, height: None, width_percent: false, height_percent: false, min_width: 0.0, min_height: 0.0, max_width: f64::INFINITY, max_height: f64::INFINITY, min_width_percent: false, min_height_percent: false, max_width_percent: false, max_height_percent: false, basis: None, basis_percent: false, grow: 0.0, shrink: 0.0, gap: 0.0, row_gap: 0.0, column_gap: 0.0, axis, reverse: false, wrap: 0, justify: 0, align_items: 0, align_self: 0, align_content: 0, margin_left: 0.0, margin_right: 0.0, margin_top: 0.0, margin_bottom: 0.0, padding: TreePadding { left: 0.0, right: 0.0, top: 0.0, bottom: 0.0, left_percent: false, right_percent: false, top_percent: false, bottom_percent: false }, border_left: 0.0, border_right: 0.0, border_top: 0.0, border_bottom: 0.0, position: 0, box_sizing: 0, aspect_ratio: 0.0, left: None, right: None, top: None, bottom: None } }
+    fn style(axis: TreeAxis) -> TreeStyle { TreeStyle { width: None, height: None, width_percent: false, height_percent: false, min_width: 0.0, min_height: 0.0, max_width: f64::INFINITY, max_height: f64::INFINITY, min_width_percent: false, min_height_percent: false, max_width_percent: false, max_height_percent: false, basis: None, basis_percent: false, grow: 0.0, shrink: 0.0, gap: 0.0, row_gap: -1.0, column_gap: -1.0, axis, reverse: false, wrap: 0, justify: 0, align_items: 0, align_self: 0, align_content: 0, margin_left: 0.0, margin_right: 0.0, margin_top: 0.0, margin_bottom: 0.0, padding: TreePadding { left: 0.0, right: 0.0, top: 0.0, bottom: 0.0, left_percent: false, right_percent: false, top_percent: false, bottom_percent: false }, border_left: 0.0, border_right: 0.0, border_top: 0.0, border_bottom: 0.0, position: 0, box_sizing: 0, aspect_ratio: 0.0, left: None, right: None, top: None, bottom: None, left_percent: false, right_percent: false, top_percent: false, bottom_percent: false } }
     #[test]
     fn persistent_tree_uses_native_main_allocation_and_keeps_prior_boxes_until_next_solve() {
         let mut root = style(TreeAxis::Row); root.width = Some(100.0); root.height = Some(20.0); root.gap = 10.0;
@@ -597,10 +653,10 @@ fn decode_tree_nodes(records: &[f64], children: &[u32], grid_input: &[f64]) -> R
         let (max_width, max_width_percent) = tree_max(record[12], record[13])?;
         let (max_height, max_height_percent) = tree_max(record[14], record[15])?;
         let (basis, basis_percent) = tree_length(record[16], record[17], false)?;
-        let (left, _) = tree_length(record[54], record[55], false)?;
-        let (right, _) = tree_length(record[56], record[57], false)?;
-        let (top, _) = tree_length(record[58], record[59], false)?;
-        let (bottom, _) = tree_length(record[60], record[61], false)?;
+        let (left, left_percent) = tree_length(record[54], record[55], false)?;
+        let (right, right_percent) = tree_length(record[56], record[57], false)?;
+        let (top, top_percent) = tree_length(record[58], record[59], false)?;
+        let (bottom, bottom_percent) = tree_length(record[60], record[61], false)?;
         if !record[50].is_finite() || record[50].fract() != 0.0 || !(0.0..=6.0).contains(&record[50]) || !record[51].is_finite() || record[51].fract() != 0.0 || !(0.0..=2.0).contains(&record[51]) || !record[52].is_finite() || record[52].fract() != 0.0 || !(0.0..=1.0).contains(&record[52]) || !record[53].is_finite() || record[53] < 0.0 || !record[62].is_finite() || !record[63].is_finite() || !record[64].is_finite() || !record[65].is_finite() { return Err(1); }
         let style = TreeStyle { width, height, width_percent, height_percent,
             min_width: min_width.unwrap_or(0.0), min_height: min_height.unwrap_or(0.0), max_width, max_height,
@@ -611,7 +667,7 @@ fn decode_tree_nodes(records: &[f64], children: &[u32], grid_input: &[f64]) -> R
             margin_left: tree_scalar(record[28], record[29])?, margin_right: tree_scalar(record[30], record[31])?,
             margin_top: tree_scalar(record[32], record[33])?, margin_bottom: tree_scalar(record[34], record[35])?,
             padding: TreePadding { left: record[36], left_percent: record[37] == 2.0, right: record[38], right_percent: record[39] == 2.0, top: record[40], top_percent: record[41] == 2.0, bottom: record[42], bottom_percent: record[43] == 2.0 },
-            border_left: record[62], border_right: record[63], border_top: record[64], border_bottom: record[65], position: record[51] as u32, box_sizing: record[52] as u32, aspect_ratio: record[53], left, right, top, bottom }.validate()?;
+            border_left: record[62], border_right: record[63], border_top: record[64], border_bottom: record[65], position: record[51] as u32, box_sizing: record[52] as u32, aspect_ratio: record[53], left, right, top, bottom, left_percent, right_percent, top_percent, bottom_percent }.validate()?;
         if !record[36].is_finite() || !record[37].is_finite() || !record[38].is_finite() || !record[39].is_finite() || !record[40].is_finite() || !record[41].is_finite() || !record[42].is_finite() || !record[43].is_finite() || !matches!(record[37] as u32, 1 | 2) || !matches!(record[39] as u32, 1 | 2) || !matches!(record[41] as u32, 1 | 2) || !matches!(record[43] as u32, 1 | 2) || (record[44] != 0.0 && record[44] != 1.0) || (record[49] != 0.0 && record[49] != 1.0) { return Err(1); }
         if !record[45].is_finite() || !record[46].is_finite() || !record[47].is_finite() || !record[48].is_finite() || record[45].fract() != 0.0 || record[46].fract() != 0.0 || record[47].fract() != 0.0 || record[48].fract() != 0.0 || record[45] < 0.0 || record[47] < 0.0 || record[46] < 1.0 || record[48] < 1.0 { return Err(1); }
         output.push(TreeNode { id: index as u32, parent: if record[1] < 0.0 { None } else { Some(record[1] as u32) }, children: children[child_start..child_end].to_vec(), style, measure_key: if record[44] == 1.0 { Some(index as u32) } else { None }, intrinsic_key: if record[49] == 1.0 { Some(index as u32) } else { None }, grid: None, grid_placement: TreeGridPlacement { column_start: record[45] as usize, column_span: record[46] as usize, row_start: record[47] as usize, row_span: record[48] as usize } });

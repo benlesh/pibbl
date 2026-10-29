@@ -278,6 +278,19 @@ export function convertYoga32Style(
       );
       continue;
     }
+    if (enumProperty) {
+      const accepted: Readonly<Record<string, readonly string[]>> = {
+        flexDirection: ['row', 'row-reverse', 'column', 'column-reverse'], flexWrap: ['nowrap', 'wrap', 'wrap-reverse'],
+        justifyContent: ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'],
+        alignItems: ['stretch', 'flex-start', 'flex-end', 'center'], alignSelf: ['auto', 'stretch', 'flex-start', 'flex-end', 'center'],
+        alignContent: ['stretch', 'flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'],
+        boxSizing: ['content-box', 'border-box'], position: ['relative', 'static', 'absolute'], overflow: ['visible'],
+      };
+      if (typeof value !== 'string' || !accepted[property]?.includes(value)) {
+        diagnostics.push(diagnostic('error', 'unsupported-style-value', sourceProperty, 'This value is not executable by the standalone layout contract.', true));
+        continue;
+      }
+    }
     (converted as Record<string, unknown>)[property] = value;
   }
   if (options.useWebDefaults) {

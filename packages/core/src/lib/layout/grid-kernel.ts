@@ -86,7 +86,7 @@ export class GridV2Region {
 
   /** Returns the current resolved values after native contribution passes. */
   resolvedTracks(axis: 0 | 1): readonly number[] {
-    if (this.disposed || !this.pointers[axis] || this.counts[axis] === 0) {
+    if (this.disposed || !this.pointers[axis]) {
       throw new RangeError('Grid v2 resolved tracks require initialized track storage');
     }
     const count = this.counts[axis];

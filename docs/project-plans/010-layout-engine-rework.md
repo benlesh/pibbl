@@ -1,5 +1,31 @@
 # 010 — Native layout engine rework
 
+## Independent-review repairs — 2026-10-29
+
+The post-review repair batch resets changed Grid contributions to authored bases,
+shares native allocation with selected-width measurement, handles empty and mixed
+auto-fit templates and intrinsic minmax maxima, and removes quadratic flow-box
+lookup. Adopted slots release their topology records on removal. Hidden managed
+Layers retain dirty state without executing child components until revealed.
+
+Standalone native trees now preserve percentage insets and fit-content caps,
+content-box padding, relative positioning, static containing blocks, absolute
+Grid exclusion, wrapped flow indexing, line distribution/reversal and zero gap
+overrides. Unsupported baseline/overflow conversions fail explicitly; Studio
+implicit-track declarations match the public package. General dependency-graph
+and unified geometry-adoption requirements remain open.
+
+The earlier verification receipts below describe the pre-review commit. Repair
+verification uses Node 26.9.0 / pnpm 11.21.0 / Chromium and the existing Rust
+1.99.0 toolchain; it does not claim a fresh full aggregate trust run.
+Fresh checks: 131 source browser tests passed with one existing skip; 58 normal-built
+browser tests passed; all 73 Rust tests passed. Core/layout builds, offline packed
+Bundler/NodeNext consumers, no-Canvas import verification, typecheck, changed-code
+lint and documentation formatting passed. The rebuilt native artifact is 153,685
+bytes. Regression tests cover the reported failures through public mounting,
+measurement and owned-tree surfaces.
+
+
 ## Native-default implementation batch — 2026-10-29
 
 The native layout engine is now the default runtime path. Applications do not

@@ -58,3 +58,9 @@ const report = analyzeYoga32Tree(sourceTree, { useWebDefaults: false });
 Both conversion and analysis return every diagnostic. Unsupported inputs, including
 Yoga reference-baseline flags, are diagnosed rather than ignored or translated to
 a different baseline policy.
+
+Standalone baseline alignment requires a baseline-provider API and is currently
+rejected. Clipped or scrolling overflow also requires an explicit host policy;
+the Yoga converter reports these values instead of returning an executable style.
+Percentage insets and fit-content limits resolve against their owning axis;
+explicit zero row/column gaps override the shared gap.

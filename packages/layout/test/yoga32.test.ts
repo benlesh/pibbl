@@ -8,9 +8,9 @@ describe('Yoga 3.2 conversion', () => {
     expect(assertYoga32Converted(result).style).toMatchObject({ flexDirection: 'row', flexShrink: 0, position: 'relative', boxSizing: 'border-box', width: 120 });
   });
   it('preserves supported enum and edge values while rejecting only unrepresentable inputs', () => {
-    const result = convertYoga32Style({ flexDirection: 'row-reverse', justifyContent: 'space-between', padding: '10%', overflow: 'clip' });
+    const result = convertYoga32Style({ flexDirection: 'row-reverse', justifyContent: 'space-between', padding: '10%', overflow: 'visible' });
     expect(result.diagnostics).toEqual([]);
-    expect(assertYoga32Converted(result).style).toMatchObject({ flexDirection: 'row-reverse', justifyContent: 'space-between', padding: '10%', overflow: 'clip' });
+    expect(assertYoga32Converted(result).style).toMatchObject({ flexDirection: 'row-reverse', justifyContent: 'space-between', padding: '10%', overflow: 'visible' });
   });
   it('reports reference baselines and ambiguous shorthand as executable conversion errors', () => {
     const result = convertYoga32Style({ flex: 1, isReferenceBaseline: true });

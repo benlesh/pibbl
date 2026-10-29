@@ -587,10 +587,10 @@ export interface MeshTransformOptions {
   export interface GridRepeatTrack { readonly kind: 'repeat'; readonly count: number | 'auto-fill' | 'auto-fit'; readonly tracks: readonly GridTrack[] }
   export type GridTrack = GridTrackBreadth | GridMinMaxTrack | GridRepeatTrack;
   export function minmax(options: { readonly min: GridTrackBreadth; readonly max: GridTrackBreadth }): GridMinMaxTrack;
-  export function repeatTracks(tracks: Iterable<GridTrack>, options: { readonly count: number }): GridRepeatTrack;
+  export function repeatTracks(tracks: readonly GridTrack[], options: { readonly count: number }): GridRepeatTrack;
   export function autoFillTracks(...tracks: GridTrack[]): GridRepeatTrack;
   export function autoFitTracks(...tracks: GridTrack[]): GridRepeatTrack;
-  export interface GridStyle extends BoxStyle, LayoutItemStyle { gridAutoFlow?: 'row' | 'column' | 'row dense' | 'column dense'; gridAutoColumns?: GridTrack | readonly GridTrack[]; gridAutoRows?: GridTrack | readonly GridTrack[]; gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
+  export interface GridStyle extends BoxStyle, LayoutItemStyle { gridAutoFlow?: 'row' | 'column' | 'row dense' | 'column dense'; gridAutoColumns?: GridTrack; gridAutoRows?: GridTrack; gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
   export interface GridProps extends PibblEventHandlers { children: PibblNodeInput }
 
   export interface CanvasMeasurementService { measureText(text: string, font: string): TextMetrics; measureTextAtBaseline?(text: string, options: Readonly<{ font: string; textBaseline: CanvasTextBaseline }>): TextMetrics }

@@ -416,6 +416,9 @@ class NativeStandaloneLayoutKernel implements StandaloneLayoutKernel {
         throw new TypeError(
           "The standalone native tree does not yet admit clipped overflow.",
         );
+      if (style.alignItems === 'baseline' || style.alignItems === 'first-baseline' || style.alignItems === 'last-baseline' ||
+          style.alignSelf === 'baseline' || style.alignSelf === 'first-baseline' || style.alignSelf === 'last-baseline')
+        throw new TypeError('Standalone baseline alignment requires a baseline provider and is not supported.');
       records[offset] = index;
       records[offset + 1] = parentIndex;
       records[offset + 2] = children.length;
@@ -438,8 +441,8 @@ class NativeStandaloneLayoutKernel implements StandaloneLayoutKernel {
       numeric(records, offset + 18, style.flexGrow, 0, "flexGrow");
       numeric(records, offset + 19, style.flexShrink, 0, "flexShrink");
       numeric(records, offset + 20, style.gap, 0, "gap");
-      numeric(records, offset + 21, style.rowGap, 0, "rowGap");
-      numeric(records, offset + 22, style.columnGap, 0, "columnGap");
+      numeric(records, offset + 21, style.rowGap, -1, "rowGap");
+      numeric(records, offset + 22, style.columnGap, -1, "columnGap");
       records[offset + 23] = enumCode(
         style.flexDirection,
         FLEX_DIRECTIONS,
@@ -630,7 +633,7 @@ class NativeStandaloneLayoutKernel implements StandaloneLayoutKernel {
           throw new TypeError(
             `Standalone Grid ${property} fit-content limit must be numeric or percentage.`,
           );
-        return [7, limit[1], 0, 0, 4, 0, 0];
+        return [limit[0] === 1 ? 9 : 7, limit[1], 0, 0, 4, 0, 0];
       }
       const fixed = breadth(value, property);
       return [fixed[0], fixed[1], 0, 0, 4, fixed[1], 0];

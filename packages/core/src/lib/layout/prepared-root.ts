@@ -106,7 +106,7 @@ export class PreparedLayoutSlot implements LayoutTopologySlot {
   dispose(): void { const region = this.region; this.region = undefined; this.boundaryOwner = undefined; try { this.disposeChildren(); region?.dispose(); } finally { releaseLayoutTopology(this); this.release(); } }
   claim(region: LayoutRegion): void {
     if (this.region !== region) throw new Error('Prepared layout region is stale.');
-    adoptMountedLayoutRegion(region, () => { if (this.region === region) { this.region = undefined; this.disposeChildren(); this.release(); } });
+    adoptMountedLayoutRegion(region, () => { if (this.region === region) { this.region = undefined; this.disposeChildren(); releaseLayoutTopology(this); this.release(); } });
   }
 }
 const activeDescriptions = new WeakMap<PibblRenderTransaction, Set<PibblElement<any>>>();

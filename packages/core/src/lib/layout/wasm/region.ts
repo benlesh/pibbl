@@ -556,10 +556,14 @@ export class LayoutRegion {
     }
   }
   applyGridV2Contributions(records: readonly number[], gap: number, axis: 0 | 1): void {
-    if (records.length === 0) return;
     const cached = axis === 0 ? this.gridV2ColumnContributions : this.gridV2RowContributions;
+    if (records.length === 0 && !cached) return;
     if (cached && cached.gap === gap && sameNumbers(cached.records, records)) return;
     try {
+      // Contributions grow native bases in place. A changed contribution set
+      // must start from the authored tracks, including removal of every child.
+      const tracks = axis === 0 ? this.gridV2Columns : this.gridV2Rows;
+      if (cached && tracks) this.gridV2Region().tracks(tracks.records, tracks.bound, tracks.gap, axis);
       this.gridV2Region().contributions(records, gap, axis);
       const entry = { records: records.slice(), gap };
       if (axis === 0) this.gridV2ColumnContributions = entry; else this.gridV2RowContributions = entry;

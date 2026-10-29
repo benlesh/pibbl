@@ -1,3 +1,4 @@
+import { isLayoutInstanceSuspended } from '../layout/participation.js';
 import { invalidateAllocationInputs } from '../layout/allocation-revision.js';
 import type { ManualSchedulerDriver } from './testing.js';
 import { RootRenderTransaction } from '../render-transaction.js';
@@ -648,7 +649,7 @@ function runFrame(hostTime: number): void {
     try {
       for (let jobIndex = 0; jobIndex < rootJob.instances.length; jobIndex++) {
         const job = rootJob.instances[jobIndex];
-        if (job.instance.mainTeardowns.closed || allocationDeferred.has(job.instance)) continue;
+        if (job.instance.mainTeardowns.closed || allocationDeferred.has(job.instance) || isLayoutInstanceSuspended(job.instance)) continue;
         const participantWork = rendererWork.get(job.instance);
         const resourceFailures = runRendererParticipantStage(
           participantWork,
