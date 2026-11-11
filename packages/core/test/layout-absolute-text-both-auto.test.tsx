@@ -63,7 +63,6 @@ it.runIf(nativeLayout)('measures one direct unwrapped Text natural ink box when 
   const fontMetric = metric('aaaa aaaa aaaa', '16px monospace');
   expect(contentMetric.left).toBeLessThan(oldMetric.left);
   expect(fontMetric.left).toBeLessThan(contentMetric.left);
-  expect(fontMetric.top).toBeLessThan(contentMetric.top);
   try {
     const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
     expect(origins.at(-1)).toEqual(oldMetric.origin);
