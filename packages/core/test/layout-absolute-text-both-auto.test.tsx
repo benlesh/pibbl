@@ -54,7 +54,9 @@ it.runIf(nativeLayout)('measures one direct unwrapped Text natural ink box when 
     const width = valueMetrics.actualBoundingBoxLeft + valueMetrics.actualBoundingBoxRight;
     const height = valueMetrics.actualBoundingBoxAscent + valueMetrics.actualBoundingBoxDescent;
     const origin = { x: 184 - width, y: 92 - height };
-    return { origin, left: origin.x - valueMetrics.actualBoundingBoxLeft, top: origin.y - valueMetrics.actualBoundingBoxAscent };
+    const left = origin.x - valueMetrics.actualBoundingBoxLeft;
+    const top = origin.y - valueMetrics.actualBoundingBoxAscent;
+    return { origin, left, top, right: left + width, bottom: top + height };
   };
   const oldMetric = metric('aaaa aaaa', '10px monospace');
   const contentMetric = metric('aaaa aaaa aaaa', '10px monospace');
@@ -81,7 +83,19 @@ it.runIf(nativeLayout)('measures one direct unwrapped Text natural ink box when 
     const afterContent = snapshotWasmLayoutDiagnostics();
     expect(afterContent.measuredLeaves).toBe(initial.measuredLeaves + 1);
     expect(afterContent.nodeCreates).toBe(initial.nodeCreates);
-    const fontBand = { x: Math.ceil(fontMetric.left + 1), y: Math.floor((contentMetric.top + fontMetric.top) / 2) };
+    // Font rasterizers can move the top edge by less than one pixel. Rounding a
+    // point in that narrow vertical strip can move it outside the new ink box.
+    // Use the much wider newly exposed horizontal strip and the ink's vertical
+    // center, then check the actual MouseEvent coordinates before testing it.
+    const fontBand = { x: Math.floor((fontMetric.left + contentMetric.left) / 2), y: Math.floor((fontMetric.top + fontMetric.bottom) / 2) };
+    const canvasBounds = canvas.getBoundingClientRect();
+    const fontProbe = new MouseEvent('click', { clientX: canvasBounds.left + fontBand.x, clientY: canvasBounds.top + fontBand.y });
+    const dispatchedFontPoint = { x: fontProbe.clientX - canvasBounds.left, y: fontProbe.clientY - canvasBounds.top };
+    expect(dispatchedFontPoint.x).toBeGreaterThan(fontMetric.left);
+    expect(dispatchedFontPoint.x).toBeLessThan(fontMetric.right);
+    expect(dispatchedFontPoint.y).toBeGreaterThan(fontMetric.top);
+    expect(dispatchedFontPoint.y).toBeLessThan(fontMetric.bottom);
+    expect(dispatchedFontPoint.x).toBeLessThan(contentMetric.left);
     click(canvas, fontBand.x, fontBand.y);
     expect(hits).toEqual(['TEXT']);
     origins.length = 0;
