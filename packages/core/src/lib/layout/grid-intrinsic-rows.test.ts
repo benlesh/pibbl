@@ -16,6 +16,26 @@ function child(style: Record<string, unknown>) {
 }
 
 describe('Grid intrinsic row allocation boundaries', () => {
+  it('sums fixed effective rows without resolving or placing native tracks', () => {
+    const constraints = { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 200 };
+    for (const rows of [
+      { gridTemplateRows: [20, 30] },
+      { gridTemplateRows: [20], gridAutoRows: 30 },
+    ]) {
+      const grid = createElement(Grid, { style: { width: 100, gridTemplateColumns: ['1fr'], gap: 5, minHeight: 0, flexShrink: 0, ...rows }, children: child({ width: '100%', height: '100%', gridRowStart: 2 }) });
+      const column = createElement(Flex, { style: { width: 100, flexDirection: 'column' }, children: grid });
+      const before = snapshotWasmLayoutDiagnostics();
+      expect(measureElement(column, constraints, service)).toEqual({ status: 'measured', size: { width: 100, height: 55 } });
+      expect(measureIntrinsicElement(grid, constraints, service)).toMatchObject({ status: 'measured', minContent: { width: 100, height: 55 } });
+      const after = snapshotWasmLayoutDiagnostics();
+      expect(after.gridTrackResolutions - before.gridTrackResolutions).toBe(0);
+      expect(after.gridCellPlacements - before.gridCellPlacements).toBe(0);
+      expect(after.activeGridArenas).toBe(before.activeGridArenas);
+    }
+    const invalid = createElement(Grid, { style: { width: 100, gridTemplateColumns: ['1fr'], gridTemplateRows: [20] }, children: child({ gridRowStart: -1 }) });
+    expect(() => measureElement(invalid, constraints, service)).toThrow(/gridRowStart/);
+  });
+
   it('rejects allocation-dependent intrinsic rows even when width is selected', () => {
     const tracks: readonly GridTrack[] = [
       '1fr', '50%', minmax({ min: 10, max: '1fr' }),
@@ -42,6 +62,23 @@ describe('Grid intrinsic row allocation boundaries', () => {
     expect([after.activeArenas, after.activeGridArenas, after.activeNodes, after.activeWasmInstances]).toEqual(
       [before.activeArenas, before.activeGridArenas, before.activeNodes, before.activeWasmInstances],
     );
+  });
+
+  it('retains native measurement for automatic implicit rows and row auto-fit collapse', () => {
+    const constraints = { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 200 };
+    const implicit = createElement(Grid, { style: { width: 100, gridTemplateColumns: ['1fr'], gridTemplateRows: [10], gridAutoRows: 'auto' }, children: createElement(Text, { children: 'a', style: { gridRowStart: 2, lineHeight: 20, wrap: true } }) });
+    const before = snapshotWasmLayoutDiagnostics();
+    expect(measureElement(implicit, constraints, service)).toEqual({ status: 'measured', size: { width: 100, height: 30 } });
+    const middle = snapshotWasmLayoutDiagnostics();
+    // Columns, rows and the Text row's intrinsic contribution each resolve.
+    expect(middle.gridTrackResolutions - before.gridTrackResolutions).toBe(3);
+    expect(middle.gridCellPlacements - before.gridCellPlacements).toBe(1);
+    const fitted = createElement(Grid, { style: { width: 100, height: 60, gridTemplateColumns: ['1fr'], gridTemplateRows: [autoFitTracks(10)] }, children: child({ width: 5, height: 5 }) });
+    expect(measureIntrinsicElement(fitted, constraints, service)).toMatchObject({ status: 'measured', minContent: { width: 100, height: 10 } });
+    const after = snapshotWasmLayoutDiagnostics();
+    expect(after.gridTrackResolutions - middle.gridTrackResolutions).toBe(2);
+    expect(after.gridCellPlacements - middle.gridCellPlacements).toBe(1);
+    expect(after.activeGridArenas).toBe(before.activeGridArenas);
   });
 
   it('rejects allocation-dependent implicit rows only when normal-flow children need them', () => {

@@ -355,11 +355,14 @@ function resolveGridPlacements(
   options: Readonly<ReturnType<typeof normalizeGridOptions>>,
   measurement: GridMeasurementInput,
   nativeRegion?: LayoutRegion,
+  assignedCells?: GridCell[],
 ): GridPlacement[] {
   assertFiniteContainer(container);
-  const cells = nativeRegion ? prepareGridCells(children, container) : prepareExplicitGridCells(children, container, options.columns.length, options.rows.length);
+  // Selected-width measurement can supply single-use cells already prepared
+  // and assigned for these exact children, container and options.
+  const cells = assignedCells ?? (nativeRegion ? prepareGridCells(children, container) : prepareExplicitGridCells(children, container, options.columns.length, options.rows.length));
   const flowCells = cells.filter((cell) => cell.normalized.position !== 'absolute');
-  if (nativeRegion) { const assigned = nativeRegion.gridV2Region().assign(flowCells, options.columns.length, options.rows.length, gridFlowCode(options.gridAutoFlow)).cells; for (let index = 0; index < flowCells.length; index++) { flowCells[index]!.columnStart = assigned[index]!.columnStart; flowCells[index]!.rowStart = assigned[index]!.rowStart; } }
+  if (nativeRegion && !assignedCells) { const assigned = nativeRegion.gridV2Region().assign(flowCells, options.columns.length, options.rows.length, gridFlowCode(options.gridAutoFlow)).cells; for (let index = 0; index < flowCells.length; index++) { flowCells[index]!.columnStart = assigned[index]!.columnStart; flowCells[index]!.rowStart = assigned[index]!.rowStart; } }
   let expandedColumns = appendImplicitTracks(options.columns, options.autoColumn, maxGridExtent(flowCells, 'column'));
   let expandedRows = appendImplicitTracks(options.rows, options.autoRow, maxGridExtent(flowCells, 'row'));
   if (nativeRegion && options.autoFitColumns) expandedColumns = collapseParsedAutoFit(expandedColumns, flowCells, 'column');
@@ -1119,18 +1122,26 @@ function measureGridRowsAtSelectedWidth(
     return { status: 'unsupported', reason: 'Grid intrinsic row measurement is allocation-dependent' };
   }
   const children = materializeLayoutChildren(childInput, 'Grid');
-  if (allocatedHeight === undefined && (trackNeedsAllocatedAxis(options.autoRow) || style.gridAutoRows !== undefined && isAutoRepeatTrack(style.gridAutoRows))) {
-    const cells = assignGridCells(children, container, options.columns.length, options.rows.length, options);
-    const rows = maxGridExtent(cells.filter(cell => cell.normalized.position !== 'absolute'), 'row');
-    if (rows > options.rows.length) {
+  const dependentImplicitRows = allocatedHeight === undefined &&
+    (trackNeedsAllocatedAxis(options.autoRow) || style.gridAutoRows !== undefined && isAutoRepeatTrack(style.gridAutoRows));
+  const canSumRows = fixedIntrinsicAxis(options.rows) && !options.autoFitRows;
+  let assignedCells: GridCell[] | undefined;
+  if (dependentImplicitRows || canSumRows) {
+    assignedCells = assignGridCells(children, container, options.columns.length, options.rows.length, options);
+    const extent = maxGridExtent(assignedCells.filter(cell => cell.normalized.position !== 'absolute'), 'row');
+    if (dependentImplicitRows && extent > options.rows.length) {
       return { status: 'unsupported', reason: 'Grid intrinsic implicit-row measurement is allocation-dependent' };
+    }
+    const rows = appendImplicitTracks(options.rows, options.autoRow, extent);
+    if (canSumRows && fixedIntrinsicAxis(rows)) {
+      return { status: 'measured', height: intrinsicTrackSize(rows, options.rowGap) };
     }
   }
   const region = new LayoutRegion();
   try {
     // Measurement and rendering use one track/occupancy algorithm. In particular,
     // a minmax fractional maximum must settle before width-dependent row queries.
-    resolveGridPlacements(container, children, options, { service, measureElement: measure }, region);
+    resolveGridPlacements(container, children, options, { service, measureElement: measure }, region, assignedCells);
     const rows = region.snapshotGridV2Tracks(1);
     let height = Math.max(0, rows.length - 1) * options.rowGap;
     for (let index = 0; index < rows.length; index++) height += rows[index]!;
