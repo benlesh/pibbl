@@ -25,7 +25,6 @@ lint and documentation formatting passed. The rebuilt native artifact is 153,685
 bytes. Regression tests cover the reported failures through public mounting,
 measurement and owned-tree surfaces.
 
-
 ## Native-default implementation batch — 2026-10-29
 
 The native layout engine is now the default runtime path. Applications do not
