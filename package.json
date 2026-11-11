@@ -113,7 +113,7 @@
     "playwright": "catalog:",
     "prettier": "catalog:",
     "rimraf": "catalog:",
-    "sharp": "0.35.4",
+    "sharp": "0.35.5",
     "tsx": "catalog:",
     "three": "catalog:",
     "typescript": "catalog:",
