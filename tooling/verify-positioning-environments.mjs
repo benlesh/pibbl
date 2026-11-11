@@ -1,7 +1,8 @@
 import { build } from "esbuild";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { chromium } from "playwright";
 
 const root = resolve(import.meta.dirname, "..");
@@ -108,7 +109,7 @@ async function render(layout, includeOffsets) {
   let controller;
   let clicks = 0;
   try {
-    controller = pibbl(canvas, createTree(layout, includeOffsets, () => { clicks++; }), {
+    controller = await pibbl(canvas, createTree(layout, includeOffsets, () => { clicks++; }), {
       pixelRatio: 1,
     });
     await nextFrame();
@@ -163,7 +164,7 @@ async function bundleProbe(kind, development) {
     absWorkingDir: root,
     bundle: true,
     define: { "import.meta.env.DEV": String(development) },
-    format: "iife",
+    format: "esm",
     outfile: output,
     platform: "browser",
     stdin: {
@@ -232,6 +233,7 @@ function assertProductionResult(label, results) {
 }
 
 let browser;
+let server;
 try {
   const bundles = await Promise.all(
     ["source", "built", ...(packedEntry ? ["packed"] : [])].flatMap((kind) => [
@@ -247,12 +249,46 @@ try {
       })),
     ]),
   );
+  // Each bundled module retains import.meta.url and fetches its own package's
+  // external native asset. Packed checks must not borrow the source artifact.
+  const routes = new Map();
+  for (const bundle of bundles) {
+    bundle.route = `/${bundle.kind}-dev-${bundle.development}/`;
+    const entry = publicCoreEntry(bundle.kind);
+    routes.set(`${bundle.route}probe.js`, {
+      type: "text/javascript",
+      body: await readFile(bundle.path),
+    });
+    routes.set(`${bundle.route}layout.wasm`, {
+      type: "application/wasm",
+      body: await readFile(join(dirname(entry), "lib/layout/wasm/layout.wasm")),
+    });
+    routes.set(bundle.route, {
+      type: "text/html",
+      body: '<!doctype html><script type="module" src="./probe.js"></script>',
+    });
+  }
+  server = createServer((request, response) => {
+    const route = routes.get(request.url);
+    if (!route) {
+      response.writeHead(404).end();
+      return;
+    }
+    response.writeHead(200, { "Content-Type": route.type });
+    response.end(route.body);
+  });
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const origin = `http://127.0.0.1:${server.address().port}`;
   browser = await chromium.launch({ headless: true });
   for (const bundle of bundles) {
     const page = await browser.newPage({
       viewport: { width: 240, height: 540 },
     });
-    await page.addScriptTag({ path: bundle.path });
+    await page.goto(`${origin}${bundle.route}`);
+    await page.waitForFunction(() => typeof globalThis.__pibblPositioningProbe === "function");
     const results = await page.evaluate(() =>
       globalThis.__pibblPositioningProbe(),
     );
@@ -264,5 +300,9 @@ try {
   }
 } finally {
   await browser?.close();
+  if (server) {
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+  }
   await rm(directory, { recursive: true, force: true });
 }
