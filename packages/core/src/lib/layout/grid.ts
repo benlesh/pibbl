@@ -1108,9 +1108,24 @@ function measureGridRowsAtSelectedWidth(
   if (!Number.isFinite(width) || width < 0 || !Number.isFinite(constraints.maxHeight)) {
     return { status: 'unsupported', reason: 'Grid selected-width row measurement requires finite owner constraints' };
   }
-  const container = { x: 0, y: 0, width, height: constraints.maxHeight };
+  const allocatedHeight = typeof style.height === 'number'
+    ? measuredLength(style.height, constraints.maxHeight, 'height', constraints)
+    : undefined;
+  const container = { x: 0, y: 0, width, height: allocatedHeight ?? constraints.maxHeight };
   const options = normalizeGridOptions(style, container);
+  // The width is selected, but maxHeight remains only an upper bound. Row
+  // fractions, percentages and automatic repetition need an allocated height.
+  if (allocatedHeight === undefined && (style.gridTemplateRows.some(isAutoRepeatTrack) || options.rows.some(trackNeedsAllocatedAxis))) {
+    return { status: 'unsupported', reason: 'Grid intrinsic row measurement is allocation-dependent' };
+  }
   const children = materializeLayoutChildren(childInput, 'Grid');
+  if (allocatedHeight === undefined && (trackNeedsAllocatedAxis(options.autoRow) || style.gridAutoRows !== undefined && isAutoRepeatTrack(style.gridAutoRows))) {
+    const cells = assignGridCells(children, container, options.columns.length, options.rows.length, options);
+    const rows = maxGridExtent(cells.filter(cell => cell.normalized.position !== 'absolute'), 'row');
+    if (rows > options.rows.length) {
+      return { status: 'unsupported', reason: 'Grid intrinsic implicit-row measurement is allocation-dependent' };
+    }
+  }
   const region = new LayoutRegion();
   try {
     // Measurement and rendering use one track/occupancy algorithm. In particular,
@@ -1121,6 +1136,12 @@ function measureGridRowsAtSelectedWidth(
     for (let index = 0; index < rows.length; index++) height += rows[index]!;
     return { status: 'measured', height };
   } finally { region.dispose(); }
+}
+
+function trackNeedsAllocatedAxis(track: ParsedGridTrack): boolean {
+  if (track.kind === 'percentage' || track.kind === 'fraction') return true;
+  if (track.kind === 'minmax') return trackNeedsAllocatedAxis(track.min) || trackNeedsAllocatedAxis(track.max);
+  return track.kind === 'intrinsic' && isFitContent(track.value) && typeof track.value.limit === 'string';
 }
 
 function fixedIntrinsicAxis(tracks: readonly ParsedGridTrack[]): boolean {
