@@ -141,6 +141,11 @@ try {
     .locator("[data-status]")
     .filter({ hasText: /^Running$/ })
     .waitFor();
+  await interactive.waitForFunction(() => {
+    const canvas = document.querySelector("[data-effect-demo] canvas");
+    const pixel = canvas?.getContext("2d")?.getImageData(1, 1, 1, 1).data;
+    return pixel?.[0] === 247 && pixel[1] === 240 && pixel[2] === 223 && pixel[3] === 255;
+  });
   await interactive.getByRole("button", { name: "Stop", exact: true }).click();
   await interactive
     .locator("[data-status]")

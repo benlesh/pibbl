@@ -6,10 +6,11 @@ const { kind } = Astro.props;
   <canvas class="demo-canvas" data-kind={kind} width="600" height="200" aria-label={`${kind} preview`}></canvas>
 </section>
 <script>
-  import { pibbl, createElement as h, Circle, Group, Rectangle } from '@pibbl/core';
+  import { pibbl, createElement as h, Circle, Group, Rectangle, type PibblController } from '@pibbl/core';
   import { blur } from '@pibbl/core/filters';
   import { useTexture, marble } from '@pibbl/core/textures';
-  const controllers = [];
+  const controllers: PibblController[] = [];
+  const lifetime = new AbortController();
   for (const canvas of document.querySelectorAll<HTMLCanvasElement>('.demo-canvas')) {
     function Scene() {
       if (canvas.dataset.kind === 'marble') {
@@ -19,7 +20,16 @@ const { kind } = Astro.props;
       return h(Group, {}, h(Circle, { style: { cx: 150, cy: 100, radius: 60, fill: '#267d7c' } }),
         ...(canvas.dataset.kind === 'blur' ? [h(Circle, { style: { cx: 450, cy: 100, radius: 60, fill: '#267d7c', filter: [blur({ radius: 8 })] } })] : []));
     }
-    controllers.push(pibbl(canvas, h(Scene, {})));
+    void pibbl(canvas, h(Scene, {}), { signal: lifetime.signal }).then(controller => {
+      if (lifetime.signal.aborted) controller.dispose();
+      else controllers.push(controller);
+    }).catch(error => {
+      if (!lifetime.signal.aborted) console.error('Unable to mount catalog preview', error);
+    });
   }
-  window.addEventListener('pagehide', () => controllers.forEach(controller => controller.dispose()), { once: true });
+  window.addEventListener('pagehide', () => {
+    lifetime.abort();
+    for (const controller of controllers) controller.dispose();
+    controllers.length = 0;
+  }, { once: true });
 </script>

@@ -4,7 +4,7 @@ const { slug } = Astro.props;
 const example = galleryExamples.find(example => example.slug === slug)!;
 const { width, height } = example.canvas;
 ---
-<section data-effect-demo={slug} data-source={example.source.path} aria-label="Interactive effect">
+<section data-effect-demo={slug} data-source={example.source.path} data-export-name={example.source.exportName} data-config={JSON.stringify(example.source.config ?? {})} data-html-overlay={example.source.htmlOverlay ? 'true' : undefined} aria-label="Interactive effect">
   <div class="effect-actions">
     <button type="button" data-start>Run example</button>
     <button type="button" data-stop disabled>Stop</button>
@@ -20,31 +20,47 @@ const { width, height } = example.canvas;
   button { padding: 0.4rem 0.8rem; cursor: pointer; }
 </style>
 <script>
-  const loaders = import.meta.glob<{ default: (canvas: HTMLCanvasElement) => { dispose(): void } }>('../../../packages/scenarios/src/learning/**/*.example.tsx');
+  import { createElement, pibbl, type PibblComponent, type PibblConfig } from '@pibbl/core';
+  import { prepareExampleHost } from '../../../packages/scenarios/src/example-surface';
+  const loaders = import.meta.glob<Record<string, unknown>>('../../../packages/scenarios/src/learning/**/*.example.tsx');
   for (const host of document.querySelectorAll<HTMLElement>('[data-effect-demo]')) {
     const canvas = host.querySelector('canvas')!;
     const start = host.querySelector<HTMLButtonElement>('[data-start]')!;
     const stop = host.querySelector<HTMLButtonElement>('[data-stop]')!;
     const status = host.querySelector<HTMLElement>('[data-status]')!;
     let controller: { dispose(): void } | undefined;
+    let surface: { dispose(): void } | undefined;
+    let lifetime: AbortController | undefined;
     let generation = 0;
     function dispose() {
       generation++;
-      controller?.dispose();
-      controller = undefined;
+      lifetime?.abort();
+      lifetime = undefined;
+      try { controller?.dispose(); }
+      finally { controller = undefined; surface?.dispose(); surface = undefined; }
       start.disabled = false;
       stop.disabled = true;
       status.textContent = 'Stopped';
     }
     start.addEventListener('click', async () => {
       const current = ++generation;
+      const attempt = lifetime = new AbortController();
       start.disabled = true;
       stop.disabled = false;
       status.textContent = 'Loading';
       try {
         const example = await loaders[`../../../${host.dataset.source}`]();
         if (current !== generation) return;
-        controller = example.default(canvas);
+        const Component = example[host.dataset.exportName!];
+        if (typeof Component !== 'function') throw new TypeError('Example must export its catalog-selected component.');
+        const prepared = prepareExampleHost(canvas, {
+          config: JSON.parse(host.dataset.config ?? '{}') as PibblConfig,
+          htmlOverlay: host.dataset.htmlOverlay === 'true',
+        });
+        surface = prepared;
+        const mounted = await pibbl(canvas, createElement(Component as PibblComponent<object>, {}), { ...prepared.config, signal: attempt.signal });
+        if (current !== generation) { mounted.dispose(); return; }
+        controller = mounted;
         status.textContent = 'Running';
       } catch (error) {
         if (current !== generation) return;
