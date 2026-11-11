@@ -35,3 +35,10 @@ catalog:
   vite: ^8.2.6
   vitest: ^4.1.10
   yaml: ^2.9.0
+
+overrides:
+  # Monaco 0.56.0 pins a sanitizer affected by GHSA-cg2g-xh64-v4q7.
+  monaco-editor@0.56.0>dompurify: 3.4.17
+
+patchedDependencies:
+  monaco-editor@0.56.0: patches/monaco-editor@0.56.0.patch
