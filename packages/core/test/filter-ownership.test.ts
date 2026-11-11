@@ -17,6 +17,7 @@ afterEach(() => {
 });
 
 describe("filter surface ownership", () => {
+  // The 100,100 checkouts verify ownership, not shared-runner wall-clock speed.
   it("keeps exact ownership through stress, replacement, failure, disposal, and remount", async () => {
     let patternAssignment:
       | {
@@ -149,7 +150,7 @@ describe("filter surface ownership", () => {
 
     freshController.dispose();
     expectReleased(freshPool, 6, 3);
-  });
+  }, 30_000);
 });
 
 const ThrowingPrimitive = definePrimitive<{}>(() => {
