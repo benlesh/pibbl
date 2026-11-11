@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 const output = new URL("../website/dist/", import.meta.url);
@@ -116,6 +117,8 @@ try {
     true,
   );
   const interactive = await browser.newPage();
+  const pageErrors = [];
+  interactive.on("pageerror", error => pageErrors.push(String(error)));
   await interactive.goto(`${base}/minimal-examples/animation/tween/`);
   await interactive
     .locator("[data-minimal-preview] [data-run][disabled]")
@@ -141,11 +144,33 @@ try {
     .locator("[data-status]")
     .filter({ hasText: /^Running$/ })
     .waitFor();
-  await interactive.waitForFunction(() => {
-    const canvas = document.querySelector("[data-effect-demo] canvas");
-    const pixel = canvas?.getContext("2d")?.getImageData(1, 1, 1, 1).data;
-    return pixel?.[0] === 247 && pixel[1] === 240 && pixel[2] === 223 && pixel[3] === 255;
-  });
+  try {
+    await interactive.waitForFunction(() => {
+      const canvas = document.querySelector("[data-effect-demo] canvas");
+      const pixel = canvas?.getContext("2d")?.getImageData(1, 1, 1, 1).data;
+      return pixel?.[0] === 247 && pixel[1] === 240 && pixel[2] === 223 && pixel[3] === 255;
+    });
+  } catch (error) {
+    const evidence = await interactive.evaluate(() => {
+      const canvas = document.querySelector("[data-effect-demo] canvas");
+      const context = canvas?.getContext("2d");
+      return {
+        status: document.querySelector("[data-status]")?.textContent,
+        width: canvas?.width,
+        height: canvas?.height,
+        display: canvas?.getBoundingClientRect().toJSON(),
+        pixelRatio: devicePixelRatio,
+        pixels: [[1, 1], [20, 20], [150, 210], [360, 210], [570, 210]].map(([x, y]) => ({
+          x, y, rgba: context ? Array.from(context.getImageData(x, y, 1, 1).data) : null,
+        })),
+      };
+    });
+    console.error("Regular polygon paint evidence", JSON.stringify({ ...evidence, pageErrors }));
+    const screenshots = new URL("../test-screenshots/", import.meta.url);
+    await mkdir(screenshots, { recursive: true });
+    await interactive.screenshot({ path: fileURLToPath(new URL("website-regular-polygon.png", screenshots)) });
+    throw error;
+  }
   await interactive.getByRole("button", { name: "Stop", exact: true }).click();
   await interactive
     .locator("[data-status]")
