@@ -1,5 +1,5 @@
 import { canvasMeasurementService } from './canvas-measurement.js';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element.js';
 import { getPrimitiveReceiverToken, getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import { signal, signalGraphSnapshot, withSignalDependencyRole } from '../signals/graph.js';
@@ -21,6 +21,39 @@ function transaction() {
 }
 const box = { x: 0, y: 0, width: 100, height: 20 };
 describe('allocation checkpoints', () => {
+  it('resolves whole style signals once per occurrence while detecting in-place values and replacing bindings', () => {
+    const owner = {}, token = {}, receiverOwner = {};
+    const source = { width: 20, height: 10 }, first = signal(source), second = signal({ width: 30, height: 10 });
+    const firstRead = vi.spyOn(first, 'get'), secondRead = vi.spyOn(second, 'get');
+    let selected = first, computations = 0, invalidations = 0;
+    const consumer = createSignalRenderConsumer({ debugName: 'whole style receiver', allocationReceiver: receiverOwner, invalidate: () => { invalidations++; } });
+    function render(success = true) {
+      const tx = transaction(); GLOBAL_STATE.renderTransaction = tx; GLOBAL_STATE.primitiveReceiverToken = token;
+      const children = [createElement(Rectangle, { style: selected })], receiver = getChildPrimitiveReceiverToken(tx, token, 0);
+      const result = withAllocationCheckpoint(owner, { children, content: box, settings: {}, calculate: () => {
+        computations++;
+        const style = preparedStyleValue(prepareDirectChildStyle(children[0], receiver, box)) as SystemStyle & { width: number };
+        return [{ box: { ...box, width: style.width }, element: childWithUsedSize(children[0], style, style.width, 10, receiver) }];
+      } });
+      if (success) {
+        collectSignalReads(consumer, () => adoptReceiverInputProvision(tx, receiver)); consumer.markClean();
+        adoptAllocationReceiver(tx, receiver, receiverOwner);
+      }
+      tx.finish(success); return result;
+    }
+    try {
+      expect(render()[0].box.width).toBe(20); expect(firstRead).toHaveBeenCalledTimes(1);
+      render(); expect(firstRead).toHaveBeenCalledTimes(2); expect(computations).toBe(1);
+      source.width = 30; expect(render()[0].box.width).toBe(30); expect(firstRead).toHaveBeenCalledTimes(3); expect(computations).toBe(2);
+      selected = second; render(); expect(secondRead).toHaveBeenCalledTimes(1); expect(computations).toBe(2);
+      const beforeOld = invalidations; first.set({ width: 40, height: 10 }); expect(invalidations).toBe(beforeOld);
+      second.set({ width: 50, height: 10 }); expect(invalidations).toBe(beforeOld + 1);
+      expect(render()[0].box.width).toBe(50); expect(secondRead).toHaveBeenCalledTimes(2);
+      second.set({ width: 60, height: 10 }); expect(render(false)[0].box.width).toBe(60); expect(secondRead).toHaveBeenCalledTimes(3);
+      second.set({ width: 50, height: 10 }); expect(render()[0].box.width).toBe(50); expect(secondRead).toHaveBeenCalledTimes(4);
+      expect(computations).toBe(4);
+    } finally { disposeAllocationCheckpoint(owner); disposeSignalRenderConsumer(consumer); firstRead.mockRestore(); secondRead.mockRestore(); GLOBAL_STATE.renderTransaction = undefined; GLOBAL_STATE.primitiveReceiverToken = undefined; }
+  });
   it('remeasures application-owned fonts while equal numeric output stops allocation', () => {
     const owner = {}, token = {};
     let width = 20, measurements = 0, computations = 0, font = '12px "ApplicationFont", monospace';
@@ -350,4 +383,27 @@ describe('allocation checkpoints', () => {
       rules[0].style.width = 60; expect(render()[0].box.width).toBe(60);
     } finally { disposeAllocationCheckpoint(owner); GLOBAL_STATE.renderTransaction = undefined; GLOBAL_STATE.primitiveReceiverToken = undefined; }
   });
+});
+
+it('does not reuse an absent continuation from an unsampled nested signal-held style', async () => {
+  const { Flex } = await import('./flex.js');
+  const owner = {}, token = {}, source = { width: 20, height: 10 }, style = signal(source);
+  const children = [createElement(Flex, { style: { width: 80, height: 10 }, children: createElement(Rectangle, { style }) })];
+  let computations = 0;
+  function render(continuation?: { target: number }) {
+    const tx = transaction(); GLOBAL_STATE.renderTransaction = tx; GLOBAL_STATE.primitiveReceiverToken = token;
+    const receiver = getChildPrimitiveReceiverToken(tx, token, 0);
+    const result = withAllocationCheckpoint(owner, { children, content: box, settings: {}, continuation, calculate: () => {
+      computations++;
+      const prepared = preparedStyleValue(prepareDirectChildStyle(children[0], receiver, box));
+      return [{ box: { ...box, width: source.width }, element: childWithUsedSize(children[0], prepared, source.width, 10, receiver) }];
+    } });
+    tx.finish(true); return result;
+  }
+  try {
+    render({ target: 20 }); expect(computations).toBe(1);
+    render({ target: 20 }); expect(computations).toBe(1);
+    source.width = 30;
+    expect(render()[0].box.width).toBe(30); expect(computations).toBe(2);
+  } finally { disposeAllocationCheckpoint(owner); GLOBAL_STATE.renderTransaction = undefined; GLOBAL_STATE.primitiveReceiverToken = undefined; }
 });

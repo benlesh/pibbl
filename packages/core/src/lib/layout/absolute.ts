@@ -2,7 +2,7 @@ import { recordAllocationStyle, configureAllocationCheckpointAdapter, withAlloca
 import { participatingLayoutChildren, layoutParticipationPlan, type LayoutParticipationSource } from './participation.js';
 import { allocatedContentBoxStyle, contentBoxStyle } from './box-sizing.js';
 import { recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit, nativeLayout } from './wasm/region.js';
-import { registerKnownLayoutPreflight, isKnownLayoutType, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, takePreparedChildStyle, type PreparedLayoutPlan } from './prepared-root.js';
+import { registerKnownLayoutPreflight, isKnownLayoutType, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, takePreparedChildStyle, stagePreparedChildStyle, type PreparedLayoutPlan } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { ResponsiveStylePreparation, getStyleMeasurementMode, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -481,7 +481,7 @@ export function prepareDirectChildStyle(
   queryBasis?: Readonly<LayoutBox>,
   flexMargins = false,
 ): Readonly<SystemStyle> | ResponsiveStylePreparation<Readonly<SystemStyle>> {
-  configureAllocationCheckpointAdapter(prepareDirectChildStyle, childWithUsedSize, takePreparedChildStyle, isLayoutComponent, isKnownLayoutType, prepareLayoutComponent);
+  configureAllocationCheckpointAdapter(prepareDirectChildStyle, childWithUsedSize, takePreparedChildStyle, stagePreparedChildStyle, isLayoutComponent, isKnownLayoutType, prepareLayoutComponent);
   const staged = takePreparedChildStyle(child, receiverToken, queryBasis);
   if (staged) { recordAllocationStyle(receiverToken, staged); return staged; }
   let source = child;

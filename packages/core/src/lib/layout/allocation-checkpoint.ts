@@ -11,17 +11,18 @@ import { peekPreNormalizedStyle, setPreNormalizedStyle } from '../style/resolve-
 import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import type { SystemStyle, PibblRenderTransaction } from '../types.js';
 import { styleInputRole } from '../element/resolve-primitive-inputs.js';
-import type { takePreparedChildStyle as TakePreparedStyle } from './prepared-root.js';
+import type { takePreparedChildStyle as TakePreparedStyle, stagePreparedChildStyle as StagePreparedStyle } from './prepared-root.js';
 import type { prepareDirectChildStyle as PrepareStyle, childWithUsedSize as PlaceStyle } from './absolute.js';
 let prepareDirectChildStyle: typeof PrepareStyle;
 let childWithUsedSize: typeof PlaceStyle;
 let takePreparedStyle: typeof TakePreparedStyle;
+let stagePreparedStyle: typeof StagePreparedStyle;
 let isDescription: (type: Function) => boolean;
 let isStructural: (type: Function) => boolean;
 let prepareDescription: (element: PibblElement<any>, options?: { receiverToken?: object }) => PibblElement<any>;
 /** Installed lazily by the existing direct-style boundary to avoid module cycles. */
-export function configureAllocationCheckpointAdapter(prepare: typeof PrepareStyle, place: typeof PlaceStyle, takePrepared: typeof TakePreparedStyle, described: (type: Function) => boolean, structural: (type: Function) => boolean, describe: typeof prepareDescription): void {
-  prepareDirectChildStyle = prepare; childWithUsedSize = place; takePreparedStyle = takePrepared; isDescription = described; isStructural = structural; prepareDescription = describe;
+export function configureAllocationCheckpointAdapter(prepare: typeof PrepareStyle, place: typeof PlaceStyle, takePrepared: typeof TakePreparedStyle, stagePrepared: typeof StagePreparedStyle, described: (type: Function) => boolean, structural: (type: Function) => boolean, describe: typeof prepareDescription): void {
+  prepareDirectChildStyle = prepare; childWithUsedSize = place; takePreparedStyle = takePrepared; stagePreparedStyle = stagePrepared; isDescription = described; isStructural = structural; prepareDescription = describe;
 }
 import { AllocationDependency, stageAllocationDependency } from './allocation-dependencies.js';
 import { getLayoutDirection, getLogicalContainingBox } from './context.js';
@@ -83,6 +84,7 @@ export function declineUntracedAllocationQuery(): void { untracedQueryRevision++
 export function allocationQueryReplayRevision(): number { return untracedQueryRevision; }
 const OPAQUE_PAINT = Symbol('opaque paint input');
 const RESPONSIVE_INPUT = Symbol('responsive input');
+const SIGNAL_STYLE_INPUT = Symbol('signal style input');
 const NO_RECEIPT: ReceiverInputProvisionReceipt = Object.freeze([]);
 function presentationOrMeasurement(key: string): boolean {
   const role = styleInputRole(key);
@@ -96,7 +98,7 @@ function snapshot(value: unknown, style = false, geometry = false): Snapshot | u
   const result: unknown[] = [];
   const visiting = new Set<object>();
   function append(value: unknown, opaquePaint = false): boolean {
-    if (style && isSignal(value)) { result.push(value); return append(value.get(), opaquePaint); }
+    if (style && isSignal(value)) { result.push(SIGNAL_STYLE_INPUT, value); return true; }
     if (value === null || typeof value !== 'object') { result.push(value); return true; }
     if (isSignal(value)) { result.push(value); return true; }
     const prototype = Object.getPrototypeOf(value);
@@ -270,8 +272,15 @@ export function withAllocationCheckpoint<P extends Placement>(owner: object | un
   if (options.continuation !== undefined && !continuation) { retireOnSuccess(owner, transaction); return options.calculate(); }
   const previous = checkpoints.get(owner);
   if (previous && same(previous.key, key) && previous.inputs.length === children.length) {
-    const placements = reuse(owner, previous, options, transaction, receivers);
+    const attempted: PreparedInputAttempt[] = [];
+    const placements = reuse(owner, previous, options, transaction, receivers, attempted);
     if (placements) { options.onHit?.(); return placements; }
+    // A numeric miss must consume the current preparation, not resolve its
+    // signals again. Existing handoffs are scoped by transaction/receiver/box.
+    for (const input of attempted) {
+      replayReceiverInputProvision(transaction, input.receiver, input.receipt);
+      stagePreparedStyle(children[input.index], input.receiver, content, input.prepared);
+    }
   }
   const active: Trace = { receivers, inputs: children.map(() => ({})), queries: [], valid: true };
   const outer = trace; trace = active;
@@ -321,14 +330,17 @@ function retireOnSuccess(owner: object, transaction: PibblRenderTransaction): vo
   transaction.onFinish(success => { if (success && checkpoints.get(owner) === previous) disposeAllocationCheckpoint(owner); });
 }
 
-function reuse<P extends Placement>(owner: object, checkpoint: Checkpoint, options: AllocationCheckpointOptions<P>, transaction: PibblRenderTransaction, receivers: Map<object, number>): P[] | undefined {
+interface PreparedInputAttempt { index: number; receiver: object; prepared: PreparedStyle; receipt: ReceiverInputProvisionReceipt; }
+
+function reuse<P extends Placement>(owner: object, checkpoint: Checkpoint, options: AllocationCheckpointOptions<P>, transaction: PibblRenderTransaction, receivers: Map<object, number>, attempted: PreparedInputAttempt[]): P[] | undefined {
   const continuation = options.continuation === undefined ? undefined : snapshot(options.continuation);
   if (continuation && !same(continuation, checkpoint.continuation)) return;
   // An absent stage means the upstream contribution was not demanded this time.
   // Reuse only while its original input program and dependencies remain clean.
   if (checkpoint.continuation && !continuation) {
     for (const [receiver, index] of receivers) {
-      if (checkpoint.inputs[index].dirty || !same(programSnapshot(options.children[index], receiver), checkpoint.programs?.[index])) return;
+      const program = programSnapshot(options.children[index], receiver);
+      if (checkpoint.inputs[index].dirty || program?.includes(SIGNAL_STYLE_INPUT) || !same(program, checkpoint.programs?.[index])) return;
     }
   }
   const prepared: PreparedStyle[] = [];
@@ -343,11 +355,14 @@ function reuse<P extends Placement>(owner: object, checkpoint: Checkpoint, optio
     if (!raw) return;
     const staged = takePreparedStyle(child, receiver, options.content);
     let current = staged ?? input.prepared;
-    if (staged || raw.includes(OPAQUE_PAINT) || raw.includes(RESPONSIVE_INPUT) || preparedStyleQuery(input.prepared) || isDescription(child.type) || !same(raw, input.raw) || (input.dirty & (1 | 2 | 64))) {
+    let geometryChanged = false;
+    if (staged || raw.includes(OPAQUE_PAINT) || raw.includes(RESPONSIVE_INPUT) || raw.includes(SIGNAL_STYLE_INPUT) || preparedStyleQuery(input.prepared) || isDescription(child.type) || !same(raw, input.raw) || (input.dirty & (1 | 2 | 64))) {
       current = staged ?? prepareDirectChildStyle(child, receiver, options.content, options.flexMargins);
-      if (!same(snapshot(preparedStyleValue(current), false, true), input.normalized)) return;
+      geometryChanged = !same(snapshot(preparedStyleValue(current), false, true), input.normalized);
       if (!same(snapshot(preparedStyleValue(current)), snapshot(preparedStyleValue(input.prepared))) || !same(snapshot(preparedStyleQuery(current)), snapshot(preparedStyleQuery(input.prepared)))) changed.add(index);
     }
+    attempted.push({ index, receiver, prepared: current, receipt: styleReceipts.get(current) ?? input.receipt });
+    if (geometryChanged) return;
     prepared.push(current); rawSnapshots.push(raw); revisions.push(input.revision);
     styleReads.push(styleReceipts.get(current) ?? input.receipt);
   }
@@ -364,7 +379,7 @@ function reuse<P extends Placement>(owner: object, checkpoint: Checkpoint, optio
     queryProps.push(props);
     // Unknown model/getter/cyclic props cannot prove unchanged input. Execute
     // the current pure provider on every admitted render and compare its output.
-    if (query.volatile || !props || props.includes(OPAQUE_PAINT) || props.includes(RESPONSIVE_INPUT) || !query.props || input.dirty || changed.has(query.index) || !same(props, query.props)) {
+    if (query.volatile || !props || props.includes(OPAQUE_PAINT) || props.includes(RESPONSIVE_INPUT) || props.includes(SIGNAL_STYLE_INPUT) || !query.props || input.dirty || changed.has(query.index) || !same(props, query.props)) {
       const element = clonePibblElement(child);
       const style = { ...query.style } as Record<string, unknown>;
       const currentStyle = preparedStyleValue(prepared[query.index]) as Record<string, unknown>;

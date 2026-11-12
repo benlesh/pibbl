@@ -22,16 +22,25 @@ applicable. Repairs preserve receiver-aware Flow equality barriers, refuse
 unproven public recursion, share exact size/baseline demands with complete receiver
 receipts, and replay externally volatile font queries before applying numeric
 equality barriers. Original geometry, hit, font-metric, and baseline assertions
-remain intact. Updated work-counter expectations account for real Absolute-root
-passes and intended measurement reuse, with added paint and hit assertions.
+remain intact. Responsive whole-style reads also retain their original
+once-per-occurrence assertions, including 1,000 queried receivers. Raw binding
+snapshots no longer resample signals, and transaction-scoped prepared-input
+handoffs avoid a second read when allocation reuse fails. Updated work-counter
+expectations count actual Absolute-root passes and intended measurement reuse,
+with added paint and hit assertions.
 
-The final frozen Windows run covered all 87 public layout files and 17 internal
-layout files: 1,371 passed, 10 failed, and 13 skipped. All ten remaining
-font/wrapping/hit failures reproduced on the exact pre-allocation main commit
+The final Windows run using exact-main tooling plus the reviewed responsive fix
+covered all 87 public layout files and 17 internal layout files: 1,373 passed,
+10 failed, and 13 skipped. All ten remaining font/wrapping/hit failures reproduced
+on the exact pre-allocation main commit
 fbdfe2394ef13041b168dd9464daed9b1955582a; none remains unclassified in this
 comparison. The late-FontFace regression passed both individually and in the full
-run. This is not an all-green Windows suite. Independent source review, 34
-integrated Node tests, typecheck, and changed-file lint passed. Canonical
+run. This is not an all-green Windows suite. Responsive browser coverage passed
+172 tests across 13 files. Broader non-layout diagnostics still have residual
+failures under classification; focused native click/drag tests pass with exact-main
+tooling, but some failures recur in larger batches. No production event change
+was made for those reports. Independent source review and 36 integrated Node
+tests passed. Canonical
 whole-repository CI for the final integrated source and documentation remains the
 release gate.
 
