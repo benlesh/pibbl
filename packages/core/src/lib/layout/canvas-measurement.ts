@@ -1,5 +1,11 @@
+import { markVolatileAllocationQuery } from './allocation-checkpoint.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import type { RenderingContext2D, CanvasMeasurementService } from '../types.js';
+
+/** Matches the existing retained Text metric policy; application faces are external inputs. */
+export function isGenericCanvasFont(font: string): boolean {
+  return /^(?:(?:bold|italic|normal) )?\d+(?:\.\d+)?px (?:sans-serif|serif|monospace)$/.test(font);
+}
 
 const serviceContexts = new WeakMap<CanvasMeasurementService, RenderingContext2D>();
 
@@ -9,6 +15,7 @@ export function canvasMeasurementService(
 ): CanvasMeasurementService {
   const service: CanvasMeasurementService = {
     measureText(text: string, font: string): TextMetrics {
+      if (!isGenericCanvasFont(font)) markVolatileAllocationQuery();
       context.save();
       try {
         context.font = font;
@@ -21,6 +28,7 @@ export function canvasMeasurementService(
       text: string,
       options: Readonly<{ font: string; textBaseline: CanvasTextBaseline }>,
     ): TextMetrics {
+      if (!isGenericCanvasFont(options.font)) markVolatileAllocationQuery();
       context.save();
       try {
         context.font = options.font;

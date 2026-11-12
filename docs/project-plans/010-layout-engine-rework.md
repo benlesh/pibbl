@@ -7,6 +7,34 @@ has passed focused independent source review. Full release verification remains
 pending until the integrated current-main snapshot passes canonical
 whole-repository CI. The accepted scope and integrated workflow are unchanged.
 
+Follow-up verification on 2026-11-12 traced duplicate constrained leaf queries
+in the existing row/column percentage-owner tests to separate framework
+measurement wrappers for the same Canvas context. Exact transaction-local demand
+reuse now recognizes that private context equivalence while preserving
+custom-service identity, current input/dependency proofs, and one-use normalized
+style consumption. The unchanged public regression file passed all 32 tests.
+
+Complete layout coverage also exposed stale untraced nested measurement output,
+a duplicated Grid baseline query, and an application-owned late-FontFace baseline
+that stopped remeasuring. Each regression reproduced against the preceding
+implementation and passed on the exact pre-allocation main snapshot where
+applicable. Repairs preserve receiver-aware Flow equality barriers, refuse
+unproven public recursion, share exact size/baseline demands with complete receiver
+receipts, and replay externally volatile font queries before applying numeric
+equality barriers. Original geometry, hit, font-metric, and baseline assertions
+remain intact. Updated work-counter expectations account for real Absolute-root
+passes and intended measurement reuse, with added paint and hit assertions.
+
+The final frozen Windows run covered all 87 public layout files and 17 internal
+layout files: 1,371 passed, 10 failed, and 13 skipped. All ten remaining
+font/wrapping/hit failures reproduced on the exact pre-allocation main commit
+fbdfe2394ef13041b168dd9464daed9b1955582a; none remains unclassified in this
+comparison. The late-FontFace regression passed both individually and in the full
+run. This is not an all-green Windows suite. Independent source review, 34
+integrated Node tests, typecheck, and changed-file lint passed. Canonical
+whole-repository CI for the final integrated source and documentation remains the
+release gate.
+
 Five mounted layout families now share receiver-role allocation checkpoints with
 normalized input comparison, demanded measurement replay, binding replacement,
 successful-completion adoption, and abort/teardown cleanup. Equal measured outputs

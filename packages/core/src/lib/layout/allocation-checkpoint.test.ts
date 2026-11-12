@@ -1,3 +1,4 @@
+import { canvasMeasurementService } from './canvas-measurement.js';
 import { describe, expect, it } from 'vitest';
 import { createElement } from '../element/create-element.js';
 import { getPrimitiveReceiverToken, getChildPrimitiveReceiverToken } from '../element/metadata.js';
@@ -5,7 +6,7 @@ import { signal, signalGraphSnapshot, withSignalDependencyRole } from '../signal
 import { withReceiverInputProvision, adoptReceiverInputProvision } from '../signals/input-provision.js';
 import { createSignalRenderConsumer, collectSignalReads, disposeSignalRenderConsumer } from '../signals/render-consumer.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import type { PibblRenderTransaction, SystemStyle } from '../types.js';
+import type { PibblRenderTransaction, SystemStyle, RenderingContext2D } from '../types.js';
 import { takePreNormalizedStyle } from '../style/resolve-dispatch.js';
 import { Rectangle } from '../components/rect.js';
 import { prepareDirectChildStyle, childWithUsedSize } from './absolute.js';
@@ -20,6 +21,32 @@ function transaction() {
 }
 const box = { x: 0, y: 0, width: 100, height: 20 };
 describe('allocation checkpoints', () => {
+  it('remeasures application-owned fonts while equal numeric output stops allocation', () => {
+    const owner = {}, token = {};
+    let width = 20, measurements = 0, computations = 0, font = '12px "ApplicationFont", monospace';
+    const service = canvasMeasurementService({ save() {}, restore() {}, font: '', measureText() { measurements++; return { width }; } } as unknown as RenderingContext2D);
+    const children = [createElement(Rectangle, { style: { width: 20, height: 10 } })];
+    const query = () => service.measureText('text', font).width;
+    function render() {
+      const tx = transaction(); GLOBAL_STATE.renderTransaction = tx; GLOBAL_STATE.primitiveReceiverToken = token;
+      const receiver = getChildPrimitiveReceiverToken(tx, token, 0);
+      const result = withAllocationCheckpoint(owner, { children, content: box, settings: {}, calculate: () => {
+        computations++;
+        const prepared = prepareDirectChildStyle(children[0], receiver, box);
+        const element = childWithUsedSize(children[0], preparedStyleValue(prepared), 20, 10, receiver);
+        const measured = allocationMeasurement(element, query);
+        return [{ box: { ...box, width: measured }, element }];
+      } });
+      tx.finish(true); return result;
+    }
+    try {
+      render(); expect(measurements).toBe(1); expect(computations).toBe(1);
+      render(); expect(measurements).toBe(2); expect(computations).toBe(1);
+      width = 30; expect(render()[0].box.width).toBe(30); expect(computations).toBe(2);
+      font = '12px monospace'; render(); const settled = measurements;
+      render(); expect(measurements).toBe(settled); expect(computations).toBe(2);
+    } finally { disposeAllocationCheckpoint(owner); GLOBAL_STATE.renderTransaction = undefined; GLOBAL_STATE.primitiveReceiverToken = undefined; }
+  });
   it('replaces measurement dependencies after equal output without keeping the old signal lease', () => {
     const owner = {}, receiverOwner = {}, token = {};
     const select = signal(true), first = signal(20), second = signal(20);

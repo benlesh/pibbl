@@ -47,6 +47,7 @@ interface QueryRead {
   dependency?: AllocationDependency;
 }
 interface Query {
+  volatile: boolean;
   index: number;
   style: Readonly<SystemStyle>;
   props: Snapshot | undefined;
@@ -75,6 +76,9 @@ let measuringTrace: Trace | undefined;
 // Public recursive queries do not prove the nested descriptor's normalized inputs.
 // A nested refusal must reach every enclosing numeric query capture.
 let untracedQueryRevision = 0;
+let volatileQueryRevision = 0;
+export function markVolatileAllocationQuery(): void { volatileQueryRevision++; }
+export function allocationQueryVolatilityRevision(): number { return volatileQueryRevision; }
 export function declineUntracedAllocationQuery(): void { untracedQueryRevision++; }
 export function allocationQueryReplayRevision(): number { return untracedQueryRevision; }
 const OPAQUE_PAINT = Symbol('opaque paint input');
@@ -182,17 +186,17 @@ export function allocationMeasurement<T>(element: PibblElement<any>, execute: (e
   const props = programSnapshot(element, getPrimitiveReceiverToken(element));
   const previousMeasuring = measuringTrace;
   measuringTrace = active;
-  let collected: { result: T; reads: QueryRead[] | undefined };
+  let collected: { result: T; reads: QueryRead[] | undefined; volatile: boolean };
   try { collected = collectQueryReads(getPrimitiveReceiverToken(element)!, () => execute(element)); } finally { measuringTrace = previousMeasuring; }
   const result = collected.result;
   const numeric = snapshot(result);
   if (!numeric || !collected.reads) active.valid = false;
-  else active.queries.push({ index, style: normalized.style, props, result: numeric, execute, reads: collected.reads });
+  else active.queries.push({ volatile: collected.volatile, index, style: normalized.style, props, result: numeric, execute, reads: collected.reads });
   return result;
 }
 
-function collectQueryReads<T>(root: object, run: () => T): { result: T; reads: QueryRead[] | undefined } {
-  const revision = untracedQueryRevision;
+function collectQueryReads<T>(root: object, run: () => T): { result: T; reads: QueryRead[] | undefined; volatile: boolean } {
+  const revision = untracedQueryRevision, volatility = volatileQueryRevision;
   const captured = new Map<object, { path: readonly number[]; receipt: { node: SignalNode<unknown>; roles: number }[] }>();
   let valid = true;
   const result = observeReceiverInputReads((node, roles, receiver) => {
@@ -205,7 +209,7 @@ function collectQueryReads<T>(root: object, run: () => T): { result: T; reads: Q
     for (const entry of target.receipt) if (entry.node === node) { entry.roles |= roles; return; }
     target.receipt.push({ node, roles });
   }, run);
-  return { result, reads: valid && revision === untracedQueryRevision ? Array.from(captured.values()) : undefined };
+  return { result, reads: valid && revision === untracedQueryRevision ? Array.from(captured.values()) : undefined, volatile: volatility !== volatileQueryRevision };
 }
 function bindQueryReads(reads: QueryRead[], input: Input, transaction: PibblRenderTransaction, root: object): void {
   for (const read of reads) {
@@ -353,13 +357,14 @@ function reuse<P extends Placement>(owner: object, checkpoint: Checkpoint, optio
   const nextResults: Snapshot[] = [];
   const queryProps: Array<Snapshot | undefined> = [];
   const queryReads: QueryRead[][] = [];
+  const queryVolatility: boolean[] = [];
   for (const query of checkpoint.queries) {
     const input = checkpoint.inputs[query.index], child = options.children[query.index];
     const props = programSnapshot(child, receiverFor(options, transaction, query.index));
     queryProps.push(props);
     // Unknown model/getter/cyclic props cannot prove unchanged input. Execute
     // the current pure provider on every admitted render and compare its output.
-    if (!props || props.includes(OPAQUE_PAINT) || props.includes(RESPONSIVE_INPUT) || !query.props || input.dirty || changed.has(query.index) || !same(props, query.props)) {
+    if (query.volatile || !props || props.includes(OPAQUE_PAINT) || props.includes(RESPONSIVE_INPUT) || !query.props || input.dirty || changed.has(query.index) || !same(props, query.props)) {
       const element = clonePibblElement(child);
       const style = { ...query.style } as Record<string, unknown>;
       const currentStyle = preparedStyleValue(prepared[query.index]) as Record<string, unknown>;
@@ -367,13 +372,13 @@ function reuse<P extends Placement>(owner: object, checkpoint: Checkpoint, optio
       for (const field of Object.keys(currentStyle)) if (presentationOrMeasurement(field)) style[field] = currentStyle[field];
       setPreNormalizedStyle(element, style, child, receiverFor(options, transaction, query.index), preparedStyleQuery(prepared[query.index]));
       const previousTrace = trace; trace = undefined;
-      let collected: { result: unknown; reads: QueryRead[] | undefined };
+      let collected: { result: unknown; reads: QueryRead[] | undefined; volatile: boolean };
       try { collected = collectQueryReads(getPrimitiveReceiverToken(element)!, () => query.execute(element)); } finally { trace = previousTrace; }
       const numeric = snapshot(collected.result);
       if (!collected.reads || !same(numeric, query.result)) return;
-      nextResults.push(numeric!); queryReads.push(collected.reads);
+      nextResults.push(numeric!); queryReads.push(collected.reads); queryVolatility.push(collected.volatile);
     } else {
-      nextResults.push(query.result); queryReads.push(query.reads);
+      nextResults.push(query.result); queryReads.push(query.reads); queryVolatility.push(query.volatile);
     }
   }
   for (let index = 0; index < checkpoint.queries.length; index++) {
@@ -415,7 +420,7 @@ function reuse<P extends Placement>(owner: object, checkpoint: Checkpoint, optio
     for (let index = 0; index < checkpoint.queries.length; index++) {
       const query = checkpoint.queries[index];
       if (query.reads !== queryReads[index]) disposeQueryReads(query.reads);
-      query.result = nextResults[index]; query.props = queryProps[index]; query.reads = queryReads[index];
+      query.result = nextResults[index]; query.props = queryProps[index]; query.reads = queryReads[index]; query.volatile = queryVolatility[index];
     }
   });
   return result;

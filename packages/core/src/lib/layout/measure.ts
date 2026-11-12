@@ -1,5 +1,5 @@
 import { bindCanvasMeasurementService, sameCanvasMeasurementService } from './canvas-measurement.js';
-import { allocationMeasurement, declineUnrecordedAllocationMeasurement, declineUntracedAllocationQuery, allocationQueryReplayRevision } from './allocation-checkpoint.js';
+import { allocationMeasurement, declineUnrecordedAllocationMeasurement, declineUntracedAllocationQuery, allocationQueryReplayRevision, allocationQueryVolatilityRevision } from './allocation-checkpoint.js';
 import { allocationOwner, setAllocationOwner } from './allocation-revision.js';
 import { isFitContent } from '../style/sizing-length.js';
 import { observeReceiverInputReads, captureReceiverInputProvision, replayReceiverInputProvision, withReceiverInputProvision, type ReceiverInputProvisionReceipt } from '../signals/input-provision.js';
@@ -465,14 +465,14 @@ function exactDirectMeasurement<T extends MeasureResult | BaselinesResult>(
   }
   let direct = true;
   const receipt: { node: SignalNode<unknown>; roles: number }[] = [];
-  const replayRevision = allocationQueryReplayRevision();
+  const replayRevision = allocationQueryReplayRevision(), volatility = allocationQueryVolatilityRevision();
   const captured = observeReceiverInputReads((node, roles, owner) => {
     if (owner !== receiver) { direct = false; return; }
     const existing = receipt.find(entry => entry.node === node);
     if (existing) existing.roles |= roles;
     else receipt.push({ node, roles });
   }, () => captureReceiverInputProvision(transaction, receiver, run));
-  if (inputs && direct && replayRevision === allocationQueryReplayRevision() && captured.receipt && captured.value.status === 'measured') {
+  if (inputs && direct && replayRevision === allocationQueryReplayRevision() && volatility === allocationQueryVolatilityRevision() && captured.receipt && captured.value.status === 'measured') {
     let current = demands;
     if (!current) {
       current = new WeakMap(); exactDirectDemands.set(transaction, current);

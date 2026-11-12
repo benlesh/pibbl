@@ -1,7 +1,7 @@
 import { allocationCheckpointPhaseOwner, retainAllocationCheckpointPhases } from './allocation-checkpoint-owner.js';
 import { withAllocationCheckpoint, recordAllocationStyle, allocationMeasurement, declineUnrecordedAllocationMeasurement } from './allocation-checkpoint.js';
 import { contentBoxStyle } from './box-sizing.js';
-import { canvasMeasurementService, isCurrentCanvasMeasurementService } from './canvas-measurement.js';
+import { canvasMeasurementService, isCurrentCanvasMeasurementService, isGenericCanvasFont } from './canvas-measurement.js';
 import { Grid } from './grid.js';
 import { Flow } from './flow.js';
 import type { PreparedFlexLayoutPlan, PreparedLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
@@ -2261,7 +2261,7 @@ function resolveAbsoluteCrossAlignment(
 }
 
 function genericTextFont(style: Readonly<Record<string, unknown>>): boolean {
-  return /^(?:(?:bold|italic|normal) )?\d+(?:\.\d+)?px (?:sans-serif|serif|monospace)$/.test(String(style.font ?? '13px sans-serif'));
+  return isGenericCanvasFont(String(style.font ?? '13px sans-serif'));
 }
 function measurementStyle(style: Readonly<Record<string, unknown>>) {
   const { fill: _fill, stroke: _stroke, opacity: _opacity, cursor: _cursor, filter: _filter, ...metrics } = style;

@@ -13,6 +13,9 @@ import {
   loadScenario,
 } from '@pibbl/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { RootRenderTransaction } from '../src/lib/render-transaction';
+import { beginLayoutGeometry } from '../src/lib/layout/geometry-publication';
+import { resolveCoordinateTarget } from '../src/lib/events/hit-test';
 import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE } from '../src/lib/global-state';
 import { removeInteractionRegion } from '../src/lib/events/dispatch';
@@ -48,6 +51,17 @@ function mountDispatchHarness(
   activeInstances.add(instance);
   executeRender(canvas, 1);
   return { canvas, instance };
+}
+
+/** Adopt initial manual fixture paint just as a successful render would. */
+function publishHarnessRegions(instance: PibblInstance, ...targets: PibblInteractionRegion[]): void {
+  const transaction = new RootRenderTransaction();
+  beginLayoutGeometry(instance, transaction);
+  for (const target of targets) {
+    instance.regions.add(target);
+    instance.paintEntries.add(target.paintEntry!);
+  }
+  transaction.finish(true);
 }
 
 function dispatchMove(canvas: HTMLCanvasElement, x: number, y: number): void {
@@ -316,8 +330,7 @@ describe('interaction dispatcher mutation contract', () => {
       rectanglePath(0, 0, 480, 240),
       { mousemove: event => coordinates.push([event.x, event.y]) },
     );
-    instance.regions.add(target);
-    instance.paintEntries.add(target.paintEntry!);
+    publishHarnessRegions(instance, target);
 
     dispatchMove(canvas, 120, 60);
     expect(coordinates).toEqual([[240, 120]]);
@@ -372,8 +385,7 @@ describe('interaction dispatcher mutation contract', () => {
       rectanglePath(20, 20, 100, 100),
       { click: onClick },
     );
-    instance.regions.add(target);
-    instance.paintEntries.add(target.paintEntry!);
+    publishHarnessRegions(instance, target);
 
     dispatchMouse(canvas, 'mousedown', 300, 180);
     expect(instance.interaction.primaryDown).toBeUndefined();
@@ -408,11 +420,10 @@ describe('interaction dispatcher mutation contract', () => {
         },
       },
     );
-    instance.regions.add(left);
-    instance.regions.add(right);
-    instance.paintEntries.add(left.paintEntry!);
-    instance.paintEntries.add(right.paintEntry!);
-    instance.interaction.hoveredRegion = left;
+    publishHarnessRegions(instance, left, right);
+    expect(resolveCoordinateTarget(instance.eventRoot, { x: 300, y: 90 })).toBe(right);
+    dispatchMove(canvas, 60, 90);
+    expect(instance.interaction.hoveredRegion).toBe(left);
 
     dispatchMove(canvas, 300, 90);
     expect(calls).toEqual(['left-out']);

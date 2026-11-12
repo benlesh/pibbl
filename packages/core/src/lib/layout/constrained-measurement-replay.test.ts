@@ -193,3 +193,25 @@ it('reuses exact baseline demands without confusing size queries or changed allo
   } finally { tx.finish(false); disposeSignalRenderConsumer(consumer); GLOBAL_STATE.renderTransaction = previous; }
   expect(signalGraphSnapshot().rendererEdges).toBe(before.rendererEdges);
 });
+
+
+it('does not memoize volatile application-font baselines even within one transaction', () => {
+  const previous = GLOBAL_STATE.renderTransaction, tx = new RootRenderTransaction(), receiver = {};
+  let width = 20, measurements = 0;
+  const service = canvasMeasurementService({ save() {}, restore() {}, font: '', measureText() { measurements++; return { width }; } } as unknown as RenderingContext2D);
+  const font = '12px "ApplicationFont", monospace';
+  const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle>(() => null, {
+    resolveStyle: () => ({}),
+    measureBaselines: ({ service }) => { const first = service.measureText('text', font).width; return { status: 'measured', first, last: first }; },
+  });
+  const query = () => {
+    const leaf = createElement(Leaf, {}); setPreNormalizedStyle(leaf, {}, leaf, receiver);
+    return measureBaselineElement(leaf, { x: 0, y: 0, width: 100, height: 60 }, service);
+  };
+  try {
+    GLOBAL_STATE.renderTransaction = tx;
+    expect(query()).toEqual({ status: 'measured', first: 20, last: 20 });
+    width = 30; expect(query()).toEqual({ status: 'measured', first: 30, last: 30 });
+    expect(measurements).toBe(2);
+  } finally { tx.finish(false); GLOBAL_STATE.renderTransaction = previous; }
+});
