@@ -180,6 +180,81 @@ export function createTarget(
   return target;
 }
 
+/** Prepared external registrations acquire fallible native leases before adoption. */
+export function prepareTargetUpdate(
+  target: PibblEventTargetRegistration,
+  handlers: PibblEventHandlers,
+  options: PibblEventTargetOptions,
+  transform: DOMMatrix,
+  clippingStack: PibblPathPaintEntry['clippingStack'],
+): { adopt(): void; finish(): void; notify(): void } {
+  const state = { ...target };
+  refreshHandlers(state, handlers, Boolean(options.cursor));
+  const paintEntry: PibblPathPaintEntry = {
+    paintKind: PibblPaintEntryKind.Path, target, path: resolvePath(options.path),
+    fill: options.fill ?? false, lineInteractionWidth: options.lineInteractionWidth ?? 0,
+    transform, clippingStack,
+  };
+  const leases = new Map<PibblEventType, () => void>();
+  const existing = nativeReleases.get(target);
+  const additions: (() => void)[] = [];
+  const hub = target.owner.eventRoot.nativeListeners;
+  try {
+    if (hub) forEachChangedType(state.requiredNativeTypesLow, state.requiredNativeTypesHigh,
+      type => {
+        let lease = existing?.get(type);
+        if (!lease) { lease = hub.acquire(type); additions.push(lease); }
+        leases.set(type, lease);
+      });
+  } catch (error) {
+    const errors: unknown[] = [error];
+    for (const release of additions) { try { release(); } catch (releaseError) { errors.push(releaseError); } }
+    if (errors.length > 1) throw new AggregateError(errors, 'Prepared target acquisition failed.', { cause: error });
+    throw error;
+  }
+  let previous: Map<PibblEventType, () => void> | undefined;
+  let adopted = false;
+  return {
+    adopt() {
+      previous = nativeReleases.get(target);
+      nativeReleases.set(target, leases);
+      if (target.paintEntry) target.owner.paintEntries.delete(target.paintEntry);
+      target.handlers = state.handlers;
+      target.handlerTypesLow = state.handlerTypesLow; target.handlerTypesHigh = state.handlerTypesHigh;
+      target.requiredNativeTypesLow = target.ownedNativeTypesLow = state.requiredNativeTypesLow;
+      target.requiredNativeTypesHigh = target.ownedNativeTypesHigh = state.requiredNativeTypesHigh;
+      target.cursor = options.cursor; target.keyboardFocusable = options.keyboardFocusable;
+      target.keyboardNavigationBounds = options.keyboardNavigationBounds;
+      target.keyboardNavigationPoints = undefined;
+      target.paintEntry = paintEntry; target.live = true;
+      target.owner.regions.add(target); target.owner.eventRoot.targets.add(target);
+      adopted = true;
+    },
+    finish() {
+      const errors: unknown[] = [];
+      const complete = (callback: () => void) => { try { callback(); } catch (error) { errors.push(error); } };
+      if (adopted) {
+        for (const [type, release] of previous ?? []) if (!leases.has(type)) complete(release);
+        previous = undefined;
+
+      } else {
+        for (const release of additions) complete(release);
+        additions.length = 0;
+      }
+      if (errors.length === 1) throw errors[0];
+      if (errors.length) throw new AggregateError(errors, 'Prepared target completion failed.');
+    },
+    notify() {
+      if (!adopted || !target.live) return;
+      const errors: unknown[] = [];
+      try { target.owner.eventRoot.focusPolicy?.observeTarget(target); } catch (error) { errors.push(error); }
+      try { target.owner.eventRoot.onTargetUpdate?.(target); } catch (error) { errors.push(error); }
+      if (errors.length === 1) throw errors[0];
+      if (errors.length) throw new AggregateError(errors, 'Prepared target notification failed.');
+    },
+  };
+}
+
 export function updateTarget(
   target: PibblEventTargetRegistration,
   handlers: PibblEventHandlers,
@@ -314,18 +389,22 @@ function suspendListenerLayout(this: PibblEventListenerRegistration): void {
 }
 
 export function releaseTarget(target: PibblEventTargetRegistration): void {
-  unregisterLayoutSuspensionResource(target.component, target);
+  const errors: unknown[] = [];
+  const release = (callback: () => void) => { try { callback(); } catch (error) { errors.push(error); } };
+  release(() => unregisterLayoutSuspensionResource(target.component, target));
   if (target.live) {
     if (target.paintEntry) target.owner.paintEntries.delete(target.paintEntry);
     target.owner.eventRoot.targets.delete(target);
-    target.owner.eventRoot.focusPolicy?.removeTarget(target);
-    target.owner.eventRoot.onNodeRelease?.(target);
+    release(() => target.owner.eventRoot.focusPolicy?.removeTarget(target));
+    release(() => target.owner.eventRoot.onNodeRelease?.(target));
   }
   target.owner.regions.delete(target);
   target.paintEntry = undefined;
   target.live = false;
-  clearPointerCapturesForTarget(target);
-  releaseNativeOwnership(target);
+  release(() => clearPointerCapturesForTarget(target));
+  release(() => releaseNativeOwnership(target));
+  if (errors.length === 1) throw errors[0];
+  if (errors.length) throw new AggregateError(errors, 'Target release failed.');
 }
 
 export function createListener(
@@ -669,10 +748,13 @@ function releaseNativeOwnership(
   const releases = nativeReleases.get(registration);
   if (!releases) return;
   nativeReleases.delete(registration);
+  const errors: unknown[] = [];
   for (const release of releases.values()) {
-    release();
+    try { release(); } catch (error) { errors.push(error); }
   }
   releases.clear();
+  if (errors.length === 1) throw errors[0];
+  if (errors.length) throw new AggregateError(errors, 'Native listener release failed.');
 }
 
 function forEachChangedType(

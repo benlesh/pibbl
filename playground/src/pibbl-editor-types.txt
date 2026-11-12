@@ -748,7 +748,9 @@ export interface MeshTransformOptions {
   export type HtmlUpdateFunction<Props> = (props: Props) => void;
   export type HtmlMountCallback<Props> = (element: HTMLDivElement, initialProps: Props, signal: AbortSignal) => HtmlUpdateFunction<Props>;
   export interface HtmlBoxFocusState { readonly isFocusWithin: boolean; readonly isFocusVisible: boolean }
-  export interface HtmlBoxProps<Props> { data: Props; mount: HtmlMountCallback<Props>; pointerEvents?: 'auto' | 'none'; onFocusChange?: (state: Readonly<HtmlBoxFocusState>) => void }
+  type HtmlBoxEvent<Event> = Event extends { readonly x: number; readonly y: number } ? Event & { readonly localX: number; readonly localY: number } : Event;
+  export type HtmlBoxEventHandlers = { [Key in keyof PibblEventHandlers]: (event: HtmlBoxEvent<Parameters<NonNullable<PibblEventHandlers[Key]>>[0]>) => void };
+  export interface HtmlBoxProps<Props> extends HtmlBoxEventHandlers { data: Props; mount: HtmlMountCallback<Props>; pointerEvents?: 'auto' | 'none'; onFocusChange?: (state: Readonly<HtmlBoxFocusState>) => void }
   export interface HtmlBoxStyle extends GStyle { opacity?: number }
   export function HtmlBox<Props>(props: Omit<PrimitiveInput<HtmlBoxProps<Props>, HtmlBoxStyle>, 'data' | 'mount'> & Pick<HtmlBoxProps<Props>, 'data' | 'mount'>): PibblRenderResult;
   export const Group: PibblPrimitiveComponent<GroupProps, PrimitiveInput<GroupProps, GStyle>>;

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { validateLearningSourceText } from './learning-source-contract';
 import {
   mkdir,
   mkdtemp,
@@ -77,3 +78,27 @@ try {
 process.stdout.write(
   'Scenario discovery fixture ignored non-TSX and rejected uncataloged example sources.\n',
 );
+
+// Manipulable intentionally takes an inspectable, signal-owned box rather than
+// an inline style object. Keep that allowance narrow in both authoring modes.
+const jsxManipulation = `import { Manipulable, useSignal } from "@pibbl/core";
+export function Example() {
+  const box = useSignal({ left: 0, top: 0, width: 100, height: 80 });
+  return <Manipulable style={box} draggable />;
+}`;
+assert.doesNotThrow(() => validateLearningSourceText(jsxManipulation, {
+  authoring: 'jsx', label: 'native HTML manipulation', exportName: 'Example',
+}));
+assert.doesNotThrow(() => validateLearningSourceText(
+  jsxManipulation.replace('Manipulable, useSignal', 'Manipulable, useSignal, createElement')
+    .replace('<Manipulable style={box} draggable />', 'createElement(Manipulable, { style: box, draggable: true })'),
+  { authoring: 'createElement', label: 'native HTML manipulation', exportName: 'Example' },
+));
+assert.throws(() => validateLearningSourceText(jsxManipulation.replaceAll('Manipulable', 'Rectangle'), {
+  authoring: 'jsx', label: 'ordinary drawing style', exportName: 'Example',
+}), /inline style objects/);
+assert.throws(() => validateLearningSourceText(jsxManipulation.replace('const box = useSignal({ left: 0, top: 0, width: 100, height: 80 });',
+  'const initial = { left: 0, top: 0, width: 100, height: 80 }; const box = useSignal(initial);'), {
+  authoring: 'jsx', label: 'opaque manipulation style', exportName: 'Example',
+}), /inline style objects/);
+process.stdout.write('Learning manipulation sources accept only inspectable signal-owned boxes.\n');

@@ -1712,7 +1712,15 @@ const htmlMount: import('@pibbl/core').HtmlMountCallback<{ label: string }> = (e
   element.addEventListener('click', () => undefined, { signal: abort });
   return next => { element.textContent = next.label; };
 };
-createElement(HtmlBox, { data: { label: 'native' }, mount: htmlMount, style: { width: 120, height: 40, rotationDegrees: 5 } });
+const htmlEvents: import('@pibbl/core').HtmlBoxEventHandlers = {
+  onPointerMove(event) {
+    const root: number = event.x;
+    const local: number = event.localX;
+    const original: PointerEvent = event.originalEvent;
+    void root; void local; void original;
+  },
+};
+createElement(HtmlBox, { data: { label: 'native' }, mount: htmlMount, ...htmlEvents, style: { width: 120, height: 40, rotationDegrees: 5 } });
 // @ts-expect-error payload and mount callback types must agree
 createElement(HtmlBox<{ label: string }>, { data: { label: 42 }, mount: htmlMount });
 const htmlConfig: PibblConfig = { viewport: 'responsive', htmlOverlay: undefined };

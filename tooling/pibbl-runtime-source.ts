@@ -159,6 +159,7 @@ export function pibblRuntimeSource(mode: string) {
   let base = "/";
   return {
     name: "pibbl-runtime-source",
+    enforce: "pre" as const,
     configResolved(config: { isProduction: boolean; base: string }) {
       production = config.isProduction;
       base = config.base;

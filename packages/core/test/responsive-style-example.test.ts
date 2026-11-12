@@ -112,7 +112,7 @@ it("restores the host and canvas styles if mounting fails", () => {
   document.body.append(host);
   const hostStyles = host.style.cssText;
   const canvasStyles = canvas.style.cssText;
-  vi.spyOn(canvas, "getBoundingClientRect").mockImplementation(() => {
+  vi.spyOn(canvas, "getClientRects").mockImplementation(() => {
     throw new Error("Unavailable surface");
   });
   expect(() => mount(canvas)).toThrow("Unavailable surface");

@@ -63,3 +63,30 @@ it("preflights all geometry before any publication and fails closed", () => {
   expect(() => transaction.finish(true)).toThrow("geometry");
   expect(calls).toEqual(["validate", "finish:false"]);
 });
+
+it('adopts prepared geometry only after every fallible publication succeeds', () => {
+  const calls: string[] = [];
+  const transaction = new RootRenderTransaction();
+  transaction.onAdopt(() => calls.push('geometry'));
+  transaction.onPublish(() => calls.push('resource'));
+  transaction.onFinish(success => calls.push(`finish:${success}`));
+  transaction.finish(true);
+  expect(calls).toEqual(['resource', 'geometry', 'finish:true']);
+
+  const failed = new RootRenderTransaction();
+  failed.onAdopt(() => calls.push('must-not-adopt'));
+  failed.onPublish(() => { throw new Error('resource'); });
+  failed.onFinish(success => calls.push(`cleanup:${success}`));
+  expect(() => failed.finish(true)).toThrow('resource');
+  expect(calls).toEqual(['resource', 'geometry', 'finish:true', 'cleanup:false']);
+});
+
+it('distinguishes explicit cancellation from fail-closed publication errors', () => {
+  const cancelled = new RootRenderTransaction();
+  cancelled.finish(false);
+  expect(cancelled.failed).toBe(false);
+  const failed = new RootRenderTransaction();
+  failed.onPublish(() => { throw new Error('publication'); });
+  expect(() => failed.finish(true)).toThrow('publication');
+  expect(failed.failed).toBe(true);
+});

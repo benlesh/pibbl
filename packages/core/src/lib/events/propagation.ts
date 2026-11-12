@@ -39,20 +39,20 @@ export function dispatchEventPath<K extends PibblEventType>(
   try {
   for (let index = 0; index < targetIndex; index++) {
     if (isPibblPropagationStopped(event)) break;
-    invoke(path[index], input.type, true, 1, event);
+    invokePibblEventHandler(path[index], input.type, true, 1, event);
   }
 
   if (!isPibblPropagationStopped(event) && input.target.live) {
-    invoke(input.target, input.type, true, 2, event);
+    invokePibblEventHandler(input.target, input.type, true, 2, event);
     if (!isPibblImmediatePropagationStopped(event)) {
-      invoke(input.target, input.type, false, 2, event);
+      invokePibblEventHandler(input.target, input.type, false, 2, event);
     }
   }
 
   if (definition.bubbles && !isPibblPropagationStopped(event)) {
     for (let index = targetIndex - 1; index >= 0; index--) {
       if (isPibblPropagationStopped(event)) break;
-      invoke(path[index], input.type, false, 3, event);
+      invokePibblEventHandler(path[index], input.type, false, 3, event);
     }
   }
 
@@ -60,7 +60,7 @@ export function dispatchEventPath<K extends PibblEventType>(
   } finally { finishEventDispatch(event); }
 }
 
-function invoke(
+export function invokePibblEventHandler(
   node: PibblEventNode,
   type: PibblEventType,
   capture: boolean,

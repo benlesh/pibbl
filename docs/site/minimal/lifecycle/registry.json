@@ -180,12 +180,16 @@
   {
     "id": "html",
     "title": "Host a native button in Pibbl",
-    "description": "Mount and update native HTML inside an HtmlBox, preserving native clicks and focus.",
+    "description": "Mount and update native HTML inside an HtmlBox, with typed event handlers, local coordinates, native clicks and focus.",
     "source": "html.tsx",
     "environment": "browser",
     "symbols": [
       {
         "name": "HtmlBox",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "HtmlBoxEventHandlers",
         "importPath": "@pibbl/core"
       },
       {
@@ -210,7 +214,8 @@
       }
     ],
     "notes": [
-      "HtmlBox hosts live DOM alongside Canvas; Canvas filters cannot capture it. The abort signal releases listeners on unmount; keep mount callback identity stable."
+      "HtmlBox hosts live DOM alongside Canvas; Canvas filters cannot capture it. The abort signal releases listeners on unmount; keep mount callback identity stable.",
+      "HtmlBoxEventHandlers is a reusable map of optional native event props. Coordinate events expose border-local localX/localY and root-logical x/y; originalEvent.target identifies the actual DOM control. Native descendant handlers run before HtmlBox bubble handlers."
     ]
   },
   {

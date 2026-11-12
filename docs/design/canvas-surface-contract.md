@@ -106,7 +106,10 @@ remain unrounded at every density; only the backing dimensions above are rounded
 Pointer inversion uses the same composed transform, including retained Layers. The bitmap is cleared in backing space
 before the root transform is installed.
 
-CSS borders and padding are excluded when measuring display space. If changing
+CSS borders and padding are excluded when measuring display space. Display size
+uses the untransformed CSS content box, so shared ancestor rotation, scale or skew
+does not change the viewport or backing dimensions. Hidden ancestors still suspend
+a surface even when its computed CSS dimensions remain positive. If changing
 backing attributes would otherwise feed intrinsic Canvas dimensions back into
 CSS sizing, Pibbl temporarily owns an equivalent inline CSS width and/or height
 to stabilize the original content box. Disposal restores only inline values

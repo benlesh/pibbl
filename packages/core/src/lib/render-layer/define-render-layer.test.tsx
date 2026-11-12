@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   FocusManagement,
+  KeyboardNavigation,
   Group,
   Rectangle,
   defineRenderLayer,
@@ -14,6 +15,7 @@ import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
 } from "../scheduler/testing.js";
+import type { PibblFocusManager } from '../focus/focus-manager.js';
 import { resolveTargetRootBounds } from "../focus/geometry.js";
 
 afterEach(() => {
@@ -653,16 +655,19 @@ describe("defineRenderLayer", () => {
 
   it("keeps candidate targets inert until a successful bitmap transaction", () => {
     const trace: string[] = [];
+    let hitTests = 0;
+    const inputTrace: string[] = [];
     const oldTarget = {};
     const newTarget = {};
-    const Layer = defineRenderLayer<{ target: object }, {}, object>({
-      create(context) {
+    const Layer = defineRenderLayer<{ target: object }, { target: object }, object>({
+      create(context, props) {
         context.canvas.getContext("2d");
-        return {};
+        return { target: props.target };
       },
+      update(resources, props) { resources.target = props.target; },
       render() {},
       interaction: {
-        settle(_resources, props) {
+        settle(resources, props) {
           const label = props.target === oldTarget ? "old" : "new";
           return {
             targets: [
@@ -671,7 +676,11 @@ describe("defineRenderLayer", () => {
                 handlers: { onClick: () => trace.push(label) },
               },
             ],
-            hitTest: () => ({ kind: "target", target: props.target }),
+            onInput(input) {
+              inputTrace.push(label);
+              if (input.type === 'pointerdown') input.setPointerCapture((input.originalEvent as PointerEvent).pointerId);
+            },
+            hitTest: () => { hitTests++; return { kind: "target", target: resources.target }; },
           };
         },
       },
@@ -696,6 +705,9 @@ describe("defineRenderLayer", () => {
       return undefined;
     }
     try {
+      pointer(mounted.canvas, 'pointerdown', 20, 20);
+      expect(inputTrace).toEqual(['old']);
+      inputTrace.length = 0;
       pibbl(
         mounted.canvas,
         <>
@@ -705,8 +717,19 @@ describe("defineRenderLayer", () => {
       );
       mounted.driver.flush(20);
       expect(observedDuringCandidate).toBe(true);
+      const before = hitTests;
       click(mounted.canvas, 20, 20);
-      expect(trace).toEqual(["old"]);
+      // The cancelled candidate mutated the shared renderer scene. The old
+      // bitmap is retained, but its picker must not inspect that newer scene.
+      pointer(mounted.canvas, 'pointermove', 20, 20);
+      expect(inputTrace).toEqual([]);
+      expect(hitTests).toBe(before);
+      expect(trace).toEqual([]);
+      expect(getPibblInstance(mounted.canvas).eventRoot.targets.has(oldRegistration!)).toBe(true);
+      pibbl(mounted.canvas, <Layer target={newTarget} style={{ width: 100, height: 60 }} />);
+      mounted.driver.flush(30);
+      click(mounted.canvas, 20, 20);
+      expect(trace).toEqual(['new']);
     } finally {
       mounted.dispose();
     }
@@ -1021,6 +1044,189 @@ describe("defineRenderLayer", () => {
       mounted.dispose();
     }
   });
+
+  it('preserves external target source order and the render-time directional boundary', () => {
+    const target = {};
+    const Layer = interactionLayer({ kind: 'target', target }, { targets: [{ target, keyboardFocusable: true,
+      keyboardNavigationBounds: { x: 0, y: 0, width: 10, height: 10 }, handlers: { onClick: () => {} } }] });
+    const mounted = mountInteraction(<FocusManagement><Group>
+      <Rectangle keyboardFocusable onClick={() => {}} style={{ width: 10, height: 10, fill: '#111' }} />
+      <KeyboardNavigation mode="directional"><Group style={{ translateX: 30 }}><Layer style={{ width: 20, height: 20 }} /></Group></KeyboardNavigation>
+      <Rectangle keyboardFocusable onClick={() => {}} style={{ left: 60, width: 10, height: 10, fill: '#111' }} />
+    </Group></FocusManagement>);
+    try {
+      const candidates = (getPibblInstance(mounted.canvas).eventRoot.focusPolicy as PibblFocusManager).candidates;
+      expect(candidates.map(candidate => candidate.rootBounds?.x)).toEqual([0, 30, 60]);
+      expect(candidates[0].directionalBoundary).toBeUndefined();
+      expect(candidates[1].directionalBoundary).toBeDefined();
+      expect(candidates[2].directionalBoundary).toBeUndefined();
+    } finally { mounted.dispose(); }
+  });
+
+  it('rejects resolver input when hit testing commits a newer interaction generation', () => {
+    const trace: number[] = [];
+    let replaceDuringHit = false;
+    let mounted: ReturnType<typeof mountInteraction>;
+    const Layer = defineRenderLayer<{ revision: number }, {}, object>({
+      create(context) { context.canvas.getContext('2d'); return {}; },
+      render() {},
+      interaction: { settle(_resources, props) {
+        return { targets: [], hitTest() {
+          if (replaceDuringHit) {
+            replaceDuringHit = false;
+            pibbl(mounted.canvas, <Layer revision={2} style={{ width: 40, height: 20 }} />);
+            mounted.driver.flush(20);
+          }
+          return { kind: 'block' };
+        }, onInput() { trace.push(props.revision); } };
+      } },
+    });
+    mounted = mountInteraction(<Layer revision={1} style={{ width: 40, height: 20 }} />);
+    try {
+      replaceDuringHit = true;
+      pointer(mounted.canvas, 'pointerdown', 5, 5);
+      expect(trace).toEqual([]);
+      pointer(mounted.canvas, 'pointerdown', 5, 5);
+      expect(trace).toEqual([2]);
+    } finally { mounted.dispose(); }
+  });
+
+  it('blocks stale target picks after hit testing replaces its interaction generation', () => {
+    const trace: string[] = [];
+    const oldTarget = {}, newTarget = {};
+    let replaceDuringHit = false;
+    let mounted: ReturnType<typeof mountInteraction>;
+    const Layer = defineRenderLayer<{ current: object }, {}, object>({
+      create(context) { context.canvas.getContext('2d'); return {}; }, render() {},
+      interaction: { settle(_resources, props) {
+        return { targets: [{ target: props.current, handlers: { onClick: () => trace.push(props.current === oldTarget ? 'old' : 'new') } }],
+          hitTest() {
+            if (replaceDuringHit) {
+              replaceDuringHit = false;
+              pibbl(mounted.canvas, <Layer current={newTarget} style={{ width: 40, height: 20 }} />);
+              mounted.driver.flush(20);
+            }
+            return { kind: 'target', target: props.current };
+          }, onInput() { trace.push('input'); } };
+      } },
+    });
+    mounted = mountInteraction(<Layer current={oldTarget} style={{ width: 40, height: 20 }} />);
+    try {
+      replaceDuringHit = true;
+      pointer(mounted.canvas, 'pointerdown', 5, 5);
+      expect(trace).toEqual([]);
+      if (mounted.driver.pendingHostFrames) expect(() => mounted.driver.flush(30)).not.toThrow();
+      click(mounted.canvas, 5, 5);
+      expect(trace).toContain('new');
+      expect(trace).not.toContain('old');
+    } finally { mounted.dispose(); }
+  });
+
+  it('releases every retired target even when a post-adoption observer throws', () => {
+    const first = {}, second = {}, replacement = {};
+    const Layer = defineRenderLayer<{ replace: boolean }, {}, object>({
+      create(context) { context.canvas.getContext('2d'); return {}; }, render() {},
+      interaction: { settle(_resources, props) {
+        const identities = props.replace ? [replacement] : [first, second];
+        return { targets: identities.map(target => ({ target, handlers: { onClick: () => {} } })),
+          hitTest: () => ({ kind: 'target', target: identities[0]! }) };
+      } },
+    });
+    const mounted = mountInteraction(<Layer replace={false} style={{ width: 40, height: 20 }} />);
+    const root = getPibblInstance(mounted.canvas).eventRoot;
+    const previous = Array.from(root.targets);
+    const original = root.onTargetUpdate;
+    try {
+      root.onTargetUpdate = () => { throw new Error('post-adoption observer fault'); };
+      pibbl(mounted.canvas, <Layer replace={true} style={{ width: 40, height: 20 }} />);
+      expect(() => mounted.driver.flush(20)).toThrow('post-adoption observer fault');
+      for (const target of previous) expect(root.targets.has(target)).toBe(false);
+    } finally { root.onTargetUpdate = original; mounted.dispose(); }
+  });
+
+  it('drains live target and bitmap ownership when disposal observers throw', () => {
+    const transfer = OffscreenCanvas.prototype.transferToImageBitmap;
+    const closes: ReturnType<typeof vi.spyOn>[] = [];
+    vi.spyOn(OffscreenCanvas.prototype, 'transferToImageBitmap').mockImplementation(function(this: OffscreenCanvas) {
+      const bitmap = transfer.call(this); closes.push(vi.spyOn(bitmap, 'close')); return bitmap;
+    });
+    const first = {}, second = {};
+    const Layer = interactionLayer({ kind: 'target', target: first }, { targets: [first, second].map(target => ({
+      target, handlers: { onClick: () => {} },
+    })) });
+    const mounted = mountInteraction(<Layer style={{ width: 40, height: 20 }} />);
+    const root = getPibblInstance(mounted.canvas).eventRoot;
+    const targets = Array.from(root.targets), original = root.onNodeRelease;
+    const report = vi.spyOn(globalThis, 'reportError').mockImplementation(() => {});
+    try {
+      root.onNodeRelease = () => { throw new Error('disposal observer fault'); };
+      mounted.dispose();
+      expect(report).toHaveBeenCalled();
+      for (const target of targets) {
+        expect(target.live).toBe(false);
+        expect(target.owner.regions.has(target)).toBe(false);
+      }
+      expect(root.targets.size).toBe(0);
+      expect(closes).toHaveLength(1); expect(closes[0]).toHaveBeenCalledTimes(1);
+    } finally { root.onNodeRelease = original; mounted.dispose(); report.mockRestore(); }
+  });
+
+  it('drains prepared leases and bitmap ownership when acquisition and cleanup both throw', () => {
+    const transfer = OffscreenCanvas.prototype.transferToImageBitmap;
+    const closes: ReturnType<typeof vi.spyOn>[] = [];
+    vi.spyOn(OffscreenCanvas.prototype, 'transferToImageBitmap').mockImplementation(function(this: OffscreenCanvas) {
+      const bitmap = transfer.call(this); closes.push(vi.spyOn(bitmap, 'close')); return bitmap;
+    });
+    const first = {}, second = {};
+    const Layer = interactionLayer({ kind: 'target', target: first }, { targets: [first, second].map(target => ({
+      target, handlers: { onClick: () => {} },
+    })) });
+    const mounted = mountInteraction(<Layer style={{ width: 40, height: 20 }} />, false);
+    const root = getPibblInstance(mounted.canvas).eventRoot;
+    const hub = root.nativeListeners!, original = hub.acquire.bind(hub);
+    let attempts = 0;
+    const releases: ReturnType<typeof vi.fn>[] = [];
+    const acquire = vi.spyOn(hub, 'acquire').mockImplementation(type => {
+      if (++attempts === 5) throw new Error('later acquire fault');
+      const nativeRelease = original(type), index = releases.length;
+      const release = vi.fn(() => { nativeRelease(); if (index === 0) throw new Error('earlier release fault'); });
+      releases.push(release); return release;
+    });
+    try {
+      expect(() => mounted.driver.flush(10)).toThrow('Render layer interaction preparation failed.');
+      expect(releases).toHaveLength(4);
+      for (const release of releases) expect(release).toHaveBeenCalledTimes(1);
+      expect(closes).toHaveLength(1); expect(closes[0]).toHaveBeenCalledTimes(1);
+      expect(root.targets.size).toBe(0);
+    } finally { acquire.mockRestore(); mounted.dispose(); }
+  });
+
+  it('closes a candidate exactly once when native input preparation fails and recovers', () => {
+    const transfer = OffscreenCanvas.prototype.transferToImageBitmap;
+    const closes: ReturnType<typeof vi.spyOn>[] = [];
+    vi.spyOn(OffscreenCanvas.prototype, 'transferToImageBitmap').mockImplementation(function(this: OffscreenCanvas) {
+      const bitmap = transfer.call(this); closes.push(vi.spyOn(bitmap, 'close')); return bitmap;
+    });
+    let hits = 0;
+    const target = {};
+    const Layer = interactionLayer({ kind: 'target', target }, { targets: [{ target, handlers: { onClick: () => hits++ } }] });
+    const scene = <Layer style={{ width: 40, height: 20 }} />;
+    const mounted = mountInteraction(scene, false);
+    const hub = getPibblInstance(mounted.canvas).eventRoot.nativeListeners!;
+    const acquire = vi.spyOn(hub, 'acquire').mockImplementation(() => { throw new Error('native acquisition fault'); });
+    try {
+      expect(() => mounted.driver.flush(10)).toThrow('native acquisition fault');
+      expect(closes).toHaveLength(1); expect(closes[0]).toHaveBeenCalledTimes(1);
+      expect(getPibblInstance(mounted.canvas).eventRoot.targets.size).toBe(0);
+      acquire.mockRestore();
+      pibbl(mounted.canvas, scene); mounted.driver.flush(20);
+      click(mounted.canvas, 5, 5); expect(hits).toBe(1);
+      mounted.dispose();
+      expect(closes).toHaveLength(2);
+      expect(closes[0]).toHaveBeenCalledTimes(1); expect(closes[1]).toHaveBeenCalledTimes(1);
+    } finally { acquire.mockRestore(); mounted.dispose(); }
+  });
+
 });
 
 function interactionLayer<Target extends object>(

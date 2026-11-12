@@ -53,6 +53,30 @@ Pibbl owns the layer surface, committed bitmap generations, scheduling entry,
 event resolver, and teardown sequence. A failed candidate never publishes a
 bitmap with interaction data from another generation.
 
+### Transactional interaction adoption
+
+Target identities and focus insertion positions are prepared at the layer's
+normal traversal position, including the active directional boundary. Candidate
+handlers, bounds, native listener leases, and the inverse input transform are
+prepared without replacing the committed registration. Successful root adoption
+switches bitmap, interaction, placement, and registration state before deferred
+observer notifications. Failed preparation closes the candidate bitmap exactly
+once and releases only provisional listener ownership.
+
+Renderer lifecycle callbacks may mutate shared scene resources. While that work
+is pending, or after it is cancelled, the retained bitmap does not authorize the
+old picker or input callback to inspect the mutated scene. Input stays gated until
+a successful replacement generation. This is distinct from an explicit
+`context.invalidate()` before renderer work begins: its existing blocked-hit
+input notification remains available. A clean placement-only traversal does not
+repaint the renderer and retains the committed captured-input coordinate frame
+until adoption, including committed ancestor bridges through clean managed Layers.
+Resolver delivery rejects a hit from an obsolete renderer or root geometry
+generation before either target handlers or the external input callback runs.
+
+These guarantees do not roll back arbitrary application callbacks or Canvas
+pixels. Publication errors retain the root's fail-closed teardown behavior.
+
 ## Three.js adapter
 
 `defineThreeLayer(definition)` is implemented with `defineRenderLayer()` and

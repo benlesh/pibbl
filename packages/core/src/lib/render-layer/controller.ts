@@ -1,3 +1,4 @@
+import { committedInstanceRootTransform, snapshotLayoutGeometry, stageLayoutTargetGeometry } from '../layout/geometry-publication.js';
 import { GLOBAL_STATE, getCurrentPibblInstance } from "../global-state.js";
 import { registerLayoutSuspensionResource, unregisterLayoutSuspensionResource } from "../layout/participation.js";
 import { getCurrentWorldTransform } from "../render-target.js";
@@ -17,6 +18,8 @@ import {
   createTarget,
   releaseTarget,
   updateTarget,
+  normalizeHandlers,
+  prepareTargetUpdate,
   type PibblEventTargetRegistration,
 } from "../events/registrations.js";
 import {
@@ -50,6 +53,23 @@ interface RenderCandidate<Target extends object> {
   readonly bitmap: ImageBitmap;
   readonly interaction: StagedInteraction<Target>;
   readonly policy: RenderLayerPolicy;
+  prepared?: PreparedInteraction<Target>;
+}
+
+interface PreparedInteraction<Target extends object> {
+  readonly interaction: StagedInteraction<Target>;
+  readonly policy: RenderLayerPolicy;
+  readonly targets: Map<Target, PibblEventTargetRegistration>;
+  readonly created: PibblEventTargetRegistration[];
+  readonly retired: PibblEventTargetRegistration[];
+  readonly registrations: ReturnType<typeof prepareTargetUpdate>[];
+  readonly inputLeases: Map<PibblResolverInputType, () => void>;
+  readonly addedInputLeases: (() => void)[];
+  previousInputLeases?: Map<PibblResolverInputType, () => void>;
+  settled?: boolean;
+  adopted?: boolean;
+  readonly inverse: DOMMatrix;
+  readonly layerEnabled: boolean;
 }
 
 interface RenderLayerPolicy {
@@ -67,6 +87,8 @@ interface RenderLayerPolicy {
 }
 
 interface WinnerState<Target extends object> {
+  readonly generation: number;
+  readonly geometryGeneration: number;
   readonly point: Readonly<{ x: number; y: number }>;
   readonly hit: PibblRenderLayerHit<Target>;
 }
@@ -117,6 +139,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   private props: Readonly<Props> | undefined;
   private needsRender = true;
   private needsResize = true;
+  private inputDeliveryGated = false;
   private inputGated = true;
   private candidate: RenderCandidate<Target> | undefined;
   private committed: ImageBitmap | undefined;
@@ -124,7 +147,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     PibblRenderLayerInteractionSnapshot<Target> | undefined;
   private committedTargetDescriptors: readonly PibblRenderLayerTarget<Target>[] =
     Object.freeze([]);
-  private readonly committedTargets = new Map<
+  private committedTargets = new Map<
     Target,
     PibblEventTargetRegistration
   >();
@@ -139,8 +162,9 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   private resolverInverseTransform = new DOMMatrix();
   private resolverBounds = new Path2D();
   private resolverSize: PibblRenderLayerSize | undefined;
+  private interactionGeneration = 0;
   private resolutionErrorQueued = false;
-  private readonly inputNativeReleases = new Map<
+  private inputNativeReleases = new Map<
     PibblResolverInputType,
     () => void
   >();
@@ -211,6 +235,9 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     const propsChanged = !initial && !sameProps(this.props, props);
     const sizeChanged = !sameSize(this.size, size);
     const policyChanged = !samePolicy(this.committedPolicy, policy);
+    // Renderer callbacks may mutate shared scene resources. No old picker can
+    // safely inspect those resources until its candidate generation settles.
+    if (initial || propsChanged || sizeChanged || this.needsRender) { this.inputGated = true; this.inputDeliveryGated = true; }
     this.size = size;
     this.publishResolver(size);
     if (sizeChanged) {
@@ -284,17 +311,28 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       const stagedPolicy = snapshotPolicy(policy);
       const candidate = this.canvas.transferToImageBitmap();
       this.candidate?.bitmap.close();
-      const stagedCandidate = {
+      if (this.candidate?.prepared) this.finishPrepared(this.candidate.prepared, false);
+      const stagedCandidate: RenderCandidate<Target> = {
         bitmap: candidate,
         interaction,
         policy: stagedPolicy,
       };
       this.candidate = stagedCandidate;
       const transaction = GLOBAL_STATE.renderTransaction;
-      transaction?.onFinish((success) =>
-        this.finishCandidate(stagedCandidate, success),
-      );
-      if (!transaction) this.finishCandidate(stagedCandidate, true);
+      if (transaction?.onAdopt) {
+        try { stagedCandidate.prepared = this.prepareInteraction(interaction, stagedPolicy); }
+        catch (error) { this.finishCandidate(stagedCandidate, false); throw error; }
+        transaction.onAdopt(() => this.finishCandidate(stagedCandidate, true));
+        transaction.onFinish(success => {
+          if (!success) {
+            this.finishCandidate(stagedCandidate, false);
+          }
+          else if (stagedCandidate.prepared) this.finishPrepared(stagedCandidate.prepared, true);
+        });
+      } else {
+        transaction?.onFinish(success => this.finishCandidate(stagedCandidate, success));
+        if (!transaction) this.finishCandidate(stagedCandidate, true);
+      }
       ctx.drawImage(
         candidate,
         0,
@@ -309,32 +347,23 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       return;
     }
     const transaction = GLOBAL_STATE.renderTransaction;
-    transaction?.onFinish((success) => {
-      if (success && !this.disposed) {
-        if (policyChanged && this.committedInteraction) {
-          this.commitInteraction(
-            {
-              snapshot: this.committedInteraction,
-              targets: this.committedTargetDescriptors,
-              transform: this.resolverTransform,
-              clippingStack: this.resolverEntry.clippingStack,
-            },
-            snapshotPolicy(policy),
-          );
+    if (transaction?.onAdopt && this.committedInteraction) {
+      const prepared = this.prepareInteraction({ snapshot: this.committedInteraction, targets: this.committedTargetDescriptors,
+        transform: this.resolverTransform, clippingStack: this.resolverEntry.clippingStack }, snapshotPolicy(policy));
+      transaction.onAdopt(() => { if (!this.disposed) this.adoptInteraction(prepared); });
+      transaction.onFinish(success => {
+        this.finishPrepared(prepared, success);
+      });
+    } else {
+      transaction?.onFinish(success => {
+        if (success && !this.disposed) {
+          if (policyChanged && this.committedInteraction) this.commitInteraction({ snapshot: this.committedInteraction,
+            targets: this.committedTargetDescriptors, transform: this.resolverTransform, clippingStack: this.resolverEntry.clippingStack }, snapshotPolicy(policy));
+          this.refreshCommittedTargetGeometry();
         }
-        this.refreshCommittedTargetGeometry();
-      }
-    });
-    if (!transaction && policyChanged && this.committedInteraction) {
-      this.commitInteraction(
-        {
-          snapshot: this.committedInteraction,
-          targets: this.committedTargetDescriptors,
-          transform: this.resolverTransform,
-          clippingStack: this.resolverEntry.clippingStack,
-        },
-        snapshotPolicy(policy),
-      );
+      });
+      if (!transaction && policyChanged && this.committedInteraction) this.commitInteraction({ snapshot: this.committedInteraction,
+        targets: this.committedTargetDescriptors, transform: this.resolverTransform, clippingStack: this.resolverEntry.clippingStack }, snapshotPolicy(policy));
     }
     this.drawCommitted(ctx, size);
   }
@@ -348,7 +377,6 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       this.resolverSize = size;
     }
     this.resolverTransform = getCurrentWorldTransform();
-    this.resolverInverseTransform = this.resolverTransform.inverse();
     this.resolverEntry.transform = this.resolverTransform;
     this.resolverEntry.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
     // Sets preserve insertion order, so refresh the retained entry at its
@@ -441,80 +469,111 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     success: boolean,
   ): void {
     if (this.candidate !== candidate) return;
-    this.candidate = undefined;
     if (!success || this.disposed) {
+      this.candidate = undefined;
+      this.needsRender = true;
+      this.inputGated = true;
       candidate.bitmap.close();
+      if (candidate.prepared) this.finishPrepared(candidate.prepared, false);
       return;
     }
-    this.commitInteraction(candidate.interaction, candidate.policy);
+    if (candidate.prepared) this.adoptInteraction(candidate.prepared);
+    else this.commitInteraction(candidate.interaction, candidate.policy);
     this.committed?.close();
     this.committed = candidate.bitmap;
+    this.candidate = undefined;
     this.resolutionErrorQueued = false;
     this.inputGated = false;
+    this.inputDeliveryGated = false;
   }
 
-  /** Publishes one interaction snapshot only after its bitmap transaction wins. */
-  private commitInteraction(
-    interaction: StagedInteraction<Target>,
-    policy: RenderLayerPolicy,
-  ): void {
-    const retained = new Set<Target>();
-    for (const descriptor of policy.pointerEvents === "none"
-      ? []
-      : interaction.targets) {
-      if (descriptor.pointerEvents === "none") continue;
-      retained.add(descriptor.target);
-      let registration = this.committedTargets.get(descriptor.target);
-      if (!registration) {
-        registration = createTarget(
-          this.instance,
-          this.refs,
-          this.committedTargets.size + 1,
-        );
-        this.committedTargets.set(descriptor.target, registration);
-      }
-      updateTarget(
-        registration,
-        descriptor.handlers ?? {},
-        {
-          path: new Path2D(),
-          cursor: descriptor.cursor,
-          keyboardFocusable: descriptor.keyboardFocusable,
+  /** Prepares descriptors without mutating the current target identities or handlers. */
+  private prepareInteraction(interaction: StagedInteraction<Target>, policy: RenderLayerPolicy): PreparedInteraction<Target> {
+    const targets = new Map<Target, PibblEventTargetRegistration>();
+    const created: PibblEventTargetRegistration[] = [];
+    const registrations: PreparedInteraction<Target>['registrations'] = [];
+    const inputLeases = new Map<PibblResolverInputType, () => void>();
+    const addedInputLeases: (() => void)[] = [];
+    const transaction = GLOBAL_STATE.renderTransaction ?? this.instance.eventRoot.renderTransaction;
+    const stage = (target: PibblEventTargetRegistration, bounds: PibblRenderLayerTarget<Target>['keyboardNavigationBounds'], focusable: boolean) => {
+      if (transaction) stageLayoutTargetGeometry(transaction, target, { bounds, transform: interaction.transform });
+      this.instance.eventRoot.focusPolicy?.observeTransactionalTarget?.(target, focusable);
+    };
+    try {
+      if (policy.pointerEvents !== 'none') for (const descriptor of interaction.targets) {
+        if (descriptor.pointerEvents === 'none') continue;
+        let target = this.committedTargets.get(descriptor.target);
+        if (!target) { target = createTarget(this.instance, this.refs, this.committedTargets.size + created.length + 1); created.push(target); }
+        targets.set(descriptor.target, target);
+        registrations.push(prepareTargetUpdate(target, descriptor.handlers ?? {}, {
+          path: new Path2D(), cursor: descriptor.cursor, keyboardFocusable: descriptor.keyboardFocusable,
           keyboardNavigationBounds: descriptor.keyboardNavigationBounds,
-        },
-        true,
-      );
-      this.applyResolverGeometry(registration, interaction);
-      this.observeTransactionalFocusTarget(registration);
+        }, interaction.transform, interaction.clippingStack));
+        const handlers = normalizeHandlers(descriptor.handlers ?? {});
+        stage(target, descriptor.keyboardNavigationBounds, descriptor.keyboardFocusable ?? Boolean(handlers.click || handlers.keydown || handlers.keyup));
+      }
+      const layerEnabled = policy.pointerEvents !== 'none' && policy.missBehavior === 'target-layer';
+      stage(this.layerTarget, policy.keyboardNavigationBounds, layerEnabled && (policy.keyboardFocusable ?? true));
+      if (layerEnabled) registrations.push(prepareTargetUpdate(this.layerTarget, { onClick: STRUCTURAL_CLICK_ELIGIBILITY }, {
+        path: new Path2D(), keyboardFocusable: policy.keyboardFocusable, keyboardNavigationBounds: policy.keyboardNavigationBounds,
+      }, interaction.transform, interaction.clippingStack));
+      const hub = this.instance.eventRoot.nativeListeners;
+      const types = interaction.snapshot.onInput ? RESOLVER_INPUT_TYPES : hasResolverPointerCapture(this.inputWinner) ? RESOLVER_CAPTURE_INPUT_TYPES : [];
+      if (hub) for (const type of types) {
+        let lease = this.inputNativeReleases.get(type);
+        if (!lease) { lease = hub.acquire(type); addedInputLeases.push(lease); }
+        inputLeases.set(type, lease);
+      }
+      const retired: PibblEventTargetRegistration[] = [];
+      for (const [identity, target] of this.committedTargets) if (!targets.has(identity)) retired.push(target);
+      if (!layerEnabled && this.layerTarget.live) retired.push(this.layerTarget);
+      return { interaction, policy, targets, created, retired, registrations, inputLeases, addedInputLeases, layerEnabled, inverse: interaction.transform.inverse() };
+    } catch (error) {
+      const errors: unknown[] = [error];
+      const release = (callback: () => void) => { try { callback(); } catch (releaseError) { errors.push(releaseError); } };
+      for (const registration of registrations) release(() => registration.finish());
+      for (const lease of addedInputLeases) release(lease);
+      for (const target of created) release(() => releaseTarget(target));
+      if (errors.length > 1) throw new AggregateError(errors, 'Render layer interaction preparation failed.', { cause: error });
+      throw error;
     }
-    for (const [identity, registration] of this.committedTargets) {
-      if (retained.has(identity)) continue;
-      releaseTarget(registration);
-      this.committedTargets.delete(identity);
-    }
-    if (
-      policy.pointerEvents !== "none" &&
-      policy.missBehavior === "target-layer"
-    ) {
-      updateTarget(
-        this.layerTarget,
-        { onClick: STRUCTURAL_CLICK_ELIGIBILITY },
-        {
-          path: new Path2D(),
-          keyboardFocusable: policy.keyboardFocusable,
-          keyboardNavigationBounds: policy.keyboardNavigationBounds,
-        },
-        true,
-      );
-      this.applyResolverGeometry(this.layerTarget, interaction);
-      this.observeTransactionalFocusTarget(this.layerTarget);
-    } else {
-      releaseTarget(this.layerTarget);
-    }
+  }
+
+  private adoptInteraction(prepared: PreparedInteraction<Target>): void {
+    const { interaction, policy } = prepared;
+    for (const registration of prepared.registrations) registration.adopt();
+    prepared.previousInputLeases = this.inputNativeReleases;
+    this.inputNativeReleases = prepared.inputLeases;
+    this.committedTargets = prepared.targets;
     this.committedInteraction = interaction.snapshot;
     this.committedTargetDescriptors = interaction.targets;
     this.committedPolicy = policy;
-    this.updateInputNativeOwnership(Boolean(interaction.snapshot.onInput));
+    this.resolverInverseTransform = prepared.inverse;
+    this.interactionGeneration++;
+    prepared.adopted = true;
+  }
+
+  private finishPrepared(prepared: PreparedInteraction<Target>, success: boolean): void {
+    if (prepared.settled) return;
+    prepared.settled = true;
+    success = success && prepared.adopted === true;
+    const errors: unknown[] = [];
+    const finish = (callback: () => void) => { try { callback(); } catch (error) { errors.push(error); } };
+    for (const registration of prepared.registrations) finish(() => registration.finish());
+    if (prepared.previousInputLeases) {
+      for (const [type, release] of prepared.previousInputLeases) if (!prepared.inputLeases.has(type)) finish(release);
+    } else if (!success) for (const release of prepared.addedInputLeases) finish(release);
+    for (const target of success ? prepared.retired : prepared.created) finish(() => releaseTarget(target));
+    if (success) for (const registration of prepared.registrations) finish(() => registration.notify());
+    if (errors.length === 1) throw errors[0];
+    if (errors.length) throw new AggregateError(errors, 'Render layer registration completion failed.');
+  }
+
+  /** Immediate fallback for callers without a root transaction. */
+  private commitInteraction(interaction: StagedInteraction<Target>, policy: RenderLayerPolicy): void {
+    const prepared = this.prepareInteraction(interaction, policy);
+    this.adoptInteraction(prepared);
+    this.finishPrepared(prepared, true);
   }
 
   private applyResolverGeometry(
@@ -600,6 +659,13 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       return;
     }
     const state = this.resolveWinnerState(localX, localY);
+    if ((state.generation !== this.interactionGeneration || state.geometryGeneration !== snapshotLayoutGeometry(this.instance).generation) || this.disposed || this.inputDeliveryGated) {
+      output.disposition = PibblHitDisposition.Block;
+      output.target = null;
+      delete output.winner;
+      delete output.winnerState;
+      return;
+    }
     output.winner = this.inputWinner;
     output.winnerState = state;
     switch (state.hit.kind) {
@@ -627,7 +693,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
           output.disposition = PibblHitDisposition.Block;
           output.target = null;
           output.winnerState = {
-            point: state.point,
+            point: state.point, generation: state.generation, geometryGeneration: state.geometryGeneration,
             hit: Object.freeze({ kind: "block" as const }),
           } satisfies WinnerState<Target>;
           this.reportUnknownTarget();
@@ -644,15 +710,20 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     localY: number,
   ): WinnerState<Target> {
     const point = Object.freeze({ x: localX, y: localY });
+    const generation = this.interactionGeneration;
+    const geometryGeneration = snapshotLayoutGeometry(this.instance).generation;
     if (this.inputGated || !this.committedInteraction) {
-      return { point, hit: Object.freeze({ kind: "block" }) };
+      return { point, generation, geometryGeneration, hit: Object.freeze({ kind: "block" }) };
     }
     const hit = this.committedInteraction.hitTest(point);
+    if ((generation !== this.interactionGeneration || geometryGeneration !== snapshotLayoutGeometry(this.instance).generation) || this.disposed || this.inputGated) {
+      return { point, generation, geometryGeneration, hit: Object.freeze({ kind: "block" }) };
+    }
     if (hit.kind === "target" && !this.committedTargets.has(hit.target)) {
       this.reportUnknownTarget();
-      return { point, hit: Object.freeze({ kind: "block" }) };
+      return { point, generation, geometryGeneration, hit: Object.freeze({ kind: "block" }) };
     }
-    return { point, hit };
+    return { point, hit, generation, geometryGeneration };
   }
 
   private reportUnknownTarget(): void {
@@ -672,14 +743,19 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     resolvedState: unknown,
   ): void {
     const snapshot = this.committedInteraction;
-    if (!snapshot?.onInput || this.disposed) return;
+    if (!snapshot?.onInput || this.disposed || this.inputDeliveryGated) return;
     let state = resolvedState as WinnerState<Target> | undefined;
+    // A reentrant render between picking and delivery must not pair an old hit
+    // with a newer renderer callback or coordinate frame.
+    if (state && (state.generation !== this.interactionGeneration || state.geometryGeneration !== snapshotLayoutGeometry(this.instance).generation)) return;
     if (!state) {
-      const local = this.resolverInverseTransform.transformPoint(
-        new DOMPoint(rootPoint.x, rootPoint.y),
-      );
+      const bridge = committedInstanceRootTransform(this.instance);
+      if (!bridge) return;
+      const ownerPoint = bridge.inverse().transformPoint(new DOMPoint(rootPoint.x, rootPoint.y));
+      const local = this.resolverInverseTransform.transformPoint(ownerPoint);
       state = this.resolveWinnerState(local.x, local.y);
     }
+    if (this.inputDeliveryGated || (state.generation !== this.interactionGeneration || state.geometryGeneration !== snapshotLayoutGeometry(this.instance).generation)) return;
     snapshot.onInput(
       Object.freeze({
         type,
@@ -731,27 +807,25 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   private dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    try {
-      if (this.created && this.definition.dispose) {
-        assertSynchronous(
-          this.definition.dispose(this.resources!, this.context),
-          "dispose",
-        );
-      }
-    } finally {
-      this.canvas.width = this.canvas.height = 0;
-      this.candidate?.bitmap.close();
-      this.committed?.close();
-      for (const target of this.committedTargets.values())
-        releaseTarget(target);
-      this.committedTargets.clear();
-      releaseTarget(this.layerTarget);
-      releaseResolverInputWinner(this.inputWinner);
-      this.updateInputNativeOwnership(false);
-      this.candidate = undefined;
-      this.committed = undefined;
-      this.committedInteraction = undefined;
-    }
+    const errors: unknown[] = [];
+    const release = (callback: () => void) => { try { callback(); } catch (error) { errors.push(error); } };
+    if (this.created && this.definition.dispose) release(() => assertSynchronous(
+      this.definition.dispose!(this.resources!, this.context), 'dispose'));
+    release(() => { this.canvas.width = this.canvas.height = 0; });
+    release(() => this.candidate?.bitmap.close());
+    if (this.candidate?.prepared) release(() => this.finishPrepared(this.candidate!.prepared!, false));
+    release(() => this.committed?.close());
+    for (const target of this.committedTargets.values()) release(() => releaseTarget(target));
+    this.committedTargets.clear();
+    release(() => releaseTarget(this.layerTarget));
+    release(() => releaseResolverInputWinner(this.inputWinner));
+    for (const lease of this.inputNativeReleases.values()) release(lease);
+    this.inputNativeReleases.clear();
+    this.candidate = undefined;
+    this.committed = undefined;
+    this.committedInteraction = undefined;
+    if (errors.length === 1) throw errors[0];
+    if (errors.length) throw new AggregateError(errors, 'Render layer disposal failed.');
   }
 }
 

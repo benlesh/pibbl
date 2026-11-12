@@ -33,7 +33,7 @@ function renderHtmlBox(props: HtmlBoxProps<unknown>, style: Readonly<Resolved>, 
   }
   const opacity = style.opacity ?? 1;
   if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) throw new RangeError('HtmlBox opacity must be between 0 and 1.');
-  service.register({ slot, data: props.data, matrix: getCurrentWorldTransform(),
+  service.register({ slot, handlers: props, data: props.data, matrix: getCurrentWorldTransform(),
     clips: snapshotClips(GLOBAL_STATE.clippingStack), border: style.borderBox, content: style.contentBox,
     opacity: ctx.globalAlpha * opacity, interactive: props.pointerEvents !== 'none', overflow: style.overflow ?? 'clip', onFocusChange: props.onFocusChange });
 }

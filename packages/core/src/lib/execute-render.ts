@@ -96,6 +96,16 @@ export function executeRender(
     for (const service of pibblInstance.optionalServices.values()) service.beginRender?.();
     GLOBAL_STATE.renderTransaction = renderTransaction;
     beginLayoutGeometry(pibblInstance, renderTransaction);
+    // Scheduled publication happens after executeRender returns. Its failure
+    // must retire the same mount-owned state as a traversal failure, so a later
+    // render cannot re-enter a policy or resource already destroyed by abort.
+    const releaseFailedGeneration = (success: boolean) => {
+      if (success || renderTransaction.failed === false) return;
+      for (const refs of pibblInstance.refs.values()) refs.teardowns.execute();
+      pibblInstance.refs.clear();
+    };
+    if (renderTransaction.onAfterFinish) renderTransaction.onAfterFinish(releaseFailedGeneration);
+    else renderTransaction.onFinish(releaseFailedGeneration);
     GLOBAL_STATE.currentPibblInstance.renderTimestamp = activeFrameSnapshot.logicalTime;
     GLOBAL_STATE.canvas = canvas;
     const rootNode = arguments.length >= 3 && updatedRoot !== NO_PENDING_ROOT ?
@@ -193,6 +203,7 @@ export function executeRender(
     driver.finishFrame(frame, true);
     finishTransaction(true);
   } catch (error) {
+    renderTransaction.fail?.();
     for (const service of pibblInstance.optionalServices.values()) service.endRender?.(false);
     finishTransaction(false);
     for (const refs of pibblInstance.refs.values()) {

@@ -1,3 +1,4 @@
+import { committedLayoutPaintEntries } from '../layout/geometry-publication.js';
 import type { PibblClippingStackEntry, PibblEventRoot, PibblInstance } from '../types.js';
 import { isHit } from '../util/is-hit.js';
 import {
@@ -74,7 +75,7 @@ function resolveInstanceHit(
   transform: DOMMatrix,
   output: PibblHitTestOutput,
 ): PibblHitTestOutput {
-  const entries = Array.from(instance.paintEntries);
+  const entries = committedLayoutPaintEntries(instance) ?? Array.from(instance.paintEntries);
   for (let index = entries.length - 1; index >= 0; index--) {
     const entry = entries[index]!;
     reset(output);

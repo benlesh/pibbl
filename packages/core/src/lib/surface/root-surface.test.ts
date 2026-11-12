@@ -137,6 +137,52 @@ describe('root Canvas surface', () => {
     controller.dispose();
   });
 
+  it('keeps responsive content dimensions local under a shared CSS affine transform', async () => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'transform-origin:0 0;transform:matrix(0,1,-1,0,400,0)';
+    const canvas = createCanvas(200, 100, 300.25, 150.5);
+    wrapper.append(canvas);
+    document.body.append(wrapper);
+    let box: ReturnType<typeof useLayoutBox> | undefined;
+    const Probe = () => { box = useLayoutBox(); };
+    const controller = pibbl(canvas, createElement(Probe, {}), {
+      viewport: 'responsive', pixelRatio: 2,
+    });
+    await settleSurface();
+    expect(box).toEqual({ x: 0, y: 0, width: 300.25, height: 150.5 });
+    expect(canvas.width).toBe(601);
+    expect(canvas.height).toBe(301);
+    expect(canvas.style.width).toBe('300.25px');
+    expect(canvas.style.height).toBe('150.5px');
+    controller.dispose();
+  });
+
+  it.each(['content-box', 'border-box'])('preserves fractional %s sizing through hidden ancestors', async boxSizing => {
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'none';
+    const canvas = createCanvas(200, 100, 220.5, 120.25);
+    canvas.style.boxSizing = boxSizing;
+    canvas.style.padding = '10px';
+    canvas.style.border = '2px solid black';
+    wrapper.append(canvas);
+    document.body.append(wrapper);
+    const boxes: ReturnType<typeof useLayoutBox>[] = [];
+    const Probe = () => { boxes.push(useLayoutBox()); };
+    const controller = pibbl(canvas, createElement(Probe, {}), {
+      viewport: 'responsive', pixelRatio: 2,
+    });
+    await settleSurface();
+    expect(boxes).toHaveLength(0);
+    wrapper.style.display = 'block';
+    await settleSurface();
+    const width = boxSizing === 'border-box' ? 196.5 : 220.5;
+    const height = boxSizing === 'border-box' ? 96.25 : 120.25;
+    expect(boxes.at(-1)).toEqual({ x: 0, y: 0, width, height });
+    expect(canvas.width).toBe(Math.round(width * 2));
+    expect(canvas.height).toBe(Math.round(height * 2));
+    controller.dispose();
+  });
+
   it('coalesces resize and density invalidations and releases exact surface observers', () => {
     const originalResizeObserver = globalThis.ResizeObserver;
     const originalMatchMedia = globalThis.matchMedia;

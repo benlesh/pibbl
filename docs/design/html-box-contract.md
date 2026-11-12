@@ -82,6 +82,24 @@ input. `pointerEvents="none"` makes that host inert and removes pointer/focus
 participation. Native pointer capture and native editing/composition/clipboard
 behavior are preserved; Pibbl does not synthesize duplicate HTML activation.
 
+`HtmlBoxEventHandlers` exposes the existing Pibbl event names and capture variants.
+Capture traverses the committed Pibbl ancestor path to the HtmlBox, native
+descendant handlers run, then HtmlBox/ancestor bubble handlers run if the native
+event bubbles and propagation was not stopped. The logical target is the HtmlBox;
+`originalEvent.target` retains the DOM target. Native default cancellation remains
+observable across both halves. Non-bubbling focus/blur/enter/leave do not acquire a
+logical ancestor bubble phase. Enter/leave only relay the actual shell boundary.
+
+Coordinate events retain root-logical x/y and add HtmlBox-border-local localX/localY
+before padding. They use the same adopted world/root projection as HTML geometry,
+including cached Layer placement and shared CSS page transforms. New handlers,
+ancestor paths and coordinate transforms become active only at adoption, after
+fallible HTML callbacks. Native events fired inside an updater see the previous
+committed generation; events inside a new mount cannot activate candidate handlers.
+A failed publication disposes native listeners with the affected HTML hosts.
+Native listeners are owned by the host lifetime, acquired lazily and gated by the
+committed handler snapshot. Suspension disables dispatch without remounting content.
+
 Without FocusManagement, native browser focus order applies. With the existing
 single focus manager, HTML regions and Canvas targets share source-order
 navigation. Tab enters the first eligible native control, reverse Tab the last;
@@ -108,6 +126,8 @@ the accessibility tree. Authors must disable or hide ineligible controls.
   failure cleanup, public authoring, and the shared Studio lesson.
 - `packages/core/test/html-box-focus.test.tsx`: mixed native/Canvas navigation,
   native editing/activation, dynamic eligibility and keyed/cached behavior.
+- `packages/core/test/html-box-events.test.tsx`: native propagation, cancellation,
+  capture, committed coordinate/handler adoption and failure cleanup.
 - Existing focus, signal/scheduler, Layer, layout, package and Studio checks remain
   required regressions. See [field notes](../testing/field-notes/html-box.md) for
   fresh execution evidence rather than inferring success from this contract.

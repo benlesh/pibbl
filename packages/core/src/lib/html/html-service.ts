@@ -1,3 +1,5 @@
+import { HtmlNativeEvents, type HtmlNativeEventSnapshot } from './html-events.js';
+import { stageLayoutHtmlGeometry } from '../layout/geometry-publication.js';
 import { isLayoutComponentSuspended, isLayoutInstanceSuspended } from '../layout/participation.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
@@ -10,7 +12,7 @@ const SVG = 'http://www.w3.org/2000/svg';
 let nextId = 0;
 type Entry = HtmlBoxRegistration | { child: PibblInstance; matrix: DOMMatrix; clips: readonly PibblClippingStackEntry[]; opacity: number; bounds: {x:number;y:number;width:number;height:number} };
 type Clip = { data: string; matrix: DOMMatrix; rule: CanvasFillRule };
-interface Projection { registration: HtmlBoxRegistration; matrix: DOMMatrix; bounds: { x: number; y: number; width: number; height: number }; visible: boolean; clips: Clip[]; opacity: number; }
+interface Projection { events?: HtmlNativeEventSnapshot; world: DOMMatrix; rootMatrix: DOMMatrix; transformCss?: string; definitions?: SVGClipPathElement[]; clipPath?: string; registration: HtmlBoxRegistration; matrix: DOMMatrix; bounds: { x: number; y: number; width: number; height: number }; visible: boolean; clips: Clip[]; opacity: number; }
 
 export function requireHtmlService(owner: PibblInstance): HtmlService {
   const root = owner.eventRoot;
@@ -26,6 +28,9 @@ export class HtmlService implements HtmlBridge {
   private svg: SVGSVGElement | undefined;
   private viewport: HTMLDivElement | undefined;
   private disposed = false;
+  private suspended = false;
+  private projections: Projection[] | undefined;
+  private nextSnapshots: Map<PibblInstance, Entry[]> | undefined;
   private rendered = new Set<HtmlBoxSlot>();
   constructor(private readonly root: PibblEventRoot) {}
 
@@ -36,12 +41,17 @@ export class HtmlService implements HtmlBridge {
     this.transaction = transaction;
     this.pending = new Map(this.snapshots);
     this.rendered = new Set();
+    this.suspended = false;
+    transaction.onPreflight!(() => this.prepare());
     transaction.onPublish!(() => this.publish());
+    transaction.onAdopt!(() => this.adopt());
     transaction.onFinish(success => {
-      if (!success) this.reset();
+      if (!success && transaction.failed !== false) this.reset();
       this.pending = undefined;
       this.transaction = undefined;
       this.rendered.clear();
+      this.projections = undefined;
+      this.nextSnapshots = undefined;
     });
   }
 
@@ -53,11 +63,7 @@ export class HtmlService implements HtmlBridge {
   suspend(instance: PibblInstance): void {
     if (instance !== this.root.rootInstance) return;
     this.enterTransaction();
-    this.root.renderTransaction!.onPublish!(() => {
-      this.root.focusPolicy?.suspendHtmlRegions?.();
-      if (this.viewport) this.viewport.hidden = true;
-      for (const slot of this.live) { slot.region.active = false; if (slot.shell) slot.shell.inert = true; }
-    });
+    this.suspended = true;
   }
 
   register(registration: HtmlBoxRegistration): void {
@@ -99,6 +105,7 @@ export class HtmlService implements HtmlBridge {
   private retire(slot: HtmlBoxSlot): void {
     if (slot.disposed) return;
     slot.disposed = true;
+    slot.events?.dispose();
     slot.region.active = false;
     this.root.focusPolicy?.removeHtmlFocusRegion?.(slot.region);
     try { withSignalWriteForbidden('HtmlBox abort cleanup', () => slot.abort?.abort()); }
@@ -112,16 +119,17 @@ export class HtmlService implements HtmlBridge {
     }
   }
 
-  private publish(): void {
+  private prepare(): void {
     if (this.disposed || !this.pending) return;
     const canvas = this.root.canvas!;
     const overlay = this.root.htmlOverlay!;
     validateHtmlOverlay(canvas, overlay);
     const rootInstance = this.root.rootInstance!;
     if (rootInstance.surface.kind === 'root' && (!rootInstance.surface.display.width || !rootInstance.surface.display.height)) {
-      this.root.focusPolicy?.suspendHtmlRegions?.();
-      if (this.viewport) this.viewport.hidden = true;
-      for (const slot of this.live) { slot.region.active = false; if (slot.shell) slot.shell.inert = true; }
+      this.suspended = true;
+      for (const slot of this.live) stageLayoutHtmlGeometry(this.transaction!, slot.region, {
+        active: false, bounds: slot.region.rootBounds ?? { x: 0, y: 0, width: 0, height: 0 },
+      });
       return;
     }
     const surface = rootInstance.surface.snapshot!;
@@ -159,18 +167,63 @@ export class HtmlService implements HtmlBridge {
       }
     };
     walk(rootInstance, new DOMMatrix(), [], 1);
+    for (const projection of projections) {
+      projection.transformCss = cssMatrix(projection.matrix);
+      const slot = projection.registration.slot;
+      slot.events ??= new HtmlNativeEvents(slot, () => this.svg!, target => {
+        const doc = this.root.canvas!.ownerDocument;
+        if (!(target instanceof doc.defaultView!.Node)) return null;
+        for (const candidate of this.live) {
+          if (candidate.events?.node.live && candidate.shell?.contains(target)) return candidate.events.node;
+        }
+        return null;
+      });
+      projection.events = slot.events.prepare(projection.registration.handlers, projection.world,
+        projection.rootMatrix, projection.visible && projection.registration.interactive);
+      stageLayoutHtmlGeometry(this.transaction!, projection.registration.slot.region, {
+        bounds: projection.bounds, active: projection.visible && projection.registration.interactive,
+      });
+    }
+    this.projections = projections;
+    this.nextSnapshots = new Map([...this.pending].filter(([owner]) => visited.has(owner)));
+  }
+
+  private publish(): void {
+    if (this.suspended) { this.root.focusPolicy?.suspendHtmlRegions?.(); return; }
+    const projections = this.projections;
+    if (!projections || this.disposed) return;
     const desired = new Set(projections.map(p => p.registration.slot));
     for (const slot of this.live) if (!desired.has(slot)) {
       if (!slot.owner.mainTeardowns.closed && (isLayoutComponentSuspended(slot.component) || isLayoutInstanceSuspended(slot.owner))) {
-        slot.region.active = false;
+        slot.region.active = false; slot.events?.suspend();
         this.root.focusPolicy?.removeHtmlFocusRegion?.(slot.region);
         if (slot.shell) { slot.shell.inert = true; slot.shell.style.visibility = 'hidden'; }
       } else this.retire(slot);
     }
     if (projections.length) this.ensureDOM();
+    for (const projection of projections) this.prepareClips(projection);
+    for (const projection of projections) {
+      const slot = projection.registration.slot;
+      if ((!projection.visible || !projection.registration.interactive) && slot.region.active) {
+        this.root.focusPolicy?.removeHtmlFocusRegion?.(slot.region);
+        const active = this.root.canvas!.ownerDocument.activeElement;
+        if (active instanceof HTMLElement && slot.content?.contains(active)) active.blur();
+      }
+      this.publishContent(projection);
+    }
+  }
+
+  private adopt(): void {
+    if (this.disposed) return;
+    if (this.suspended) {
+      if (this.viewport) this.viewport.hidden = true;
+      for (const slot of this.live) { slot.region.active = false; slot.events?.suspend(); if (slot.shell) slot.shell.inert = true; }
+      return;
+    }
+    if (!this.projections) return;
     if (this.viewport) this.viewport.hidden = false;
-    for (const [index, projection] of projections.entries()) this.apply(projection, index);
-    this.snapshots = new Map([...this.pending].filter(([owner]) => visited.has(owner)));
+    for (let index = 0; index < this.projections.length; index++) this.applyGeometry(this.projections[index], index);
+    this.snapshots = this.nextSnapshots!;
   }
 
   private ensureDOM(): void {
@@ -182,18 +235,18 @@ export class HtmlService implements HtmlBridge {
     this.svg = doc.createElementNS(SVG, 'svg');
     this.svg.setAttribute('width', '0'); this.svg.setAttribute('height', '0');
     this.svg.setAttribute('aria-hidden', 'true');
-    this.svg.style.cssText = 'position:absolute;pointer-events:none';
+    this.svg.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none';
     this.root.htmlOverlay!.append(this.svg, this.viewport);
   }
 
-  private apply(projection: Projection, index: number): void {
-    const { registration: r, matrix, bounds, visible, clips, opacity } = projection;
+  private publishContent(projection: Projection): void {
+    const r = projection.registration;
     const slot = r.slot;
     const first = !slot.shell;
     const doc = this.root.canvas!.ownerDocument;
     if (first) {
       slot.shell = doc.createElement('div'); slot.shell.dataset.pibblHtmlBox = '';
-      slot.shell.style.cssText = 'position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;isolation:isolate';
+      slot.shell.style.cssText = 'position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;isolation:isolate;opacity:0';
       slot.content = doc.createElement('div'); slot.content.dataset.pibblHtmlContent = '';
       slot.content.style.cssText = 'position:absolute;box-sizing:border-box';
       slot.shell.append(slot.content); this.viewport!.append(slot.shell);
@@ -201,18 +254,7 @@ export class HtmlService implements HtmlBridge {
       slot.region.content = slot.content;
       this.live.add(slot);
     }
-    slot.shell!.style.width = `${r.border.width}px`; slot.shell!.style.height = `${r.border.height}px`;
-    slot.shell!.style.transform = cssMatrix(matrix); slot.shell!.style.zIndex = String(index);
-    slot.shell!.style.opacity = String(opacity); slot.shell!.style.overflow = r.overflow;
-    slot.content!.style.left = `${r.content.x}px`; slot.content!.style.top = `${r.content.y}px`;
-    slot.content!.style.width = `${r.content.width}px`; slot.content!.style.height = `${r.content.height}px`;
-    slot.content!.style.pointerEvents = r.interactive ? 'auto' : 'none';
-    slot.shell!.inert = !visible || !r.interactive;
-    slot.shell!.style.visibility = visible ? 'visible' : 'hidden';
-    slot.region.active = visible && r.interactive;
-    slot.region.rootBounds = bounds;
-    slot.callback = r.onFocusChange;
-    if (visible) this.applyClips(slot, clips);
+    slot.events!.prepareListeners(projection.events!);
     try {
       if (first) {
         const update = withSignalWriteForbidden('HtmlBox mount', () => slot.mount(slot.content!, r.data, slot.abort!.signal));
@@ -223,30 +265,68 @@ export class HtmlService implements HtmlBridge {
         if (result && typeof (result as PromiseLike<unknown>).then === 'function') throw new TypeError('HtmlBox update must be synchronous.');
       }
     } catch (error) { this.retire(slot); throw error; }
-    slot.shell!.inert = !visible || !r.interactive;
-    slot.shell!.style.visibility = visible ? 'visible' : 'hidden';
   }
 
-  private applyClips(slot: HtmlBoxSlot, clips: Clip[]): void {
-    const definitions = slot.clipping!;
+  private applyGeometry(projection: Projection, index: number): void {
+    const { registration: r, bounds, visible, opacity } = projection;
+    const slot = r.slot;
+    if (slot.disposed) return;
+    slot.shell!.style.width = `${r.border.width}px`; slot.shell!.style.height = `${r.border.height}px`;
+    slot.shell!.style.transform = projection.transformCss!; slot.shell!.style.zIndex = String(index);
+    slot.shell!.style.opacity = String(opacity); slot.shell!.style.overflow = r.overflow;
+    slot.content!.style.left = `${r.content.x}px`; slot.content!.style.top = `${r.content.y}px`;
+    slot.content!.style.width = `${r.content.width}px`; slot.content!.style.height = `${r.content.height}px`;
+    slot.content!.style.pointerEvents = r.interactive ? 'auto' : 'none';
+    slot.shell!.inert = !visible || !r.interactive;
+    slot.shell!.style.visibility = visible ? 'visible' : 'hidden';
+    slot.region.active = visible && r.interactive;
+    slot.region.rootBounds = bounds;
+    slot.callback = r.onFocusChange;
+    slot.events!.adopt(projection.events!);
+    if (visible) {
+      const previous = slot.clipping;
+      slot.clipping = projection.definitions!;
+      slot.shell!.style.clipPath = projection.clipPath!;
+      if (previous !== slot.clipping) for (const definition of previous ?? []) definition.remove();
+    }
+  }
+
+  private prepareClips(projection: Projection): void {
+    if (!projection.visible) return;
+    const slot = projection.registration.slot;
+    const clips = projection.clips;
+    const previous = slot.clipping;
+    let unchanged = previous?.length === clips.length;
+    const matrices: string[] = [];
+    for (let index = 0; index < clips.length; index++) {
+      const clip = clips[index];
+      matrices.push(cssMatrix(clip.matrix));
+      const path = previous?.[index]?.firstElementChild;
+      if (!path || path.getAttribute('d') !== clip.data || path.getAttribute('clip-rule') !== clip.rule ||
+          path.getAttribute('transform') !== matrices[index]) unchanged = false;
+    }
+    if (unchanged) {
+      projection.definitions = previous;
+      projection.clipPath = clips.length ? `url(#${previous![0].id})` : 'none';
+      return;
+    }
+    const definitions: SVGClipPathElement[] = [];
     const doc = this.root.canvas!.ownerDocument;
-    while (definitions.length < clips.length) {
+    for (let index = 0; index < clips.length; index++) {
       const definition = doc.createElementNS(SVG, 'clipPath');
       definition.id = `pibbl-html-clip-${++nextId}`;
       definition.setAttribute('clipPathUnits', 'userSpaceOnUse');
-      definition.append(doc.createElementNS(SVG, 'path'));
-      this.svg!.append(definition); definitions.push(definition);
+      const path = doc.createElementNS(SVG, 'path');
+      path.setAttribute('d', clips[index].data);
+      path.setAttribute('clip-rule', clips[index].rule);
+      path.setAttribute('transform', matrices[index]);
+      definition.append(path); definitions.push(definition);
     }
-    clips.forEach((clip, index) => {
-      const definition = definitions[index]; const path = definition.firstElementChild!;
-      setAttribute(path, 'd', clip.data);
-      setAttribute(path, 'clip-rule', clip.rule);
-      setAttribute(path, 'transform', cssMatrix(clip.matrix));
-      if (index + 1 < clips.length) setAttribute(definition, 'clip-path', `url(#${definitions[index+1].id})`);
-      else definition.removeAttribute('clip-path');
-    });
-    slot.shell!.style.clipPath = clips.length ? `url(#${definitions[0].id})` : 'none';
-    while (definitions.length > clips.length) definitions.pop()!.remove();
+    for (let index = 0; index + 1 < definitions.length; index++) definitions[index].firstElementChild!.setAttribute('clip-path', `url(#${definitions[index + 1].id})`);
+    // New definitions cannot affect the live shell until its clip-path is adopted.
+    for (const definition of definitions) this.svg!.append(definition);
+    projection.definitions = definitions;
+    projection.clipPath = definitions.length ? `url(#${definitions[0].id})` : 'none';
   }
 
   private reset(): void {
@@ -265,7 +345,6 @@ export function snapshotClips(clips: readonly PibblClippingStackEntry[]): PibblC
   return clips.map(clip => ({ ...clip, transform: copy(clip.transform) }));
 }
 function cssMatrix(m: DOMMatrixReadOnly): string { return `matrix(${m.a},${m.b},${m.c},${m.d},${m.e},${m.f})`; }
-function setAttribute(element: Element, name: string, value: string): void { if (element.getAttribute(name) !== value) element.setAttribute(name, value); }
 
 
 /** Settle all fallible numeric projection work before publishing any host. */
@@ -305,7 +384,7 @@ function prepareProjection(registration: HtmlBoxRegistration, world: DOMMatrix, 
       localClips.push({ data: clip.data, rule: clip.rule, matrix: local });
     }
   }
-  return { registration, matrix, bounds, visible, clips: localClips, opacity };
+  return { registration, world, rootMatrix, matrix, bounds, visible, clips: localClips, opacity };
 }
 function assertFiniteProjectionMatrix(matrix: DOMMatrixReadOnly): void {
   if (!(Number.isFinite(matrix.a) && Number.isFinite(matrix.b) && Number.isFinite(matrix.c) && Number.isFinite(matrix.d) && Number.isFinite(matrix.e) && Number.isFinite(matrix.f))) throw new Error('HtmlBox projection must be finite.');

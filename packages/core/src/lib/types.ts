@@ -660,9 +660,14 @@ export interface PibblEventRoot {
 
 /** @internal Root-wide render completion seam for optional policies. */
 export interface PibblRenderTransaction {
+  /** Distinguishes fail-closed errors from an explicitly cancelled candidate. */
+  readonly failed?: boolean;
+  fail?(): void;
   /** Validate staged geometry before any fallible resource publication. */
   onPreflight?(callback: () => void): void;
   onPublish?(callback: () => void): void;
+  /** Adopt prepared geometry after all fallible application publications succeed. */
+  onAdopt?(callback: () => void): void;
   onFinish(callback: (success: boolean) => void): void;
   /** Run after all finish callbacks have published their committed state. */
   onAfterFinish?(callback: (success: boolean) => void): void;
@@ -675,7 +680,7 @@ export interface PibblFocusPolicyBridge {
   snapshot(target: PibblEventTargetRegistration): PibblEventTargetSnapshot;
   observeTarget(target: PibblEventTargetRegistration): void;
   /** @internal Records a target committed during the active render transaction. */
-  observeTransactionalTarget?(target: PibblEventTargetRegistration): void;
+  observeTransactionalTarget?(target: PibblEventTargetRegistration, preparedFocusable?: boolean): void;
   removeTarget(target: PibblEventTargetRegistration): void;
   beforeNativeDispatch?(
     type: DOMPibblEventType,

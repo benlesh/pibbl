@@ -1,5 +1,6 @@
 import {
   HtmlBox,
+  Manipulable,
   Group,
   Clip,
   FocusManagement,
@@ -43,8 +44,8 @@ const mountEditor: HtmlMountCallback<string> = (element, title, signal) => {
 
 function HtmlBoxLesson() {
   const angle = useSignal(0);
-  const position = useSignal(0);
-  const scale = useSignal(1);
+  const box = useSignal({ left: 145, top: 174, width: 340, height: 190 });
+  const edits = useSignal(0);
   const after = useSignal(0);
   const clip = useConst(() => {
     const path = new PathGeometry();
@@ -54,15 +55,15 @@ function HtmlBoxLesson() {
   const controls = [
     {
       text: "ROTATE",
-      action: () => angle.update((value) => (value === 20 ? -20 : value + 10)),
+      action: () => angle.update((value) => value + Math.PI / 18),
     },
     {
       text: "MOVE",
-      action: () => position.update((value) => (value === 60 ? 0 : value + 20)),
+      action: () => box.update((value) => ({ ...value, left: value.left >= 205 ? 145 : value.left + 20 })),
     },
     {
       text: "SCALE",
-      action: () => scale.update((value) => (value === 1 ? 0.8 : 1)),
+      action: () => box.update((value) => ({ ...value, width: value.width === 340 ? 272 : 340, height: value.width === 340 ? 152 : 190 })),
     },
   ];
   return (
@@ -101,7 +102,8 @@ function HtmlBoxLesson() {
               pointerEvents="none"
               style={{
                 left: 92 + index * 135,
-                top: 122,
+                top: 116,
+                textBaseline: "middle",
                 textAlign: "center",
                 font: "700 12px system-ui",
                 fill: "white",
@@ -111,24 +113,26 @@ function HtmlBoxLesson() {
             </Text>
           </Group>
         ))}
-        <Group style={{ translateX: 145 + position.get(), translateY: 174 }}>
-          <Group
-            style={{
-              rotationDegrees: angle.get(),
-              rotationOrigin: [170, 95],
-              scaleX: scale.get(),
-              scaleY: scale.get(),
-            }}
-          >
+        <Manipulable style={box} rotation={angle} draggable rotatable
+          resizable={{ minWidth: 220, maxWidth: 470, minHeight: 120, aspectRatio: { value: "initial" } }}
+          resizeHandles="corners">
+          <Group style={{ scaleX: box.get().width / 340, scaleY: box.get().height / 190 }}>
             <Clip style={{ d: clip }}>
               <HtmlBox
                 mount={mountEditor}
                 data="Your note"
                 style={{ width: 340, height: 190 }}
+                onInput={() => edits.update(value => value + 1)}
+                onPointerDown={event => {
+                  // Native controls keep editing and label activation; the panel's
+                  // empty space bubbles to Manipulable's ordinary drag handler.
+                  const target = event.originalEvent.target;
+                  if (target instanceof Element && target.closest("input, button, label")) event.stopPropagation();
+                }}
               />
             </Clip>
           </Group>
-        </Group>
+        </Manipulable>
         <Rectangle
           style={{
             left: 32,
@@ -144,7 +148,8 @@ function HtmlBoxLesson() {
           pointerEvents="none"
           style={{
             left: 127,
-            top: 430,
+            top: 424,
+            textBaseline: "middle",
             textAlign: "center",
             font: "700 12px system-ui",
             fill: "white",
@@ -153,12 +158,13 @@ function HtmlBoxLesson() {
         <Text
           style={{
             left: 242,
-            top: 429,
+            top: 424,
+            textBaseline: "middle",
             font: "13px system-ui",
             fill: "#42655f",
           }}
         >
-          Tab between Canvas and HTML. Your text stays put.
+          {`Native edits: ${edits.get()}. Drag, resize, or rotate the panel.`}
         </Text>
       </Group>
     </FocusManagement>

@@ -1,3 +1,4 @@
+import { preparedLayoutHtmlGeometry, preparedLayoutTargetBounds } from '../layout/geometry-publication.js';
 import type { PibblEventTargetRegistration } from "../events/registrations.js";
 import { GLOBAL_STATE } from "../global-state.js";
 import type {
@@ -35,6 +36,15 @@ import {
   type PibblNavigationCandidate,
 } from "./types.js";
 import { getManagedTabStops } from "./dom-tab-stops.js";
+
+interface PreparedNavigation {
+  readonly navigation: readonly PibblNavigationCandidate[];
+  readonly canvas: readonly PibblFocusCandidate[];
+  readonly html: readonly PibblHtmlFocusCandidate[];
+  readonly byBoundary: ReadonlyMap<DirectionalBoundary, readonly PibblNavigationCandidate[]>;
+  readonly boundaries: Set<DirectionalBoundary>;
+}
+const EMPTY_NAVIGATION: readonly PibblNavigationCandidate[] = Object.freeze([]);
 
 const UNFOCUSED_SNAPSHOT = Object.freeze({
   isFocused: false,
@@ -229,13 +239,14 @@ class FocusManagerCoordinator {
       restored: undefined,
     };
     this.transactions.set(transaction, state);
-    transaction.onFinish((success) => this.finishTransaction(state, success));
+    transaction.onFinish((success) => this.finishTransaction(state, success, transaction.failed === false));
     return state;
   }
 
   private finishTransaction(
     state: FocusTransactionState,
     success: boolean,
+    cancelled = false,
   ): void {
     if (state.finished) return;
     state.finished = true;
@@ -259,7 +270,7 @@ class FocusManagerCoordinator {
       (state.claimed && state.claimed !== state.prior) ||
       (state.prepared && state.prepared !== state.prior);
     const restored =
-      state.prior && attemptedReplacement && !state.prior.isDestroyed
+      state.prior && (attemptedReplacement || cancelled) && !state.prior.isDestroyed
         ? state.prior
         : undefined;
     state.restored = restored;
@@ -474,12 +485,18 @@ export class PibblFocusManager implements PibblFocusPolicyBridge {
     const transaction = this.eventRoot.renderTransaction;
     if (transaction) {
       this.transactionalPending = { transaction, frame: pending };
+      let prepared: PreparedNavigation | undefined;
+      if (transaction.onPreflight && transaction.onAdopt) {
+        transaction.onPreflight(() => { prepared = this.prepareCollection(pending, transaction); });
+        transaction.onAdopt(() => { if (prepared && !this.destroyed) this.adoptNavigationCandidates(prepared); });
+      }
       transaction.onFinish((transactionSucceeded) => {
         if (this.transactionalPending?.transaction === transaction) {
           this.transactionalPending = undefined;
         }
         if (transactionSucceeded && !this.destroyed) {
-          this.commitCollection(pending);
+          if (prepared) this.finishNavigationCandidates();
+          else this.commitCollection(pending);
         }
       });
       return;
@@ -489,6 +506,11 @@ export class PibblFocusManager implements PibblFocusPolicyBridge {
   }
 
   private commitCollection(pending: PendingFrame): void {
+    this.adoptNavigationCandidates(this.prepareCollection(pending));
+    this.finishNavigationCandidates();
+  }
+
+  private prepareCollection(pending: PendingFrame, transaction?: PibblRenderTransaction): PreparedNavigation {
     const collected: PibblNavigationCandidate[] = [];
     for (const [sourceIndex, observed] of pending.entries.entries()) {
       if ("target" in observed) {
@@ -498,38 +520,25 @@ export class PibblFocusManager implements PibblFocusPolicyBridge {
             target,
             sourceIndex,
             directionalBoundary: observed.directionalBoundary,
-            rootBounds: resolveTargetRootBounds(target),
+            rootBounds: transaction ? preparedLayoutTargetBounds(transaction, target) : resolveTargetRootBounds(target),
           }) satisfies PibblFocusCandidate,
         );
         continue;
       }
       const region = observed.region;
-      if (region.active && region.content)
+      const geometry = transaction ? preparedLayoutHtmlGeometry(transaction, region) : undefined;
+      if (geometry ? geometry.active : region.active && region.content)
         collected.push(
           Object.freeze({
             region,
             sourceIndex,
             directionalBoundary: observed.directionalBoundary,
-            rootBounds: region.rootBounds,
+            rootBounds: geometry?.bounds ?? region.rootBounds,
           }) satisfies PibblHtmlFocusCandidate,
         );
     }
     const navigation = Object.freeze(collected);
-    this.commitNavigationCandidates(navigation, pending.boundaries);
-    const candidates = navigation.filter(
-      (candidate): candidate is PibblFocusCandidate =>
-        !isHtmlFocusCandidate(candidate),
-    );
-    for (const candidate of candidates) {
-      if (candidate.directionalBoundary) {
-        retainedDirectionalBoundaries.set(
-          candidate.target,
-          asDirectionalBoundary(candidate.directionalBoundary),
-        );
-      } else {
-        retainedDirectionalBoundaries.delete(candidate.target);
-      }
-    }
+    return this.prepareNavigationCandidates(navigation, pending.boundaries);
   }
 
   observeTarget(target: PibblEventTargetRegistration): void {
@@ -627,18 +636,14 @@ export class PibblFocusManager implements PibblFocusPolicyBridge {
     if (focused) this.clearHtmlFocus(focused);
   }
 
-  observeTransactionalTarget(target: PibblEventTargetRegistration): void {
+  observeTransactionalTarget(target: PibblEventTargetRegistration, preparedFocusable?: boolean): void {
     const transactional = this.transactionalPending;
-    if (
-      !transactional ||
-      transactional.transaction !== this.eventRoot.renderTransaction
-    )
-      return;
-    const pending = transactional.frame;
+    const pending = this.pending ?? (transactional?.transaction === this.eventRoot.renderTransaction ? transactional?.frame : undefined);
+    if (!pending) return;
     if (this.pendingSpaceTarget === target && !target.handlers.click) {
       this.cancelSpaceActivation();
     }
-    if (!isKeyboardFocusable(target)) {
+    if (!(preparedFocusable ?? isKeyboardFocusable(target))) {
       pending.ineligibleTargets.add(target);
       const index = pending.targets.findIndex(
         (candidate) => candidate.target === target,
@@ -1140,6 +1145,14 @@ export class PibblFocusManager implements PibblFocusPolicyBridge {
     candidates: readonly PibblNavigationCandidate[],
     boundaries: ReadonlySet<DirectionalBoundary>,
   ): void {
+    this.adoptNavigationCandidates(this.prepareNavigationCandidates(candidates, boundaries));
+    this.finishNavigationCandidates();
+  }
+
+  private prepareNavigationCandidates(
+    candidates: readonly PibblNavigationCandidate[],
+    boundaries: ReadonlySet<DirectionalBoundary>,
+  ): PreparedNavigation {
     const pendingByBoundary = new Map<
       DirectionalBoundary,
       PibblNavigationCandidate[]
@@ -1161,27 +1174,32 @@ export class PibblFocusManager implements PibblFocusPolicyBridge {
       committedByBoundary.set(boundary, Object.freeze(directCandidates));
     }
 
+    return {
+      navigation: candidates,
+      canvas: Object.freeze(candidates.filter((candidate): candidate is PibblFocusCandidate => !isHtmlFocusCandidate(candidate))),
+      html: Object.freeze(candidates.filter((candidate): candidate is PibblHtmlFocusCandidate => isHtmlFocusCandidate(candidate))),
+      byBoundary: committedByBoundary,
+      boundaries: new Set(committedByBoundary.keys()),
+    };
+  }
+
+  private adoptNavigationCandidates(prepared: PreparedNavigation): void {
     for (const boundary of this.committedBoundaries) {
-      if (!committedByBoundary.has(boundary)) {
-        boundary.commit(Object.freeze([]));
-      }
+      if (!prepared.byBoundary.has(boundary)) boundary.commit(EMPTY_NAVIGATION);
     }
-    for (const [boundary, directCandidates] of committedByBoundary) {
-      boundary.commit(directCandidates);
+    for (const [boundary, candidates] of prepared.byBoundary) boundary.commit(candidates);
+    this.committedBoundaries = prepared.boundaries;
+    this.committedNavigationCandidates = prepared.navigation;
+    this.committedCandidates = prepared.canvas;
+    this.committedHtmlCandidates = prepared.html;
+    for (const candidate of prepared.canvas) {
+      if (candidate.directionalBoundary) retainedDirectionalBoundaries.set(candidate.target, asDirectionalBoundary(candidate.directionalBoundary));
+      else retainedDirectionalBoundaries.delete(candidate.target);
     }
-    this.committedBoundaries = new Set(committedByBoundary.keys());
-    this.committedNavigationCandidates = candidates;
-    this.committedCandidates = Object.freeze(
-      candidates.filter(
-        (candidate): candidate is PibblFocusCandidate =>
-          !isHtmlFocusCandidate(candidate),
-      ),
-    );
-    this.committedHtmlCandidates = Object.freeze(
-      candidates.filter((candidate): candidate is PibblHtmlFocusCandidate =>
-        isHtmlFocusCandidate(candidate),
-      ),
-    );
+  }
+
+  private finishNavigationCandidates(): void {
+    const candidates = this.committedNavigationCandidates;
     if (
       this.focusedTarget &&
       !candidates.some(

@@ -1,3 +1,5 @@
+import type { PibblEventHandlers } from '../events/types.js';
+import type { HtmlNativeEvents } from './html-events.js';
 import type { HtmlBox } from '../components/html-box.js';
 import type { GStyle } from '../components/g.js';
 import type { HtmlFocusRegion } from '../focus/html-focus-region.js';
@@ -41,6 +43,22 @@ export interface HtmlBoxFocusState {
   /** Whether focus should be presented as keyboard-visible. See {@link HtmlBoxFocusState}. */
   readonly isFocusVisible: boolean;
 }
+type HtmlBoxEvent<Event> = Event extends { readonly x: number; readonly y: number }
+  ? Event & { readonly localX: number; readonly localY: number } : Event;
+/**
+ * Optional native event callbacks using Pibbl event names and capture/bubble phases.
+ * Coordinate events retain root-logical x/y and add border-local localX/localY,
+ * before padding and independent of the current ancestor handler. The originalEvent
+ * retains the real DOM target; target/currentTarget identify the logical Pibbl path.
+ * Native editing, cancellation and pointer capture remain browser-owned.
+ *
+ * @see {@link PibblEventHandlers}
+ * @see {@link HtmlBoxProps}
+ * @see {@link HtmlBox}
+ */
+export type HtmlBoxEventHandlers = {
+  [Key in keyof PibblEventHandlers]: (event: HtmlBoxEvent<Parameters<NonNullable<PibblEventHandlers[Key]>>[0]>) => void;
+};
 /**
  * Props for a DOM-hosting region, including mount ownership, updates, and focus behavior.
  *
@@ -48,7 +66,7 @@ export interface HtmlBoxFocusState {
  * @see {@link HtmlBoxFocusState}
  * @see {@link HtmlBox}
  */
-export interface HtmlBoxProps<Props> {
+export interface HtmlBoxProps<Props> extends HtmlBoxEventHandlers {
   /**
    * Application data supplied to the component or reported by the event. See {@link HtmlBoxProps}
    * .
@@ -83,6 +101,7 @@ export interface HtmlBridge {
 }
 export interface HtmlBoxRegistration {
   slot: HtmlBoxSlot;
+  handlers: HtmlBoxEventHandlers;
   data: unknown;
   matrix: DOMMatrix;
   clips: readonly PibblClippingStackEntry[];
@@ -97,6 +116,7 @@ export interface HtmlBoxSlot {
   readonly component: PibblComponentRefs<any>;
   readonly owner: PibblInstance;
   readonly mount: HtmlMountCallback<unknown>;
+  events?: HtmlNativeEvents;
   region: HtmlFocusRegion & { content: HTMLDivElement | undefined; rootBounds: Readonly<LayoutBox> | undefined; active: boolean };
   shell?: HTMLDivElement;
   content?: HTMLDivElement;

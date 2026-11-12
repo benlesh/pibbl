@@ -25,6 +25,11 @@ export interface CreatePibblEventInput<K extends PibblEventType> {
   readonly x?: number;
   /** Root-logical coordinate supplied by the family adapter. */
   readonly y?: number;
+  /** HtmlBox border-local coordinates, fixed across the logical path. */
+  readonly localX?: number;
+  readonly localY?: number;
+  /** Native host paths preserve the original DOM bubbling flag. */
+  readonly nativeBubbles?: boolean;
 }
 
 interface PibblEventFacadeState {
@@ -87,7 +92,7 @@ export function createPibblEvent<K extends PibblEventType>(
     type: input.type,
     target: input.target.publicTarget,
     relatedTarget: input.relatedTarget?.publicTarget ?? null,
-    bubbles: definition.bubbles,
+    bubbles: input.nativeBubbles ?? definition.bubbles,
     cancelable,
     timeStamp: originalEvent.timeStamp,
     originalEvent,
@@ -99,7 +104,7 @@ export function createPibblEvent<K extends PibblEventType>(
       return state.eventPhase;
     },
     get defaultPrevented() {
-      return state.defaultPrevented;
+      return state.defaultPrevented || originalEvent.defaultPrevented;
     },
     composedPath() {
       return publicPath;
@@ -162,6 +167,9 @@ function projectFamilyFields<K extends PibblEventType>(
   const original: unknown = input.originalEvent;
   if (definition.coordinate) {
     Object.assign(facade, { x: input.x ?? 0, y: input.y ?? 0 });
+    if (input.localX !== undefined && input.localY !== undefined) {
+      Object.assign(facade, { localX: input.localX, localY: input.localY });
+    }
   }
 
   switch (definition.family) {

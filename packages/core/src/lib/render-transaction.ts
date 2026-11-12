@@ -4,9 +4,13 @@ import type { PibblRenderTransaction } from "./types.js";
 export class RootRenderTransaction implements PibblRenderTransaction {
   private preflights = new Set<() => void>();
   private publications = new Set<() => void>();
+  private adoptions = new Set<() => void>();
   private callbacks = new Set<(success: boolean) => void>();
   private afterFinishCallbacks = new Set<(success: boolean) => void>();
   private result: boolean | undefined;
+  private failure = false;
+  get failed(): boolean { return this.failure; }
+  fail(): void { this.failure = true; }
   private afterFinishDelivered = false;
 
   onPreflight(callback: () => void): void {
@@ -19,6 +23,12 @@ export class RootRenderTransaction implements PibblRenderTransaction {
     if (this.result !== undefined) {
       if (this.result) callback();
     } else this.publications.add(callback);
+  }
+
+  onAdopt(callback: () => void): void {
+    if (this.result !== undefined) {
+      if (this.result) callback();
+    } else this.adoptions.add(callback);
   }
 
   onFinish(callback: (success: boolean) => void): void {
@@ -40,7 +50,7 @@ export class RootRenderTransaction implements PibblRenderTransaction {
     if (success) {
       for (const preflight of this.preflights) {
         try { preflight(); }
-        catch (error) { errors.push(error); success = false; break; }
+        catch (error) { errors.push(error); this.failure = true; success = false; break; }
       }
     }
     this.preflights.clear();
@@ -50,12 +60,20 @@ export class RootRenderTransaction implements PibblRenderTransaction {
           publish();
         } catch (error) {
           errors.push(error);
+          this.failure = true;
           success = false;
           break;
         }
       }
     }
     this.publications.clear();
+    if (success) {
+      for (const adopt of this.adoptions) {
+        try { adopt(); }
+        catch (error) { errors.push(error); this.failure = true; success = false; break; }
+      }
+    }
+    this.adoptions.clear();
     this.result = success;
     const callbacks = Array.from(this.callbacks);
     this.callbacks.clear();

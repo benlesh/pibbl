@@ -415,7 +415,7 @@ export { defineTexture, useTexture } from './lib/textures/texture.js';
 export type { Texture, TexturePaint, TextureRecipe, TextureDefinition, TextureOptions, TexturePlacement, TextureContext, TextureFrame } from './lib/textures/texture.js';
 
 export { HtmlBox } from './lib/components/html-box.js';
-export type { HtmlBoxProps, HtmlBoxStyle, HtmlMountCallback, HtmlUpdateFunction, HtmlBoxFocusState } from './lib/html/types.js';
+export type { HtmlBoxEventHandlers, HtmlBoxProps, HtmlBoxStyle, HtmlMountCallback, HtmlUpdateFunction, HtmlBoxFocusState } from './lib/html/types.js';
 
 export { fade } from './lib/transitions/fade.js';
 export type { PibblTransitionEffect } from './lib/transitions/fade.js';

@@ -1328,17 +1328,15 @@ function createCanvas(): HTMLCanvasElement {
 }
 
 function installSynchronousResizeChange(canvas: HTMLCanvasElement): void {
-  let boundsReadCount = 0;
-  vi.spyOn(canvas, "getBoundingClientRect").mockImplementation(() => {
-    const width = boundsReadCount++ === 0 ? 100 : 200;
-    return DOMRect.fromRect({ width, height: 100 });
-  });
+  canvas.style.width = "100px";
+  canvas.style.height = "100px";
   vi.stubGlobal(
     "ResizeObserver",
     class implements ResizeObserver {
       constructor(private readonly callback: ResizeObserverCallback) {}
 
       observe(): void {
+        canvas.style.width = "200px";
         this.callback([], this);
       }
 

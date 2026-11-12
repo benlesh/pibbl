@@ -150,8 +150,12 @@ try {
     if (example.id === "lifecycle/html") {
       await page.getByRole("button", { name: "Native clicks: 0" }).click();
       await page.getByRole("button", { name: "Native clicks: 1" }).waitFor();
+      assert.equal(await page.locator("output").last().textContent(),
+        "HtmlBox click 1 from a native button");
       await page.keyboard.press("Enter");
       await page.getByRole("button", { name: "Native clicks: 2" }).waitFor();
+      assert.equal(await page.locator("output").last().textContent(),
+        "HtmlBox click 2 from a native button");
     }
     if (example.id === "animation/tween") {
       await page.getByRole("button", { name: "Pause", exact: true }).click();

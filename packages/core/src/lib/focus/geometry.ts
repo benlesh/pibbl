@@ -1,3 +1,4 @@
+import { committedLayoutTargetBounds } from '../layout/geometry-publication.js';
 import type { PibblEventTargetRegistration } from '../events/registrations.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import type { LayoutBox } from '../layout/types.js';
@@ -9,6 +10,14 @@ import {
 
 /** Converts one target-local navigation rectangle to root-logical space. */
 export function resolveTargetRootBounds(
+  target: PibblEventTargetRegistration,
+): Readonly<LayoutBox> | undefined {
+  const committed = committedLayoutTargetBounds(target);
+  return committed ? committed.get(target) : resolveStagedTargetRootBounds(target);
+}
+
+/** Geometry preparation only; dispatch and navigation use the adopted generation. */
+export function resolveStagedTargetRootBounds(
   target: PibblEventTargetRegistration,
 ): Readonly<LayoutBox> | undefined {
   const bounds = target.keyboardNavigationBounds;

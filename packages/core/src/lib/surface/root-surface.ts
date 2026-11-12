@@ -135,11 +135,15 @@ export function prepareSurface(
 export function readCanvasContentBox(
   canvas: HTMLCanvasElement,
 ): SurfaceDisplaySize {
-  const rect = canvas.getBoundingClientRect();
+  // A shared page transform changes the screen bounding rectangle, not the
+  // Canvas CSS content box. Resolved CSS sizes retain local fractional lengths.
+  // Hidden ancestors have no layout box even when computed width remains set.
+  if (canvas.getClientRects().length === 0) return { width: 0, height: 0 };
   const style = getComputedStyle(canvas);
+  const borderBox = style.boxSizing === 'border-box';
   return {
-    width: Math.max(0, rect.width - boxInsets(style, 'width')),
-    height: Math.max(0, rect.height - boxInsets(style, 'height')),
+    width: Math.max(0, pixelValue(style.width) - (borderBox ? boxInsets(style, 'width') : 0)),
+    height: Math.max(0, pixelValue(style.height) - (borderBox ? boxInsets(style, 'height') : 0)),
   };
 }
 
@@ -200,7 +204,8 @@ function ownInlineSize(
   value: number,
   current: RootSurfaceState['ownedWidth'],
 ) {
-  const owned = `${value}px`;
+  const style = getComputedStyle(canvas);
+  const owned = `${value + (style.boxSizing === 'border-box' ? boxInsets(style, property) : 0)}px`;
   const previous = current?.previous ?? canvas.style[property];
   canvas.style[property] = owned;
   return { previous, owned };
@@ -220,10 +225,13 @@ function boxInsets(
   style: CSSStyleDeclaration,
   axis: 'width' | 'height',
 ): number {
-  const values = axis === 'width' ?
-    [style.borderLeftWidth, style.borderRightWidth, style.paddingLeft, style.paddingRight] :
-    [style.borderTopWidth, style.borderBottomWidth, style.paddingTop, style.paddingBottom];
-  return values.reduce((total, value) => total + (Number.parseFloat(value) || 0), 0);
+  return axis === 'width'
+    ? pixelValue(style.borderLeftWidth) + pixelValue(style.borderRightWidth) + pixelValue(style.paddingLeft) + pixelValue(style.paddingRight)
+    : pixelValue(style.borderTopWidth) + pixelValue(style.borderBottomWidth) + pixelValue(style.paddingTop) + pixelValue(style.paddingBottom);
+}
+
+function pixelValue(value: string): number {
+  return Number.parseFloat(value) || 0;
 }
 
 function nearlyEqual(left: number, right: number): boolean {

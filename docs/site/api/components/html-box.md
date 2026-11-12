@@ -13,6 +13,7 @@ relatedTypes:
     HtmlMountCallback,
     HtmlUpdateFunction,
     HtmlBoxFocusState,
+    HtmlBoxEventHandlers,
   ]
 ---
 
@@ -58,6 +59,39 @@ sizes. `pointerEvents="none"` disables the host's pointer and focus participatio
 A changed `key` replaces the mounted content; an inline mount callback changing
 identity does not.
 
+Native event props such as `onInput`, `onPointerMove`, and `onClickCapture` use the
+existing Pibbl event names. Capture runs through Pibbl ancestors and the HtmlBox,
+then native descendant handlers run, followed by HtmlBox and ancestor bubbling.
+Cancellation remains native. `event.originalEvent.target` is the real DOM target;
+`event.target` is the logical HtmlBox. Pointer capture on that target uses the
+native HTML content host. Non-bubbling events do not bubble to Pibbl ancestors.
+
+Coordinate events supply root-logical `x`/`y` plus `localX`/`localY` measured from
+the HtmlBox border origin, before padding. They account for root fit, backing
+density, Layers and shared CSS transforms. Handlers and coordinates adopt together
+after successful HTML callbacks. Events fired during mount cannot activate the new
+host; events fired during update still use the previous committed generation.
+
+```tsx
+<HtmlBox
+  data="Name"
+  mount={(host, label) => {
+    const input = document.createElement("input");
+    input.setAttribute("aria-label", label);
+    host.append(input);
+    return (next) => input.setAttribute("aria-label", next);
+  }}
+  style={{ width: 240, height: 80, padding: 8 }}
+  onInput={(event) => console.log(event.originalEvent.target)}
+  onPointerMove={(event) => console.log(event.localX, event.localY)}
+/>
+```
+
+The [HTML Box example](#/examples/composition/html-box) combines native editing
+with `Manipulable` dragging, resizing and rotation. Its native controls stop the
+pointer-down event so editing does not start a drag; empty panel space bubbles
+through the same Pibbl ancestor handlers.
+
 With `FocusManagement`, native controls enter the source-order navigation between
 Canvas targets. Native text editing and activation stay native. Without it, the
 browser's DOM order applies. Use ordinary descendant `.focus()` for programmatic
@@ -74,6 +108,7 @@ native accessibility reading order.
 
 Type reference: [HtmlBoxProps](#/api/types/html-box#htmlboxprops),
 [HtmlBoxStyle](#/api/types/html-box#htmlboxstyle),
+[HtmlBoxEventHandlers](#/api/types/html-box#htmlboxeventhandlers),
 [HtmlMountCallback](#/api/types/html-box#htmlmountcallback),
 [HtmlUpdateFunction](#/api/types/html-box#htmlupdatefunction), and
 [HtmlBoxFocusState](#/api/types/html-box#htmlboxfocusstate).
