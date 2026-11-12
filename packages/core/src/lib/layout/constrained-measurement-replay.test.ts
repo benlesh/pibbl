@@ -10,7 +10,8 @@ import { RootRenderTransaction } from '../render-transaction.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type { FlexStyle } from './flex.js';
 import { measureElement, measureConstrainedLayoutChild } from './measure.js';
-import type { SystemStyle } from '../types.js';
+import { canvasMeasurementService } from './canvas-measurement.js';
+import type { RenderingContext2D, SystemStyle } from '../types.js';
 
 it('reuses only the current transaction constrained leaf demand and validates scalar inputs, signal bindings, style, service and constraints', () => {
   const previousTransaction = GLOBAL_STATE.renderTransaction;
@@ -87,4 +88,37 @@ it('does not reuse a receiver-tagged leaf without a fresh normalized style proof
     setPreNormalizedStyle(leaf, { ...style }, leaf, receiver); query(); expect(calls).toBe(3);
     style.width = 40; expect(query()).toEqual({ status: 'measured', size: { width: 40, height: 10 } }); expect(calls).toBe(4);
   } finally { tx.finish(false); GLOBAL_STATE.renderTransaction = previous; }
+});
+
+it('reuses framework Canvas wrappers for one target, while isolating different targets and custom services', () => {
+  const previousTransaction = GLOBAL_STATE.renderTransaction;
+  const receiver = {}, leafReceiver = {};
+  let calls = 0;
+  const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle>(() => null, {
+    resolveStyle: () => ({}),
+    measure: () => { calls++; expect(GLOBAL_STATE.renderContext).toBeUndefined(); return { status: 'measured', size: { width: 20, height: 20 } }; },
+  });
+  const Parent = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle>(() => null, {
+    resolveStyle: () => ({}),
+    measure: () => {
+      const leaf = createElement(Leaf, { style: { width: 'auto', height: 20 } });
+      setPreNormalizedStyle(leaf, { width: 'auto', height: 20 } as FlexStyle, leaf, leafReceiver);
+      return measureConstrainedLayoutChild(leaf, { minWidth: 0, maxWidth: 40, minHeight: 20, maxHeight: 20 });
+    },
+  });
+  const tx = new RootRenderTransaction();
+  const first = {} as RenderingContext2D, second = {} as RenderingContext2D;
+  const query = (service: Parameters<typeof measureElement>[2]) => {
+    const root = createElement(Parent, { style: { height: 20 } });
+    setPreNormalizedStyle(root, { height: 20 } as FlexStyle, root, receiver);
+    return measureElement(root, { minWidth: 0, maxWidth: 160, minHeight: 20, maxHeight: 20 }, service);
+  };
+  try {
+    GLOBAL_STATE.renderTransaction = tx;
+    query(canvasMeasurementService(first)); query(canvasMeasurementService(first)); expect(calls).toBe(1);
+    query(canvasMeasurementService(second)); expect(calls).toBe(2);
+    const custom = { measureText: () => { throw new Error('No text'); } };
+    query(custom); query(custom); expect(calls).toBe(3);
+    query({ ...custom }); expect(calls).toBe(4);
+  } finally { tx.finish(false); GLOBAL_STATE.renderTransaction = previousTransaction; }
 });

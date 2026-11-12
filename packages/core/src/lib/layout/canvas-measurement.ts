@@ -35,6 +35,16 @@ export function canvasMeasurementService(
   return service;
 }
 
+/** Internal wrappers are equivalent only when they target the same Canvas.
+ * Pure measurement clears render state, so compare the bound targets directly.
+ * Independent custom services retain strict identity semantics.
+ */
+export function sameCanvasMeasurementService(left: CanvasMeasurementService, right: CanvasMeasurementService): boolean {
+  if (left === right) return true;
+  const context = serviceContexts.get(left);
+  return context !== undefined && context === serviceContexts.get(right);
+}
+
 export function isCurrentCanvasMeasurementService(service: CanvasMeasurementService): boolean {
   return GLOBAL_STATE.renderContext !== undefined && serviceContexts.get(service) === GLOBAL_STATE.renderContext;
 }

@@ -1,4 +1,4 @@
-import { bindCanvasMeasurementService } from './canvas-measurement.js';
+import { bindCanvasMeasurementService, sameCanvasMeasurementService } from './canvas-measurement.js';
 import { allocationMeasurement, declineUnrecordedAllocationMeasurement } from './allocation-checkpoint.js';
 import { allocationOwner, setAllocationOwner } from './allocation-revision.js';
 import { isFitContent } from '../style/sizing-length.js';
@@ -459,7 +459,7 @@ export function measureConstrainedLayoutChild(
     const prior = demands?.get(receiver);
     const metadata = getElementMetadata(element);
     const source = metadata?.policyPreparationSource ?? metadata?.layoutDescriptionSource ?? peekPreNormalizedStyle(element)?.source ?? element;
-    if (!context.active.has(source) && inputs && prior && prior.type === element.type && prior.service === service && sameIntrinsicInputs(prior.key, key) &&
+    if (!context.active.has(source) && inputs && prior && prior.type === element.type && sameCanvasMeasurementService(prior.service, service) && sameIntrinsicInputs(prior.key, key) &&
         sameIntrinsicInputs(prior.inputs, inputs) && measurementDependenciesUnchanged(prior)) {
       if (trace) trace.cacheable = false;
       takePreNormalizedStyle(element);
