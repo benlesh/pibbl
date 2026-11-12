@@ -199,6 +199,10 @@ if (browserExamples.length) {
     platform: "browser",
     target: "es2022",
     chunkNames: "_shared/[name]-[hash]",
+    // Split chunks must use the same published WASM asset as the website runtime.
+    define: {
+      __PIBBL_LAYOUT_ASSET_URL__: JSON.stringify("/pibbl-layout/layout.wasm"),
+    },
     plugins: [
       {
         name: "public-text-engine",
