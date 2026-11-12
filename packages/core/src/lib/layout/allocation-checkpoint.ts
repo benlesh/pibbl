@@ -72,6 +72,11 @@ const checkpoints = new WeakMap<object, Checkpoint>();
 const styleReceipts = new WeakMap<object, ReceiverInputProvisionReceipt>();
 let trace: Trace | undefined;
 let measuringTrace: Trace | undefined;
+// Public recursive queries do not prove the nested descriptor's normalized inputs.
+// A nested refusal must reach every enclosing numeric query capture.
+let untracedQueryRevision = 0;
+export function declineUntracedAllocationQuery(): void { untracedQueryRevision++; }
+export function allocationQueryReplayRevision(): number { return untracedQueryRevision; }
 const OPAQUE_PAINT = Symbol('opaque paint input');
 const RESPONSIVE_INPUT = Symbol('responsive input');
 const NO_RECEIPT: ReceiverInputProvisionReceipt = Object.freeze([]);
@@ -187,6 +192,7 @@ export function allocationMeasurement<T>(element: PibblElement<any>, execute: (e
 }
 
 function collectQueryReads<T>(root: object, run: () => T): { result: T; reads: QueryRead[] | undefined } {
+  const revision = untracedQueryRevision;
   const captured = new Map<object, { path: readonly number[]; receipt: { node: SignalNode<unknown>; roles: number }[] }>();
   let valid = true;
   const result = observeReceiverInputReads((node, roles, receiver) => {
@@ -199,7 +205,7 @@ function collectQueryReads<T>(root: object, run: () => T): { result: T; reads: Q
     for (const entry of target.receipt) if (entry.node === node) { entry.roles |= roles; return; }
     target.receipt.push({ node, roles });
   }, run);
-  return { result, reads: valid ? Array.from(captured.values()) : undefined };
+  return { result, reads: valid && revision === untracedQueryRevision ? Array.from(captured.values()) : undefined };
 }
 function bindQueryReads(reads: QueryRead[], input: Input, transaction: PibblRenderTransaction, root: object): void {
   for (const read of reads) {

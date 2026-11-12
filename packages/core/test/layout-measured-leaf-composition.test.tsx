@@ -61,6 +61,7 @@ it.runIf(nativeLayout)(
     const card = <Card key="card" style={cardStyle} />;
     const constraints = { minWidth: 0, maxWidth: 200, minHeight: 20, maxHeight: 20 };
     expect(measureElement(card, constraints, service)).toEqual({ status: 'measured', size: { width: 110, height: 20 } });
+    expect(calls).toBe(1);
 
     const delegatedSizes: number[] = [];
     const Owner = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle & { width: number; height: number }>((_props, style) => { ownerWidths.push(style.width); return card; }, {
@@ -81,6 +82,7 @@ it.runIf(nativeLayout)(
     const direct = pibbl(canvas, outer(card)); controllers.push(direct); await frame();
     expect(pixel(29)).toEqual([182, 61, 61, 255]);
     expect(pixel(31)).toEqual([66, 107, 97, 255]);
+    expect(calls).toBe(2);
     direct.dispose();
     canvas.getContext('2d')!.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -93,7 +95,9 @@ it.runIf(nativeLayout)(
     expect(paintedWidths).toEqual([30, 27.5]);
     expect(ownerWidths).toEqual([110]);
     expect(delegatedSizes).toEqual([110, 100]);
-    expect(calls).toBe(4);
+    // Distinct parent envelopes retain their own continuation results, while the
+    // identical pure 0..40 by 20 leaf demand is shared within this transaction.
+    expect(calls).toBe(3);
     delegated.dispose();
     const after = snapshotWasmLayoutDiagnostics();
     expect([after.activeNodes, after.activeArenas, after.cachedMeasurements, after.activeWasmInstances]).toEqual([

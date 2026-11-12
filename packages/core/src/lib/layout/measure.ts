@@ -1,5 +1,5 @@
 import { bindCanvasMeasurementService, sameCanvasMeasurementService } from './canvas-measurement.js';
-import { allocationMeasurement, declineUnrecordedAllocationMeasurement } from './allocation-checkpoint.js';
+import { allocationMeasurement, declineUnrecordedAllocationMeasurement, declineUntracedAllocationQuery, allocationQueryReplayRevision } from './allocation-checkpoint.js';
 import { allocationOwner, setAllocationOwner } from './allocation-revision.js';
 import { isFitContent } from '../style/sizing-length.js';
 import { observeReceiverInputReads, captureReceiverInputProvision, replayReceiverInputProvision, withReceiverInputProvision, type ReceiverInputProvisionReceipt } from '../signals/input-provision.js';
@@ -220,6 +220,19 @@ function measureBaselineElementUncached(
   service: CanvasMeasurementService,
   options?: BaselineMeasurementOptions,
 ): BaselinesResult {
+  // Responsive baselines require the existing current-owner proof and must
+  // never bypass its validation through direct demand reuse.
+  if (!options && !peekPreNormalizedStyle(element)?.query) {
+    const mode = getStyleMeasurementMode() ? 'recursive' : GLOBAL_STATE.componentRefs ? 'mounted-intrinsic' : 'standalone-root';
+    return exactDirectMeasurement(element, service, ['baseline', mode, allocation.width, allocation.height],
+      () => measureBaselineElementWithCache(element, allocation, service));
+  }
+  return measureBaselineElementWithCache(element, allocation, service, options);
+}
+
+function measureBaselineElementWithCache(
+  element: PibblElement<any>, allocation: Readonly<LayoutBox>, service: CanvasMeasurementService, options?: BaselineMeasurementOptions,
+): BaselinesResult {
   const transaction = GLOBAL_STATE.renderTransaction;
   const receiver = getPrimitiveReceiverToken(element);
   const mode = getStyleMeasurementMode() ? 'recursive' : GLOBAL_STATE.componentRefs ? 'mounted-intrinsic' : 'standalone-root';
@@ -423,7 +436,7 @@ export function withConstrainedMeasurementTrace<T>(trace: ConstrainedMeasurement
   try { return work(); }
   finally { constrainedMeasurementTrace = previous; }
 }
-interface ConstrainedLeafDemand {
+interface ExactDirectDemand {
   readonly type: Function;
   readonly service: CanvasMeasurementService;
   readonly key: readonly unknown[];
@@ -431,9 +444,46 @@ interface ConstrainedLeafDemand {
   readonly receipt: ReceiverInputProvisionReceipt;
   readonly dependencies: readonly SignalNode<unknown>[];
   readonly dependencyVersions: readonly number[];
-  readonly result: MeasureResult;
+  readonly result: MeasureResult | BaselinesResult;
 }
-const constrainedLeafDemands = new WeakMap<object, WeakMap<object, ConstrainedLeafDemand>>();
+const exactDirectDemands = new WeakMap<object, WeakMap<object, ExactDirectDemand>>();
+
+// A failed allocation equality barrier may demand the same pure query again.
+// Share only current transaction/receiver numeric demands, never an old program.
+function exactDirectMeasurement<T extends MeasureResult | BaselinesResult>(
+  element: PibblElement<any>, service: CanvasMeasurementService, key: readonly unknown[], run: () => T, allowHit = true,
+): T {
+  const transaction = GLOBAL_STATE.renderTransaction, receiver = getPrimitiveReceiverToken(element);
+  if (!transaction || !receiver || Object.hasOwn(element.props, 'children') || isLayoutComponent(element.type)) return run();
+  const inputs = peekPreNormalizedStyle(element) ? intrinsicInputSnapshot(element) : undefined;
+  const demands = exactDirectDemands.get(transaction), prior = demands?.get(receiver);
+  if (allowHit && inputs && prior && prior.type === element.type && sameCanvasMeasurementService(prior.service, service) &&
+      sameIntrinsicInputs(prior.key, key) && sameIntrinsicInputs(prior.inputs, inputs) && measurementDependenciesUnchanged(prior)) {
+    takePreNormalizedStyle(element);
+    replayReceiverInputProvision(transaction, receiver, prior.receipt);
+    return prior.result as T;
+  }
+  let direct = true;
+  const receipt: { node: SignalNode<unknown>; roles: number }[] = [];
+  const replayRevision = allocationQueryReplayRevision();
+  const captured = observeReceiverInputReads((node, roles, owner) => {
+    if (owner !== receiver) { direct = false; return; }
+    const existing = receipt.find(entry => entry.node === node);
+    if (existing) existing.roles |= roles;
+    else receipt.push({ node, roles });
+  }, () => captureReceiverInputProvision(transaction, receiver, run));
+  if (inputs && direct && replayRevision === allocationQueryReplayRevision() && captured.receipt && captured.value.status === 'measured') {
+    let current = demands;
+    if (!current) {
+      current = new WeakMap(); exactDirectDemands.set(transaction, current);
+      transaction.onFinish(() => exactDirectDemands.delete(transaction));
+    }
+    const dependencies = receipt.map(entry => entry.node);
+    current.set(receiver, { type: element.type, service, key, inputs, receipt, dependencies,
+      dependencyVersions: measurementDependencyVersions(dependencies), result: captured.value });
+  }
+  return captured.value;
+}
 
 export function measureConstrainedLayoutChild(
   element: PibblElement<any>,
@@ -447,40 +497,14 @@ export function measureConstrainedLayoutChild(
   const trace = constrainedMeasurementTrace;
   const run = () => withSignalDependencyRole('measurement', () =>
     measureElementInternal(element, constraints, service, context, false, true));
-  // A changed contribution may fail an allocation equality barrier and then be
-  // demanded again by its allocator. Reuse only this transaction's exact direct
-  // leaf query, preserving its receiver receipt instead of calling the provider twice.
+  // The structural tracer has no indexed leaf path for this native continuation.
   if (transaction && receiver && childIndex === undefined && !Object.hasOwn(element.props, 'children') && !isLayoutComponent(element.type)) {
-    // This narrow native continuation always supplies normalized input. A bare
-    // receiver token cannot prove authored style, nor renew a consumed marker.
-    const inputs = peekPreNormalizedStyle(element) ? intrinsicInputSnapshot(element) : undefined;
-    const key = [getStyleMeasurementMode(), constraints.minWidth, constraints.maxWidth, constraints.minHeight, constraints.maxHeight];
-    const demands = constrainedLeafDemands.get(transaction);
-    const prior = demands?.get(receiver);
+    if (trace) trace.cacheable = false;
     const metadata = getElementMetadata(element);
     const source = metadata?.policyPreparationSource ?? metadata?.layoutDescriptionSource ?? peekPreNormalizedStyle(element)?.source ?? element;
-    if (!context.active.has(source) && inputs && prior && prior.type === element.type && sameCanvasMeasurementService(prior.service, service) && sameIntrinsicInputs(prior.key, key) &&
-        sameIntrinsicInputs(prior.inputs, inputs) && measurementDependenciesUnchanged(prior)) {
-      if (trace) trace.cacheable = false;
-      takePreNormalizedStyle(element);
-      replayReceiverInputProvision(transaction, receiver, prior.receipt);
-      return prior.result;
-    }
-    let direct = true;
-    const captured = observeReceiverInputReads((_node, _roles, owner) => { if (owner !== receiver) direct = false; },
-      () => captureReceiverInputProvision(transaction, receiver, run));
-    if (inputs && direct && captured.receipt && captured.value.status === 'measured') {
-      let current = demands;
-      if (!current) {
-        current = new WeakMap(); constrainedLeafDemands.set(transaction, current);
-        transaction.onFinish(() => constrainedLeafDemands.delete(transaction));
-      }
-      const dependencies = captured.receipt.map(entry => entry.node);
-      current.set(receiver, { type: element.type, service, key, inputs, receipt: captured.receipt, dependencies,
-        dependencyVersions: measurementDependencyVersions(dependencies), result: captured.value });
-    }
-    if (trace) trace.cacheable = false;
-    return captured.value;
+    return exactDirectMeasurement(element, service,
+      ['size', getStyleMeasurementMode(), constraints.minWidth, constraints.maxWidth, constraints.minHeight, constraints.maxHeight],
+      run, !context.active.has(source));
   }
   if (!trace) return withReceiverInputProvision(transaction, receiver, run);
   if (childIndex === undefined || trace.receivers[childIndex] !== receiver) {
@@ -590,8 +614,13 @@ function measureElementInternal(
           // their ordinary measurement behavior without caching this aggregate.
           if (constrainedMeasurementTrace) constrainedMeasurementTrace.cacheable = false;
           const receiver = getPrimitiveReceiverToken(child);
+          const prepared = peekPreNormalizedStyle(child);
+          // Known layout providers pass current normalized children with an
+          // owned receiver path. Their props must join that receiver's receipt.
+          // Arbitrary public descriptors have no such replayable input proof.
+          if (!receiver || !prepared) declineUntracedAllocationQuery();
           return receiver ? withReceiverInputProvision(GLOBAL_STATE.renderTransaction, receiver, () => withSignalDependencyRole('measurement', () =>
-            measureElementInternal(child, childConstraints, service, context))) : measureElementInternal(child, childConstraints, service, context);
+            measureElementInternal(child, childConstraints, service, context, false, !!prepared))) : measureElementInternal(child, childConstraints, service, context);
         },
       }));
     } finally {

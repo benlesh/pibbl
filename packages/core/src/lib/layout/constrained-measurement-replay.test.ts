@@ -9,7 +9,7 @@ import { GLOBAL_STATE } from '../global-state.js';
 import { RootRenderTransaction } from '../render-transaction.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type { FlexStyle } from './flex.js';
-import { measureElement, measureConstrainedLayoutChild } from './measure.js';
+import { measureElement, measureConstrainedLayoutChild, measureBaselineElement } from './measure.js';
 import { canvasMeasurementService } from './canvas-measurement.js';
 import type { RenderingContext2D, SystemStyle } from '../types.js';
 
@@ -121,4 +121,75 @@ it('reuses framework Canvas wrappers for one target, while isolating different t
     query(custom); query(custom); expect(calls).toBe(3);
     query({ ...custom }); expect(calls).toBe(4);
   } finally { tx.finish(false); GLOBAL_STATE.renderTransaction = previousTransaction; }
+});
+
+it('does not memoize a direct constrained provider with an untraced nested public query', () => {
+  const previous = GLOBAL_STATE.renderTransaction, tx = new RootRenderTransaction();
+  const receiver = {}, childReceiver = {}, height = signal(20);
+  const Nested = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle>(() => null, {
+    resolveStyle: () => ({}),
+    measure: ({ style }) => ({ status: 'measured', size: { width: 1, height: style.height as number } }),
+  });
+  const nested = createElement(Nested, { style: { height } });
+  const Leaf = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle>(() => null, {
+    resolveStyle: () => ({}),
+    measure: ({ measureElement }) => measureElement(nested, { minWidth: 0, maxWidth: 1, minHeight: 0, maxHeight: 100 }),
+  });
+  const Parent = definePrimitive<{}, FlexStyle, FlexStyle, SystemStyle>(() => null, {
+    resolveStyle: () => ({}),
+    measure: () => {
+      const leaf = createElement(Leaf, {});
+      setPreNormalizedStyle(leaf, {} as SystemStyle, leaf, childReceiver);
+      return measureConstrainedLayoutChild(leaf, { minWidth: 0, maxWidth: 40, minHeight: 0, maxHeight: 100 });
+    },
+  });
+  const service = { measureText: () => { throw new Error('No text'); } };
+  const query = () => {
+    const root = createElement(Parent, {}); setPreNormalizedStyle(root, {}, root, receiver);
+    return measureElement(root, { minWidth: 0, maxWidth: 40, minHeight: 0, maxHeight: 100 }, service);
+  };
+  try {
+    GLOBAL_STATE.renderTransaction = tx;
+    expect(query()).toEqual({ status: 'measured', size: { width: 1, height: 20 } });
+    height.set(40);
+    expect(query()).toEqual({ status: 'measured', size: { width: 1, height: 40 } });
+  } finally { tx.finish(false); GLOBAL_STATE.renderTransaction = previous; }
+});
+
+
+it('reuses exact baseline demands without confusing size queries or changed allocations and input bindings', () => {
+  const previous = GLOBAL_STATE.renderTransaction, tx = new RootRenderTransaction(), receiver = {};
+  const first = signal(12), replacement = signal(12);
+  let selected = first, calls = 0, invalidations = 0;
+  const before = signalGraphSnapshot();
+  const consumer = createSignalRenderConsumer({ debugName: 'baseline demand receipt', invalidate: () => { invalidations++; } });
+  const Leaf = definePrimitive<{ first: typeof first }, FlexStyle, FlexStyle, SystemStyle>(() => null, {
+    resolveStyle: () => ({}), preserveSignalProps: ['first'],
+    measure: () => ({ status: 'measured', size: { width: 100, height: 55 } }),
+    measureBaselines: ({ props, allocation }) => { calls++; const value = props.first.get(); return { status: 'measured', first: value, last: allocation.height }; },
+  });
+  const service = { measureText: () => { throw new Error('No text'); } };
+  const element = () => {
+    const leaf = createElement(Leaf, { first: selected, style: { width: 100, height: 55 } });
+    setPreNormalizedStyle(leaf, { width: 100, height: 55 } as FlexStyle, leaf, receiver); return leaf;
+  };
+  const box = { x: 0, y: 0, width: 100, height: 55 };
+  const query = () => {
+    const result = measureBaselineElement(element(), box, service);
+    collectSignalReads(consumer, () => adoptReceiverInputProvision(tx, receiver)); consumer.markClean(); return result;
+  };
+  try {
+    GLOBAL_STATE.renderTransaction = tx;
+    expect(query()).toEqual({ status: 'measured', first: 12, last: 55 });
+    query(); expect(calls).toBe(1);
+    first.set(22); expect(invalidations).toBe(1); expect(query()).toEqual({ status: 'measured', first: 22, last: 55 });
+    query(); expect(calls).toBe(2);
+    selected = replacement; expect(query()).toEqual({ status: 'measured', first: 12, last: 55 }); expect(calls).toBe(3);
+    const beforeOld = invalidations; first.set(30); expect(invalidations).toBe(beforeOld); query(); expect(calls).toBe(3);
+    replacement.set(15); expect(invalidations).toBe(beforeOld + 1);
+    expect(query()).toEqual({ status: 'measured', first: 15, last: 55 }); expect(calls).toBe(4);
+    expect(measureElement(element(), { minWidth: 100, maxWidth: 100, minHeight: 55, maxHeight: 55 }, service)).toEqual({ status: 'measured', size: { width: 100, height: 55 } });
+    box.height = 60; expect(query()).toEqual({ status: 'measured', first: 15, last: 60 }); expect(calls).toBe(5);
+  } finally { tx.finish(false); disposeSignalRenderConsumer(consumer); GLOBAL_STATE.renderTransaction = previous; }
+  expect(signalGraphSnapshot().rendererEdges).toBe(before.rendererEdges);
 });

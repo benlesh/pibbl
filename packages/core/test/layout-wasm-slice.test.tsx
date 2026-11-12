@@ -1794,7 +1794,8 @@ it.runIf(nativeLayout)('prepares later known sibling sizing failures before eval
   try {
     const baseline = snapshotWasmLayoutDiagnostics();
     const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame(); expect(evaluations).toBe(1);
-    expect(snapshotWasmLayoutDiagnostics().allocationPasses).toBe(baseline.allocationPasses + 2);
+    // Allocation passes include the Absolute root; only the two Flex regions solve natively.
+    expect(snapshotWasmLayoutDiagnostics().allocationPasses).toBe(baseline.allocationPasses + 3);
     expect(snapshotWasmLayoutDiagnostics().solves).toBe(baseline.solves + 2);
     const mounted = snapshotWasmLayoutDiagnostics(); width.set(90); await nextFrame();
     expect(evaluations).toBe(2);
@@ -1851,14 +1852,15 @@ it.runIf(nativeLayout).each([false, true])('consumes prepared wrapped Text alloc
   const scene = createElement(Absolute, { style: { width: 200, height: 100 }, children: nested ? createElement(Flex, { style: { width, height: 100, flexDirection: 'column' }, children: row }) : row });
   const baseline = snapshotWasmLayoutDiagnostics(); const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
   const mounted = snapshotWasmLayoutDiagnostics(); expect(probes).toBe(1); expect(allocations).toEqual([30]);
-  expect(mounted.allocationPasses).toBe(baseline.allocationPasses + (nested ? 2 : 1)); expect(mounted.solves).toBe(baseline.solves + (nested ? 2 : 1));
+  // Include the actual Absolute root pass separately from native Flex solves.
+  expect(mounted.allocationPasses).toBe(baseline.allocationPasses + (nested ? 3 : 2)); expect(mounted.solves).toBe(baseline.solves + (nested ? 2 : 1));
   expect(mounted.measuredLeaves - baseline.measuredLeaves).toBeGreaterThan(0);
   const numeric = layoutFlex({ x: 0, y: 0, width: 180, height: 100 }, flexChildren, { alignItems: 'flex-start' }, { service: { measureText(value, font) { const ctx = canvas.getContext('2d')!; ctx.font = font; return ctx.measureText(value); } }, measureElement: (element, constraints) => measureElement(element, constraints, { measureText(value, font) { const ctx = canvas.getContext('2d')!; ctx.font = font; return ctx.measureText(value); } }) });
   expect(numeric[0].height).toBe(10); expect(numeric[1].x).toBe(150);
   clickCanvas(canvas, 45, 15); expect(hits).toEqual([]);
   const beforeNarrow = snapshotWasmLayoutDiagnostics(); width.set(90); await nextFrame();
   const narrow = snapshotWasmLayoutDiagnostics(); expect(probes).toBe(2);
-  expect(narrow.allocationPasses).toBe(beforeNarrow.allocationPasses + (nested ? 2 : 1)); expect(narrow.solves).toBe(beforeNarrow.solves + 1);
+  expect(narrow.allocationPasses).toBe(beforeNarrow.allocationPasses + (nested ? 3 : 2)); expect(narrow.solves).toBe(beforeNarrow.solves + 1);
   expect(narrow.nodeCreates).toBe(beforeNarrow.nodeCreates);
   expect([...canvas.getContext('2d')!.getImageData(65, 5, 1, 1).data]).toEqual([255, 0, 0, 255]);
   clickCanvas(canvas, 45, 15); expect(hits).toEqual(['text']);
@@ -1877,7 +1879,8 @@ it.runIf(nativeLayout)('prepares a later nested known Flex before an earlier opa
     const baseline = snapshotWasmLayoutDiagnostics();
     const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame(); expect(evaluations).toBe(1);
     const mounted = snapshotWasmLayoutDiagnostics();
-    expect(mounted.allocationPasses).toBe(baseline.allocationPasses + 2); expect(mounted.solves).toBe(baseline.solves + 2);
+    // The Absolute root allocates too, while only the two Flex regions solve natively.
+    expect(mounted.allocationPasses).toBe(baseline.allocationPasses + 3); expect(mounted.solves).toBe(baseline.solves + 2);
     expect(mounted.activeArenas).toBe(baseline.activeArenas + 2); expect(mounted.activeWasmInstances).toBe(baseline.activeWasmInstances + 1);
     width.set(190); await nextFrame(); expect(evaluations).toBe(2);
     expect(snapshotWasmLayoutDiagnostics().allocationPasses).toBe(mounted.allocationPasses + 2);
@@ -3251,7 +3254,7 @@ it.runIf(nativeLayout)('moves inner paint and targets with allocated percentage 
   width.set(300);await nextFrame();expect(size).toEqual({width:75,height:55});expect([...canvas.getContext('2d')!.getImageData(22,12,1,1).data]).toEqual([0,0,0,0]);clickCanvas(canvas,22,12);expect(hits).toBe(1);clickCanvas(canvas,35,20);expect(hits).toBe(2);expect(mounts).toBe(1);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
   controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
 });
-it.runIf(nativeLayout)('keeps frozen percentage padding off the raw-input allocation cache while numeric transitions remain eligible',async()=>{
+it.runIf(nativeLayout)('reuses normalized percentage padding geometry while preserving numeric transitions',async()=>{
   const fill=signal('red'),padding=signal<number|'10%'>(10);let hits=0;
   const first=createElement(Rectangle,{style:Object.freeze({width:20,height:20,minWidth:0,flexShrink:0,padding,fill})});
   const second=createElement(Rectangle,{onClick:()=>hits++,style:Object.freeze({width:20,height:20,minWidth:0,flexShrink:0,fill:'blue'})});
@@ -3260,7 +3263,7 @@ it.runIf(nativeLayout)('keeps frozen percentage padding off the raw-input alloca
   const canvas=document.createElement('canvas');canvas.width=200;canvas.height=100;document.body.append(canvas);const controller=pibbl(canvas,createElement(Scene,{}));controllers.push(controller);await nextFrame();expect(frozenFlexInputs(children)).toBe(true);
   fill.set('green');await nextFrame();clickCanvas(canvas,45,5);expect(hits).toBe(1);
   padding.set('10%');await nextFrame();expect(frozenFlexInputs(children)).toBe(false);clickCanvas(canvas,45,5);expect(hits).toBe(1);clickCanvas(canvas,65,5);expect(hits).toBe(2);const percent=snapshotWasmLayoutDiagnostics();
-  fill.set('red');await nextFrame();expect(snapshotWasmLayoutDiagnostics().allocationCacheHits).toBe(percent.allocationCacheHits);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(percent.nodeCreates);clickCanvas(canvas,65,5);expect(hits).toBe(3);
+  fill.set('red');await nextFrame();expect(snapshotWasmLayoutDiagnostics().allocationCacheHits).toBe(percent.allocationCacheHits + 1);expect(snapshotWasmLayoutDiagnostics().allocationPasses).toBe(percent.allocationPasses);expect([...canvas.getContext('2d')!.getImageData(5,5,1,1).data]).toEqual([255,0,0,255]);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(percent.nodeCreates);clickCanvas(canvas,65,5);expect(hits).toBe(3);
   padding.set(10);await nextFrame();expect(frozenFlexInputs(children)).toBe(true);clickCanvas(canvas,45,5);expect(hits).toBe(4);
 });
 
@@ -4870,7 +4873,10 @@ it.runIf(nativeLayout)('measures a direct wrapped Flex owner before automatic cr
   expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
   const beforePaint = snapshotWasmLayoutDiagnostics(); ink.set('#a63758'); await nextFrame();
   expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforePaint.solves);
-  expect(snapshotWasmLayoutDiagnostics().measuredLeaves).toBe(beforePaint.measuredLeaves + 1);
+  // A paint-only sibling change preserves the measured subtree's numeric inputs.
+  expect(snapshotWasmLayoutDiagnostics().measuredLeaves).toBe(beforePaint.measuredLeaves);
+  expect(pixel(95, 5)).toEqual([166, 55, 88, 255]);
+  clickCanvas(canvas, 95, 5); expect(hits).toEqual(['a', 'a', 'sibling', 'sibling']);
   controller.dispose();
   const disposed = snapshotWasmLayoutDiagnostics();
   expect(disposed.activeNodes).toBe(baseline.activeNodes);
@@ -5052,7 +5058,11 @@ it.runIf(nativeLayout)('preserves a decorated row-reverse nested percentage cros
   clickCanvas(canvas, 136, 134); expect(cHits).toBe(2);
   const resized = snapshotWasmLayoutDiagnostics(); expect(resized.solves).toBe(initial.solves); expect(resized.crossPlacements).toBeGreaterThan(initial.crossPlacements); expect(resized.nodeCreates).toBe(initial.nodeCreates);
   fill.set('#a63758'); await nextFrame();
-  const painted = snapshotWasmLayoutDiagnostics(); expect(painted.solves).toBe(resized.solves); expect(painted.lineFormations).toBe(resized.lineFormations); expect(painted.measuredLeaves).toBe(resized.measuredLeaves + 1); expect(painted.nodeCreates).toBe(resized.nodeCreates); expect(mounts).toBe(2);
+  const painted = snapshotWasmLayoutDiagnostics(); expect(painted.solves).toBe(resized.solves); expect(painted.lineFormations).toBe(resized.lineFormations); expect(painted.measuredLeaves).toBe(resized.measuredLeaves); expect(painted.nodeCreates).toBe(resized.nodeCreates); expect(mounts).toBe(2);
+  // Reuse numeric measurement while repaint and the relocated hit target stay live.
+  expect([...canvas.getContext('2d')!.getImageData(136, 134, 1, 1).data]).toEqual([166, 55, 88, 255]);
+  clickCanvas(canvas, 136, 98); expect(cHits).toBe(2);
+  clickCanvas(canvas, 136, 134); expect(cHits).toBe(3);
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });
 
@@ -5381,7 +5391,11 @@ it.runIf(nativeLayout)('resolves nested wrapped percentage cross minimums from t
   clickCanvas(canvas, 10, 118); expect(cHits).toBe(2);
   const resized = snapshotWasmLayoutDiagnostics(); expect(resized.solves).toBe(initial.solves); expect(resized.crossPlacements).toBeGreaterThan(initial.crossPlacements); expect(resized.nodeCreates).toBe(initial.nodeCreates);
   fill.set('#a63758'); await nextFrame();
-  const painted = snapshotWasmLayoutDiagnostics(); expect(painted.solves).toBe(resized.solves); expect(painted.lineFormations).toBe(resized.lineFormations); expect(painted.measuredLeaves).toBe(resized.measuredLeaves + 1); expect(painted.nodeCreates).toBe(resized.nodeCreates); expect(mounts).toBe(2);
+  const painted = snapshotWasmLayoutDiagnostics(); expect(painted.solves).toBe(resized.solves); expect(painted.lineFormations).toBe(resized.lineFormations); expect(painted.measuredLeaves).toBe(resized.measuredLeaves); expect(painted.nodeCreates).toBe(resized.nodeCreates); expect(mounts).toBe(2);
+  // Reuse numeric measurement while repaint and the relocated hit target stay live.
+  expect([...canvas.getContext('2d')!.getImageData(10, 118, 1, 1).data]).toEqual([166, 55, 88, 255]);
+  clickCanvas(canvas, 10, 80); expect(cHits).toBe(2);
+  clickCanvas(canvas, 10, 118); expect(cHits).toBe(3);
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });
 
