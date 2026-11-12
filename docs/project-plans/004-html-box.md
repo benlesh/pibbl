@@ -1,5 +1,19 @@
 # Plan 004 — HtmlBox
 
+## Current integration checkpoint — 2026-11-12
+
+The accepted HtmlBox scope, including typed native events, logical ancestor
+propagation, local/root coordinates, native pointer capture, retained Layers,
+and shared geometry adoption, is implemented and integrated on main. Current
+public contracts and examples use Pibbl names and the asynchronous mount API.
+The focused event, focus, Layer, surface, scheduling and responsive browser batch
+passed all 99 tests; the complete minimal example covers both public handler-type
+exports. Final repository review repairs and canonical integrated CI are pending.
+The current task authorizes integration and push on main. The earlier local-only
+instructions and status board below are historical, not remaining work or gates.
+
+## Historical execution record — 2026-10-02
+
 Status: active, 2026-10-02. User authorizes complete implementation, reviewed plan,
 implementation review and fixes, and a local commit for review. No push requested.
 
@@ -10,7 +24,7 @@ and [reviewed implementation plan](../superpowers/plans/2026-10-02-html-box-impl
 This is directly requested feature work. Preserve existing texture/scenario/editor
 changes; stage only HtmlBox work and the HtmlBox portion of shared files.
 
-## Status board
+## Historical status board — 2026-10-02
 
 | Step                                   | State       |
 | -------------------------------------- | ----------- |

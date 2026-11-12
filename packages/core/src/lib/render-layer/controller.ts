@@ -1,4 +1,4 @@
-import { committedInstanceRootTransform, snapshotLayoutGeometry, stageLayoutTargetGeometry } from '../layout/geometry-publication.js';
+import { committedInstanceRootTransform, snapshotLayoutGeometry, stageLayoutTargetGeometry, stageLayoutTargetRetirement } from '../layout/geometry-publication.js';
 import { GLOBAL_STATE, getCurrentPibblInstance } from "../global-state.js";
 import { registerLayoutSuspensionResource, unregisterLayoutSuspensionResource } from "../layout/participation.js";
 import { getCurrentWorldTransform } from "../render-target.js";
@@ -527,6 +527,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
       const retired: PibblEventTargetRegistration[] = [];
       for (const [identity, target] of this.committedTargets) if (!targets.has(identity)) retired.push(target);
       if (!layerEnabled && this.layerTarget.live) retired.push(this.layerTarget);
+      if (transaction) for (const target of retired) stageLayoutTargetRetirement(transaction, target);
       return { interaction, policy, targets, created, retired, registrations, inputLeases, addedInputLeases, layerEnabled, inverse: interaction.transform.inverse() };
     } catch (error) {
       const errors: unknown[] = [error];

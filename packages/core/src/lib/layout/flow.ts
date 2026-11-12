@@ -1,6 +1,7 @@
+import { withAllocationCheckpoint } from './allocation-checkpoint.js';
 import { contentBoxStyle } from './box-sizing.js';
 import { canvasMeasurementService } from './canvas-measurement.js';
-import { nativeLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
+import { nativeLayout, mountedLayoutRegion, type LayoutRegion, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
 import { prepareKnownLayoutDescendants, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { getStyleMeasurementMode, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -337,7 +338,7 @@ function measureIntrinsicFlowHeight(
 function prepareFlowAllocation(props: FlowProps, style: Readonly<FlowStyle>, content: Readonly<LayoutBox>, ctx: RenderingContext2D, region?: LayoutRegion): { children: readonly PibblElement<any>[]; placements: FlowPlacement[] } {
   const children = prepareLayoutChildren(props.children, 'Flow');
   const service = canvasMeasurementService(ctx);
-  const placements = resolveFlowPlacements(content, children, style, { service, measureElement: (child, constraints) => measureElement(child, constraints, service) }, region);
+  const placements = withAllocationCheckpoint(region, { children, content, settings: style, onHit: recordWasmAllocationCacheHit, calculate: () => resolveFlowPlacements(content, children, style, { service, measureElement: (child, constraints) => measureElement(child, constraints, service) }, region) });
   return { children, placements };
 }
 if (nativeLayout) registerKnownLayoutPreflight(Flow, (element, style, content, receiver, slot) => {
@@ -383,10 +384,12 @@ function resolveFlowPlacements(
   measurement: FlowMeasurementInput,
   nativeRegion?: LayoutRegion,
 ): FlowPlacement[] {
+  if (nativeRegion) recordWasmAllocationPass();
   assertFiniteContainer(container);
   const options = normalizeFlowOptions(style, container);
   const items: FlowItem[] = [];
   for (const child of children) {
+    if (nativeRegion) recordWasmAllocationItem();
     const receiverToken = getChildPrimitiveReceiverToken(
       GLOBAL_STATE.renderTransaction,
       GLOBAL_STATE.primitiveReceiverToken,
@@ -446,6 +449,7 @@ function resolveFlowPlacements(
       'flow',
       resolvedStyle,
       measurement.service,
+      receiverToken,
     );
     const box = resolved.borderBox;
     items.push({

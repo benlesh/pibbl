@@ -1,7 +1,8 @@
+import { recordAllocationStyle, configureAllocationCheckpointAdapter, withAllocationCheckpoint, mountedAllocationCheckpointOwner } from './allocation-checkpoint.js';
 import { participatingLayoutChildren, layoutParticipationPlan, type LayoutParticipationSource } from './participation.js';
 import { allocatedContentBoxStyle, contentBoxStyle } from './box-sizing.js';
-import { nativeLayout } from './wasm/region.js';
-import { registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, takePreparedChildStyle, type PreparedLayoutPlan } from './prepared-root.js';
+import { recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit, nativeLayout } from './wasm/region.js';
+import { registerKnownLayoutPreflight, isKnownLayoutType, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, takePreparedChildStyle, type PreparedLayoutPlan } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { ResponsiveStylePreparation, getStyleMeasurementMode, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -55,7 +56,7 @@ import {
   placeChild,
 } from './place-child.js';
 import type { LayoutBox } from './types.js';
-import { withReceiverInputProvision } from '../signals/input-provision.js';
+import { withReceiverInputProvision, captureReceiverInputProvision } from '../signals/input-provision.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 
 /**
@@ -122,13 +123,14 @@ function renderAbsolute(
 
   const prepared = nativeLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
   const children = prepared?.children ?? ordinaryChildren ?? prepareLayoutChildren(props.children, 'Absolute');
+  const placements = prepared?.placements ?? (nativeLayout ? withAllocationCheckpoint(mountedAllocationCheckpointOwner(), { children, content: localContent, settings: style, onHit: recordWasmAllocationCacheHit, calculate: () => prepareAbsolutePlacements(children, localContent) }) : undefined);
   let placementIndex = 0;
   let occurrence = 0;
   return placeDirectChildren(
     children,
     localContent,
     (child, childOccurrence) => {
-      const placement = prepared ? prepared.placements[placementIndex++] : resolveAbsoluteChildPlacement(localContent, child, getChildPrimitiveReceiverToken(
+      const placement = placements ? placements[placementIndex++] : resolveAbsoluteChildPlacement(localContent, child, getChildPrimitiveReceiverToken(
         GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, occurrence++,
       ));
       if (nativeLayout && !prepared) preparePlacedKnownLayout(placement.element, childOccurrence);
@@ -266,6 +268,16 @@ function intrinsicOffset(
   return { status: 'measured', value: Math.max(0, value) };
 }
 
+function prepareAbsolutePlacements(children: readonly PibblElement<any>[], content: Readonly<LayoutBox>): { box: LayoutBox; element: PibblElement<any> }[] {
+  recordWasmAllocationPass();
+  const placements: { box: LayoutBox; element: PibblElement<any> }[] = [];
+  for (let index = 0; index < children.length; index++) {
+    recordWasmAllocationItem();
+    placements.push(resolveAbsoluteChildPlacement(content, children[index], getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, index)));
+  }
+  return placements;
+}
+
 if (nativeLayout) registerKnownLayoutPreflight(Absolute, (element, style, content, receiver, slot) => {
   const previous = GLOBAL_STATE.primitiveReceiverToken;
   GLOBAL_STATE.primitiveReceiverToken = receiver;
@@ -278,10 +290,7 @@ if (nativeLayout) registerKnownLayoutPreflight(Absolute, (element, style, conten
   });
   try {
     const children = prepareLayoutChildren(element.props.children, 'Absolute');
-    const placements = new Array<{ box: LayoutBox; element: PibblElement<any> }>(children.length);
-    for (let index = 0; index < children.length; index++) {
-      placements[index] = resolveAbsoluteChildPlacement(content, children[index], getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, receiver, index));
-    }
+    const placements = withAllocationCheckpoint(slot, { children, content, settings: style, onHit: recordWasmAllocationCacheHit, calculate: () => prepareAbsolutePlacements(children, content) });
     const plan: PreparedLayoutPlan = { content, children, placements };
     prepareKnownLayoutDescendants(plan, slot);
     stagePreparedLayoutPlan(slot, plan);
@@ -322,7 +331,7 @@ function resolveAbsoluteChildPlacement(
   }
   // Absolute retains legacy left/top placement but never accepts Flex's explicit mode.
   assertSupportedChildPosition('Absolute', child, style, false, false);
-  const resolved = resolveDirectChildBox(container, child, 'absolute', style);
+  const resolved = resolveDirectChildBox(container, child, 'absolute', style, undefined, receiverToken);
   const context = childDiagnosticContext(child, container, 'absolute');
   const left = resolveScalarSizingLength(style.left ?? 0, container.width, 'left', context)!;
   const top = resolveScalarSizingLength(style.top ?? 0, container.height, 'top', context)!;
@@ -373,9 +382,10 @@ export function resolveDirectChildBox(
   algorithm: string,
   style: Readonly<SystemStyle> = normalizeDirectChildStyle(child, undefined, container),
   service?: CanvasMeasurementService,
+  receiverToken?: object,
 ): ResolvedBoxStyle {
   const boxStyle = style as Readonly<BoxStyle>;
-  if (hasIntrinsicDirectLength(boxStyle)) return resolveIntrinsicDirectChildBox(container, child, algorithm, boxStyle, service);
+  if (hasIntrinsicDirectLength(boxStyle)) return resolveIntrinsicDirectChildBox(container, child, algorithm, boxStyle, service, receiverToken);
   return resolveLayoutBox(
     boxStyle,
     {
@@ -402,12 +412,12 @@ function hasIntrinsicDirectLength(style: Readonly<BoxStyle>): boolean {
     isIntrinsicSizingValue(style.minHeight) || isIntrinsicSizingValue(style.maxHeight);
 }
 
-function resolveIntrinsicDirectChildBox(container: Readonly<LayoutBox>, child: PibblElement<any>, algorithm: string, style: Readonly<BoxStyle>, service?: CanvasMeasurementService): ResolvedBoxStyle {
+function resolveIntrinsicDirectChildBox(container: Readonly<LayoutBox>, child: PibblElement<any>, algorithm: string, style: Readonly<BoxStyle>, service?: CanvasMeasurementService, receiverToken?: object): ResolvedBoxStyle {
   const context = childDiagnosticContext(child, container, algorithm);
   const measurement = service ?? (GLOBAL_STATE.renderContext ? canvasMeasurementService(GLOBAL_STATE.renderContext) : undefined);
   if (!measurement) throw layoutDiagnostic({ ...context, property: 'width', value: style.width, reason: 'intrinsic sizing requires a Canvas measurement service' });
   const pairedChild = clonePibblElement(child);
-  setPreNormalizedStyle(pairedChild, style, child);
+  setPreNormalizedStyle(pairedChild, style, child, receiverToken);
   const paired = measureIntrinsicElement(pairedChild, { minWidth: 0, maxWidth: container.width, minHeight: 0, maxHeight: container.height }, measurement);
   if (paired.status !== 'measured') throw layoutDiagnostic({ ...context, property: 'width', value: style.width, reason: `intrinsic measurement is required but unsupported: ${paired.reason}` });
   let width = intrinsicDirectLength(style.width, paired.minContent.width, paired.maxContent.width, container.width, 'width', context);
@@ -423,7 +433,7 @@ function resolveIntrinsicDirectChildBox(container: Readonly<LayoutBox>, child: P
   }
   if (height === undefined && width !== undefined) {
     const measuredChild = clonePibblElement(child);
-    setPreNormalizedStyle(measuredChild, { ...style, boxSizing: 'content-box', width, minWidth: undefined, maxWidth: undefined } as Readonly<BoxStyle>, child);
+    setPreNormalizedStyle(measuredChild, { ...style, boxSizing: 'content-box', width, minWidth: undefined, maxWidth: undefined } as Readonly<BoxStyle>, child, receiverToken);
     const measured = measureElement(measuredChild, { minWidth: width, maxWidth: width, minHeight: 0, maxHeight: container.height }, measurement);
     if (measured.status !== 'measured') throw layoutDiagnostic({ ...context, property: 'height', value: style.height ?? 'auto', reason: `constrained measurement is required but unsupported: ${measured.reason}` });
     height = measured.size.height;
@@ -471,10 +481,11 @@ export function prepareDirectChildStyle(
   queryBasis?: Readonly<LayoutBox>,
   flexMargins = false,
 ): Readonly<SystemStyle> | ResponsiveStylePreparation<Readonly<SystemStyle>> {
+  configureAllocationCheckpointAdapter(prepareDirectChildStyle, childWithUsedSize, takePreparedChildStyle, isLayoutComponent, isKnownLayoutType, prepareLayoutComponent);
   const staged = takePreparedChildStyle(child, receiverToken, queryBasis);
-  if (staged) return staged;
+  if (staged) { recordAllocationStyle(receiverToken, staged); return staged; }
   let source = child;
-  const prepared = withReceiverInputProvision(
+  const captured = captureReceiverInputProvision(
     GLOBAL_STATE.renderTransaction,
     receiverToken,
     () => {
@@ -485,6 +496,7 @@ export function prepareDirectChildStyle(
       ) ?? EMPTY_STYLE;
     },
   );
+  const prepared = captured.value;
   const definition = getPrimitiveDefinition(source.type);
   const style = preparedStyleValue(prepared);
   if (!flexMargins) {
@@ -503,8 +515,10 @@ export function prepareDirectChildStyle(
   const final = { ...normalized, ...(filter === undefined ? {} : { filter }), ...(style.transition === undefined ? {} : { transition: (style as Readonly<SystemStyle>).transition }) };
   if (prepared instanceof ResponsiveStylePreparation) {
     prepared.style = final;
+    recordAllocationStyle(receiverToken, prepared, captured.receipt);
     return prepared;
   }
+  recordAllocationStyle(receiverToken, final, captured.receipt);
   return final;
 }
 

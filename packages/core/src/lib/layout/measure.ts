@@ -1,3 +1,5 @@
+import { bindCanvasMeasurementService } from './canvas-measurement.js';
+import { allocationMeasurement, declineUnrecordedAllocationMeasurement } from './allocation-checkpoint.js';
 import { allocationOwner, setAllocationOwner } from './allocation-revision.js';
 import { isFitContent } from '../style/sizing-length.js';
 import { observeReceiverInputReads, captureReceiverInputProvision, replayReceiverInputProvision, withReceiverInputProvision, type ReceiverInputProvisionReceipt } from '../signals/input-provision.js';
@@ -57,7 +59,12 @@ export type {
  * @see {@link CanvasMeasurementService}
  * @see {@link MeasureResult}
  */
-export function measureElement(
+export function measureElement(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService): MeasureResult {
+  const resolveService = bindCanvasMeasurementService(service);
+  return allocationMeasurement(element, current => measureElementUncached(current, constraints, resolveService()));
+}
+
+function measureElementUncached(
   element: PibblElement<any>,
   constraints: Readonly<Constraints>,
   service: CanvasMeasurementService,
@@ -69,11 +76,13 @@ export function measureElement(
   const mode = getStyleMeasurementMode() ? 'recursive' :
     GLOBAL_STATE.componentRefs ? 'mounted-intrinsic' : 'standalone-root';
   const owner = GLOBAL_STATE.currentPibblInstance?.interactionRoot ?? GLOBAL_STATE.currentPibblInstance;
-  return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () =>
+  const evaluate = () => withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () =>
     withMeasurementLayoutOwner(owner, () => withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
       measureElementInternal(element, constraints, service, context),
     ))),
   );
+  const receiver = getPrimitiveReceiverToken(element);
+  return receiver ? withReceiverInputProvision(GLOBAL_STATE.renderTransaction, receiver, () => withSignalDependencyRole('measurement', evaluate)) : evaluate();
 }
 
 /** @internal Passive snapshot owned and released by one layout region. */
@@ -83,6 +92,7 @@ export interface PrimitiveMeasurementEntry {
   readonly result: IntrinsicSizesResult | MeasureResult | BaselinesResult;
   readonly mode: 'intrinsic' | 'finite' | 'baseline';
   readonly dependencies: readonly SignalNode<unknown>[];
+  readonly receiverDependencies?: readonly SignalNode<unknown>[];
   readonly dependencyVersions?: readonly number[];
   readonly inputSnapshot: readonly unknown[] | undefined;
   readonly receiverReceipts?: readonly ConstrainedMeasurementReceipt[];
@@ -146,17 +156,20 @@ interface PrimitiveMeasurementOptions {
 }
 /** @internal Paired content contributions through the existing pure receiver transaction. */
 export function measureIntrinsicElement(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, options?: PrimitiveMeasurementOptions): IntrinsicSizesResult {
-  return measurePrimitiveInput(element, constraints, service, true, options);
+  const resolveService = bindCanvasMeasurementService(service);
+  return allocationMeasurement(element, current => measurePrimitiveInput(current, constraints, resolveService(), true, options));
 }
 /** @internal Finite custom measurement through the same receiver transaction and cache. */
 export function measureConstrainedIntrinsicElement(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService, options?: PrimitiveMeasurementOptions): MeasureResult {
-  return measurePrimitiveInput(element, constraints, service, false, options);
+  const resolveService = bindCanvasMeasurementService(service);
+  return allocationMeasurement(element, current => measurePrimitiveInput(current, constraints, resolveService(), false, options));
 }
 /** @internal Parent-owned prepared row result with fresh receiver paths per query. */
 export function measurePreparedLayoutElement(
   element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService,
   options: PrimitiveMeasurementOptions, snapshot: readonly unknown[], receivers: readonly object[],
 ): MeasureResult {
+  declineUnrecordedAllocationMeasurement();
   return measurePrimitiveInput(element, constraints, service, false, options, { snapshot, receivers });
 }
 interface PreparedMeasurementInput {
@@ -189,7 +202,19 @@ export interface BaselineMeasurementOptions extends PrimitiveMeasurementOptions 
 }
 
 /** @internal Pure first/last baseline query at one final content allocation. */
-export function measureBaselineElement(
+export function measureBaselineElement(element: PibblElement<any>, allocation: Readonly<LayoutBox>, service: CanvasMeasurementService, options?: BaselineMeasurementOptions): BaselinesResult {
+  const resolveService = bindCanvasMeasurementService(service);
+  const owner = preparedBaselineOwners.get(element);
+  const ownerValid = owner && owner.transaction === GLOBAL_STATE.renderTransaction &&
+    owner.receiver === getPrimitiveReceiverToken(element) && owner.query === peekPreNormalizedStyle(element)?.query;
+  const ownerBox = ownerValid ? { x: 0, y: 0, width: owner.width, height: owner.height } : undefined;
+  return allocationMeasurement(element, current => {
+    if (ownerBox) setPreparedBaselineOwner(current, ownerBox);
+    return measureBaselineElementUncached(current, allocation, resolveService(), options);
+  }, true);
+}
+
+function measureBaselineElementUncached(
   element: PibblElement<any>,
   allocation: Readonly<LayoutBox>,
   service: CanvasMeasurementService,
@@ -330,6 +355,8 @@ function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly
     if (!entry || !measurementDependenciesUnchanged(entry) || entry.mode !== entryMode || entry.props !== element.props || !sameIntrinsicInputs(entry.inputSnapshot, inputSnapshot) || prepared && entry.receiverReceipts === undefined) {
       options?.recordMeasurement();
       const dependencies: SignalNode<unknown>[] = [];
+      const receiverDependencies: SignalNode<unknown>[] = [];
+      let untracedReceiverReads = false;
       const trace: ConstrainedMeasurementTrace | undefined = prepared ? {
         cacheable: true, receipts: [], receivers: prepared.receivers,
       } : undefined;
@@ -337,12 +364,19 @@ function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly
         measureElementInternal(element, constraints, service, context, true) :
         measureElementInternal(element, constraints, service, context, false, true),
       ));
-      const addDependency = (node: SignalNode<unknown>) => { if (!dependencies.includes(node)) dependencies.push(node); };
-      const result = observeReceiverInputReads(addDependency, () => withSignalTracking({ addDependency }, () =>
+      const addDependency = (node: SignalNode<unknown>) => {
+        if (!dependencies.includes(node)) dependencies.push(node);
+        if (!receiverDependencies.includes(node)) receiverDependencies.push(node);
+      };
+      const result = observeReceiverInputReads((node, _roles, inputReceiver) => {
+        if (!dependencies.includes(node)) dependencies.push(node);
+        if (inputReceiver === receiver && !receiverDependencies.includes(node)) receiverDependencies.push(node);
+        if (inputReceiver !== receiver && !trace) untracedReceiverReads = true;
+      }, () => withSignalTracking({ addDependency }, () =>
         trace ? withConstrainedMeasurementTrace(trace, evaluate) : evaluate()));
-      entry = { props: element.props, key, result, mode: entryMode, dependencies, dependencyVersions: measurementDependencyVersions(dependencies), inputSnapshot,
+      entry = { props: element.props, key, result, mode: entryMode, dependencies, receiverDependencies, dependencyVersions: measurementDependencyVersions(dependencies), inputSnapshot,
         ...(trace?.cacheable ? { receiverReceipts: trace.receipts } : {}) };
-      if (options && transaction && inputSnapshot && result.status === 'measured' && (!trace || trace.cacheable)) {
+      if (options && transaction && inputSnapshot && result.status === 'measured' && !untracedReceiverReads && (!trace || trace.cacheable)) {
         if (!receivers) { receivers = new WeakMap(); intrinsicTransactions.set(transaction, receivers); }
         if (!entries) { entries = new Map(); receivers.set(options.token, entries); }
         entries.set(key, entry);
@@ -356,7 +390,7 @@ function measurePrimitiveInput(element: PibblElement<any>, constraints: Readonly
         replayReceiverInputProvision(transaction, prepared.receivers[captured.childIndex], captured.receipt);
       }
     }
-    for (const node of entry.dependencies) trackSignalDependency(node, 'measurement');
+    for (const node of entry.receiverDependencies ?? entry.dependencies) trackSignalDependency(node, 'measurement');
     return entry.result as IntrinsicSizesResult | MeasureResult;
   }))));
 }
@@ -450,8 +484,9 @@ function measureElementInternal(
       // caller's measurement mode so a paired primitive root can contribute its
       // intrinsic result or receive provider inputs under the same transaction.
       const root = placedLayoutComponentRoot(element, preNormalized);
-      return intrinsic ? measureElementInternal(root, constraints, service, context, true) :
-        measureElementInternal(root, constraints, service, context, false, providerInputs);
+      return withReceiverInputProvision(GLOBAL_STATE.renderTransaction, getPrimitiveReceiverToken(root), () => intrinsic ?
+        measureElementInternal(root, constraints, service, context, true) :
+        measureElementInternal(root, constraints, service, context, false, providerInputs));
     } finally {
       context.stack.pop();
       context.active.delete(source);
@@ -507,7 +542,9 @@ function measureElementInternal(
           // Public recursive queries have no direct-child receipt path. Preserve
           // their ordinary measurement behavior without caching this aggregate.
           if (constrainedMeasurementTrace) constrainedMeasurementTrace.cacheable = false;
-          return measureElementInternal(child, childConstraints, service, context);
+          const receiver = getPrimitiveReceiverToken(child);
+          return receiver ? withReceiverInputProvision(GLOBAL_STATE.renderTransaction, receiver, () => withSignalDependencyRole('measurement', () =>
+            measureElementInternal(child, childConstraints, service, context))) : measureElementInternal(child, childConstraints, service, context);
         },
       }));
     } finally {

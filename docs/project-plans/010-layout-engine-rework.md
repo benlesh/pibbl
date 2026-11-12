@@ -1,5 +1,60 @@
 # 010 — Native layout engine rework
 
+## Integrated architecture checkpoint — 2026-11-12
+
+The accepted dependency-propagation and geometry-adoption work is implemented and
+has passed focused independent source review. Full release verification remains
+pending until the integrated current-main snapshot passes canonical
+whole-repository CI. The accepted scope and integrated workflow are unchanged.
+
+Five mounted layout families now share receiver-role allocation checkpoints with
+normalized input comparison, demanded measurement replay, binding replacement,
+successful-completion adoption, and abort/teardown cleanup. Equal measured outputs
+stop upstream allocation while opaque component evaluation and painting continue.
+Known/described descendants, selected-width demands, structural baselines, finite
+responsive baseline queries, and staged intrinsic continuations retain their
+numeric dependencies. Static-origin preparation keeps pending descriptors apart
+from final absolute geometry; the final phase is keyed by the settled containing
+box and owns a separately pruned lifetime. Explicit allocation refresh still
+forces work. Original allocator counters stay at actual numerical solver calls.
+
+Volatile class-valued provider inputs are remeasured rather than trusted by
+identity. Native paint values force current style preparation while remaining
+outside numeric geometry comparison. Transform-only inputs update presentation
+geometry without rerunning allocation. Mutable source/schema verification still
+visits JavaScript inputs. Unsafe or unrecorded schema/receipt paths conservatively
+recompute; there is no claim of universal constant-time traversal. Unsupported
+responsive intrinsic queries remain unsupported rather than becoming a new API.
+
+Geometry preparation now supplies production hit testing and focus bounds. Native
+paths/clips/transforms are copied; clean Layer ledgers are retained. HTML content
+callbacks see previous committed interactive geometry while Canvas painting stays
+immediate. Prepared hit/focus/HTML state is adopted together. External targets
+retain traversal focus order, prepare native leases before adoption, and defer
+notifications until mandatory cleanup completes. Captured input composes committed
+managed-Layer bridges; reentrant picks are bound to both renderer and root geometry
+generations. Cancelled mutable-scene input stays gated until recovery. These
+changes do not promise Canvas pixel or application callback rollback.
+
+Focused verification uses cloud Node 24.22.1 and Windows Node 24.1 / Chrome 156,
+not the canonical CI environment. Public allocation/publication, ownership,
+static-origin, volatile-provider, native-paint, transform, responsive-mutation,
+and captured-coordinate failures were demonstrated before their fixes. The final
+allocation snapshot passed all 32 root regressions and 147 broader tests across
+17 files, including browser signal/receiver tests. Twenty-seven focused Node tests,
+typecheck, changed-code lint, the normal core build, and native artifact integrity
+checks pass. No remaining supported-case blocker was identified in focused review.
+
+The geometry snapshot initially passed 45 focused tests. Canonical CI subsequently
+caught a retained inner focus-manager regression in an existing cached-Layer test;
+its repair preserves old bounds during publication and adopts the new parent
+bridge without rerendering the child. The repaired snapshot passed 301 tests
+across 24 focus/Layer/hit/participation suites, plus a dedicated mixed HTML/Canvas
+retained-manager test. Historical Windows wrapping-count failures were reproduced
+with the allocation patch removed; the unrelated font-top assertion is already
+fixed on current main. These receipts do not replace the pending canonical
+integrated CI gate.
+
 ## Independent-review repairs — 2026-10-29
 
 The post-review repair batch resets changed Grid contributions to authored bases,

@@ -1,3 +1,4 @@
+import { disposeAllocationCheckpoint, adoptAllocationCheckpointOwner } from './allocation-checkpoint-owner.js';
 import { getLayoutDirection } from './context.js';
 import { peekPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type { BoxStyle } from '../style/types.js';
@@ -18,6 +19,12 @@ export interface KnownLayoutPreflightOptions { readonly deferStaticContainingDes
 type Preflight = (element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver: object, slot: PreparedLayoutSlot, parentMainAxis?: 'row' | 'column', options?: KnownLayoutPreflightOptions) => void;
 const preflights = new WeakMap<Function, Preflight>();
 export function isKnownLayoutType(type: Function): boolean { return preflights.has(type); }
+const currentReceiverSlots = new WeakMap<PibblRenderTransaction, WeakMap<object, PreparedLayoutSlot>>();
+/** Only the current transaction's settled preparation may be attached to a replay. */
+export function currentPreparedReceiverSlot(receiver: object | undefined): PreparedLayoutSlot | undefined {
+  const transaction = GLOBAL_STATE.renderTransaction;
+  return transaction && receiver ? currentReceiverSlots.get(transaction)?.get(receiver) : undefined;
+}
 const snapshots = new WeakMap<PibblRenderTransaction, WeakMap<object, { child: PibblElement<any>; width: number; height: number; prepared: PreparedStyle }>>();
 
 /** Registers only known declarative input preparation, never component evaluation. */
@@ -66,6 +73,9 @@ export function preflightKnownLayout(element: PibblElement<any>, style: Readonly
   }
   stageLayoutTopology(transaction, slot, parentSlot);
   preflight(root, style, content, rootReceiver, slot, parentMainAxis, options);
+  let receivers = currentReceiverSlots.get(transaction);
+  if (!receivers) { receivers = new WeakMap(); currentReceiverSlots.set(transaction, receivers); }
+  receivers.set(receiver, slot); receivers.set(rootReceiver, slot);
   return slot;
   } finally { visiting.delete(source); }
 }
@@ -88,7 +98,7 @@ export class PreparedLayoutSlot implements LayoutTopologySlot {
   claimBoundary(): void {
     const refs = GLOBAL_STATE.componentRefs!;
     if (this.boundaryOwner === refs) return;
-    this.boundaryOwner = refs; refs.teardowns.add(() => { if (this.boundaryOwner === refs) this.dispose(); });
+    this.boundaryOwner = refs; adoptAllocationCheckpointOwner(this); refs.teardowns.add(() => { if (this.boundaryOwner === refs) this.dispose(); });
   }
   readonly children = new Map<Function, Map<string, PreparedLayoutSlot>>();
   private disposeChildren(): void {
@@ -103,7 +113,7 @@ export class PreparedLayoutSlot implements LayoutTopologySlot {
   }
   matchesRoot(root: PibblElement<any>): boolean { return this.rootType === root.type && this.rootKey === root.key; }
   acquire(): LayoutRegion { return this.region ??= new LayoutRegion(this.topologyOwner); }
-  dispose(): void { const region = this.region; this.region = undefined; this.boundaryOwner = undefined; try { this.disposeChildren(); region?.dispose(); } finally { releaseLayoutTopology(this); this.release(); } }
+  dispose(): void { disposeAllocationCheckpoint(this); const region = this.region; this.region = undefined; this.boundaryOwner = undefined; try { this.disposeChildren(); region?.dispose(); } finally { releaseLayoutTopology(this); this.release(); } }
   claim(region: LayoutRegion): void {
     if (this.region !== region) throw new Error('Prepared layout region is stale.');
     adoptMountedLayoutRegion(region, () => { if (this.region === region) { this.region = undefined; this.disposeChildren(); releaseLayoutTopology(this); this.release(); } });

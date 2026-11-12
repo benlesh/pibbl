@@ -2454,6 +2454,48 @@ are not instructions for applications to select a different runtime. The dated
 checkpoint text remains historical evidence; unsupported behavior remains
 explicitly diagnosed rather than silently falling back.
 
+## Receiver-owned incremental allocation
+
+Flex, Grid, Flow, Absolute and Overlay retain numeric allocation checkpoints under
+mounted region or prepared-slot ownership. Existing receiver subscriptions route
+layout and measurement changes to their numeric consumers. These relationships do
+not add parent-owned signal leases. Parent contributions are values, not child
+render subscriptions. Explicit allocation refresh still invalidates checkpoints.
+
+A checkpoint compares normalized geometry, source topology, selected constraints,
+percentage/containing bases and direction. It records the pure measurements the
+allocator actually demanded, including final-width queries and structural
+first/last baselines. Changed demanded results reopen the relevant numerical
+allocation; equal results stop propagation before the family allocator runs.
+Measurement dependencies and current receiver receipts are replaced even when
+results are equal. Native staged intrinsic targets, bounds and auto-margin
+residuals are compared as numeric continuations rather than root-wide revisions.
+
+Paint, interaction and Group presentation transforms do not become allocation
+inputs. They still receive current normalization and committed presentation
+geometry. Native paint objects such as CanvasGradient force current preparation;
+object identity alone does not establish unchanged normalization. Responsive
+branches are selected afresh and their signal bindings are replaced even when
+the selected numeric style is equal. Finite responsive baseline queries retain
+their current-owner checks; unsupported responsive intrinsic queries remain
+unsupported.
+
+Static baseline preparation retains unresolved absolute entries as descriptors,
+not geometry. Final absolute placement has a separate checkpoint keyed by the
+settled containing box. Both phases share region lifetime; a successful topology
+replacement retires unreachable phases, while failure preserves the prior live
+ownership. No sentinel or speculative geometry is published.
+
+Ordinary components, explicit component signal reads and paint traversal still
+execute normally. Mutable styles and declared programs are inspected; this is not
+a promise of constant-time JavaScript traversal. When arbitrary model props
+cannot establish unchanged input, a pure demanded provider is executed with its
+current props and its numeric output is compared. Unsafe style/schema snapshots
+and queries without replayable receiver ownership stay on the normal path.
+Nested measurement-cache entries without replayable receiver ownership are not retained. Replacement and
+teardown release numeric dependencies and descendant receipts on success,
+failure, removal and unmount.
+
 ## Integrated native layout additions — 2026-10-28
 
 This section records the native layout additions that became the default engine.

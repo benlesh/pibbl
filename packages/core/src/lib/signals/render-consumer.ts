@@ -1,5 +1,6 @@
+import { invalidateAllocationReceiver, releaseAllocationReceiver } from '../layout/allocation-dependencies.js';
 import type { PibblInstance } from '../types.js';
-import { invalidateAllocationInputs } from '../layout/allocation-revision.js';
+import { invalidateReceiverAllocationInputs } from '../layout/allocation-revision.js';
 import {
   recordRendererConsumerCreated,
   recordRendererConsumerReleased,
@@ -35,6 +36,7 @@ export interface SignalRenderConsumer {
 
 export interface SignalRenderConsumerOptions {
   layoutOwner?: PibblInstance;
+  allocationReceiver?: object;
   debugName: string;
   invalidate(): void;
 }
@@ -48,6 +50,7 @@ export interface ComponentSignalReadOptions extends SignalRenderConsumerOptions 
 }
 
 interface ConsumerState extends SignalDependencyConsumer {
+  readonly allocationReceiver: object | undefined;
   collecting: boolean;
   dirty: boolean;
   disposed: boolean;
@@ -65,6 +68,7 @@ export function createSignalRenderConsumer(
   options: SignalRenderConsumerOptions,
 ): SignalRenderConsumer {
   const state: ConsumerState = {
+    allocationReceiver: options.allocationReceiver,
     dependencyHead: undefined,
     dependencyTail: undefined,
     dependencyFreeHead: undefined,
@@ -85,12 +89,13 @@ export function createSignalRenderConsumer(
     notify(_node, dependencyRoles = 64): void {
       if (state.disposed) return;
       recordSignalInputInvalidation(dependencyRoles);
+      if (options.allocationReceiver) invalidateAllocationReceiver(options.allocationReceiver, dependencyRoles);
       // Paint, transforms, and interaction retain allocation geometry. Mixed
       // dependencies still invalidate when any structural/metric role is present.
       if ((dependencyRoles & allocationDependencyRoles) !== 0) {
         // Only layout/measurement roles can be checked by a frozen descriptor
         // fingerprint. Structure and unknown values can replace that descriptor.
-        invalidateAllocationInputs(options.layoutOwner, (dependencyRoles & (1 | 64)) !== 0 ? 'structural' : 'metric');
+        invalidateReceiverAllocationInputs(options.layoutOwner, (dependencyRoles & (1 | 64)) !== 0 ? 'structural' : 'metric');
       }
       if (state.dirty) return;
       state.dirty = true;
@@ -217,6 +222,7 @@ export function disposeSignalRenderConsumer(consumer: SignalRenderConsumer): voi
   const state = getConsumerState(consumer);
   if (state.disposed) return;
   state.disposed = true;
+  if (state.allocationReceiver) releaseAllocationReceiver(state.allocationReceiver);
   state.collectionGeneration++;
   state.collecting = false;
   disposeReactiveConsumer(state, releaseRendererEdge);

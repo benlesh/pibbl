@@ -1,6 +1,7 @@
+import { withAllocationCheckpoint } from './allocation-checkpoint.js';
 import { contentBoxStyle } from './box-sizing.js';
 import { canvasMeasurementService } from './canvas-measurement.js';
-import { nativeLayout, LayoutRegion, mountedLayoutRegion } from './wasm/region.js';
+import { nativeLayout, LayoutRegion, mountedLayoutRegion, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
 import { prepareKnownLayoutDescendants, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { getStyleMeasurementMode, preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -248,7 +249,7 @@ function renderGrid(
   const service = canvasMeasurementService(ctx);
   const nativeRegion = prepared?.region ?? (nativeLayout ? mountedLayoutRegion() : undefined);
   if (nativeLayout && !nativeRegion) throw new Error('Experimental Grid requires its mounted native region.');
-  const placements = prepared?.placements ?? resolveGridPlacements(
+  const placements = prepared?.placements ?? withAllocationCheckpoint(nativeRegion, { children, content: localContent, settings: style, onHit: recordWasmAllocationCacheHit, calculate: () => resolveGridPlacements(
     localContent,
     children,
     style,
@@ -258,7 +259,7 @@ function renderGrid(
         measureElement(element, constraints, service),
     },
     nativeRegion,
-  );
+  ) });
   let index = 0;
   return placeDirectChildren(
     children,
@@ -326,7 +327,7 @@ if (nativeLayout) registerKnownLayoutPreflight(Grid, (element, style, content, r
     if (!ctx) throw new Error('Known Grid preparation requires a Canvas measurement context.');
     const service = canvasMeasurementService(ctx);
     const region = slot.acquire();
-    const placements = resolveGridPlacements(content, children, options, { service, measureElement: (child, constraints) => measureElement(child, constraints, service) }, region);
+    const placements = withAllocationCheckpoint(region, { children, content, settings: options, onHit: recordWasmAllocationCacheHit, calculate: () => resolveGridPlacements(content, children, options, { service, measureElement: (child, constraints) => measureElement(child, constraints, service) }, region) });
     const plan: PreparedLayoutPlan = { region, content, children, placements };
     prepareKnownLayoutDescendants(plan, slot);
     stagePreparedLayoutPlan(slot, plan);
@@ -357,6 +358,7 @@ function resolveGridPlacements(
   nativeRegion?: LayoutRegion,
   assignedCells?: GridCell[],
 ): GridPlacement[] {
+  if (nativeRegion) recordWasmAllocationPass();
   assertFiniteContainer(container);
   // Selected-width measurement can supply single-use cells already prepared
   // and assigned for these exact children, container and options.
@@ -504,7 +506,7 @@ function resolveGridPlacements(
             : 0
         : normalized.height,
     };
-    const resolved = resolveDirectChildBox(area, child, 'grid', usedStyle, measurement.service);
+    const resolved = resolveDirectChildBox(area, child, 'grid', usedStyle, measurement.service, receiverToken);
     const border = resolved.borderBox;
     const box = {
       x: area.x + alignmentOffset(area.width, border.width, justify),
@@ -577,6 +579,7 @@ function prepareExplicitGridCells(children: readonly PibblElement<any>[], contai
 function prepareGridCells(children: readonly PibblElement<any>[], container: Readonly<LayoutBox>): GridCell[] {
   const result: GridCell[] = [];
   for (let index = 0; index < children.length; index++) {
+    recordWasmAllocationItem();
     const child = children[index]!;
     const receiverToken = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, index);
     const prepared = prepareDirectChildStyle(child, receiverToken, container);
@@ -664,8 +667,10 @@ function gatherGridIntrinsicContributions(
       records.push(start, span, height, height);
       continue;
     }
+    const contributionChild = clonePibblElement(cell.child);
+    setPreNormalizedStyle(contributionChild, cell.normalized, cell.child, cell.receiverToken, preparedStyleQuery(cell.prepared));
     const result = measureIntrinsicElement(
-      cell.child,
+      contributionChild,
       {
         minWidth: 0,
         maxWidth: container.width,

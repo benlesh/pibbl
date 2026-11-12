@@ -1,3 +1,4 @@
+import { disposeAllocationCheckpoint } from '../allocation-checkpoint-owner.js';
 /// <reference types="vite/client" />
 import type { PrimitiveMeasurementEntry } from '../measure.js';
 import type { FlexAllocationCache } from '../flex-allocation-cache.js';
@@ -882,6 +883,7 @@ export class LayoutRegion {
     return this.crossResults;
   }
   dispose(): void {
+    disposeAllocationCheckpoint(this);
     this.gridV2?.dispose(); this.gridV2 = undefined;
     this.hasAbsoluteMeasurements = false;
     this.flowCache = undefined;

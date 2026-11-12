@@ -3,7 +3,7 @@ import { Flex, Rectangle, HtmlBox, defineRenderLayer, FocusManagement, Clip, Pat
 import { pibblSync } from '@pibbl/core/sync';
 import { GLOBAL_STATE } from '../src/lib/global-state.js';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing.js';
-import { snapshotLayoutGeometry } from '../src/lib/layout/geometry-publication.js';
+import { committedLayoutTargetBounds, snapshotLayoutGeometry } from '../src/lib/layout/geometry-publication.js';
 import type { PibblFocusManager } from '../src/lib/focus/focus-manager.js';
 
 it('publishes immutable matching geometry batches and clears failed generations', () => {
@@ -217,7 +217,7 @@ it('keeps captured external input in the committed coordinate frame through plac
 });
 
 
-it('releases unadopted clean renderer registrations when an HTML updater disposes the controller', () => {
+it.each(['prepare', 'publication'] as const)('releases unadopted clean renderer registrations when disposal occurs during %s', phase => {
   const wrapper = document.createElement('div'); wrapper.style.cssText = 'position:relative;width:100px;height:40px;isolation:isolate';
   const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 40;
   canvas.style.cssText = 'display:block;width:100%;height:100%';
@@ -231,31 +231,45 @@ it('releases unadopted clean renderer registrations when an HTML updater dispose
     interaction: { settle() { return { targets: [{ target, handlers: { onClick: () => {} } }],
       hitTest: () => ({ kind: 'target', target }) }; } },
   });
+  let disposedTargets: import('../src/lib/events/registrations.js').PibblEventTargetRegistration[] = [];
   let disposeDuringUpdate = false;
-  const mount = () => () => {
+  const disposeRenderer = () => {
     if (disposeDuringUpdate) {
       const refs = Array.from(GLOBAL_STATE.pibblInstances.get(canvas)!.refs.values()).find(refs => refs.element.type === Layer);
       expect(refs).toBeDefined();
       refs!.teardowns.execute();
     }
   };
-  const scene = (enabled: boolean) => createElement(Flex, { style: { width: 100, height: 40 }, children: [
+  const mount = () => () => { if (phase === 'publication') disposeRenderer(); };
+  const DisposeBeforePreflight = () => {
+    if (phase === 'prepare') disposeRenderer();
+  };
+  const scene = (enabled: boolean) => createElement(FocusManagement, { children: createElement(Flex, { style: { width: 100, height: 40 }, children: [
     createElement(Layer, { pointerEvents: enabled ? 'auto' : 'none', style: { width: 20, height: 20, minWidth: 0, flexShrink: 0 } }),
+    createElement(DisposeBeforePreflight, { style: { width: 0, height: 0, minWidth: 0, flexShrink: 0 } }),
     createElement(HtmlBox, { mount, data: 0, style: { width: 10, height: 10, minWidth: 0, flexShrink: 0 } }),
-  ] });
+  ] }) });
   const controller = pibblSync(canvas, scene(false), { htmlOverlay: overlay });
   const hub = GLOBAL_STATE.pibblInstances.get(canvas)!.eventRoot.nativeListeners!;
   const releases: ReturnType<typeof vi.fn>[] = [];
   let spy: ReturnType<typeof vi.spyOn> | undefined;
+  let focusSpy: ReturnType<typeof vi.spyOn> | undefined;
   try {
     driver.flush(1);
+    const policy = GLOBAL_STATE.pibblInstances.get(canvas)!.eventRoot.focusPolicy!;
+    const observe = policy.observeTransactionalTarget!.bind(policy);
+    focusSpy = vi.spyOn(policy, 'observeTransactionalTarget').mockImplementation((target, focusable) => {
+      disposedTargets.push(target); observe(target, focusable);
+    });
     const acquire = hub.acquire.bind(hub);
     spy = vi.spyOn(hub, 'acquire').mockImplementation(type => {
       const release = vi.fn(acquire(type)); releases.push(release); return release;
     });
     disposeDuringUpdate = true; pibblSync(canvas, scene(true)); driver.flush(2);
     expect(renders).toBe(1);
+    expect(disposedTargets.length).toBeGreaterThan(0);
+    for (const target of disposedTargets) expect(committedLayoutTargetBounds(target)?.has(target)).toBe(false);
     expect(releases.length).toBeGreaterThan(0);
     for (const release of releases) expect(release).toHaveBeenCalledTimes(1);
-  } finally { spy?.mockRestore(); controller.dispose(); restore(); wrapper.remove(); }
+  } finally { focusSpy?.mockRestore(); spy?.mockRestore(); controller.dispose(); restore(); wrapper.remove(); }
 });

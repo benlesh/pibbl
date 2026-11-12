@@ -1,3 +1,4 @@
+import { adoptAllocationReceiver } from '../layout/allocation-dependencies.js';
 import type { PibblRenderTransaction } from '../types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { getPrimitiveReceiverToken } from '../element/metadata.js';
@@ -28,13 +29,13 @@ const transactionProvisions = new WeakMap<
 export type ReceiverInputProvisionReceipt = readonly { readonly node: SignalNode<unknown>; readonly roles: number }[];
 
 interface ReceiverReadObserver {
-  readonly read: (node: SignalNode<unknown>) => void;
+  readonly read: (node: SignalNode<unknown>, roles: number, receiver: object) => void;
   readonly parent: ReceiverReadObserver | undefined;
 }
 let receiverReadObserver: ReceiverReadObserver | undefined;
 
 /** Observe provisioned reads for cache validation without acquiring receiver edges. */
-export function observeReceiverInputReads<T>(read: (node: SignalNode<unknown>) => void, callback: () => T): T {
+export function observeReceiverInputReads<T>(read: (node: SignalNode<unknown>, roles: number, receiver: object) => void, callback: () => T): T {
   const previous = receiverReadObserver;
   receiverReadObserver = { read, parent: previous };
   try { return callback(); }
@@ -89,7 +90,7 @@ function runReceiverInputProvision<T>(
   let provision: ReceiverInputProvision | undefined;
   const collector: SignalDependencyCollector = {
     addDependency(node, role: SignalDependencyRoleInput = 'unknown'): void {
-      for (let observer = receiverReadObserver; observer; observer = observer.parent) observer.read(node);
+      for (let observer = receiverReadObserver; observer; observer = observer.parent) observer.read(node, signalDependencyRoleMask(role), receiver);
       if (provision === undefined) {
         provision = createProvision(transaction, receiver);
       }
@@ -117,6 +118,8 @@ export function adoptReceiverInputProvision(
   receiver: object,
 ): void {
   if (!transaction) return;
+  const owner = GLOBAL_STATE.componentRefs;
+  if (owner) adoptAllocationReceiver(transaction, receiver, owner);
   const receivers = transactionProvisions.get(transaction);
   const provision = receivers?.get(receiver);
   if (!provision || provision.settled) return;

@@ -1,5 +1,19 @@
 # 009 — Parameterized texture library
 
+## Current integration checkpoint — 2026-11-12
+
+The approved implemented collections are integrated: the first pattern/material
+collection, fabrics, noise/composition and emboss, the Schnakenberg, Barkley and
+Brusselator chemical models, and the polka-dot, halftone, plaid and Truchet
+factories with their public explorers. The acceptance and implementation receipts
+below remain the historical evidence for each collection. Current public exports,
+examples and package/site integration have been reconciled during final repository
+review; canonical integrated CI remains pending. The earlier feedback/status board
+does not reopen completed implementation. Recommended future families remain a
+backlog and are not authorized by this checkpoint.
+
+## Historical planning record
+
 > **Historical status: Planning and implementation work record; current code and public contracts define shipped behavior.**
 
 Date: 2026-10-09. Status: first collection and fabric slice accepted on 2026-10-12; noise/composition and emboss slice accepted.
@@ -23,7 +37,7 @@ factories have descriptive names and fixed return/message contracts. No public
 `texture({ kind })` factory or backend selector. Simulation model names identify
 distinct recipes; a Gray–Scott preset is ordinary configuration of one solver.
 
-## Status board
+## Historical status board
 
 | Step                                                   | State               | Completion bar                                                                                   |
 | ------------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------ |

@@ -1,3 +1,4 @@
+import { releaseLayoutTargetGeometry } from '../layout/geometry-publication.js';
 import { registerLayoutSuspensionResource, unregisterLayoutSuspensionResource, isLayoutComponentSuspended, isLayoutInstanceSuspended } from '../layout/participation.js';
 import type { PibblHitTestOutput } from './paint-entry.js';
 import type { isBackendEventTargetLive, useBackendEventTarget } from '../../internal.js';
@@ -389,6 +390,7 @@ function suspendListenerLayout(this: PibblEventListenerRegistration): void {
 }
 
 export function releaseTarget(target: PibblEventTargetRegistration): void {
+  releaseLayoutTargetGeometry(target);
   const errors: unknown[] = [];
   const release = (callback: () => void) => { try { callback(); } catch (error) { errors.push(error); } };
   release(() => unregisterLayoutSuspensionResource(target.component, target));

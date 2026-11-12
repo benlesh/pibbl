@@ -6,6 +6,8 @@ import type { PibblInstance } from '../types.js';
 let nextRevision = 0;
 let fallbackStructuralRevision = 0;
 let fallbackMetricRevision = 0;
+let fallbackExplicitRevision = 0;
+const explicitRevisions = new WeakMap<PibblInstance, number>();
 let isolatedOwner: PibblInstance | undefined;
 interface AllocationRevisions { structural: number; metric: number; }
 const revisions = new WeakMap<PibblInstance, AllocationRevisions>();
@@ -37,8 +39,21 @@ export function allocationInputState(owner = allocationOwner()): AllocationInput
     metric: Math.max(fallbackMetricRevision, local?.metric ?? 0),
   };
 }
+export function allocationExplicitRevision(owner = allocationOwner()): number {
+  return Math.max(fallbackExplicitRevision, owner ? explicitRevisions.get(owner.interactionRoot ?? owner) ?? 0 : 0);
+}
 export function invalidateAllocationInputs(owner?: PibblInstance, kind: 'structural' | 'metric' = 'structural'): void {
+  advanceAllocationInputs(owner, kind, true);
+}
+export function invalidateReceiverAllocationInputs(owner: PibblInstance | undefined, kind: 'structural' | 'metric'): void {
+  advanceAllocationInputs(owner, kind, false);
+}
+function advanceAllocationInputs(owner: PibblInstance | undefined, kind: 'structural' | 'metric', explicit: boolean): void {
   const revision = ++nextRevision;
+  if (explicit) {
+    if (owner) explicitRevisions.set(owner.interactionRoot ?? owner, revision);
+    else fallbackExplicitRevision = revision;
+  }
   if (!owner) {
     if (kind === 'metric') fallbackMetricRevision = revision;
     else fallbackStructuralRevision = revision;

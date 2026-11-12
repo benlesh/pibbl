@@ -54,6 +54,7 @@ const primitivePresentationResolvers = new WeakMap<
   (style: Readonly<any>) => Readonly<PrimitivePresentation> | undefined
 >();
 const policyDefinitions = new WeakMap<Function, ElementPolicyDefinition>();
+const receiverParents = new WeakMap<object, { parent: object; index: number }>();
 const childPrimitiveReceiverTransactions = new WeakMap<
   PibblRenderTransaction,
   WeakMap<object, Map<number, object>>
@@ -260,9 +261,26 @@ export function getChildPrimitiveReceiverToken(
   let token = children.get(occurrence);
   if (!token) {
     token = createPrimitiveReceiverToken();
+    receiverParents.set(token, { parent, index: occurrence });
     children.set(occurrence, token);
   }
   return token;
+}
+
+/** A transaction-independent numeric child path, never a retained receiver token. */
+export function primitiveReceiverPath(receiver: object, root: object): readonly number[] | undefined {
+  const reverse: number[] = [];
+  while (receiver !== root) {
+    const edge = receiverParents.get(receiver);
+    if (!edge) return;
+    reverse.push(edge.index); receiver = edge.parent;
+  }
+  return reverse.reverse();
+}
+export function primitiveReceiverAtPath(transaction: PibblRenderTransaction, root: object, path: readonly number[]): object {
+  let receiver = root;
+  for (let index = 0; index < path.length; index++) receiver = getChildPrimitiveReceiverToken(transaction, receiver, path[index]);
+  return receiver;
 }
 
 /** @internal Reads the private identity override for a placed element. */

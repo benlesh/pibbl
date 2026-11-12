@@ -16,6 +16,7 @@ import {
   ManualSchedulerDriver,
 } from "../scheduler/testing.js";
 import type { PibblFocusManager } from '../focus/focus-manager.js';
+import { committedLayoutTargetBounds } from "../layout/geometry-publication.js";
 import { resolveTargetRootBounds } from "../focus/geometry.js";
 
 afterEach(() => {
@@ -1119,6 +1120,31 @@ describe("defineRenderLayer", () => {
       click(mounted.canvas, 5, 5);
       expect(trace).toContain('new');
       expect(trace).not.toContain('old');
+    } finally { mounted.dispose(); }
+  });
+
+  it('drops retired target geometry ownership after removal while the root idles', () => {
+    const identity = {};
+    const Layer = defineRenderLayer<{ present: boolean }, {}, object>({
+      create(context) { context.canvas.getContext('2d'); return {}; }, render() {},
+      interaction: { settle(_resources, props) {
+        return { targets: props.present ? [{ target: identity, handlers: { onClick: () => {} },
+          keyboardNavigationBounds: { x: 0, y: 0, width: 10, height: 10 } }] : [],
+          hitTest: () => ({ kind: 'miss' }) };
+      } },
+    });
+    const mounted = mountInteraction(<Layer present={true} style={{ width: 40, height: 20 }} />);
+    const root = getPibblInstance(mounted.canvas).eventRoot;
+    const target = Array.from(root.targets).find(target => target.live)!;
+    expect(target).toBeDefined();
+    expect(committedLayoutTargetBounds(target)?.has(target)).toBe(true);
+    try {
+      pibbl(mounted.canvas, <Layer present={false} style={{ width: 40, height: 20 }} />);
+      mounted.driver.flush(20);
+      expect(target.live).toBe(false);
+      expect(root.targets.has(target)).toBe(false);
+      expect(committedLayoutTargetBounds(target)?.has(target)).toBe(false);
+      expect(mounted.driver.pendingHostFrames).toBe(0);
     } finally { mounted.dispose(); }
   });
 

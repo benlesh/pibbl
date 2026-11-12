@@ -260,6 +260,32 @@ geometry adoption nonthrowing. If HTML/resource publication fails, follow the
 root's existing fail-closed cleanup contract and ensure no mismatched interactive
 generation remains active. Do not claim atomic pixel rollback.
 
+### Implementation checkpoint, 2026-11-12
+
+The mounted runtime now prepares a shared geometry generation used by coordinate
+hit testing and focus bounds, rather than publishing a receipt with no consumers.
+Preparation copies native paths, clip paths, and transforms, retains clean Layer
+paint ledgers, and prepares HTML projections and clip resources. HTML application
+callbacks execute against the prior committed geometry. Adoption switches the
+prepared hit/focus/HTML state, and notifications follow adoption. External renderer
+registrations prepare their native listener requirements before the switch.
+Exceptions still fail closed; immediate Canvas painting is unchanged.
+
+Allocation checkpoints cover the five mounted layout families. They compare
+normalized geometric inputs, replay demanded numeric measurements against current
+inputs, and stop allocator work when the relevant outputs remain equal. Receiver
+subscriptions remain receiver-owned. Binding identity is retained separately from
+numeric equality, so replacing an equal-valued signal replaces its dependency
+rather than keeping the old signal alive. Explicit allocation refresh remains a
+forced refresh. Successful root completion adopts checkpoints; aborted preparation
+and teardown release provisional receipts.
+
+Supported pending/final origin phases, conservative schema boundaries, and
+verification limits are tracked in the current
+[Plan 010 checkpoint](../../../project-plans/010-layout-engine-rework.md). The
+implemented numeric barriers do not assert that unchanged allocations eliminate
+JavaScript source traversal or that unsafe schema inputs can be skipped.
+
 ## Lifecycle and failure matrix
 
 | Event                                | Required result                                                                                |

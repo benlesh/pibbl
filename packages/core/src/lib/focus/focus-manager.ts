@@ -336,6 +336,7 @@ export class PibblFocusManager implements PibblFocusPolicyBridge {
     Object.freeze([]);
   private committedBoundaries = new Set<DirectionalBoundary>();
   private pending: PendingFrame | undefined;
+  private retainedNavigationTransaction: PibblRenderTransaction | undefined;
   private transactionalPending:
     | {
         readonly transaction: PibblRenderTransaction;
@@ -924,6 +925,7 @@ export class PibblFocusManager implements PibblFocusPolicyBridge {
     }
 
     if (retained.length === 0) return;
+    if (this.stageRetainedNavigation()) return;
     const replayed = new Set(retained);
     const candidates = Object.freeze(
       this.committedNavigationCandidates.map((candidate) => {
@@ -962,6 +964,7 @@ export class PibblFocusManager implements PibblFocusPolicyBridge {
       }
       return;
     }
+    if (this.stageRetainedNavigation()) return;
     const replayed = new Set(targets);
     if (
       !this.committedCandidates.some((candidate) =>
@@ -980,6 +983,35 @@ export class PibblFocusManager implements PibblFocusPolicyBridge {
       ),
     );
     this.commitCandidates(candidates, this.committedBoundaries);
+  }
+
+  /** A clean inner manager still joins its parent root's geometry adoption. */
+  private stageRetainedNavigation(): boolean {
+    const transaction = this.eventRoot.renderTransaction;
+    if (!transaction?.onPreflight || !transaction.onAdopt) return false;
+    if (this.retainedNavigationTransaction === transaction) return true;
+    this.retainedNavigationTransaction = transaction;
+    let prepared: PreparedNavigation | undefined;
+    transaction.onPreflight(() => {
+      if (this.destroyed) return;
+      const candidates: PibblNavigationCandidate[] = [];
+      for (const candidate of this.committedNavigationCandidates) {
+        if (isHtmlFocusCandidate(candidate)) {
+          const geometry = preparedLayoutHtmlGeometry(transaction, candidate.region);
+          if (geometry ? !geometry.active : !candidate.region.active || !candidate.region.content) continue;
+          candidates.push(Object.freeze({ ...candidate, rootBounds: geometry?.bounds ?? candidate.region.rootBounds }));
+        } else {
+          candidates.push(Object.freeze({ ...candidate, rootBounds: preparedLayoutTargetBounds(transaction, candidate.target) }));
+        }
+      }
+      prepared = this.prepareNavigationCandidates(Object.freeze(candidates), this.committedBoundaries);
+    });
+    transaction.onAdopt(() => { if (prepared && !this.destroyed) this.adoptNavigationCandidates(prepared); });
+    transaction.onFinish(success => {
+      if (this.retainedNavigationTransaction === transaction) this.retainedNavigationTransaction = undefined;
+      if (success && prepared && !this.destroyed) this.finishNavigationCandidates();
+    });
+    return true;
   }
 
   setFocusState(

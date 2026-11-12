@@ -1,16 +1,18 @@
+import { allocationCheckpointPhaseOwner, retainAllocationCheckpointPhases } from './allocation-checkpoint-owner.js';
+import { withAllocationCheckpoint, recordAllocationStyle, allocationMeasurement, declineUnrecordedAllocationMeasurement } from './allocation-checkpoint.js';
 import { contentBoxStyle } from './box-sizing.js';
-import { canvasMeasurementService } from './canvas-measurement.js';
+import { canvasMeasurementService, isCurrentCanvasMeasurementService } from './canvas-measurement.js';
 import { Grid } from './grid.js';
 import { Flow } from './flow.js';
 import type { PreparedFlexLayoutPlan, PreparedLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
-import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, peekPreparedLayoutPlan, peekPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedIntrinsicMain, peekPreparedIntrinsicMain, takePreparedIntrinsicMain, type PreparedIntrinsicMainStage } from './prepared-root.js';
+import { currentPreparedReceiverSlot, isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, claimPreparedFlexPlan, peekPreparedLayoutPlan, peekPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedIntrinsicMain, peekPreparedIntrinsicMain, takePreparedIntrinsicMain, type PreparedIntrinsicMainStage } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
-import { allocationInputRevision, allocationStructuralRevision, allocationInputState, allocationOwner } from './allocation-revision.js';
+import { allocationInputRevision, allocationStructuralRevision } from './allocation-revision.js';
 import { FLEX_BASELINE_GROUP, FLEX_LAST_BASELINE } from './flex-baseline-mode.js';
-import { FlexAllocationCache, frozenFlexInputs, frozenFlexMetricDependencies, type CachedFlexPlacement } from './flex-allocation-cache.js';
+import type { CachedFlexPlacement } from './flex-allocation-cache.js';
 import { nativeLayout, LayoutRegion, mountedLayoutRegion, solveTransientFlexMain, prepareTransientIntrinsicMainQueries, resolveTransientIntrinsicMain, resolveTransientKnownOwnerMain, type NumericFlexMainInput, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
 import { Rectangle } from '../components/rect.js';
-import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth, measureLayoutTextNaturalRun } from '../components/text.js';
+import { Text, prepareLayoutTextContent as readLayoutTextContent, measureLayoutTextMinimumWidth, measureLayoutTextNaturalRun } from '../components/text.js';
 
 const unsupportedProperties = ['order'] as const;
 
@@ -50,7 +52,6 @@ import type {
 } from '../types.js';
 import {
   childWithUsedSize,
-  childWithCachedUsedSize,
   prepareDirectChildStyle,
   materializeLayoutChildren,
   placeDirectChildren,
@@ -260,30 +261,7 @@ function renderFlex(
   const region = nativeLayout ? mountedLayoutRegion() : undefined;
   const plan = prepared ?? prepareFlexAllocation(props, style, localContent, service, region);
   if (nativeLayout && !prepared) prepareFlexDescendants(plan, style);
-  const { children, placements, revision } = plan;
-  if (!plan.cached) {
-    const transaction = GLOBAL_STATE.renderTransaction;
-    const input = props.children;
-    const metricDependencies = frozenFlexMetricDependencies(input);
-    if (region && transaction && !style[FLEX_INHERITED_CONTAINING_BOX] && metricDependencies && frozenFlexInputs(input)) {
-      const owner = GLOBAL_STATE.componentRefs!;
-      const allocationRoot = allocationOwner();
-      const snapshot: CachedFlexPlacement[] = [];
-      for (const placement of placements) {
-        snapshot.push({
-          box: { x: placement.box.x, y: placement.box.y, width: placement.box.width, height: placement.box.height },
-          layoutY: placement.layoutY,
-          usedWidth: placement.usedWidth, usedHeight: placement.usedHeight,
-        });
-      }
-      transaction.onFinish(success => {
-        if (!success || owner.teardowns.closed || allocationInputRevision(allocationRoot) !== revision) return;
-        const cache = new FlexAllocationCache();
-        cache.store(input, allocationInputState(allocationRoot), localContent, style, snapshot, metricDependencies);
-        region.allocationCache = cache;
-      });
-    }
-  }
+  const { children, placements } = plan;
   let index = 0;
   return placeDirectChildren(
     children,
@@ -298,44 +276,44 @@ function flexMeasurementService(ctx: RenderingContext2D): CanvasMeasurementServi
 }
 function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexStyle>, localContent: Readonly<LayoutBox>, service: CanvasMeasurementService, region?: LayoutRegion, parentSlot?: PreparedLayoutSlot, deferStaticAbsolute?: Array<DeferredStaticAbsolutePlacement | undefined>) {
   const revision = allocationInputRevision();
-  // Decide before materializing or inspecting children; normal paint traversal
-  // still visits them and resolves their current receiver-owned paint inputs.
-  const cached = deferStaticAbsolute || style[FLEX_INHERITED_CONTAINING_BOX] ? undefined : region?.allocationCache?.read(props.children, allocationInputState(), localContent, style);
   const children = prepareLayoutChildren(props.children, 'Flex');
-  let placements: FlexPlacement[];
-  if (cached) {
-    recordWasmAllocationCacheHit();
-    placements = [];
-    for (let index = 0; index < children.length; index++) {
-      const allocation = cached[index];
-      const child = children[index];
-      const receiver = hasPreparedChildStyles() ? getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, index) : undefined;
-      const prepared = takePreparedChildStyle(child, receiver, localContent);
-      placements.push({
-        box: allocation.box,
-        layoutY: allocation.layoutY,
-        usedWidth: allocation.usedWidth,
-        usedHeight: allocation.usedHeight,
-        element: prepared ? childWithUsedSize(child, preparedStyleValue(prepared), allocation.usedWidth, allocation.usedHeight, receiver, preparedStyleQuery(prepared)) :
-          childWithCachedUsedSize(child, allocation.usedWidth, allocation.usedHeight),
-      });
-    }
-  } else {
-    if (region) region.allocationCache = undefined;
-    const axis = isRowDirection(style.flexDirection) ? 'row' : 'column';
-    const staged = takePreparedIntrinsicMain(
-      GLOBAL_STATE.primitiveReceiverToken,
-      children,
-      axis,
-      axis === 'row' ? localContent.width : localContent.height,
-      revision,
-    );
-    placements = resolveFlexPlacements(localContent, children, style, {
+  const axis = isRowDirection(style.flexDirection) ? 'row' : 'column';
+  const staged = takePreparedIntrinsicMain(
+    GLOBAL_STATE.primitiveReceiverToken,
+    children,
+    axis,
+    axis === 'row' ? localContent.width : localContent.height,
+    revision,
+  );
+  const placements = withAllocationCheckpoint(region, {
+    children, content: localContent, settings: { style, deferred: !!deferStaticAbsolute }, flexMargins: true,
+    continuation: staged && { axis: staged.axis, contentMain: staged.contentMain, items: staged.items, autoMarginFreeMain: staged.autoMarginFreeMain },
+    pending: deferStaticAbsolute && {
+      read: index => {
+        const entry = deferStaticAbsolute[index];
+        return entry && { style: entry.style, data: { measured: !!entry.measurement, token: entry.measurementToken } };
+      },
+      replay: (index, normalized, receiverToken, query, data) => {
+        const { measured, token } = data as { measured: boolean; token: object | undefined };
+        deferStaticAbsolute[index] = { sourceIndex: index, child: children[index], style: normalized, receiverToken, query,
+          measurement: measured ? { service, measureElement: (element, constraints) => measureElement(element, constraints, service) } : undefined,
+          measurementToken: token };
+        return deferredStaticPlacementSentinel();
+      },
+    },
+    onHit: recordWasmAllocationCacheHit,
+    calculate: () => resolveFlexPlacements(localContent, children, style, {
       service,
       measureElement: (element, constraints) => measureElement(element, constraints, service),
-    }, region, staged, parentSlot, deferStaticAbsolute);
+    }, region, staged, parentSlot, deferStaticAbsolute),
+  });
+  for (let index = 0; index < placements.length; index++) {
+    if (deferStaticAbsolute?.[index]) continue;
+    const placement = placements[index];
+    attachPreparedLayoutSlot(placement.element, currentPreparedReceiverSlot(getPrimitiveReceiverToken(placement.element)));
   }
-  return { children, placements, revision, content: localContent, cached: cached !== undefined };
+  if (region) retainAllocationCheckpointPhases(region, deferStaticAbsolute?.flatMap((entry, index) => entry ? [index] : []) ?? []);
+  return { children, placements, revision, content: localContent, cached: false };
 }
 
 /**
@@ -459,8 +437,19 @@ function finalizeDeferredStaticAbsolutePlacements(plan: PreparedFlexLayoutPlan, 
     const entry = state.slots[sourceIndex];
     if (!entry) continue;
     if (entry.sourceIndex !== sourceIndex || sourceIndex >= plan.placements.length) throw new Error('Deferred static absolute placement lost source ordering.');
-    plan.placements[sourceIndex] = resolveAbsoluteFlexPlacement(paddingBox ??= resolveFlexContainingBox(style, plan.content),
-      entry.child, entry.style, entry.receiverToken, entry.query, plan.content, style, entry.measurement, plan.region, entry.measurementToken);
+    const containing = paddingBox ??= resolveFlexContainingBox(style, plan.content);
+    const owner = plan.region && allocationCheckpointPhaseOwner(plan.region, sourceIndex);
+    plan.placements[sourceIndex] = withAllocationCheckpoint(owner, {
+      children: [entry.child], receiverTokens: [entry.receiverToken], content: plan.content,
+      settings: { style, containing }, flexMargins: true, onHit: recordWasmAllocationCacheHit,
+      calculate: () => {
+        // This is a distinct numerical phase, after the containing origin settles.
+        if (plan.region) { recordWasmAllocationPass(); recordWasmAllocationItem(); }
+        recordAllocationStyle(entry.receiverToken, entry.query ? new ResponsiveStylePreparation(entry.style, entry.query) : entry.style);
+        return [resolveAbsoluteFlexPlacement(containing, entry.child, entry.style, entry.receiverToken, entry.query,
+          plan.content, style, entry.measurement, plan.region, entry.measurementToken)];
+      },
+    })[0];
     state.slots[sourceIndex] = undefined;
   }
 }
@@ -1575,19 +1564,13 @@ function resolveFlexPlacements(
     let intrinsicTextBasis: number | undefined;
     let intrinsicTextMaximum: number | undefined;
     if (directIntrinsicTextMain) {
-      const font = normalized.font as string ?? '13px sans-serif';
-      const content = prepareLayoutTextContent(child.props, { receiverToken });
-      if (region) recordWasmMeasurement();
-      const maximum = normalized.wrap === true
-        ? measureLayoutTextNaturalRun(content, { font, service: measurement.service })
-        : measurement.service.measureText(content, font).width;
+      const intrinsic = measureTextIntrinsicWidths(child, normalized, receiverToken, measurement, region);
+      const maximum = intrinsic.maximum;
       if (!Number.isFinite(maximum) || maximum < 0) {
         throw childDiagnostic(child, 'width', intrinsicMainValue, container, 'Text intrinsic run width must be finite and nonnegative');
       }
       // An unwrapped run has no soft break opportunities in Text's public policy.
-      intrinsicTextMinimum = normalized.wrap === true
-        ? measureLayoutTextMinimumWidth(child.props, { font, service: measurement.service, receiverToken })
-        : maximum;
+      intrinsicTextMinimum = intrinsic.minimum;
       intrinsicTextMaximum = maximum;
       if (intrinsicMainRequest) {
         intrinsicTextBasis = resolveIntrinsicMainBasis(intrinsicMainRequest, intrinsicTextMinimum, maximum, child, container);
@@ -1768,11 +1751,7 @@ function resolveFlexPlacements(
       ? resolveIntrinsicMainBasis(intrinsicMainRequest, intrinsicMinimum, intrinsicMaximum, child, container)
       : undefined);
     if (automaticTextMinimum) {
-      if (region) recordWasmMeasurement();
-      const font = normalized.font as string ?? '13px sans-serif';
-      const contentMinimum = normalized.wrap === true ? measureLayoutTextMinimumWidth(child.props, {
-        font, service: measurement.service, receiverToken,
-      }) : measurement.service.measureText(prepareLayoutTextContent(child.props, { receiverToken }), font).width;
+      const contentMinimum = measureTextContentMinimum(child, normalized, receiverToken, measurement, region);
       minMain = Math.min(contentMinimum, maxMain,
         typeof specifiedMain === 'number' ? specifiedMain : Number.POSITIVE_INFINITY);
     }
@@ -1795,15 +1774,8 @@ function resolveFlexPlacements(
       container,
     );
     if (naturalColumnWrappedTextCross) {
-      const content = prepareLayoutTextContent(child.props, { receiverToken });
-      const font = normalized.font as string ?? '13px sans-serif';
       const token = layoutToken ?? receiverToken;
-      let naturalWidth = region?.readTextMaximum(token, content, font);
-      if (naturalWidth === undefined) {
-        if (region) recordWasmMeasurement();
-        naturalWidth = measureLayoutTextNaturalRun(content, { font, service: measurement.service });
-        region?.writeTextMaximum(token, content, font, naturalWidth);
-      }
+      const naturalWidth = measureTextNaturalWidth(child, normalized, receiverToken, token, measurement, region);
       const chosenWidth = Math.min(naturalWidth, Math.max(0, crossSize - paddingCross - marginCrossBefore - marginCrossAfter));
       const measuredStyle = { ...normalized, width: chosenWidth };
       const measurementChild = clonePibblElement(child);
@@ -1860,15 +1832,7 @@ function resolveFlexPlacements(
 
     let naturalTextMain: number | undefined;
     if (automaticTextBasis) {
-      const content = prepareLayoutTextContent(child.props, { receiverToken });
-      const font = normalized.font as string ?? '13px sans-serif';
-      const token = layoutToken ?? receiverToken;
-      naturalTextMain = genericTextFont(normalized) ? region?.readTextMaximum(token, content, font) : undefined;
-      if (naturalTextMain === undefined) {
-        if (region) recordWasmMeasurement();
-        naturalTextMain = normalized.wrap === true ? measureLayoutTextNaturalRun(content, { font, service: measurement.service }) : measurement.service.measureText(content, font).width;
-        if (genericTextFont(normalized)) region?.writeTextMaximum(token, content, font, naturalTextMain);
-      }
+      naturalTextMain = measureTextNaturalWidth(child, normalized, receiverToken, layoutToken ?? receiverToken, measurement, region);
     }
     const stretchMain = (declared.flexBasis === undefined || declared.flexBasis === 'auto' ? declared[mainProperty] : declared.flexBasis) === 'stretch';
     const baseMain = stagedMeasured ? stagedItem!.target : stretchMain ? Math.max(0, mainReference - marginMainBefore - marginMainAfter - paddingMain) : intrinsicMainBasis ?? naturalTextMain ?? resolveBasis(
@@ -2215,7 +2179,7 @@ export function resolveAbsoluteFlexPlacement(
     height: automaticHeight ? measuredHeight ?? resolveAbsoluteAutoSize(top, bottom, paddingBox.height, 'height', child, paddingBox, sizingStyle.aspectRatio === undefined ? undefined : (specifiedWidth as number) / sizingStyle.aspectRatio) : specifiedHeight,
   } : sizingStyle;
   if (automaticWidth || automaticHeight) markDerivedAbsoluteAxes(settledStyle, automaticWidth, automaticHeight);
-  const resolved = resolveDirectChildBox(paddingBox, child, 'absolute', settledStyle);
+  const resolved = resolveDirectChildBox(paddingBox, child, 'absolute', settledStyle, undefined, receiverToken);
   const width = resolved.borderBox.width;
   const height = resolved.borderBox.height;
   const row = isRowDirection(options.flexDirection);
@@ -2462,7 +2426,84 @@ function appendPreparedStyleSnapshot(snapshot: unknown[], style: Readonly<Record
   return true;
 }
 
+function currentFlexMeasurementInput(): FlexMeasurementInput {
+  const context = GLOBAL_STATE.renderContext;
+  if (!context) throw new Error('A mounted Flex query requires its current Canvas context.');
+  const service = canvasMeasurementService(context);
+  return { service, measureElement: (element, constraints) => measureElement(element, constraints, service) };
+}
+function bindFlexMeasurementInput(input: FlexMeasurementInput): () => FlexMeasurementInput {
+  return isCurrentCanvasMeasurementService(input.service) ? currentFlexMeasurementInput : () => input;
+}
+
+function measureTextIntrinsicWidths(child: PibblElement<any>, style: Readonly<SystemStyle>, receiver: object, measurement: FlexMeasurementInput, region?: LayoutRegion): { minimum: number; maximum: number } {
+  const resolveMeasurement = bindFlexMeasurementInput(measurement);
+  const element = clonePibblElement(child);
+  setPreNormalizedStyle(element, style, child, receiver);
+  return allocationMeasurement(element, current => {
+    const measurement = resolveMeasurement();
+    const normalized = peekPreNormalizedStyle(current)!.style as Readonly<TextStyle>;
+    const receiverToken = getPrimitiveReceiverToken(current);
+    const font = normalized.font ?? '13px sans-serif';
+    const content = prepareLayoutTextContent(current.props, { receiverToken });
+    if (region) recordWasmMeasurement();
+    const maximum = normalized.wrap === true ? measureLayoutTextNaturalRun(content, { font, service: measurement.service }) : measurement.service.measureText(content, font).width;
+    const minimum = normalized.wrap === true ? measureLayoutTextMinimumWidth(current.props, { font, service: measurement.service, receiverToken }) : maximum;
+    return { minimum, maximum };
+  });
+}
+function measureTextContentMinimum(child: PibblElement<any>, style: Readonly<SystemStyle>, receiver: object, measurement: FlexMeasurementInput, region?: LayoutRegion): number {
+  const resolveMeasurement = bindFlexMeasurementInput(measurement);
+  const element = clonePibblElement(child);
+  setPreNormalizedStyle(element, style, child, receiver);
+  return allocationMeasurement(element, current => {
+    const measurement = resolveMeasurement();
+    const normalized = peekPreNormalizedStyle(current)!.style as Readonly<TextStyle>;
+    const receiverToken = getPrimitiveReceiverToken(current);
+    const font = normalized.font ?? '13px sans-serif';
+    if (region) recordWasmMeasurement();
+    return normalized.wrap === true ? measureLayoutTextMinimumWidth(current.props, { font, service: measurement.service, receiverToken }) :
+      measurement.service.measureText(prepareLayoutTextContent(current.props, { receiverToken }), font).width;
+  });
+}
+function measureTextNaturalWidth(child: PibblElement<any>, style: Readonly<SystemStyle>, receiver: object, token: object, measurement: FlexMeasurementInput, region?: LayoutRegion): number {
+  const resolveMeasurement = bindFlexMeasurementInput(measurement);
+  const element = clonePibblElement(child);
+  setPreNormalizedStyle(element, style, child, receiver);
+  return allocationMeasurement(element, current => {
+    const measurement = resolveMeasurement();
+    const normalized = peekPreNormalizedStyle(current)!.style as Readonly<TextStyle>;
+    const receiverToken = getPrimitiveReceiverToken(current);
+    const font = normalized.font ?? '13px sans-serif';
+    const content = prepareLayoutTextContent(current.props, { receiverToken });
+    let width = genericTextFont(normalized) ? region?.readTextMaximum(token, content, font) : undefined;
+    if (width === undefined) {
+      if (region) recordWasmMeasurement();
+      width = normalized.wrap === true ? measureLayoutTextNaturalRun(content, { font, service: measurement.service }) : measurement.service.measureText(content, font).width;
+      if (genericTextFont(normalized)) region?.writeTextMaximum(token, content, font, width);
+    }
+    return width;
+  });
+}
+
+function prepareLayoutTextContent(props: Parameters<typeof readLayoutTextContent>[0], options: Parameters<typeof readLayoutTextContent>[1]): string {
+  declineUnrecordedAllocationMeasurement();
+  return readLayoutTextContent(props, options);
+}
+
 function measureFlexChild(
+  child: PibblElement<any>, constraints: Constraints,
+  style: Readonly<BoxStyle & Record<string, unknown>>, token: object,
+  measurement: FlexMeasurementInput, region?: LayoutRegion, query?: PreparedQuery, constrainedProvider = false,
+  parentMainAxis?: 'row' | 'column', ordinaryProvider = false,
+): MeasureResult {
+  const resolveMeasurement = bindFlexMeasurementInput(measurement);
+  return allocationMeasurement(child, current => measureFlexChildUncached(current, constraints,
+    (peekPreNormalizedStyle(current)?.style ?? style) as Readonly<BoxStyle & Record<string, unknown>>,
+    token, resolveMeasurement(), region, query, constrainedProvider, parentMainAxis, ordinaryProvider));
+}
+
+function measureFlexChildUncached(
   child: PibblElement<any>, constraints: Constraints,
   style: Readonly<BoxStyle & Record<string, unknown>>, token: object,
   measurement: FlexMeasurementInput, region?: LayoutRegion, query?: PreparedQuery, constrainedProvider = false,
@@ -2707,17 +2748,43 @@ function prepareKnownStructuralBaseline(
   parentSlot?: PreparedLayoutSlot,
   lastSource = false,
 ): PreparedKnownBaseline | undefined {
-  const alignment = lastSource ? 'last-baseline' : 'first-baseline';
   const root = item.baselineRoot ?? item.child;
   if (root.type !== Flex && root.type !== Flow && root.type !== Grid) return;
+  const resolveMeasurement = bindFlexMeasurementInput(measurement);
+  const { targetMain, preferredCross, paddingCross, layoutOccurrence } = item;
+  const child = clonePibblElement(item.child);
+  setPreNormalizedStyle(child, item.normalized, item.child, item.receiverToken, item.query);
+  const offset = allocationMeasurement(child, current => {
+    const normalized = peekPreNormalizedStyle(current)!.style;
+    const receiverToken = getPrimitiveReceiverToken(current);
+    if (!receiverToken) throw new Error('A structural baseline query requires its current receiver.');
+    const baselineRoot = isLayoutComponent(current.type) ? prepareLayoutComponent(current, { receiverToken }) : current;
+    return prepareKnownStructuralBaselineUncached({ child: current, normalized, receiverToken, baselineRoot,
+      targetMain, preferredCross, paddingCross, layoutOccurrence }, container, resolveMeasurement(), parentSlot, lastSource).offset;
+  });
+  const slot = currentPreparedReceiverSlot(item.receiverToken);
+  if (!slot) throw new Error('A structural baseline demand must stage its current receiver allocation.');
+  return { slot, offset };
+}
+
+function prepareKnownStructuralBaselineUncached(
+  item: Pick<FlexItem, 'child' | 'normalized' | 'receiverToken' | 'baselineRoot' | 'targetMain' | 'preferredCross' | 'paddingCross' | 'layoutOccurrence'>,
+  container: Readonly<LayoutBox>, measurement: FlexMeasurementInput, parentSlot: PreparedLayoutSlot | undefined, lastSource: boolean,
+): PreparedKnownBaseline {
+  const alignment = lastSource ? 'last-baseline' : 'first-baseline';
+  const root = item.baselineRoot ?? item.child;
   const style = item.normalized as Readonly<FlexStyle>;
   const staticOwner = root.type === Flex && style.position === 'static';
   const content = { x: 0, y: 0, width: item.targetMain, height: Math.max(0, item.preferredCross - item.paddingCross) };
-  const slot = preflightKnownLayout(item.child, item.normalized, content, item.receiverToken, item.layoutOccurrence, parentSlot, 'row',
+  const direction = style.layoutDirection ?? getLayoutDirection();
+  const currentSlot = currentPreparedReceiverSlot(item.receiverToken);
+  const currentPlan = currentSlot && peekPreparedLayoutPlan(currentSlot, content, direction);
+  // A failed equality comparison may already have prepared this exact demand.
+  // The ensuing allocator consumes that current plan instead of staging it twice.
+  const slot = currentPlan ? currentSlot : preflightKnownLayout(item.child, item.normalized, content, item.receiverToken, item.layoutOccurrence, parentSlot, 'row',
     staticOwner ? { deferStaticContainingDescendants: true } : undefined);
   if (!slot) throw childDiagnostic(item.child, 'alignItems', alignment, container,
     'PIBBL_LAYOUT_UNSUPPORTED_BASELINE: the selected known layout root did not prepare its allocation');
-  const direction = style.layoutDirection ?? getLayoutDirection();
   const plan = root.type === Flex ?
     peekPreparedFlexPlan(slot, content, direction) :
     peekPreparedLayoutPlan(slot, content, direction);

@@ -28,7 +28,8 @@ interface GeometryOwner {
   instances: Map<PibblInstance, InstanceGeometry>;
   snapshot: GeometrySnapshot;
   paint: ReadonlyMap<PibblInstance, readonly PibblPaintEntry[]>;
-  targets: ReadonlyMap<PibblEventTargetRegistration, Readonly<LayoutBox> | undefined>;
+  targets: Map<PibblEventTargetRegistration, Readonly<LayoutBox> | undefined>;
+  candidateTargets?: Map<PibblEventTargetRegistration, Readonly<LayoutBox> | undefined>;
 }
 let nextNodeId = 0;
 const nodeIds = new WeakMap<PibblComponentRefs<any>, number>();
@@ -62,9 +63,12 @@ export function beginLayoutGeometry(instance: PibblInstance, transaction: PibblR
     let targets: Map<PibblEventTargetRegistration, Readonly<LayoutBox> | undefined> | undefined;
     transaction.onPreflight?.(() => {
       targets = new Map();
-      for (const target of root.eventRoot.targets) targets.set(target, preparedLayoutTargetBounds(transaction, target));
+      committed.candidateTargets = targets;
+      for (const target of root.eventRoot.targets) {
+        if (!retiredTargets.get(transaction)?.has(target)) targets.set(target, preparedLayoutTargetBounds(transaction, target));
+      }
       for (const target of preparedTargets.get(transaction)?.keys() ?? []) {
-        if ((target.owner.interactionRoot ?? target.owner) === root) targets.set(target, preparedLayoutTargetBounds(transaction, target));
+        if ((target.owner.interactionRoot ?? target.owner) === root && !retiredTargets.get(transaction)?.has(target)) targets.set(target, preparedLayoutTargetBounds(transaction, target));
       }
       next = new Map(committed.instances);
       paint = new Map(committed.paint);
@@ -109,6 +113,7 @@ export function beginLayoutGeometry(instance: PibblInstance, transaction: PibblR
     transaction.onFinish(success => {
       if (success && !transaction.onAdopt) adopt();
       if (!success && transaction.failed !== false) { committed.instances.clear(); committed.snapshot = EMPTY; committed.paint = new Map(); committed.targets = new Map(); }
+      if (committed.candidateTargets === targets) committed.candidateTargets = undefined;
       staged.clear(); roots!.delete(root);
       if (!roots!.size) pending.delete(transaction);
     });
@@ -168,6 +173,19 @@ function copyMatrix(matrix: DOMMatrix): DOMMatrix {
   return new DOMMatrix([matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f]);
 }
 
+/** Released registrations cannot be retained by either committed or prepared geometry. */
+export function releaseLayoutTargetGeometry(target: PibblEventTargetRegistration): void {
+  const owner = owners.get(target.owner.interactionRoot ?? target.owner);
+  owner?.targets.delete(target);
+  owner?.candidateTargets?.delete(target);
+  const transaction = GLOBAL_STATE.renderTransaction ?? target.owner.eventRoot.renderTransaction;
+  if (transaction) {
+    stageLayoutTargetRetirement(transaction, target);
+    preparedTargets.get(transaction)?.delete(target);
+    preparedTargetResults.get(transaction)?.delete(target);
+  }
+}
+
 /** Returns a published target rectangle, including an intentional absent rectangle. */
 export function committedLayoutTargetBounds(target: PibblEventTargetRegistration): ReadonlyMap<PibblEventTargetRegistration, Readonly<LayoutBox> | undefined> | undefined {
   const owner = owners.get(target.owner.interactionRoot ?? target.owner);
@@ -200,8 +218,21 @@ interface PreparedTargetGeometry {
 const preparedTargets = new WeakMap<PibblRenderTransaction, Map<PibblEventTargetRegistration, PreparedTargetGeometry>>();
 const preparedTargetResults = new WeakMap<PibblRenderTransaction, Map<PibblEventTargetRegistration, Readonly<LayoutBox> | undefined>>();
 
+const retiredTargets = new WeakMap<PibblRenderTransaction, Set<PibblEventTargetRegistration>>();
+
+/** Excludes retiring registrations from the candidate without touching committed ownership. */
+export function stageLayoutTargetRetirement(transaction: PibblRenderTransaction, target: PibblEventTargetRegistration): void {
+  let entries = retiredTargets.get(transaction);
+  if (!entries) {
+    entries = new Set(); retiredTargets.set(transaction, entries);
+    transaction.onFinish(() => retiredTargets.delete(transaction));
+  }
+  entries.add(target);
+}
+
 /** External renderer targets join geometry preparation without changing live registrations. */
 export function stageLayoutTargetGeometry(transaction: PibblRenderTransaction, target: PibblEventTargetRegistration, geometry: PreparedTargetGeometry): void {
+  if (retiredTargets.get(transaction)?.has(target)) return;
   let entries = preparedTargets.get(transaction);
   if (!entries) {
     entries = new Map(); preparedTargets.set(transaction, entries);

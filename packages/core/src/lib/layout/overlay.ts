@@ -1,5 +1,6 @@
+import { withAllocationCheckpoint, mountedAllocationCheckpointOwner } from './allocation-checkpoint.js';
 import { hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
-import { nativeLayout } from './wasm/region.js';
+import { recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit, nativeLayout } from './wasm/region.js';
 import { registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { getStyleMeasurementMode, preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -97,7 +98,7 @@ function renderOverlay(
 
   const prepared = nativeLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
   const children = prepared?.children ?? ordinaryChildren ?? prepareLayoutChildren(props.children, 'Overlay');
-  const placements = prepared?.placements ?? (nativeLayout ? prepareOverlayPlacements(children, localContent, style) : undefined);
+  const placements = prepared?.placements ?? (nativeLayout ? withAllocationCheckpoint(mountedAllocationCheckpointOwner(), { children, content: localContent, settings: style, onHit: recordWasmAllocationCacheHit, calculate: () => prepareOverlayPlacements(children, localContent, style) }) : undefined);
   let placementIndex = 0;
   let occurrence = 0;
   return placeDirectChildren(
@@ -146,8 +147,10 @@ export const Overlay = definePrimitive<
 });
 
 function prepareOverlayPlacements(children: readonly PibblElement<any>[], content: Readonly<LayoutBox>, alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>>): { box: LayoutBox; element: PibblElement<any> }[] {
+  recordWasmAllocationPass();
   const placements = new Array<{ box: LayoutBox; element: PibblElement<any> }>(children.length);
   for (let index = 0; index < children.length; index++) {
+    recordWasmAllocationItem();
     placements[index] = resolveOverlayChildPlacement(content, children[index], alignment, getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, index));
   }
   return placements;
@@ -165,7 +168,7 @@ if (nativeLayout) registerKnownLayoutPreflight(Overlay, (element, style, content
   });
   try {
     const children = prepareLayoutChildren(element.props.children, 'Overlay');
-    const plan: PreparedLayoutPlan = { content, children, placements: prepareOverlayPlacements(children, content, style as Readonly<OverlayStyle>) };
+    const plan: PreparedLayoutPlan = { content, children, placements: withAllocationCheckpoint(slot, { children, content, settings: style, onHit: recordWasmAllocationCacheHit, calculate: () => prepareOverlayPlacements(children, content, style as Readonly<OverlayStyle>) }) };
     prepareKnownLayoutDescendants(plan, slot);
     stagePreparedLayoutPlan(slot, plan);
   } finally {
@@ -201,6 +204,8 @@ function resolveOverlayChildPlacement(
     child,
     'overlay',
     item,
+    undefined,
+    receiverToken,
   );
   const declaredBox = resolved.borderBox;
   const horizontal = resolveItemAlignment(

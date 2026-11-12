@@ -115,12 +115,14 @@ export function resolvePrimitiveStyleInput(
   return resolved ?? source;
 }
 
-function styleInputRole(
+/** @internal Shared receiver input roles for numeric allocation comparisons. */
+export function styleInputRole(
   key: string,
 ): 'layout' | 'measurement' | 'paint' | 'interaction' | 'transform' | 'unknown' {
-  if (key === 'fill' || key === 'stroke' || key === 'opacity' || key === 'filter') return 'paint';
-  if (key === 'cursor' || key === 'pointerEvents') return 'interaction';
-  if (key === 'font' || key === 'lineHeight' || key === 'wrap' || key === 'fit') return 'measurement';
+  if (key === 'fill' || key === 'stroke' || key === 'strokeWidth' || key === 'opacity' || key === 'filter') return 'paint';
+  if (key === 'translateX' || key === 'translateY' || key === 'scaleX' || key === 'scaleY' || key === 'rotationDegrees' || key === 'rotationOrigin' || key === 'skewX' || key === 'skewY') return 'transform';
+  if (key === 'cursor' || key === 'pointerEvents' || key === 'lineInteractionWidth') return 'interaction';
+  if (key === 'font' || key === 'textBaseline' || key === 'textAlign' || key === 'lineHeight' || key === 'wrap' || key === 'fit') return 'measurement';
   if (key === 'layoutParticipation' || key === 'gridAutoFlow' || key === 'gridAutoColumns' || key === 'gridAutoRows' || key === 'gridTemplateColumns' || key === 'gridTemplateRows' || key === 'gridColumnStart' || key === 'gridColumnSpan' || key === 'gridRowStart' || key === 'gridRowSpan' || key === 'aspectRatio' || key === 'borderWidth' || key === 'borderStartWidth' || key === 'borderEndWidth' || key === 'boxSizing' || key === 'width' || key === 'height' || key === 'minWidth' || key === 'minHeight' || key === 'maxWidth' || key === 'maxHeight' || key === 'position' || key === 'left' || key === 'right' || key === 'top' || key === 'bottom' || key === 'insetStart' || key === 'insetEnd' || key === 'flexBasis' || key === 'flexGrow' || key === 'flexShrink' || key === 'layoutDirection' || key === 'flexDirection' || key === 'flexWrap' || key === 'justifyContent' || key === 'alignItems' || key === 'alignSelf' || key === 'alignContent' || key === 'gap' || key === 'rowGap' || key === 'columnGap' || key === 'padding' || key === 'paddingStart' || key === 'paddingEnd' || key === 'margin' || key === 'marginTop' || key === 'marginRight' || key === 'marginBottom' || key === 'marginLeft' || key === 'marginStart' || key === 'marginEnd') return 'layout';
   return 'unknown';
 }

@@ -17,7 +17,7 @@ import type {
   PibblEventTargetSnapshot,
 } from '../events/types';
 import { executeRender } from '../execute-render';
-import { clearSharedState, getPibblInstance } from '../global-state';
+import { GLOBAL_STATE, clearSharedState, getPibblInstance } from '../global-state';
 import { useEventListener } from '../hooks/use-event-listener';
 import { useEventTarget } from '../hooks/use-event-target';
 import { useRef } from '../hooks/use-ref';
@@ -700,6 +700,12 @@ describe('directional boundaries and root-logical bounds', () => {
 
   it('uses the current layer bridge for an inner manager on first render and cached movement', () => {
     let renders = 0;
+    let inspectPublication: (() => void) | undefined;
+    const observed: Array<Readonly<LayoutBox> | undefined> = [];
+    const InspectPublication = () => {
+      if (inspectPublication) GLOBAL_STATE.renderTransaction?.onPublish?.(inspectPublication);
+      return undefined;
+    };
     const Inner = (_props: {}) => {
       renders++;
       return createElement(Target, {
@@ -717,7 +723,7 @@ describe('directional boundaries and root-logical bounds', () => {
         children: focusManaged(
           directionalPolicy(createElement(Inner, {}), { mode: 'directional' }),
         ),
-      })],
+      }), createElement(InspectPublication, {})],
     });
     const mounted = mountAndRender(createElement(Root, { x: 20 }));
 
@@ -729,7 +735,10 @@ describe('directional boundaries and root-logical bounds', () => {
     });
     expect(mounted.manager.candidates[0].directionalBoundary).toBeDefined();
 
+    inspectPublication = () => { observed.push(mounted.manager.candidates[0].rootBounds); };
     executeRender(mounted.canvas, 2, createElement(Root, { x: 50 }));
+
+    expect(observed).toEqual([{ x: 22, y: 13, width: 4, height: 5 }]);
 
     expect(renders).toBe(1);
     expect(mounted.manager.candidates[0].rootBounds).toEqual({

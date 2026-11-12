@@ -356,6 +356,7 @@ function componentSignalReadOptions(
   return {
     debugName: `${componentRefs.element.type.name || 'Anonymous'} (${componentRefs.id})`,
     layoutOwner: pibblInstance,
+    allocationReceiver: componentRefs,
     invalidate: () => {
       if (
         GLOBAL_STATE.pibblInstances.get(pibblInstance.canvas) !== pibblInstance ||

@@ -2,6 +2,18 @@
 
 # Plan 008 — Financial charting
 
+## Current integration checkpoint — 2026-11-12
+
+All eight approved financial visualization batches are integrated. See
+[Main integration verification](#main-integration-verification--2026-10-12)
+for the implementation and dated source/built, package-consumer, lifecycle and
+interaction receipts. Current package, example and release integration has been
+reconciled during the final repository review; canonical integrated CI remains
+pending. The opening status and unrelated blockers below are historical and do
+not select a new task. Additional financial APIs are outside this completion scope.
+
+## Historical opening status — 2026-10-12
+
 Status: Batch 0 accepted, hardened and committed as `0ad33084`. Batches 1 and 2
 are accepted and committed as `be31890a`. Batch 3 linked panes, UTC range controls,
 fixed-base comparisons and adaptive navigation were accepted and committed as
